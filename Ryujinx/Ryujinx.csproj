@@ -90,7 +90,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config.json">
+    <None Update="Config.json" Condition="'$(Configuration)' == 'Debug' OR '$(Configuration)' == 'Profile Debug'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="RPsupported.dat">

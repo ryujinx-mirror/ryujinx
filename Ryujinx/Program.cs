@@ -14,6 +14,8 @@ namespace Ryujinx
     {
         public static string Version { get; private set; }
 
+        public static string ConfigurationPath { get; set; }
+		
         static void Main(string[] args)
         {
             Toolkit.Init(new ToolkitOptions
@@ -40,19 +42,33 @@ namespace Ryujinx
             // Initialize Discord integration
             DiscordIntegrationModule.Initialize();
 
-            string configurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string localConfigurationPath  = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string globalConfigurationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx", "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
-            if (File.Exists(configurationPath))
+            if (File.Exists(localConfigurationPath))
             {
-                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(configurationPath);
+                ConfigurationPath = localConfigurationPath;
+
+                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(localConfigurationPath);
+
+                ConfigurationState.Instance.Load(configurationFileFormat);
+            }
+            else if (File.Exists(globalConfigurationPath))
+            {
+                ConfigurationPath = globalConfigurationPath;
+
+                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(globalConfigurationPath);
+
                 ConfigurationState.Instance.Load(configurationFileFormat);
             }
             else
             {
                 // No configuration, we load the default values and save it on disk
+                ConfigurationPath = globalConfigurationPath;
+
                 ConfigurationState.Instance.LoadDefault();
-                ConfigurationState.Instance.ToFileFormat().SaveConfig(configurationPath);
+                ConfigurationState.Instance.ToFileFormat().SaveConfig(globalConfigurationPath);
             }
 
             Profile.Initialize();
