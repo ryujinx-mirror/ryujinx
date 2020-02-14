@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             AtomicOp = (AtomicOp)opCode.Extract(23, 3);
 
-            Offset = opCode.Extract(28, 20);
+            Offset = (opCode.Extract(28, 20) << 12) >> 12;
 
             Extended = opCode.Extract(48);
         }

@@ -138,11 +138,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             int count = op.Size == IntegerSize.B64 ? 2 : 1;
 
-            Operand wordOffset = context.ShiftRightU32(GetSrcA(context), Const(2));
+            Operand addr = context.IAdd(GetSrcA(context), Const(op.Offset));
 
-            wordOffset = context.IAdd(wordOffset, Const(op.Offset));
+            Operand wordOffset = context.ShiftRightU32(addr, Const(2));
 
-            Operand bitOffset = GetBitOffset(context, GetSrcA(context));
+            Operand bitOffset = GetBitOffset(context, addr);
 
             for (int index = 0; index < count; index++)
             {

@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Rd = new Register(opCode.Extract(0, 8), RegisterType.Gpr);
             Ra = new Register(opCode.Extract(8, 8), RegisterType.Gpr);
 
-            Offset = opCode.Extract(20, 24);
+            Offset = (opCode.Extract(20, 24) << 8) >> 8;
 
             Extended = opCode.Extract(45);
 
