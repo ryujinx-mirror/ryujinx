@@ -45,7 +45,12 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (!(ldcSrc1.AsgOp is Operation addOp))
+                if (!(ldcSrc1.AsgOp is Operation shrOp) || shrOp.Inst != Instruction.ShiftRightU32)
+                {
+                    continue;
+                }
+
+                if (!(shrOp.GetSource(0).AsgOp is Operation addOp) || addOp.Inst != Instruction.Add)
                 {
                     continue;
                 }
@@ -57,15 +62,15 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                texOp.TurnIntoIndexed(addSrc1.Value);
+                texOp.TurnIntoIndexed(addSrc1.Value / 4);
 
                 Operand index = Local();
 
                 Operand source = addOp.GetSource(0);
 
-                Operation shrBy1 = new Operation(Instruction.ShiftRightU32, index, source, Const(1));
+                Operation shrBy3 = new Operation(Instruction.ShiftRightU32, index, source, Const(3));
 
-                block.Operations.AddBefore(node, shrBy1);
+                block.Operations.AddBefore(node, shrBy3);
 
                 texOp.SetSource(0, index);
             }
