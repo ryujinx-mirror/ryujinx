@@ -118,6 +118,7 @@ namespace Ryujinx.Ui
             ApplyTheme();
 
             _mainWin.Icon            = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
+            _mainWin.Title           = $"Ryujinx {Program.Version}";
             _stopEmulation.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
@@ -427,7 +428,7 @@ namespace Ryujinx.Ui
 
                 _gameTableWindow.Expand = true;
 
-                this.Window.Title = "Ryujinx";
+                this.Window.Title = $"Ryujinx {Program.Version}";
 
                 _emulationContext = null;
                 _gameLoaded       = false;
