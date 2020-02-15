@@ -323,10 +323,7 @@ namespace Ryujinx.Ui
                     });
                 }
 
-                if (IsFocused)
-                {
-                    UpdateFrame();
-                }
+                UpdateFrame();
 
                 // Polling becomes expensive if it's not slept
                 Thread.Sleep(1);
@@ -351,29 +348,33 @@ namespace Ryujinx.Ui
             JoystickPosition rightJoystick;
             HLE.Input.Keyboard? hidKeyboard = null;
 
-            KeyboardState keyboard = OpenTK.Input.Keyboard.GetState();
-
-            Gtk.Application.Invoke(delegate
-            {
-                HandleScreenState(keyboard);
-            });
-
             int leftJoystickDx = 0;
             int leftJoystickDy = 0;
             int rightJoystickDx = 0;
             int rightJoystickDy = 0;
 
-            // Normal Input
-            currentHotkeyButtons = KeyboardControls.GetHotkeyButtons(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
-            currentButton = KeyboardControls.GetButtons(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
-
-            if (ConfigurationState.Instance.Hid.EnableKeyboard)
+            // OpenTK always captures keyboard events, even if out of focus, so check if window is focused.
+            if (IsFocused)
             {
-                hidKeyboard = KeyboardControls.GetKeysDown(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
-            }
+                KeyboardState keyboard = OpenTK.Input.Keyboard.GetState();
 
-            (leftJoystickDx, leftJoystickDy) = KeyboardControls.GetLeftStick(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
-            (rightJoystickDx, rightJoystickDy) = KeyboardControls.GetRightStick(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+                Gtk.Application.Invoke(delegate
+                {
+                    HandleScreenState(keyboard);
+                });
+
+                // Normal Input
+                currentHotkeyButtons = KeyboardControls.GetHotkeyButtons(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+                currentButton = KeyboardControls.GetButtons(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+
+                if (ConfigurationState.Instance.Hid.EnableKeyboard)
+                {
+                    hidKeyboard = KeyboardControls.GetKeysDown(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+                }
+
+                (leftJoystickDx, leftJoystickDy) = KeyboardControls.GetLeftStick(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+                (rightJoystickDx, rightJoystickDy) = KeyboardControls.GetRightStick(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
+            }
 
             if (!hidKeyboard.HasValue)
             {
