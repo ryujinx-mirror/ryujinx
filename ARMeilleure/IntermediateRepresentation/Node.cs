@@ -1,10 +1,12 @@
 using System;
-using System.Collections.Generic;
 
 namespace ARMeilleure.IntermediateRepresentation
 {
-    class Node
+    class Node : IIntrusiveListNode<Node>
     {
+        public Node ListPrevious { get; set; }
+        public Node ListNext { get; set; }
+
         public Operand Destination
         {
             get
@@ -27,9 +29,6 @@ namespace ARMeilleure.IntermediateRepresentation
         private Operand[] _destinations;
         private Operand[] _sources;
 
-        private LinkedListNode<Node>[] _asgUseNodes;
-        private LinkedListNode<Node>[] _srcUseNodes;
-
         public int DestinationsCount => _destinations.Length;
         public int SourcesCount      => _sources.Length;
 
@@ -38,8 +37,6 @@ namespace ARMeilleure.IntermediateRepresentation
             Destination = destination;
 
             _sources = new Operand[sourcesCount];
-
-            _srcUseNodes = new LinkedListNode<Node>[sourcesCount];
         }
 
         public Node(Operand[] destinations, int sourcesCount)
@@ -47,8 +44,6 @@ namespace ARMeilleure.IntermediateRepresentation
             SetDestinations(destinations ?? throw new ArgumentNullException(nameof(destinations)));
 
             _sources = new Operand[sourcesCount];
-
-            _srcUseNodes = new LinkedListNode<Node>[sourcesCount];
         }
 
         public Operand GetDestination(int index)
@@ -67,12 +62,12 @@ namespace ARMeilleure.IntermediateRepresentation
 
             if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
             {
-                oldOp.Assignments.Remove(_asgUseNodes[index]);
+                oldOp.Assignments.Remove(this);
             }
 
             if (destination != null && destination.Kind == OperandKind.LocalVariable)
             {
-                _asgUseNodes[index] = destination.Assignments.AddLast(this);
+                destination.Assignments.Add(this);
             }
 
             _destinations[index] = destination;
@@ -84,12 +79,12 @@ namespace ARMeilleure.IntermediateRepresentation
 
             if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
             {
-                oldOp.Uses.Remove(_srcUseNodes[index]);
+                oldOp.Uses.Remove(this);
             }
 
             if (source != null && source.Kind == OperandKind.LocalVariable)
             {
-                _srcUseNodes[index] = source.Uses.AddLast(this);
+                source.Uses.Add(this);
             }
 
             _sources[index] = source;
@@ -105,7 +100,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
                     if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
                     {
-                        oldOp.Assignments.Remove(_asgUseNodes[index]);
+                        oldOp.Assignments.Remove(this);
                     }
                 }
 
@@ -116,8 +111,6 @@ namespace ARMeilleure.IntermediateRepresentation
                 _destinations = new Operand[destinations.Length];
             }
 
-            _asgUseNodes = new LinkedListNode<Node>[destinations.Length];
-
             for (int index = 0; index < destinations.Length; index++)
             {
                 Operand newOp = destinations[index];
@@ -126,7 +119,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
                 if (newOp.Kind == OperandKind.LocalVariable)
                 {
-                    _asgUseNodes[index] = newOp.Assignments.AddLast(this);
+                    newOp.Assignments.Add(this);
                 }
             }
         }
@@ -139,13 +132,11 @@ namespace ARMeilleure.IntermediateRepresentation
 
                 if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
                 {
-                    oldOp.Uses.Remove(_srcUseNodes[index]);
+                    oldOp.Uses.Remove(this);
                 }
             }
 
             _sources = new Operand[sources.Length];
-
-            _srcUseNodes = new LinkedListNode<Node>[sources.Length];
 
             for (int index = 0; index < sources.Length; index++)
             {
@@ -155,7 +146,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
                 if (newOp.Kind == OperandKind.LocalVariable)
                 {
-                    _srcUseNodes[index] = newOp.Uses.AddLast(this);
+                    newOp.Uses.Add(this);
                 }
             }
         }

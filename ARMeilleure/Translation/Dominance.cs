@@ -71,7 +71,7 @@ namespace ARMeilleure.Translation
 
         public static void FindDominanceFrontiers(ControlFlowGraph cfg)
         {
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
                 if (block.Predecessors.Count < 2)
                 {

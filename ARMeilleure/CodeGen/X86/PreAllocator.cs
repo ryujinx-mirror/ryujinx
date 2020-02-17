@@ -8,8 +8,6 @@ using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.CodeGen.X86
 {
-    using LLNode = LinkedListNode<Node>;
-
     static class PreAllocator
     {
         public static void RunPass(CompilerContext cctx, StackAllocator stackAlloc, out int maxCallArgs)
@@ -20,24 +18,24 @@ namespace ARMeilleure.CodeGen.X86
 
             Operand[] preservedArgs = new Operand[CallingConvention.GetArgumentsOnRegsCount()];
 
-            foreach (BasicBlock block in cctx.Cfg.Blocks)
+            for (BasicBlock block = cctx.Cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                LLNode nextNode;
+                Node nextNode;
 
-                for (LLNode node = block.Operations.First; node != null; node = nextNode)
+                for (Node node = block.Operations.First; node != null; node = nextNode)
                 {
-                    nextNode = node.Next;
+                    nextNode = node.ListNext;
 
-                    if (!(node.Value is Operation operation))
+                    if (!(node is Operation operation))
                     {
                         continue;
                     }
 
-                    HandleConstantCopy(node, operation);
+                    HandleConstantCopy(block.Operations, node, operation);
 
-                    HandleSameDestSrc1Copy(node, operation);
+                    HandleSameDestSrc1Copy(block.Operations, node, operation);
 
-                    HandleFixedRegisterCopy(node, operation);
+                    HandleFixedRegisterCopy(block.Operations, node, operation);
 
                     switch (operation.Instruction)
                     {
@@ -62,51 +60,51 @@ namespace ARMeilleure.CodeGen.X86
                             // being called, as mandated by the ABI.
                             if (callConv == CallConvName.Windows)
                             {
-                                node = HandleCallWindowsAbi(stackAlloc, node, operation);
+                                node = HandleCallWindowsAbi(block.Operations, stackAlloc, node, operation);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                node = HandleCallSystemVAbi(node, operation);
+                                node = HandleCallSystemVAbi(block.Operations, node, operation);
                             }
                             break;
 
                         case Instruction.ConvertToFPUI:
-                            HandleConvertToFPUI(node, operation);
+                            HandleConvertToFPUI(block.Operations, node, operation);
                             break;
 
                         case Instruction.LoadArgument:
                             if (callConv == CallConvName.Windows)
                             {
-                                HandleLoadArgumentWindowsAbi(cctx, node, preservedArgs, operation);
+                                HandleLoadArgumentWindowsAbi(cctx, block.Operations, node, preservedArgs, operation);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                HandleLoadArgumentSystemVAbi(cctx, node, preservedArgs, operation);
+                                HandleLoadArgumentSystemVAbi(cctx, block.Operations, node, preservedArgs, operation);
                             }
                             break;
 
                         case Instruction.Negate:
                             if (!operation.GetSource(0).Type.IsInteger())
                             {
-                                node = HandleNegate(node, operation);
+                                node = HandleNegate(block.Operations, node, operation);
                             }
                             break;
 
                         case Instruction.Return:
                             if (callConv == CallConvName.Windows)
                             {
-                                HandleReturnWindowsAbi(cctx, node, preservedArgs, operation);
+                                HandleReturnWindowsAbi(cctx, block.Operations, node, preservedArgs, operation);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                HandleReturnSystemVAbi(node, operation);
+                                HandleReturnSystemVAbi(block.Operations, node, operation);
                             }
                             break;
 
                         case Instruction.VectorInsert8:
                             if (!HardwareCapabilities.SupportsSse41)
                             {
-                                node = HandleVectorInsert8(node, operation);
+                                node = HandleVectorInsert8(block.Operations, node, operation);
                             }
                             break;
                     }
@@ -114,7 +112,7 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        private static void HandleConstantCopy(LLNode node, Operation operation)
+        private static void HandleConstantCopy(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             if (operation.SourcesCount == 0 || IsIntrinsic(operation.Instruction))
             {
@@ -135,7 +133,7 @@ namespace ARMeilleure.CodeGen.X86
                     // - Insert a copy with the constant value (as integer) to a GPR.
                     // - Insert a copy from the GPR to a XMM register.
                     // - Replace the constant use with the XMM register.
-                    src1 = AddXmmCopy(node, src1);
+                    src1 = AddXmmCopy(nodes, node, src1);
 
                     operation.SetSource(0, src1);
                 }
@@ -164,7 +162,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     if (src1.Kind == OperandKind.Constant)
                     {
-                        src1 = AddCopy(node, src1);
+                        src1 = AddCopy(nodes, node, src1);
 
                         operation.SetSource(0, src1);
                     }
@@ -182,24 +180,22 @@ namespace ARMeilleure.CodeGen.X86
             {
                 if (!src2.Type.IsInteger())
                 {
-                    src2 = AddXmmCopy(node, src2);
+                    src2 = AddXmmCopy(nodes, node, src2);
 
                     operation.SetSource(1, src2);
                 }
                 else if (!HasConstSrc2(inst) || IsLongConst(src2))
                 {
-                    src2 = AddCopy(node, src2);
+                    src2 = AddCopy(nodes, node, src2);
 
                     operation.SetSource(1, src2);
                 }
             }
         }
 
-        private static LLNode HandleFixedRegisterCopy(LLNode node, Operation operation)
+        private static Node HandleFixedRegisterCopy(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             Operand dest = operation.Destination;
-
-            LinkedList<Node> nodes = node.List;
 
             switch (operation.Instruction)
             {
@@ -359,7 +355,7 @@ namespace ARMeilleure.CodeGen.X86
             return node;
         }
 
-        private static LLNode HandleSameDestSrc1Copy(LLNode node, Operation operation)
+        private static Node HandleSameDestSrc1Copy(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             if (operation.Destination == null || operation.SourcesCount == 0)
             {
@@ -370,8 +366,6 @@ namespace ARMeilleure.CodeGen.X86
 
             Operand dest = operation.Destination;
             Operand src1 = operation.GetSource(0);
-
-            LinkedList<Node> nodes = node.List;
 
             // The multiply instruction (that maps to IMUL) is somewhat special, it has
             // a three operand form where the second source is a immediate value.
@@ -441,7 +435,7 @@ namespace ARMeilleure.CodeGen.X86
             return node;
         }
 
-        private static LLNode HandleConvertToFPUI(LLNode node, Operation operation)
+        private static Node HandleConvertToFPUI(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             // Unsigned integer to FP conversions are not supported on X86.
             // We need to turn them into signed integer to FP conversions, and
@@ -451,9 +445,7 @@ namespace ARMeilleure.CodeGen.X86
 
             Debug.Assert(source.Type.IsInteger(), $"Invalid source type \"{source.Type}\".");
 
-            LinkedList<Node> nodes = node.List;
-
-            LLNode currentNode = node;
+            Node currentNode = node;
 
             if (source.Type == OperandType.I32)
             {
@@ -494,12 +486,12 @@ namespace ARMeilleure.CodeGen.X86
                 node = nodes.AddAfter(node, new Operation(Instruction.Add, dest, dest, lsbF));
             }
 
-            Delete(currentNode, operation);
+            Delete(nodes, currentNode, operation);
 
             return node;
         }
 
-        private static LLNode HandleNegate(LLNode node, Operation operation)
+        private static Node HandleNegate(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             // There's no SSE FP negate instruction, so we need to transform that into
             // a XOR of the value to be negated with a mask with the highest bit set.
@@ -510,9 +502,7 @@ namespace ARMeilleure.CodeGen.X86
             Debug.Assert(dest.Type == OperandType.FP32 ||
                          dest.Type == OperandType.FP64, $"Invalid destination type \"{dest.Type}\".");
 
-            LinkedList<Node> nodes = node.List;
-
-            LLNode currentNode = node;
+            Node currentNode = node;
 
             Operand res = Local(dest.Type);
 
@@ -531,12 +521,12 @@ namespace ARMeilleure.CodeGen.X86
 
             node = nodes.AddAfter(node, new Operation(Instruction.Copy, dest, res));
 
-            Delete(currentNode, operation);
+            Delete(nodes, currentNode, operation);
 
             return node;
         }
 
-        private static LLNode HandleVectorInsert8(LLNode node, Operation operation)
+        private static Node HandleVectorInsert8(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             // Handle vector insertion, when SSE 4.1 is not supported.
             Operand dest = operation.Destination;
@@ -550,9 +540,7 @@ namespace ARMeilleure.CodeGen.X86
 
             Debug.Assert(index < 16);
 
-            LinkedList<Node> nodes = node.List;
-
-            LLNode currentNode = node;
+            Node currentNode = node;
 
             Operand temp1 = Local(OperandType.I32);
             Operand temp2 = Local(OperandType.I32);
@@ -580,16 +568,14 @@ namespace ARMeilleure.CodeGen.X86
 
             node = nodes.AddAfter(node, vinsOp);
 
-            Delete(currentNode, operation);
+            Delete(nodes, currentNode, operation);
 
             return node;
         }
 
-        private static LLNode HandleCallWindowsAbi(StackAllocator stackAlloc, LLNode node, Operation operation)
+        private static Node HandleCallWindowsAbi(IntrusiveList<Node> nodes, StackAllocator stackAlloc, Node node, Operation operation)
         {
             Operand dest = operation.Destination;
-
-            LinkedList<Node> nodes = node.List;
 
             // Handle struct arguments.
             int retArgs = 0;
@@ -661,7 +647,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     Operation storeOp = new Operation(Instruction.Store, null, stackAddr, source);
 
-                    HandleConstantCopy(nodes.AddBefore(node, storeOp), storeOp);
+                    HandleConstantCopy(nodes, nodes.AddBefore(node, storeOp), storeOp);
 
                     operation.SetSource(index, stackAddr);
                 }
@@ -687,7 +673,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 Operation copyOp = new Operation(Instruction.Copy, argReg, source);
 
-                HandleConstantCopy(nodes.AddBefore(node, copyOp), copyOp);
+                HandleConstantCopy(nodes, nodes.AddBefore(node, copyOp), copyOp);
 
                 sources[1 + retArgs + index] = argReg;
             }
@@ -702,7 +688,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 Operation spillOp = new Operation(Instruction.SpillArg, null, offset, source);
 
-                HandleConstantCopy(nodes.AddBefore(node, spillOp), spillOp);
+                HandleConstantCopy(nodes, nodes.AddBefore(node, spillOp), spillOp);
             }
 
             if (dest != null)
@@ -738,15 +724,14 @@ namespace ARMeilleure.CodeGen.X86
             return node;
         }
 
-        private static LLNode HandleCallSystemVAbi(LLNode node, Operation operation)
+        private static Node HandleCallSystemVAbi(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             Operand dest = operation.Destination;
 
-            LinkedList<Node> nodes = node.List;
-
-            List<Operand> sources = new List<Operand>();
-
-            sources.Add(operation.GetSource(0));
+            List<Operand> sources = new List<Operand>
+            {
+                operation.GetSource(0)
+            };
 
             int argsCount = operation.SourcesCount - 1;
 
@@ -797,7 +782,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     Operation copyOp = new Operation(Instruction.Copy, argReg, source);
 
-                    HandleConstantCopy(nodes.AddBefore(node, copyOp), copyOp);
+                    HandleConstantCopy(nodes, nodes.AddBefore(node, copyOp), copyOp);
 
                     sources.Add(argReg);
                 }
@@ -807,7 +792,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     Operation spillOp = new Operation(Instruction.SpillArg, null, offset, source);
 
-                    HandleConstantCopy(nodes.AddBefore(node, spillOp), spillOp);
+                    HandleConstantCopy(nodes, nodes.AddBefore(node, spillOp), spillOp);
 
                     stackOffset += source.Type.GetSizeInBytes();
                 }
@@ -846,7 +831,8 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void HandleLoadArgumentWindowsAbi(
             CompilerContext cctx,
-            LLNode node,
+            IntrusiveList<Node> nodes,
+            Node node,
             Operand[] preservedArgs,
             Operation operation)
         {
@@ -896,9 +882,9 @@ namespace ARMeilleure.CodeGen.X86
                     ? Instruction.Load
                     : Instruction.Copy, dest, preservedArgs[index]);
 
-                node.List.AddBefore(node, argCopyOp);
+                nodes.AddBefore(node, argCopyOp);
 
-                Delete(node, operation);
+                Delete(nodes, node, operation);
             }
             else
             {
@@ -908,7 +894,8 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void HandleLoadArgumentSystemVAbi(
             CompilerContext cctx,
-            LLNode node,
+            IntrusiveList<Node> nodes,
+            Node node,
             Operand[] preservedArgs,
             Operation operation)
         {
@@ -994,9 +981,9 @@ namespace ARMeilleure.CodeGen.X86
 
                 Operation argCopyOp = new Operation(Instruction.Copy, dest, preservedArgs[index]);
 
-                node.List.AddBefore(node, argCopyOp);
+                nodes.AddBefore(node, argCopyOp);
 
-                Delete(node, operation);
+                Delete(nodes, node, operation);
             }
             else
             {
@@ -1006,7 +993,8 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void HandleReturnWindowsAbi(
             CompilerContext cctx,
-            LLNode node,
+            IntrusiveList<Node> nodes,
+            Node node,
             Operand[] preservedArgs,
             Operation operation)
         {
@@ -1049,19 +1037,19 @@ namespace ARMeilleure.CodeGen.X86
             {
                 Operation retStoreOp = new Operation(Instruction.Store, null, retReg, source);
 
-                node.List.AddBefore(node, retStoreOp);
+                nodes.AddBefore(node, retStoreOp);
             }
             else
             {
                 Operation retCopyOp = new Operation(Instruction.Copy, retReg, source);
 
-                node.List.AddBefore(node, retCopyOp);
+                nodes.AddBefore(node, retCopyOp);
             }
 
             operation.SetSources(new Operand[0]);
         }
 
-        private static void HandleReturnSystemVAbi(LLNode node, Operation operation)
+        private static void HandleReturnSystemVAbi(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             if (operation.SourcesCount == 0)
             {
@@ -1075,8 +1063,8 @@ namespace ARMeilleure.CodeGen.X86
                 Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(),     OperandType.I64);
                 Operand retHReg = Gpr(CallingConvention.GetIntReturnRegisterHigh(), OperandType.I64);
 
-                node.List.AddBefore(node, new Operation(Instruction.VectorExtract, retLReg, source, Const(0)));
-                node.List.AddBefore(node, new Operation(Instruction.VectorExtract, retHReg, source, Const(1)));
+                nodes.AddBefore(node, new Operation(Instruction.VectorExtract, retLReg, source, Const(0)));
+                nodes.AddBefore(node, new Operation(Instruction.VectorExtract, retHReg, source, Const(1)));
             }
             else
             {
@@ -1086,30 +1074,30 @@ namespace ARMeilleure.CodeGen.X86
 
                 Operation retCopyOp = new Operation(Instruction.Copy, retReg, source);
 
-                node.List.AddBefore(node, retCopyOp);
+                nodes.AddBefore(node, retCopyOp);
             }
         }
 
-        private static Operand AddXmmCopy(LLNode node, Operand source)
+        private static Operand AddXmmCopy(IntrusiveList<Node> nodes, Node node, Operand source)
         {
             Operand temp = Local(source.Type);
 
-            Operand intConst = AddCopy(node, GetIntConst(source));
+            Operand intConst = AddCopy(nodes, node, GetIntConst(source));
 
             Operation copyOp = new Operation(Instruction.VectorCreateScalar, temp, intConst);
 
-            node.List.AddBefore(node, copyOp);
+            nodes.AddBefore(node, copyOp);
 
             return temp;
         }
 
-        private static Operand AddCopy(LLNode node, Operand source)
+        private static Operand AddCopy(IntrusiveList<Node> nodes, Node node, Operand source)
         {
             Operand temp = Local(source.Type);
 
             Operation copyOp = new Operation(Instruction.Copy, temp, source);
 
-            node.List.AddBefore(node, copyOp);
+            nodes.AddBefore(node, copyOp);
 
             return temp;
         }
@@ -1142,7 +1130,7 @@ namespace ARMeilleure.CodeGen.X86
             return value == (int)value;
         }
 
-        private static void Delete(LLNode node, Operation operation)
+        private static void Delete(IntrusiveList<Node> nodes, Node node, Operation operation)
         {
             operation.Destination = null;
 
@@ -1151,7 +1139,7 @@ namespace ARMeilleure.CodeGen.X86
                 operation.SetSource(index, null);
             }
 
-            node.List.Remove(node);
+            nodes.Remove(node);
         }
 
         private static Operand Gpr(X86Register register, OperandType type)

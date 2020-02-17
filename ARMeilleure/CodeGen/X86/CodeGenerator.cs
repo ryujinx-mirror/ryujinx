@@ -157,11 +157,11 @@ namespace ARMeilleure.CodeGen.X86
 
                 UnwindInfo unwindInfo = WritePrologue(context);
 
-                foreach (BasicBlock block in cfg.Blocks)
+                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
                 {
                     context.EnterBlock(block);
 
-                    foreach (Node node in block.Operations)
+                    for (Node node = block.Operations.First; node != null; node = node.ListNext)
                     {
                         if (node is Operation operation)
                         {

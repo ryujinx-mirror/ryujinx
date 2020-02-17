@@ -2,13 +2,14 @@ using System.Collections.Generic;
 
 namespace ARMeilleure.IntermediateRepresentation
 {
-    class BasicBlock
+    class BasicBlock : IIntrusiveListNode<BasicBlock>
     {
         public int Index { get; set; }
 
-        public LinkedListNode<BasicBlock> Node { get; set; }
+        public BasicBlock ListPrevious { get; set; }
+        public BasicBlock ListNext { get; set; }
 
-        public LinkedList<Node> Operations { get; }
+        public IntrusiveList<Node> Operations { get; }
 
         private BasicBlock _next;
         private BasicBlock _branch;
@@ -33,7 +34,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public BasicBlock()
         {
-            Operations = new LinkedList<Node>();
+            Operations = new IntrusiveList<Node>();
 
             Predecessors = new List<BasicBlock>();
 
@@ -77,7 +78,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public Node GetLastOp()
         {
-            return Operations.Last?.Value;
+            return Operations.Last;
         }
     }
 }

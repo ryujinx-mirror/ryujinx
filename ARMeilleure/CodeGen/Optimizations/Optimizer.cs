@@ -16,17 +16,17 @@ namespace ARMeilleure.CodeGen.Optimizations
             {
                 modified = false;
 
-                foreach (BasicBlock block in cfg.Blocks)
+                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
                 {
-                    LinkedListNode<Node> node = block.Operations.First;
+                    Node node = block.Operations.First;
 
                     while (node != null)
                     {
-                        LinkedListNode<Node> nextNode = node.Next;
+                        Node nextNode = node.ListNext;
 
-                        bool isUnused = IsUnused(node.Value);
+                        bool isUnused = IsUnused(node);
 
-                        if (!(node.Value is Operation operation) || isUnused)
+                        if (!(node is Operation operation) || isUnused)
                         {
                             if (isUnused)
                             {
@@ -80,13 +80,11 @@ namespace ARMeilleure.CodeGen.Optimizations
             }
         }
 
-        private static void RemoveNode(BasicBlock block, LinkedListNode<Node> llNode)
+        private static void RemoveNode(BasicBlock block, Node node)
         {
             // Remove a node from the nodes list, and also remove itself
             // from all the use lists on the operands that this node uses.
-            block.Operations.Remove(llNode);
-
-            Node node = llNode.Value;
+            block.Operations.Remove(node);
 
             for (int index = 0; index < node.SourcesCount; index++)
             {

@@ -47,7 +47,7 @@ namespace ARMeilleure.Translation
         {
             DefMap[] globalDefs = new DefMap[cfg.Blocks.Count];
 
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
                 globalDefs[block.Index] = new DefMap();
             }
@@ -55,11 +55,11 @@ namespace ARMeilleure.Translation
             Queue<BasicBlock> dfPhiBlocks = new Queue<BasicBlock>();
 
             // First pass, get all defs and locals uses.
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
                 Operand[] localDefs = new Operand[RegisterConsts.TotalCount];
 
-                LinkedListNode<Node> node = block.Operations.First;
+                Node node = block.Operations.First;
 
                 Operand RenameLocal(Operand operand)
                 {
@@ -75,7 +75,7 @@ namespace ARMeilleure.Translation
 
                 while (node != null)
                 {
-                    if (node.Value is Operation operation)
+                    if (node is Operation operation)
                     {
                         for (int index = 0; index < operation.SourcesCount; index++)
                         {
@@ -94,7 +94,7 @@ namespace ARMeilleure.Translation
                         }
                     }
 
-                    node = node.Next;
+                    node = node.ListNext;
                 }
 
                 for (int index = 0; index < RegisterConsts.TotalCount; index++)
@@ -126,11 +126,11 @@ namespace ARMeilleure.Translation
             }
 
             // Second pass, rename variables with definitions on different blocks.
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
                 Operand[] localDefs = new Operand[RegisterConsts.TotalCount];
 
-                LinkedListNode<Node> node = block.Operations.First;
+                Node node = block.Operations.First;
 
                 Operand RenameGlobal(Operand operand)
                 {
@@ -155,7 +155,7 @@ namespace ARMeilleure.Translation
 
                 while (node != null)
                 {
-                    if (node.Value is Operation operation)
+                    if (node is Operation operation)
                     {
                         for (int index = 0; index < operation.SourcesCount; index++)
                         {
@@ -163,7 +163,7 @@ namespace ARMeilleure.Translation
                         }
                     }
 
-                    node = node.Next;
+                    node = node.ListNext;
                 }
             }
         }
@@ -238,17 +238,17 @@ namespace ARMeilleure.Translation
 
         private static void AddPhi(BasicBlock block, PhiNode phi)
         {
-            LinkedListNode<Node> node = block.Operations.First;
+            Node node = block.Operations.First;
 
             if (node != null)
             {
-                while (node.Next?.Value is PhiNode)
+                while (node.ListNext is PhiNode)
                 {
-                    node = node.Next;
+                    node = node.ListNext;
                 }
             }
 
-            if (node?.Value is PhiNode)
+            if (node is PhiNode)
             {
                 block.Operations.AddAfter(node, phi);
             }

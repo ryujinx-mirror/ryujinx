@@ -9,13 +9,13 @@ namespace ARMeilleure.Translation
     {
         public BasicBlock Entry { get; }
 
-        public LinkedList<BasicBlock> Blocks { get; }
+        public IntrusiveList<BasicBlock> Blocks { get; }
 
         public BasicBlock[] PostOrderBlocks { get; }
 
         public int[] PostOrderMap { get; }
 
-        public ControlFlowGraph(BasicBlock entry, LinkedList<BasicBlock> blocks)
+        public ControlFlowGraph(BasicBlock entry, IntrusiveList<BasicBlock> blocks)
         {
             Entry  = entry;
             Blocks = blocks;
@@ -57,7 +57,7 @@ namespace ARMeilleure.Translation
             }
         }
 
-        private void RemoveUnreachableBlocks(LinkedList<BasicBlock> blocks)
+        private void RemoveUnreachableBlocks(IntrusiveList<BasicBlock> blocks)
         {
             HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
 
@@ -87,25 +87,23 @@ namespace ARMeilleure.Translation
                 // Remove unreachable blocks and renumber.
                 int index = 0;
 
-                for (LinkedListNode<BasicBlock> node = blocks.First; node != null;)
+                for (BasicBlock block = blocks.First; block != null;)
                 {
-                    LinkedListNode<BasicBlock> nextNode = node.Next;
-
-                    BasicBlock block = node.Value;
+                    BasicBlock nextBlock = block.ListNext;
 
                     if (!visited.Contains(block))
                     {
-                        block.Next   = null;
+                        block.Next = null;
                         block.Branch = null;
 
-                        blocks.Remove(node);
+                        blocks.Remove(block);
                     }
                     else
                     {
                         block.Index = index++;
                     }
 
-                    node = nextNode;
+                    block = nextBlock;
                 }
             }
         }
@@ -130,7 +128,7 @@ namespace ARMeilleure.Translation
             }
 
             // Insert the new block on the list of blocks.
-            BasicBlock succPrev = successor.Node.Previous?.Value;
+            BasicBlock succPrev = successor.ListPrevious;
 
             if (succPrev != null && succPrev != predecessor && succPrev.Next == successor)
             {
@@ -145,12 +143,12 @@ namespace ARMeilleure.Translation
 
                 splitBlock2.Operations.AddLast(new Operation(Instruction.Branch, null));
 
-                Blocks.AddBefore(successor.Node, splitBlock2);
+                Blocks.AddBefore(successor, splitBlock2);
             }
 
             splitBlock.Next = successor;
 
-            Blocks.AddBefore(successor.Node, splitBlock);
+            Blocks.AddBefore(successor, splitBlock);
 
             return splitBlock;
         }

@@ -9,13 +9,13 @@ namespace ARMeilleure.Translation
     {
         public static void Deconstruct(ControlFlowGraph cfg)
         {
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                LinkedListNode<Node> node = block.Operations.First;
+                Node node = block.Operations.First;
 
-                while (node?.Value is PhiNode phi)
+                while (node is PhiNode phi)
                 {
-                    LinkedListNode<Node> nextNode = node.Next;
+                    Node nextNode = node.ListNext;
 
                     Operand local = Local(phi.Destination.Type);
 

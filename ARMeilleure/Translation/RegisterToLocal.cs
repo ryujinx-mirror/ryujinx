@@ -25,9 +25,9 @@ namespace ARMeilleure.Translation
                 return local;
             }
 
-            foreach (BasicBlock block in cfg.Blocks)
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                foreach (Node node in block.Operations)
+                for (Node node = block.Operations.First; node != null; node = node.ListNext)
                 {
                     Operand dest = node.Destination;
 
