@@ -18,8 +18,8 @@ namespace Ryujinx.Ui
 {
     public class GLRenderer : GLWidget
     {
-        private const int TouchScreenWidth = 1280;
-        private const int TouchScreenHeight = 720;
+        private const int SwitchPanelWidth = 1280;
+        private const int SwitchPanelHeight = 720;
         private const int TargetFps = 60;
 
         public ManualResetEvent WaitEvent { get; set; }
@@ -52,9 +52,9 @@ namespace Ryujinx.Ui
 
         private Input.NpadController _primaryController;
 
-        public GLRenderer(Switch device) 
+        public GLRenderer(Switch device)
             : base (new GraphicsMode(new ColorFormat()),
-            3, 3, 
+            3, 3,
             GraphicsContextFlags.ForwardCompatible)
         {
             WaitEvent = new ManualResetEvent(false);
@@ -73,9 +73,9 @@ namespace Ryujinx.Ui
 
             _primaryController = new Input.NpadController(ConfigurationState.Instance.Hid.JoystickControls);
 
-            AddEvents((int)(Gdk.EventMask.ButtonPressMask 
-                          | Gdk.EventMask.ButtonReleaseMask 
-                          | Gdk.EventMask.PointerMotionMask 
+            AddEvents((int)(Gdk.EventMask.ButtonPressMask
+                          | Gdk.EventMask.ButtonReleaseMask
+                          | Gdk.EventMask.PointerMotionMask
                           | Gdk.EventMask.KeyPressMask
                           | Gdk.EventMask.KeyReleaseMask));
 
@@ -109,9 +109,9 @@ namespace Ryujinx.Ui
 
         public void HandleScreenState(KeyboardState keyboard)
         {
-            bool toggleFullscreen = keyboard.IsKeyDown(OpenTK.Input.Key.F11) 
-                                || ((keyboard.IsKeyDown(OpenTK.Input.Key.AltLeft) 
-                                ||   keyboard.IsKeyDown(OpenTK.Input.Key.AltRight)) 
+            bool toggleFullscreen = keyboard.IsKeyDown(OpenTK.Input.Key.F11)
+                                || ((keyboard.IsKeyDown(OpenTK.Input.Key.AltLeft)
+                                ||   keyboard.IsKeyDown(OpenTK.Input.Key.AltRight))
                                 &&   keyboard.IsKeyDown(OpenTK.Input.Key.Enter))
                                 || keyboard.IsKeyDown(OpenTK.Input.Key.Escape);
 
@@ -156,7 +156,9 @@ namespace Ryujinx.Ui
         {
             var result = base.OnConfigureEvent(evnt);
 
-            _renderer.Window.SetSize(AllocatedWidth, AllocatedHeight);
+            Gdk.Monitor monitor = Display.GetMonitorAtWindow(Window);
+
+            _renderer.Window.SetSize(evnt.Width * monitor.ScaleFactor, evnt.Height * monitor.ScaleFactor);
 
             return result;
         }
@@ -224,6 +226,42 @@ namespace Ryujinx.Ui
             }
 
             return false;
+        }
+
+        protected override void OnGetPreferredHeight(out int minimumHeight, out int naturalHeight)
+        {
+            Gdk.Monitor monitor = Display.GetMonitorAtWindow(Window);
+
+            // If the monitor is at least 1080p, use the Switch panel size as minimal size.
+            if (monitor.Geometry.Height >= 1080)
+            {
+                minimumHeight = SwitchPanelHeight;
+            }
+            // Otherwise, we default minimal size to 480p 16:9.
+            else
+            {
+                minimumHeight = 480;
+            }
+
+            naturalHeight = minimumHeight;
+        }
+
+        protected override void OnGetPreferredWidth(out int minimumWidth, out int naturalWidth)
+        {
+            Gdk.Monitor monitor = Display.GetMonitorAtWindow(Window);
+
+            // If the monitor is at least 1080p, use the Switch panel size as minimal size.
+            if (monitor.Geometry.Height >= 1080)
+            {
+                minimumWidth = SwitchPanelWidth;
+            }
+            // Otherwise, we default minimal size to 480p 16:9.
+            else
+            {
+                minimumWidth = 854;
+            }
+
+            naturalWidth = minimumWidth;
         }
 
         public void Exit()
@@ -421,13 +459,13 @@ namespace Ryujinx.Ui
                 int screenWidth = AllocatedWidth;
                 int screenHeight = AllocatedHeight;
 
-                if (AllocatedWidth > (AllocatedHeight * TouchScreenWidth) / TouchScreenHeight)
+                if (AllocatedWidth > (AllocatedHeight * SwitchPanelWidth) / SwitchPanelHeight)
                 {
-                    screenWidth = (AllocatedHeight * TouchScreenWidth) / TouchScreenHeight;
+                    screenWidth = (AllocatedHeight * SwitchPanelWidth) / SwitchPanelHeight;
                 }
                 else
                 {
-                    screenHeight = (AllocatedWidth * TouchScreenHeight) / TouchScreenWidth;
+                    screenHeight = (AllocatedWidth * SwitchPanelHeight) / SwitchPanelWidth;
                 }
 
                 int startX = (AllocatedWidth - screenWidth) >> 1;
@@ -445,8 +483,8 @@ namespace Ryujinx.Ui
                     int screenMouseX = (int)_mouseX - startX;
                     int screenMouseY = (int)_mouseY - startY;
 
-                    int mX = (screenMouseX * TouchScreenWidth) / screenWidth;
-                    int mY = (screenMouseY * TouchScreenHeight) / screenHeight;
+                    int mX = (screenMouseX * SwitchPanelWidth) / screenWidth;
+                    int mY = (screenMouseY * SwitchPanelHeight) / screenHeight;
 
                     TouchPoint currentPoint = new TouchPoint
                     {
