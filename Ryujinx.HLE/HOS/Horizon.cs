@@ -688,7 +688,7 @@ namespace Ryujinx.HLE.HOS
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
-            Result rc = EnsureApplicationSaveData(Device.FileSystem.FsClient, out _, titleId, ref ControlData.Value, ref user);
+            Result rc = EnsureApplicationSaveData(Device.FileSystem.FsClient, out _, titleId, ref control, ref user);
 
             if (rc.IsFailure())
             {

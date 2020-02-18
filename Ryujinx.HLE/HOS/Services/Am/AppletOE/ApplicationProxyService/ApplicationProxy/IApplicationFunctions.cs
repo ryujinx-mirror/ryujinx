@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             }
 
             Result result = EnsureApplicationSaveData(context.Device.FileSystem.FsClient, out long requiredSize, titleId,
-                ref context.Device.System.ControlData.Value, ref userId);
+                ref control, ref userId);
 
             context.ResponseData.Write(requiredSize);
 
