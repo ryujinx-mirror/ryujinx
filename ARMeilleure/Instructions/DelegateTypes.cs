@@ -4,13 +4,19 @@ using System;
 namespace ARMeilleure.Instructions
 {
     delegate double _F64_F64(double a1);
+    delegate double _F64_F64_Bool(double a1, bool a2);
     delegate double _F64_F64_F64(double a1, double a2);
+    delegate double _F64_F64_F64_Bool(double a1, double a2, bool a3);
     delegate double _F64_F64_F64_F64(double a1, double a2, double a3);
+    delegate double _F64_F64_F64_F64_Bool(double a1, double a2, double a3, bool a4);
     delegate double _F64_F64_MidpointRounding(double a1, MidpointRounding a2);
 
     delegate float _F32_F32(float a1);
+    delegate float _F32_F32_Bool(float a1, bool a2);
     delegate float _F32_F32_F32(float a1, float a2);
+    delegate float _F32_F32_F32_Bool(float a1, float a2, bool a3);
     delegate float _F32_F32_F32_F32(float a1, float a2, float a3);
+    delegate float _F32_F32_F32_F32_Bool(float a1, float a2, float a3, bool a4);
     delegate float _F32_F32_MidpointRounding(float a1, MidpointRounding a2);
     delegate float _F32_U16(ushort a1);
 
@@ -37,6 +43,7 @@ namespace ARMeilleure.Instructions
     delegate ushort _U16_F32(float a1);
     delegate ushort _U16_U64(ulong a1);
 
+    delegate uint _U32();
     delegate uint _U32_F32(float a1);
     delegate uint _U32_F64(double a1);
     delegate uint _U32_U32(uint a1);
@@ -74,6 +81,7 @@ namespace ARMeilleure.Instructions
     delegate V128 _V128_V128_V128_V128(V128 a1, V128 a2, V128 a3);
 
     delegate void _Void();
+    delegate void _Void_U32(uint a1);
     delegate void _Void_U64(ulong a1);
     delegate void _Void_U64_S32(ulong a1, int a2);
     delegate void _Void_U64_U16(ulong a1, ushort a2);

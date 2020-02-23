@@ -6,7 +6,6 @@ namespace ARMeilleure.Decoders
         int Rn { get; }
 
         bool WBack { get; }
-
         bool IsLoad { get; }
     }
 }

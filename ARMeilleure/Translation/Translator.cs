@@ -20,7 +20,7 @@ namespace ARMeilleure.Translation
 
         private ConcurrentDictionary<ulong, TranslatedFunction> _funcs;
 
-        private PriorityQueue<ulong> _backgroundQueue;
+        private PriorityQueue<RejitRequest> _backgroundQueue;
 
         private AutoResetEvent _backgroundTranslatorEvent;
 
@@ -32,7 +32,7 @@ namespace ARMeilleure.Translation
 
             _funcs = new ConcurrentDictionary<ulong, TranslatedFunction>();
 
-            _backgroundQueue = new PriorityQueue<ulong>(2);
+            _backgroundQueue = new PriorityQueue<RejitRequest>(2);
 
             _backgroundTranslatorEvent = new AutoResetEvent(false);
         }
@@ -41,11 +41,11 @@ namespace ARMeilleure.Translation
         {
             while (_threadCount != 0)
             {
-                if (_backgroundQueue.TryDequeue(out ulong address))
+                if (_backgroundQueue.TryDequeue(out RejitRequest request))
                 {
-                    TranslatedFunction func = Translate(address, ExecutionMode.Aarch64, highCq: true);
+                    TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
 
-                    _funcs.AddOrUpdate(address, func, (key, oldFunc) => func);
+                    _funcs.AddOrUpdate(request.Address, func, (key, oldFunc) => func);
                 }
                 else
                 {
@@ -114,7 +114,7 @@ namespace ARMeilleure.Translation
             }
             else if (isCallTarget && func.ShouldRejit())
             {
-                _backgroundQueue.Enqueue(0, address);
+                _backgroundQueue.Enqueue(0, new RejitRequest(address, mode));
 
                 _backgroundTranslatorEvent.Set();
             }
@@ -149,7 +149,7 @@ namespace ARMeilleure.Translation
 
             Logger.StartPass(PassName.RegisterUsage);
 
-            RegisterUsage.RunPass(cfg, isCompleteFunction: false);
+            RegisterUsage.RunPass(cfg, mode, isCompleteFunction: false);
 
             Logger.EndPass(PassName.RegisterUsage);
 

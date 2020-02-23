@@ -36,6 +36,7 @@ namespace ARMeilleure.State
 
         public FPCR Fpcr { get; set; }
         public FPSR Fpsr { get; set; }
+        public FPCR StandardFpcrValue => (Fpcr & (FPCR.Ahp)) | FPCR.Dn | FPCR.Fz;
 
         public bool IsAarch32 { get; set; }
 
@@ -89,6 +90,9 @@ namespace ARMeilleure.State
 
         public bool GetPstateFlag(PState flag)             => _nativeContext.GetPstateFlag(flag);
         public void SetPstateFlag(PState flag, bool value) => _nativeContext.SetPstateFlag(flag, value);
+
+        public bool GetFPstateFlag(FPState flag) => _nativeContext.GetFPStateFlag(flag);
+        public void SetFPstateFlag(FPState flag, bool value) => _nativeContext.SetFPStateFlag(flag, value);
 
         internal void CheckInterrupt()
         {

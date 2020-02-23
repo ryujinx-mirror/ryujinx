@@ -148,5 +148,20 @@ namespace ARMeilleure.Decoders
         {
             return (((long)opCode << 45) >> 48) & ~3;
         }
+
+        public static bool VectorArgumentsInvalid(bool q, params int[] args)
+        {
+            if (q) 
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if ((args[i] & 1) == 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

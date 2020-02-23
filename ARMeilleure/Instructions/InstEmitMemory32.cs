@@ -20,9 +20,11 @@ namespace ARMeilleure.Instructions
         [Flags]
         enum AccessType
         {
-            Store  = 0,
-            Signed = 1,
-            Load   = 2,
+            Store     = 0,
+            Signed    = 1,
+            Load      = 2,
+            Ordered   = 4,
+            Exclusive = 8,
 
             LoadZx = Load,
             LoadSx = Load | Signed,
@@ -95,7 +97,7 @@ namespace ARMeilleure.Instructions
         {
             OpCode32MemMult op = (OpCode32MemMult)context.CurrOp;
 
-            Operand n = GetIntA32(context, op.Rn);
+            Operand n = context.Copy(GetIntA32(context, op.Rn));
 
             Operand baseAddress = context.Add(n, Const(op.Offset));
 
@@ -152,14 +154,15 @@ namespace ARMeilleure.Instructions
             OpCode32Mem op = (OpCode32Mem)context.CurrOp;
 
             Operand n = context.Copy(GetIntA32(context, op.Rn));
+            Operand m = GetMemM(context, setCarry: false);
 
             Operand temp = null;
 
             if (op.Index || op.WBack)
             {
                 temp = op.Add
-                    ? context.Add     (n, Const(op.Immediate))
-                    : context.Subtract(n, Const(op.Immediate));
+                    ? context.Add     (n, m)
+                    : context.Subtract(n, m);
             }
 
             if (op.WBack)

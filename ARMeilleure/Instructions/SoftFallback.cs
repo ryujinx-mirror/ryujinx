@@ -420,6 +420,26 @@ namespace ARMeilleure.Instructions
                 return MathF.Truncate(value);
             }
         }
+
+        public static int FloatToInt32(float value)
+        {
+            return SatF32ToS32(RoundF(value));
+        }
+
+        public static int DoubleToInt32(double value)
+        {
+            return SatF64ToS32(Round(value));
+        }
+
+        public static uint FloatToUInt32(float value)
+        {
+            return SatF32ToU32(RoundF(value));
+        }
+
+        public static uint DoubleToUInt32(double value)
+        {
+            return SatF64ToU32(Round(value));
+        }
 #endregion
 
 #region "Saturation"

@@ -32,6 +32,7 @@ namespace ARMeilleure.State
         public const int SpFiq  = 29;
         public const int LrFiq  = 30;
 
+        public const int Aarch32Sp = 13;
         public const int Aarch32Lr = 14;
         public const int Aarch32Pc = 15;
 

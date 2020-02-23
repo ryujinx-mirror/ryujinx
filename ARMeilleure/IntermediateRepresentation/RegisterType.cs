@@ -4,6 +4,7 @@ namespace ARMeilleure.IntermediateRepresentation
     {
         Integer,
         Vector,
-        Flag
+        Flag,
+        FpFlag
     }
 }

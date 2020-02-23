@@ -268,9 +268,13 @@ namespace ARMeilleure.Translation
             {
                 return RegisterConsts.IntRegsCount + reg.Index;
             }
-            else /* if (reg.Type == RegisterType.Flag) */
+            else if (reg.Type == RegisterType.Flag)
             {
                 return RegisterConsts.IntAndVecRegsCount + reg.Index;
+            }
+            else /* if (reg.Type == RegisterType.FpFlag) */
+            {
+                return RegisterConsts.FpFlagsOffset + reg.Index;
             }
         }
 
@@ -284,9 +288,13 @@ namespace ARMeilleure.Translation
             {
                 return new Register(id - RegisterConsts.IntRegsCount, RegisterType.Vector);
             }
-            else /* if (id < RegisterConsts.TotalCount) */
+            else if (id < RegisterConsts.FpFlagsOffset)
             {
                 return new Register(id - RegisterConsts.IntAndVecRegsCount, RegisterType.Flag);
+            }
+            else /* if (id < RegisterConsts.TotalCount) */
+            {
+                return new Register(id - RegisterConsts.FpFlagsOffset, RegisterType.FpFlag);
             }
         }
     }

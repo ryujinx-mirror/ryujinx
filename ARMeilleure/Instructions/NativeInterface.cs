@@ -87,14 +87,37 @@ namespace ARMeilleure.Instructions
             return (ulong)GetContext().Fpsr;
         }
 
+        public static uint GetFpscr()
+        {
+            ExecutionContext context = GetContext();
+            uint result = (uint)(context.Fpsr & FPSR.A32Mask) | (uint)(context.Fpcr & FPCR.A32Mask);
+
+            result |= context.GetFPstateFlag(FPState.NFlag) ? (1u << 31) : 0;
+            result |= context.GetFPstateFlag(FPState.ZFlag) ? (1u << 30) : 0;
+            result |= context.GetFPstateFlag(FPState.CFlag) ? (1u << 29) : 0;
+            result |= context.GetFPstateFlag(FPState.VFlag) ? (1u << 28) : 0;
+
+            return result;
+        }
+
         public static ulong GetTpidrEl0()
         {
             return (ulong)GetContext().TpidrEl0;
         }
 
+        public static uint GetTpidrEl032()
+        {
+            return (uint)GetContext().TpidrEl0;
+        }
+
         public static ulong GetTpidr()
         {
             return (ulong)GetContext().Tpidr;
+        }
+
+        public static uint GetTpidr32()
+        {
+            return (uint)GetContext().Tpidr;
         }
 
         public static ulong GetCntfrqEl0()
@@ -117,13 +140,31 @@ namespace ARMeilleure.Instructions
             GetContext().Fpsr = (FPSR)value;
         }
 
+        public static void SetFpscr(uint value)
+        {
+            ExecutionContext context = GetContext();
+
+            context.SetFPstateFlag(FPState.NFlag, (value & (1u << 31)) != 0);
+            context.SetFPstateFlag(FPState.ZFlag, (value & (1u << 30)) != 0);
+            context.SetFPstateFlag(FPState.CFlag, (value & (1u << 29)) != 0);
+            context.SetFPstateFlag(FPState.VFlag, (value & (1u << 28)) != 0);
+
+            context.Fpsr = FPSR.A32Mask & (FPSR)value;
+            context.Fpcr = FPCR.A32Mask & (FPCR)value;
+        }
+
         public static void SetTpidrEl0(ulong value)
         {
             GetContext().TpidrEl0 = (long)value;
         }
-#endregion
 
-#region "Read"
+        public static void SetTpidrEl032(uint value)
+        {
+            GetContext().TpidrEl0 = (long)value;
+        }
+        #endregion
+
+        #region "Read"
         public static byte ReadByte(ulong address)
         {
             return GetMemoryManager().ReadByte((long)address);

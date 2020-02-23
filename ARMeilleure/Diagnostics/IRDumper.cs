@@ -134,6 +134,7 @@ namespace ARMeilleure.Diagnostics
                 switch (reg.Type)
                 {
                     case RegisterType.Flag:    name = "b" + reg.Index; break;
+                    case RegisterType.FpFlag:  name = "f" + reg.Index; break;
                     case RegisterType.Integer: name = "r" + reg.Index; break;
                     case RegisterType.Vector:  name = "v" + reg.Index; break;
                 }

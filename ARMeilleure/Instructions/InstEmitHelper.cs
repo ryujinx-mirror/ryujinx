@@ -43,8 +43,13 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                return GetIntOrSP(context, GetRegisterAlias(context.Mode, regIndex));
+                return Register(GetRegisterAlias(context.Mode, regIndex), RegisterType.Integer, OperandType.I32);
             }
+        }
+
+        public static Operand GetVecA32(int regIndex)
+        {
+            return Register(regIndex, RegisterType.Vector, OperandType.V128);
         }
 
         public static void SetIntA32(ArmEmitterContext context, int regIndex, Operand value)
@@ -57,7 +62,13 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                SetIntOrSP(context, GetRegisterAlias(context.Mode, regIndex), value);
+                if (value.Type == OperandType.I64)
+                {
+                    value = context.ConvertI64ToI32(value);
+                }
+                Operand reg = Register(GetRegisterAlias(context.Mode, regIndex), RegisterType.Integer, OperandType.I32);
+
+                context.Copy(reg, value);
             }
         }
 
@@ -143,11 +154,12 @@ namespace ARMeilleure.Instructions
 
             context.BranchIfTrue(lblArmMode, mode);
 
-            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseAnd(pc, Const(~1))));
+            // Make this count as a call, the translator will ignore the low bit for the address.
+            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(pc, Const((int)InstEmitFlowHelper.CallFlag))));
 
             context.MarkLabel(lblArmMode);
 
-            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseAnd(pc, Const(~3))));
+            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(context.BitwiseAnd(pc, Const(~3)), Const((int)InstEmitFlowHelper.CallFlag))));
         }
 
         public static Operand GetIntOrZR(ArmEmitterContext context, int regIndex)
@@ -208,11 +220,21 @@ namespace ARMeilleure.Instructions
             return Register((int)stateFlag, RegisterType.Flag, OperandType.I32);
         }
 
+        public static Operand GetFpFlag(FPState stateFlag)
+        {
+            return Register((int)stateFlag, RegisterType.FpFlag, OperandType.I32);
+        }
+
         public static void SetFlag(ArmEmitterContext context, PState stateFlag, Operand value)
         {
             context.Copy(GetFlag(stateFlag), value);
 
             context.MarkFlagSet(stateFlag);
+        }
+
+        public static void SetFpFlag(ArmEmitterContext context, FPState stateFlag, Operand value)
+        {
+            context.Copy(GetFpFlag(stateFlag), value);
         }
     }
 }

@@ -1528,7 +1528,7 @@ namespace ARMeilleure.Instructions
         {
             ThrowIfInvalid(index, size);
 
-            if (size < 3)
+            if (size < 3 && value.Type == OperandType.I64)
             {
                 value = context.ConvertI64ToI32(value);
             }
@@ -1544,7 +1544,7 @@ namespace ARMeilleure.Instructions
             return vector;
         }
 
-        private static void ThrowIfInvalid(int index, int size)
+        public static void ThrowIfInvalid(int index, int size)
         {
             if ((uint)size > 3u)
             {

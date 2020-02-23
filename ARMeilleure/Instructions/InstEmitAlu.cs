@@ -276,23 +276,6 @@ namespace ARMeilleure.Instructions
             SetAluDOrZR(context, d);
         }
 
-        private static Operand EmitReverseBits32Op(ArmEmitterContext context, Operand op)
-        {
-            Debug.Assert(op.Type == OperandType.I32);
-
-            Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaaaaaaau)), Const(1)),
-                                            context.ShiftLeft   (context.BitwiseAnd(op, Const(0x55555555u)), Const(1)));
-
-            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccccccccu)), Const(2)),
-                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x33333333u)), Const(2)));
-            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xf0f0f0f0u)), Const(4)),
-                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0f0f0f0fu)), Const(4)));
-            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xff00ff00u)), Const(8)),
-                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x00ff00ffu)), Const(8)));
-
-            return context.BitwiseOr(context.ShiftRightUI(val, Const(16)), context.ShiftLeft(val, Const(16)));
-        }
-
         private static Operand EmitReverseBits64Op(ArmEmitterContext context, Operand op)
         {
             Debug.Assert(op.Type == OperandType.I64);
@@ -329,23 +312,6 @@ namespace ARMeilleure.Instructions
             }
 
             SetAluDOrZR(context, d);
-        }
-
-        private static Operand EmitReverseBytes16_32Op(ArmEmitterContext context, Operand op)
-        {
-            Debug.Assert(op.Type == OperandType.I32);
-
-            Operand val = EmitReverseBytes16_64Op(context, context.ZeroExtend32(OperandType.I64, op));
-
-            return context.ConvertI64ToI32(val);
-        }
-
-        private static Operand EmitReverseBytes16_64Op(ArmEmitterContext context, Operand op)
-        {
-            Debug.Assert(op.Type == OperandType.I64);
-
-            return context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xff00ff00ff00ff00ul)), Const(8)),
-                                     context.ShiftLeft   (context.BitwiseAnd(op, Const(0x00ff00ff00ff00fful)), Const(8)));
         }
 
         public static void Rev32(ArmEmitterContext context)

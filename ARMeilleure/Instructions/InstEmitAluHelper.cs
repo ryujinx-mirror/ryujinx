@@ -3,6 +3,7 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
+using System.Diagnostics;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
@@ -77,6 +78,89 @@ namespace ARMeilleure.Instructions
             SetFlag(context, PState.VFlag, vOut);
         }
 
+        public static Operand EmitReverseBits32Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I32);
+
+            Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaaaaaaau)), Const(1)),
+                                            context.ShiftLeft(context.BitwiseAnd(op, Const(0x55555555u)), Const(1)));
+
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccccccccu)), Const(2)),
+                                    context.ShiftLeft(context.BitwiseAnd(val, Const(0x33333333u)), Const(2)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xf0f0f0f0u)), Const(4)),
+                                    context.ShiftLeft(context.BitwiseAnd(val, Const(0x0f0f0f0fu)), Const(4)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xff00ff00u)), Const(8)),
+                                    context.ShiftLeft(context.BitwiseAnd(val, Const(0x00ff00ffu)), Const(8)));
+
+            return context.BitwiseOr(context.ShiftRightUI(val, Const(16)), context.ShiftLeft(val, Const(16)));
+        }
+
+        public static Operand EmitReverseBytes16_64Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I64);
+
+            return context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xff00ff00ff00ff00ul)), Const(8)),
+                                     context.ShiftLeft(context.BitwiseAnd(op, Const(0x00ff00ff00ff00fful)), Const(8)));
+        }
+
+        public static Operand EmitReverseBytes16_32Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I32);
+
+            Operand val = EmitReverseBytes16_64Op(context, context.ZeroExtend32(OperandType.I64, op));
+
+            return context.ConvertI64ToI32(val);
+        }
+
+        private static void EmitAluWritePc(ArmEmitterContext context, Operand value)
+        {
+            Debug.Assert(value.Type == OperandType.I32);
+
+            context.StoreToContext();
+
+            if (IsThumb(context.CurrOp))
+            {
+                // Make this count as a call, the translator will ignore the low bit for the address.
+                context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(value, Const(1))));
+            }
+            else
+            {
+                EmitBxWritePc(context, value);
+            }
+        }
+
+        public static void EmitGenericAluStoreA32(ArmEmitterContext context, int rd, bool setFlags, Operand value)
+        {
+            Debug.Assert(value.Type == OperandType.I32);
+
+            if (rd == RegisterAlias.Aarch32Pc && setFlags)
+            {
+                if (setFlags)
+                {
+                    // TODO: Load SPSR etc.
+                    Operand isThumb = GetFlag(PState.TFlag);
+
+                    Operand lblThumb = Label();
+
+                    context.BranchIfTrue(lblThumb, isThumb);
+
+                    // Make this count as a call, the translator will ignore the low bit for the address.
+                    context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(context.BitwiseAnd(value, Const(~3)), Const(1))));
+
+                    context.MarkLabel(lblThumb);
+
+                    context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(value, Const(1))));
+                }
+                else
+                {
+                    EmitAluWritePc(context, value);
+                }
+            }
+            else
+            {
+                SetIntA32(context, rd, value);
+            }
+        }
 
         public static Operand GetAluN(ArmEmitterContext context)
         {
@@ -116,9 +200,14 @@ namespace ARMeilleure.Instructions
                     return Const(op.Immediate);
                 }
 
+                case OpCode32AluImm16 op: return Const(op.Immediate);
+
                 case OpCode32AluRsImm op: return GetMShiftedByImmediate(context, op, setCarry);
+                case OpCode32AluRsReg op: return GetMShiftedByReg(context, op, setCarry);
 
                 case OpCodeT16AluImm8 op: return Const(op.Immediate);
+
+                case IOpCode32AluReg op: return GetIntA32(context, op.Rm);
 
                 // ARM64.
                 case IOpCodeAluImm op:
@@ -167,11 +256,11 @@ namespace ARMeilleure.Instructions
         }
 
         // ARM32 helpers.
-        private static Operand GetMShiftedByImmediate(ArmEmitterContext context, OpCode32AluRsImm op, bool setCarry)
+        public static Operand GetMShiftedByImmediate(ArmEmitterContext context, OpCode32AluRsImm op, bool setCarry)
         {
             Operand m = GetIntA32(context, op.Rm);
 
-            int shift = op.Imm;
+            int shift = op.Immediate;
 
             if (shift == 0)
             {
@@ -193,7 +282,7 @@ namespace ARMeilleure.Instructions
                     case ShiftType.Lsr: m = GetLsrC(context, m, setCarry, shift); break;
                     case ShiftType.Asr: m = GetAsrC(context, m, setCarry, shift); break;
                     case ShiftType.Ror:
-                        if (op.Imm != 0)
+                        if (op.Immediate != 0)
                         {
                             m = GetRorC(context, m, setCarry, shift);
                         }
@@ -208,8 +297,74 @@ namespace ARMeilleure.Instructions
             return m;
         }
 
-        private static Operand GetLslC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        public static Operand GetMShiftedByReg(ArmEmitterContext context, OpCode32AluRsReg op, bool setCarry)
         {
+            Operand m = GetIntA32(context, op.Rm);
+            Operand s = context.ZeroExtend8(OperandType.I32, GetIntA32(context, op.Rs));
+            Operand shiftIsZero = context.ICompareEqual(s, Const(0));
+
+            Operand zeroResult = m;
+            Operand shiftResult = m;
+
+            setCarry &= op.SetFlags;
+
+            switch (op.ShiftType)
+            {
+                case ShiftType.Lsl: shiftResult = EmitLslC(context, m, setCarry, s, shiftIsZero); break;
+                case ShiftType.Lsr: shiftResult = EmitLsrC(context, m, setCarry, s, shiftIsZero); break;
+                case ShiftType.Asr: shiftResult = EmitAsrC(context, m, setCarry, s, shiftIsZero); break;
+                case ShiftType.Ror: shiftResult = EmitRorC(context, m, setCarry, s, shiftIsZero); break;
+            }
+
+            return context.ConditionalSelect(shiftIsZero, zeroResult, shiftResult);
+        }
+
+        public static void EmitIfHelper(ArmEmitterContext context, Operand boolValue, Action action, bool expected = true)
+        {
+            Debug.Assert(boolValue.Type == OperandType.I32);
+
+            Operand endLabel = Label();
+
+            if (expected)
+            {
+                context.BranchIfFalse(endLabel, boolValue);
+            } 
+            else
+            {
+                context.BranchIfTrue(endLabel, boolValue);
+            }
+
+            action();
+
+            context.MarkLabel(endLabel);
+        }
+
+        public static Operand EmitLslC(ArmEmitterContext context, Operand m, bool setCarry, Operand shift, Operand shiftIsZero)
+        {
+            Debug.Assert(m.Type == OperandType.I32 && shift.Type == OperandType.I32 && shiftIsZero.Type == OperandType.I32);
+
+            Operand shiftLarge = context.ICompareGreaterOrEqual(shift, Const(32));
+            Operand result = context.ShiftLeft(m, shift);
+            if (setCarry)
+            {
+                EmitIfHelper(context, shiftIsZero, () =>
+                {
+                    Operand cOut = context.ShiftRightUI(m, context.Subtract(Const(32), shift));
+
+                    cOut = context.BitwiseAnd(cOut, Const(1));
+                    cOut = context.ConditionalSelect(context.ICompareGreater(shift, Const(32)), Const(0), cOut);
+
+                    SetFlag(context, PState.CFlag, cOut);
+                }, false);
+            }
+
+            return context.ConditionalSelect(shiftLarge, Const(0), result);
+        }
+
+        public static Operand GetLslC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        {
+            Debug.Assert(m.Type == OperandType.I32);
+
             if ((uint)shift > 32)
             {
                 return GetShiftByMoreThan32(context, setCarry);
@@ -238,8 +393,32 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        private static Operand GetLsrC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        public static Operand EmitLsrC(ArmEmitterContext context, Operand m, bool setCarry, Operand shift, Operand shiftIsZero)
         {
+            Debug.Assert(m.Type == OperandType.I32 && shift.Type == OperandType.I32 && shiftIsZero.Type == OperandType.I32);
+
+            Operand shiftLarge = context.ICompareGreaterOrEqual(shift, Const(32));
+            Operand result = context.ShiftRightUI(m, shift);
+            if (setCarry)
+            {
+                EmitIfHelper(context, shiftIsZero, () =>
+                {
+                    Operand cOut = context.ShiftRightUI(m, context.Subtract(shift, Const(1)));
+
+                    cOut = context.BitwiseAnd(cOut, Const(1));
+                    cOut = context.ConditionalSelect(context.ICompareGreater(shift, Const(32)), Const(0), cOut);
+
+                    SetFlag(context, PState.CFlag, cOut);
+                }, false);
+            }
+            
+            return context.ConditionalSelect(shiftLarge, Const(0), result);
+        }
+
+        public static Operand GetLsrC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        {
+            Debug.Assert(m.Type == OperandType.I32);
+
             if ((uint)shift > 32)
             {
                 return GetShiftByMoreThan32(context, setCarry);
@@ -274,8 +453,45 @@ namespace ARMeilleure.Instructions
             return Const(0);
         }
 
-        private static Operand GetAsrC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        public static Operand EmitAsrC(ArmEmitterContext context, Operand m, bool setCarry, Operand shift, Operand shiftIsZero)
         {
+            Debug.Assert(m.Type == OperandType.I32 && shift.Type == OperandType.I32 && shiftIsZero.Type == OperandType.I32);
+
+            Operand l32Result;
+            Operand ge32Result;
+
+            Operand less32 = context.ICompareLess(shift, Const(32));
+
+            ge32Result = context.ShiftRightSI(m, Const(31));
+
+            if (setCarry)
+            {
+                EmitIfHelper(context, context.BitwiseOr(less32, shiftIsZero), () =>
+                {
+                    SetCarryMLsb(context, ge32Result);
+                }, false);
+            }
+
+            l32Result = context.ShiftRightSI(m, shift);
+            if (setCarry)
+            {
+                EmitIfHelper(context, context.BitwiseAnd(less32, context.BitwiseNot(shiftIsZero)), () =>
+                {
+                    Operand cOut = context.ShiftRightUI(m, context.Subtract(shift, Const(1)));
+
+                    cOut = context.BitwiseAnd(cOut, Const(1));
+
+                    SetFlag(context, PState.CFlag, cOut);
+                });
+            }
+
+            return context.ConditionalSelect(less32, l32Result, ge32Result);
+        }
+
+        public static Operand GetAsrC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        {
+            Debug.Assert(m.Type == OperandType.I32);
+
             if ((uint)shift >= 32)
             {
                 m = context.ShiftRightSI(m, Const(31));
@@ -298,8 +514,28 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        private static Operand GetRorC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        public static Operand EmitRorC(ArmEmitterContext context, Operand m, bool setCarry, Operand shift, Operand shiftIsZero)
         {
+            Debug.Assert(m.Type == OperandType.I32 && shift.Type == OperandType.I32 && shiftIsZero.Type == OperandType.I32);
+
+            shift = context.BitwiseAnd(shift, Const(0x1f));
+            m = context.RotateRight(m, shift);
+
+            if (setCarry)
+            {
+                EmitIfHelper(context, shiftIsZero, () =>
+                {
+                    SetCarryMMsb(context, m);
+                }, false);
+            }
+
+            return m;
+        }
+
+        public static Operand GetRorC(ArmEmitterContext context, Operand m, bool setCarry, int shift)
+        {
+            Debug.Assert(m.Type == OperandType.I32);
+
             shift &= 0x1f;
 
             m = context.RotateRight(m, Const(shift));
@@ -312,8 +548,10 @@ namespace ARMeilleure.Instructions
             return m;
         }
 
-        private static Operand GetRrxC(ArmEmitterContext context, Operand m, bool setCarry)
+        public static Operand GetRrxC(ArmEmitterContext context, Operand m, bool setCarry)
         {
+            Debug.Assert(m.Type == OperandType.I32);
+
             // Rotate right by 1 with carry.
             Operand cIn = context.Copy(GetFlag(PState.CFlag));
 
@@ -331,16 +569,22 @@ namespace ARMeilleure.Instructions
 
         private static void SetCarryMLsb(ArmEmitterContext context, Operand m)
         {
+            Debug.Assert(m.Type == OperandType.I32);
+
             SetFlag(context, PState.CFlag, context.BitwiseAnd(m, Const(1)));
         }
 
         private static void SetCarryMMsb(ArmEmitterContext context, Operand m)
         {
+            Debug.Assert(m.Type == OperandType.I32);
+
             SetFlag(context, PState.CFlag, context.ShiftRightUI(m, Const(31)));
         }
 
         private static void SetCarryMShrOut(ArmEmitterContext context, Operand m, int shift)
         {
+            Debug.Assert(m.Type == OperandType.I32);
+
             Operand cOut = context.ShiftRightUI(m, Const(shift - 1));
 
             cOut = context.BitwiseAnd(cOut, Const(1));

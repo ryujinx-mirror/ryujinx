@@ -4,7 +4,7 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32Mem : OpCode32, IOpCode32Mem
     {
-        public int Rt { get; private set; }
+        public int Rt { get; protected set; }
         public int Rn { get; private set; }
 
         public int Immediate { get; protected set; }
