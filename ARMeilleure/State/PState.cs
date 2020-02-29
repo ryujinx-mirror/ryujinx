@@ -7,7 +7,7 @@ namespace ARMeilleure.State
     {
         TFlag = 5,
         EFlag = 9,
-
+        QFlag = 27,
         VFlag = 28,
         CFlag = 29,
         ZFlag = 30,

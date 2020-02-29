@@ -1,5 +1,6 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 
@@ -53,27 +54,6 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, res);
         }
 
-        public static void Smull(ArmEmitterContext context)
-        {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
-
-            Operand n = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rn));
-            Operand m = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rm));
-
-            Operand res = context.Multiply(n, m);
-
-            Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
-            Operand lo = context.ConvertI64ToI32(res);
-
-            if (op.SetFlags)
-            {
-                EmitNZFlagsCheck(context, res);
-            }
-
-            EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
-            EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
-        }
-
         public static void Smmla(ArmEmitterContext context)
         {
             EmitSmmul(context, MullFlags.SignedAdd);
@@ -101,7 +81,7 @@ namespace ARMeilleure.Instructions
             if (flags.HasFlag(MullFlags.Add) && op.Ra != 0xf)
             {
                 res = context.Add(context.ShiftLeft(context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Ra)), Const(32)), res);
-            } 
+            }
             else if (flags.HasFlag(MullFlags.Subtract))
             {
                 res = context.Subtract(context.ShiftLeft(context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Ra)), Const(32)), res);
@@ -117,37 +97,40 @@ namespace ARMeilleure.Instructions
             EmitGenericAluStoreA32(context, op.Rd, false, hi);
         }
 
-        public static void Smlab(ArmEmitterContext context)
+        public static void Smla__(ArmEmitterContext context)
         {
             OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
+            Operand a = GetIntA32(context, op.Ra);
 
             if (op.NHigh)
             {
-                n = context.SignExtend16(OperandType.I32, context.ShiftRightUI(n, Const(16)));
+                n = context.SignExtend16(OperandType.I64, context.ShiftRightUI(n, Const(16)));
             }
             else
             {
-                n = context.SignExtend16(OperandType.I32, n);
+                n = context.SignExtend16(OperandType.I64, n);
             }
 
             if (op.MHigh)
             {
-                m = context.SignExtend16(OperandType.I32, context.ShiftRightUI(m, Const(16)));
+                m = context.SignExtend16(OperandType.I64, context.ShiftRightUI(m, Const(16)));
             }
             else
             {
-                m = context.SignExtend16(OperandType.I32, m);
+                m = context.SignExtend16(OperandType.I64, m);
             }
 
             Operand res = context.Multiply(n, m);
 
-            Operand a = GetIntA32(context, op.Ra);
-            res = context.Add(res, a);
+            Operand toAdd = context.SignExtend32(OperandType.I64, a);
+            res = context.Add(res, toAdd);
+            Operand q = context.ICompareNotEqual(res, context.SignExtend32(OperandType.I64, res));
+            res = context.ConvertI64ToI32(res);
 
-            // TODO: set Q flag when last addition overflows (saturation)?
+            UpdateQFlag(context, q);
 
             EmitGenericAluStoreA32(context, op.Rd, false, res);
         }
@@ -157,7 +140,7 @@ namespace ARMeilleure.Instructions
             EmitMlal(context, true);
         }
 
-        public static void Smlalh(ArmEmitterContext context)
+        public static void Smlal__(ArmEmitterContext context)
         {
             OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
 
@@ -167,7 +150,7 @@ namespace ARMeilleure.Instructions
             if (op.NHigh)
             {
                 n = context.SignExtend16(OperandType.I64, context.ShiftRightUI(n, Const(16)));
-            } 
+            }
             else
             {
                 n = context.SignExtend16(OperandType.I64, n);
@@ -176,7 +159,7 @@ namespace ARMeilleure.Instructions
             if (op.MHigh)
             {
                 m = context.SignExtend16(OperandType.I64, context.ShiftRightUI(m, Const(16)));
-            } 
+            }
             else
             {
                 m = context.SignExtend16(OperandType.I64, m);
@@ -195,7 +178,37 @@ namespace ARMeilleure.Instructions
             EmitGenericAluStoreA32(context, op.RdLo, false, lo);
         }
 
-        public static void Smulh(ArmEmitterContext context)
+        public static void Smlaw_(ArmEmitterContext context)
+        {
+            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+
+            Operand n = GetIntA32(context, op.Rn);
+            Operand m = GetIntA32(context, op.Rm);
+            Operand a = GetIntA32(context, op.Ra);
+
+            if (op.MHigh)
+            {
+                m = context.SignExtend16(OperandType.I64, context.ShiftRightUI(m, Const(16)));
+            }
+            else
+            {
+                m = context.SignExtend16(OperandType.I64, m);
+            }
+
+            Operand res = context.Multiply(context.SignExtend32(OperandType.I64, n), m);
+
+            Operand toAdd = context.ShiftLeft(context.SignExtend32(OperandType.I64, a), Const(16));
+            res = context.Add(res, toAdd);
+            res = context.ShiftRightSI(res, Const(16));
+            Operand q = context.ICompareNotEqual(res, context.SignExtend32(OperandType.I64, res));
+            res = context.ConvertI64ToI32(res);
+
+            UpdateQFlag(context, q);
+
+            EmitGenericAluStoreA32(context, op.Rd, false, res);
+        }
+
+        public static void Smul__(ArmEmitterContext context)
         {
             OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
 
@@ -221,6 +234,51 @@ namespace ARMeilleure.Instructions
             }
 
             Operand res = context.Multiply(n, m);
+
+            EmitGenericAluStoreA32(context, op.Rd, false, res);
+        }
+
+        public static void Smull(ArmEmitterContext context)
+        {
+            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+
+            Operand n = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rn));
+            Operand m = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rm));
+
+            Operand res = context.Multiply(n, m);
+
+            Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
+            Operand lo = context.ConvertI64ToI32(res);
+
+            if (op.SetFlags)
+            {
+                EmitNZFlagsCheck(context, res);
+            }
+
+            EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
+            EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
+        }
+
+        public static void Smulw_(ArmEmitterContext context)
+        {
+            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+
+            Operand n = GetIntA32(context, op.Rn);
+            Operand m = GetIntA32(context, op.Rm);
+
+            if (op.MHigh)
+            {
+                m = context.SignExtend16(OperandType.I64, context.ShiftRightUI(m, Const(16)));
+            }
+            else
+            {
+                m = context.SignExtend16(OperandType.I64, m);
+            }
+
+            Operand res = context.Multiply(context.SignExtend32(OperandType.I64, n), m);
+
+            res = context.ShiftRightUI(res, Const(16));
+            res = context.ConvertI64ToI32(res);
 
             EmitGenericAluStoreA32(context, op.Rd, false, res);
         }
@@ -285,6 +343,17 @@ namespace ARMeilleure.Instructions
 
             EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
             EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
+        }
+
+        private static void UpdateQFlag(ArmEmitterContext context, Operand q)
+        {
+            Operand lblSkipSetQ = Label();
+
+            context.BranchIfFalse(lblSkipSetQ, q);
+
+            SetFlag(context, PState.QFlag, Const(1));
+
+            context.MarkLabel(lblSkipSetQ);
         }
     }
 }

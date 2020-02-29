@@ -45,10 +45,10 @@ namespace Ryujinx.Tests.Unicorn
             set => SetRegister(Arm32Register.PC, value);
         }
 
-        public uint APSR
+        public uint CPSR
         {
-            get => (uint)GetRegister(Arm32Register.APSR);
-            set => SetRegister(Arm32Register.APSR, (uint)value);
+            get => (uint)GetRegister(Arm32Register.CPSR);
+            set => SetRegister(Arm32Register.CPSR, (uint)value);
         }
 
         public int Fpscr
@@ -57,28 +57,34 @@ namespace Ryujinx.Tests.Unicorn
             set => SetRegister(Arm32Register.FPSCR, (uint)value);
         }
 
+        public bool QFlag
+        {
+            get => (CPSR & 0x8000000u) != 0;
+            set => CPSR = (CPSR & ~0x8000000u) | (value ? 0x8000000u : 0u);
+        }
+
         public bool OverflowFlag
         {
-            get => (APSR & 0x10000000u) != 0;
-            set => APSR = (APSR & ~0x10000000u) | (value ? 0x10000000u : 0u);
+            get => (CPSR & 0x10000000u) != 0;
+            set => CPSR = (CPSR & ~0x10000000u) | (value ? 0x10000000u : 0u);
         }
 
         public bool CarryFlag
         {
-            get => (APSR & 0x20000000u) != 0;
-            set => APSR = (APSR & ~0x20000000u) | (value ? 0x20000000u : 0u);
+            get => (CPSR & 0x20000000u) != 0;
+            set => CPSR = (CPSR & ~0x20000000u) | (value ? 0x20000000u : 0u);
         }
 
         public bool ZeroFlag
         {
-            get => (APSR & 0x40000000u) != 0;
-            set => APSR = (APSR & ~0x40000000u) | (value ? 0x40000000u : 0u);
+            get => (CPSR & 0x40000000u) != 0;
+            set => CPSR = (CPSR & ~0x40000000u) | (value ? 0x40000000u : 0u);
         }
 
         public bool NegativeFlag
         {
-            get => (APSR & 0x80000000u) != 0;
-            set => APSR = (APSR & ~0x80000000u) | (value ? 0x80000000u : 0u);
+            get => (CPSR & 0x80000000u) != 0;
+            set => CPSR = (CPSR & ~0x80000000u) | (value ? 0x80000000u : 0u);
         }
 
         public UnicornAArch32()

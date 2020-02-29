@@ -297,6 +297,21 @@ namespace ARMeilleure.Instructions
             return m;
         }
 
+        public static int DecodeImmShift(ShiftType shiftType, int shift)
+        {
+            if (shift == 0)
+            {
+                switch (shiftType)
+                {
+                    case ShiftType.Lsr: shift = 32; break;
+                    case ShiftType.Asr: shift = 32; break;
+                    case ShiftType.Ror: shift = 1;  break;
+                }
+            }
+
+            return shift;
+        }
+
         public static Operand GetMShiftedByReg(ArmEmitterContext context, OpCode32AluRsReg op, bool setCarry)
         {
             Operand m = GetIntA32(context, op.Rm);
@@ -328,7 +343,7 @@ namespace ARMeilleure.Instructions
             if (expected)
             {
                 context.BranchIfFalse(endLabel, boolValue);
-            } 
+            }
             else
             {
                 context.BranchIfTrue(endLabel, boolValue);
@@ -411,7 +426,7 @@ namespace ARMeilleure.Instructions
                     SetFlag(context, PState.CFlag, cOut);
                 }, false);
             }
-            
+
             return context.ConditionalSelect(shiftLarge, Const(0), result);
         }
 

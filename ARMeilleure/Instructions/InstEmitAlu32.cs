@@ -389,6 +389,20 @@ namespace ARMeilleure.Instructions
             EmitDiv(context, false);
         }
 
+        public static void Ssat(ArmEmitterContext context)
+        {
+            OpCode32Sat op = (OpCode32Sat)context.CurrOp;
+
+            EmitSat(context, -(1 << op.SatImm), (1 << op.SatImm) - 1);
+        }
+
+        public static void Ssat16(ArmEmitterContext context)
+        {
+            OpCode32Sat16 op = (OpCode32Sat16)context.CurrOp;
+
+            EmitSat16(context, -(1 << op.SatImm), (1 << op.SatImm) - 1);
+        }
+
         public static void Sub(ArmEmitterContext context)
         {
             IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
@@ -458,6 +472,20 @@ namespace ARMeilleure.Instructions
         public static void Udiv(ArmEmitterContext context)
         {
             EmitDiv(context, true);
+        }
+
+        public static void Usat(ArmEmitterContext context)
+        {
+            OpCode32Sat op = (OpCode32Sat)context.CurrOp;
+
+            EmitSat(context, 0, op.SatImm == 32 ? (int)(~0) : (1 << op.SatImm) - 1);
+        }
+
+        public static void Usat16(ArmEmitterContext context)
+        {
+            OpCode32Sat16 op = (OpCode32Sat16)context.CurrOp;
+
+            EmitSat16(context, 0, (1 << op.SatImm) - 1);
         }
 
         public static void Uxtb(ArmEmitterContext context)
@@ -553,7 +581,7 @@ namespace ARMeilleure.Instructions
                     lowAdd = context.ZeroExtend16(OperandType.I32, n);
                     highAdd = context.ZeroExtend16(OperandType.I32, context.ShiftRightUI(n, Const(16)));
                 }
-                
+
                 low16 = context.Add(low16, lowAdd);
                 high16 = context.Add(high16, highAdd);
             }
@@ -615,9 +643,116 @@ namespace ARMeilleure.Instructions
             context.MarkLabel(lblEnd);
         }
 
+        private static void EmitSat(ArmEmitterContext context, int intMin, int intMax)
+        {
+            OpCode32Sat op = (OpCode32Sat)context.CurrOp;
+
+            Operand n = GetIntA32(context, op.Rn);
+
+            int shift = DecodeImmShift(op.ShiftType, op.Imm5);
+
+            switch (op.ShiftType)
+            {
+                case ShiftType.Lsl:
+                    if (shift == 32)
+                    {
+                        n = Const(0);
+                    }
+                    else
+                    {
+                        n = context.ShiftLeft(n, Const(shift));
+                    }
+                    break;
+                case ShiftType.Asr:
+                    if (shift == 32)
+                    {
+                        n = context.ShiftRightSI(n, Const(31));
+                    }
+                    else
+                    {
+                        n = context.ShiftRightSI(n, Const(shift));
+                    }
+                    break;
+            }
+
+            Operand lblCheckLtIntMin = Label();
+            Operand lblNoSat = Label();
+            Operand lblEnd = Label();
+
+            context.BranchIfFalse(lblCheckLtIntMin, context.ICompareGreater(n, Const(intMax)));
+
+            SetFlag(context, PState.QFlag, Const(1));
+            SetIntA32(context, op.Rd, Const(intMax));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblCheckLtIntMin);
+            context.BranchIfFalse(lblNoSat, context.ICompareLess(n, Const(intMin)));
+
+            SetFlag(context, PState.QFlag, Const(1));
+            SetIntA32(context, op.Rd, Const(intMin));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblNoSat);
+
+            SetIntA32(context, op.Rd, n);
+
+            context.MarkLabel(lblEnd);
+        }
+
+        private static void EmitSat16(ArmEmitterContext context, int intMin, int intMax)
+        {
+            OpCode32Sat16 op = (OpCode32Sat16)context.CurrOp;
+
+            void SetD(int part, Operand value)
+            {
+                if (part == 0)
+                {
+                    SetIntA32(context, op.Rd, context.ZeroExtend16(OperandType.I32, value));
+                }
+                else
+                {
+                    SetIntA32(context, op.Rd, context.BitwiseOr(GetIntA32(context, op.Rd), context.ShiftLeft(value, Const(16))));
+                }
+            }
+
+            Operand n = GetIntA32(context, op.Rn);
+
+            Operand nLow = context.SignExtend16(OperandType.I32, n);
+            Operand nHigh = context.ShiftRightSI(n, Const(16));
+
+            for (int part = 0; part < 2; part++)
+            {
+                Operand nPart = part == 0 ? nLow : nHigh;
+
+                Operand lblCheckLtIntMin = Label();
+                Operand lblNoSat = Label();
+                Operand lblEnd = Label();
+
+                context.BranchIfFalse(lblCheckLtIntMin, context.ICompareGreater(nPart, Const(intMax)));
+
+                SetFlag(context, PState.QFlag, Const(1));
+                SetD(part, Const(intMax));
+                context.Branch(lblEnd);
+
+                context.MarkLabel(lblCheckLtIntMin);
+                context.BranchIfFalse(lblNoSat, context.ICompareLess(nPart, Const(intMin)));
+
+                SetFlag(context, PState.QFlag, Const(1));
+                SetD(part, Const(intMin));
+                context.Branch(lblEnd);
+
+                context.MarkLabel(lblNoSat);
+
+                SetD(part, nPart);
+
+                context.MarkLabel(lblEnd);
+            }
+        }
+
         private static void EmitAluStore(ArmEmitterContext context, Operand value)
         {
             IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
+
             EmitGenericAluStoreA32(context, op.Rd, op.SetFlags, value);
         }
     }

@@ -348,6 +348,7 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.That((int)_context.Fpcr | ((int)_context.Fpsr & (int)fpsrMask), Is.EqualTo(_unicornEmu.Fpscr));
 
+            Assert.That(_context.GetPstateFlag(PState.QFlag), Is.EqualTo(_unicornEmu.QFlag));
             Assert.That(_context.GetPstateFlag(PState.VFlag), Is.EqualTo(_unicornEmu.OverflowFlag));
             Assert.That(_context.GetPstateFlag(PState.CFlag), Is.EqualTo(_unicornEmu.CarryFlag));
             Assert.That(_context.GetPstateFlag(PState.ZFlag), Is.EqualTo(_unicornEmu.ZeroFlag));
@@ -358,7 +359,7 @@ namespace Ryujinx.Tests.Cpu
                 byte[] meilleureMem = _memory.ReadBytes((long)(0x2000), _size);
                 byte[] unicornMem = _unicornEmu.MemoryRead((ulong)(0x2000), (ulong)_size);
 
-                for (int i = 0; i < _size; i++) 
+                for (int i = 0; i < _size; i++)
                 {
                     Assert.AreEqual(meilleureMem[i], unicornMem[i]);
                 }
