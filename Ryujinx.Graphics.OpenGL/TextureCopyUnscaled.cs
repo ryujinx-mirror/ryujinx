@@ -14,18 +14,18 @@ namespace Ryujinx.Graphics.OpenGL
             int srcDepth  = src.DepthOrLayers;
             int srcLevels = src.Levels;
 
-            srcWidth  = Math.Max(1, srcWidth  >> dstLevel);
-            srcHeight = Math.Max(1, srcHeight >> dstLevel);
-
-            if (src.Target == Target.Texture3D)
-            {
-                srcDepth = Math.Max(1, srcDepth >> dstLevel);
-            }
-
             int dstWidth  = dst.Width;
             int dstHeight = dst.Height;
             int dstDepth  = dst.DepthOrLayers;
             int dstLevels = dst.Levels;
+
+            dstWidth = Math.Max(1, dstWidth >> dstLevel);
+            dstHeight = Math.Max(1, dstHeight >> dstLevel);
+
+            if (dst.Target == Target.Texture3D)
+            {
+                dstDepth = Math.Max(1, dstDepth >> dstLevel);
+            }
 
             // When copying from a compressed to a non-compressed format,
             // the non-compressed texture will have the size of the texture
