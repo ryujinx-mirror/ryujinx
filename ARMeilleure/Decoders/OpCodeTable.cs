@@ -244,6 +244,10 @@ namespace ARMeilleure.Decoders
             SetA64("0>1011101<1xxxxx110101xxxxxxxxxx", InstName.Fabd_V,          InstEmit.Fabd_V,          typeof(OpCodeSimdReg));
             SetA64("000111100x100000110000xxxxxxxxxx", InstName.Fabs_S,          InstEmit.Fabs_S,          typeof(OpCodeSimd));
             SetA64("0>0011101<100000111110xxxxxxxxxx", InstName.Fabs_V,          InstEmit.Fabs_V,          typeof(OpCodeSimd));
+            SetA64("011111100x1xxxxx111011xxxxxxxxxx", InstName.Facge_S,         InstEmit.Facge_S,         typeof(OpCodeSimdReg));
+            SetA64("0>1011100<1xxxxx111011xxxxxxxxxx", InstName.Facge_V,         InstEmit.Facge_V,         typeof(OpCodeSimdReg));
+            SetA64("011111101x1xxxxx111011xxxxxxxxxx", InstName.Facgt_S,         InstEmit.Facgt_S,         typeof(OpCodeSimdReg));
+            SetA64("0>1011101<1xxxxx111011xxxxxxxxxx", InstName.Facgt_V,         InstEmit.Facgt_V,         typeof(OpCodeSimdReg));
             SetA64("000111100x1xxxxx001010xxxxxxxxxx", InstName.Fadd_S,          InstEmit.Fadd_S,          typeof(OpCodeSimdReg));
             SetA64("0>0011100<1xxxxx110101xxxxxxxxxx", InstName.Fadd_V,          InstEmit.Fadd_V,          typeof(OpCodeSimdReg));
             SetA64("011111100x110000110110xxxxxxxxxx", InstName.Faddp_S,         InstEmit.Faddp_S,         typeof(OpCodeSimd));
@@ -751,7 +755,7 @@ namespace ARMeilleure.Decoders
             SetA32("111100110x11xxxxxxxx0001xxx1xxxx", InstName.Vbif,    InstEmit32.Vbif,     typeof(OpCode32SimdBinary));
             SetA32("111100110x10xxxxxxxx0001xxx1xxxx", InstName.Vbit,    InstEmit32.Vbit,     typeof(OpCode32SimdBinary));
             SetA32("111100110x01xxxxxxxx0001xxx1xxxx", InstName.Vbsl,    InstEmit32.Vbsl,     typeof(OpCode32SimdBinary));
-            SetA32("111100110x<<xxxxxxxx1000xxx1xxxx", InstName.Vceq,    InstEmit32.Vceq_I,   typeof(OpCode32SimdReg)); 
+            SetA32("111100110x<<xxxxxxxx1000xxx1xxxx", InstName.Vceq,    InstEmit32.Vceq_I,   typeof(OpCode32SimdReg));
             SetA32("111100100x00xxxxxxxx1110xxx0xxxx", InstName.Vceq,    InstEmit32.Vceq_V,   typeof(OpCode32SimdReg));
             SetA32("111100111x11xx01xxxx0x010xx0xxxx", InstName.Vceq,    InstEmit32.Vceq_Z,   typeof(OpCode32SimdCmpZ));
             SetA32("1111001x0x<<xxxxxxxx0011xxx1xxxx", InstName.Vcge,    InstEmit32.Vcge_I,   typeof(OpCode32SimdReg));
