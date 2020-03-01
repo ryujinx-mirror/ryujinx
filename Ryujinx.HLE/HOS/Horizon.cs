@@ -14,6 +14,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sm;
@@ -232,6 +233,8 @@ namespace Ryujinx.HLE.HOS
             // FIXME: TimeZone shoud be init here but it's actually done in ContentManager
 
             TimeServiceManager.Instance.SetupEphemeralNetworkSystemClock();
+
+            DatabaseImpl.Instance.InitializeDatabase(device);
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)

@@ -5,6 +5,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 {
     public class SystemStateMgr
     {
+        public static readonly UserId DefaultUserId = new UserId("00000000000000010000000000000000");
+
         internal static string[] LanguageCodes = new string[]
         {
             "ja",
@@ -53,10 +55,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
             Account = new AccountUtils();
 
-            UserId defaultUid = new UserId("00000000000000010000000000000000");
-
-            Account.AddUser(defaultUid, "Player");
-            Account.OpenUser(defaultUid);
+            Account.AddUser(DefaultUserId, "Player");
+            Account.OpenUser(DefaultUserId);
         }
 
         public void SetLanguage(SystemLanguage language)
