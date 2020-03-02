@@ -8,6 +8,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         private UserId                    _userId;
         private ApplicationLaunchProperty _applicationLaunchProperty;
 
+        private const long NetworkServiceAccountId = 0xcafe;
+
         public IManagerForApplication(UserId userId, ApplicationLaunchProperty applicationLaunchProperty)
         {
             _userId                    = userId;
@@ -27,11 +29,22 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetAccountId() -> nn::account::NetworkServiceAccountId
         public ResultCode GetAccountId(ServiceCtx context)
         {
-            long networkServiceAccountId = 0xcafe;
+            Logger.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
 
-            Logger.PrintStub(LogClass.ServiceAcc, new { networkServiceAccountId });
+            context.ResponseData.Write(NetworkServiceAccountId);
 
-            context.ResponseData.Write(networkServiceAccountId);
+            return ResultCode.Success;
+        }
+
+        [Command(130)]
+        // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, buffer<nn::account::nas::NasUserBaseForApplication, 0x1a>, buffer<bytes, 6>)
+        public ResultCode GetNintendoAccountUserResourceCacheForApplication(ServiceCtx context)
+        {
+            Logger.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
+
+            context.ResponseData.Write(NetworkServiceAccountId);
+
+            // TODO: determine and fill the two output IPC buffers.
 
             return ResultCode.Success;
         }
