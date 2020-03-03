@@ -46,6 +46,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         CompareLessU32,
         CompareNotEqual,
         ConditionalSelect,
+        ConvertFP32ToFP64,
+        ConvertFP64ToFP32,
         ConvertFPToS32,
         ConvertFPToU32,
         ConvertS32ToFP,
@@ -122,9 +124,10 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         Count,
 
-        FP = 1 << 16,
+        FP32 = 1 << 16,
+        FP64 = 1 << 17,
 
-        MrShift = 17,
+        MrShift = 18,
 
         MrGlobal  = 0 << MrShift,
         MrShared  = 1 << MrShift,

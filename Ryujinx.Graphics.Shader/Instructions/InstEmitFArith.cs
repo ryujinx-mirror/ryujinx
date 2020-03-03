@@ -11,53 +11,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
-        public static void Fadd(EmitterContext context)
-        {
-            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
+        public static void Dadd(EmitterContext context) => EmitFPAdd(context, Instruction.FP64);
+        public static void Dfma(EmitterContext context) => EmitFPFma(context, Instruction.FP64);
+        public static void Dmul(EmitterContext context) => EmitFPMultiply(context, Instruction.FP64);
 
-            bool absoluteA = op.AbsoluteA, absoluteB, negateA, negateB;
-
-            if (op is OpCodeFArithImm32)
-            {
-                negateB   = op.RawOpCode.Extract(53);
-                negateA   = op.RawOpCode.Extract(56);
-                absoluteB = op.RawOpCode.Extract(57);
-            }
-            else
-            {
-                negateB   = op.RawOpCode.Extract(45);
-                negateA   = op.RawOpCode.Extract(48);
-                absoluteB = op.RawOpCode.Extract(49);
-            }
-
-            Operand srcA = context.FPAbsNeg(GetSrcA(context), absoluteA, negateA);
-            Operand srcB = context.FPAbsNeg(GetSrcB(context), absoluteB, negateB);
-
-            Operand dest = GetDest(context);
-
-            context.Copy(dest, context.FPSaturate(context.FPAdd(srcA, srcB), op.Saturate));
-
-            SetFPZnFlags(context, dest, op.SetCondCode);
-        }
-
-        public static void Ffma(EmitterContext context)
-        {
-            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
-
-            bool negateB = op.RawOpCode.Extract(48);
-            bool negateC = op.RawOpCode.Extract(49);
-
-            Operand srcA = GetSrcA(context);
-
-            Operand srcB = context.FPNegate(GetSrcB(context), negateB);
-            Operand srcC = context.FPNegate(GetSrcC(context), negateC);
-
-            Operand dest = GetDest(context);
-
-            context.Copy(dest, context.FPSaturate(context.FPFusedMultiplyAdd(srcA, srcB, srcC), op.Saturate));
-
-            SetFPZnFlags(context, dest, op.SetCondCode);
-        }
+        public static void Fadd(EmitterContext context) => EmitFPAdd(context, Instruction.FP32);
+        public static void Ffma(EmitterContext context) => EmitFPFma(context, Instruction.FP32);
 
         public static void Ffma32i(EmitterContext context)
         {
@@ -103,40 +62,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             SetFPZnFlags(context, dest, op.SetCondCode);
         }
 
-        public static void Fmul(EmitterContext context)
-        {
-            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
-
-            bool isImm32 = op is OpCodeFArithImm32;
-
-            bool negateB = !isImm32 && op.RawOpCode.Extract(48);
-
-            Operand srcA = GetSrcA(context);
-
-            Operand srcB = context.FPNegate(GetSrcB(context), negateB);
-
-            switch (op.Scale)
-            {
-                case FPMultiplyScale.None: break;
-
-                case FPMultiplyScale.Divide2:   srcA = context.FPDivide  (srcA, ConstF(2)); break;
-                case FPMultiplyScale.Divide4:   srcA = context.FPDivide  (srcA, ConstF(4)); break;
-                case FPMultiplyScale.Divide8:   srcA = context.FPDivide  (srcA, ConstF(8)); break;
-                case FPMultiplyScale.Multiply2: srcA = context.FPMultiply(srcA, ConstF(2)); break;
-                case FPMultiplyScale.Multiply4: srcA = context.FPMultiply(srcA, ConstF(4)); break;
-                case FPMultiplyScale.Multiply8: srcA = context.FPMultiply(srcA, ConstF(8)); break;
-
-                default: break; //TODO: Warning.
-            }
-
-            Operand dest = GetDest(context);
-
-            bool saturate = isImm32 ? op.RawOpCode.Extract(55) : op.Saturate;
-
-            context.Copy(dest, context.FPSaturate(context.FPMultiply(srcA, srcB), saturate));
-
-            SetFPZnFlags(context, dest, op.SetCondCode);
-        }
+        public static void Fmul(EmitterContext context) => EmitFPMultiply(context, Instruction.FP32);
 
         public static void Fset(EmitterContext context)
         {
@@ -406,6 +332,107 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(context), context.FPSaturate(res, op.Saturate));
         }
 
+        private static void EmitFPAdd(EmitterContext context, Instruction fpType)
+        {
+            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
+
+            bool isFP64 = fpType == Instruction.FP64;
+
+            bool absoluteA = op.AbsoluteA, absoluteB, negateA, negateB;
+
+            if (op is OpCodeFArithImm32)
+            {
+                negateB   = op.RawOpCode.Extract(53);
+                negateA   = op.RawOpCode.Extract(56);
+                absoluteB = op.RawOpCode.Extract(57);
+            }
+            else
+            {
+                negateB   = op.RawOpCode.Extract(45);
+                negateA   = op.RawOpCode.Extract(48);
+                absoluteB = op.RawOpCode.Extract(49);
+            }
+
+            Operand srcA = context.FPAbsNeg(GetSrcA(context, isFP64), absoluteA, negateA, fpType);
+            Operand srcB = context.FPAbsNeg(GetSrcB(context, isFP64), absoluteB, negateB, fpType);
+
+            Operand res = context.FPSaturate(context.FPAdd(srcA, srcB, fpType), op.Saturate, fpType);
+
+            SetDest(context, res, isFP64);
+
+            SetFPZnFlags(context, res, op.SetCondCode, fpType);
+        }
+
+        private static void EmitFPFma(EmitterContext context, Instruction fpType)
+        {
+            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
+
+            bool isFP64 = fpType == Instruction.FP64;
+
+            bool negateB = op.RawOpCode.Extract(48);
+            bool negateC = op.RawOpCode.Extract(49);
+
+            Operand srcA = GetSrcA(context, isFP64);
+
+            Operand srcB = context.FPNegate(GetSrcB(context, isFP64), negateB, fpType);
+            Operand srcC = context.FPNegate(GetSrcC(context, isFP64), negateC, fpType);
+
+            Operand res = context.FPSaturate(context.FPFusedMultiplyAdd(srcA, srcB, srcC, fpType), op.Saturate, fpType);
+
+            SetDest(context, res, isFP64);
+
+            SetFPZnFlags(context, res, op.SetCondCode, fpType);
+        }
+
+        private static void EmitFPMultiply(EmitterContext context, Instruction fpType)
+        {
+            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
+
+            bool isFP64 = fpType == Instruction.FP64;
+
+            bool isImm32 = op is OpCodeFArithImm32;
+
+            bool negateB = !isImm32 && op.RawOpCode.Extract(48);
+
+            Operand srcA = GetSrcA(context, isFP64);
+
+            Operand srcB = context.FPNegate(GetSrcB(context, isFP64), negateB, fpType);
+
+            if (op.Scale != FPMultiplyScale.None)
+            {
+                Operand scale = op.Scale switch
+                {
+                    FPMultiplyScale.Divide2 => ConstF(0.5f),
+                    FPMultiplyScale.Divide4 => ConstF(0.25f),
+                    FPMultiplyScale.Divide8 => ConstF(0.125f),
+                    FPMultiplyScale.Multiply2 => ConstF(2f),
+                    FPMultiplyScale.Multiply4 => ConstF(4f),
+                    FPMultiplyScale.Multiply8 => ConstF(8f),
+                    _ => ConstF(1) // Invalid, behave as if it had no scale.
+                };
+
+                if (scale.AsFloat() == 1)
+                {
+                    context.Config.PrintLog($"Invalid FP multiply scale \"{op.Scale}\".");
+                }
+
+                if (isFP64)
+                {
+                    scale = context.FP32ConvertToFP64(scale);
+                }
+
+                srcA = context.FPMultiply(srcA, scale, fpType);
+            }
+
+            bool saturate = isImm32 ? op.RawOpCode.Extract(55) : op.Saturate;
+
+            Operand res = context.FPSaturate(context.FPMultiply(srcA, srcB, fpType), saturate, fpType);
+
+            SetDest(context, res, isFP64);
+
+            SetFPZnFlags(context, res, op.SetCondCode, fpType);
+        }
+
         private static Operand GetFPComparison(
             EmitterContext context,
             Condition      cond,
@@ -447,7 +474,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     default: throw new InvalidOperationException($"Unexpected condition \"{cond}\".");
                 }
 
-                res = context.Add(inst | Instruction.FP, Local(), srcA, srcB);
+                res = context.Add(inst | Instruction.FP32, Local(), srcA, srcB);
 
                 if ((cond & Condition.Nan) != 0)
                 {
@@ -482,6 +509,21 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand[] operands = GetHalfUnpacked(context, GetSrcC(context), op.SwizzleC);
 
             return FPAbsNeg(context, operands, false, op.NegateC);
+        }
+
+        private static void SetDest(EmitterContext context, Operand value, bool isFP64)
+        {
+            if (isFP64)
+            {
+                IOpCodeRd op = (IOpCodeRd)context.CurrOp;
+
+                context.Copy(Register(op.Rd.Index, op.Rd.Type), context.UnpackDouble2x32Low(value));
+                context.Copy(Register(op.Rd.Index | 1, op.Rd.Type), context.UnpackDouble2x32High(value));
+            }
+            else
+            {
+                context.Copy(GetDest(context), value);
+            }
         }
     }
 }

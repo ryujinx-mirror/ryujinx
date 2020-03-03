@@ -104,7 +104,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                     if (isCondSel && type == VariableType.F32)
                     {
-                        inst |= Instruction.FP;
+                        inst |= Instruction.FP32;
                     }
 
                     dest.VarType = type;

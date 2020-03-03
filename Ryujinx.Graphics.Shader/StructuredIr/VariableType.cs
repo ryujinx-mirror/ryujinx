@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         Scalar,
         Int,
         F32,
+        F64,
         S32,
         U32
     }

@@ -136,6 +136,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.Lod:
                         return InstGenMemory.Lod(context, operation);
 
+                    case Instruction.PackDouble2x32:
+                        return InstGenPacking.PackDouble2x32(context, operation);
+
                     case Instruction.PackHalf2x16:
                         return InstGenPacking.PackHalf2x16(context, operation);
 
@@ -153,6 +156,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.TextureSize:
                         return InstGenMemory.TextureSize(context, operation);
+
+                    case Instruction.UnpackDouble2x32:
+                        return InstGenPacking.UnpackDouble2x32(context, operation);
 
                     case Instruction.UnpackHalf2x16:
                         return InstGenPacking.UnpackHalf2x16(context, operation);

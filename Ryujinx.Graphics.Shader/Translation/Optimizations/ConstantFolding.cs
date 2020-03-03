@@ -101,51 +101,51 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     EvaluateBinary(operation, (x, y) => y != 0 ? x / y : 0);
                     break;
 
-                case Instruction.FP | Instruction.Add:
+                case Instruction.FP32 | Instruction.Add:
                     EvaluateFPBinary(operation, (x, y) => x + y);
                     break;
 
-                case Instruction.FP | Instruction.Clamp:
+                case Instruction.FP32 | Instruction.Clamp:
                     EvaluateFPTernary(operation, (x, y, z) => Math.Clamp(x, y, z));
                     break;
 
-                case Instruction.FP | Instruction.CompareEqual:
+                case Instruction.FP32 | Instruction.CompareEqual:
                     EvaluateFPBinary(operation, (x, y) => x == y);
                     break;
 
-                case Instruction.FP | Instruction.CompareGreater:
+                case Instruction.FP32 | Instruction.CompareGreater:
                     EvaluateFPBinary(operation, (x, y) => x > y);
                     break;
 
-                case Instruction.FP | Instruction.CompareGreaterOrEqual:
+                case Instruction.FP32 | Instruction.CompareGreaterOrEqual:
                     EvaluateFPBinary(operation, (x, y) => x >= y);
                     break;
 
-                case Instruction.FP | Instruction.CompareLess:
+                case Instruction.FP32 | Instruction.CompareLess:
                     EvaluateFPBinary(operation, (x, y) => x < y);
                     break;
 
-                case Instruction.FP | Instruction.CompareLessOrEqual:
+                case Instruction.FP32 | Instruction.CompareLessOrEqual:
                     EvaluateFPBinary(operation, (x, y) => x <= y);
                     break;
 
-                case Instruction.FP | Instruction.CompareNotEqual:
+                case Instruction.FP32 | Instruction.CompareNotEqual:
                     EvaluateFPBinary(operation, (x, y) => x != y);
                     break;
 
-                case Instruction.FP | Instruction.Divide:
+                case Instruction.FP32 | Instruction.Divide:
                     EvaluateFPBinary(operation, (x, y) => x / y);
                     break;
 
-                case Instruction.FP | Instruction.Multiply:
+                case Instruction.FP32 | Instruction.Multiply:
                     EvaluateFPBinary(operation, (x, y) => x * y);
                     break;
 
-                case Instruction.FP | Instruction.Negate:
+                case Instruction.FP32 | Instruction.Negate:
                     EvaluateFPUnary(operation, (x) => -x);
                     break;
 
-                case Instruction.FP | Instruction.Subtract:
+                case Instruction.FP32 | Instruction.Subtract:
                     EvaluateFPBinary(operation, (x, y) => x - y);
                     break;
 

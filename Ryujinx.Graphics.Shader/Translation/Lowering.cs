@@ -304,7 +304,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     Operand coordNormalized = Local();
 
-                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, coordNormalized, source, Float(coordSize)));
+                    node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, coordNormalized, source, Float(coordSize)));
 
                     sources[coordsIndex + index] = coordNormalized;
                 }
@@ -375,13 +375,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         Operand intOffset = offsets[index + (hasOffsets ? texOp.Index * coordsCount : 0)];
 
-                        node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
+                        node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
 
                         Operand source = sources[coordsIndex + index];
 
                         Operand coordPlusOffset = Local();
 
-                        node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Add, coordPlusOffset, source, offset));
+                        node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Add, coordPlusOffset, source, offset));
 
                         sources[coordsIndex + index] = coordPlusOffset;
                     }

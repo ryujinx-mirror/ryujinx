@@ -50,6 +50,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.CompareLessU32,           InstType.OpBinary,       "<",               4);
             Add(Instruction.CompareNotEqual,          InstType.OpBinaryCom,    "!=",              5);
             Add(Instruction.ConditionalSelect,        InstType.OpTernary,      "?:",              12);
+            Add(Instruction.ConvertFP32ToFP64,        InstType.CallUnary,      "double");
+            Add(Instruction.ConvertFP64ToFP32,        InstType.CallUnary,      "float");
             Add(Instruction.ConvertFPToS32,           InstType.CallUnary,      "int");
             Add(Instruction.ConvertFPToU32,           InstType.CallUnary,      "uint");
             Add(Instruction.ConvertS32ToFP,           InstType.CallUnary,      "float");
@@ -83,6 +85,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.LogicalOr,                InstType.OpBinaryCom,    "||",              11);
             Add(Instruction.LoopBreak,                InstType.OpNullary,      "break");
             Add(Instruction.LoopContinue,             InstType.OpNullary,      "continue");
+            Add(Instruction.PackDouble2x32,           InstType.Special);
             Add(Instruction.PackHalf2x16,             InstType.Special);
             Add(Instruction.ShiftLeft,                InstType.OpBinary,       "<<",              3);
             Add(Instruction.ShiftRightS32,            InstType.OpBinary,       ">>",              3);
@@ -113,6 +116,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.TextureSample,            InstType.Special);
             Add(Instruction.TextureSize,              InstType.Special);
             Add(Instruction.Truncate,                 InstType.CallUnary,      "trunc");
+            Add(Instruction.UnpackDouble2x32,         InstType.Special);
             Add(Instruction.UnpackHalf2x16,           InstType.Special);
             Add(Instruction.VoteAll,                  InstType.CallUnary,      "allInvocationsARB");
             Add(Instruction.VoteAllEqual,             InstType.CallUnary,      "allInvocationsEqualARB");

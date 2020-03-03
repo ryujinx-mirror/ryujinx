@@ -54,5 +54,21 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             return BitConverter.Int32BitsToSingle(imm);
         }
+
+        public static float DecodeD20Immediate(long opCode)
+        {
+            long imm = opCode.Extract(20, 19);
+
+            bool negate = opCode.Extract(56);
+
+            imm <<= 44;
+
+            if (negate)
+            {
+                imm |= 1L << 63;
+            }
+
+            return (float)BitConverter.Int64BitsToDouble(imm);
+        }
     }
 }

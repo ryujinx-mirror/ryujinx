@@ -45,6 +45,16 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("111000110100xx", InstEmit.Brk,     typeof(OpCodeBranchPop));
             Set("111000100101xx", InstEmit.Brx,     typeof(OpCodeBranchIndir));
             Set("0101000010100x", InstEmit.Csetp,   typeof(OpCodePset));
+            Set("0100110001110x", InstEmit.Dadd,    typeof(OpCodeFArithCbuf));
+            Set("0011100x01110x", InstEmit.Dadd,    typeof(OpCodeDArithImm));
+            Set("0101110001110x", InstEmit.Dadd,    typeof(OpCodeFArithReg));
+            Set("010010110111xx", InstEmit.Dfma,    typeof(OpCodeFArithCbuf));
+            Set("0011011x0111xx", InstEmit.Dfma,    typeof(OpCodeDArithImm));
+            Set("010100110111xx", InstEmit.Dfma,    typeof(OpCodeFArithRegCbuf));
+            Set("010110110111xx", InstEmit.Dfma,    typeof(OpCodeFArithReg));
+            Set("0100110010000x", InstEmit.Dmul,    typeof(OpCodeFArithCbuf));
+            Set("0011100x10000x", InstEmit.Dmul,    typeof(OpCodeDArithImm));
+            Set("0101110010000x", InstEmit.Dmul,    typeof(OpCodeFArithReg));
             Set("111000110000xx", InstEmit.Exit,    typeof(OpCodeExit));
             Set("0100110010101x", InstEmit.F2F,     typeof(OpCodeFArithCbuf));
             Set("0011100x10101x", InstEmit.F2F,     typeof(OpCodeFArithImm));

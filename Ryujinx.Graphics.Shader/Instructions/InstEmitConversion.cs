@@ -21,31 +21,43 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool negateB   = op.RawOpCode.Extract(45);
             bool absoluteB = op.RawOpCode.Extract(49);
 
-            Operand srcB = context.FPAbsNeg(GetSrcB(context, srcType), absoluteB, negateB);
+            Operand srcB = context.FPAbsNeg(GetSrcB(context, srcType), absoluteB, negateB, srcType.ToInstFPType());
 
-            if (round)
+            if (round && srcType == dstType)
             {
                 switch (op.RoundingMode)
                 {
                     case RoundingMode.ToNearest:
-                        srcB = context.FPRound(srcB);
+                        srcB = context.FPRound(srcB, srcType.ToInstFPType());
                         break;
 
                     case RoundingMode.TowardsNegativeInfinity:
-                        srcB = context.FPFloor(srcB);
+                        srcB = context.FPFloor(srcB, srcType.ToInstFPType());
                         break;
 
                     case RoundingMode.TowardsPositiveInfinity:
-                        srcB = context.FPCeiling(srcB);
+                        srcB = context.FPCeiling(srcB, srcType.ToInstFPType());
                         break;
 
                     case RoundingMode.TowardsZero:
-                        srcB = context.FPTruncate(srcB);
+                        srcB = context.FPTruncate(srcB, srcType.ToInstFPType());
                         break;
                 }
             }
 
-            srcB = context.FPSaturate(srcB, op.Saturate);
+            // We don't need to handle conversions between FP16 <-> FP32
+            // since we do FP16 operations as FP32 directly.
+            // FP16 <-> FP64 conversions are invalid.
+            if (srcType == FPType.FP32 && dstType == FPType.FP64)
+            {
+                srcB = context.FP32ConvertToFP64(srcB);
+            }
+            else if (srcType == FPType.FP64 && dstType == FPType.FP32)
+            {
+                srcB = context.FP64ConvertToFP32(srcB);
+            }
+
+            srcB = context.FPSaturate(srcB, op.Saturate, dstType.ToInstFPType());
 
             WriteFP(context, dstType, srcB);
 
@@ -229,9 +241,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.Copy(dest, context.PackHalf2x16(srcB, ConstF(0)));
             }
-            else
+            else /* if (type == FPType.FP64) */
             {
-                // TODO.
+                Operand dest2 = GetDest2(context);
+
+                context.Copy(dest, context.UnpackDouble2x32Low(srcB));
+                context.Copy(dest2, context.UnpackDouble2x32High(srcB));
             }
         }
     }

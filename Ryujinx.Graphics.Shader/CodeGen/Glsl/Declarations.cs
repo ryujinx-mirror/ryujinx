@@ -189,6 +189,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 case VariableType.Bool: return "bool";
                 case VariableType.F32:  return "precise float";
+                case VariableType.F64:  return "double";
                 case VariableType.S32:  return "int";
                 case VariableType.U32:  return "uint";
             }

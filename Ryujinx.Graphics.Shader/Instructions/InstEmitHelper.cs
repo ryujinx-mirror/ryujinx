@@ -34,9 +34,25 @@ namespace Ryujinx.Graphics.Shader.Instructions
             return Register(((IOpCodeRd)context.CurrOp).Rd);
         }
 
-        public static Operand GetSrcA(EmitterContext context)
+        public static Operand GetDest2(EmitterContext context)
         {
-            return Register(((IOpCodeRa)context.CurrOp).Ra);
+            Register rd = ((IOpCodeRd)context.CurrOp).Rd;
+
+            return Register(rd.Index | 1, rd.Type);
+        }
+
+        public static Operand GetSrcA(EmitterContext context, bool isFP64 = false)
+        {
+            IOpCodeRa op = (IOpCodeRa)context.CurrOp;
+
+            if (isFP64)
+            {
+                return context.PackDouble2x32(Register(op.Ra.Index, op.Ra.Type), Register(op.Ra.Index | 1, op.Ra.Type));
+            }
+            else
+            {
+                return Register(op.Ra);
+            }
         }
 
         public static Operand GetSrcB(EmitterContext context, FPType floatType)
@@ -53,46 +69,78 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (floatType == FPType.FP64)
             {
-                // TODO: Double floating-point type support.
+                return GetSrcB(context, true);
             }
 
-            context.Config.PrintLog($"Invalid floating point type: {floatType}.");
-
-            return ConstF(0);
+            throw new ArgumentException($"Invalid floating point type \"{floatType}\".");
         }
 
-        public static Operand GetSrcB(EmitterContext context)
+        public static Operand GetSrcB(EmitterContext context, bool isFP64 = false)
         {
-            switch (context.CurrOp)
+            if (isFP64)
             {
-                case IOpCodeCbuf op:
-                    return Cbuf(op.Slot, op.Offset);
+                switch (context.CurrOp)
+                {
+                    case IOpCodeCbuf op:
+                        return context.PackDouble2x32(Cbuf(op.Slot, op.Offset), Cbuf(op.Slot, op.Offset + 1));
 
-                case IOpCodeImm op:
-                    return Const(op.Immediate);
+                    case IOpCodeImmF op:
+                        return context.FP32ConvertToFP64(ConstF(op.Immediate));
 
-                case IOpCodeImmF op:
-                    return ConstF(op.Immediate);
+                    case IOpCodeReg op:
+                        return context.PackDouble2x32(Register(op.Rb.Index, op.Rb.Type), Register(op.Rb.Index | 1, op.Rb.Type));
 
-                case IOpCodeReg op:
-                    return Register(op.Rb);
+                    case IOpCodeRegCbuf op:
+                        return context.PackDouble2x32(Register(op.Rc.Index, op.Rc.Type), Register(op.Rc.Index | 1, op.Rc.Type));
+                }
+            }
+            else
+            {
+                switch (context.CurrOp)
+                {
+                    case IOpCodeCbuf op:
+                        return Cbuf(op.Slot, op.Offset);
 
-                case IOpCodeRegCbuf op:
-                    return Register(op.Rc);
+                    case IOpCodeImm op:
+                        return Const(op.Immediate);
+
+                    case IOpCodeImmF op:
+                        return ConstF(op.Immediate);
+
+                    case IOpCodeReg op:
+                        return Register(op.Rb);
+
+                    case IOpCodeRegCbuf op:
+                        return Register(op.Rc);
+                }
             }
 
             throw new InvalidOperationException($"Unexpected opcode type \"{context.CurrOp.GetType().Name}\".");
         }
 
-        public static Operand GetSrcC(EmitterContext context)
+        public static Operand GetSrcC(EmitterContext context, bool isFP64 = false)
         {
-            switch (context.CurrOp)
+            if (isFP64)
             {
-                case IOpCodeRegCbuf op:
-                    return Cbuf(op.Slot, op.Offset);
+                switch (context.CurrOp)
+                {
+                    case IOpCodeRegCbuf op:
+                        return context.PackDouble2x32(Cbuf(op.Slot, op.Offset), Cbuf(op.Slot, op.Offset + 1));
 
-                case IOpCodeRc op:
-                    return Register(op.Rc);
+                    case IOpCodeRc op:
+                        return context.PackDouble2x32(Register(op.Rc.Index, op.Rc.Type), Register(op.Rc.Index | 1, op.Rc.Type));
+                }
+            }
+            else
+            {
+                switch (context.CurrOp)
+                {
+                    case IOpCodeRegCbuf op:
+                        return Cbuf(op.Slot, op.Offset);
+
+                    case IOpCodeRc op:
+                        return Register(op.Rc);
+                }
             }
 
             throw new InvalidOperationException($"Unexpected opcode type \"{context.CurrOp.GetType().Name}\".");
