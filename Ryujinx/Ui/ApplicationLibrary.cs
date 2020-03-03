@@ -148,7 +148,7 @@ namespace Ryujinx.Ui
 
                                     Result result = pfs.OpenFile(out IFile npdmFile, "/main.npdm", OpenMode.Read);
 
-                                    if (result != ResultFs.PathNotFound)
+                                    if (ResultFs.PathNotFound.Includes(result))
                                     {
                                         Npdm npdm = new Npdm(npdmFile.AsStream());
 
@@ -347,7 +347,7 @@ namespace Ryujinx.Ui
                 {
                     SaveDataFilter filter = new SaveDataFilter();
                     filter.SetUserId(new UserId(1, 0));
-                    filter.SetTitleId(new TitleId(titleIdNum));
+                    filter.SetProgramId(new TitleId(titleIdNum));
 
                     Result result = virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 

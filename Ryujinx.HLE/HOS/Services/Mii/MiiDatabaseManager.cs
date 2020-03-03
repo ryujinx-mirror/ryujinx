@@ -132,7 +132,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
                 if (result.IsFailure())
                 {
-                    if (ResultFs.TargetNotFound == result)
+                    if (ResultFs.TargetNotFound.Includes(result))
                     {
                         // TODO: We're currently always specifying the owner ID because FS doesn't have a way of
                         // knowing which process called it
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
                 return (ResultCode)result.Value;
             }
-            else if (result == ResultFs.PathNotFound)
+            else if (ResultFs.PathNotFound.Includes(result))
             {
                 return (ResultCode)ForceSaveDatabase().Value;
             }
@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         {
             Result result = _filesystemClient.CreateFile(DatabasePath, Unsafe.SizeOf<NintendoFigurineDatabase>());
 
-            if (result.IsSuccess() || result == ResultFs.PathAlreadyExists)
+            if (result.IsSuccess() || ResultFs.PathAlreadyExists.Includes(result))
             {
                 result = _filesystemClient.OpenFile(out FileHandle handle, DatabasePath, OpenMode.Write);
 

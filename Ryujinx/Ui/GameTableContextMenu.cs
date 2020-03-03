@@ -75,11 +75,11 @@ namespace Ryujinx.Ui
 
             SaveDataFilter filter = new SaveDataFilter();
             filter.SetUserId(new UserId(1, 0));
-            filter.SetTitleId(new TitleId(titleId));
+            filter.SetProgramId(new TitleId(titleId));
 
             Result result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 
-            if (result == ResultFs.TargetNotFound)
+            if (ResultFs.TargetNotFound.Includes(result))
             {
                 // Savedata was not found. Ask the user if they want to create it
                 using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)

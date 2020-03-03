@@ -26,6 +26,7 @@ namespace Ryujinx.HLE.FileSystem
         public FileSystemServer FsServer { get; private set; }
         public FileSystemClient FsClient { get; private set; }
         public EmulatedGameCard GameCard { get; private set; }
+        public EmulatedSdCard   SdCard   { get; private set; }
 
         private VirtualFileSystem()
         {
@@ -208,6 +209,7 @@ namespace Ryujinx.HLE.FileSystem
             DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet);
 
             GameCard = fsServerObjects.GameCard;
+            SdCard   = fsServerObjects.SdCard;
 
             FileSystemServerConfig fsServerConfig = new FileSystemServerConfig
             {
