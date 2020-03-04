@@ -47,7 +47,7 @@ namespace ARMeilleure.Decoders
             {
                 if (!visited.TryGetValue(blkAddress, out Block block))
                 {
-                    if (opsCount > MaxInstsPerFunction)
+                    if (opsCount > MaxInstsPerFunction || !memory.IsMapped((long)blkAddress))
                     {
                         return null;
                     }

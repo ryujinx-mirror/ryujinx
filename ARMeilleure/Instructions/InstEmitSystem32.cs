@@ -17,7 +17,8 @@ namespace ARMeilleure.Instructions
 
             if (op.Coproc != 15)
             {
-                throw new NotImplementedException($"Unknown MRC Coprocessor ID 0x{op.Coproc:X16} at 0x{op.Address:X16}.");
+                InstEmit.Und(context);
+                return;
             }
 
             if (op.Opc1 != 0)
@@ -70,7 +71,8 @@ namespace ARMeilleure.Instructions
 
             if (op.Coproc != 15)
             {
-                throw new NotImplementedException($"Unknown MRC Coprocessor ID 0x{op.Coproc:X16} at 0x{op.Address:X16}.");
+                InstEmit.Und(context);
+                return;
             }
 
             if (op.Opc1 != 0)
@@ -119,7 +121,8 @@ namespace ARMeilleure.Instructions
 
             if (op.Coproc != 15)
             {
-                throw new NotImplementedException($"Unknown MRC Coprocessor ID 0x{op.Coproc:X16} at 0x{op.Address:X16}.");
+                InstEmit.Und(context);
+                return;
             }
 
             var opc = op.MrrcOp;
