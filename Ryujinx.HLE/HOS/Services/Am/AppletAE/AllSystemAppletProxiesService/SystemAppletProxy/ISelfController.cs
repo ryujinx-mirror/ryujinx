@@ -13,6 +13,12 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private KEvent _accumulatedSuspendedTickChangedEvent;
         private int    _accumulatedSuspendedTickChangedEventHandle = 0;
 
+        private object _fatalSectionLock = new object();
+        private int    _fatalSectionCount;
+
+        // TODO: Set this when the game goes in suspension (go back to home menu ect), we currently don't support that so we can keep it set to 0.
+        private ulong _accumulatedSuspendedTickValue = 0;
+
         private int _idleTimeDetectionExtension;
 
         public ISelfController(Horizon system)
@@ -45,6 +51,39 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             Logger.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
+        }
+
+        [Command(3)] // 2.0.0+
+        // EnterFatalSection()
+        public ResultCode EnterFatalSection(ServiceCtx context)
+        {
+            lock (_fatalSectionLock)
+            {
+                _fatalSectionCount++;
+            }
+
+            return ResultCode.Success;
+        }
+
+        [Command(4)] // 2.0.0+
+        // LeaveFatalSection()
+        public ResultCode LeaveFatalSection(ServiceCtx context)
+        {
+            ResultCode result = ResultCode.Success;
+
+            lock (_fatalSectionLock)
+            {
+                if (_fatalSectionCount != 0)
+                {
+                    _fatalSectionCount--;
+                }
+                else
+                {
+                    result = ResultCode.UnbalancedFatalSection;
+                }
+            }
+
+            return result;
         }
 
         [Command(9)]
@@ -172,6 +211,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             context.ResponseData.Write(_idleTimeDetectionExtension);
 
             Logger.PrintStub(LogClass.ServiceAm, new { _idleTimeDetectionExtension });
+
+            return ResultCode.Success;
+        }
+
+        [Command(90)] // 6.0.0+
+        // GetAccumulatedSuspendedTickValue() -> u64
+        public ResultCode GetAccumulatedSuspendedTickValue(ServiceCtx context)
+        {
+            context.ResponseData.Write(_accumulatedSuspendedTickValue);
 
             return ResultCode.Success;
         }
