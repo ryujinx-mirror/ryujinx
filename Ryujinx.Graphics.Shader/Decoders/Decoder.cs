@@ -390,7 +390,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             void Push(PathBlockState pbs)
             {
-                if (pbs.Block == null || visited.Add(pbs.Block))
+                // When block is null, this means we are pushing a restore operation.
+                // Restore operations are used to undo the work done inside a block
+                // when we return from it, for example it pops addresses pushed by
+                // SSY/PBK instructions inside the block, and pushes addresses poped
+                // by SYNC/BRK.
+                // For blocks, if it's already visited, we just ignore to avoid going
+                // around in circles and getting stuck here.
+                if (pbs.Block == null || !visited.Contains(pbs.Block))
                 {
                     workQueue.Push(pbs);
                 }
@@ -408,6 +415,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 Block current = pbs.Block;
+
+                // If the block was already processed, we just ignore it, otherwise
+                // we would push the same child blocks of an already processed block,
+                // and go around in circles until memory is exhausted.
+                if (!visited.Add(current))
+                {
+                    continue;
+                }
 
                 int pushOpsCount = current.PushOpCodes.Count;
 
@@ -434,7 +449,9 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
                 else if (current.GetLastOp() is OpCodeBranchIndir brIndir)
                 {
-                    foreach (Block possibleTarget in brIndir.PossibleTargets)
+                    // By adding them in descending order (sorted by address), we process the blocks
+                    // in order (of ascending address), since we work with a LIFO.
+                    foreach (Block possibleTarget in brIndir.PossibleTargets.OrderByDescending(x => x.Address))
                     {
                         Push(new PathBlockState(possibleTarget));
                     }
@@ -453,6 +470,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                     else
                     {
+                        // First we push the target address (this will be used to push the
+                        // address back into the SSY/PBK stack when we return from that block),
+                        // then we push the block itself into the work "queue" (well, it's a stack)
+                        // for processing.
                         Push(new PathBlockState(targetAddress));
                         Push(new PathBlockState(blocks[targetAddress]));
                     }
