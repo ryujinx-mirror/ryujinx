@@ -51,10 +51,12 @@ namespace Ryujinx.Ui
         [GUI] MenuBar        _menuBar;
         [GUI] Box            _footerBox;
         [GUI] MenuItem       _fullScreen;
+        [GUI] Box            _statusBar;
         [GUI] MenuItem       _stopEmulation;
         [GUI] CheckMenuItem  _favToggle;
         [GUI] MenuItem       _firmwareInstallFile;
         [GUI] MenuItem       _firmwareInstallDirectory;
+        [GUI] Label          _hostStatus;
         [GUI] MenuItem       _openDebugger;
         [GUI] CheckMenuItem  _iconToggle;
         [GUI] CheckMenuItem  _appToggle;
@@ -65,6 +67,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem  _fileExtToggle;
         [GUI] CheckMenuItem  _fileSizeToggle;
         [GUI] CheckMenuItem  _pathToggle;
+        [GUI] Label          _gameStatus;
         [GUI] TreeView       _gameTable;
         [GUI] ScrolledWindow _gameTableWindow;
         [GUI] TreeSelection  _gameTableSelection;
@@ -72,6 +75,7 @@ namespace Ryujinx.Ui
         [GUI] Label          _firmwareVersionLabel;
         [GUI] LevelBar       _progressBar;
         [GUI] Box            _viewBox;
+        [GUI] Label          _vSyncStatus;
         [GUI] Box            _listStatusBox;
 
 #pragma warning restore CS0649
@@ -83,10 +87,12 @@ namespace Ryujinx.Ui
         {
             builder.Autoconnect(this);
 
-            DeleteEvent += Window_Close;
+            this.DeleteEvent      += Window_Close;
+            _fullScreen.Activated += FullScreen_Toggled;
 
             ApplicationLibrary.ApplicationAdded        += Application_Added;
             ApplicationLibrary.ApplicationCountUpdated += ApplicationCount_Updated;
+            GLRenderer.StatusUpdatedEvent              += Update_StatusBar;
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
@@ -161,7 +167,7 @@ namespace Ryujinx.Ui
 
             Task.Run(RefreshFirmwareLabel);
 
-            _fullScreen.Activated += FullScreen_Toggled;
+            _statusBar.Hide();
         }
 
 #if USE_DEBUGGING
@@ -401,7 +407,7 @@ namespace Ryujinx.Ui
                 _viewBox.Child = _gLWidget;
 
                 _gLWidget.ShowAll();
-                ClearFooterForGameRender();
+                EditFooterForGameRender();
             });
 
             _gLWidget.WaitEvent.WaitOne();
@@ -451,12 +457,14 @@ namespace Ryujinx.Ui
 
         private void RecreateFooterForMenu()
         {
-            _footerBox.Add(_listStatusBox);
+            _listStatusBox.Show();
+            _statusBar.Hide();
         }
 
-        private void ClearFooterForGameRender()
+        private void EditFooterForGameRender()
         {
-            _footerBox.Remove(_listStatusBox);
+            _listStatusBox.Hide();
+            _statusBar.Show();
         }
 
         public void ToggleExtraWidgets(bool show)
@@ -466,7 +474,8 @@ namespace Ryujinx.Ui
                 if (show)
                 {
                     _menuBar.ShowAll();
-                    _footerBox.ShowAll();
+                    _footerBox.Show();
+                    _statusBar.Show();
                 }
                 else
                 {
@@ -587,6 +596,26 @@ namespace Ryujinx.Ui
                 }
 
                 _progressBar.Value = barValue;
+            });
+        }
+
+        private void Update_StatusBar(object sender, StatusUpdatedEventArgs args)
+        {
+            Application.Invoke(delegate
+            {
+                _hostStatus.Text = args.HostStatus;
+                _gameStatus.Text = args.GameStatus;
+
+                if (args.VSyncEnabled)
+                {
+                    _vSyncStatus.Attributes = new Pango.AttrList();
+                    _vSyncStatus.Attributes.Insert(new Pango.AttrForeground(11822, 60138, 51657));
+                }
+                else
+                {
+                    _vSyncStatus.Attributes = new Pango.AttrList();
+                    _vSyncStatus.Attributes.Insert(new Pango.AttrForeground(ushort.MaxValue, 17733, 21588));
+                }
             });
         }
 
