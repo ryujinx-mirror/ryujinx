@@ -374,7 +374,7 @@ namespace ARMeilleure.Decoders
             SetA64("0x001100110xxxxxxxxxxxxxxxxxxxxx", InstName.Ld__Vms,         InstEmit.Ld__Vms,         typeof(OpCodeSimdMemMs));
             SetA64("0x00110101x00000xxxxxxxxxxxxxxxx", InstName.Ld__Vss,         InstEmit.Ld__Vss,         typeof(OpCodeSimdMemSs));
             SetA64("0x00110111xxxxxxxxxxxxxxxxxxxxxx", InstName.Ld__Vss,         InstEmit.Ld__Vss,         typeof(OpCodeSimdMemSs));
-            SetA64("xx10110xx1xxxxxxxxxxxxxxxxxxxxxx", InstName.Ldp,             InstEmit.Ldp,             typeof(OpCodeSimdMemPair));
+            SetA64("<<10110xx1xxxxxxxxxxxxxxxxxxxxxx", InstName.Ldp,             InstEmit.Ldp,             typeof(OpCodeSimdMemPair));
             SetA64("xx111100x10xxxxxxxxx00xxxxxxxxxx", InstName.Ldr,             InstEmit.Ldr,             typeof(OpCodeSimdMemImm));
             SetA64("xx111100x10xxxxxxxxx01xxxxxxxxxx", InstName.Ldr,             InstEmit.Ldr,             typeof(OpCodeSimdMemImm));
             SetA64("xx111100x10xxxxxxxxx11xxxxxxxxxx", InstName.Ldr,             InstEmit.Ldr,             typeof(OpCodeSimdMemImm));
@@ -514,7 +514,7 @@ namespace ARMeilleure.Decoders
             SetA64("0x001100100xxxxxxxxxxxxxxxxxxxxx", InstName.St__Vms,         InstEmit.St__Vms,         typeof(OpCodeSimdMemMs));
             SetA64("0x00110100x00000xxxxxxxxxxxxxxxx", InstName.St__Vss,         InstEmit.St__Vss,         typeof(OpCodeSimdMemSs));
             SetA64("0x00110110xxxxxxxxxxxxxxxxxxxxxx", InstName.St__Vss,         InstEmit.St__Vss,         typeof(OpCodeSimdMemSs));
-            SetA64("xx10110xx0xxxxxxxxxxxxxxxxxxxxxx", InstName.Stp,             InstEmit.Stp,             typeof(OpCodeSimdMemPair));
+            SetA64("<<10110xx0xxxxxxxxxxxxxxxxxxxxxx", InstName.Stp,             InstEmit.Stp,             typeof(OpCodeSimdMemPair));
             SetA64("xx111100x00xxxxxxxxx00xxxxxxxxxx", InstName.Str,             InstEmit.Str,             typeof(OpCodeSimdMemImm));
             SetA64("xx111100x00xxxxxxxxx01xxxxxxxxxx", InstName.Str,             InstEmit.Str,             typeof(OpCodeSimdMemImm));
             SetA64("xx111100x00xxxxxxxxx11xxxxxxxxxx", InstName.Str,             InstEmit.Str,             typeof(OpCodeSimdMemImm));
