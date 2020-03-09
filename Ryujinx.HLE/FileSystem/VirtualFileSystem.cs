@@ -211,6 +211,8 @@ namespace Ryujinx.HLE.FileSystem
             GameCard = fsServerObjects.GameCard;
             SdCard   = fsServerObjects.SdCard;
 
+            SdCard.SetSdCardInsertionStatus(true);
+
             FileSystemServerConfig fsServerConfig = new FileSystemServerConfig
             {
                 FsCreators     = fsServerObjects.FsCreators,
