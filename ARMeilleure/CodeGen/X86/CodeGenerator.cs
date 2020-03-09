@@ -109,6 +109,8 @@ namespace ARMeilleure.CodeGen.X86
                 Optimizer.RunPass(cfg);
             }
 
+            X86Optimizer.RunPass(cfg);
+
             Logger.EndPass(PassName.Optimization, cfg);
 
             Logger.StartPass(PassName.PreAllocation);

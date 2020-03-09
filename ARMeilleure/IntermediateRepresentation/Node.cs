@@ -58,34 +58,18 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public void SetDestination(int index, Operand destination)
         {
-            Operand oldOp = _destinations[index];
+            RemoveAssignment(_destinations[index]);
 
-            if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
-            {
-                oldOp.Assignments.Remove(this);
-            }
-
-            if (destination != null && destination.Kind == OperandKind.LocalVariable)
-            {
-                destination.Assignments.Add(this);
-            }
+            AddAssignment(destination);
 
             _destinations[index] = destination;
         }
 
         public void SetSource(int index, Operand source)
         {
-            Operand oldOp = _sources[index];
+            RemoveUse(_sources[index]);
 
-            if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
-            {
-                oldOp.Uses.Remove(this);
-            }
-
-            if (source != null && source.Kind == OperandKind.LocalVariable)
-            {
-                source.Uses.Add(this);
-            }
+            AddUse(source);
 
             _sources[index] = source;
         }
@@ -96,12 +80,7 @@ namespace ARMeilleure.IntermediateRepresentation
             {
                 for (int index = 0; index < _destinations.Length; index++)
                 {
-                    Operand oldOp = _destinations[index];
-
-                    if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
-                    {
-                        oldOp.Assignments.Remove(this);
-                    }
+                    RemoveAssignment(_destinations[index]);
                 }
 
                 _destinations = destinations;
@@ -117,10 +96,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
                 _destinations[index] = newOp;
 
-                if (newOp.Kind == OperandKind.LocalVariable)
-                {
-                    newOp.Assignments.Add(this);
-                }
+                AddAssignment(newOp);
             }
         }
 
@@ -128,12 +104,7 @@ namespace ARMeilleure.IntermediateRepresentation
         {
             for (int index = 0; index < _sources.Length; index++)
             {
-                Operand oldOp = _sources[index];
-
-                if (oldOp != null && oldOp.Kind == OperandKind.LocalVariable)
-                {
-                    oldOp.Uses.Remove(this);
-                }
+                RemoveUse(_sources[index]);
             }
 
             _sources = new Operand[sources.Length];
@@ -144,9 +115,114 @@ namespace ARMeilleure.IntermediateRepresentation
 
                 _sources[index] = newOp;
 
-                if (newOp.Kind == OperandKind.LocalVariable)
+                AddUse(newOp);
+            }
+        }
+
+        private void AddAssignment(Operand op)
+        {
+            if (op == null)
+            {
+                return;
+            }
+
+            if (op.Kind == OperandKind.LocalVariable)
+            {
+                op.Assignments.Add(this);
+            }
+            else if (op.Kind == OperandKind.Memory)
+            {
+                MemoryOperand memOp = (MemoryOperand)op;
+
+                if (memOp.BaseAddress != null)
                 {
-                    newOp.Uses.Add(this);
+                    memOp.BaseAddress.Assignments.Add(this);
+                }
+                
+                if (memOp.Index != null)
+                {
+                    memOp.Index.Assignments.Add(this);
+                }
+            }
+        }
+
+        private void RemoveAssignment(Operand op)
+        {
+            if (op == null)
+            {
+                return;
+            }
+
+            if (op.Kind == OperandKind.LocalVariable)
+            {
+                op.Assignments.Remove(this);
+            }
+            else if (op.Kind == OperandKind.Memory)
+            {
+                MemoryOperand memOp = (MemoryOperand)op;
+
+                if (memOp.BaseAddress != null)
+                {
+                    memOp.BaseAddress.Assignments.Remove(this);
+                }
+
+                if (memOp.Index != null)
+                {
+                    memOp.Index.Assignments.Remove(this);
+                }
+            }
+        }
+
+        private void AddUse(Operand op)
+        {
+            if (op == null)
+            {
+                return;
+            }
+
+            if (op.Kind == OperandKind.LocalVariable)
+            {
+                op.Uses.Add(this);
+            }
+            else if (op.Kind == OperandKind.Memory)
+            {
+                MemoryOperand memOp = (MemoryOperand)op;
+
+                if (memOp.BaseAddress != null)
+                {
+                    memOp.BaseAddress.Uses.Add(this);
+                }
+
+                if (memOp.Index != null)
+                {
+                    memOp.Index.Uses.Add(this);
+                }
+            }
+        }
+
+        private void RemoveUse(Operand op)
+        {
+            if (op == null)
+            {
+                return;
+            }
+
+            if (op.Kind == OperandKind.LocalVariable)
+            {
+                op.Uses.Remove(this);
+            }
+            else if (op.Kind == OperandKind.Memory)
+            {
+                MemoryOperand memOp = (MemoryOperand)op;
+
+                if (memOp.BaseAddress != null)
+                {
+                    memOp.BaseAddress.Uses.Remove(this);
+                }
+
+                if (memOp.Index != null)
+                {
+                    memOp.Index.Uses.Remove(this);
                 }
             }
         }

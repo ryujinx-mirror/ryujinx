@@ -711,6 +711,20 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     {
                         operation.SetSource(index, register);
                     }
+                    else if (source.Kind == OperandKind.Memory)
+                    {
+                        MemoryOperand memOp = (MemoryOperand)source;
+
+                        if (memOp.BaseAddress == current.Local)
+                        {
+                            memOp.BaseAddress = register;
+                        }
+
+                        if (memOp.Index == current.Local)
+                        {
+                            memOp.Index = register;
+                        }
+                    }
                 }
 
                 for (int index = 0; index < operation.DestinationsCount; index++)
@@ -1010,6 +1024,20 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 if (IsLocalOrRegister(source.Kind))
                 {
                     yield return source;
+                }
+                else if (source.Kind == OperandKind.Memory)
+                {
+                    MemoryOperand memOp = (MemoryOperand)source;
+
+                    if (memOp.BaseAddress != null)
+                    {
+                        yield return memOp.BaseAddress;
+                    }
+
+                    if (memOp.Index != null)
+                    {
+                        yield return memOp.Index;
+                    }
                 }
             }
         }

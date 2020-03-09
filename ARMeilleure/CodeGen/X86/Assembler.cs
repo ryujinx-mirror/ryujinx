@@ -14,6 +14,8 @@ namespace ARMeilleure.CodeGen.X86
         private const byte RexWPrefix = 0x48;
         private const byte LockPrefix = 0xf0;
 
+        private const int MaxRegNumber = 15;
+
         [Flags]
         private enum InstructionFlags
         {
@@ -842,10 +844,7 @@ namespace ARMeilleure.CodeGen.X86
             {
                 X86Register shiftReg = (X86Register)source.GetRegister().Index;
 
-                if (shiftReg != X86Register.Rcx)
-                {
-                    throw new ArgumentException($"Invalid shift register \"{shiftReg}\".");
-                }
+                Debug.Assert(shiftReg == X86Register.Rcx, $"Invalid shift register \"{shiftReg}\".");
 
                 source = null;
             }
@@ -1080,6 +1079,8 @@ namespace ARMeilleure.CodeGen.X86
 
                 if (baseReg.Index >= 8)
                 {
+                    Debug.Assert((uint)baseReg.Index <= MaxRegNumber);
+
                     rexPrefix |= RexPrefix | (baseReg.Index >> 3);
                 }
 
@@ -1091,13 +1092,12 @@ namespace ARMeilleure.CodeGen.X86
                     {
                         int indexReg = memOp.Index.GetRegister().Index;
 
-                        if (indexReg == (int)X86Register.Rsp)
-                        {
-                            throw new ArgumentException("Using RSP as index register on the memory operand is not allowed.");
-                        }
+                        Debug.Assert(indexReg != (int)X86Register.Rsp, "Using RSP as index register on the memory operand is not allowed.");
 
                         if (indexReg >= 8)
                         {
+                            Debug.Assert((uint)indexReg <= MaxRegNumber);
+
                             rexPrefix |= RexPrefix | (indexReg >> 3) << 1;
                         }
 

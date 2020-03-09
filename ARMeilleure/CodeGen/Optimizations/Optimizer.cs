@@ -1,8 +1,6 @@
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace ARMeilleure.CodeGen.Optimizations
 {
@@ -48,6 +46,36 @@ namespace ARMeilleure.CodeGen.Optimizations
                         {
                             PropagateCopy(operation);
 
+                            RemoveNode(block, node);
+
+                            modified = true;
+                        }
+
+                        node = nextNode;
+                    }
+                }
+            }
+            while (modified);
+        }
+
+        public static void RemoveUnusedNodes(ControlFlowGraph cfg)
+        {
+            bool modified;
+
+            do
+            {
+                modified = false;
+
+                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
+                {
+                    Node node = block.Operations.First;
+
+                    while (node != null)
+                    {
+                        Node nextNode = node.ListNext;
+
+                        if (IsUnused(node))
+                        {
                             RemoveNode(block, node);
 
                             modified = true;

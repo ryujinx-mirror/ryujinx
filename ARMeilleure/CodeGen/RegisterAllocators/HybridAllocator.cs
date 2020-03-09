@@ -110,6 +110,20 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                         {
                             locInfo[source.AsInt32() - 1].SetBlockIndex(block.Index);
                         }
+                        else if (source.Kind == OperandKind.Memory)
+                        {
+                            MemoryOperand memOp = (MemoryOperand)source;
+
+                            if (memOp.BaseAddress != null)
+                            {
+                                locInfo[memOp.BaseAddress.AsInt32() - 1].SetBlockIndex(block.Index);
+                            }
+
+                            if (memOp.Index != null)
+                            {
+                                locInfo[memOp.Index.AsInt32() - 1].SetBlockIndex(block.Index);
+                            }
+                        }
                     }
 
                     for (int dstIndex = 0; dstIndex < node.DestinationsCount; dstIndex++)
@@ -181,15 +195,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     int intLocalUse = 0;
                     int vecLocalUse = 0;
 
-                    for (int srcIndex = 0; srcIndex < node.SourcesCount; srcIndex++)
+                    void AllocateRegister(Operand source, MemoryOperand memOp, int srcIndex)
                     {
-                        Operand source = node.GetSource(srcIndex);
-
-                        if (source.Kind != OperandKind.LocalVariable)
-                        {
-                            continue;
-                        }
-
                         LocalInfo info = locInfo[source.AsInt32() - 1];
 
                         info.UseCount++;
@@ -198,7 +205,23 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                         if (info.Register != -1)
                         {
-                            node.SetSource(srcIndex, Register(info.Register, source.Type.ToRegisterType(), source.Type));
+                            Operand reg = Register(info.Register, source.Type.ToRegisterType(), source.Type);
+
+                            if (memOp != null)
+                            {
+                                if (srcIndex == 0)
+                                {
+                                    memOp.BaseAddress = reg;
+                                }
+                                else /* if (srcIndex == 1) */
+                                {
+                                    memOp.Index = reg;
+                                }
+                            }
+                            else
+                            {
+                                node.SetSource(srcIndex, reg);
+                            }
 
                             if (info.UseCount == info.Uses && !info.PreAllocated)
                             {
@@ -223,14 +246,52 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                                     : GetSpillTemp(source, vecSpillTempRegisters, ref vecLocalUse);
 
                                 info.Sequence = sequence;
-                                info.Temp     = temp;
+                                info.Temp = temp;
                             }
 
-                            node.SetSource(srcIndex, temp);
+                            if (memOp != null)
+                            {
+                                if (srcIndex == 0)
+                                {
+                                    memOp.BaseAddress = temp;
+                                }
+                                else /* if (srcIndex == 1) */
+                                {
+                                    memOp.Index = temp;
+                                }
+                            }
+                            else
+                            {
+                                node.SetSource(srcIndex, temp);
+                            }
 
                             Operation fillOp = new Operation(Instruction.Fill, temp, Const(info.SpillOffset));
 
                             block.Operations.AddBefore(node, fillOp);
+                        }
+                    }
+
+                    for (int srcIndex = 0; srcIndex < node.SourcesCount; srcIndex++)
+                    {
+                        Operand source = node.GetSource(srcIndex);
+
+                        if (source.Kind == OperandKind.LocalVariable)
+                        {
+                            AllocateRegister(source, null, srcIndex);
+                        }
+                        else if (source.Kind == OperandKind.Memory)
+                        {
+                            MemoryOperand memOp = (MemoryOperand)source;
+
+                            if (memOp.BaseAddress != null)
+                            {
+                                AllocateRegister(memOp.BaseAddress, memOp, 0);
+                            }
+
+                            if (memOp.Index != null)
+                            {
+                                AllocateRegister(memOp.Index, memOp, 1);
+                            }
                         }
                     }
 

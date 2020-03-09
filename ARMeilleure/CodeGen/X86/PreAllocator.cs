@@ -184,7 +184,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     operation.SetSource(1, src2);
                 }
-                else if (!HasConstSrc2(inst) || IsLongConst(src2))
+                else if (!HasConstSrc2(inst) || CodeGenCommon.IsLongConst(src2))
                 {
                     src2 = AddCopy(nodes, node, src2);
 
@@ -1046,7 +1046,7 @@ namespace ARMeilleure.CodeGen.X86
                 nodes.AddBefore(node, retCopyOp);
             }
 
-            operation.SetSources(new Operand[0]);
+            operation.SetSources(System.Array.Empty<Operand>());
         }
 
         private static void HandleReturnSystemVAbi(IntrusiveList<Node> nodes, Node node, Operation operation)
@@ -1114,20 +1114,6 @@ namespace ARMeilleure.CodeGen.X86
             }
 
             return value;
-        }
-
-        private static bool IsLongConst(Operand operand)
-        {
-            long value = operand.Type == OperandType.I32
-                ? operand.AsInt32()
-                : operand.AsInt64();
-
-            return !ConstFitsOnS32(value);
-        }
-
-        private static bool ConstFitsOnS32(long value)
-        {
-            return value == (int)value;
         }
 
         private static void Delete(IntrusiveList<Node> nodes, Node node, Operation operation)
