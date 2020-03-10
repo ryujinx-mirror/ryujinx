@@ -56,6 +56,34 @@ namespace Ryujinx.Tests.Cpu
 
             CompareAgainstUnicorn();
         }
+
+        [Test, Pairwise, Description("VORR.I32 <Vd>, #<imm>")]
+        public void Vorr_II([Range(0u, 4u)] uint rd,
+                            [Random(RndCnt)] ulong z,
+                            [Random(RndCnt)] byte imm,
+                            [Values(0u, 1u, 2u, 3u)] uint cMode,
+                            [Values] bool q)
+        {
+            uint opcode = 0xf2800110u; // VORR.I32 D0, #0
+
+            if (q)
+            {
+                opcode |= 1 << 6;
+                rd <<= 1;
+            }
+
+            opcode |= (uint)(imm & 0xf) << 0;
+            opcode |= (uint)(imm & 0x70) << 12;
+            opcode |= (uint)(imm & 0x80) << 17;
+            opcode |= (cMode & 0x3) << 9;
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
 #endif
     }
 }

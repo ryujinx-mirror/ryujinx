@@ -2,7 +2,7 @@
 {
     public static class OpCodeSimdHelper
     {
-        public static (long Immediate, int Size) GetSimdImmediateAndSize(int cMode, int op, long imm, int fpBaseSize = 0)
+        public static (long Immediate, int Size) GetSimdImmediateAndSize(int cMode, int op, long imm)
         {
             int modeLow = cMode & 1;
             int modeHigh = cMode >> 1;

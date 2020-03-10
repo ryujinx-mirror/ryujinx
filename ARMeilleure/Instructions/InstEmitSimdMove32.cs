@@ -139,6 +139,36 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vmovl(ArmEmitterContext context)
+        {
+            OpCode32SimdLong op = (OpCode32SimdLong)context.CurrOp;
+
+            Operand res = context.VectorZero();
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, !op.U);
+
+                if (op.Size == 2)
+                {
+                    if (op.U)
+                    {
+                        me = context.ZeroExtend32(OperandType.I64, me);
+                    }
+                    else
+                    {
+                        me = context.SignExtend32(OperandType.I64, me);
+                    }
+                }
+
+                res = EmitVectorInsert(context, res, me, index, op.Size + 1);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
         public static void Vtbl(ArmEmitterContext context)
         {
             OpCode32SimdTbl op = (OpCode32SimdTbl)context.CurrOp;

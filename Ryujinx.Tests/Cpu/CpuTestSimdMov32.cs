@@ -228,6 +228,36 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
+        [Test, Pairwise, Description("VMOVL.<size> <Qd>, <Dm>")]
+        public void Vmovl([Values(0u, 1u, 2u, 3u)] uint vm,
+                          [Values(0u, 2u, 4u, 6u)] uint vd,
+                          [Values(1u, 2u, 4u)] uint imm3H,
+                          [Values] bool u)
+        {
+            // This is not VMOVL because imm3H = 0, but once
+            // we shift in the imm3H value it turns into VMOVL.
+            uint opcode = 0xf2800a10u; // VMOV.I16 D0, #0
+
+            opcode |= (vm & 0x10) << 1;
+            opcode |= (vm & 0xf);
+            opcode |= (vd & 0x10) << 18;
+            opcode |= (vd & 0xf) << 12;
+            opcode |= (imm3H & 0x7) << 19;
+            if (u)
+            {
+                opcode |= 1 << 24;
+            }
+
+            V128 v0 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v1 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v2 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v3 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, v3: v3);
+
+            CompareAgainstUnicorn();
+        }
+
         [Test, Pairwise, Description("VTRN.<size> <Vd>, <Vm>")]
         public void Vtrn([Values(0u, 1u, 2u, 3u)] uint vm,
                          [Values(0u, 1u, 2u, 3u)] uint vd,
