@@ -57,7 +57,6 @@ namespace ARMeilleure.Instructions
                 // From dreg.
                 vec = GetVecA32(reg >> 1);
                 insert = context.VectorInsert(vec, value, reg & 1);
-                
             }
             else
             {
@@ -67,6 +66,11 @@ namespace ARMeilleure.Instructions
             }
 
             context.Copy(vec, insert);
+        }
+
+        public static Operand ExtractElement(ArmEmitterContext context, int reg, int size, bool signed)
+        {
+            return EmitVectorExtract32(context, reg >> (4 - size), reg & ((16 >> size) - 1), size, signed);
         }
 
         public static void EmitVectorImmUnaryOp32(ArmEmitterContext context, Func1I emit)
@@ -250,6 +254,57 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVecA32(op.Qd), res);
         }
 
+        public static void EmitVectorBinaryLongOpI32(ArmEmitterContext context, Func2I emit, bool signed)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            Operand res = context.VectorZero();
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size, signed);
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, signed);
+
+                if (op.Size == 2)
+                {
+                    ne = signed ? context.SignExtend32(OperandType.I64, ne) : context.ZeroExtend32(OperandType.I64, ne);
+                    me = signed ? context.SignExtend32(OperandType.I64, me) : context.ZeroExtend32(OperandType.I64, me);
+                }
+
+                res = EmitVectorInsert(context, res, emit(ne, me), index, op.Size + 1);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
+        public static void EmitVectorTernaryLongOpI32(ArmEmitterContext context, Func3I emit, bool signed)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            Operand res = context.VectorZero();
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand de = EmitVectorExtract32(context, op.Qd, op.Id + index, op.Size + 1, signed);
+                Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size,     signed);
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size,     signed);
+
+                if (op.Size == 2)
+                {
+                    ne = signed ? context.SignExtend32(OperandType.I64, ne) : context.ZeroExtend32(OperandType.I64, ne);
+                    me = signed ? context.SignExtend32(OperandType.I64, me) : context.ZeroExtend32(OperandType.I64, me);
+                }
+
+                res = EmitVectorInsert(context, res, emit(de, ne, me), index, op.Size + 1);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
         public static void EmitVectorTernaryOpI32(ArmEmitterContext context, Func3I emit, bool signed)
         {
             OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
@@ -330,7 +385,7 @@ namespace ARMeilleure.Instructions
         {
             OpCode32SimdRegElem op = (OpCode32SimdRegElem)context.CurrOp;
 
-            Operand m = EmitVectorExtract32(context, op.Vm >> (4 - op.Size), op.Vm & ((1 << (4 - op.Size)) - 1), op.Size, signed);
+            Operand m = ExtractElement(context, op.Vm, op.Size, signed);
 
             Operand res = GetVecA32(op.Qd);
 
@@ -340,7 +395,37 @@ namespace ARMeilleure.Instructions
             {
                 Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size, signed);
 
-                res = EmitVectorInsert(context, res, emit(ne, m), op.In + index, op.Size);
+                res = EmitVectorInsert(context, res, emit(ne, m), op.Id + index, op.Size);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
+        public static void EmitVectorByScalarLongOpI32(ArmEmitterContext context, Func2I emit, bool signed)
+        {
+            OpCode32SimdRegElem op = (OpCode32SimdRegElem)context.CurrOp;
+
+            Operand m = ExtractElement(context, op.Vm, op.Size, signed);
+
+            if (op.Size == 2)
+            {
+                m = signed ? context.SignExtend32(OperandType.I64, m) : context.ZeroExtend32(OperandType.I64, m);
+            }
+
+            Operand res = context.VectorZero();
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size, signed);
+
+                if (op.Size == 2)
+                {
+                    ne = signed ? context.SignExtend32(OperandType.I64, ne) : context.ZeroExtend32(OperandType.I64, ne);
+                }
+
+                res = EmitVectorInsert(context, res, emit(ne, m), index, op.Size + 1);
             }
 
             context.Copy(GetVecA32(op.Qd), res);
@@ -454,7 +539,7 @@ namespace ARMeilleure.Instructions
 
         // Narrow
 
-        public static void EmitVectorUnaryNarrowOp32(ArmEmitterContext context, Func1I emit)
+        public static void EmitVectorUnaryNarrowOp32(ArmEmitterContext context, Func1I emit, bool signed = false)
         {
             OpCode32Simd op = (OpCode32Simd)context.CurrOp;
 
@@ -465,7 +550,7 @@ namespace ARMeilleure.Instructions
 
             for (int index = 0; index < elems; index++)
             {
-                Operand m = EmitVectorExtract32(context, op.Qm, index, op.Size + 1, false);
+                Operand m = EmitVectorExtract32(context, op.Qm, index, op.Size + 1, signed);
 
                 res = EmitVectorInsert(context, res, emit(m), id + index, op.Size);
             }

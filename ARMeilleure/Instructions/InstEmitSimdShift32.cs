@@ -1,5 +1,6 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
@@ -11,6 +12,78 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit32
     {
+        public static void Vqrshrn(ArmEmitterContext context)
+        {
+            OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
+
+            EmitRoundShrImmSaturatingNarrowOp(context, op.U ? ShrImmSaturatingNarrowFlags.VectorZxZx : ShrImmSaturatingNarrowFlags.VectorSxSx);
+        }
+
+        public static void Vqrshrun(ArmEmitterContext context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+        }
+
+        public static void Vrshr(ArmEmitterContext context)
+        {
+            OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
+            int shift = GetImmShr(op);
+            long roundConst = 1L << (shift - 1);
+
+            if (op.U)
+            {
+                if (op.Size < 2)
+                {
+                    EmitVectorUnaryOpZx32(context, (op1) =>
+                    {
+                        op1 = context.Add(op1, Const(op1.Type, roundConst));
+
+                        return context.ShiftRightUI(op1, Const(shift));
+                    });
+                }
+                else if (op.Size == 2)
+                {
+                    EmitVectorUnaryOpZx32(context, (op1) =>
+                    {
+                        op1 = context.ZeroExtend32(OperandType.I64, op1);
+                        op1 = context.Add(op1, Const(op1.Type, roundConst));
+
+                        return context.ConvertI64ToI32(context.ShiftRightUI(op1, Const(shift)));
+                    });
+                }
+                else /* if (op.Size == 3) */
+                {
+                    EmitVectorUnaryOpZx32(context, (op1) => EmitShrImm64(context, op1, signed: false, roundConst, shift));
+                }
+            }
+            else
+            {
+                if (op.Size < 2)
+                {
+                    EmitVectorUnaryOpSx32(context, (op1) =>
+                    {
+                        op1 = context.Add(op1, Const(op1.Type, roundConst));
+
+                        return context.ShiftRightSI(op1, Const(shift));
+                    });
+                }
+                else if (op.Size == 2)
+                {
+                    EmitVectorUnaryOpSx32(context, (op1) =>
+                    {
+                        op1 = context.SignExtend32(OperandType.I64, op1);
+                        op1 = context.Add(op1, Const(op1.Type, roundConst));
+
+                        return context.ConvertI64ToI32(context.ShiftRightSI(op1, Const(shift)));
+                    });
+                }
+                else /* if (op.Size == 3) */
+                {
+                    EmitVectorUnaryOpZx32(context, (op1) => EmitShrImm64(context, op1, signed: true, roundConst, shift));
+                }
+            }
+        }
+
         public static void Vshl(ArmEmitterContext context)
         {
             OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
@@ -35,7 +108,7 @@ namespace ARMeilleure.Instructions
         public static void Vshr(ArmEmitterContext context)
         {
             OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
-            int shift = (8 << op.Size) - op.Shift; // Shr amount is flipped.
+            int shift = GetImmShr(op);
             int maxShift = (8 << op.Size) - 1;
 
             if (op.U)
@@ -51,7 +124,7 @@ namespace ARMeilleure.Instructions
         public static void Vshrn(ArmEmitterContext context)
         {
             OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
-            int shift = (8 << op.Size) - op.Shift; // Shr amount is flipped.
+            int shift = GetImmShr(op);
 
             EmitVectorUnaryNarrowOp32(context, (op1) => context.ShiftRightUI(op1, Const(shift)));
         }
@@ -95,6 +168,111 @@ namespace ARMeilleure.Instructions
 
                 return context.ConditionalSelect(isOutOfRange0, Const(op.Type, 0), context.ConditionalSelect(isOutOfRangeN, min, res));
             }
+        }
+
+        [Flags]
+        private enum ShrImmSaturatingNarrowFlags
+        {
+            Scalar = 1 << 0,
+            SignedSrc = 1 << 1,
+            SignedDst = 1 << 2,
+
+            Round = 1 << 3,
+
+            ScalarSxSx = Scalar | SignedSrc | SignedDst,
+            ScalarSxZx = Scalar | SignedSrc,
+            ScalarZxZx = Scalar,
+
+            VectorSxSx = SignedSrc | SignedDst,
+            VectorSxZx = SignedSrc,
+            VectorZxZx = 0
+        }
+
+        private static void EmitRoundShrImmSaturatingNarrowOp(ArmEmitterContext context, ShrImmSaturatingNarrowFlags flags)
+        {
+            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.Round | flags);
+        }
+
+        private static void EmitShrImmSaturatingNarrowOp(ArmEmitterContext context, ShrImmSaturatingNarrowFlags flags)
+        {
+            OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
+
+            bool scalar    = (flags & ShrImmSaturatingNarrowFlags.Scalar)    != 0;
+            bool signedSrc = (flags & ShrImmSaturatingNarrowFlags.SignedSrc) != 0;
+            bool signedDst = (flags & ShrImmSaturatingNarrowFlags.SignedDst) != 0;
+            bool round     = (flags & ShrImmSaturatingNarrowFlags.Round)     != 0;
+
+            if (scalar)
+            {
+                // TODO: Support scalar operation.
+                throw new NotImplementedException();
+            }
+
+            int shift = GetImmShr(op);
+            long roundConst = 1L << (shift - 1);
+
+            EmitVectorUnaryNarrowOp32(context, (op1) =>
+            {
+                if (op.Size <= 1 || !round)
+                {
+                    if (round)
+                    {
+                        op1 = context.Add(op1, Const(op1.Type, roundConst));
+                    }
+
+                    op1 = signedSrc ? context.ShiftRightSI(op1, Const(shift)) : context.ShiftRightUI(op1, Const(shift));
+                }
+                else /* if (op.Size == 2 && round) */
+                {
+                    op1 = EmitShrImm64(context, op1, signedSrc, roundConst, shift); // shift <= 32
+                }
+
+                return EmitSatQ(context, op1, 8 << op.Size, signedDst);
+            }, signedSrc);
+        }
+
+        private static int GetImmShr(OpCode32SimdShImm op)
+        {
+            return (8 << op.Size) - op.Shift; // Shr amount is flipped.
+        }
+
+        // dst64 = (Int(src64, signed) + roundConst) >> shift;
+        private static Operand EmitShrImm64(
+            ArmEmitterContext context,
+            Operand value,
+            bool signed,
+            long roundConst,
+            int shift)
+        {
+            Delegate dlg = signed
+                ? (Delegate)new _S64_S64_S64_S32(SoftFallback.SignedShrImm64)
+                : (Delegate)new _U64_U64_S64_S32(SoftFallback.UnsignedShrImm64);
+
+            return context.Call(dlg, value, Const(roundConst), Const(shift));
+        }
+
+        private static Operand EmitSatQ(ArmEmitterContext context, Operand value, int eSize, bool signed)
+        {
+            Debug.Assert(eSize <= 32);
+
+            long intMin = signed ? -(1L << (eSize - 1)) : 0;
+            long intMax = signed ? (1L << (eSize - 1)) - 1 : (1L << eSize) - 1;
+
+            Operand gt = context.ICompareGreater(value, Const(value.Type, intMax));
+            Operand lt = context.ICompareLess(value, Const(value.Type, intMin));
+
+            value = context.ConditionalSelect(gt, Const(value.Type, intMax), value);
+            value = context.ConditionalSelect(lt, Const(value.Type, intMin), value);
+
+            Operand lblNoSat = Label();
+
+            context.BranchIfFalse(lblNoSat, context.BitwiseOr(gt, lt));
+
+            // TODO: Set QC (to 1) on FPSCR here.
+
+            context.MarkLabel(lblNoSat);
+
+            return value;
         }
     }
 }

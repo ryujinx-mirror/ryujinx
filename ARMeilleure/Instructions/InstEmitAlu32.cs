@@ -128,8 +128,6 @@ namespace ARMeilleure.Instructions
 
         public static void Cmp(ArmEmitterContext context)
         {
-            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
-
             Operand n = GetAluN(context);
             Operand m = GetAluM(context, setCarry: false);
 

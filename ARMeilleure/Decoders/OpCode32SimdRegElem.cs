@@ -6,13 +6,20 @@
         {
             Q = ((opCode >> 24) & 0x1) != 0;
             F = ((opCode >> 8) & 0x1) != 0;
-            Size = ((opCode >> 20) & 0x3);
+            Size = (opCode >> 20) & 0x3;
 
             RegisterSize = Q ? RegisterSize.Simd128 : RegisterSize.Simd64;
 
-            Vm = ((opCode >> 5) & 0x1) | ((opCode << 1) & 0x1e);
+            if (Size == 1)
+            {
+                Vm = ((opCode >> 3) & 0x1) | ((opCode >> 4) & 0x2) | ((opCode << 2) & 0x1c);
+            }
+            else /* if (Size == 2) */
+            {
+                Vm = ((opCode >> 5) & 0x1) | ((opCode << 1) & 0x1e);
+            }
 
-            if (DecoderHelper.VectorArgumentsInvalid(Q, Vd, Vn) || Size == 0 || (Size == 1 && F))
+            if (GetType() == typeof(OpCode32SimdRegElem) && DecoderHelper.VectorArgumentsInvalid(Q, Vd, Vn) || Size == 0 || (Size == 1 && F))
             {
                 Instruction = InstDescriptor.Undefined;
             }

@@ -11,6 +11,52 @@ namespace Ryujinx.Tests.Cpu
 #if SimdShImm32
         private const int RndCnt = 2;
 
+        [Test, Pairwise]
+        public void Vrshr_Vshr_Imm([Values(0u)] uint rd,
+                             [Values(2u, 0u)] uint rm,
+                             [Values(0u, 1u, 2u, 3u)] uint size,
+                             [Random(RndCnt), Values(0u)] uint shiftImm,
+                             [Random(RndCnt)] ulong z,
+                             [Random(RndCnt)] ulong a,
+                             [Random(RndCnt)] ulong b,
+                             [Values] bool u,
+                             [Values] bool q,
+                             [Values] bool round)
+        {
+            uint opcode = 0xf2800010u; // VMOV.I32 D0, #0 (immediate value changes it into SHR)
+            if (q)
+            {
+                opcode |= 1 << 6;
+                rm <<= 1;
+                rd <<= 1;
+            }
+
+            if (round)
+            {
+                opcode |= 1 << 9; // Turn into VRSHR
+            }
+
+            if (u)
+            {
+                opcode |= 1 << 24;
+            }
+
+            uint imm = 1u << ((int)size + 3);
+            imm |= shiftImm & (imm - 1);
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((imm & 0x3f) << 16) | ((imm & 0x40) << 1);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
         [Test, Pairwise, Description("VSHL.<size> {<Vd>}, <Vm>, #<imm>")]
         public void Vshl_Imm([Values(0u)] uint rd,
                              [Values(2u, 0u)] uint rm,
@@ -45,36 +91,23 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("VSHR.<size> {<Vd>}, <Vm>, #<imm>")]
-        public void Vshr_Imm([Values(0u)] uint rd,
-                             [Values(2u, 0u)] uint rm,
-                             [Values(0u, 1u, 2u, 3u)] uint size,
-                             [Random(RndCnt), Values(0u)] uint shiftImm,
-                             [Random(RndCnt)] ulong z,
-                             [Random(RndCnt)] ulong a,
-                             [Random(RndCnt)] ulong b,
-                             [Values] bool u,
-                             [Values] bool q)
+        [Test, Pairwise, Description("VSHRN.<size> <Vd>, <Vm>, #<imm>")]
+        public void Vshrn_Imm([Values(0u, 1u)] uint rd,
+                              [Values(2u, 0u)] uint rm,
+                              [Values(0u, 1u, 2u)] uint size,
+                              [Random(RndCnt), Values(0u)] uint shiftImm,
+                              [Random(RndCnt)] ulong z,
+                              [Random(RndCnt)] ulong a,
+                              [Random(RndCnt)] ulong b)
         {
-            uint opcode = 0xf2800010u; // VMOV.I32 D0, #0 (immediate value changes it into SHR)
-            if (q)
-            {
-                opcode |= 1 << 6;
-                rm <<= 1;
-                rd <<= 1;
-            }
-
-            if (u)
-            {
-                opcode |= 1 << 24;
-            }
+            uint opcode = 0xf2800810u; // VMOV.I16 D0, #0 (immediate value changes it into SHRN)
 
             uint imm = 1u << ((int)size + 3);
             imm |= shiftImm & (imm - 1);
 
             opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
-            opcode |= ((imm & 0x3f) << 16) | ((imm & 0x40) << 1);
+            opcode |= ((imm & 0x3f) << 16);
 
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(a, z);
@@ -85,16 +118,49 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("VSHRN.<size> {<Vd>}, <Vm>, #<imm>")]
-        public void Vshrn_Imm([Values(0u, 1u)] uint rd,
-                              [Values(2u, 0u)] uint rm,
-                              [Values(0u, 1u, 2u)] uint size,
-                              [Random(RndCnt), Values(0u)] uint shiftImm,
-                              [Random(RndCnt)] ulong z,
-                              [Random(RndCnt)] ulong a,
-                              [Random(RndCnt)] ulong b)
+        [Test, Pairwise, Description("VQRSHRN.<type><size> <Vd>, <Vm>, #<imm>")]
+        public void Vqrshrn_Imm([Values(0u, 1u)] uint rd,
+                                [Values(2u, 0u)] uint rm,
+                                [Values(0u, 1u, 2u)] uint size,
+                                [Random(RndCnt), Values(0u)] uint shiftImm,
+                                [Random(RndCnt)] ulong z,
+                                [Random(RndCnt)] ulong a,
+                                [Random(RndCnt)] ulong b,
+                                [Values] bool u)
         {
-            uint opcode = 0xf2800810u; // VMOV.I16 D0, #0 (immediate value changes it into SHRN)
+            uint opcode = 0xf2800950u; // VORR.I16 Q0, #0 (immediate value changes it into QRSHRN)
+
+            uint imm = 1u << ((int)size + 3);
+            imm |= shiftImm & (imm - 1);
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((imm & 0x3f) << 16);
+
+            if (u)
+            {
+                opcode |= 1u << 24;
+            }
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VQRSHRUN.<type><size> <Vd>, <Vm>, #<imm>")]
+        public void Vqrshrun_Imm([Values(0u, 1u)] uint rd,
+                                 [Values(2u, 0u)] uint rm,
+                                 [Values(0u, 1u, 2u)] uint size,
+                                 [Random(RndCnt), Values(0u)] uint shiftImm,
+                                 [Random(RndCnt)] ulong z,
+                                 [Random(RndCnt)] ulong a,
+                                 [Random(RndCnt)] ulong b)
+        {
+            uint opcode = 0xf3800850u; // VMOV.I16 Q0, #0x80 (immediate value changes it into QRSHRUN)
 
             uint imm = 1u << ((int)size + 3);
             imm |= shiftImm & (imm - 1);

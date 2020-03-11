@@ -256,7 +256,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
                 opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
-            } 
+            }
             else
             {
                 opcode |= ((rm & 0x1e) >> 1)  | ((rm & 0x1) << 5);
@@ -280,6 +280,78 @@ namespace Ryujinx.Tests.Cpu
             int fpscr = (int)(TestContext.CurrentContext.Random.NextUInt(0xf) << 28);
 
             SingleOpcode(opcode, v1: v1, v2: v2, overflow: v, carry: c, zero: z, negative: n, fpscr: fpscr, copyFpFlags: true);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VMLSL.<type><size> <Vd>, <Vn>, <Vm>")]
+        public void Vmlsl_I([Values(0u)] uint rd,
+                            [Values(1u, 0u)] uint rn,
+                            [Values(2u, 0u)] uint rm,
+                            [Values(0u, 1u, 2u)] uint size,
+                            [Random(RndCnt)] ulong z,
+                            [Random(RndCnt)] ulong a,
+                            [Random(RndCnt)] ulong b,
+                            [Values] bool u)
+        {
+            uint opcode = 0xf2800a00u; // VMLSL.S8 Q0, D0, D0
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+
+            opcode |= size << 20;
+
+            if (u)
+            {
+                opcode |= 1 << 24;
+            }
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VMULL.<size> <Vd>, <Vn>, <Vm>")]
+        public void Vmull_I([Values(0u)] uint rd,
+                            [Values(1u, 0u)] uint rn,
+                            [Values(2u, 0u)] uint rm,
+                            [Values(0u, 1u, 2u)] uint size,
+                            [Random(RndCnt)] ulong z,
+                            [Random(RndCnt)] ulong a,
+                            [Random(RndCnt)] ulong b,
+                            [Values] bool op,
+                            [Values] bool u)
+        {
+            uint opcode = 0xf2800c00u; // VMULL.S8 Q0, D0, D0
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+
+            if (op)
+            {
+                opcode |= 1 << 9;
+                size = 0;
+                u = false;
+            }
+
+            opcode |= size << 20;
+
+            if (u)
+            {
+                opcode |= 1 << 24;
+            }
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
         }
