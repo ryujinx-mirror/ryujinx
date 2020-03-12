@@ -3,6 +3,8 @@ using System;
 
 namespace ARMeilleure.Instructions
 {
+    delegate bool _Bool();
+
     delegate double _F64_F64(double a1);
     delegate double _F64_F64_Bool(double a1, bool a2);
     delegate double _F64_F64_F64(double a1, double a2);

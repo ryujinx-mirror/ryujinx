@@ -34,7 +34,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.ByteSwap,                GenerateByteSwap);
             Add(Instruction.Call,                    GenerateCall);
             Add(Instruction.Clobber,                 GenerateClobber);
-            Add(Instruction.CompareAndSwap128,       GenerateCompareAndSwap128);
+            Add(Instruction.CompareAndSwap,          GenerateCompareAndSwap);
             Add(Instruction.CompareEqual,            GenerateCompareEqual);
             Add(Instruction.CompareGreater,          GenerateCompareGreater);
             Add(Instruction.CompareGreaterOrEqual,   GenerateCompareGreaterOrEqual);
@@ -76,6 +76,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.Store16,                 GenerateStore16);
             Add(Instruction.Store8,                  GenerateStore8);
             Add(Instruction.Subtract,                GenerateSubtract);
+            Add(Instruction.Tailcall,                GenerateTailcall);
             Add(Instruction.VectorCreateScalar,      GenerateVectorCreateScalar);
             Add(Instruction.VectorExtract,           GenerateVectorExtract);
             Add(Instruction.VectorExtract16,         GenerateVectorExtract16);
@@ -543,13 +544,27 @@ namespace ARMeilleure.CodeGen.X86
             // register allocator, we don't need to produce any code.
         }
 
-        private static void GenerateCompareAndSwap128(CodeGenContext context, Operation operation)
+        private static void GenerateCompareAndSwap(CodeGenContext context, Operation operation)
         {
-            Operand source = operation.GetSource(0);
+            Operand src1 = operation.GetSource(0);
 
-            MemoryOperand memOp = new MemoryOperand(OperandType.I64, source);
+            if (operation.SourcesCount == 5) // CompareAndSwap128 has 5 sources, compared to CompareAndSwap64/32's 3.
+            {
+                MemoryOperand memOp = new MemoryOperand(OperandType.I64, src1);
 
-            context.Assembler.Cmpxchg16b(memOp);
+                context.Assembler.Cmpxchg16b(memOp);
+            }
+            else
+            {
+                Operand src2 = operation.GetSource(1);
+                Operand src3 = operation.GetSource(2);
+
+                EnsureSameType(src2, src3);
+
+                MemoryOperand memOp = new MemoryOperand(src3.Type, src1);
+
+                context.Assembler.Cmpxchg(memOp, src3);
+            }
         }
 
         private static void GenerateCompareEqual(CodeGenContext context, Operation operation)
@@ -1081,6 +1096,13 @@ namespace ARMeilleure.CodeGen.X86
             {
                 context.Assembler.Subsd(dest, src1, src2);
             }
+        }
+
+        private static void GenerateTailcall(CodeGenContext context, Operation operation)
+        {
+            WriteEpilogue(context);
+
+            context.Assembler.Jmp(operation.GetSource(0));
         }
 
         private static void GenerateVectorCreateScalar(CodeGenContext context, Operation operation)

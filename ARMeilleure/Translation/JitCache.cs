@@ -13,9 +13,11 @@ namespace ARMeilleure.Translation
 
         private const int CodeAlignment = 4; // Bytes
 
-        private const int CacheSize = 512 * 1024 * 1024;
+        private const int CacheSize = 2047 * 1024 * 1024;
 
-        private static IntPtr _basePointer;
+        private static ReservedRegion _jitRegion;
+
+        private static IntPtr _basePointer => _jitRegion.Pointer;
 
         private static int _offset;
 
@@ -25,10 +27,11 @@ namespace ARMeilleure.Translation
 
         static JitCache()
         {
-            _basePointer = MemoryManagement.Allocate(CacheSize);
+            _jitRegion = new ReservedRegion(CacheSize);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                _jitRegion.ExpandIfNeeded(PageSize);
                 JitUnwindWindows.InstallFunctionTableHandler(_basePointer, CacheSize);
 
                 // The first page is used for the table based SEH structs.
@@ -96,6 +99,8 @@ namespace ARMeilleure.Translation
             int allocOffset = _offset;
 
             _offset += codeSize;
+
+            _jitRegion.ExpandIfNeeded((ulong)_offset);
 
             if ((ulong)(uint)_offset > CacheSize)
             {

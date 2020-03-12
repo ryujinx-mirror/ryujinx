@@ -143,9 +143,22 @@ namespace ARMeilleure.Translation
             }
         }
 
-        public Operand CompareAndSwap128(Operand address, Operand expected, Operand desired)
+        public void Tailcall(Operand address, params Operand[] callArgs)
         {
-            return Add(Instruction.CompareAndSwap128, Local(OperandType.V128), address, expected, desired);
+            Operand[] args = new Operand[callArgs.Length + 1];
+
+            args[0] = address;
+
+            Array.Copy(callArgs, 0, args, 1, callArgs.Length);
+
+            Add(Instruction.Tailcall, null, args);
+
+            _needsNewBlock = true;
+        }
+
+        public Operand CompareAndSwap(Operand address, Operand expected, Operand desired)
+        {
+            return Add(Instruction.CompareAndSwap, Local(desired.Type), address, expected, desired);
         }
 
         public Operand ConditionalSelect(Operand op1, Operand op2, Operand op3)

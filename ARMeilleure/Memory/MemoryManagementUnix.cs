@@ -30,11 +30,34 @@ namespace ARMeilleure.Memory
             return ptr;
         }
 
+        public static bool Commit(IntPtr address, ulong size)
+        {
+            return Syscall.mprotect(address, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE) == 0;
+        }
+
         public static bool Reprotect(IntPtr address, ulong size, Memory.MemoryProtection protection)
         {
             MmapProts prot = GetProtection(protection);
 
             return Syscall.mprotect(address, size, prot) == 0;
+        }
+
+        public static IntPtr Reserve(ulong size)
+        {
+            ulong pageSize = (ulong)Syscall.sysconf(SysconfName._SC_PAGESIZE);
+
+            const MmapProts prot = MmapProts.PROT_NONE;
+
+            const MmapFlags flags = MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANONYMOUS;
+
+            IntPtr ptr = Syscall.mmap(IntPtr.Zero, size + pageSize, prot, flags, -1, 0);
+
+            if (ptr == IntPtr.Zero)
+            {
+                throw new OutOfMemoryException();
+            }
+
+            return ptr;
         }
 
         private static MmapProts GetProtection(Memory.MemoryProtection protection)

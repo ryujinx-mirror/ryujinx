@@ -44,6 +44,25 @@ namespace ARMeilleure.Memory
             }
         }
 
+        public static bool Commit(IntPtr address, ulong size)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                IntPtr sizeNint = new IntPtr((long)size);
+
+                return MemoryManagementWindows.Commit(address, sizeNint);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+                     RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return MemoryManagementUnix.Commit(address, size);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
         public static void Reprotect(IntPtr address, ulong size, MemoryProtection permission)
         {
             bool result;
@@ -67,6 +86,25 @@ namespace ARMeilleure.Memory
             if (!result)
             {
                 throw new MemoryProtectionException(permission);
+            }
+        }
+
+        public static IntPtr Reserve(ulong size)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                IntPtr sizeNint = new IntPtr((long)size);
+
+                return MemoryManagementWindows.Reserve(sizeNint);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+                     RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return MemoryManagementUnix.Reserve(size);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
             }
         }
 

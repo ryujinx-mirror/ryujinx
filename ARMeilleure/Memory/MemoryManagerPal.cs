@@ -53,7 +53,7 @@ namespace ARMeilleure.Memory
                 Operand expected = context.LoadArgument(OperandType.V128, 1);
                 Operand desired  = context.LoadArgument(OperandType.V128, 2);
 
-                Operand result = context.CompareAndSwap128(address, expected, desired);
+                Operand result = context.CompareAndSwap(address, expected, desired);
 
                 context.Return(result);
 

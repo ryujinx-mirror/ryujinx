@@ -90,6 +90,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Cmpps,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fc2, InstructionFlags.Vex));
             Add(X86Instruction.Cmpsd,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fc2, InstructionFlags.Vex | InstructionFlags.PrefixF2));
             Add(X86Instruction.Cmpss,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fc2, InstructionFlags.Vex | InstructionFlags.PrefixF3));
+            Add(X86Instruction.Cmpxchg,    new InstructionInfo(0x00000fb1, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.None));
             Add(X86Instruction.Cmpxchg16b, new InstructionInfo(0x01000fc7, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.RexW));
             Add(X86Instruction.Comisd,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2f, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Comiss,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2f, InstructionFlags.Vex));
@@ -117,6 +118,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Imul,       new InstructionInfo(BadOp,      0x0000006b, 0x00000069, BadOp,      0x00000faf, InstructionFlags.None));
             Add(X86Instruction.Imul128,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x050000f7, InstructionFlags.None));
             Add(X86Instruction.Insertps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a21, InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Jmp,        new InstructionInfo(0x040000ff, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.None));
             Add(X86Instruction.Lea,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x0000008d, InstructionFlags.None));
             Add(X86Instruction.Maxpd,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5f, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Maxps,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5f, InstructionFlags.Vex));
@@ -328,6 +330,13 @@ namespace ARMeilleure.CodeGen.X86
             WriteByte(0x99);
         }
 
+        public void Cmpxchg(MemoryOperand memOp, Operand src)
+        {
+            WriteByte(LockPrefix);
+
+            WriteInstruction(memOp, src, src.Type, X86Instruction.Cmpxchg);
+        }
+
         public void Cmpxchg16b(MemoryOperand memOp)
         {
             WriteByte(LockPrefix);
@@ -478,6 +487,11 @@ namespace ARMeilleure.CodeGen.X86
             {
                 throw new ArgumentOutOfRangeException(nameof(offset));
             }
+        }
+
+        public void Jmp(Operand dest)
+        {
+            WriteInstruction(dest, null, OperandType.None, X86Instruction.Jmp);
         }
 
         public void Lea(Operand dest, Operand source, OperandType type)

@@ -144,22 +144,34 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void EmitBxWritePc(ArmEmitterContext context, Operand pc)
+        public static bool IsA32Return(ArmEmitterContext context)
         {
+            switch (context.CurrOp)
+            {
+                case IOpCode32MemMult op:
+                    return true; // Setting PC using LDM is nearly always a return.
+                case OpCode32AluRsImm op:
+                    return op.Rm == RegisterAlias.Aarch32Lr;
+                case OpCode32AluRsReg op:
+                    return op.Rm == RegisterAlias.Aarch32Lr;
+                case OpCode32AluReg op:
+                    return op.Rm == RegisterAlias.Aarch32Lr;
+                case OpCode32Mem op:
+                    return op.Rn == RegisterAlias.Aarch32Sp && op.WBack && !op.Index; // Setting PC to an address stored on the stack is nearly always a return.
+            }
+            return false;
+        }
+
+        public static void EmitBxWritePc(ArmEmitterContext context, Operand pc, int sourceRegister = 0)
+        {
+            bool isReturn = sourceRegister == RegisterAlias.Aarch32Lr || IsA32Return(context);
             Operand mode = context.BitwiseAnd(pc, Const(1));
 
             SetFlag(context, PState.TFlag, mode);
 
-            Operand lblArmMode = Label();
+            Operand addr = context.ConditionalSelect(mode, context.BitwiseOr(pc, Const((int)InstEmitFlowHelper.CallFlag)), context.BitwiseAnd(pc, Const(~3)));
 
-            context.BranchIfTrue(lblArmMode, mode);
-
-            // Make this count as a call, the translator will ignore the low bit for the address.
-            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(pc, Const((int)InstEmitFlowHelper.CallFlag))));
-
-            context.MarkLabel(lblArmMode);
-
-            context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(context.BitwiseAnd(pc, Const(~3)), Const((int)InstEmitFlowHelper.CallFlag))));
+            InstEmitFlowHelper.EmitVirtualJump(context, addr, isReturn);
         }
 
         public static Operand GetIntOrZR(ArmEmitterContext context, int regIndex)

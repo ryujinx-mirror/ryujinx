@@ -21,7 +21,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                context.Return(Const(op.Immediate));
+                EmitTailContinue(context, Const(op.Immediate), context.CurrBlock.TailCall);
             }
         }
 
@@ -56,7 +56,7 @@ namespace ARMeilleure.Instructions
         {
             OpCodeBReg op = (OpCodeBReg)context.CurrOp;
 
-            EmitVirtualJump(context, GetIntOrZR(context, op.Rn));
+            EmitVirtualJump(context, GetIntOrZR(context, op.Rn), op.Rn == RegisterAlias.Lr);
         }
 
         public static void Cbnz(ArmEmitterContext context) => EmitCb(context, onNotZero: true);
@@ -71,7 +71,7 @@ namespace ARMeilleure.Instructions
 
         public static void Ret(ArmEmitterContext context)
         {
-            context.Return(context.BitwiseOr(GetIntOrZR(context, RegisterAlias.Lr), Const(CallFlag)));
+            context.Return(GetIntOrZR(context, RegisterAlias.Lr));
         }
 
         public static void Tbnz(ArmEmitterContext context) => EmitTb(context, onNotZero: true);
@@ -96,7 +96,7 @@ namespace ARMeilleure.Instructions
 
                 if (context.CurrBlock.Next == null)
                 {
-                    context.Return(Const(op.Address + 4));
+                    EmitTailContinue(context, Const(op.Address + 4));
                 }
             }
             else
@@ -105,11 +105,11 @@ namespace ARMeilleure.Instructions
 
                 EmitCondBranch(context, lblTaken, cond);
 
-                context.Return(Const(op.Address + 4));
+                EmitTailContinue(context, Const(op.Address + 4));
 
                 context.MarkLabel(lblTaken);
 
-                context.Return(Const(op.Immediate));
+                EmitTailContinue(context, Const(op.Immediate));
             }
         }
 
@@ -132,7 +132,7 @@ namespace ARMeilleure.Instructions
 
                 if (context.CurrBlock.Next == null)
                 {
-                    context.Return(Const(op.Address + 4));
+                    EmitTailContinue(context, Const(op.Address + 4));
                 }
             }
             else
@@ -148,11 +148,11 @@ namespace ARMeilleure.Instructions
                     context.BranchIfFalse(lblTaken, value);
                 }
 
-                context.Return(Const(op.Address + 4));
+                EmitTailContinue(context, Const(op.Address + 4));
 
                 context.MarkLabel(lblTaken);
 
-                context.Return(Const(op.Immediate));
+                EmitTailContinue(context, Const(op.Immediate));
             }
         }
     }

@@ -1141,9 +1141,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             Owner.Translator.Execute(Context, entrypoint);
 
-            Context.Dispose();
-
             ThreadExit();
+
+            Context.Dispose();
         }
 
         private void ThreadExit()

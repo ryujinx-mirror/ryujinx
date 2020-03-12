@@ -116,12 +116,14 @@ namespace ARMeilleure.Instructions
         {
             Debug.Assert(value.Type == OperandType.I32);
 
-            context.StoreToContext();
-
             if (IsThumb(context.CurrOp))
             {
-                // Make this count as a call, the translator will ignore the low bit for the address.
-                context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(value, Const(1))));
+                context.StoreToContext();
+                bool isReturn = IsA32Return(context);
+
+                Operand addr = context.BitwiseOr(value, Const(1));
+
+                InstEmitFlowHelper.EmitVirtualJump(context, addr, isReturn);
             }
             else
             {
@@ -138,18 +140,8 @@ namespace ARMeilleure.Instructions
                 if (setFlags)
                 {
                     // TODO: Load SPSR etc.
-                    Operand isThumb = GetFlag(PState.TFlag);
 
-                    Operand lblThumb = Label();
-
-                    context.BranchIfTrue(lblThumb, isThumb);
-
-                    // Make this count as a call, the translator will ignore the low bit for the address.
-                    context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(context.BitwiseAnd(value, Const(~3)), Const(1))));
-
-                    context.MarkLabel(lblThumb);
-
-                    context.Return(context.ZeroExtend32(OperandType.I64, context.BitwiseOr(value, Const(1))));
+                    EmitBxWritePc(context, value);
                 }
                 else
                 {

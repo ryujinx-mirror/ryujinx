@@ -89,11 +89,34 @@ namespace ARMeilleure.Memory
             return ptr;
         }
 
+        public static bool Commit(IntPtr location, IntPtr size)
+        {
+            const AllocationType flags = AllocationType.Commit;
+
+            IntPtr ptr = VirtualAlloc(location, size, flags, MemoryProtection.ReadWrite);
+
+            return ptr != IntPtr.Zero;
+        }
+
         public static bool Reprotect(IntPtr address, IntPtr size, Memory.MemoryProtection protection)
         {
             MemoryProtection prot = GetProtection(protection);
 
             return VirtualProtect(address, size, prot, out _);
+        }
+
+        public static IntPtr Reserve(IntPtr size)
+        {
+            const AllocationType flags = AllocationType.Reserve;
+
+            IntPtr ptr = VirtualAlloc(IntPtr.Zero, size, flags, MemoryProtection.ReadWrite);
+
+            if (ptr == IntPtr.Zero)
+            {
+                throw new OutOfMemoryException();
+            }
+
+            return ptr;
         }
 
         private static MemoryProtection GetProtection(Memory.MemoryProtection protection)

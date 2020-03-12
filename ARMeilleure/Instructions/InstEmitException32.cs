@@ -1,6 +1,7 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.Translation;
 
+using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.Instructions
@@ -29,7 +30,7 @@ namespace ARMeilleure.Instructions
 
             if (context.CurrBlock.Next == null)
             {
-                context.Return(Const(op.Address + 4));
+                EmitTailContinue(context, Const(op.Address + 4));
             }
         }
     }

@@ -11,6 +11,8 @@ namespace ARMeilleure.Decoders
         public Block Next   { get; set; }
         public Block Branch { get; set; }
 
+        public bool TailCall { get; set; }
+
         public List<OpCode> OpCodes { get; private set; }
 
         public Block()

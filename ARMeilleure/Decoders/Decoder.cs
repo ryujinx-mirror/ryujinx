@@ -1,3 +1,4 @@
+using ARMeilleure.Decoders.Optimizations;
 using ARMeilleure.Instructions;
 using ARMeilleure.Memory;
 using ARMeilleure.State;
@@ -14,6 +15,9 @@ namespace ARMeilleure.Decoders
         // this prevents functions being potentially too large, which would
         // take too long to compile and use too much memory.
         private const int MaxInstsPerFunction = 5000;
+
+        // For lower code quality translation, we set a lower limit since we're blocking execution.
+        private const int MaxInstsPerFunctionLowCq = 500;
 
         private delegate object MakeOp(InstDescriptor inst, ulong address, int opCode);
 
@@ -33,7 +37,7 @@ namespace ARMeilleure.Decoders
             return new Block[] { block };
         }
 
-        public static Block[] DecodeFunction(MemoryManager memory, ulong address, ExecutionMode mode)
+        public static Block[] DecodeFunction(MemoryManager memory, ulong address, ExecutionMode mode, bool highCq)
         {
             List<Block> blocks = new List<Block>();
 
@@ -43,11 +47,13 @@ namespace ARMeilleure.Decoders
 
             int opsCount = 0;
 
+            int instructionLimit = highCq ? MaxInstsPerFunction : MaxInstsPerFunctionLowCq;
+
             Block GetBlock(ulong blkAddress)
             {
                 if (!visited.TryGetValue(blkAddress, out Block block))
                 {
-                    if (opsCount > MaxInstsPerFunction || !memory.IsMapped((long)blkAddress))
+                    if (opsCount > instructionLimit || !memory.IsMapped((long)blkAddress))
                     {
                         return null;
                     }
@@ -121,7 +127,7 @@ namespace ARMeilleure.Decoders
                         currBlock.Branch = GetBlock((ulong)op.Immediate);
                     }
 
-                    if (!IsUnconditionalBranch(lastOp) /*|| isCall*/)
+                    if (!IsUnconditionalBranch(lastOp) || isCall)
                     {
                         currBlock.Next = GetBlock(currBlock.EndAddress);
                     }
@@ -140,10 +146,12 @@ namespace ARMeilleure.Decoders
                 }
             }
 
+            TailCallRemover.RunPass(address, blocks);
+
             return blocks.ToArray();
         }
 
-        private static bool BinarySearch(List<Block> blocks, ulong address, out int index)
+        public static bool BinarySearch(List<Block> blocks, ulong address, out int index)
         {
             index = 0;
 

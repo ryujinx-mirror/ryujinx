@@ -10,7 +10,7 @@ namespace ARMeilleure.State
         private const int IntSize   = 8;
         private const int VecSize   = 16;
         private const int FlagSize  = 4;
-        private const int ExtraSize = 4;
+        private const int ExtraSize = 8;
 
         private const int TotalSize = RegisterConsts.IntRegsCount * IntSize  +
                                       RegisterConsts.VecRegsCount * VecSize  +
@@ -181,6 +181,14 @@ namespace ARMeilleure.State
                    RegisterConsts.VecRegsCount * VecSize  +
                    RegisterConsts.FlagsCount   * FlagSize +
                    RegisterConsts.FpFlagsCount * FlagSize;
+        }
+
+        public static int GetCallAddressOffset()
+        {
+            return RegisterConsts.IntRegsCount * IntSize  +
+                   RegisterConsts.VecRegsCount * VecSize  +
+                   RegisterConsts.FlagsCount   * FlagSize +
+                   RegisterConsts.FpFlagsCount * FlagSize + 4;
         }
 
         public void Dispose()

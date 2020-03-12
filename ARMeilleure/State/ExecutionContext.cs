@@ -5,7 +5,7 @@ namespace ARMeilleure.State
 {
     public class ExecutionContext
     {
-        private const int MinCountForCheck = 40000;
+        private const int MinCountForCheck = 4000;
 
         private NativeContext _nativeContext;
 
@@ -57,7 +57,7 @@ namespace ARMeilleure.State
             }
         }
 
-        public bool Running { get; set; }
+        internal bool Running { get; private set; }
 
         public event EventHandler<EventArgs>              Interrupt;
         public event EventHandler<InstExceptionEventArgs> Break;
@@ -124,6 +124,12 @@ namespace ARMeilleure.State
         internal void OnUndefined(ulong address, int opCode)
         {
             Undefined?.Invoke(this, new InstUndefinedEventArgs(address, opCode));
+        }
+
+        public void StopRunning()
+        {
+            Running = false;
+            _nativeContext.SetCounter(0);
         }
 
         public void Dispose()

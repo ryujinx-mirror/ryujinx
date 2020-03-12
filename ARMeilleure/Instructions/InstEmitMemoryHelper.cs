@@ -51,7 +51,7 @@ namespace ARMeilleure.Instructions
                 EmitReadInt(context, address, rt, size);
             }
 
-            if (!isSimd)
+            if (!isSimd && !(context.CurrOp is OpCode32 && rt == State.RegisterAlias.Aarch32Pc))
             {
                 Operand value = GetInt(context, rt);
 
