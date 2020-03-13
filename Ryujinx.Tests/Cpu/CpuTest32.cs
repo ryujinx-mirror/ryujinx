@@ -164,11 +164,11 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        protected void ExecuteOpcodes()
+        protected void ExecuteOpcodes(bool runUnicorn = true)
         {
             _translator.Execute(_context, _entryPoint);
 
-            if (_unicornAvailable)
+            if (_unicornAvailable && runUnicorn)
             {
                 _unicornEmu.RunForCount((ulong)(_currAddress - _entryPoint - 4) / 4);
             }
@@ -193,7 +193,8 @@ namespace Ryujinx.Tests.Cpu
                                                 bool zero = false,
                                                 bool negative = false,
                                                 int fpscr = 0,
-                                                bool copyFpFlags = false)
+                                                bool copyFpFlags = false,
+                                                bool runUnicorn = true)
         {
             Opcode(opcode);
             if (copyFpFlags)
@@ -202,7 +203,7 @@ namespace Ryujinx.Tests.Cpu
             }
             Opcode(0xe12fff1e); // BX LR
             SetContext(r0, r1, r2, r3, sp, v0, v1, v2, v3, v4, v5, v14, v15, overflow, carry, zero, negative, fpscr);
-            ExecuteOpcodes();
+            ExecuteOpcodes(runUnicorn);
 
             return GetContext();
         }

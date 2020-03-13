@@ -12,14 +12,16 @@ namespace Ryujinx.Tests.Cpu
 #if SimdLogical32
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _Vbif_Vbit_Vbsl_Vand_()
+        private static uint[] _Vbif_Vbit_Vbsl_Vand_Vorr_Veor_()
         {
             return new uint[]
             {
                 0xf3300110u, // VBIF D0, D0, D0
                 0xf3200110u, // VBIT D0, D0, D0
                 0xf3100110u, // VBSL D0, D0, D0
-                0xf2000110u  // VAND D0, D0, D0
+                0xf2000110u, // VAND D0, D0, D0
+                0xf2200110u, // VORR D0, D0, D0
+                0xf3000110u  // VEOR D0, D0, D0
             };
         }
  #endregion
@@ -27,14 +29,14 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 2;
 
         [Test, Pairwise]
-        public void Vbif_Vbit_Vbsl_Vand([ValueSource("_Vbif_Vbit_Vbsl_Vand_")] uint opcode,
-                                        [Range(0u, 4u)] uint rd,
-                                        [Range(0u, 4u)] uint rn,
-                                        [Range(0u, 4u)] uint rm,
-                                        [Random(RndCnt)] ulong z,
-                                        [Random(RndCnt)] ulong a,
-                                        [Random(RndCnt)] ulong b,
-                                        [Values] bool q)
+        public void Vbif_Vbit_Vbsl_Vand_Vorr_Veor([ValueSource("_Vbif_Vbit_Vbsl_Vand_Vorr_Veor_")] uint opcode,
+                                                  [Range(0u, 4u)] uint rd,
+                                                  [Range(0u, 4u)] uint rn,
+                                                  [Range(0u, 4u)] uint rm,
+                                                  [Random(RndCnt)] ulong z,
+                                                  [Random(RndCnt)] ulong a,
+                                                  [Random(RndCnt)] ulong b,
+                                                  [Values] bool q)
         {
             if (q)
             {

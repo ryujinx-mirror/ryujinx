@@ -547,6 +547,7 @@ namespace ARMeilleure.Instructions
         Vcvt,
         Vdiv,
         Vdup,
+        Veor,
         Vext,
         Vld1,
         Vld2,

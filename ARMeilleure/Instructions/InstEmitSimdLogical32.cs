@@ -55,6 +55,18 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Veor_I(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitVectorBinaryOpF32(context, Intrinsic.X86Pxor, Intrinsic.X86Pxor);
+            }
+            else
+            {
+                EmitVectorBinaryOpZx32(context, (op1, op2) => context.BitwiseExclusiveOr(op1, op2));
+            }
+        }
+
         public static void Vorr_I(ArmEmitterContext context)
         {
             if (Optimizations.UseSse2)
