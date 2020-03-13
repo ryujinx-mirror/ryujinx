@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Gpu.State;
+using System.IO;
 
 namespace Ryujinx.Graphics.Gpu
 {
@@ -61,13 +62,13 @@ namespace Ryujinx.Graphics.Gpu
             /// </summary>
             /// <param name="mme">Program code</param>
             /// <param name="state">Current GPU state</param>
-            public void Execute(int[] mme, GpuState state)
+            public void Execute(int[] mme, ShadowRamControl shadowCtrl, GpuState state, GpuState shadowState)
             {
                 if (_executionPending)
                 {
                     _executionPending = false;
 
-                    _interpreter?.Execute(mme, Position, _argument, state);
+                    _interpreter?.Execute(mme, Position, _argument, shadowCtrl, state, shadowState);
                 }
             }
 
@@ -84,6 +85,8 @@ namespace Ryujinx.Graphics.Gpu
         private int _currMacroPosition;
         private int _currMacroBindIndex;
 
+        private ShadowRamControl _shadowCtrl;
+
         private CachedMacro[] _macros;
 
         private int[] _mme;
@@ -99,6 +102,11 @@ namespace Ryujinx.Graphics.Gpu
             public GpuState State { get; }
 
             /// <summary>
+            /// Sub-channel shadow GPU state (used as backup storage to restore MME changes).
+            /// </summary>
+            public GpuState ShadowState { get; }
+
+            /// <summary>
             /// Engine bound to the sub-channel.
             /// </summary>
             public ClassId  Class { get; set; }
@@ -109,6 +117,7 @@ namespace Ryujinx.Graphics.Gpu
             public SubChannel()
             {
                 State = new GpuState();
+                ShadowState = new GpuState();
             }
         }
 
@@ -188,11 +197,22 @@ namespace Ryujinx.Graphics.Gpu
 
                         break;
                     }
+
+                    case NvGpuFifoMeth.SetMmeShadowRamControl:
+                    {
+                        _shadowCtrl = (ShadowRamControl)meth.Argument;
+
+                        break;
+                    }
                 }
             }
             else if (meth.Method < 0xe00)
             {
-                _subChannels[meth.SubChannel].State.CallMethod(meth);
+                SubChannel sc = _subChannels[meth.SubChannel];
+
+                sc.ShadowState.Write(meth.Method, meth.Argument);
+
+                sc.State.CallMethod(meth);
             }
             else
             {
@@ -209,7 +229,9 @@ namespace Ryujinx.Graphics.Gpu
 
                 if (meth.IsLastCall)
                 {
-                    _macros[macroIndex].Execute(_mme, _subChannels[meth.SubChannel].State);
+                    SubChannel sc = _subChannels[meth.SubChannel];
+
+                    _macros[macroIndex].Execute(_mme, _shadowCtrl, sc.State, sc.ShadowState);
 
                     _context.Methods.PerformDeferredDraws();
                 }
