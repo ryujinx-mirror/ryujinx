@@ -51,7 +51,7 @@ namespace Ryujinx.Ui
         private Input.NpadController _primaryController;
 
         public GLRenderer(Switch device)
-            : base (new GraphicsMode(new ColorFormat()),
+            : base (GetGraphicsMode(),
             3, 3,
             GraphicsContextFlags.ForwardCompatible)
         {
@@ -78,6 +78,16 @@ namespace Ryujinx.Ui
                           | Gdk.EventMask.KeyReleaseMask));
 
             this.Shown += Renderer_Shown;
+        }
+
+        private static GraphicsMode GetGraphicsMode()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                return new GraphicsMode(new ColorFormat(24));
+            }
+
+            return new GraphicsMode(new ColorFormat());
         }
 
         private void GLRenderer_ShuttingDown(object sender, EventArgs args)
