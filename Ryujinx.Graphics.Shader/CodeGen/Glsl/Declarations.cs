@@ -254,7 +254,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             Dictionary<string, AstTextureOperation> samplers = new Dictionary<string, AstTextureOperation>();
 
-            foreach (AstTextureOperation texOp in info.Samplers.OrderBy(x => x.Handle))
+            // Texture instructions other than TextureSample (like TextureSize)
+            // may have incomplete sampler type information. In those cases,
+            // we prefer instead the more accurate information from the
+            // TextureSample instruction, if both are available.
+            foreach (AstTextureOperation texOp in info.Samplers.OrderBy(x => x.Handle * 2 + (x.Inst == Instruction.TextureSample ? 0 : 1)))
             {
                 string indexExpr = NumberFormatter.FormatInt(texOp.ArraySize);
 
