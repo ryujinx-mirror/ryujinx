@@ -3,6 +3,7 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.OperationHelper;
 
 namespace ARMeilleure.CodeGen.X86
 {
@@ -34,7 +35,7 @@ namespace ARMeilleure.CodeGen.X86
                         {
                             Operand temp = Local(src1.Type);
 
-                            Operation copyOp = new Operation(Instruction.Copy, temp, src1);
+                            Operation copyOp = Operation(Instruction.Copy, temp, src1);
 
                             block.Operations.AddBefore(operation, copyOp);
 
@@ -45,7 +46,7 @@ namespace ARMeilleure.CodeGen.X86
                         {
                             Operand temp = Local(src2.Type);
 
-                            Operation copyOp = new Operation(Instruction.Copy, temp, src2);
+                            Operation copyOp = Operation(Instruction.Copy, temp, src2);
 
                             block.Operations.AddBefore(operation, copyOp);
 
@@ -110,7 +111,7 @@ namespace ARMeilleure.CodeGen.X86
                 return null;
             }
 
-            return new MemoryOperand(type, baseOp, indexOp, scale, imm);
+            return MemoryOp(type, baseOp, indexOp, scale, imm);
         }
 
         private static int GetConstOp(ref Operand baseOp)

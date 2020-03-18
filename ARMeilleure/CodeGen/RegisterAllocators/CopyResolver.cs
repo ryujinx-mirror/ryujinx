@@ -2,6 +2,9 @@ using ARMeilleure.IntermediateRepresentation;
 using System;
 using System.Collections.Generic;
 
+using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.OperationHelper;
+
 namespace ARMeilleure.CodeGen.RegisterAllocators
 {
     class CopyResolver
@@ -133,14 +136,14 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             private static void EmitCopy(List<Operation> sequence, Operand x, Operand y)
             {
-                sequence.Add(new Operation(Instruction.Copy, x, y));
+                sequence.Add(Operation(Instruction.Copy, x, y));
             }
 
             private static void EmitXorSwap(List<Operation> sequence, Operand x, Operand y)
             {
-                sequence.Add(new Operation(Instruction.BitwiseExclusiveOr, x, x, y));
-                sequence.Add(new Operation(Instruction.BitwiseExclusiveOr, y, y, x));
-                sequence.Add(new Operation(Instruction.BitwiseExclusiveOr, x, x, y));
+                sequence.Add(Operation(Instruction.BitwiseExclusiveOr, x, x, y));
+                sequence.Add(Operation(Instruction.BitwiseExclusiveOr, y, y, x));
+                sequence.Add(Operation(Instruction.BitwiseExclusiveOr, x, x, y));
             }
         }
 
@@ -194,20 +197,20 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         {
             Operand register = GetRegister(right.Register, type);
 
-            Operand offset = new Operand(left.SpillOffset);
+            Operand offset = Const(left.SpillOffset);
 
-            _fillQueue.Enqueue(new Operation(Instruction.Fill, register, offset));
+            _fillQueue.Enqueue(Operation(Instruction.Fill, register, offset));
 
             HasCopy = true;
         }
 
         private void AddSplitSpill(LiveInterval left, LiveInterval right, OperandType type)
         {
-            Operand offset = new Operand(right.SpillOffset);
+            Operand offset = Const(right.SpillOffset);
 
             Operand register = GetRegister(left.Register, type);
 
-            _spillQueue.Enqueue(new Operation(Instruction.Spill, null, offset, register));
+            _spillQueue.Enqueue(Operation(Instruction.Spill, null, offset, register));
 
             HasCopy = true;
         }
@@ -240,7 +243,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private static Operand GetRegister(Register reg, OperandType type)
         {
-            return new Operand(reg.Index, reg.Type, type);
+            return Register(reg.Index, reg.Type, type);
         }
     }
 }

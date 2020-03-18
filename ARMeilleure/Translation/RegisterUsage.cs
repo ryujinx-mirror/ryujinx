@@ -3,6 +3,7 @@ using ARMeilleure.State;
 using System;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.OperationHelper;
 
 namespace ARMeilleure.Translation
 {
@@ -299,16 +300,16 @@ namespace ARMeilleure.Translation
 
                 Operand addr = Local(OperandType.I64);
 
-                Operation loadOp = new Operation(Instruction.Load, dest, addr);
+                Operation loadOp = Operation(Instruction.Load, dest, addr);
 
                 block.Operations.AddFirst(loadOp);
 
-                Operation calcOffsOp = new Operation(Instruction.Add, addr, arg0, Const(offset));
+                Operation calcOffsOp = Operation(Instruction.Add, addr, arg0, Const(offset));
 
                 block.Operations.AddFirst(calcOffsOp);
             }
 
-            Operation loadArg0 = new Operation(Instruction.LoadArgument, arg0, Const(0));
+            Operation loadArg0 = Operation(Instruction.LoadArgument, arg0, Const(0));
 
             block.Operations.AddFirst(loadArg0);
         }
@@ -329,7 +330,7 @@ namespace ARMeilleure.Translation
 
             Operand arg0 = Local(OperandType.I64);
 
-            Operation loadArg0 = new Operation(Instruction.LoadArgument, arg0, Const(0));
+            Operation loadArg0 = Operation(Instruction.LoadArgument, arg0, Const(0));
 
             block.Append(loadArg0);
 
@@ -348,11 +349,11 @@ namespace ARMeilleure.Translation
 
                 Operand addr = Local(OperandType.I64);
 
-                Operation calcOffsOp = new Operation(Instruction.Add, addr, arg0, Const(offset));
+                Operation calcOffsOp = Operation(Instruction.Add, addr, arg0, Const(offset));
 
                 block.Append(calcOffsOp);
 
-                Operation storeOp = new Operation(Instruction.Store, null, addr, source);
+                Operation storeOp = Operation(Instruction.Store, null, addr, source);
 
                 block.Append(storeOp);
             }
@@ -362,15 +363,15 @@ namespace ARMeilleure.Translation
         {
             if (bit < RegsCount)
             {
-                return new Operand(bit, baseType, GetOperandType(baseType, mode));
+                return OperandHelper.Register(bit, baseType, GetOperandType(baseType, mode));
             }
             else if (baseType == RegisterType.Integer)
             {
-                return new Operand(bit & RegsMask, RegisterType.Flag, OperandType.I32);
+                return OperandHelper.Register(bit & RegsMask, RegisterType.Flag, OperandType.I32);
             }
             else if (baseType == RegisterType.Vector)
             {
-                return new Operand(bit & RegsMask, RegisterType.FpFlag, OperandType.I32);
+                return OperandHelper.Register(bit & RegsMask, RegisterType.FpFlag, OperandType.I32);
             }
             else
             {

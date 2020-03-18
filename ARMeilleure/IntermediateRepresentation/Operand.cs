@@ -5,16 +5,16 @@ namespace ARMeilleure.IntermediateRepresentation
 {
     class Operand
     {
-        public OperandKind Kind { get; }
+        public OperandKind Kind { get; private set; }
 
-        public OperandType Type { get; }
+        public OperandType Type { get; private set; }
 
         public ulong Value { get; private set; }
 
         public List<Node> Assignments { get; }
         public List<Node> Uses        { get; }
 
-        private Operand()
+        public Operand()
         {
             Assignments = new List<Node>();
             Uses        = new List<Node>();
@@ -26,42 +26,50 @@ namespace ARMeilleure.IntermediateRepresentation
             Type = type;
         }
 
-        public Operand(int value) : this(OperandKind.Constant, OperandType.I32)
+        public Operand With(OperandKind kind, OperandType type = OperandType.None, ulong value = 0)
         {
-            Value = (uint)value;
-        }
-
-        public Operand(uint value) : this(OperandKind.Constant, OperandType.I32)
-        {
-            Value = (uint)value;
-        }
-
-        public Operand(long value) : this(OperandKind.Constant, OperandType.I64)
-        {
-            Value = (ulong)value;
-        }
-
-        public Operand(ulong value) : this(OperandKind.Constant, OperandType.I64)
-        {
-            Value = value;
-        }
-
-        public Operand(float value) : this(OperandKind.Constant, OperandType.FP32)
-        {
-            Value = (ulong)BitConverter.SingleToInt32Bits(value);
-        }
-
-        public Operand(double value) : this(OperandKind.Constant, OperandType.FP64)
-        {
-            Value = (ulong)BitConverter.DoubleToInt64Bits(value);
-        }
-
-        public Operand(int index, RegisterType regType, OperandType type) : this()
-        {
-            Kind = OperandKind.Register;
+            Kind = kind;
             Type = type;
+            Value = value;
 
-            Value = (ulong)((int)regType << 24 | index);
+            Assignments.Clear();
+            Uses.Clear();
+            return this;
+        }
+
+        public Operand With(int value)
+        {
+            return With(OperandKind.Constant, OperandType.I32, (uint)value);
+        }
+
+        public Operand With(uint value)
+        {
+            return With(OperandKind.Constant, OperandType.I32, value);
+        }
+
+        public Operand With(long value)
+        {
+            return With(OperandKind.Constant, OperandType.I64, (ulong)value);
+        }
+
+        public Operand With(ulong value)
+        {
+            return With(OperandKind.Constant, OperandType.I64, value);
+        }
+
+        public Operand With(float value)
+        {
+            return With(OperandKind.Constant, OperandType.FP32, (ulong)BitConverter.SingleToInt32Bits(value));
+        }
+
+        public Operand With(double value)
+        {
+            return With(OperandKind.Constant, OperandType.FP64, (ulong)BitConverter.DoubleToInt64Bits(value));
+        }
+
+        public Operand With(int index, RegisterType regType, OperandType type)
+        {
+            return With(OperandKind.Register, type, (ulong)((int)regType << 24 | index));
         }
 
         public Register GetRegister()

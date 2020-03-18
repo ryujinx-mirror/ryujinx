@@ -1,10 +1,11 @@
-using ARMeilleure.Common;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.OperationHelper;
 
 namespace ARMeilleure.CodeGen.RegisterAllocators
 {
@@ -265,7 +266,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                                 node.SetSource(srcIndex, temp);
                             }
 
-                            Operation fillOp = new Operation(Instruction.Fill, temp, Const(info.SpillOffset));
+                            Operation fillOp = Operation(Instruction.Fill, temp, Const(info.SpillOffset));
 
                             block.Operations.AddBefore(node, fillOp);
                         }
@@ -317,7 +318,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                             if (info.IsBlockLocal && mask != 0)
                             {
-                                int selectedReg = BitUtils.LowestBitSet(mask);
+                                int selectedReg = BitOperations.TrailingZeroCount(mask);
 
                                 info.Register = selectedReg;
 
@@ -363,7 +364,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                             node.SetDestination(dstIndex, temp);
 
-                            Operation spillOp = new Operation(Instruction.Spill, null, Const(info.SpillOffset), temp);
+                            Operation spillOp = Operation(Instruction.Spill, null, Const(info.SpillOffset), temp);
 
                             block.Operations.AddAfter(node, spillOp);
 
@@ -415,7 +416,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private static Operand GetSpillTemp(Operand local, int freeMask, ref int useMask)
         {
-            int selectedReg = BitUtils.LowestBitSet(freeMask & ~useMask);
+            int selectedReg = BitOperations.TrailingZeroCount(freeMask & ~useMask);
 
             useMask |= 1 << selectedReg;
 

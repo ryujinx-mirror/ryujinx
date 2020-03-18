@@ -459,14 +459,63 @@ namespace ARMeilleure.Translation
             return Add(Instruction.ZeroExtend8, Local(type), op1);
         }
 
-        private Operand Add(Instruction inst, Operand dest = null, params Operand[] sources)
+        private void NewNextBlockIfNeeded()
         {
             if (_needsNewBlock)
             {
                 NewNextBlock();
             }
+        }
 
-            Operation operation = new Operation(inst, dest, sources);
+        private Operand Add(Instruction inst, Operand dest = null)
+        {
+            NewNextBlockIfNeeded();
+
+            Operation operation = OperationHelper.Operation(inst, dest);
+
+            _irBlock.Operations.AddLast(operation);
+
+            return dest;
+        }
+
+        private Operand Add(Instruction inst, Operand dest, Operand[] sources)
+        {
+            NewNextBlockIfNeeded();
+
+            Operation operation = OperationHelper.Operation(inst, dest, sources);
+
+            _irBlock.Operations.AddLast(operation);
+
+            return dest;
+        }
+
+        private Operand Add(Instruction inst, Operand dest, Operand source0)
+        {
+            NewNextBlockIfNeeded();
+
+            Operation operation = OperationHelper.Operation(inst, dest, source0);
+
+            _irBlock.Operations.AddLast(operation);
+
+            return dest;
+        }
+
+        private Operand Add(Instruction inst, Operand dest, Operand source0, Operand source1)
+        {
+            NewNextBlockIfNeeded();
+
+            Operation operation = OperationHelper.Operation(inst, dest, source0, source1);
+
+            _irBlock.Operations.AddLast(operation);
+
+            return dest;
+        }
+
+        private Operand Add(Instruction inst, Operand dest, Operand source0, Operand source1, Operand source2)
+        {
+            NewNextBlockIfNeeded();
+
+            Operation operation = OperationHelper.Operation(inst, dest, source0, source1, source2);
 
             _irBlock.Operations.AddLast(operation);
 

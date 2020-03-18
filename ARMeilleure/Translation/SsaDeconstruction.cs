@@ -2,6 +2,7 @@ using ARMeilleure.IntermediateRepresentation;
 using System.Collections.Generic;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.OperationHelper;
 
 namespace ARMeilleure.Translation
 {
@@ -25,12 +26,12 @@ namespace ARMeilleure.Translation
 
                         Operand source = phi.GetSource(index);
 
-                        predecessor.Append(new Operation(Instruction.Copy, local, source));
+                        predecessor.Append(Operation(Instruction.Copy, local, source));
 
                         phi.SetSource(index, null);
                     }
 
-                    Operation copyOp = new Operation(Instruction.Copy, phi.Destination, local);
+                    Operation copyOp = Operation(Instruction.Copy, phi.Destination, local);
 
                     block.Operations.AddBefore(node, copyOp);
 

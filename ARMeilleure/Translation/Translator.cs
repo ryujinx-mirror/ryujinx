@@ -73,7 +73,7 @@ namespace ARMeilleure.Translation
                 // If we only have one rejit thread, it should be normal priority as highCq code is performance critical.
                 // TODO: Use physical cores rather than logical. This only really makes sense for processors with hyperthreading. Requires OS specific code.
                 int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
-                int threadCount = Math.Min(3, unboundedThreadCount);
+                int threadCount = Math.Min(4, unboundedThreadCount);
                 for (int i = 0; i < threadCount; i++)
                 {
                     bool last = i != 0 && i == unboundedThreadCount - 1;
@@ -146,6 +146,9 @@ namespace ARMeilleure.Translation
         {
             ArmEmitterContext context = new ArmEmitterContext(_memory, _jumpTable, (long)address, highCq, Aarch32Mode.User);
 
+            OperandHelper.PrepareOperandPool(highCq);
+            OperationHelper.PrepareOperationPool(highCq);
+
             Logger.StartPass(PassName.Decoding);
 
             Block[] blocks = AlwaysTranslateFunctions
@@ -180,6 +183,9 @@ namespace ARMeilleure.Translation
                 : CompilerOptions.None;
 
             GuestFunction func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
+
+            OperandHelper.ResetOperandPool(highCq);
+            OperationHelper.ResetOperationPool(highCq);
 
             return new TranslatedFunction(func, rejit: !highCq);
         }
