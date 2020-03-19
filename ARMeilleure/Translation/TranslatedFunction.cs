@@ -9,6 +9,7 @@ namespace ARMeilleure.Translation
         private const int MinCallsForRejit = 100;
 
         private GuestFunction _func;
+        private IntPtr _funcPtr;
 
         private bool _rejit;
         private int  _callCount;
@@ -33,7 +34,12 @@ namespace ARMeilleure.Translation
 
         public IntPtr GetPointer()
         {
-            return Marshal.GetFunctionPointerForDelegate(_func);
+            if (_funcPtr == IntPtr.Zero)
+            {
+                _funcPtr = Marshal.GetFunctionPointerForDelegate(_func);
+            }
+
+            return _funcPtr;
         }
     }
 }
