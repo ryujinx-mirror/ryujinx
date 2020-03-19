@@ -149,6 +149,11 @@ namespace Ryujinx.Configuration
             public ReactiveObject<Language> Language { get; private set; }
 
             /// <summary>
+            /// Change System Region
+            /// </summary>
+            public ReactiveObject<Region> Region { get; private set; }
+
+            /// <summary>
             /// Enables or disables Docked Mode
             /// </summary>
             public ReactiveObject<bool> EnableDockedMode { get; private set; }
@@ -176,6 +181,7 @@ namespace Ryujinx.Configuration
             public SystemSection()
             {
                 Language                  = new ReactiveObject<Language>();
+                Region                    = new ReactiveObject<Region>();
                 EnableDockedMode          = new ReactiveObject<bool>();
                 EnableMulticoreScheduling = new ReactiveObject<bool>();
                 EnableFsIntegrityChecks   = new ReactiveObject<bool>();
@@ -289,7 +295,7 @@ namespace Ryujinx.Configuration
         {
             ConfigurationFileFormat configurationFile = new ConfigurationFileFormat
             {
-                Version                   = 1,
+                Version                   = 2,
                 GraphicsShadersDumpPath   = Graphics.ShadersDumpPath,
                 LoggingEnableDebug        = Logger.EnableDebug,
                 LoggingEnableStub         = Logger.EnableStub,
@@ -301,6 +307,7 @@ namespace Ryujinx.Configuration
                 LoggingFilteredClasses    = Logger.FilteredClasses,
                 EnableFileLog             = Logger.EnableFileLog,
                 SystemLanguage            = System.Language,
+                SystemRegion              = System.Region,
                 DockedMode                = System.EnableDockedMode,
                 EnableDiscordIntegration  = EnableDiscordIntegration,
                 EnableVsync               = Graphics.EnableVsync,
@@ -346,6 +353,7 @@ namespace Ryujinx.Configuration
             Logger.FilteredClasses.Value           = new LogClass[] { };
             Logger.EnableFileLog.Value             = true;
             System.Language.Value                  = Language.AmericanEnglish;
+            System.Region.Value                    = Region.USA;
             System.EnableDockedMode.Value          = false;
             EnableDiscordIntegration.Value         = true;
             Graphics.EnableVsync.Value             = true;
@@ -440,15 +448,26 @@ namespace Ryujinx.Configuration
             };
         }
 
-        public void Load(ConfigurationFileFormat configurationFileFormat)
+        public void Load(ConfigurationFileFormat configurationFileFormat, string configurationFilePath)
         {
-            if (configurationFileFormat.Version != 1 && configurationFileFormat.Version != 0)
+            bool configurationFileUpdated = false;
+
+            if (configurationFileFormat.Version < 0 || configurationFileFormat.Version > 2)
             {
                 Common.Logging.Logger.PrintWarning(LogClass.Application, $"Unsupported configuration version {configurationFileFormat.Version}, loading default.");
 
                 LoadDefault();
 
                 return;
+            }
+
+            if (configurationFileFormat.Version < 2)
+            {
+                Common.Logging.Logger.PrintWarning(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, needs to be updated.");
+
+                configurationFileFormat.SystemRegion = Region.USA;
+
+                configurationFileUpdated = true;
             }
 
             Graphics.ShadersDumpPath.Value         = configurationFileFormat.GraphicsShadersDumpPath;
@@ -462,6 +481,7 @@ namespace Ryujinx.Configuration
             Logger.FilteredClasses.Value           = configurationFileFormat.LoggingFilteredClasses;
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             System.Language.Value                  = configurationFileFormat.SystemLanguage;
+            System.Region.Value                    = configurationFileFormat.SystemRegion;
             System.EnableDockedMode.Value          = configurationFileFormat.DockedMode;
             System.EnableDockedMode.Value          = configurationFileFormat.DockedMode;
             EnableDiscordIntegration.Value         = configurationFileFormat.EnableDiscordIntegration;
@@ -487,6 +507,13 @@ namespace Ryujinx.Configuration
             Hid.EnableKeyboard.Value               = configurationFileFormat.EnableKeyboard;
             Hid.KeyboardControls.Value             = configurationFileFormat.KeyboardControls;
             Hid.JoystickControls.Value             = configurationFileFormat.JoystickControls;
+
+            if (configurationFileUpdated)
+            {
+                ToFileFormat().SaveConfig(configurationFilePath);
+
+                Common.Logging.Logger.PrintWarning(LogClass.Application, "Configuration file is updated!");
+            }
         }
 
         public static void Initialize()

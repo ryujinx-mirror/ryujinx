@@ -39,6 +39,7 @@ namespace Ryujinx.Ui
         [GUI] CheckButton  _ignoreToggle;
         [GUI] CheckButton  _directKeyboardAccess;
         [GUI] ComboBoxText _systemLanguageSelect;
+        [GUI] ComboBoxText _systemRegionSelect;
         [GUI] CheckButton  _custThemeToggle;
         [GUI] Entry        _custThemePath;
         [GUI] ToggleButton _browseThemePath;
@@ -197,6 +198,7 @@ namespace Ryujinx.Ui
             }
 
             _systemLanguageSelect.SetActiveId(ConfigurationState.Instance.System.Language.Value.ToString());
+            _systemRegionSelect  .SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
             _controller1Type     .SetActiveId(ConfigurationState.Instance.Hid.ControllerType.Value.ToString());
             Controller_Changed(null, null, _controller1Type.ActiveId, _controller1Image);
 
@@ -232,6 +234,7 @@ namespace Ryujinx.Ui
             _gameDirsBox.AppendColumn("", new CellRendererText(), "text", 0);
             _gameDirsBoxStore  = new ListStore(typeof(string));
             _gameDirsBox.Model = _gameDirsBoxStore;
+
             foreach (string gameDir in ConfigurationState.Instance.Ui.GameDirs.Value)
             {
                 _gameDirsBoxStore.AppendValues(gameDir);
@@ -438,6 +441,7 @@ namespace Ryujinx.Ui
             };
 
             ConfigurationState.Instance.System.Language.Value              = (Language)Enum.Parse(typeof(Language), _systemLanguageSelect.ActiveId);
+            ConfigurationState.Instance.System.Region.Value                = (Configuration.System.Region)Enum.Parse(typeof(Configuration.System.Region), _systemRegionSelect.ActiveId);
             ConfigurationState.Instance.Hid.ControllerType.Value           = (ControllerType)Enum.Parse(typeof(ControllerType), _controller1Type.ActiveId);
             ConfigurationState.Instance.Ui.CustomThemePath.Value           = _custThemePath.Buffer.Text;
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value     = _graphicsShadersDumpPath.Buffer.Text;

@@ -15,6 +15,7 @@
     "logging_filtered_classes",
     "enable_file_log",
     "system_language",
+    "system_region",
     "docked_mode",
     "enable_vsync",
     "enable_multicore_scheduling",
@@ -400,6 +401,25 @@
       ],
       "examples": [
         "AmericanEnglish"
+      ]
+    },
+    "system_region": {
+      "$id": "#/properties/system_region",
+      "type": "string",
+      "title": "System Region",
+      "description": "Change System Region",
+      "default": "USA",
+      "enum": [
+        "Japan",
+        "USA",
+        "Europe",
+        "Australia",
+        "China",
+        "Korea",
+        "Taiwan"
+      ],
+      "examples": [
+        "USA"
       ]
     },
     "docked_mode": {

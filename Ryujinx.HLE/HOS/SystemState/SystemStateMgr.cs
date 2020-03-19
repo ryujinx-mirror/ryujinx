@@ -37,6 +37,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         internal long DesiredLanguageCode { get; private set; }
 
+        internal uint DesiredRegionCode { get; private set; }
+
         public TitleLanguage DesiredTitleLanguage { get; private set; }
 
         internal string ActiveAudioOutput { get; private set; }
@@ -77,6 +79,11 @@ namespace Ryujinx.HLE.HOS.SystemState
                     DesiredTitleLanguage = Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), language));
                     break;
             }
+        }
+
+        public void SetRegion(SystemRegion region)
+        {
+            DesiredRegionCode = (uint)region;
         }
 
         public void SetAudioOutputAsTv()

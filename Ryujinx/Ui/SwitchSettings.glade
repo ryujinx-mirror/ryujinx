@@ -166,6 +166,43 @@
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">Change System Region</property>
+                                        <property name="halign">end</property>
+                                        <property name="label" translatable="yes">System Region:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">2</property>
+                                        <property name="padding">5</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBoxText" id="_systemRegionSelect">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">Change System Region</property>
+                                        <property name="margin_left">5</property>
+                                        <items>
+                                          <item id="Japan" translatable="yes">Japan</item>
+                                          <item id="USA" translatable="yes">USA</item>
+                                          <item id="Europe" translatable="yes">Europe</item>
+                                          <item id="Australia" translatable="yes">Australia</item>
+                                          <item id="China" translatable="yes">China</item>
+                                          <item id="Korea" translatable="yes">Korea</item>
+                                          <item id="Taiwan" translatable="yes">Taiwan</item>
+                                        </items>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">3</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

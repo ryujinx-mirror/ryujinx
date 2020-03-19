@@ -54,6 +54,24 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
+        [Command(4)]
+        // GetRegionCode() -> u32 nn::settings::RegionCode
+        public ResultCode GetRegionCode(ServiceCtx context)
+        {
+            // NOTE: Service mount 0x8000000000000050 savedata and read the region code here.
+
+            SystemRegion regionCode = (SystemRegion)context.Device.System.State.DesiredRegionCode;
+
+            if (regionCode < SystemRegion.Min || regionCode > SystemRegion.Max)
+            {
+                regionCode = SystemRegion.USA;
+            }
+
+            context.ResponseData.Write((uint)regionCode);
+
+            return ResultCode.Success;
+        }
+
         [Command(5)]
         // GetAvailableLanguageCodes2() -> (u32, buffer<nn::settings::LanguageCode, 6>)
         public ResultCode GetAvailableLanguageCodes2(ServiceCtx context)

@@ -1,5 +1,5 @@
 {
-    "version": 1,
+    "version": 2,
     "graphics_shaders_dump_path": "",
     "logging_enable_debug": false,
     "logging_enable_stub": true,
@@ -11,6 +11,7 @@
     "logging_filtered_classes": [],
     "enable_file_log": true,
     "system_language": "AmericanEnglish",
+    "system_region": "USA",
     "docked_mode": false,
     "enable_discord_integration": true,
     "enable_vsync": true,

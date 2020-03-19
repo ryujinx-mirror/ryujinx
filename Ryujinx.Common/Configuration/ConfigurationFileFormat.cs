@@ -74,6 +74,11 @@ namespace Ryujinx.Configuration
         public Language SystemLanguage { get; set; }
 
         /// <summary>
+        /// Change System Region
+        /// </summary>
+        public Region SystemRegion { get; set; }
+
+        /// <summary>
         /// Enables or disables Docked Mode
         /// </summary>
         public bool DockedMode { get; set; }
