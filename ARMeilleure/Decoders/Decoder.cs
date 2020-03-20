@@ -3,9 +3,7 @@ using ARMeilleure.Instructions;
 using ARMeilleure.Memory;
 using ARMeilleure.State;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 
 namespace ARMeilleure.Decoders
 {
@@ -18,15 +16,6 @@ namespace ARMeilleure.Decoders
 
         // For lower code quality translation, we set a lower limit since we're blocking execution.
         private const int MaxInstsPerFunctionLowCq = 500;
-
-        private delegate object MakeOp(InstDescriptor inst, ulong address, int opCode);
-
-        private static ConcurrentDictionary<Type, MakeOp> _opActivators;
-
-        static Decoder()
-        {
-            _opActivators = new ConcurrentDictionary<Type, MakeOp>();
-        }
 
         public static Block[] DecodeBasicBlock(MemoryManager memory, ulong address, ExecutionMode mode)
         {
@@ -319,56 +308,32 @@ namespace ARMeilleure.Decoders
 
             InstDescriptor inst;
 
-            Type type;
+            OpCodeTable.MakeOp makeOp;
 
             if (mode == ExecutionMode.Aarch64)
             {
-                (inst, type) = OpCodeTable.GetInstA64(opCode);
+                (inst, makeOp) = OpCodeTable.GetInstA64(opCode);
             }
             else
             {
                 if (mode == ExecutionMode.Aarch32Arm)
                 {
-                    (inst, type) = OpCodeTable.GetInstA32(opCode);
+                    (inst, makeOp) = OpCodeTable.GetInstA32(opCode);
                 }
                 else /* if (mode == ExecutionMode.Aarch32Thumb) */
                 {
-                    (inst, type) = OpCodeTable.GetInstT32(opCode);
+                    (inst, makeOp) = OpCodeTable.GetInstT32(opCode);
                 }
             }
 
-            if (type != null)
+            if (makeOp != null)
             {
-                return MakeOpCode(inst, type, address, opCode);
+                return (OpCode)makeOp(inst, address, opCode);
             }
             else
             {
                 return new OpCode(inst, address, opCode);
             }
-        }
-
-        private static OpCode MakeOpCode(InstDescriptor inst, Type type, ulong address, int opCode)
-        {
-            MakeOp createInstance = _opActivators.GetOrAdd(type, CacheOpActivator);
-
-            return (OpCode)createInstance(inst, address, opCode);
-        }
-
-        private static MakeOp CacheOpActivator(Type type)
-        {
-            Type[] argTypes = new Type[] { typeof(InstDescriptor), typeof(ulong), typeof(int) };
-
-            DynamicMethod mthd = new DynamicMethod($"Make{type.Name}", type, argTypes);
-
-            ILGenerator generator = mthd.GetILGenerator();
-
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Ldarg_2);
-            generator.Emit(OpCodes.Newobj, type.GetConstructor(argTypes));
-            generator.Emit(OpCodes.Ret);
-
-            return (MakeOp)mthd.CreateDelegate(typeof(MakeOp));
         }
     }
 }
