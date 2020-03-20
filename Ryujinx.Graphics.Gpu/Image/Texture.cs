@@ -302,15 +302,68 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _sequenceNumber = _context.SequenceNumber;
 
-            bool modified = _context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.Texture).Length != 0;
+            (ulong, ulong)[] modifiedRanges = _context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.Texture);
 
-            if (!modified && _hasData)
+            if (modifiedRanges.Length == 0 && _hasData)
             {
                 return;
             }
 
             ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, Size);
 
+            // If the texture was modified by the host GPU, we do partial invalidation
+            // of the texture by getting GPU data and merging in the pages of memory
+            // that were modified.
+            // Note that if ASTC is not supported by the GPU we can't read it back since
+            // it will use a different format. Since applications shouldn't be writing
+            // ASTC textures from the GPU anyway, ignoring it should be safe.
+            if (_context.Methods.TextureManager.IsTextureModified(this) && !Info.FormatInfo.Format.IsAstc())
+            {
+                Span<byte> gpuData = GetTextureDataFromGpu();
+
+                ulong endAddress = Address + Size;
+
+                for (int i = 0; i < modifiedRanges.Length; i++)
+                {
+                    (ulong modifiedAddress, ulong modifiedSize) = modifiedRanges[i];
+
+                    ulong endModifiedAddress = modifiedAddress + modifiedSize;
+
+                    if (modifiedAddress < Address)
+                    {
+                        modifiedAddress = Address;
+                    }
+
+                    if (endModifiedAddress > endAddress)
+                    {
+                        endModifiedAddress = endAddress;
+                    }
+
+                    modifiedSize = endModifiedAddress - modifiedAddress;
+
+                    int offset = (int)(modifiedAddress - Address);
+                    int length = (int)modifiedSize;
+
+                    data.Slice(offset, length).CopyTo(gpuData.Slice(offset, length));
+                }
+
+                data = gpuData;
+            }
+
+            data = ConvertToHostCompatibleFormat(data);
+
+            HostTexture.SetData(data);
+
+            _hasData = true;
+        }
+
+        /// <summary>
+        /// Converts texture data to a format and layout that is supported by the host GPU.
+        /// </summary>
+        /// <param name="data">Data to be converted</param>
+        /// <returns>Converted data</returns>
+        private ReadOnlySpan<byte> ConvertToHostCompatibleFormat(ReadOnlySpan<byte> data)
+        {
             if (Info.IsLinear)
             {
                 data = LayoutConverter.ConvertLinearStridedToLinear(
@@ -360,9 +413,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 data = decoded;
             }
 
-            HostTexture.SetData(data);
-
-            _hasData = true;
+            return data;
         }
 
         /// <summary>
@@ -374,6 +425,19 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This may cause data corruption if the memory is already being used for something else on the CPU side.
         /// </summary>
         public void Flush()
+        {
+            _context.PhysicalMemory.Write(Address, GetTextureDataFromGpu());
+        }
+
+        /// <summary>
+        /// Gets data from the host GPU.
+        /// </summary>
+        /// <remarks>
+        /// This method should be used to retrieve data that was modified by the host GPU.
+        /// This is not cheap, avoid doing that unless strictly needed.
+        /// </remarks>
+        /// <returns>Host texture data</returns>
+        private Span<byte> GetTextureDataFromGpu()
         {
             Span<byte> data = HostTexture.GetData();
 
@@ -406,7 +470,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     data);
             }
 
-            _context.PhysicalMemory.Write(Address, data);
+            return data;
         }
 
         /// <summary>
