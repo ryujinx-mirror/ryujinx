@@ -16,8 +16,6 @@ namespace Ryujinx.Graphics.OpenGL
             Extents2D   dstRegion,
             bool        linearFilter)
         {
-            GL.Disable(EnableCap.FramebufferSrgb);
-
             int oldReadFramebufferHandle = GL.GetInteger(GetPName.ReadFramebufferBinding);
             int oldDrawFramebufferHandle = GL.GetInteger(GetPName.DrawFramebufferBinding);
 
@@ -50,8 +48,6 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
-
-            GL.Enable(EnableCap.FramebufferSrgb);
         }
 
         private static void Attach(FramebufferTarget target, Format format, int handle)
