@@ -494,7 +494,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string lodExpr = GetSoureExpr(context, lod, GetSrcVarType(operation.Inst, lodSrcIndex));
 
-            return $"textureSize({samplerName}, {lodExpr}){GetMask(texOp.Index)}";
+            if (texOp.Index == 3)
+            {
+                return $"textureQueryLevels({samplerName})";
+            }
+            else
+            {
+                return $"textureSize({samplerName}, {lodExpr}){GetMask(texOp.Index)}";
+            }
         }
 
         private static string GetStorageBufferAccessor(string slotExpr, string offsetExpr, ShaderStage stage)
