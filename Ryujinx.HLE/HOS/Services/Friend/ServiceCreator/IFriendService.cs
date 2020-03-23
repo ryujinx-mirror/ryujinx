@@ -93,6 +93,25 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
+        [Command(10400)]
+        // nn::friends::GetBlockedUserListIds(int offset, nn::account::Uid userId) -> (u32, buffer<nn::account::NetworkServiceAccountId, 0xa>)
+        public ResultCode GetBlockedUserListIds(ServiceCtx context)
+        {
+            int offset = context.RequestData.ReadInt32();
+
+            // Padding
+            context.RequestData.ReadInt32();
+
+            UserId userId = context.RequestData.ReadStruct<UserId>();
+
+            // There are no friends blocked, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
+            context.ResponseData.Write(0);
+
+            Logger.PrintStub(LogClass.ServiceFriend, new { offset, UserId = userId.ToString() });
+
+            return ResultCode.Success;
+        }
+
         [Command(10600)]
         // nn::friends::DeclareOpenOnlinePlaySession(nn::account::Uid userId)
         public ResultCode DeclareOpenOnlinePlaySession(ServiceCtx context)
