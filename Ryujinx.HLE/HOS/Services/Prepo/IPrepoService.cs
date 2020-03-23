@@ -3,9 +3,9 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.Utilities;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Utf8Json;
 
 namespace Ryujinx.HLE.HOS.Services.Prepo
 {
@@ -95,12 +95,11 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
             sb.AppendLine($" Room: {room}");
 
-            var payload = Deserialize<IDictionary<string, object>>(buffer);
+            var    deserializedReport = Deserialize<dynamic>(buffer);
+            string jsonReport         = Encoding.ASCII.GetString(JsonSerializer.PrettyPrintByteArray(Encoding.UTF8.GetBytes(deserializedReport.ToString())));
 
-            foreach (var field in payload)
-            {
-                sb.AppendLine($"  Key: {field.Key}, Value: {field.Value}");
-            }
+            sb.AppendLine($" Report:");
+            sb.AppendLine(jsonReport);
 
             return sb.ToString();
         }
