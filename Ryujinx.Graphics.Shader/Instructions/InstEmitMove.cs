@@ -97,8 +97,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Sel(EmitterContext context)
         {
-            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
-
             Operand pred = GetPredicate39(context);
 
             Operand srcA = GetSrcA(context);
