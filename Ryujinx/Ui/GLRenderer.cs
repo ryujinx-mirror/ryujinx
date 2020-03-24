@@ -335,17 +335,11 @@ namespace Ryujinx.Ui
 
                     _device.Statistics.RecordSystemFrameTime();
 
-                    string gpuVendor = "Unknown";
-
-                    if (_renderer.GpuVendor.ToLower().Contains("nvidia")) gpuVendor = "NVIDIA";
-                    if (_renderer.GpuVendor.ToLower().Contains("amd") || _renderer.GpuVendor.ToLower().Contains("ati")) gpuVendor = "AMD";
-                    if (_renderer.GpuVendor.ToLower().Contains("intel")) gpuVendor = "Intel";
-
                     StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                         _device.EnableDeviceVsync, 
                         $"Host: {_device.Statistics.GetSystemFrameRate():00.00} FPS", 
                         $"Game: {_device.Statistics.GetGameFrameRate():00.00} FPS",
-                        $"GPU: {gpuVendor}"));
+                        $"GPU: {_renderer.GpuVendor}"));
 
                     _device.System.SignalVsync();
 
