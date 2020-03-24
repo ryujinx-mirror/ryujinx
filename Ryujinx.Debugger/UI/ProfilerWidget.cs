@@ -481,7 +481,7 @@ namespace Ryujinx.Debugger.UI
 
                     float y = GetLineY(yOffset, LineHeight, LinePadding, true, verticalIndex);
 
-                    canvas.DrawText(entry.Key.SessionGroup, new SKPoint(xOffset, y), textFont);
+                    canvas.DrawText(entry.Key.SessionItem, new SKPoint(xOffset, y), textFont);
 
                     columnWidth = textFont.MeasureText(entry.Key.SessionItem);
 
