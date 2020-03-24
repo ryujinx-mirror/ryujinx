@@ -1,3 +1,4 @@
+using MsgPack;
 using MsgPack.Serialization;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
@@ -83,35 +84,21 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
         private string ReadReportBuffer(byte[] buffer, string room, UserId userId)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder     builder = new StringBuilder();
+            MessagePackObject deserializedReport = MessagePackSerializer.UnpackMessagePackObject(buffer);
 
-            sb.AppendLine();
-            sb.AppendLine("PlayReport log:");
+            builder.AppendLine();
+            builder.AppendLine("PlayReport log:");
 
             if (!userId.IsNull)
             {
-                sb.AppendLine($" UserId: {userId.ToString()}");
+                builder.AppendLine($" UserId: {userId.ToString()}");
             }
 
-            sb.AppendLine($" Room: {room}");
+            builder.AppendLine($" Room: {room}");
+            builder.AppendLine($" Report: {deserializedReport}");
 
-            var    deserializedReport = Deserialize<dynamic>(buffer);
-            string jsonReport         = Encoding.ASCII.GetString(JsonSerializer.PrettyPrintByteArray(Encoding.UTF8.GetBytes(deserializedReport.ToString())));
-
-            sb.AppendLine($" Report:");
-            sb.AppendLine(jsonReport);
-
-            return sb.ToString();
-        }
-
-        private static T Deserialize<T>(byte[] bytes)
-        {
-            MessagePackSerializer serializer = MessagePackSerializer.Get<T>();
-
-            using (MemoryStream byteStream = new MemoryStream(bytes))
-            {
-                return (T)serializer.Unpack(byteStream);
-            }
+            return builder.ToString();
         }
     }
 }
