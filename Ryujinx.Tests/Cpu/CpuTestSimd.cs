@@ -829,10 +829,12 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_NZ_SU_S_S_()
+        private static uint[] _F_Cvt_ANZ_SU_S_S_()
         {
             return new uint[]
             {
+                0x5E21C820u, // FCVTAS S0, S1
+                0x7E21C820u, // FCVTAU S0, S1
                 0x5E21A820u, // FCVTNS S0, S1
                 0x7E21A820u, // FCVTNU S0, S1
                 0x5EA1B820u, // FCVTZS S0, S1
@@ -840,10 +842,12 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_NZ_SU_S_D_()
+        private static uint[] _F_Cvt_ANZ_SU_S_D_()
         {
             return new uint[]
             {
+                0x5E61C820u, // FCVTAS D0, D1
+                0x7E61C820u, // FCVTAU D0, D1
                 0x5E61A820u, // FCVTNS D0, D1
                 0x7E61A820u, // FCVTNU D0, D1
                 0x5EE1B820u, // FCVTZS D0, D1
@@ -851,10 +855,12 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_NZ_SU_V_2S_4S_()
+        private static uint[] _F_Cvt_ANZ_SU_V_2S_4S_()
         {
             return new uint[]
             {
+                0x0E21C800u, // FCVTAS V0.2S, V0.2S
+                0x2E21C800u, // FCVTAU V0.2S, V0.2S
                 0x0E21A800u, // FCVTNS V0.2S, V0.2S
                 0x2E21A800u, // FCVTNU V0.2S, V0.2S
                 0x0EA1B800u, // FCVTZS V0.2S, V0.2S
@@ -862,10 +868,12 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_NZ_SU_V_2D_()
+        private static uint[] _F_Cvt_ANZ_SU_V_2D_()
         {
             return new uint[]
             {
+                0x4E61C800u, // FCVTAS V0.2D, V0.2D
+                0x6E61C800u, // FCVTAU V0.2D, V0.2D
                 0x4E61A800u, // FCVTNS V0.2D, V0.2D
                 0x6E61A800u, // FCVTNU V0.2D, V0.2D
                 0x4EE1B800u, // FCVTZS V0.2D, V0.2D
@@ -1981,8 +1989,8 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_S_S([ValueSource("_F_Cvt_NZ_SU_S_S_")] uint opcodes,
-                                    [ValueSource("_1S_F_W_")] ulong a)
+        public void F_Cvt_ANZ_SU_S_S([ValueSource("_F_Cvt_ANZ_SU_S_S_")] uint opcodes,
+                                     [ValueSource("_1S_F_W_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE0E1(z, z);
@@ -1994,8 +2002,8 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_S_D([ValueSource("_F_Cvt_NZ_SU_S_D_")] uint opcodes,
-                                    [ValueSource("_1D_F_X_")] ulong a)
+        public void F_Cvt_ANZ_SU_S_D([ValueSource("_F_Cvt_ANZ_SU_S_D_")] uint opcodes,
+                                     [ValueSource("_1D_F_X_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE1(z);
@@ -2007,12 +2015,12 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_V_2S_4S([ValueSource("_F_Cvt_NZ_SU_V_2S_4S_")] uint opcodes,
-                                        [Values(0u)]     uint rd,
-                                        [Values(1u, 0u)] uint rn,
-                                        [ValueSource("_2S_F_W_")] ulong z,
-                                        [ValueSource("_2S_F_W_")] ulong a,
-                                        [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        public void F_Cvt_ANZ_SU_V_2S_4S([ValueSource("_F_Cvt_ANZ_SU_V_2S_4S_")] uint opcodes,
+                                         [Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_2S_F_W_")] ulong z,
+                                         [ValueSource("_2S_F_W_")] ulong a,
+                                         [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
@@ -2026,11 +2034,11 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_V_2D([ValueSource("_F_Cvt_NZ_SU_V_2D_")] uint opcodes,
-                                     [Values(0u)]     uint rd,
-                                     [Values(1u, 0u)] uint rn,
-                                     [ValueSource("_1D_F_X_")] ulong z,
-                                     [ValueSource("_1D_F_X_")] ulong a)
+        public void F_Cvt_ANZ_SU_V_2D([ValueSource("_F_Cvt_ANZ_SU_V_2D_")] uint opcodes,
+                                      [Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_1D_F_X_")] ulong z,
+                                      [ValueSource("_1D_F_X_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
