@@ -19,6 +19,12 @@ namespace Ryujinx.Graphics.OpenGL
 
         internal TextureCopy TextureCopy { get; }
 
+        public string GpuVendor { get; private set; }
+
+        public string GpuRenderer { get; private set; }
+
+        public string GpuVersion { get; private set; }
+
         public Renderer()
         {
             _pipeline = new Pipeline();
@@ -78,11 +84,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void PrintGpuInformation()
         {
-            string gpuVendor   = GL.GetString(StringName.Vendor);
-            string gpuRenderer = GL.GetString(StringName.Renderer);
-            string gpuVersion  = GL.GetString(StringName.Version);
+            GpuVendor   = GL.GetString(StringName.Vendor);
+            GpuRenderer = GL.GetString(StringName.Renderer);
+            GpuVersion  = GL.GetString(StringName.Version);
 
-            Logger.PrintInfo(LogClass.Gpu, $"{gpuVendor} {gpuRenderer} ({gpuVersion})");
+            Logger.PrintInfo(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
         }
 
         public void ResetCounter(CounterType type)

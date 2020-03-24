@@ -71,6 +71,7 @@ namespace Ryujinx.Ui
         [GUI] TreeView       _gameTable;
         [GUI] ScrolledWindow _gameTableWindow;
         [GUI] TreeSelection  _gameTableSelection;
+        [GUI] Label          _gpuName;
         [GUI] Label          _progressLabel;
         [GUI] Label          _firmwareVersionLabel;
         [GUI] LevelBar       _progressBar;
@@ -605,6 +606,7 @@ namespace Ryujinx.Ui
             {
                 _hostStatus.Text = args.HostStatus;
                 _gameStatus.Text = args.GameStatus;
+                _gpuName.Text    = args.GpuName;
 
                 if (args.VSyncEnabled)
                 {
