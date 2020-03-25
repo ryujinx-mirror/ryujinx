@@ -2,6 +2,7 @@
 using Ryujinx.Configuration;
 using Ryujinx.Configuration.Hid;
 using Ryujinx.Configuration.System;
+using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,6 +41,7 @@ namespace Ryujinx.Ui
         [GUI] CheckButton  _directKeyboardAccess;
         [GUI] ComboBoxText _systemLanguageSelect;
         [GUI] ComboBoxText _systemRegionSelect;
+        [GUI] ComboBoxText _systemTimeZoneSelect;
         [GUI] CheckButton  _custThemeToggle;
         [GUI] Entry        _custThemePath;
         [GUI] ToggleButton _browseThemePath;
@@ -80,9 +82,9 @@ namespace Ryujinx.Ui
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        public SwitchSettings() : this(new Builder("Ryujinx.Ui.SwitchSettings.glade")) { }
+        public SwitchSettings(HLE.FileSystem.VirtualFileSystem virtualFileSystem, HLE.FileSystem.Content.ContentManager contentManager) : this(new Builder("Ryujinx.Ui.SwitchSettings.glade"), virtualFileSystem, contentManager) { }
 
-        private SwitchSettings(Builder builder) : base(builder.GetObject("_settingsWin").Handle)
+        private SwitchSettings(Builder builder, HLE.FileSystem.VirtualFileSystem virtualFileSystem, HLE.FileSystem.Content.ContentManager contentManager) : base(builder.GetObject("_settingsWin").Handle)
         {
             builder.Autoconnect(this);
 
@@ -197,8 +199,22 @@ namespace Ryujinx.Ui
                 _custThemeToggle.Click();
             }
 
+            TimeZoneContentManager timeZoneContentManager = new TimeZoneContentManager();
+
+            timeZoneContentManager.InitializeInstance(virtualFileSystem, contentManager, LibHac.FsSystem.IntegrityCheckLevel.None);
+
+            List<string> locationNames = timeZoneContentManager.LocationNameCache.ToList();
+
+            locationNames.Sort();
+
+            foreach (string locationName in locationNames)
+            {
+                _systemTimeZoneSelect.Append(locationName, locationName);
+            }
+
             _systemLanguageSelect.SetActiveId(ConfigurationState.Instance.System.Language.Value.ToString());
             _systemRegionSelect  .SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
+            _systemTimeZoneSelect.SetActiveId(timeZoneContentManager.SanityCheckDeviceLocationName());
             _controller1Type     .SetActiveId(ConfigurationState.Instance.Hid.ControllerType.Value.ToString());
             Controller_Changed(null, null, _controller1Type.ActiveId, _controller1Image);
 
@@ -447,6 +463,8 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value     = _graphicsShadersDumpPath.Buffer.Text;
             ConfigurationState.Instance.Ui.GameDirs.Value                  = gameDirs;
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value = (int)_fsLogSpinAdjustment.Value;
+
+            ConfigurationState.Instance.System.TimeZone.Value = _systemTimeZoneSelect.ActiveId;
 
             MainWindow.SaveConfig();
             MainWindow.ApplyTheme();

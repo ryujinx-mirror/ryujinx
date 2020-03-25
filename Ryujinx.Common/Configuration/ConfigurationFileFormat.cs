@@ -16,6 +16,11 @@ namespace Ryujinx.Configuration
 {
     public class ConfigurationFileFormat
     {
+        /// <summary>
+        /// The current version of the file format
+        /// </summary>
+        public const int CurrentVersion = 3;
+
         public int Version { get; set; }
 
         /// <summary>
@@ -77,6 +82,11 @@ namespace Ryujinx.Configuration
         /// Change System Region
         /// </summary>
         public Region SystemRegion { get; set; }
+
+        /// <summary>
+        /// Change System TimeZone
+        /// </summary>
+        public string SystemTimeZone { get; set; }
 
         /// <summary>
         /// Enables or disables Docked Mode
