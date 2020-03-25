@@ -78,18 +78,18 @@ namespace Ryujinx.Ui
                 result = fs.CopyDirectory("OldSave:/", "NewSave:/");
                 if (result.IsFailure()) return result;
 
-                result = fs.Commit("NewSave");
+                result = fs.Commit("NewSave".ToU8Span());
             }
             finally
             {
                 if (isOldMounted)
                 {
-                    fs.Unmount("OldSave");
+                    fs.Unmount("OldSave".ToU8Span());
                 }
 
                 if (isNewMounted)
                 {
-                    fs.Unmount("NewSave");
+                    fs.Unmount("NewSave".ToU8Span());
                 }
             }
 

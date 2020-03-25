@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS;
+﻿using LibHac.Common;
+using Ryujinx.HLE.HOS;
 using System;
 using System.Globalization;
 using System.IO;
@@ -71,6 +72,16 @@ namespace Ryujinx.HLE.Utilities
 
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
+        }
+
+        public static U8Span ReadUtf8Span(ServiceCtx context, int index = 0)
+        {
+            ulong position = (ulong)context.Request.PtrBuff[index].Position;
+            ulong size = (ulong)context.Request.PtrBuff[index].Size;
+
+            ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, size);
+
+            return new U8Span(buffer);
         }
 
         public static string ReadUtf8StringSend(ServiceCtx context, int index = 0)

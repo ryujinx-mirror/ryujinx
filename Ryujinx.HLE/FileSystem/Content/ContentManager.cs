@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
@@ -491,11 +492,11 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             if (filesystem.FileExists($"{path}/00"))
             {
-                filesystem.OpenFile(out file, $"{path}/00", mode);
+                filesystem.OpenFile(out file, $"{path}/00".ToU8Span(), mode);
             }
             else
             {
-                filesystem.OpenFile(out file, path, mode);
+                filesystem.OpenFile(out file, path.ToU8Span(), mode);
             }
 
             return file;
@@ -608,7 +609,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
-                        if (fs.OpenFile(out IFile metaFile, cnmtPath, OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(out IFile metaFile, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.AsStream());
 
@@ -636,7 +637,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                             var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
-                            if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
+                            if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                             {
                                 systemVersion = new SystemVersion(systemVersionFile.AsStream());
                             }
@@ -673,7 +674,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                                     string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
-                                    if (fs.OpenFile(out IFile metaFile, cnmtPath, OpenMode.Read).IsSuccess())
+                                    if (fs.OpenFile(out IFile metaFile, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                                     {
                                         var meta = new Cnmt(metaFile.AsStream());
 
@@ -744,7 +745,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
-                        if (fs.OpenFile(out IFile metaFile, cnmtPath, OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(out IFile metaFile, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.AsStream());
 
@@ -760,7 +761,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     {
                         var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
-                        if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
+                        if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             systemVersion = new SystemVersion(systemVersionFile.AsStream());
                         }
@@ -809,7 +810,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
-                        if (fs.OpenFile(out IFile metaFile, cnmtPath, OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(out IFile metaFile, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.AsStream());
 
@@ -879,7 +880,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                             {
                                 var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
-                                if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
+                                if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                                 {
                                     return new SystemVersion(systemVersionFile.AsStream());
                                 }

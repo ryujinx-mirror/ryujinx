@@ -208,7 +208,7 @@ namespace Ryujinx.Ui
 
                             foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
                             {
-                                pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
+                                pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                 Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
 
@@ -292,8 +292,8 @@ namespace Ryujinx.Ui
                             }
                         }
 
-                        fsClient.Unmount(source);
-                        fsClient.Unmount(output);
+                        fsClient.Unmount(source.ToU8Span());
+                        fsClient.Unmount(output.ToU8Span());
                     }
                 });
 
@@ -305,7 +305,7 @@ namespace Ryujinx.Ui
 
         private (Result? result, bool canceled) CopyDirectory(FileSystemClient fs, string sourcePath, string destPath)
         {
-            Result rc = fs.OpenDirectory(out DirectoryHandle sourceHandle, sourcePath, OpenDirectoryMode.All);
+            Result rc = fs.OpenDirectory(out DirectoryHandle sourceHandle, sourcePath.ToU8Span(), OpenDirectoryMode.All);
             if (rc.IsFailure()) return (rc, false);
 
             using (sourceHandle)
@@ -346,12 +346,12 @@ namespace Ryujinx.Ui
 
         public Result CopyFile(FileSystemClient fs, string sourcePath, string destPath)
         {
-            Result rc = fs.OpenFile(out FileHandle sourceHandle, sourcePath, OpenMode.Read);
+            Result rc = fs.OpenFile(out FileHandle sourceHandle, sourcePath.ToU8Span(), OpenMode.Read);
             if (rc.IsFailure()) return rc;
 
             using (sourceHandle)
             {
-                rc = fs.OpenFile(out FileHandle destHandle, destPath, OpenMode.Write | OpenMode.AllowAppend);
+                rc = fs.OpenFile(out FileHandle destHandle, destPath.ToU8Span(), OpenMode.Write | OpenMode.AllowAppend);
                 if (rc.IsFailure()) return rc;
 
                 using (destHandle)

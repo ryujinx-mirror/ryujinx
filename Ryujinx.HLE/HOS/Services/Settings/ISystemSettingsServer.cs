@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
@@ -231,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
 
-                Result result = firmwareRomFs.OpenFile(out IFile firmwareFile, "/file", OpenMode.Read);
+                Result result = firmwareRomFs.OpenFile(out IFile firmwareFile, "/file".ToU8Span(), OpenMode.Read);
                 if (result.IsFailure())
                 {
                     return null;

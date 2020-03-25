@@ -1,5 +1,6 @@
 using JsonPrettyPrinterPlus;
 using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
@@ -116,7 +117,7 @@ namespace Ryujinx.Ui
                                     {
                                         if (Path.GetExtension(fileEntry.FullPath).ToLower() == ".nca")
                                         {
-                                            pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
+                                            pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                             Nca nca       = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
                                             int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
@@ -146,7 +147,7 @@ namespace Ryujinx.Ui
                                 {
                                     applicationIcon = _nspIcon;
 
-                                    Result result = pfs.OpenFile(out IFile npdmFile, "/main.npdm", OpenMode.Read);
+                                    Result result = pfs.OpenFile(out IFile npdmFile, "/main.npdm".ToU8Span(), OpenMode.Read);
 
                                     if (ResultFs.PathNotFound.Includes(result))
                                     {
@@ -162,7 +163,7 @@ namespace Ryujinx.Ui
                                     GetControlFsAndTitleId(pfs, out IFileSystem controlFs, out titleId);
 
                                     // Creates NACP class from the NACP file
-                                    controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp", OpenMode.Read).ThrowIfFailure();
+                                    controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                     Nacp controlData = new Nacp(controlNacpFile.AsStream());
 
@@ -174,7 +175,7 @@ namespace Ryujinx.Ui
                                     // Read the icon from the ControlFS and store it as a byte array
                                     try
                                     {
-                                        controlFs.OpenFile(out IFile icon, $"/icon_{_desiredTitleLanguage}.dat", OpenMode.Read).ThrowIfFailure();
+                                        controlFs.OpenFile(out IFile icon, $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                         using (MemoryStream stream = new MemoryStream())
                                         {
@@ -191,7 +192,7 @@ namespace Ryujinx.Ui
                                                 continue;
                                             }
 
-                                            controlFs.OpenFile(out IFile icon, entry.FullPath, OpenMode.Read).ThrowIfFailure();
+                                            controlFs.OpenFile(out IFile icon, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                             using (MemoryStream stream = new MemoryStream())
                                             {
@@ -429,7 +430,7 @@ namespace Ryujinx.Ui
             // Add keys to key set if needed
             foreach (DirectoryEntryEx ticketEntry in pfs.EnumerateEntries("/", "*.tik"))
             {
-                Result result = pfs.OpenFile(out IFile ticketFile, ticketEntry.FullPath, OpenMode.Read);
+                Result result = pfs.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
                 if (result.IsSuccess())
                 {
@@ -442,7 +443,7 @@ namespace Ryujinx.Ui
             // Find the Control NCA and store it in variable called controlNca
             foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
             {
-                pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
+                pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
 

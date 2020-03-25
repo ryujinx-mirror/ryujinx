@@ -52,7 +52,7 @@
 
   <ItemGroup>
     <PackageReference Include="Concentus" Version="1.1.7" />
-    <PackageReference Include="LibHac" Version="0.9.0" />
+    <PackageReference Include="LibHac" Version="0.10.0" />
     <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
     <PackageReference Include="TimeZoneConverter.Posix" Version="2.1.0" />
   </ItemGroup>

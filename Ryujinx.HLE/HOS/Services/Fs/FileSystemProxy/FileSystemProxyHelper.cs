@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
@@ -81,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                     string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
 
-                    Result result = nsp.OpenFile(out LibHac.Fs.IFile ncaFile, filename, OpenMode.Read);
+                    Result result = nsp.OpenFile(out LibHac.Fs.IFile ncaFile, filename.ToU8Span(), OpenMode.Read);
                     if (result.IsFailure())
                     {
                         return (ResultCode)result.Value;
@@ -102,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
             {
-                Result result = nsp.OpenFile(out LibHac.Fs.IFile ticketFile, ticketEntry.FullPath, OpenMode.Read);
+                Result result = nsp.OpenFile(out LibHac.Fs.IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
                 if (result.IsSuccess())
                 {

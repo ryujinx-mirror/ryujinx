@@ -17,8 +17,9 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         private const ulong  DatabaseSaveDataId     = 0x8000000000000030;
         private const ulong  NsTitleId              = 0x010000000000001F;
         private const ulong  SdbTitleId             = 0x0100000000000039;
-        private const string DatabasePath           = "mii:/MiiDatabase.dat";
-        private const string MountName              = "mii";
+
+        private static U8String DatabasePath = new U8String("mii:/MiiDatabase.dat");
+        private static U8String MountName    = new U8String("mii");
 
         private NintendoFigurineDatabase _database;
         private bool                     _isDirty;

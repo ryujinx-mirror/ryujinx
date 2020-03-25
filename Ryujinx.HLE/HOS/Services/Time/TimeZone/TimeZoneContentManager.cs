@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
@@ -61,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     Nca         nca              = new Nca(_device.System.KeySet, ncaFileStream);
                     IFileSystem romfs            = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
-                    romfs.OpenFile(out IFile binaryListFile, "/binaryList.txt", OpenMode.Read).ThrowIfFailure();
+                    romfs.OpenFile(out IFile binaryListFile, "/binaryList.txt".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                     StreamReader reader = new StreamReader(binaryListFile.AsStream());
 
@@ -165,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             Nca         nca   = new Nca(_device.System.KeySet, ncaFile);
             IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
-            Result result = romfs.OpenFile(out IFile timeZoneBinaryFile, $"/zoneinfo/{locationName}", OpenMode.Read);
+            Result result = romfs.OpenFile(out IFile timeZoneBinaryFile, $"/zoneinfo/{locationName}".ToU8Span(), OpenMode.Read);
 
             timeZoneBinaryStream = timeZoneBinaryFile.AsStream();
 
