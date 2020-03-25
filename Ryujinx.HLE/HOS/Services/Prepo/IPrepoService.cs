@@ -49,6 +49,27 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
             return ProcessReport(context, withUserID: true);
         }
 
+        [Command(10200)]
+        // RequestImmediateTransmission()
+        public ResultCode RequestImmediateTransmission(ServiceCtx context)
+        {
+            // It signals an event of nn::prepo::detail::service::core::TransmissionStatusManager that requests the transmission of the report.
+            // Since we don't use reports it's fine to do nothing.
+
+            return ResultCode.Success;
+        }
+
+        [Command(10300)]
+        // GetTransmissionStatus() -> u32
+        public ResultCode GetTransmissionStatus(ServiceCtx context)
+        {
+            // It returns the transmission result of nn::prepo::detail::service::core::TransmissionStatusManager.
+            // Since we don't use reports it's fine to return ResultCode.Success.
+            context.ResponseData.Write((int)ResultCode.Success);
+
+            return ResultCode.Success;
+        }
+
         private ResultCode ProcessReport(ServiceCtx context, bool withUserID)
         {
             UserId  userId   = withUserID ? context.RequestData.ReadStruct<UserId>() : new UserId();
