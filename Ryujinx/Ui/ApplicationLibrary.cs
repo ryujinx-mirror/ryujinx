@@ -6,6 +6,7 @@ using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
+using LibHac.Ns;
 using LibHac.Spl;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration.System;
@@ -81,6 +82,12 @@ namespace Ryujinx.Ui
             }
         }
 
+        public static void ReadControlData(IFileSystem controlFs, Span<byte> outProperty)
+        {
+            controlFs.OpenFile(out IFile controlFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+            controlFile.Read(out long _, 0, outProperty, ReadOption.None).ThrowIfFailure();
+        }
+
         public static void LoadApplications(List<string> appDirs, VirtualFileSystem virtualFileSystem, Language desiredTitleLanguage)
         {
             int numApplicationsFound  = 0;
@@ -127,6 +134,7 @@ namespace Ryujinx.Ui
                 string version         = "0";
                 string saveDataPath    = null;
                 byte[] applicationIcon = null;
+                BlitStruct<ApplicationControlProperty> controlHolder = new BlitStruct<ApplicationControlProperty>(1);
 
                 try
                 {
@@ -203,6 +211,8 @@ namespace Ryujinx.Ui
                                 {
                                     // Store the ControlFS in variable called controlFs
                                     GetControlFsAndTitleId(pfs, out IFileSystem controlFs, out titleId);
+
+                                    ReadControlData(controlFs, controlHolder.ByteSpan);
 
                                     // Creates NACP class from the NACP file
                                     controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
@@ -413,7 +423,8 @@ namespace Ryujinx.Ui
                     FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0 ,1),
                     FileSize      = (fileSize < 1) ? (fileSize * 1024).ToString("0.##") + "MB" : fileSize.ToString("0.##") + "GB",
                     Path          = applicationPath,
-                    SaveDataPath  = saveDataPath
+                    SaveDataPath  = saveDataPath,
+                    ControlHolder = controlHolder
                 };
 
                 numApplicationsLoaded++;

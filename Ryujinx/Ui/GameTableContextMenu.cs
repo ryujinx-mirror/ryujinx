@@ -1,21 +1,25 @@
 ﻿using Gtk;
 using LibHac;
+using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
+using LibHac.Ns;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
 
+using static LibHac.Fs.ApplicationSaveDataManagement;
 using GUI = Gtk.Builder.ObjectAttribute;
 
 namespace Ryujinx.Ui
@@ -28,23 +32,31 @@ namespace Ryujinx.Ui
         private MessageDialog     _dialog;
         private bool              _cancel;
 
+        private BlitStruct<ApplicationControlProperty> _controlData;
+
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
-        [GUI] MenuItem _openSaveDir;
+        [GUI] MenuItem _openSaveUserDir;
+        [GUI] MenuItem _openSaveDeviceDir;
         [GUI] MenuItem _extractRomFs;
         [GUI] MenuItem _extractExeFs;
         [GUI] MenuItem _extractLogo;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        public GameTableContextMenu(ListStore gameTableStore, TreeIter rowIter, VirtualFileSystem virtualFileSystem)
-            : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, rowIter, virtualFileSystem) { }
+        public GameTableContextMenu(ListStore gameTableStore, BlitStruct<ApplicationControlProperty> controlData, TreeIter rowIter, VirtualFileSystem virtualFileSystem)
+            : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, controlData, rowIter, virtualFileSystem) { }
 
-        private GameTableContextMenu(Builder builder, ListStore gameTableStore, TreeIter rowIter, VirtualFileSystem virtualFileSystem) : base(builder.GetObject("_contextMenu").Handle)
+        private GameTableContextMenu(Builder builder, ListStore gameTableStore, BlitStruct<ApplicationControlProperty> controlData, TreeIter rowIter, VirtualFileSystem virtualFileSystem) : base(builder.GetObject("_contextMenu").Handle)
         {
             builder.Autoconnect(this);
 
-            _openSaveDir.Activated  += OpenSaveDir_Clicked;
+            _openSaveUserDir.Activated   += OpenSaveUserDir_Clicked;
+            _openSaveDeviceDir.Activated += OpenSaveDeviceDir_Clicked;
+
+            _openSaveUserDir.Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0;
+            _openSaveDeviceDir.Sensitive = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0;
+
             _extractRomFs.Activated += ExtractRomFs_Clicked;
             _extractExeFs.Activated += ExtractExeFs_Clicked;
             _extractLogo.Activated  += ExtractLogo_Clicked;
@@ -52,6 +64,7 @@ namespace Ryujinx.Ui
             _gameTableStore    = gameTableStore;
             _rowIter           = rowIter;
             _virtualFileSystem = virtualFileSystem;
+            _controlData       = controlData;
 
             string ext = System.IO.Path.GetExtension(_gameTableStore.GetValue(_rowIter, 9).ToString()).ToLower();
             if (ext != ".nca" && ext != ".nsp" && ext != ".pfs0" && ext != ".xci")
@@ -62,20 +75,9 @@ namespace Ryujinx.Ui
             }
         }
 
-        private bool TryFindSaveData(string titleName, string titleIdText, out ulong saveDataId)
+        private bool TryFindSaveData(string titleName, ulong titleId, BlitStruct<ApplicationControlProperty> controlHolder, SaveDataFilter filter, out ulong saveDataId)
         {
             saveDataId = default;
-
-            if (!ulong.TryParse(titleIdText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleId))
-            {
-                GtkDialog.CreateErrorDialog("UI error: The selected game did not have a valid title ID");
-
-                return false;
-            }
-
-            SaveDataFilter filter = new SaveDataFilter();
-            filter.SetUserId(new UserId(1, 0));
-            filter.SetProgramId(new TitleId(titleId));
 
             Result result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 
@@ -84,10 +86,10 @@ namespace Ryujinx.Ui
                 // Savedata was not found. Ask the user if they want to create it
                 using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
                 {
-                    Title          = "Ryujinx",
-                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
-                    Text           = $"There is no savedata for {titleName} [{titleId:x16}]",
-                    SecondaryText  = "Would you like to create savedata for this game?",
+                    Title = "Ryujinx",
+                    Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
+                    Text = $"There is no savedata for {titleName} [{titleId:x16}]",
+                    SecondaryText = "Would you like to create savedata for this game?",
                     WindowPosition = WindowPosition.Center
                 };
 
@@ -96,7 +98,25 @@ namespace Ryujinx.Ui
                     return false;
                 }
 
-                result = _virtualFileSystem.FsClient.CreateSaveData(new TitleId(titleId), new UserId(1, 0), new TitleId(titleId), 0, 0, 0);
+                ref ApplicationControlProperty control = ref controlHolder.Value;
+
+                if (LibHac.Util.IsEmpty(controlHolder.ByteSpan))
+                {
+                    // If the current application doesn't have a loaded control property, create a dummy one
+                    // and set the savedata sizes so a user savedata will be created.
+                    control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
+
+                    // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
+                    control.UserAccountSaveDataSize = 0x4000;
+                    control.UserAccountSaveDataJournalSize = 0x4000;
+
+                    Logger.PrintWarning(LogClass.Application,
+                        "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
+                }
+
+                Uid user = new Uid(1, 0);
+
+                result = EnsureApplicationSaveData(_virtualFileSystem.FsClient, out _, new TitleId(titleId), ref control, ref user);
 
                 if (result.IsFailure())
                 {
@@ -392,12 +412,29 @@ namespace Ryujinx.Ui
         }
 
         // Events
-        private void OpenSaveDir_Clicked(object sender, EventArgs args)
+        private void OpenSaveUserDir_Clicked(object sender, EventArgs args)
         {
             string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
-            string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+            string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
 
-            if (!TryFindSaveData(titleName, titleId, out ulong saveDataId))
+            if (!ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
+            {
+                GtkDialog.CreateErrorDialog("UI error: The selected game did not have a valid title ID");
+
+                return;
+            }
+
+            SaveDataFilter filter = new SaveDataFilter();
+            filter.SetUserId(new UserId(1, 0));
+
+            OpenSaveDir(titleName, titleIdNumber, filter);
+        }
+
+        private void OpenSaveDir(string titleName, ulong titleId, SaveDataFilter filter)
+        {
+            filter.SetProgramId(new TitleId(titleId));
+
+            if (!TryFindSaveData(titleName, titleId, _controlData, filter, out ulong saveDataId))
             {
                 return;
             }
@@ -410,6 +447,25 @@ namespace Ryujinx.Ui
                 UseShellExecute = true,
                 Verb            = "open"
             });
+        }
+
+        // Events
+        private void OpenSaveDeviceDir_Clicked(object sender, EventArgs args)
+        {
+            string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
+            string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+
+            if (!ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
+            {
+                GtkDialog.CreateErrorDialog("UI error: The selected game did not have a valid title ID");
+
+                return;
+            }
+
+            SaveDataFilter filter = new SaveDataFilter();
+            filter.SetSaveDataType(SaveDataType.Device);
+
+            OpenSaveDir(titleName, titleIdNumber, filter);
         }
 
         private void ExtractRomFs_Clicked(object sender, EventArgs args)

@@ -1,4 +1,8 @@
-﻿namespace Ryujinx.Ui
+﻿using LibHac;
+using LibHac.Common;
+using LibHac.Ns;
+
+namespace Ryujinx.Ui
 {
     public struct ApplicationData
     {
@@ -14,5 +18,6 @@
         public string FileSize      { get; set; }
         public string Path          { get; set; }
         public string SaveDataPath  { get; set; }
+        public BlitStruct<ApplicationControlProperty> ControlHolder { get; set; }
     }
 }
