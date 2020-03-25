@@ -17,6 +17,11 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Addps,      new IntrinsicInfo(X86Instruction.Addps,      IntrinsicType.Binary));
             Add(Intrinsic.X86Addsd,      new IntrinsicInfo(X86Instruction.Addsd,      IntrinsicType.Binary));
             Add(Intrinsic.X86Addss,      new IntrinsicInfo(X86Instruction.Addss,      IntrinsicType.Binary));
+            Add(Intrinsic.X86Aesdec,     new IntrinsicInfo(X86Instruction.Aesdec,     IntrinsicType.Binary));
+            Add(Intrinsic.X86Aesdeclast, new IntrinsicInfo(X86Instruction.Aesdeclast, IntrinsicType.Binary));
+            Add(Intrinsic.X86Aesenc,     new IntrinsicInfo(X86Instruction.Aesenc,     IntrinsicType.Binary));
+            Add(Intrinsic.X86Aesenclast, new IntrinsicInfo(X86Instruction.Aesenclast, IntrinsicType.Binary));
+            Add(Intrinsic.X86Aesimc,     new IntrinsicInfo(X86Instruction.Aesimc,     IntrinsicType.Unary));
             Add(Intrinsic.X86Andnpd,     new IntrinsicInfo(X86Instruction.Andnpd,     IntrinsicType.Binary));
             Add(Intrinsic.X86Andnps,     new IntrinsicInfo(X86Instruction.Andnps,     IntrinsicType.Binary));
             Add(Intrinsic.X86Andpd,      new IntrinsicInfo(X86Instruction.Andpd,      IntrinsicType.Binary));
