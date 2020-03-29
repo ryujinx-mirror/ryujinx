@@ -23,6 +23,7 @@ namespace Ryujinx.HLE.FileSystem.Content
         private Dictionary<StorageId, LinkedList<LocationEntry>> _locationEntries;
 
         private Dictionary<string, long>   _sharedFontTitleDictionary;
+        private Dictionary<long, string>   _systemTitlesNameDictionary;
         private Dictionary<string, string> _sharedFontFilenameDictionary;
 
         private SortedDictionary<(ulong titleId, NcaContentType type), string> _contentDictionary;
@@ -44,6 +45,16 @@ namespace Ryujinx.HLE.FileSystem.Content
                 { "FontKorean",                    0x0100000000000812 },
                 { "FontChineseTraditional",        0x0100000000000813 },
                 { "FontNintendoExtended",          0x0100000000000810 }
+            };
+
+            _systemTitlesNameDictionary = new Dictionary<long, string>()
+            {
+                { 0x010000000000080E, "TimeZoneBinary"         },
+                { 0x0100000000000810, "FontNintendoExtension"  },
+                { 0x0100000000000811, "FontStandard"           },
+                { 0x0100000000000812, "FontKorean"             },
+                { 0x0100000000000813, "FontChineseTraditional" },
+                { 0x0100000000000814, "FontChineseSimple"      },
             };
 
             _sharedFontFilenameDictionary = new Dictionary<string, string>
@@ -342,6 +353,11 @@ namespace Ryujinx.HLE.FileSystem.Content
         public bool TryGetFontFilename(string fontName, out string filename)
         {
             return _sharedFontFilenameDictionary.TryGetValue(fontName, out filename);
+        }
+
+        public bool TryGetSystemTitlesName(long titleId, out string name)
+        {
+            return _systemTitlesNameDictionary.TryGetValue(titleId, out name);
         }
 
         private LocationEntry GetLocation(long titleId, NcaContentType contentType, StorageId storageId)

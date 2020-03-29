@@ -21,6 +21,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
     {
         private const long TimeZoneBinaryTitleId = 0x010000000000080E;
 
+        private readonly string TimeZoneSystemTitleMissingErrorMessage = "TimeZoneBinary system title not found! TimeZone conversions will not work, provide the system archive to fix this error. (See https://github.com/Ryujinx/Ryujinx#requirements for more information)";
+
         private VirtualFileSystem   _virtualFileSystem;
         private IntegrityCheckLevel _fsIntegrityCheckLevel;
         private ContentManager      _contentManager;
@@ -111,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             {
                 LocationNameCache = new string[] { "UTC" };
 
-                Logger.PrintWarning(LogClass.ServiceTime, "TimeZoneBinary system title not found! TimeZone conversions will not work, provide the system archive to fix this warning. (See https://github.com/Ryujinx/Ryujinx#requirements for more informations)");
+                Logger.PrintError(LogClass.ServiceTime, TimeZoneSystemTitleMissingErrorMessage);
             }
         }
 
@@ -186,7 +188,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             timeZoneBinaryStream = null;
             ncaFile              = null;
 
-            if (!IsLocationNameValid(locationName))
+            if (!HasTimeZoneBinaryTitle() || !IsLocationNameValid(locationName))
             {
                 return ResultCode.TimeZoneNotFound;
             }
@@ -215,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (!HasTimeZoneBinaryTitle())
             {
-                throw new InvalidSystemResourceException($"TimeZoneBinary system title not found! Please provide it. (See https://github.com/Ryujinx/Ryujinx#requirements for more informations)");
+                throw new InvalidSystemResourceException(TimeZoneSystemTitleMissingErrorMessage);
             }
 
             ResultCode result = GetTimeZoneBinary(locationName, out Stream timeZoneBinaryStream, out LocalStorage ncaFile);
