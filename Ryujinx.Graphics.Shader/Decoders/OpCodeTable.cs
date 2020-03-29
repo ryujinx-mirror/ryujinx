@@ -1,10 +1,13 @@
 using Ryujinx.Graphics.Shader.Instructions;
 using System;
+using System.Reflection.Emit;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class OpCodeTable
     {
+        public delegate object OpActivator(InstEmitter emitter, ulong address, long opCode);
+
         private const int EncodingBits = 14;
 
         private class TableEntry
@@ -15,11 +18,31 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             public int XBits { get; }
 
+            public OpActivator OpActivator { get; }
+
             public TableEntry(InstEmitter emitter, Type opCodeType, int xBits)
             {
-                Emitter    = emitter;
-                OpCodeType = opCodeType;
-                XBits      = xBits;
+                Emitter     = emitter;
+                OpCodeType  = opCodeType;
+                XBits       = xBits;
+                OpActivator = CacheOpActivator(opCodeType);
+            }
+
+            private static OpActivator CacheOpActivator(Type type)
+            {
+                Type[] argTypes = new Type[] { typeof(InstEmitter), typeof(ulong), typeof(long) };
+
+                DynamicMethod mthd = new DynamicMethod($"Make{type.Name}", type, argTypes);
+
+                ILGenerator generator = mthd.GetILGenerator();
+
+                generator.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldarg_2);
+                generator.Emit(OpCodes.Newobj, type.GetConstructor(argTypes));
+                generator.Emit(OpCodes.Ret);
+
+                return (OpActivator)mthd.CreateDelegate(typeof(OpActivator));
             }
         }
 
@@ -266,13 +289,13 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
         }
 
-        public static (InstEmitter emitter, Type opCodeType) GetEmitter(long opCode)
+        public static (InstEmitter emitter, OpActivator opActivator) GetEmitter(long opCode)
         {
             TableEntry entry = _opCodes[(ulong)opCode >> (64 - EncodingBits)];
 
             if (entry != null)
             {
-                return (entry.Emitter, entry.OpCodeType);
+                return (entry.Emitter, entry.OpActivator);
             }
 
             return (null, null);
