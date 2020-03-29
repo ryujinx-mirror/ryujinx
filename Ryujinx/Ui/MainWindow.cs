@@ -363,7 +363,9 @@ namespace Ryujinx.Ui
                 else
                 {
                     Logger.PrintWarning(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
-                    End(device);
+                    device.Dispose();
+
+                    return;
                 }
 
                 _emulationContext = device;
