@@ -8,18 +8,16 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
+        public TextureCreateInfo Info { get; }
+
         private readonly Renderer _renderer;
-
-        private readonly TextureCreateInfo _info;
-
-        public Target Target => _info.Target;
 
         private int _viewsCount;
 
         public TextureStorage(Renderer renderer, TextureCreateInfo info)
         {
             _renderer = renderer;
-            _info     = info;
+            Info      = info;
 
             Handle = GL.GenTexture();
 
@@ -28,13 +26,13 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void CreateImmutableStorage()
         {
-            TextureTarget target = _info.Target.Convert();
+            TextureTarget target = Info.Target.Convert();
 
             GL.ActiveTexture(TextureUnit.Texture0);
 
             GL.BindTexture(target, Handle);
 
-            FormatInfo format = FormatTable.GetFormatInfo(_info.Format);
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
             SizedInternalFormat internalFormat;
 
@@ -47,92 +45,92 @@ namespace Ryujinx.Graphics.OpenGL
                 internalFormat = (SizedInternalFormat)format.PixelInternalFormat;
             }
 
-            switch (_info.Target)
+            switch (Info.Target)
             {
                 case Target.Texture1D:
                     GL.TexStorage1D(
                         TextureTarget1d.Texture1D,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width);
+                        Info.Width);
                     break;
 
                 case Target.Texture1DArray:
                     GL.TexStorage2D(
                         TextureTarget2d.Texture1DArray,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.Texture2D:
                     GL.TexStorage2D(
                         TextureTarget2d.Texture2D,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.Texture2DArray:
                     GL.TexStorage3D(
                         TextureTarget3d.Texture2DArray,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height,
-                        _info.Depth);
+                        Info.Width,
+                        Info.Height,
+                        Info.Depth);
                     break;
 
                 case Target.Texture2DMultisample:
                     GL.TexStorage2DMultisample(
                         TextureTargetMultisample2d.Texture2DMultisample,
-                        _info.Samples,
+                        Info.Samples,
                         internalFormat,
-                        _info.Width,
-                        _info.Height,
+                        Info.Width,
+                        Info.Height,
                         true);
                     break;
 
                 case Target.Texture2DMultisampleArray:
                     GL.TexStorage3DMultisample(
                         TextureTargetMultisample3d.Texture2DMultisampleArray,
-                        _info.Samples,
+                        Info.Samples,
                         internalFormat,
-                        _info.Width,
-                        _info.Height,
-                        _info.Depth,
+                        Info.Width,
+                        Info.Height,
+                        Info.Depth,
                         true);
                     break;
 
                 case Target.Texture3D:
                     GL.TexStorage3D(
                         TextureTarget3d.Texture3D,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height,
-                        _info.Depth);
+                        Info.Width,
+                        Info.Height,
+                        Info.Depth);
                     break;
 
                 case Target.Cubemap:
                     GL.TexStorage2D(
                         TextureTarget2d.TextureCubeMap,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.CubemapArray:
                     GL.TexStorage3D(
                         (TextureTarget3d)All.TextureCubeMapArray,
-                        _info.Levels,
+                        Info.Levels,
                         internalFormat,
-                        _info.Width,
-                        _info.Height,
-                        _info.Depth);
+                        Info.Width,
+                        Info.Height,
+                        Info.Depth);
                     break;
 
                 default:
@@ -143,7 +141,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public ITexture CreateDefaultView()
         {
-            return CreateView(_info, 0, 0);
+            return CreateView(Info, 0, 0);
         }
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)

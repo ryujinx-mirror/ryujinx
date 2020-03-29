@@ -5,15 +5,25 @@ namespace Ryujinx.Graphics.OpenGL
 {
     static class HwCapabilities
     {
-        private static Lazy<bool> _supportsAstcCompression = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
+        private static readonly Lazy<bool> _supportsAstcCompression = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
 
-        private static Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
-        private static Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
+        private static readonly Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
+        private static readonly Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
 
-        private static Lazy<bool> _isNvidiaDriver = new Lazy<bool>(() => IsNvidiaDriver());
+        public enum GpuVendor
+        {
+            Unknown,
+            Amd,
+            Intel,
+            Nvidia
+        }
+
+        private static readonly Lazy<GpuVendor> _gpuVendor = new Lazy<GpuVendor>(GetGpuVendor);
+
+        public static GpuVendor Vendor => _gpuVendor.Value;
 
         public static bool SupportsAstcCompression          => _supportsAstcCompression.Value;
-        public static bool SupportsNonConstantTextureOffset => _isNvidiaDriver.Value;
+        public static bool SupportsNonConstantTextureOffset => _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
@@ -38,9 +48,26 @@ namespace Ryujinx.Graphics.OpenGL
             return GL.GetInteger((GetPName)name);
         }
 
-        private static bool IsNvidiaDriver()
+        private static GpuVendor GetGpuVendor()
         {
-            return GL.GetString(StringName.Vendor).Equals("NVIDIA Corporation");
+            string vendor = GL.GetString(StringName.Vendor).ToLower();
+
+            if (vendor == "nvidia corporation")
+            {
+                return GpuVendor.Nvidia;
+            }
+            else if (vendor == "intel")
+            {
+                return GpuVendor.Intel;
+            }
+            else if (vendor == "ati technologies inc." || vendor == "advanced micro devices, inc.")
+            {
+                return GpuVendor.Amd;
+            }
+            else
+            {
+                return GpuVendor.Unknown;
+            }
         }
     }
 }

@@ -7,22 +7,30 @@ namespace Ryujinx.Graphics.OpenGL
 {
     static class TextureCopyUnscaled
     {
-        public static void Copy(TextureView src, TextureView dst, int dstLayer, int dstLevel)
+        public static void Copy(
+            TextureCreateInfo srcInfo,
+            TextureCreateInfo dstInfo,
+            int srcHandle,
+            int dstHandle,
+            int srcLayer,
+            int dstLayer,
+            int srcLevel,
+            int dstLevel)
         {
-            int srcWidth  = src.Width;
-            int srcHeight = src.Height;
-            int srcDepth  = src.DepthOrLayers;
-            int srcLevels = src.Levels;
+            int srcWidth  = srcInfo.Width;
+            int srcHeight = srcInfo.Height;
+            int srcDepth  = srcInfo.GetDepthOrLayers();
+            int srcLevels = srcInfo.Levels;
 
-            int dstWidth  = dst.Width;
-            int dstHeight = dst.Height;
-            int dstDepth  = dst.DepthOrLayers;
-            int dstLevels = dst.Levels;
+            int dstWidth  = dstInfo.Width;
+            int dstHeight = dstInfo.Height;
+            int dstDepth  = dstInfo.GetDepthOrLayers();
+            int dstLevels = dstInfo.Levels;
 
             dstWidth = Math.Max(1, dstWidth >> dstLevel);
             dstHeight = Math.Max(1, dstHeight >> dstLevel);
 
-            if (dst.Target == Target.Texture3D)
+            if (dstInfo.Target == Target.Texture3D)
             {
                 dstDepth = Math.Max(1, dstDepth >> dstLevel);
             }
@@ -31,15 +39,15 @@ namespace Ryujinx.Graphics.OpenGL
             // the non-compressed texture will have the size of the texture
             // in blocks (not in texels), so we must adjust that size to
             // match the size in texels of the compressed texture.
-            if (!src.IsCompressed && dst.IsCompressed)
+            if (!srcInfo.IsCompressed && dstInfo.IsCompressed)
             {
-                dstWidth  = BitUtils.DivRoundUp(dstWidth,  dst.BlockWidth);
-                dstHeight = BitUtils.DivRoundUp(dstHeight, dst.BlockHeight);
+                dstWidth  = BitUtils.DivRoundUp(dstWidth,  dstInfo.BlockWidth);
+                dstHeight = BitUtils.DivRoundUp(dstHeight, dstInfo.BlockHeight);
             }
-            else if (src.IsCompressed && !dst.IsCompressed)
+            else if (srcInfo.IsCompressed && !dstInfo.IsCompressed)
             {
-                dstWidth  *= dst.BlockWidth;
-                dstHeight *= dst.BlockHeight;
+                dstWidth  *= dstInfo.BlockWidth;
+                dstHeight *= dstInfo.BlockHeight;
             }
 
             int width  = Math.Min(srcWidth,  dstWidth);
@@ -50,20 +58,20 @@ namespace Ryujinx.Graphics.OpenGL
             for (int level = 0; level < levels; level++)
             {
                 // Stop copy if we are already out of the levels range.
-                if (level >= src.Levels || dstLevel + level >= dst.Levels)
+                if (level >= srcInfo.Levels || dstLevel + level >= dstInfo.Levels)
                 {
                     break;
                 }
 
                 GL.CopyImageSubData(
-                    src.Handle,
-                    src.Target.ConvertToImageTarget(),
-                    level,
+                    srcHandle,
+                    srcInfo.Target.ConvertToImageTarget(),
+                    srcLevel + level,
                     0,
                     0,
-                    0,
-                    dst.Handle,
-                    dst.Target.ConvertToImageTarget(),
+                    srcLayer,
+                    dstHandle,
+                    dstInfo.Target.ConvertToImageTarget(),
                     dstLevel + level,
                     0,
                     0,
@@ -72,10 +80,10 @@ namespace Ryujinx.Graphics.OpenGL
                     height,
                     depth);
 
-                width  = Math.Max(1, width  >> 1);
+                width = Math.Max(1, width >> 1);
                 height = Math.Max(1, height >> 1);
 
-                if (src.Target == Target.Texture3D)
+                if (srcInfo.Target == Target.Texture3D)
                 {
                     depth = Math.Max(1, depth >> 1);
                 }

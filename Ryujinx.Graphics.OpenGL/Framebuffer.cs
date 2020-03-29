@@ -10,9 +10,13 @@ namespace Ryujinx.Graphics.OpenGL
 
         private FramebufferAttachment _lastDsAttachment;
 
+        private readonly TextureView[] _colors;
+
         public Framebuffer()
         {
             Handle = GL.GenFramebuffer();
+
+            _colors = new TextureView[8];
         }
 
         public void Bind()
@@ -22,11 +26,19 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void AttachColor(int index, TextureView color)
         {
-            GL.FramebufferTexture(
-                FramebufferTarget.Framebuffer,
-                FramebufferAttachment.ColorAttachment0 + index,
-                color?.Handle ?? 0,
-                0);
+            FramebufferAttachment attachment = FramebufferAttachment.ColorAttachment0 + index;
+
+            if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Amd ||
+                HwCapabilities.Vendor == HwCapabilities.GpuVendor.Intel)
+            {
+                GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.GetIncompatibleFormatViewHandle() ?? 0, 0);
+
+                _colors[index] = color;
+            }
+            else
+            {
+                GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.Handle ?? 0, 0);
+            }
         }
 
         public void AttachDepthStencil(TextureView depthStencil)
@@ -65,6 +77,21 @@ namespace Ryujinx.Graphics.OpenGL
             else
             {
                 _lastDsAttachment = 0;
+            }
+        }
+
+        public void SignalModified()
+        {
+            if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Amd ||
+                HwCapabilities.Vendor == HwCapabilities.GpuVendor.Intel)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    if (_colors[i] != null)
+                    {
+                        _colors[i].SignalModified();
+                    }
+                }
             }
         }
 
