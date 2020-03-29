@@ -6,8 +6,15 @@ namespace Ryujinx.Graphics.OpenGL
 {
     class TextureCopy : IDisposable
     {
+        private readonly Renderer _renderer;
+
         private int _srcFramebuffer;
         private int _dstFramebuffer;
+
+        public TextureCopy(Renderer renderer)
+        {
+            _renderer = renderer;
+        }
 
         public void Copy(
             TextureView src,
@@ -34,6 +41,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
+            GL.Disable(EnableCap.ScissorTest);
+
             GL.BlitFramebuffer(
                 srcRegion.X1,
                 srcRegion.Y1,
@@ -48,6 +57,8 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
+
+            ((Pipeline)_renderer.Pipeline).RestoreScissorEnable();
         }
 
         private static void Attach(FramebufferTarget target, Format format, int handle)

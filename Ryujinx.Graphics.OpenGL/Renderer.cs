@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.OpenGL
 {
     public sealed class Renderer : IRenderer
     {
-        private Pipeline _pipeline;
+        private readonly Pipeline _pipeline;
 
         public IPipeline Pipeline => _pipeline;
 
@@ -31,9 +31,9 @@ namespace Ryujinx.Graphics.OpenGL
 
             _counters = new Counters();
 
-            _window = new Window();
+            _window = new Window(this);
 
-            TextureCopy = new TextureCopy();
+            TextureCopy = new TextureCopy(this);
         }
 
         public IShader CompileShader(ShaderProgram shader)

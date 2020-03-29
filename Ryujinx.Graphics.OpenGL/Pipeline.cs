@@ -31,10 +31,14 @@ namespace Ryujinx.Graphics.OpenGL
 
         private uint[] _componentMasks;
 
+        private readonly bool[] _scissorEnable;
+
         internal Pipeline()
         {
             _clipOrigin    = ClipOrigin.LowerLeft;
             _clipDepthMode = ClipDepthMode.NegativeOneToOne;
+
+            _scissorEnable = new bool[8];
         }
 
         public void Barrier()
@@ -674,6 +678,25 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public void SetScissorEnable(int index, bool enable)
+        {
+            if (enable)
+            {
+                GL.Enable(IndexedEnableCap.ScissorTest, index);
+            }
+            else
+            {
+                GL.Disable(IndexedEnableCap.ScissorTest, index);
+            }
+
+            _scissorEnable[index] = enable;
+        }
+
+        public void SetScissor(int index, int x, int y, int width, int height)
+        {
+            GL.ScissorIndexed(index, x, y, width, height);
+        }
+
         public void SetStencilTest(StencilTestDescriptor stencilTest)
         {
             if (!stencilTest.TestEnable)
@@ -925,6 +948,17 @@ namespace Ryujinx.Graphics.OpenGL
                     (_componentMasks[index] & 2u) != 0,
                     (_componentMasks[index] & 4u) != 0,
                     (_componentMasks[index] & 8u) != 0);
+            }
+        }
+
+        public void RestoreScissorEnable()
+        {
+            for (int index = 0; index < 8; index++)
+            {
+                if (_scissorEnable[index])
+                {
+                    GL.Enable(IndexedEnableCap.ScissorTest, index);
+                }
             }
         }
 

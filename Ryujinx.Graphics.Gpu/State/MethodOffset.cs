@@ -33,6 +33,7 @@ namespace Ryujinx.Graphics.Gpu.State
         ClearStencilValue               = 0x368,
         DepthBiasState                  = 0x370,
         TextureBarrier                  = 0x378,
+        ScissorState                    = 0x380,
         StencilBackMasks                = 0x3d5,
         InvalidateTextures              = 0x3dd,
         TextureBarrierTiled             = 0x3df,

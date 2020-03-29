@@ -57,6 +57,7 @@ namespace Ryujinx.Graphics.Gpu.State
             new TableItem(MethodOffset.ViewportExtents,        typeof(ViewportExtents),       8),
             new TableItem(MethodOffset.VertexBufferDrawState,  typeof(VertexBufferDrawState), 1),
             new TableItem(MethodOffset.DepthBiasState,         typeof(DepthBiasState),        1),
+            new TableItem(MethodOffset.ScissorState,           typeof(ScissorState),          8),
             new TableItem(MethodOffset.StencilBackMasks,       typeof(StencilBackMasks),      1),
             new TableItem(MethodOffset.RtDepthStencilState,    typeof(RtDepthStencilState),   1),
             new TableItem(MethodOffset.VertexAttribState,      typeof(VertexAttribState),     16),

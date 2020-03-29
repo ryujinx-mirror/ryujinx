@@ -29,9 +29,7 @@ namespace Ryujinx.Graphics.GAL
         void SetBlendColor(ColorF color);
 
         void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp);
-
         void SetDepthMode(DepthMode mode);
-
         void SetDepthTest(DepthTestDescriptor depthTest);
 
         void SetFaceCulling(bool enable, Face face);
@@ -55,6 +53,9 @@ namespace Ryujinx.Graphics.GAL
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
         void SetSampler(int index, ShaderStage stage, ISampler sampler);
+
+        void SetScissorEnable(int index, bool enable);
+        void SetScissor(int index, int x, int y, int width, int height);
 
         void SetStencilTest(StencilTestDescriptor stencilTest);
 
