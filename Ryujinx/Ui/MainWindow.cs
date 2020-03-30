@@ -91,6 +91,12 @@ namespace Ryujinx.Ui
         {
             builder.Autoconnect(this);
 
+            int monitorWidth  = Display.PrimaryMonitor.Geometry.Width  * Display.PrimaryMonitor.ScaleFactor;
+            int monitorHeight = Display.PrimaryMonitor.Geometry.Height * Display.PrimaryMonitor.ScaleFactor;
+
+            this.DefaultWidth  = monitorWidth < 1280 ? monitorWidth : 1280;
+            this.DefaultHeight = monitorHeight < 760 ? monitorHeight : 760;
+
             this.DeleteEvent      += Window_Close;
             _fullScreen.Activated += FullScreen_Toggled;
 
