@@ -17,6 +17,15 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
+        /// Unpacks the attribute constant flag.
+        /// </summary>
+        /// <returns>True if the attribute is constant, false otherwise</returns>
+        public bool UnpackIsConstant()
+        {
+            return (Attribute & 0x40) != 0;
+        }
+
+        /// <summary>
         /// Unpacks the offset, in bytes, of the attribute on the vertex buffer.
         /// </summary>
         /// <returns>Attribute offset in bytes</returns>

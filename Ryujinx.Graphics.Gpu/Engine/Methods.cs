@@ -532,6 +532,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 vertexAttribs[index] = new VertexAttribDescriptor(
                     vertexAttrib.UnpackBufferIndex(),
                     vertexAttrib.UnpackOffset(),
+                    vertexAttrib.UnpackIsConstant(),
                     format);
             }
 

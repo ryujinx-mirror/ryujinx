@@ -58,8 +58,17 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 FormatInfo fmtInfo = FormatTable.GetFormatInfo(attrib.Format);
 
-                GL.EnableVertexAttribArray(attribIndex);
-
+                if (attrib.IsZero)
+                {
+                    // Disabling the attribute causes the shader to read a constant value.
+                    // The value is configurable, but by default is a vector of (0, 0, 0, 1).
+                    GL.DisableVertexAttribArray(attribIndex);
+                }
+                else
+                {
+                    GL.EnableVertexAttribArray(attribIndex);
+                }
+                
                 int offset = attrib.Offset;
                 int size   = fmtInfo.Components;
 
@@ -117,7 +126,7 @@ namespace Ryujinx.Graphics.OpenGL
                     continue;
                 }
 
-                if (_needsAttribsUpdate)
+                if (_needsAttribsUpdate && !attrib.IsZero)
                 {
                     GL.EnableVertexAttribArray(attribIndex);
                 }
