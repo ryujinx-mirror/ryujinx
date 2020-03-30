@@ -16,6 +16,24 @@ namespace Ryujinx.Graphics.Shader.Instructions
         public static void Dmul(EmitterContext context) => EmitFPMultiply(context, Instruction.FP64);
 
         public static void Fadd(EmitterContext context) => EmitFPAdd(context, Instruction.FP32);
+
+        public static void Fcmp(EmitterContext context)
+        {
+            OpCode op = context.CurrOp;
+
+            Condition cmpOp = (Condition)op.RawOpCode.Extract(48, 4);
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+            Operand srcC = GetSrcC(context);
+
+            Operand cmpRes = GetFPComparison(context, cmpOp, srcC, ConstF(0));
+
+            Operand res = context.ConditionalSelect(cmpRes, srcA, srcB);
+
+            context.Copy(GetDest(context), res);
+        }
+
         public static void Ffma(EmitterContext context) => EmitFPFma(context, Instruction.FP32);
 
         public static void Ffma32i(EmitterContext context)

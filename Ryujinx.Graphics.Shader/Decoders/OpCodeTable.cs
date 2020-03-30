@@ -90,6 +90,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0011100x01011x", InstEmit.Fadd,    typeof(OpCodeFArithImm));
             Set("000010xxxxxxxx", InstEmit.Fadd,    typeof(OpCodeFArithImm32));
             Set("0101110001011x", InstEmit.Fadd,    typeof(OpCodeFArithReg));
+            Set("010010111010xx", InstEmit.Fcmp,    typeof(OpCodeFArithCbuf));
+            Set("0011011x1010xx", InstEmit.Fcmp,    typeof(OpCodeFArithImm));
+            Set("010110111010xx", InstEmit.Fcmp,    typeof(OpCodeFArithReg));
+            Set("010100111010xx", InstEmit.Fcmp,    typeof(OpCodeFArithRegCbuf));
             Set("010010011xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithCbuf));
             Set("0011001x1xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithImm));
             Set("000011xxxxxxxx", InstEmit.Ffma32i, typeof(OpCodeFArithImm32));
