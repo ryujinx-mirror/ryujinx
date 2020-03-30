@@ -1,5 +1,6 @@
 {
-    "version": 2,
+    "version": 4,
+    "max_anisotropy": -1,
     "graphics_shaders_dump_path": "",
     "logging_enable_debug": false,
     "logging_enable_stub": true,
@@ -12,6 +13,7 @@
     "enable_file_log": true,
     "system_language": "AmericanEnglish",
     "system_region": "USA",
+    "system_time_zone": "UTC",
     "docked_mode": false,
     "enable_discord_integration": true,
     "enable_vsync": true,

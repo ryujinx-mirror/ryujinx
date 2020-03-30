@@ -22,11 +22,15 @@ namespace Ryujinx.Graphics.OpenGL
 
         public static GpuVendor Vendor => _gpuVendor.Value;
 
+        private static Lazy<float> _maxSupportedAnisotropy = new Lazy<float>(GL.GetFloat((GetPName)All.MaxTextureMaxAnisotropy));
+
         public static bool SupportsAstcCompression          => _supportsAstcCompression.Value;
         public static bool SupportsNonConstantTextureOffset => _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
+
+        public static float MaxSupportedAnisotropy => _maxSupportedAnisotropy.Value;
 
         private static bool HasExtension(string name)
         {

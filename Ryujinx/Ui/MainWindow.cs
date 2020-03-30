@@ -308,6 +308,7 @@ namespace Ryujinx.Ui
                 HLE.Switch device = InitializeSwitchInstance();
 
                 // TODO: Move this somewhere else + reloadable?
+                Graphics.Gpu.GraphicsConfig.MaxAnisotropy   = ConfigurationState.Instance.Graphics.MaxAnisotropy;
                 Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
 
                 if (Directory.Exists(path))

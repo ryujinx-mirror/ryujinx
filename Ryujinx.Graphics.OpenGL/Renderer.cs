@@ -67,7 +67,8 @@ namespace Ryujinx.Graphics.OpenGL
                 HwCapabilities.SupportsAstcCompression,
                 HwCapabilities.SupportsNonConstantTextureOffset,
                 HwCapabilities.MaximumComputeSharedMemorySize,
-                HwCapabilities.StorageBufferOffsetAlignment);
+                HwCapabilities.StorageBufferOffsetAlignment,
+                HwCapabilities.MaxSupportedAnisotropy);
         }
 
         public ulong GetCounter(CounterType type)

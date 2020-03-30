@@ -19,9 +19,14 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int Version { get; set; }
+
+        /// <summary>
+        /// Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.
+        /// </summary>
+        public float MaxAnisotropy { get; set; }
 
         /// <summary>
         /// Dumps shaders in this local directory

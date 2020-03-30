@@ -52,6 +52,7 @@ namespace Ryujinx.Ui
         [GUI] ToggleButton _browseDir;
         [GUI] ToggleButton _removeDir;
         [GUI] Entry        _graphicsShadersDumpPath;
+        [GUI] ComboBoxText _anisotropy;
         [GUI] Image        _controller1Image;
 
         [GUI] ComboBoxText _controller1Type;
@@ -215,6 +216,7 @@ namespace Ryujinx.Ui
             _systemLanguageSelect.SetActiveId(ConfigurationState.Instance.System.Language.Value.ToString());
             _systemRegionSelect  .SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
             _systemTimeZoneSelect.SetActiveId(timeZoneContentManager.SanityCheckDeviceLocationName());
+            _anisotropy          .SetActiveId(ConfigurationState.Instance.Graphics.MaxAnisotropy.Value.ToString());
             _controller1Type     .SetActiveId(ConfigurationState.Instance.Hid.ControllerType.Value.ToString());
             Controller_Changed(null, null, _controller1Type.ActiveId, _controller1Image);
 
@@ -458,6 +460,7 @@ namespace Ryujinx.Ui
 
             ConfigurationState.Instance.System.Language.Value              = (Language)Enum.Parse(typeof(Language), _systemLanguageSelect.ActiveId);
             ConfigurationState.Instance.System.Region.Value                = (Configuration.System.Region)Enum.Parse(typeof(Configuration.System.Region), _systemRegionSelect.ActiveId);
+            ConfigurationState.Instance.Graphics.MaxAnisotropy.Value       = float.Parse(_anisotropy.ActiveId);
             ConfigurationState.Instance.Hid.ControllerType.Value           = (ControllerType)Enum.Parse(typeof(ControllerType), _controller1Type.ActiveId);
             ConfigurationState.Instance.Ui.CustomThemePath.Value           = _custThemePath.Buffer.Text;
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value     = _graphicsShadersDumpPath.Buffer.Text;

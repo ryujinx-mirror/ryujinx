@@ -177,8 +177,8 @@
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">True</property>
-                                        <property name="position">2</property>
                                         <property name="padding">5</property>
+                                        <property name="position">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -247,6 +247,11 @@
                                           </packing>
                                         </child>
                                       </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
                                     </child>
                                   </object>
                                   <packing>
@@ -1447,6 +1452,52 @@
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="padding">5</property>
+                                    <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">Graphics Shaders Dump Path</property>
+                                        <property name="label" translatable="yes">Anisotropic Filtering:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="padding">5</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBoxText" id="_anisotropy">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">Change System TimeZone</property>
+                                        <property name="active_id">-1</property>
+                                        <items>
+                                          <item id="-1" translatable="yes">Auto</item>
+                                          <item id="2" translatable="yes">2x</item>
+                                          <item id="4" translatable="yes">4x</item>
+                                          <item id="8" translatable="yes">8x</item>
+                                          <item id="16" translatable="yes">16x</item>
+                                        </items>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">1</property>
                                       </packing>
