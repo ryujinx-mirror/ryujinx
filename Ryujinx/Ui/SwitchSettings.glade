@@ -1472,7 +1472,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="tooltip_text" translatable="yes">Graphics Shaders Dump Path</property>
+                                        <property name="tooltip_text" translatable="yes">Level of Anisotropic Filtering (set to Auto to use the value requested by the game)</property>
                                         <property name="label" translatable="yes">Anisotropic Filtering:</property>
                                       </object>
                                       <packing>
@@ -1486,7 +1486,7 @@
                                       <object class="GtkComboBoxText" id="_anisotropy">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="tooltip_text" translatable="yes">Change System TimeZone</property>
+                                        <property name="tooltip_text" translatable="yes">Level of Anisotropic Filtering (set to Auto to use the value requested by the game)</property>
                                         <property name="active_id">-1</property>
                                         <items>
                                           <item id="-1" translatable="yes">Auto</item>
