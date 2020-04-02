@@ -79,7 +79,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 program.SBufferDescriptors,
                 program.TextureDescriptors,
                 program.ImageDescriptors,
-                sInfo.InterpolationQualifiers,
                 sInfo.UsesInstanceId);
 
             string glslCode = program.Code;

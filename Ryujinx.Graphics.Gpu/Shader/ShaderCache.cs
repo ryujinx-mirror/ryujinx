@@ -145,8 +145,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             gpShaders.Shaders[3] = TranslateGraphicsShader(state, ShaderStage.Geometry,               addresses.Geometry);
             gpShaders.Shaders[4] = TranslateGraphicsShader(state, ShaderStage.Fragment,               addresses.Fragment);
 
-            BackpropQualifiers(gpShaders);
-
             List<IShader> hostShaders = new List<IShader>();
 
             for (int stage = 0; stage < gpShaders.Shaders.Length; stage++)
@@ -373,45 +371,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             ulong address = _context.MemoryManager.Translate(gpuVa);
 
             return new CachedShader(program, codeCached);
-        }
-
-        /// <summary>
-        /// Performs backwards propagation of interpolation qualifiers or later shader stages input,
-        /// to ealier shader stages output.
-        /// This is required by older versions of OpenGL (pre-4.3).
-        /// </summary>
-        /// <param name="program">Graphics shader cached code</param>
-        private void BackpropQualifiers(GraphicsShader program)
-        {
-            ShaderProgram fragmentShader = program.Shaders[4]?.Program;
-
-            bool isFirst = true;
-
-            for (int stage = 3; stage >= 0; stage--)
-            {
-                if (program.Shaders[stage] == null)
-                {
-                    continue;
-                }
-
-                // We need to iterate backwards, since we do name replacement,
-                // and it would otherwise replace a subset of the longer names.
-                for (int attr = 31; attr >= 0; attr--)
-                {
-                    string iq = fragmentShader?.Info.InterpolationQualifiers[attr].ToGlslQualifier() ?? string.Empty;
-
-                    if (isFirst && !string.IsNullOrEmpty(iq))
-                    {
-                        program.Shaders[stage].Program.Replace($"{DefineNames.OutQualifierPrefixName}{attr}", iq);
-                    }
-                    else
-                    {
-                        program.Shaders[stage].Program.Replace($"{DefineNames.OutQualifierPrefixName}{attr} ", string.Empty);
-                    }
-                }
-
-                isFirst = false;
-            }
         }
 
         /// <summary>
