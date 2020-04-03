@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
         ResultCode GetResult();
 
-        static T ReadStruct<T>(ReadOnlySpan<byte> data) where T : struct
+        static T ReadStruct<T>(ReadOnlySpan<byte> data) where T : unmanaged
         {
             return MemoryMarshal.Cast<byte, T>(data)[0];
         }
