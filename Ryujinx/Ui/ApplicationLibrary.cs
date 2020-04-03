@@ -217,12 +217,10 @@ namespace Ryujinx.Ui
                                     // Creates NACP class from the NACP file
                                     controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                                    Nacp controlData = new Nacp(controlNacpFile.AsStream());
-
                                     // Get the title name, title ID, developer name and version number from the NACP
-                                    version = controlData.DisplayVersion;
+                                    version = controlHolder.Value.DisplayVersion.ToString();
 
-                                    GetNameIdDeveloper(controlData, out titleName, out _, out developer);
+                                    GetNameIdDeveloper(ref controlHolder.Value, out titleName, out _, out developer);
 
                                     // Read the icon from the ControlFS and store it as a byte array
                                     try
@@ -318,17 +316,13 @@ namespace Ryujinx.Ui
                                     // Reads and stores game icon as byte array
                                     applicationIcon = Read(assetOffset + iconOffset, (int) iconSize);
 
-                                    // Creates memory stream out of byte array which is the NACP
-                                    using (MemoryStream stream = new MemoryStream(Read(assetOffset + (int) nacpOffset, (int) nacpSize)))
-                                    {
-                                        // Creates NACP class from the memory stream
-                                        Nacp controlData = new Nacp(stream);
+                                    // Read the NACP data
+                                    Read(assetOffset + (int)nacpOffset, (int)nacpSize).AsSpan().CopyTo(controlHolder.ByteSpan);
 
-                                        // Get the title name, title ID, developer name and version number from the NACP
-                                        version = controlData.DisplayVersion;
+                                    // Get the title name, title ID, developer name and version number from the NACP
+                                    version = controlHolder.Value.DisplayVersion.ToString();
 
-                                        GetNameIdDeveloper(controlData, out titleName, out titleId, out developer);
-                                    }
+                                    GetNameIdDeveloper(ref controlHolder.Value, out titleName, out titleId, out developer);
                                 }
                                 else
                                 {
@@ -579,40 +573,52 @@ namespace Ryujinx.Ui
             return readableString;
         }
 
-        private static void GetNameIdDeveloper(Nacp controlData, out string titleName, out string titleId, out string developer)
+        private static void GetNameIdDeveloper(ref ApplicationControlProperty controlData, out string titleName, out string titleId, out string publisher)
         {
             Enum.TryParse(_desiredTitleLanguage.ToString(), out TitleLanguage desiredTitleLanguage);
 
-            NacpDescription nacpDescription = controlData.Descriptions.ToList().Find(x => x.Language == desiredTitleLanguage);
-
-            if (nacpDescription != null)
+            if (controlData.Titles.Length > (int)desiredTitleLanguage)
             {
-                titleName = nacpDescription.Title;
-                developer = nacpDescription.Developer;
+                titleName = controlData.Titles[(int)desiredTitleLanguage].Name.ToString();
+                publisher = controlData.Titles[(int)desiredTitleLanguage].Publisher.ToString();
             }
             else
             {
                 titleName = null;
-                developer = null;
+                publisher = null;
             }
 
             if (string.IsNullOrWhiteSpace(titleName))
             {
-                titleName = controlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
+                foreach (ApplicationControlTitle controlTitle in controlData.Titles)
+                {
+                    if (!((U8Span)controlTitle.Name).IsEmpty())
+                    {
+                        titleName = controlTitle.Name.ToString();
+                        break;
+                    }
+                }
             }
 
-            if (string.IsNullOrWhiteSpace(developer))
+            if (string.IsNullOrWhiteSpace(publisher))
             {
-                developer = controlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Developer)).Developer;
+                foreach (ApplicationControlTitle controlTitle in controlData.Titles)
+                {
+                    if (!((U8Span)controlTitle.Publisher).IsEmpty())
+                    {
+                        publisher = controlTitle.Publisher.ToString();
+                        break;
+                    }
+                }
             }
 
             if (controlData.PresenceGroupId != 0)
             {
                 titleId = controlData.PresenceGroupId.ToString("x16");
             }
-            else if (controlData.SaveDataOwnerId != 0)
+            else if (controlData.SaveDataOwnerId.Value != 0)
             {
-                titleId = controlData.SaveDataOwnerId.ToString("x16");
+                titleId = controlData.SaveDataOwnerId.ToString();
             }
             else if (controlData.AddOnContentBaseId != 0)
             {
