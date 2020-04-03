@@ -43,8 +43,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             // TODO: When we will be able to add multiple controllers add one entry by controller here.
             Device device1 = new Device
             {
-                NpadIdType = HidNpadIdType.Player1,
-                Handle     = HidUtils.GetIndexFromNpadIdType(HidNpadIdType.Player1),
+                NpadIdType = NpadIdType.Player1,
+                Handle     = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
                 State      = DeviceState.Initialized
             };
 

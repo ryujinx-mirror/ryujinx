@@ -1,5 +1,6 @@
 ﻿using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Applets
 {
@@ -11,5 +12,10 @@ namespace Ryujinx.HLE.HOS.Applets
                          AppletSession interactiveSession);
 
         ResultCode GetResult();
+
+        static T ReadStruct<T>(ReadOnlySpan<byte> data) where T : struct
+        {
+            return MemoryMarshal.Cast<byte, T>(data)[0];
+        }
     }
 }

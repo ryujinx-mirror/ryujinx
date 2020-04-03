@@ -1,32 +1,39 @@
-﻿using OpenTK.Input;
-using Ryujinx.HLE.Input;
+﻿using System;
+using OpenTK.Input;
+using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.UI.Input;
 
 namespace Ryujinx.Ui
 {
+    [Flags]
+    public enum HotkeyButtons
+    {
+        ToggleVSync = 1 << 0,
+    }
+
     public static class KeyboardControls
     {
-        public static ControllerButtons GetButtons(NpadKeyboard npad, KeyboardState keyboard)
+        public static ControllerKeys GetButtons(NpadKeyboard npad, KeyboardState keyboard)
         {
-            ControllerButtons buttons = 0;
+            ControllerKeys buttons = 0;
 
-            if (keyboard[(Key)npad.LeftJoycon.StickButton]) buttons |= ControllerButtons.StickLeft;
-            if (keyboard[(Key)npad.LeftJoycon.DPadUp])      buttons |= ControllerButtons.DpadUp;
-            if (keyboard[(Key)npad.LeftJoycon.DPadDown])    buttons |= ControllerButtons.DpadDown;
-            if (keyboard[(Key)npad.LeftJoycon.DPadLeft])    buttons |= ControllerButtons.DpadLeft;
-            if (keyboard[(Key)npad.LeftJoycon.DPadRight])   buttons |= ControllerButtons.DPadRight;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonMinus]) buttons |= ControllerButtons.Minus;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonL])     buttons |= ControllerButtons.L;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonZl])    buttons |= ControllerButtons.Zl;
+            if (keyboard[(Key)npad.LeftJoycon.StickButton]) buttons |= ControllerKeys.LStick;
+            if (keyboard[(Key)npad.LeftJoycon.DPadUp])      buttons |= ControllerKeys.DpadUp;
+            if (keyboard[(Key)npad.LeftJoycon.DPadDown])    buttons |= ControllerKeys.DpadDown;
+            if (keyboard[(Key)npad.LeftJoycon.DPadLeft])    buttons |= ControllerKeys.DpadLeft;
+            if (keyboard[(Key)npad.LeftJoycon.DPadRight])   buttons |= ControllerKeys.DpadRight;
+            if (keyboard[(Key)npad.LeftJoycon.ButtonMinus]) buttons |= ControllerKeys.Minus;
+            if (keyboard[(Key)npad.LeftJoycon.ButtonL])     buttons |= ControllerKeys.L | ControllerKeys.Sl;
+            if (keyboard[(Key)npad.LeftJoycon.ButtonZl])    buttons |= ControllerKeys.Zl;
             
-            if (keyboard[(Key)npad.RightJoycon.StickButton]) buttons |= ControllerButtons.StickRight;
-            if (keyboard[(Key)npad.RightJoycon.ButtonA])     buttons |= ControllerButtons.A;
-            if (keyboard[(Key)npad.RightJoycon.ButtonB])     buttons |= ControllerButtons.B;
-            if (keyboard[(Key)npad.RightJoycon.ButtonX])     buttons |= ControllerButtons.X;
-            if (keyboard[(Key)npad.RightJoycon.ButtonY])     buttons |= ControllerButtons.Y;
-            if (keyboard[(Key)npad.RightJoycon.ButtonPlus])  buttons |= ControllerButtons.Plus;
-            if (keyboard[(Key)npad.RightJoycon.ButtonR])     buttons |= ControllerButtons.R;
-            if (keyboard[(Key)npad.RightJoycon.ButtonZr])    buttons |= ControllerButtons.Zr;
+            if (keyboard[(Key)npad.RightJoycon.StickButton]) buttons |= ControllerKeys.RStick;
+            if (keyboard[(Key)npad.RightJoycon.ButtonA])     buttons |= ControllerKeys.A;
+            if (keyboard[(Key)npad.RightJoycon.ButtonB])     buttons |= ControllerKeys.B;
+            if (keyboard[(Key)npad.RightJoycon.ButtonX])     buttons |= ControllerKeys.X;
+            if (keyboard[(Key)npad.RightJoycon.ButtonY])     buttons |= ControllerKeys.Y;
+            if (keyboard[(Key)npad.RightJoycon.ButtonPlus])  buttons |= ControllerKeys.Plus;
+            if (keyboard[(Key)npad.RightJoycon.ButtonR])     buttons |= ControllerKeys.R | ControllerKeys.Sr;
+            if (keyboard[(Key)npad.RightJoycon.ButtonZr])    buttons |= ControllerKeys.Zr;
 
             return buttons;
         }
@@ -216,9 +223,9 @@ namespace Ryujinx.Ui
             new KeyMappingEntry { TargetKey = Key.NumLock,      Target = 10 },
         };
 
-        public static HLE.Input.Keyboard GetKeysDown(NpadKeyboard npad, KeyboardState keyboard)
+        public static KeyboardInput GetKeysDown(NpadKeyboard npad, KeyboardState keyboard)
         {
-            HLE.Input.Keyboard hidKeyboard = new HLE.Input.Keyboard
+            KeyboardInput hidKeyboard = new KeyboardInput
             {
                     Modifier = 0,
                     Keys     = new int[0x8]

@@ -10,6 +10,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
+using Ryujinx.HLE.HOS.Services.Hid;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -446,7 +447,19 @@ namespace Ryujinx.Ui
 
         private void CreateGameWindow(HLE.Switch device)
         {
-            device.Hid.InitializePrimaryController(ConfigurationState.Instance.Hid.ControllerType);
+            ControllerType type = (Ryujinx.Configuration.Hid.ControllerType)ConfigurationState.Instance.Hid.ControllerType switch {
+                Ryujinx.Configuration.Hid.ControllerType.ProController => ControllerType.ProController,
+                Ryujinx.Configuration.Hid.ControllerType.Handheld => ControllerType.Handheld,
+                Ryujinx.Configuration.Hid.ControllerType.NpadPair => ControllerType.JoyconPair,
+                Ryujinx.Configuration.Hid.ControllerType.NpadLeft => ControllerType.JoyconLeft,
+                Ryujinx.Configuration.Hid.ControllerType.NpadRight => ControllerType.JoyconRight,
+                _ => ControllerType.Handheld
+            };
+            
+            device.Hid.Npads.AddControllers(new ControllerConfig {
+                Player = PlayerIndex.Player1,
+                Type = type
+            });
 
             _gLWidget = new GLRenderer(_emulationContext);
 

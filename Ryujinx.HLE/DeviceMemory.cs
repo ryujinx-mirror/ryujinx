@@ -1,6 +1,7 @@
 using ARMeilleure.Memory;
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE
 {
@@ -62,6 +63,11 @@ namespace Ryujinx.HLE
         public unsafe T ReadStruct<T>(long position)
         {
             return Marshal.PtrToStructure<T>((IntPtr)(_ramPtr + position));
+        }
+
+        public unsafe ref T GetStructRef<T>(long position)
+        {
+            return ref Unsafe.AsRef<T>((void*)(IntPtr)(_ramPtr + position));
         }
 
         public void WriteSByte(long position, sbyte value)

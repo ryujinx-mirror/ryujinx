@@ -1,7 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Input;
 using Ryujinx.Common.Configuration.Hid;
-using Ryujinx.HLE.Input;
+using Ryujinx.HLE.HOS.Services.Hid;
 using System;
 
 using InnerNpadController = Ryujinx.Common.Configuration.Hid.NpadController;
@@ -24,7 +24,7 @@ namespace Ryujinx.Ui.Input
             return _inner.Enabled && Joystick.GetState(_inner.Index).IsConnected;
         }
 
-        public ControllerButtons GetButtons()
+        public ControllerKeys GetButtons()
         {
             if (!IsEnabled())
             {
@@ -33,30 +33,30 @@ namespace Ryujinx.Ui.Input
 
             JoystickState joystickState = Joystick.GetState(_inner.Index);
 
-            ControllerButtons buttons = 0;
+            ControllerKeys buttons = 0;
 
-            if (IsActivated(joystickState, _inner.LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
-            if (IsActivated(joystickState, _inner.LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
-            if (IsActivated(joystickState, _inner.LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
-            if (IsActivated(joystickState, _inner.LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
-            if (IsActivated(joystickState, _inner.LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
-            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
-            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
-            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadUp))       buttons |= ControllerKeys.DpadUp;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadDown))     buttons |= ControllerKeys.DpadDown;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadLeft))     buttons |= ControllerKeys.DpadLeft;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadRight))    buttons |= ControllerKeys.DpadRight;
+            if (IsActivated(joystickState, _inner.LeftJoycon.StickButton))  buttons |= ControllerKeys.LStick;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonMinus))  buttons |= ControllerKeys.Minus;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonL))      buttons |= ControllerKeys.L | ControllerKeys.Sl;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonZl))     buttons |= ControllerKeys.Zl;
 
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
-            if (IsActivated(joystickState, _inner.RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
-            if (IsActivated(joystickState, _inner.RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonA))     buttons |= ControllerKeys.A;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonB))     buttons |= ControllerKeys.B;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonX))     buttons |= ControllerKeys.X;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonY))     buttons |= ControllerKeys.Y;
+            if (IsActivated(joystickState, _inner.RightJoycon.StickButton)) buttons |= ControllerKeys.RStick;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonPlus))  buttons |= ControllerKeys.Plus;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonR))     buttons |= ControllerKeys.R | ControllerKeys.Sr;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonZr))    buttons |= ControllerKeys.Zr;
 
             return buttons;
         }
 
-        private bool IsActivated(JoystickState joystickState,ControllerInputId controllerInputId)
+        private bool IsActivated(JoystickState joystickState, ControllerInputId controllerInputId)
         {
             if (controllerInputId <= ControllerInputId.Button20)
             {

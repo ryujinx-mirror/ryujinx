@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Applets
             var keyboardConfig = _normalSession.Pop();
             var transferMemory = _normalSession.Pop();
 
-            _keyboardConfig = ReadStruct<SoftwareKeyboardConfig>(keyboardConfig);
+            _keyboardConfig = IApplet.ReadStruct<SoftwareKeyboardConfig>(keyboardConfig);
 
             if (_keyboardConfig.UseUtf8)
             {
@@ -174,21 +174,6 @@ namespace Ryujinx.HLE.HOS.Applets
                 writer.Write(output);
 
                 return stream.ToArray();
-            }
-        }
-
-        private static T ReadStruct<T>(byte[] data)
-            where T : struct
-        {
-            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-
-            try
-            {    
-                return Marshal.PtrToStructure<T>(handle.AddrOfPinnedObject());
-            }
-            finally
-            {
-                handle.Free();
             }
         }
     }
