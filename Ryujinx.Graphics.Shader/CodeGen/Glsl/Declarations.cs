@@ -365,11 +365,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             foreach (int attr in info.IAttributes.OrderBy(x => x))
             {
-                string iq = info.InterpolationQualifiers[attr].ToGlslQualifier();
+                string iq = string.Empty;
 
-                if (iq != string.Empty)
+                if (context.Config.Stage == ShaderStage.Fragment)
                 {
-                    iq += " ";
+                    iq = context.Config.ImapTypes[attr].GetFirstUsedType() switch
+                    {
+                        PixelImap.Constant => "flat ",
+                        PixelImap.ScreenLinear => "noperspective ",
+                        _ => string.Empty
+                    };
                 }
 
                 context.AppendLine($"layout (location = {attr}) {iq}in vec4 {DefaultNames.IAttributePrefix}{attr}{suffix};");

@@ -4,7 +4,39 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
-    struct OutputMapTarget
+    enum PixelImap
+    {
+        Unused = 0,
+        Constant = 1,
+        Perspective = 2,
+        ScreenLinear = 3
+    }
+
+    struct ImapPixelType
+    {
+        public PixelImap X { get; }
+        public PixelImap Y { get; }
+        public PixelImap Z { get; }
+        public PixelImap W { get; }
+
+        public ImapPixelType(PixelImap x, PixelImap y, PixelImap z, PixelImap w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
+
+        public PixelImap GetFirstUsedType()
+        {
+            if (X != PixelImap.Unused) return X;
+            if (Y != PixelImap.Unused) return Y;
+            if (Z != PixelImap.Unused) return Z;
+            return W;
+        }
+    }
+
+    struct OmapTarget
     {
         public bool Red   { get; }
         public bool Green { get; }
@@ -13,7 +45,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public bool Enabled => Red || Green || Blue || Alpha;
 
-        public OutputMapTarget(bool red, bool green, bool blue, bool alpha)
+        public OmapTarget(bool red, bool green, bool blue, bool alpha)
         {
             Red   = red;
             Green = green;
@@ -72,9 +104,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int StoreReqStart { get; }
         public int StoreReqEnd   { get; }
 
-        public OutputMapTarget[] OmapTargets    { get; }
-        public bool              OmapSampleMask { get; }
-        public bool              OmapDepth      { get; }
+        public ImapPixelType[] ImapTypes { get; }
+
+        public OmapTarget[] OmapTargets    { get; }
+        public bool         OmapSampleMask { get; }
+        public bool         OmapDepth      { get; }
 
         public ShaderHeader(ReadOnlySpan<byte> code)
         {
@@ -127,14 +161,30 @@ namespace Ryujinx.Graphics.Shader.Translation
             StoreReqStart = commonWord4.Extract(12, 8);
             StoreReqEnd   = commonWord4.Extract(24, 8);
 
+            ImapTypes = new ImapPixelType[32];
+
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    byte imap = (byte)(header[6 + i] >> (j * 8));
+
+                    ImapTypes[i * 4 + j] = new ImapPixelType(
+                        (PixelImap)((imap >> 0) & 3),
+                        (PixelImap)((imap >> 2) & 3),
+                        (PixelImap)((imap >> 4) & 3),
+                        (PixelImap)((imap >> 6) & 3));
+                }
+            }
+
             int type2OmapTarget = header[18];
             int type2Omap       = header[19];
 
-            OmapTargets = new OutputMapTarget[8];
+            OmapTargets = new OmapTarget[8];
 
             for (int offset = 0; offset < OmapTargets.Length * 4; offset += 4)
             {
-                OmapTargets[offset >> 2] = new OutputMapTarget(
+                OmapTargets[offset >> 2] = new OmapTarget(
                     type2OmapTarget.Extract(offset + 0),
                     type2OmapTarget.Extract(offset + 1),
                     type2OmapTarget.Extract(offset + 2),

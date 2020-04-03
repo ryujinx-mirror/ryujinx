@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 for (int attachment = 0; attachment < 8; attachment++)
                 {
-                    OutputMapTarget target = _config.OmapTargets[attachment];
+                    OmapTarget target = _config.OmapTargets[attachment];
 
                     for (int component = 0; component < 4; component++)
                     {
