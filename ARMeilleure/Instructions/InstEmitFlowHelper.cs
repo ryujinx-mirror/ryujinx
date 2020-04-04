@@ -225,14 +225,23 @@ namespace ARMeilleure.Instructions
             bool useTailContinue = true; // Left option here as it may be useful if we need to return to managed rather than tail call in future. (eg. for debug)
             if (useTailContinue)
             {
-                if (allowRejit)
+                if (context.HighCq)
                 {
-                    address = context.BitwiseOr(address, Const(1L));
+                    // If we're doing a tail continue in HighCq, reserve a space in the jump table to avoid calling back to the translator.
+                    // This will always try to get a HighCq version of our continue target as well.
+                    EmitJumpTableBranch(context, address, true);
+                } 
+                else
+                {
+                    if (allowRejit)
+                    {
+                        address = context.BitwiseOr(address, Const(CallFlag));
+                    }
+
+                    Operand fallbackAddr = context.Call(new _U64_U64(NativeInterface.GetFunctionAddress), address);
+
+                    EmitNativeCall(context, fallbackAddr, true);
                 }
-
-                Operand fallbackAddr = context.Call(new _U64_U64(NativeInterface.GetFunctionAddress), address);
-
-                EmitNativeCall(context, fallbackAddr, true);
             } 
             else
             {
