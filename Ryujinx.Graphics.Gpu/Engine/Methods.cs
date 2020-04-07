@@ -108,6 +108,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateShaderState(state);
             }
 
+            if (state.QueryModified(MethodOffset.RasterizeEnable))
+            {
+                UpdateRasterizerState(state);
+            }
+
             if (state.QueryModified(MethodOffset.RtColorState,
                                     MethodOffset.RtDepthStencilState,
                                     MethodOffset.RtControl,
@@ -209,6 +214,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             CommitBindings();
+        }
+
+        /// <summary>
+        /// Updates Rasterizer primitive discard state based on guest gpu state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        private void UpdateRasterizerState(GpuState state)
+        {
+            Boolean32 enable = state.Get<Boolean32>(MethodOffset.RasterizeEnable);
+            _context.Renderer.Pipeline.SetRasterizerDiscard(!enable);
         }
 
         /// <summary>

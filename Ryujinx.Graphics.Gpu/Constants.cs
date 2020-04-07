@@ -53,6 +53,6 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Maximum number of viewports.
         /// </summary>
-        public const int TotalViewports = 8;
+        public const int TotalViewports = 16;
     }
 }

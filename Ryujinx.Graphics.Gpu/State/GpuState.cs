@@ -117,6 +117,9 @@ namespace Ryujinx.Graphics.Gpu.State
         /// </summary>
         private void InitializeDefaultState()
         {
+            // Enable Rasterizer
+            _backingMemory[(int)MethodOffset.RasterizeEnable] = 1;
+
             // Depth ranges.
             for (int index = 0; index < 8; index++)
             {

@@ -53,11 +53,11 @@ namespace Ryujinx.Graphics.Gpu.State
         public static TableItem[] Table = new TableItem[]
         {
             new TableItem(MethodOffset.RtColorState,           typeof(RtColorState),          8),
-            new TableItem(MethodOffset.ViewportTransform,      typeof(ViewportTransform),     8),
-            new TableItem(MethodOffset.ViewportExtents,        typeof(ViewportExtents),       8),
+            new TableItem(MethodOffset.ViewportTransform,      typeof(ViewportTransform),     Constants.TotalViewports),
+            new TableItem(MethodOffset.ViewportExtents,        typeof(ViewportExtents),       Constants.TotalViewports),
             new TableItem(MethodOffset.VertexBufferDrawState,  typeof(VertexBufferDrawState), 1),
             new TableItem(MethodOffset.DepthBiasState,         typeof(DepthBiasState),        1),
-            new TableItem(MethodOffset.ScissorState,           typeof(ScissorState),          8),
+            new TableItem(MethodOffset.ScissorState,           typeof(ScissorState),          Constants.TotalViewports),
             new TableItem(MethodOffset.StencilBackMasks,       typeof(StencilBackMasks),      1),
             new TableItem(MethodOffset.RtDepthStencilState,    typeof(RtDepthStencilState),   1),
             new TableItem(MethodOffset.VertexAttribState,      typeof(VertexAttribState),     16),

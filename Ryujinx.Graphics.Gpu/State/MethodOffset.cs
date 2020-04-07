@@ -16,6 +16,7 @@ namespace Ryujinx.Graphics.Gpu.State
         DispatchParamsAddress           = 0xad,
         Dispatch                        = 0xaf,
         CopyBuffer                      = 0xc0,
+        RasterizeEnable                 = 0xdf,
         CopyBufferParams                = 0x100,
         CopyBufferSwizzle               = 0x1c2,
         CopyBufferDstTexture            = 0x1c3,

@@ -41,7 +41,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
-            GL.Disable(EnableCap.ScissorTest);
+            GL.Disable(EnableCap.RasterizerDiscard);
+            GL.Disable(IndexedEnableCap.ScissorTest, 0);
 
             GL.BlitFramebuffer(
                 srcRegion.X1,
@@ -58,7 +59,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
 
-            ((Pipeline)_renderer.Pipeline).RestoreScissorEnable();
+            ((Pipeline)_renderer.Pipeline).RestoreScissor0Enable();
+            ((Pipeline)_renderer.Pipeline).RestoreRasterizerDiscard();
         }
 
         private static void Attach(FramebufferTarget target, Format format, int handle)

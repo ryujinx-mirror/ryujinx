@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private Program _program;
 
+        private bool _rasterizerDiscard;
+
         private VertexArray _vertexArray;
         private Framebuffer _framebuffer;
 
@@ -31,14 +33,13 @@ namespace Ryujinx.Graphics.OpenGL
 
         private uint[] _componentMasks;
 
-        private readonly bool[] _scissorEnable;
+        private bool _scissor0Enable = false;
 
         internal Pipeline()
         {
+            _rasterizerDiscard = false;
             _clipOrigin = ClipOrigin.LowerLeft;
             _clipDepthMode = ClipDepthMode.NegativeOneToOne;
-
-            _scissorEnable = new bool[8];
         }
 
         public void Barrier()
@@ -644,6 +645,20 @@ namespace Ryujinx.Graphics.OpenGL
             _program.Bind();
         }
 
+        public void SetRasterizerDiscard(bool discard)
+        {
+            if (discard)
+            {
+                GL.Enable(EnableCap.RasterizerDiscard);
+            }
+            else
+            {
+                GL.Disable(EnableCap.RasterizerDiscard);
+            }
+
+            _rasterizerDiscard = discard;
+        }
+
         public void SetRenderTargetColorMasks(uint[] componentMasks)
         {
             _componentMasks = (uint[])componentMasks.Clone();
@@ -697,7 +712,10 @@ namespace Ryujinx.Graphics.OpenGL
                 GL.Disable(IndexedEnableCap.ScissorTest, index);
             }
 
-            _scissorEnable[index] = enable;
+            if (index == 0)
+            {
+                _scissor0Enable = enable;
+            }
         }
 
         public void SetScissor(int index, int x, int y, int width, int height)
@@ -959,14 +977,19 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void RestoreScissorEnable()
+        public void RestoreScissor0Enable()
         {
-            for (int index = 0; index < 8; index++)
+            if (_scissor0Enable)
             {
-                if (_scissorEnable[index])
-                {
-                    GL.Enable(IndexedEnableCap.ScissorTest, index);
-                }
+                GL.Enable(IndexedEnableCap.ScissorTest, 0);
+            }
+        }
+
+        public void RestoreRasterizerDiscard()
+        {
+            if (_rasterizerDiscard)
+            {
+                GL.Enable(EnableCap.RasterizerDiscard);
             }
         }
 

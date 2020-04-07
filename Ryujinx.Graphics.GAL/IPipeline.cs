@@ -48,6 +48,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetProgram(IProgram program);
 
+        void SetRasterizerDiscard(bool discard);
+
         void SetRenderTargetColorMasks(uint[] componentMask);
 
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
