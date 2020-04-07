@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 {
     class NroInfo
     {
-        public NxRelocatableObject Executable { get; private set; }
+        public NroExecutable Executable { get; private set; }
 
         public byte[] Hash             { get; private set; }
         public ulong  NroAddress       { get; private set; }
@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         public ulong  NroMappedAddress { get; set;         }
 
         public NroInfo(
-            NxRelocatableObject executable,
+            NroExecutable       executable,
             byte[]              hash,
             ulong               nroAddress,
             ulong               nroSize,

@@ -1,4 +1,5 @@
 using ARMeilleure.Memory;
+using LibHac;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -17,7 +18,7 @@ namespace Ryujinx.HLE.HOS
         private const int ArgsDataSize   = 0x9000;
         private const int ArgsTotalSize  = ArgsHeaderSize + ArgsDataSize;
 
-        public static bool LoadKernelInitalProcess(Horizon system, KernelInitialProcess kip)
+        public static bool LoadKernelInitalProcess(Horizon system, KipExecutable kip)
         {
             int endOffset = kip.DataOffset + kip.Data.Length;
 
@@ -30,7 +31,7 @@ namespace Ryujinx.HLE.HOS
 
             int codePagesCount = codeSize / KMemoryManager.PageSize;
 
-            ulong codeBaseAddress = kip.Addr39Bits ? 0x8000000UL : 0x200000UL;
+            ulong codeBaseAddress = (kip.Header.Flags & 0x10) != 0 ? 0x8000000UL : 0x200000UL;
 
             ulong codeAddress = codeBaseAddress + (ulong)kip.TextOffset;
 
@@ -43,27 +44,27 @@ namespace Ryujinx.HLE.HOS
                 mmuFlags |= 0x20;
             }
 
-            if (kip.Addr39Bits)
+            if ((kip.Header.Flags & 0x10) != 0)
             {
                 mmuFlags |= (int)AddressSpaceType.Addr39Bits << 1;
             }
 
-            if (kip.Is64Bits)
+            if ((kip.Header.Flags & 0x08) != 0)
             {
                 mmuFlags |= 1;
             }
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo(
-                kip.Name,
-                kip.ProcessCategory,
-                kip.TitleId,
+                kip.Header.Name,
+                kip.Header.ProcessCategory,
+                kip.Header.TitleId,
                 codeAddress,
                 codePagesCount,
                 mmuFlags,
                 0,
                 0);
 
-            MemoryRegion memoryRegion = kip.IsService
+            MemoryRegion memoryRegion = (kip.Header.Flags & 0x20) != 0
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
@@ -103,9 +104,9 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            process.DefaultCpuCore = kip.DefaultProcessorId;
+            process.DefaultCpuCore = kip.Header.DefaultCore;
 
-            result = process.Start(kip.MainThreadPriority, (ulong)kip.MainThreadStackSize);
+            result = process.Start(kip.Header.MainThreadPriority, (ulong)kip.Header.Sections[1].Attribute);
 
             if (result != KernelResult.Success)
             {

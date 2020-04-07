@@ -2,7 +2,7 @@ using System.IO;
 
 namespace Ryujinx.HLE.Loaders.Executables
 {
-    class NxRelocatableObject : IExecutable
+    class NroExecutable : IExecutable
     {
         public byte[] Text { get; private set; }
         public byte[] Ro   { get; private set; }
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         public ulong SourceAddress { get; private set; }
         public ulong BssAddress    { get; private set; }
 
-        public NxRelocatableObject(Stream input, ulong sourceAddress = 0, ulong bssAddress = 0)
+        public NroExecutable(Stream input, ulong sourceAddress = 0, ulong bssAddress = 0)
         {
             SourceAddress = sourceAddress;
             BssAddress    = bssAddress;

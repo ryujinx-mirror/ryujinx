@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             stream.Position = 0;
 
-            NxRelocatableObject executable = new NxRelocatableObject(stream, nroAddress, bssAddress);
+            NroExecutable executable = new NroExecutable(stream, nroAddress, bssAddress);
 
             // check if everything is page align.
             if ((executable.Text.Length & 0xFFF) != 0 || (executable.Ro.Length & 0xFFF) != 0 ||
