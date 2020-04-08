@@ -12,7 +12,6 @@ namespace ARMeilleure.CodeGen.Optimizations
             switch (operation.Instruction)
             {
                 case Instruction.Add:
-                case Instruction.BitwiseExclusiveOr:
                     TryEliminateBinaryOpComutative(operation, 0);
                     break;
 
@@ -22,6 +21,10 @@ namespace ARMeilleure.CodeGen.Optimizations
 
                 case Instruction.BitwiseOr:
                     TryEliminateBitwiseOr(operation);
+                    break;
+
+                case Instruction.BitwiseExclusiveOr:
+                    TryEliminateBitwiseExclusiveOr(operation);
                     break;
 
                 case Instruction.ConditionalSelect:
@@ -86,6 +89,24 @@ namespace ARMeilleure.CodeGen.Optimizations
             else if (IsConstEqual(x, AllOnes(x.Type)) || IsConstEqual(y, AllOnes(y.Type)))
             {
                 operation.TurnIntoCopy(Const(AllOnes(x.Type)));
+            }
+        }
+
+        private static void TryEliminateBitwiseExclusiveOr(Operation operation)
+        {
+            // Try to recognize and optimize those 2 patterns (in order):
+            // x ^ y == 0x00000000 when x == y
+            // 0x00000000 ^ y == y, x ^ 0x00000000 == x
+            Operand x = operation.GetSource(0);
+            Operand y = operation.GetSource(1);
+
+            if (x == y && x.Type.IsInteger())
+            {
+                operation.TurnIntoCopy(Const(x.Type, 0));
+            }
+            else
+            {
+                TryEliminateBinaryOpComutative(operation, 0);
             }
         }
 
