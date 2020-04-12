@@ -30,6 +30,20 @@
       </object>
     </child>
     <child>
+      <object class="GtkMenuItem" id="_manageTitleUpdates">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Manage Title Updates</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
       <object class="GtkMenuItem" id="_extractRomFs">
         <property name="visible">True</property>
         <property name="can_focus">False</property>

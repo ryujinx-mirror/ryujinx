@@ -12,7 +12,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -38,6 +37,7 @@ namespace Ryujinx.Ui
 #pragma warning disable IDE0044
         [GUI] MenuItem _openSaveUserDir;
         [GUI] MenuItem _openSaveDeviceDir;
+        [GUI] MenuItem _manageTitleUpdates;
         [GUI] MenuItem _extractRomFs;
         [GUI] MenuItem _extractExeFs;
         [GUI] MenuItem _extractLogo;
@@ -51,20 +51,20 @@ namespace Ryujinx.Ui
         {
             builder.Autoconnect(this);
 
-            _openSaveUserDir.Activated   += OpenSaveUserDir_Clicked;
-            _openSaveDeviceDir.Activated += OpenSaveDeviceDir_Clicked;
-
-            _openSaveUserDir.Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0;
-            _openSaveDeviceDir.Sensitive = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0;
-
-            _extractRomFs.Activated += ExtractRomFs_Clicked;
-            _extractExeFs.Activated += ExtractExeFs_Clicked;
-            _extractLogo.Activated  += ExtractLogo_Clicked;
-
             _gameTableStore    = gameTableStore;
             _rowIter           = rowIter;
             _virtualFileSystem = virtualFileSystem;
             _controlData       = controlData;
+
+            _openSaveUserDir.Activated    += OpenSaveUserDir_Clicked;
+            _openSaveDeviceDir.Activated  += OpenSaveDeviceDir_Clicked;
+            _manageTitleUpdates.Activated += ManageTitleUpdates_Clicked;
+            _extractRomFs.Activated       += ExtractRomFs_Clicked;
+            _extractExeFs.Activated       += ExtractExeFs_Clicked;
+            _extractLogo.Activated        += ExtractLogo_Clicked;
+
+            _openSaveUserDir.Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0;
+            _openSaveDeviceDir.Sensitive = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0;
 
             string ext = System.IO.Path.GetExtension(_gameTableStore.GetValue(_rowIter, 9).ToString()).ToLower();
             if (ext != ".nca" && ext != ".nsp" && ext != ".pfs0" && ext != ".xci")
@@ -86,10 +86,10 @@ namespace Ryujinx.Ui
                 // Savedata was not found. Ask the user if they want to create it
                 using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
                 {
-                    Title = "Ryujinx",
-                    Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
-                    Text = $"There is no savedata for {titleName} [{titleId:x16}]",
-                    SecondaryText = "Would you like to create savedata for this game?",
+                    Title          = "Ryujinx",
+                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
+                    Text           = $"There is no savedata for {titleName} [{titleId:x16}]",
+                    SecondaryText  = "Would you like to create savedata for this game?",
                     WindowPosition = WindowPosition.Center
                 };
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Ui
                     control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
 
                     // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
-                    control.UserAccountSaveDataSize = 0x4000;
+                    control.UserAccountSaveDataSize        = 0x4000;
                     control.UserAccountSaveDataJournalSize = 0x4000;
 
                     Logger.PrintWarning(LogClass.Application,
@@ -415,7 +415,7 @@ namespace Ryujinx.Ui
         private void OpenSaveUserDir_Clicked(object sender, EventArgs args)
         {
             string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
-            string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+            string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
 
             if (!ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
             {
@@ -449,11 +449,10 @@ namespace Ryujinx.Ui
             });
         }
 
-        // Events
         private void OpenSaveDeviceDir_Clicked(object sender, EventArgs args)
         {
             string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
-            string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+            string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
 
             if (!ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
             {
@@ -466,6 +465,15 @@ namespace Ryujinx.Ui
             filter.SetSaveDataType(SaveDataType.Device);
 
             OpenSaveDir(titleName, titleIdNumber, filter);
+        }
+
+        private void ManageTitleUpdates_Clicked(object sender, EventArgs args)
+        {
+            string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
+            string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+
+            TitleUpdateWindow titleUpdateWindow = new TitleUpdateWindow(titleId, titleName, _virtualFileSystem);
+            titleUpdateWindow.Show();
         }
 
         private void ExtractRomFs_Clicked(object sender, EventArgs args)

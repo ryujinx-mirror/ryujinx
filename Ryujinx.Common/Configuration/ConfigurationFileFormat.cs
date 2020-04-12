@@ -200,7 +200,7 @@ namespace Ryujinx.Configuration
             File.WriteAllText(path, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
         }
 
-        private class ConfigurationEnumFormatter<T> : IJsonFormatter<T>
+        public class ConfigurationEnumFormatter<T> : IJsonFormatter<T>
             where T : struct
         {
             public void Serialize(ref JsonWriter writer, T value, IJsonFormatterResolver formatterResolver)

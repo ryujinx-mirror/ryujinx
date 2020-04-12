@@ -9,6 +9,7 @@ using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Spl;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Configuration.System;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Npdm;
@@ -218,7 +219,7 @@ namespace Ryujinx.Ui
                                     controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                     // Get the title name, title ID, developer name and version number from the NACP
-                                    version = controlHolder.Value.DisplayVersion.ToString();
+                                    version = IsUpdateApplied(titleId, out string updateVersion) ? updateVersion : controlHolder.Value.DisplayVersion.ToString();
 
                                     GetNameIdDeveloper(ref controlHolder.Value, out titleName, out _, out developer);
 
@@ -400,11 +401,11 @@ namespace Ryujinx.Ui
 
                     if (result.IsSuccess())
                     {
-                        saveDataPath = Path.Combine(virtualFileSystem.GetNandPath(), $"user/save/{saveDataInfo.SaveDataId:x16}");
+                        saveDataPath = Path.Combine(virtualFileSystem.GetNandPath(), "user", "save", saveDataInfo.SaveDataId.ToString("x16"));
                     }
                 }
 
-                ApplicationData data = new ApplicationData()
+                ApplicationData data = new ApplicationData
                 {
                     Favorite      = appMetadata.Favorite,
                     Icon          = applicationIcon,
@@ -628,6 +629,73 @@ namespace Ryujinx.Ui
             {
                 titleId = "0000000000000000";
             }
+        }
+
+        private static bool IsUpdateApplied(string titleId, out string version)
+        {
+            string jsonPath = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "updates.json");
+
+            if (File.Exists(jsonPath))
+            {
+                using (Stream stream = File.OpenRead(jsonPath))
+                {
+                    IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
+                    string updatePath = JsonSerializer.Deserialize<TitleUpdateMetadata>(stream, resolver).Selected;
+
+                    if (!File.Exists(updatePath))
+                    {
+                        version = "";
+
+                        return false;
+                    }
+
+                    using (FileStream file = new FileStream(updatePath, FileMode.Open, FileAccess.Read))
+                    {
+                        PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+
+                        foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
+                        {
+                            Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+
+                            if (result.IsSuccess())
+                            {
+                                Ticket ticket = new Ticket(ticketFile.AsStream());
+
+                                _virtualFileSystem.KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
+                            }
+                        }
+
+                        foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
+                        {
+                            nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                            Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+
+                            if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
+                            {
+                                break;
+                            }
+
+                            if (nca.Header.ContentType == NcaContentType.Control)
+                            {
+                                ApplicationControlProperty controlData = new ApplicationControlProperty();
+
+                                nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                
+                                nacpFile.Read(out long _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
+
+                                version = controlData.DisplayVersion.ToString();
+
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            version = "";
+
+            return false;
         }
     }
 }

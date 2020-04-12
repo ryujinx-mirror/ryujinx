@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
         private const int MetaMagic = 'M' << 0 | 'E' << 8 | 'T' << 16 | 'A' << 24;
 
         public byte   MmuFlags            { get; private set; }
-        public bool   Is64Bits            { get; private set; }
+        public bool   Is64Bit             { get; private set; }
         public byte   MainThreadPriority  { get; private set; }
         public byte   DefaultCpuId        { get; private set; }
         public int    PersonalMmHeapSize  { get; private set; }
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             MmuFlags = reader.ReadByte();
 
-            Is64Bits = (MmuFlags & 1) != 0;
+            Is64Bit = (MmuFlags & 1) != 0;
 
             reader.ReadByte();
 

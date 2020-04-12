@@ -48,6 +48,7 @@
     <None Remove="Ui\GameTableContextMenu.glade" />
     <None Remove="Ui\MainWindow.glade" />
     <None Remove="Ui\SwitchSettings.glade" />
+    <None Remove="Ui\TitleUpdateWindow.glade" />
   </ItemGroup>
 
   <ItemGroup>
@@ -69,6 +70,7 @@
     <EmbeddedResource Include="Ui\GameTableContextMenu.glade" />
     <EmbeddedResource Include="Ui\MainWindow.glade" />
     <EmbeddedResource Include="Ui\SwitchSettings.glade" />
+    <EmbeddedResource Include="Ui\TitleUpdateWindow.glade" />
   </ItemGroup>
 
   <ItemGroup>
