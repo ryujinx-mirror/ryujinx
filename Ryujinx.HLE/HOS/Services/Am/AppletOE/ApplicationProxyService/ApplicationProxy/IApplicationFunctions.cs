@@ -84,20 +84,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetTerminateResult(u32)
         public ResultCode SetTerminateResult(ServiceCtx context)
         {
-            int    errorCode = context.RequestData.ReadInt32();
-            string result    = GetFormattedErrorCode(errorCode);
+            Result result = new Result(context.RequestData.ReadUInt32());
 
-            Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{errorCode:x8} ({result}).");
+            Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{result.Value:x8} ({result.ToStringWithName()}).");
 
             return ResultCode.Success;
-        }
-
-        private string GetFormattedErrorCode(int errorCode)
-        {
-            int module      = (errorCode >> 0) & 0x1ff;
-            int description = (errorCode >> 9) & 0x1fff;
-
-            return $"{(2000 + module):d4}-{description:d4}";
         }
 
         [Command(23)]
