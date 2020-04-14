@@ -173,7 +173,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             return FPAbsNeg(context, operands, absoluteA, negateA);
         }
 
-        public static Operand[] GetHalfSrcB(EmitterContext context)
+        public static Operand[] GetHalfSrcB(EmitterContext context, bool isMul = false)
         {
             OpCode op = context.CurrOp;
 
@@ -193,6 +193,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 swizzle = FPHalfSwizzle.FP32;
 
                 absoluteB = op.RawOpCode.Extract(54);
+
+                if (!isMul)
+                {
+                    negateB = op.RawOpCode.Extract(56);
+                }
             }
 
             Operand[] operands = GetHalfUnpacked(context, GetSrcB(context), swizzle);
