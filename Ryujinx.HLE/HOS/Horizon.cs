@@ -254,6 +254,11 @@ namespace Ryujinx.HLE.HOS
             LocalFileSystem codeFs = new LocalFileSystem(exeFsDir);
 
             LoadExeFs(codeFs, out _);
+
+            if (TitleId != 0)
+            {
+                EnsureSaveData(new TitleId(TitleId));
+            }
         }
 
         public void LoadXci(string xciFile)
@@ -755,14 +760,14 @@ namespace Ryujinx.HLE.HOS
 
             FileSystemClient fs = Device.FileSystem.FsClient;
 
-            Result rc = fs.EnsureApplicationCacheStorage(out _, titleId, ref ControlData.Value);
+            Result rc = fs.EnsureApplicationCacheStorage(out _, titleId, ref control);
 
             if (rc.IsFailure())
             {
                 Logger.PrintError(LogClass.Application, $"Error calling EnsureApplicationCacheStorage. Result code {rc.ToStringWithName()}");
             }
 
-            rc = EnsureApplicationSaveData(fs, out _, titleId, ref ControlData.Value, ref user);
+            rc = EnsureApplicationSaveData(fs, out _, titleId, ref control, ref user);
 
             if (rc.IsFailure())
             {
