@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Gpu.State
             _backingMemory[(int)MethodOffset.RasterizeEnable] = 1;
 
             // Depth ranges.
-            for (int index = 0; index < 8; index++)
+            for (int index = 0; index < Constants.TotalViewports; index++)
             {
                 _backingMemory[(int)MethodOffset.ViewportExtents + index * 4 + 2] = 0;
                 _backingMemory[(int)MethodOffset.ViewportExtents + index * 4 + 3] = 0x3F800000;
