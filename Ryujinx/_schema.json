@@ -422,6 +422,18 @@
         "USA"
       ]
     },
+    "system_time_offset": {
+      "$id": "#/properties/system_time_offset",
+      "type": "integer",
+      "title": "System Time Offset",
+      "description": "System time offset in seconds.",
+      "default": 0,
+      "examples": [
+        -3600,
+        0,
+        3600
+      ]
+    },
     "docked_mode": {
       "$id": "#/properties/docked_mode",
       "type": "boolean",

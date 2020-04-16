@@ -1,5 +1,5 @@
 {
-    "version": 4,
+    "version": 5,
     "max_anisotropy": -1,
     "graphics_shaders_dump_path": "",
     "logging_enable_debug": false,
@@ -14,6 +14,7 @@
     "system_language": "AmericanEnglish",
     "system_region": "USA",
     "system_time_zone": "UTC",
+    "system_time_offset": 0,
     "docked_mode": false,
     "enable_discord_integration": true,
     "enable_vsync": true,

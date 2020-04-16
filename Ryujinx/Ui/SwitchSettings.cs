@@ -20,6 +20,8 @@ namespace Ryujinx.Ui
 
         private static bool _listeningForKeypress;
 
+        private long _systemTimeOffset;
+
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
         [GUI] Window       _settingsWin;
@@ -42,6 +44,16 @@ namespace Ryujinx.Ui
         [GUI] ComboBoxText _systemLanguageSelect;
         [GUI] ComboBoxText _systemRegionSelect;
         [GUI] ComboBoxText _systemTimeZoneSelect;
+        [GUI] SpinButton   _systemTimeYearSpin;
+        [GUI] SpinButton   _systemTimeMonthSpin;
+        [GUI] SpinButton   _systemTimeDaySpin;
+        [GUI] SpinButton   _systemTimeHourSpin;
+        [GUI] SpinButton   _systemTimeMinuteSpin;
+        [GUI] Adjustment   _systemTimeYearSpinAdjustment;
+        [GUI] Adjustment   _systemTimeMonthSpinAdjustment;
+        [GUI] Adjustment   _systemTimeDaySpinAdjustment;
+        [GUI] Adjustment   _systemTimeHourSpinAdjustment;
+        [GUI] Adjustment   _systemTimeMinuteSpinAdjustment;
         [GUI] CheckButton  _custThemeToggle;
         [GUI] Entry        _custThemePath;
         [GUI] ToggleButton _browseThemePath;
@@ -248,6 +260,7 @@ namespace Ryujinx.Ui
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
             _graphicsShadersDumpPath.Buffer.Text = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             _fsLogSpinAdjustment.Value           = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
+            _systemTimeOffset                    = ConfigurationState.Instance.System.SystemTimeOffset;
 
             _gameDirsBox.AppendColumn("", new CellRendererText(), "text", 0);
             _gameDirsBoxStore  = new ListStore(typeof(string));
@@ -266,9 +279,71 @@ namespace Ryujinx.Ui
             }
 
             _listeningForKeypress = false;
+
+            //Setup system time spinners
+            UpdateSystemTimeSpinners();
+        }
+
+        private void UpdateSystemTimeSpinners()
+        {
+            //Unbind system time spin events
+            _systemTimeYearSpin.ValueChanged   -= SystemTimeSpin_ValueChanged;
+            _systemTimeMonthSpin.ValueChanged  -= SystemTimeSpin_ValueChanged;
+            _systemTimeDaySpin.ValueChanged    -= SystemTimeSpin_ValueChanged;
+            _systemTimeHourSpin.ValueChanged   -= SystemTimeSpin_ValueChanged;
+            _systemTimeMinuteSpin.ValueChanged -= SystemTimeSpin_ValueChanged;
+
+            //Apply actual system time + SystemTimeOffset to system time spin buttons
+            DateTime systemTime = DateTime.Now.AddSeconds(_systemTimeOffset);
+
+            _systemTimeYearSpinAdjustment.Value   = systemTime.Year;
+            _systemTimeMonthSpinAdjustment.Value  = systemTime.Month;
+            _systemTimeDaySpinAdjustment.Value    = systemTime.Day;
+            _systemTimeHourSpinAdjustment.Value   = systemTime.Hour;
+            _systemTimeMinuteSpinAdjustment.Value = systemTime.Minute;
+
+            //Format spin buttons text to include leading zeros
+            _systemTimeYearSpin.Text   = systemTime.Year.ToString("0000");
+            _systemTimeMonthSpin.Text  = systemTime.Month.ToString("00");
+            _systemTimeDaySpin.Text    = systemTime.Day.ToString("00");
+            _systemTimeHourSpin.Text   = systemTime.Hour.ToString("00");
+            _systemTimeMinuteSpin.Text = systemTime.Minute.ToString("00");
+
+            //Bind system time spin button events
+            _systemTimeYearSpin.ValueChanged   += SystemTimeSpin_ValueChanged;
+            _systemTimeMonthSpin.ValueChanged  += SystemTimeSpin_ValueChanged;
+            _systemTimeDaySpin.ValueChanged    += SystemTimeSpin_ValueChanged;
+            _systemTimeHourSpin.ValueChanged   += SystemTimeSpin_ValueChanged;
+            _systemTimeMinuteSpin.ValueChanged += SystemTimeSpin_ValueChanged;
         }
 
         //Events
+        private void SystemTimeSpin_ValueChanged(Object sender, EventArgs e)
+        {
+            int year   = _systemTimeYearSpin.ValueAsInt;
+            int month  = _systemTimeMonthSpin.ValueAsInt;
+            int day    = _systemTimeDaySpin.ValueAsInt;
+            int hour   = _systemTimeHourSpin.ValueAsInt;
+            int minute = _systemTimeMinuteSpin.ValueAsInt;
+
+            if (!DateTime.TryParse(year + "-" + month + "-" + day + " " + hour + ":" + minute, out DateTime newTime))
+            {
+                UpdateSystemTimeSpinners();
+
+                return;
+            }
+
+            newTime = newTime.AddSeconds(DateTime.Now.Second).AddMilliseconds(DateTime.Now.Millisecond);
+
+            long systemTimeOffset = (long)Math.Ceiling((newTime - DateTime.Now).TotalMinutes) * 60L;
+
+            if (_systemTimeOffset != systemTimeOffset)
+            {
+                _systemTimeOffset = systemTimeOffset;
+                UpdateSystemTimeSpinners();
+            }
+        }
+
         private void Button_Pressed(object sender, EventArgs args, ToggleButton button)
         {
             if (_listeningForKeypress == false)
@@ -467,7 +542,8 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Ui.GameDirs.Value                  = gameDirs;
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value = (int)_fsLogSpinAdjustment.Value;
 
-            ConfigurationState.Instance.System.TimeZone.Value = _systemTimeZoneSelect.ActiveId;
+            ConfigurationState.Instance.System.TimeZone.Value              = _systemTimeZoneSelect.ActiveId;
+            ConfigurationState.Instance.System.SystemTimeOffset.Value      = _systemTimeOffset;
 
             MainWindow.SaveConfig();
             MainWindow.ApplyTheme();
