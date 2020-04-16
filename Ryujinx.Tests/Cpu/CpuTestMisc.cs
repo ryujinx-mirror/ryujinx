@@ -190,7 +190,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetContext().GetV(0).AsFloat(), Is.EqualTo(16f));
+            Assert.That(GetContext().GetV(0).As<float>(), Is.EqualTo(16f));
         }
 
         [Explicit]
@@ -236,7 +236,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetContext().GetV(0).AsDouble(), Is.EqualTo(16d));
+            Assert.That(GetContext().GetV(0).As<double>(), Is.EqualTo(16d));
         }
 
         [Test, Ignore("The Tester supports only one return point.")]

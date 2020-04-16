@@ -1017,13 +1017,13 @@ namespace ARMeilleure.Instructions
         {
             for (int e = 0; e <= 3; e++)
             {
-                uint t = ShaChoose(hash_abcd.GetUInt32(1),
-                                   hash_abcd.GetUInt32(2),
-                                   hash_abcd.GetUInt32(3));
+                uint t = ShaChoose(hash_abcd.Extract<uint>(1),
+                                   hash_abcd.Extract<uint>(2),
+                                   hash_abcd.Extract<uint>(3));
 
-                hash_e += Rol(hash_abcd.GetUInt32(0), 5) + t + wk.GetUInt32(e);
+                hash_e += Rol(hash_abcd.Extract<uint>(0), 5) + t + wk.Extract<uint>(e);
 
-                t = Rol(hash_abcd.GetUInt32(1), 30);
+                t = Rol(hash_abcd.Extract<uint>(1), 30);
 
                 hash_abcd.Insert(1, t);
 
@@ -1042,13 +1042,13 @@ namespace ARMeilleure.Instructions
         {
             for (int e = 0; e <= 3; e++)
             {
-                uint t = ShaMajority(hash_abcd.GetUInt32(1),
-                                     hash_abcd.GetUInt32(2),
-                                     hash_abcd.GetUInt32(3));
+                uint t = ShaMajority(hash_abcd.Extract<uint>(1),
+                                     hash_abcd.Extract<uint>(2),
+                                     hash_abcd.Extract<uint>(3));
 
-                hash_e += Rol(hash_abcd.GetUInt32(0), 5) + t + wk.GetUInt32(e);
+                hash_e += Rol(hash_abcd.Extract<uint>(0), 5) + t + wk.Extract<uint>(e);
 
-                t = Rol(hash_abcd.GetUInt32(1), 30);
+                t = Rol(hash_abcd.Extract<uint>(1), 30);
 
                 hash_abcd.Insert(1, t);
 
@@ -1062,13 +1062,13 @@ namespace ARMeilleure.Instructions
         {
             for (int e = 0; e <= 3; e++)
             {
-                uint t = ShaParity(hash_abcd.GetUInt32(1),
-                                   hash_abcd.GetUInt32(2),
-                                   hash_abcd.GetUInt32(3));
+                uint t = ShaParity(hash_abcd.Extract<uint>(1),
+                                   hash_abcd.Extract<uint>(2),
+                                   hash_abcd.Extract<uint>(3));
 
-                hash_e += Rol(hash_abcd.GetUInt32(0), 5) + t + wk.GetUInt32(e);
+                hash_e += Rol(hash_abcd.Extract<uint>(0), 5) + t + wk.Extract<uint>(e);
 
-                t = Rol(hash_abcd.GetUInt32(1), 30);
+                t = Rol(hash_abcd.Extract<uint>(1), 30);
 
                 hash_abcd.Insert(1, t);
 
@@ -1080,8 +1080,8 @@ namespace ARMeilleure.Instructions
 
         public static V128 Sha1SchedulePart1(V128 w0_3, V128 w4_7, V128 w8_11)
         {
-            ulong t2 = w4_7.GetUInt64(0);
-            ulong t1 = w0_3.GetUInt64(1);
+            ulong t2 = w4_7.Extract<ulong>(0);
+            ulong t1 = w0_3.Extract<ulong>(1);
 
             V128 result = new V128(t1, t2);
 
@@ -1092,17 +1092,17 @@ namespace ARMeilleure.Instructions
         {
             V128 t = tw0_3 ^ (w12_15 >> 32);
 
-            uint tE0 = t.GetUInt32(0);
-            uint tE1 = t.GetUInt32(1);
-            uint tE2 = t.GetUInt32(2);
-            uint tE3 = t.GetUInt32(3);
+            uint tE0 = t.Extract<uint>(0);
+            uint tE1 = t.Extract<uint>(1);
+            uint tE2 = t.Extract<uint>(2);
+            uint tE3 = t.Extract<uint>(3);
 
             return new V128(tE0.Rol(1), tE1.Rol(1), tE2.Rol(1), tE3.Rol(1) ^ tE0.Rol(2));
         }
 
         private static void Rol32_160(ref uint y, ref V128 x)
         {
-            uint xE3 = x.GetUInt32(3);
+            uint xE3 = x.Extract<uint>(3);
 
             x <<= 32;
             x.Insert(0, y);
@@ -1148,11 +1148,11 @@ namespace ARMeilleure.Instructions
 
             for (int e = 0; e <= 3; e++)
             {
-                uint elt = (e <= 2 ? w0_3 : w4_7).GetUInt32(e <= 2 ? e + 1 : 0);
+                uint elt = (e <= 2 ? w0_3 : w4_7).Extract<uint>(e <= 2 ? e + 1 : 0);
 
                 elt = elt.Ror(7) ^ elt.Ror(18) ^ elt.Lsr(3);
 
-                elt += w0_3.GetUInt32(e);
+                elt += w0_3.Extract<uint>(e);
 
                 result.Insert(e, elt);
             }
@@ -1164,7 +1164,7 @@ namespace ARMeilleure.Instructions
         {
             V128 result = new V128();
 
-            ulong t1 = w12_15.GetUInt64(1);
+            ulong t1 = w12_15.Extract<ulong>(1);
 
             for (int e = 0; e <= 1; e++)
             {
@@ -1172,12 +1172,12 @@ namespace ARMeilleure.Instructions
 
                 elt = elt.Ror(17) ^ elt.Ror(19) ^ elt.Lsr(10);
 
-                elt += w0_3.GetUInt32(e) + w8_11.GetUInt32(e + 1);
+                elt += w0_3.Extract<uint>(e) + w8_11.Extract<uint>(e + 1);
 
                 result.Insert(e, elt);
             }
 
-            t1 = result.GetUInt64(0);
+            t1 = result.Extract<ulong>(0);
 
             for (int e = 2; e <= 3; e++)
             {
@@ -1185,7 +1185,7 @@ namespace ARMeilleure.Instructions
 
                 elt = elt.Ror(17) ^ elt.Ror(19) ^ elt.Lsr(10);
 
-                elt += w0_3.GetUInt32(e) + (e == 2 ? w8_11 : w12_15).GetUInt32(e == 2 ? 3 : 0);
+                elt += w0_3.Extract<uint>(e) + (e == 2 ? w8_11 : w12_15).Extract<uint>(e == 2 ? 3 : 0);
 
                 result.Insert(e, elt);
             }
@@ -1197,21 +1197,21 @@ namespace ARMeilleure.Instructions
         {
             for (int e = 0; e <= 3; e++)
             {
-                uint chs = ShaChoose(y.GetUInt32(0),
-                                     y.GetUInt32(1),
-                                     y.GetUInt32(2));
+                uint chs = ShaChoose(y.Extract<uint>(0),
+                                     y.Extract<uint>(1),
+                                     y.Extract<uint>(2));
 
-                uint maj = ShaMajority(x.GetUInt32(0),
-                                       x.GetUInt32(1),
-                                       x.GetUInt32(2));
+                uint maj = ShaMajority(x.Extract<uint>(0),
+                                       x.Extract<uint>(1),
+                                       x.Extract<uint>(2));
 
-                uint t1 = y.GetUInt32(3) + ShaHashSigma1(y.GetUInt32(0)) + chs + w.GetUInt32(e);
+                uint t1 = y.Extract<uint>(3) + ShaHashSigma1(y.Extract<uint>(0)) + chs + w.Extract<uint>(e);
 
-                uint t2 = t1 + x.GetUInt32(3);
+                uint t2 = t1 + x.Extract<uint>(3);
 
                 x.Insert(3, t2);
 
-                t2 = t1 + ShaHashSigma0(x.GetUInt32(0)) + maj;
+                t2 = t1 + ShaHashSigma0(x.Extract<uint>(0)) + maj;
 
                 y.Insert(3, t2);
 
@@ -1223,8 +1223,8 @@ namespace ARMeilleure.Instructions
 
         private static void Rol32_256(ref V128 y, ref V128 x)
         {
-            uint yE3 = y.GetUInt32(3);
-            uint xE3 = x.GetUInt32(3);
+            uint yE3 = y.Extract<uint>(3);
+            uint xE3 = x.Extract<uint>(3);
 
             y <<= 32;
             x <<= 32;

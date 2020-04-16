@@ -663,8 +663,8 @@ namespace ARMeilleure.Memory
 
         public void WriteVector128(long position, V128 value)
         {
-            WriteUInt64(position + 0, value.GetUInt64(0));
-            WriteUInt64(position + 8, value.GetUInt64(1));
+            WriteUInt64(position + 0, value.Extract<ulong>(0));
+            WriteUInt64(position + 8, value.Extract<ulong>(1));
         }
 
         public void WriteBytes(long position, byte[] data)

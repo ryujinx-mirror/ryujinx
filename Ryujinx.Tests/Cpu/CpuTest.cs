@@ -414,15 +414,15 @@ namespace Ryujinx.Tests.Cpu
                 if (fpTolerances == FpTolerances.UpToOneUlpsS)
                 {
                     if (IsNormalOrSubnormalS(_unicornEmu.Q[0].AsFloat()) &&
-                        IsNormalOrSubnormalS(_context.GetV(0).AsFloat()))
+                        IsNormalOrSubnormalS(_context.GetV(0).As<float>()))
                     {
-                        Assert.That   (_context.GetV(0).GetFloat(0),
+                        Assert.That   (_context.GetV(0).Extract<float>(0),
                             Is.EqualTo(_unicornEmu.Q[0].GetFloat(0)).Within(1).Ulps);
-                        Assert.That   (_context.GetV(0).GetFloat(1),
+                        Assert.That   (_context.GetV(0).Extract<float>(1),
                             Is.EqualTo(_unicornEmu.Q[0].GetFloat(1)).Within(1).Ulps);
-                        Assert.That   (_context.GetV(0).GetFloat(2),
+                        Assert.That   (_context.GetV(0).Extract<float>(2),
                             Is.EqualTo(_unicornEmu.Q[0].GetFloat(2)).Within(1).Ulps);
-                        Assert.That   (_context.GetV(0).GetFloat(3),
+                        Assert.That   (_context.GetV(0).Extract<float>(3),
                             Is.EqualTo(_unicornEmu.Q[0].GetFloat(3)).Within(1).Ulps);
 
                         Console.WriteLine(fpTolerances);
@@ -436,11 +436,11 @@ namespace Ryujinx.Tests.Cpu
                 if (fpTolerances == FpTolerances.UpToOneUlpsD)
                 {
                     if (IsNormalOrSubnormalD(_unicornEmu.Q[0].AsDouble()) &&
-                        IsNormalOrSubnormalD(_context.GetV(0).AsDouble()))
+                        IsNormalOrSubnormalD(_context.GetV(0).As<double>()))
                     {
-                        Assert.That   (_context.GetV(0).GetDouble(0),
+                        Assert.That   (_context.GetV(0).Extract<double>(0),
                             Is.EqualTo(_unicornEmu.Q[0].GetDouble(0)).Within(1).Ulps);
-                        Assert.That   (_context.GetV(0).GetDouble(1),
+                        Assert.That   (_context.GetV(0).Extract<double>(1),
                             Is.EqualTo(_unicornEmu.Q[0].GetDouble(1)).Within(1).Ulps);
 
                         Console.WriteLine(fpTolerances);
@@ -455,7 +455,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static SimdValue V128ToSimdValue(V128 value)
         {
-            return new SimdValue(value.GetUInt64(0), value.GetUInt64(1));
+            return new SimdValue(value.Extract<ulong>(0), value.Extract<ulong>(1));
         }
 
         protected static V128 MakeVectorScalar(float value)  => new V128(value);
@@ -466,8 +466,8 @@ namespace Ryujinx.Tests.Cpu
 
         protected static V128 MakeVectorE0E1(ulong e0, ulong e1) => new V128(e0, e1);
 
-        protected static ulong GetVectorE0(V128 vector) => vector.GetUInt64(0);
-        protected static ulong GetVectorE1(V128 vector) => vector.GetUInt64(1);
+        protected static ulong GetVectorE0(V128 vector) => vector.Extract<ulong>(0);
+        protected static ulong GetVectorE1(V128 vector) => vector.Extract<ulong>(1);
 
         protected static ushort GenNormalH()
         {

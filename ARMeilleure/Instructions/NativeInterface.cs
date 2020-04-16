@@ -245,8 +245,8 @@ namespace ARMeilleure.Instructions
             V128 value = _context.Memory.AtomicLoadInt128((long)address);
 
             _context.ExclusiveAddress   = GetMaskedExclusiveAddress(address);
-            _context.ExclusiveValueLow  = value.GetUInt64(0);
-            _context.ExclusiveValueHigh = value.GetUInt64(1);
+            _context.ExclusiveValueLow  = value.Extract<ulong>(0);
+            _context.ExclusiveValueHigh = value.Extract<ulong>(1);
 
             return value;
         }
