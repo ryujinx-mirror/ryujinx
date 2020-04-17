@@ -546,6 +546,21 @@ namespace Ryujinx.Graphics.OpenGL
             // GL.PolygonOffsetClamp(factor, units, clamp);
         }
 
+        public void SetDepthClamp(bool clampNear, bool clampFar)
+        {
+            // TODO: Use GL_AMD_depth_clamp_separate or similar if available?
+            // Currently enables clamping if either is set.
+            bool clamp = clampNear || clampFar;
+
+            if (!clamp)
+            {
+                GL.Disable(EnableCap.DepthClamp);
+                return;
+            }
+
+            GL.Enable(EnableCap.DepthClamp);
+        }
+
         public void SetDepthMode(DepthMode mode)
         {
             ClipDepthMode depthMode = mode.Convert();

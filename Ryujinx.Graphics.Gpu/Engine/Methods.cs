@@ -127,6 +127,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateScissorState(state);
             }
 
+            if (state.QueryModified(MethodOffset.ViewVolumeClipControl))
+            {
+                UpdateDepthClampState(state);
+            }
+
             if (state.QueryModified(MethodOffset.DepthTestEnable,
                                     MethodOffset.DepthWriteEnable,
                                     MethodOffset.DepthTestFunc))
@@ -134,7 +139,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateDepthTestState(state);
             }
 
-            if (state.QueryModified(MethodOffset.DepthMode, MethodOffset.ViewportTransform, MethodOffset.ViewportExtents))
+            if (state.QueryModified(MethodOffset.DepthMode,
+                                    MethodOffset.ViewportTransform,
+                                    MethodOffset.ViewportExtents))
             {
                 UpdateViewportTransform(state);
             }
@@ -363,6 +370,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
         }
 
         /// <summary>
+        /// Updates host depth clamp state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        private void UpdateDepthClampState(GpuState state)
+        {
+            ViewVolumeClipControl clip = state.Get<ViewVolumeClipControl>(MethodOffset.ViewVolumeClipControl);
+            _context.Renderer.Pipeline.SetDepthClamp((clip & ViewVolumeClipControl.DepthClampNear) != 0,
+                                                     (clip & ViewVolumeClipControl.DepthClampFar) != 0);
+        }
+
+        /// <summary>
         /// Updates host depth test state based on current GPU state.
         /// </summary>
         /// <param name="state">Current GPU state</param>
@@ -384,8 +402,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _context.Renderer.Pipeline.SetDepthMode(depthMode);
 
-            bool flipY = (state.Get<int>(MethodOffset.YControl) & 1) != 0;
-
+            bool flipY = (state.Get<YControl>(MethodOffset.YControl) & YControl.NegateY) != 0;
             float yFlip = flipY ? -1 : 1;
 
             Viewport[] viewports = new Viewport[Constants.TotalViewports];
