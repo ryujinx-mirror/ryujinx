@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                         errorCode = ConvertInternalErrorCode(internalResult);
 
-                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        if ((ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
                         {
                             context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
                         }
@@ -452,7 +452,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                         errorCode = ConvertInternalErrorCode(internalResult);
 
-                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        if ((ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
                         {
                             context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
                         }
@@ -497,7 +497,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                         errorCode = ConvertInternalErrorCode(internalResult);
 
-                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        if ((ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
                         {
                             context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
                             context.Memory.WriteBytes(inlineOutBufferPosition, inlineOutBuffer.ToArray());
@@ -518,6 +518,18 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             Logger.PrintStub(LogClass.ServiceNv);
 
             return ResultCode.Success;
+        }
+
+        public static void Destroy()
+        {
+            foreach (object entry in _deviceFileIdRegistry.Values)
+            {
+                NvDeviceFile deviceFile = (NvDeviceFile)entry;
+
+                deviceFile.Close();
+            }
+
+            _deviceFileIdRegistry.Clear();
         }
     }
 }

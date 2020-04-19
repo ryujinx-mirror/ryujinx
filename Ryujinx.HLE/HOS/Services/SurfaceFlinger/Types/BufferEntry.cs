@@ -8,6 +8,8 @@
 
         public Rect Crop;
 
+        public MultiFence Fence;
+
         public GbpBuffer Data;
     }
 }

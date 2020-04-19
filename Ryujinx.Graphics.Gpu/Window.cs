@@ -30,12 +30,17 @@ namespace Ryujinx.Graphics.Gpu
             public ImageCrop Crop { get; }
 
             /// <summary>
-            /// Texture release callback.
+            /// Texture acquire callback.
             /// </summary>
-            public Action<object> Callback { get; }
+            public Action<GpuContext, object> AcquireCallback { get; }
 
             /// <summary>
-            /// User defined object, passed to the release callback.
+            /// Texture release callback.
+            /// </summary>
+            public Action<object> ReleaseCallback { get; }
+
+            /// <summary>
+            /// User defined object, passed to the various callbacks.
             /// </summary>
             public object UserObj { get; }
 
@@ -44,18 +49,21 @@ namespace Ryujinx.Graphics.Gpu
             /// </summary>
             /// <param name="info">Information of the texture to be presented</param>
             /// <param name="crop">Texture crop region</param>
-            /// <param name="callback">Texture release callback</param>
+            /// <param name="acquireCallback">Texture acquire callback</param>
+            /// <param name="releaseCallback">Texture release callback</param>
             /// <param name="userObj">User defined object passed to the release callback, can be used to identify the texture</param>
             public PresentationTexture(
-                TextureInfo    info,
-                ImageCrop      crop,
-                Action<object> callback,
-                object         userObj)
+                TextureInfo                info,
+                ImageCrop                  crop,
+                Action<GpuContext, object> acquireCallback,
+                Action<object>             releaseCallback,
+                object                     userObj)
             {
-                Info     = info;
-                Crop     = crop;
-                Callback = callback;
-                UserObj  = userObj;
+                Info            = info;
+                Crop            = crop;
+                AcquireCallback = acquireCallback;
+                ReleaseCallback = releaseCallback;
+                UserObj         = userObj;
             }
         }
 
@@ -87,20 +95,22 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="format">Texture format</param>
         /// <param name="bytesPerPixel">Texture format bytes per pixel (must match the format)</param>
         /// <param name="crop">Texture crop region</param>
-        /// <param name="callback">Texture release callback</param>
+        /// <param name="acquireCallback">Texture acquire callback</param>
+        /// <param name="releaseCallback">Texture release callback</param>
         /// <param name="userObj">User defined object passed to the release callback</param>
         public void EnqueueFrameThreadSafe(
-            ulong          address,
-            int            width,
-            int            height,
-            int            stride,
-            bool           isLinear,
-            int            gobBlocksInY,
-            Format         format,
-            int            bytesPerPixel,
-            ImageCrop      crop,
-            Action<object> callback,
-            object         userObj)
+            ulong                      address,
+            int                        width,
+            int                        height,
+            int                        stride,
+            bool                       isLinear,
+            int                        gobBlocksInY,
+            Format                     format,
+            int                        bytesPerPixel,
+            ImageCrop                  crop,
+            Action<GpuContext, object> acquireCallback,
+            Action<object>             releaseCallback,
+            object                     userObj)
         {
             FormatInfo formatInfo = new FormatInfo(format, 1, 1, bytesPerPixel);
 
@@ -120,7 +130,7 @@ namespace Ryujinx.Graphics.Gpu
                 Target.Texture2D,
                 formatInfo);
 
-            _frameQueue.Enqueue(new PresentationTexture(info, crop, callback, userObj));
+            _frameQueue.Enqueue(new PresentationTexture(info, crop, acquireCallback, releaseCallback, userObj));
         }
 
         /// <summary>
@@ -134,6 +144,8 @@ namespace Ryujinx.Graphics.Gpu
 
             if (_frameQueue.TryDequeue(out PresentationTexture pt))
             {
+                pt.AcquireCallback(_context, pt.UserObj);
+
                 Texture texture = _context.Methods.TextureManager.FindOrCreateTexture(pt.Info);
 
                 texture.SynchronizeMemory();
@@ -142,7 +154,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 swapBuffersCallback();
 
-                pt.Callback(pt.UserObj);
+                pt.ReleaseCallback(pt.UserObj);
             }
         }
     }

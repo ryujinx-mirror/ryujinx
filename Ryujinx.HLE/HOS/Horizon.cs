@@ -17,9 +17,11 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Mii;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sm;
+using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
@@ -39,6 +41,7 @@ using TimeServiceManager = Ryujinx.HLE.HOS.Services.Time.TimeManager;
 using NsoExecutable      = Ryujinx.HLE.Loaders.Executables.NsoExecutable;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
+using Ryujinx.HLE.HOS.Services.Nv;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -130,6 +133,8 @@ namespace Ryujinx.HLE.HOS
         public int GlobalAccessLogMode { get; set; }
 
         internal long HidBaseAddress { get; private set; }
+
+        internal NvHostSyncpt HostSyncpoint { get; private set; }
 
         public Horizon(Switch device, ContentManager contentManager)
         {
@@ -259,6 +264,8 @@ namespace Ryujinx.HLE.HOS
             TimeServiceManager.Instance.SetupEphemeralNetworkSystemClock();
 
             DatabaseImpl.Instance.InitializeDatabase(device);
+
+            HostSyncpoint = new NvHostSyncpt(device);
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -869,6 +876,10 @@ namespace Ryujinx.HLE.HOS
                 {
                     Device.VsyncEvent.Set();
                 }
+
+                // Destroy nvservices channels as KThread could be waiting on some user events.
+                // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
+                INvDrvServices.Destroy();
 
                 // This is needed as the IPC Dummy KThread is also counted in the ThreadCounter.
                 ThreadCounter.Signal();

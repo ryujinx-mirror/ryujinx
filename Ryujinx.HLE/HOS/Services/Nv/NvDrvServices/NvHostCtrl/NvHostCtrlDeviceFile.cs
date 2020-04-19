@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.Gpu.Synchronization;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types;
@@ -13,12 +14,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 {
     internal class NvHostCtrlDeviceFile : NvDeviceFile
     {
-        private const int EventsCount = 64;
+        public const int EventsCount = 64;
 
         private bool          _isProductionMode;
-        private NvHostSyncpt  _syncpt;
+        private Switch        _device;
         private NvHostEvent[] _events;
-        private KEvent        _dummyEvent;
 
         public NvHostCtrlDeviceFile(ServiceCtx context) : base(context)
         {
@@ -31,9 +31,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                 _isProductionMode = true;
             }
 
-            _syncpt     = new NvHostSyncpt();
-            _events     = new NvHostEvent[EventsCount];
-            _dummyEvent = new KEvent(context.Device.System);
+            _device = context.Device;
+
+            _events = new NvHostEvent[EventsCount];
         }
 
         public override NvInternalResult Ioctl(NvIoctl command, Span<byte> arguments)
@@ -69,6 +69,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                             configArgument.CopyTo(arguments);
                         }
                         break;
+                    case 0x1c:
+                        result = CallIoctlMethod<uint>(EventSignal, arguments);
+                        break;
                     case 0x1d:
                         result = CallIoctlMethod<EventWaitArguments>(EventWait, arguments);
                         break;
@@ -78,16 +81,45 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                     case 0x1f:
                         result = CallIoctlMethod<uint>(EventRegister, arguments);
                         break;
+                    case 0x20:
+                        result = CallIoctlMethod<uint>(EventUnregister, arguments);
+                        break;
+                    case 0x21:
+                        result = CallIoctlMethod<ulong>(EventKill, arguments);
+                        break;
                 }
             }
 
             return result;
         }
 
+        private KEvent QueryEvent(uint eventId)
+        {
+            uint eventSlot;
+            uint syncpointId;
+
+            if ((eventId >> 28) == 1)
+            {
+                eventSlot   = eventId & 0xFFFF;
+                syncpointId = (eventId >> 16) & 0xFFF;
+            }
+            else
+            {
+                eventSlot   = eventId & 0xFF;
+                syncpointId = eventId >> 4;
+            }
+
+            if (eventSlot >= EventsCount || _events[eventSlot] == null || _events[eventSlot].Fence.Id != syncpointId)
+            {
+                return null;
+            }
+
+            return _events[eventSlot].Event;
+        }
+
         public override NvInternalResult QueryEvent(out int eventHandle, uint eventId)
         {
-            // TODO: implement SyncPts <=> KEvent logic accurately. For now we return a dummy event.
-            KEvent targetEvent = _dummyEvent;
+            KEvent targetEvent = QueryEvent(eventId);
 
             if (targetEvent != null)
             {
@@ -113,24 +145,26 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
         private NvInternalResult SyncptIncr(ref uint id)
         {
-            if (id >= NvHostSyncpt.SyncptsCount)
+            if (id >= SynchronizationManager.MaxHardwareSyncpoints)
             {
                 return NvInternalResult.InvalidInput;
             }
 
-            _syncpt.Increment((int)id);
+            _device.System.HostSyncpoint.Increment(id);
 
             return NvInternalResult.Success;
         }
 
         private NvInternalResult SyncptWait(ref SyncptWaitArguments arguments)
         {
-            return SyncptWait(ref arguments, out _);
+            uint dummyValue = 0;
+
+            return EventWait(ref arguments.Fence, ref dummyValue, arguments.Timeout, isWaitEventAsyncCmd: false, isWaitEventCmd: false);
         }
 
         private NvInternalResult SyncptWaitEx(ref SyncptWaitExArguments arguments)
         {
-            return SyncptWait(ref arguments.Input, out arguments.Value);
+            return EventWait(ref arguments.Input.Fence, ref arguments.Value, arguments.Input.Timeout, isWaitEventAsyncCmd: false, isWaitEventCmd: false);
         }
 
         private NvInternalResult SyncptReadMax(ref NvFence arguments)
@@ -182,194 +216,237 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
         private NvInternalResult EventWait(ref EventWaitArguments arguments)
         {
-            return EventWait(ref arguments, async: false);
+            return EventWait(ref arguments.Fence, ref arguments.Value, arguments.Timeout, isWaitEventAsyncCmd: false, isWaitEventCmd: true);
         }
 
         private NvInternalResult EventWaitAsync(ref EventWaitArguments arguments)
         {
-            return EventWait(ref arguments, async: true);
+            return EventWait(ref arguments.Fence, ref arguments.Value, arguments.Timeout, isWaitEventAsyncCmd: true, isWaitEventCmd: false);
         }
 
         private NvInternalResult EventRegister(ref uint userEventId)
         {
-            Logger.PrintStub(LogClass.ServiceNv);
+            NvInternalResult result = EventUnregister(ref userEventId);
+
+            if (result == NvInternalResult.Success)
+            {
+                _events[userEventId] = new NvHostEvent(_device.System.HostSyncpoint, userEventId, _device.System);
+            }
+
+            return result;
+        }
+
+        private NvInternalResult EventUnregister(ref uint userEventId)
+        {
+            if (userEventId >= EventsCount)
+            {
+                return NvInternalResult.InvalidInput;
+            }
+
+            NvHostEvent hostEvent = _events[userEventId];
+
+            if (hostEvent == null)
+            {
+                return NvInternalResult.Success;
+            }
+
+            if (hostEvent.State == NvHostEventState.Available ||
+                hostEvent.State == NvHostEventState.Cancelled ||
+                hostEvent.State == NvHostEventState.Signaled)
+            {
+                _events[userEventId].Dispose();
+                _events[userEventId] = null;
+
+                return NvInternalResult.Success;
+            }
+
+            return NvInternalResult.Busy;
+        }
+
+        private NvInternalResult EventKill(ref ulong eventMask)
+        {
+            NvInternalResult result = NvInternalResult.Success;
+
+            for (uint eventId = 0; eventId < EventsCount; eventId++)
+            {
+                if ((eventMask & (1UL << (int)eventId)) != 0)
+                {
+                    NvInternalResult tmp = EventUnregister(ref eventId);
+
+                    if (tmp != NvInternalResult.Success)
+                    {
+                        result = tmp;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private NvInternalResult EventSignal(ref uint userEventId)
+        {
+            uint eventId = userEventId & ushort.MaxValue;
+
+            if (eventId >= EventsCount)
+            {
+                return NvInternalResult.InvalidInput;
+            }
+
+            NvHostEvent hostEvent = _events[eventId];
+
+            if (hostEvent == null)
+            {
+                return NvInternalResult.InvalidInput;
+            }
+
+            NvHostEventState oldState = hostEvent.State;
+
+            if (oldState == NvHostEventState.Waiting)
+            {
+                hostEvent.State = NvHostEventState.Cancelling;
+
+                hostEvent.Cancel(_device.Gpu);
+            }
+
+            hostEvent.State = NvHostEventState.Cancelled;
 
             return NvInternalResult.Success;
         }
 
         private NvInternalResult SyncptReadMinOrMax(ref NvFence arguments, bool max)
         {
-            if (arguments.Id >= NvHostSyncpt.SyncptsCount)
+            if (arguments.Id >= SynchronizationManager.MaxHardwareSyncpoints)
             {
                 return NvInternalResult.InvalidInput;
             }
 
             if (max)
             {
-                arguments.Value = (uint)_syncpt.GetMax((int)arguments.Id);
+                arguments.Value = _device.System.HostSyncpoint.ReadSyncpointMaxValue(arguments.Id);
             }
             else
             {
-                arguments.Value = (uint)_syncpt.GetMin((int)arguments.Id);
+                arguments.Value = _device.System.HostSyncpoint.ReadSyncpointValue(arguments.Id);
             }
 
             return NvInternalResult.Success;
         }
 
-        private NvInternalResult SyncptWait(ref SyncptWaitArguments arguments, out int value)
+        private NvInternalResult EventWait(ref NvFence fence, ref uint value, int timeout, bool isWaitEventAsyncCmd, bool isWaitEventCmd)
         {
-            if (arguments.Id >= NvHostSyncpt.SyncptsCount)
-            {
-                value = 0;
-
-                return NvInternalResult.InvalidInput;
-            }
-
-            NvInternalResult result;
-
-            if (_syncpt.MinCompare((int)arguments.Id, arguments.Thresh))
-            {
-                result = NvInternalResult.Success;
-            }
-            else if (arguments.Timeout == 0)
-            {
-                result = NvInternalResult.TryAgain;
-            }
-            else
-            {
-                Logger.PrintDebug(LogClass.ServiceNv, $"Waiting syncpt with timeout of {arguments.Timeout}ms...");
-
-                using (ManualResetEvent waitEvent = new ManualResetEvent(false))
-                {
-                    _syncpt.AddWaiter(arguments.Thresh, waitEvent);
-
-                    // Note: Negative (> INT_MAX) timeouts aren't valid on .NET,
-                    // in this case we just use the maximum timeout possible.
-                    int timeout = arguments.Timeout;
-
-                    if (timeout < -1)
-                    {
-                        timeout = int.MaxValue;
-                    }
-
-                    if (timeout == -1)
-                    {
-                        waitEvent.WaitOne();
-
-                        result = NvInternalResult.Success;
-                    }
-                    else if (waitEvent.WaitOne(timeout))
-                    {
-                        result = NvInternalResult.Success;
-                    }
-                    else
-                    {
-                        result = NvInternalResult.TimedOut;
-                    }
-                }
-
-                Logger.PrintDebug(LogClass.ServiceNv, "Resuming...");
-            }
-
-            value = _syncpt.GetMin((int)arguments.Id);
-
-            return result;
-        }
-
-        private NvInternalResult EventWait(ref EventWaitArguments arguments, bool async)
-        {
-            if (arguments.Id >= NvHostSyncpt.SyncptsCount)
+            if (fence.Id >= SynchronizationManager.MaxHardwareSyncpoints)
             {
                 return NvInternalResult.InvalidInput;
             }
 
-            if (_syncpt.MinCompare(arguments.Id, arguments.Thresh))
+            // First try to check if the syncpoint is already expired on the CPU side
+            if (_device.System.HostSyncpoint.IsSyncpointExpired(fence.Id, fence.Value))
             {
-                arguments.Value = _syncpt.GetMin(arguments.Id);
+                value = _device.System.HostSyncpoint.ReadSyncpointMinValue(fence.Id);
 
                 return NvInternalResult.Success;
             }
 
-            if (!async)
+            // Try to invalidate the CPU cache and check for expiration again.
+            uint newCachedSyncpointValue = _device.System.HostSyncpoint.UpdateMin(fence.Id);
+
+            // Has the fence already expired?
+            if (_device.System.HostSyncpoint.IsSyncpointExpired(fence.Id, fence.Value))
             {
-                arguments.Value = 0;
+                value = newCachedSyncpointValue;
+
+                return NvInternalResult.Success;
             }
 
-            if (arguments.Timeout == 0)
+            // If the timeout is 0, directly return.
+            if (timeout == 0)
             {
                 return NvInternalResult.TryAgain;
             }
 
-            NvHostEvent Event;
+            // The syncpoint value isn't at the fence yet, we need to wait.
+
+            if (!isWaitEventAsyncCmd)
+            {
+                value = 0;
+            }
+
+            NvHostEvent hostEvent;
 
             NvInternalResult result;
 
-            int eventIndex;
+            uint eventIndex;
 
-            if (async)
+            if (isWaitEventAsyncCmd)
             {
-                eventIndex = arguments.Value;
+                eventIndex = value;
 
-                if ((uint)eventIndex >= EventsCount)
+                if (eventIndex >= EventsCount)
                 {
                     return NvInternalResult.InvalidInput;
                 }
 
-                Event = _events[eventIndex];
+                hostEvent = _events[eventIndex];
             }
             else
             {
-                Event = GetFreeEvent(arguments.Id, out eventIndex);
+                hostEvent = GetFreeEvent(fence.Id, out eventIndex);
             }
 
-            if (Event != null &&
-               (Event.State == NvHostEventState.Registered ||
-                Event.State == NvHostEventState.Free))
+            if (hostEvent != null &&
+               (hostEvent.State == NvHostEventState.Available ||
+                hostEvent.State == NvHostEventState.Signaled  ||
+                hostEvent.State == NvHostEventState.Cancelled))
             {
-                Event.Id     = arguments.Id;
-                Event.Thresh = arguments.Thresh;
+                hostEvent.Wait(_device.Gpu, fence);
 
-                Event.State = NvHostEventState.Waiting;
-
-                if (!async)
+                if (isWaitEventCmd)
                 {
-                    arguments.Value = ((arguments.Id & 0xfff) << 16) | 0x10000000;
+                    value = ((fence.Id & 0xfff) << 16) | 0x10000000;
                 }
                 else
                 {
-                    arguments.Value = arguments.Id << 4;
+                    value = fence.Id << 4;
                 }
 
-                arguments.Value |= eventIndex;
+                value |= eventIndex;
 
                 result = NvInternalResult.TryAgain;
             }
             else
             {
+                Logger.PrintError(LogClass.ServiceNv, $"Invalid Event at index {eventIndex} (isWaitEventAsyncCmd: {isWaitEventAsyncCmd}, isWaitEventCmd: {isWaitEventCmd})");
+
+                if (hostEvent != null)
+                {
+                    Logger.PrintError(LogClass.ServiceNv, hostEvent.DumpState(_device.Gpu));
+                }
+
                 result = NvInternalResult.InvalidInput;
             }
 
             return result;
         }
 
-        private NvHostEvent GetFreeEvent(int id, out int eventIndex)
+        public NvHostEvent GetFreeEvent(uint id, out uint eventIndex)
         {
             eventIndex = EventsCount;
 
-            int nullIndex = EventsCount;
+            uint nullIndex = EventsCount;
 
-            for (int index = 0; index < EventsCount; index++)
+            for (uint index = 0; index < EventsCount; index++)
             {
                 NvHostEvent Event = _events[index];
 
                 if (Event != null)
                 {
-                    if (Event.State == NvHostEventState.Registered ||
-                        Event.State == NvHostEventState.Free)
+                    if (Event.State == NvHostEventState.Available ||
+                        Event.State == NvHostEventState.Signaled   ||
+                        Event.State == NvHostEventState.Cancelled)
                     {
                         eventIndex = index;
 
-                        if (Event.Id == id)
+                        if (Event.Fence.Id == id)
                         {
                             return Event;
                         }
@@ -385,7 +462,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             {
                 eventIndex = nullIndex;
 
-                return _events[nullIndex] = new NvHostEvent();
+                EventRegister(ref eventIndex);
+
+                return _events[nullIndex];
             }
 
             if (eventIndex < EventsCount)
@@ -396,6 +475,44 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             return null;
         }
 
-        public override void Close() { }
+        public override void Close()
+        {
+            Logger.PrintWarning(LogClass.ServiceNv, "Closing channel");
+
+            // If the device file need to be closed, cancel all user events and dispose events.
+            for (int i = 0; i < _events.Length; i++)
+            {
+                NvHostEvent evnt = _events[i];
+
+                if (evnt != null)
+                {
+                    if (evnt.State == NvHostEventState.Waiting)
+                    {
+                        evnt.State = NvHostEventState.Cancelling;
+
+                        evnt.Cancel(_device.Gpu);
+                    }
+                    else if (evnt.State == NvHostEventState.Signaling)
+                    {
+                        // Wait at max 9ms if the guest app is trying to signal the event while closing it..
+                        int retryCount = 0;
+                        do
+                        {
+                            if (retryCount++ > 9)
+                            {
+                                break;
+                            }
+
+                            // TODO: This should be handled by the kernel (reschedule the current thread ect), waiting for Kernel decoupling work.
+                            Thread.Sleep(1);
+                        } while (evnt.State != NvHostEventState.Signaled);
+                    }
+
+                    evnt.Dispose();
+
+                   _events[i] = null;
+                }
+            }
+        }
     }
 }

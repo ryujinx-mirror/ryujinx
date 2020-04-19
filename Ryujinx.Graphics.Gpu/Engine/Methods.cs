@@ -65,6 +65,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             state.RegisterCallback(MethodOffset.Dispatch, Dispatch);
 
+            state.RegisterCallback(MethodOffset.SyncpointAction, IncrementSyncpoint);
+
             state.RegisterCallback(MethodOffset.CopyBuffer,  CopyBuffer);
             state.RegisterCallback(MethodOffset.CopyTexture, CopyTexture);
 
@@ -92,6 +94,19 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.UniformBufferBindTessEvaluation, UniformBufferBindTessEvaluation);
             state.RegisterCallback(MethodOffset.UniformBufferBindGeometry,       UniformBufferBindGeometry);
             state.RegisterCallback(MethodOffset.UniformBufferBindFragment,       UniformBufferBindFragment);
+        }
+
+        /// <summary>
+        /// Register callback for Fifo method calls that triggers an action on the GPFIFO.
+        /// </summary>
+        /// <param name="state">GPU state where the triggers will be registered</param>
+        public void RegisterCallbacksForFifo(GpuState state)
+        {
+            state.RegisterCallback(MethodOffset.FenceAction,            FenceAction);
+            state.RegisterCallback(MethodOffset.WaitForIdle,            WaitForIdle);
+            state.RegisterCallback(MethodOffset.SendMacroCodeData,      SendMacroCodeData);
+            state.RegisterCallback(MethodOffset.BindMacro,              BindMacro);
+            state.RegisterCallback(MethodOffset.SetMmeShadowRamControl, SetMmeShadowRamControl);
         }
 
         /// <summary>

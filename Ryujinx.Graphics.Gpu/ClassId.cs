@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Gpu
         Engine3D            = 0xb197,
         EngineCompute       = 0xb1c0,
         EngineInline2Memory = 0xa140,
-        EngineDma           = 0xb0b5
+        EngineDma           = 0xb0b5,
+        EngineGpfifo        = 0xb06f
     }
 }

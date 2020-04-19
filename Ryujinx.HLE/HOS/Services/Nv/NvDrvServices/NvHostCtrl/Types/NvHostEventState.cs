@@ -2,9 +2,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 {
     enum NvHostEventState
     {
-        Registered = 0,
+        Available  = 0,
         Waiting    = 1,
-        Busy       = 2,
-        Free       = 5
+        Cancelling = 2,
+        Signaling  = 3,
+        Signaled   = 4,
+        Cancelled  = 5
     }
 }

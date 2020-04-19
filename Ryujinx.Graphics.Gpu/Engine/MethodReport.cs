@@ -26,16 +26,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             switch (mode)
             {
-                case ReportMode.Semaphore: ReportSemaphore(state);     break;
-                case ReportMode.Counter:   ReportCounter(state, type); break;
+                case ReportMode.Release: ReleaseSemaphore(state);    break;
+                case ReportMode.Counter: ReportCounter(state, type); break;
             }
         }
 
         /// <summary>
-        /// Writes a GPU semaphore value to guest memory.
+        /// Writes (or Releases) a GPU semaphore value to guest memory.
         /// </summary>
         /// <param name="state">Current GPU state</param>
-        private void ReportSemaphore(GpuState state)
+        private void ReleaseSemaphore(GpuState state)
         {
             var rs = state.Get<ReportState>(MethodOffset.ReportState);
 

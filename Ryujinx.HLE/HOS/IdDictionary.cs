@@ -8,6 +8,8 @@ namespace Ryujinx.HLE.HOS
     {
         private ConcurrentDictionary<int, object> _objs;
 
+        public ICollection<object> Values => _objs.Values;
+
         public IdDictionary()
         {
             _objs = new ConcurrentDictionary<int, object>();

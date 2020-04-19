@@ -6,6 +6,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types
     struct SyncptWaitExArguments
     {
         public SyncptWaitArguments Input;
-        public int                 Value;
+        public uint                Value;
     }
 }
