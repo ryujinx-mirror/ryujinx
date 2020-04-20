@@ -1375,6 +1375,9 @@ namespace ARMeilleure.CodeGen.X86
                 case Instruction.ShiftLeft:
                 case Instruction.ShiftRightSI:
                 case Instruction.ShiftRightUI:
+                case Instruction.Store:
+                case Instruction.Store16:
+                case Instruction.Store8:
                 case Instruction.Subtract:
                 case Instruction.VectorExtract:
                 case Instruction.VectorExtract16:
