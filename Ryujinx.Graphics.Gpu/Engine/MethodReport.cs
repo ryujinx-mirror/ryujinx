@@ -11,8 +11,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private const int NsToTicksFractionNumerator   = 384;
         private const int NsToTicksFractionDenominator = 625;
 
-        private ulong _runningCounter;
-
         /// <summary>
         /// Writes a GPU counter to guest memory.
         /// </summary>
@@ -81,15 +79,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     break;
             }
 
-            ulong ticks;
+            ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
 
             if (GraphicsConfig.FastGpuTime)
             {
-                ticks = _runningCounter++;
-            }
-            else
-            {
-                ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
+                // Divide by some amount to report time as if operations were performed faster than they really are.
+                // This can prevent some games from switching to a lower resolution because rendering is too slow.
+                ticks /= 256;
             }
 
             counterData.Counter   = counter;
