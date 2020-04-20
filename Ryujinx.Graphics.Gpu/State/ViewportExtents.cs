@@ -5,11 +5,13 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct ViewportExtents
     {
+#pragma warning disable CS0649
         public ushort X;
         public ushort Width;
         public ushort Y;
         public ushort Height;
         public float  DepthNear;
         public float  DepthFar;
+#pragma warning restore CS0649
     }
 }

@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct StencilTestState
     {
+#pragma warning disable CS0649
         public Boolean32 Enable;
         public StencilOp FrontSFail;
         public StencilOp FrontDpFail;
@@ -15,5 +16,6 @@ namespace Ryujinx.Graphics.Gpu.State
         public int       FrontFuncRef;
         public int       FrontFuncMask;
         public int       FrontMask;
+#pragma warning restore CS0649
     }
 }

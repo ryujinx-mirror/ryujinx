@@ -5,7 +5,9 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct VertexAttribState
     {
+#pragma warning disable CS0649
         public uint Attribute;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Unpacks the index of the vertex buffer this attribute belongs to.

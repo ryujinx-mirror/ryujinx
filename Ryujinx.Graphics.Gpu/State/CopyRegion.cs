@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct CopyRegion
     {
+#pragma warning disable CS0649
         public int  DstX;
         public int  DstY;
         public int  DstWidth;
@@ -13,5 +14,6 @@ namespace Ryujinx.Graphics.Gpu.State
         public long SrcHeightRF;
         public long SrcXF;
         public long SrcYF;
+#pragma warning restore CS0649
     }
 }

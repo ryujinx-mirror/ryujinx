@@ -5,7 +5,9 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct Boolean32
     {
+#pragma warning disable CS0649
         private uint _value;
+#pragma warning restore CS0649
 
         public static implicit operator bool(Boolean32 value)
         {

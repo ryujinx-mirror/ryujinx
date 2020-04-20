@@ -5,9 +5,11 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct VertexBufferState
     {
+#pragma warning disable CS0649
         public uint  Control;
         public GpuVa Address;
         public int   Divisor;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Vertex buffer stride, defined as the number of bytes occupied by each vertex in memory.

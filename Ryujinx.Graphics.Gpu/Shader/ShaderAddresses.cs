@@ -7,12 +7,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// </summary>
     struct ShaderAddresses : IEquatable<ShaderAddresses>
     {
+#pragma warning disable CS0649
         public ulong VertexA;
         public ulong Vertex;
         public ulong TessControl;
         public ulong TessEvaluation;
         public ulong Geometry;
         public ulong Fragment;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Check if the addresses are equal.

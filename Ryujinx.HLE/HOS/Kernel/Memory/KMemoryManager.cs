@@ -64,6 +64,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public int AddrSpaceWidth { get; private set; }
 
         private bool _isKernel;
+
         private bool _aslrEnabled;
 
         private KMemoryBlockAllocator _blockAllocator;
@@ -78,6 +79,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _cpuMemory = cpuMemory;
 
             _blocks = new LinkedList<KMemoryBlock>();
+
+            _isKernel = false;
         }
 
         private static readonly int[] AddrSpaceSizes = new int[] { 32, 36, 32, 39 };

@@ -6,7 +6,9 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct RtColorMask
     {
+#pragma warning disable CS0649
         public uint Packed;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Unpacks red channel enable.

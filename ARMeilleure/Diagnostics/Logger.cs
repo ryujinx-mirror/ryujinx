@@ -6,9 +6,11 @@ namespace ARMeilleure.Diagnostics
 {
     static class Logger
     {
+#pragma warning disable CS0169
         private static long _startTime;
 
         private static long[] _accumulatedTime;
+#pragma warning restore CS0196
 
         static Logger()
         {

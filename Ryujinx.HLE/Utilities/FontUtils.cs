@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.Utilities
 
         public static byte[] DecryptFont(Stream bfttfStream)
         {
-            uint KXor(uint In) => In ^ 0x06186249;
+            uint KXor(uint In) => In ^ FontKey;
 
             using (BinaryReader reader = new BinaryReader(bfttfStream))
             {

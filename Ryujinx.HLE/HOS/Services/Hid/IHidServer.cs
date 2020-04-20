@@ -26,7 +26,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         private long  _npadCommunicationMode;
         private uint  _accelerometerPlayMode;
+#pragma warning disable CS0649
         private long  _vibrationGcErmCommand;
+#pragma warning restore CS0649
         private float _sevenSixAxisSensorFusionStrength;
 
         private HidSensorFusionParameters  _sensorFusionParams;

@@ -790,10 +790,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// </summary>
         private struct SbDescriptor
         {
+#pragma warning disable CS0649
             public uint AddressLow;
             public uint AddressHigh;
             public int  Size;
             public int  Padding;
+#pragma warning restore CS0649
 
             public ulong PackAddress()
             {

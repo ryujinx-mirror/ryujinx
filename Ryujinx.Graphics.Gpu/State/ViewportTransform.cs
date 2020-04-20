@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct ViewportTransform
     {
+#pragma warning disable CS0649
         public float ScaleX;
         public float ScaleY;
         public float ScaleZ;
@@ -15,6 +16,7 @@ namespace Ryujinx.Graphics.Gpu.State
         public float TranslateZ;
         public uint  Swizzle;
         public uint  SubpixelPrecisionBias;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Unpacks viewport swizzle of the position X component.

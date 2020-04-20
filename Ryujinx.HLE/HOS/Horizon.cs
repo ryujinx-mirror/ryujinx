@@ -114,7 +114,9 @@ namespace Ryujinx.HLE.HOS
 
         public Keyset KeySet => Device.FileSystem.KeySet;
 
+#pragma warning disable CS0649
         private bool _hasStarted;
+#pragma warning restore CS0649
         private bool _isDisposed;
 
         public BlitStruct<ApplicationControlProperty> ControlData { get; set; }

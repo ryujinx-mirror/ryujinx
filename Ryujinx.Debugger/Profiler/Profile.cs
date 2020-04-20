@@ -11,7 +11,9 @@ namespace Ryujinx.Debugger.Profiler
         public static float UpdateRate    => _settings.UpdateRate;
         public static long  HistoryLength => _settings.History;
 
+#pragma warning disable CS0649
         private static InternalProfile  _profileInstance;
+#pragma warning restore CS0649
         private static ProfilerSettings _settings;
 
         [Conditional("USE_DEBUGGING")]

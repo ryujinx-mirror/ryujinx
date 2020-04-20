@@ -51,6 +51,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private const float Frac8ToF32 = 1.0f / 256.0f;
 
+#pragma warning disable CS0649
         public uint Word0;
         public uint Word1;
         public uint Word2;
@@ -59,6 +60,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public float BorderColorG;
         public float BorderColorB;
         public float BorderColorA;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Unpacks the texture wrap mode along the X axis.

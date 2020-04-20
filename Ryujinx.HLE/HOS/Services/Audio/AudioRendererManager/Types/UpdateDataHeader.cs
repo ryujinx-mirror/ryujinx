@@ -2,6 +2,7 @@
 {
     struct UpdateDataHeader
     {
+#pragma warning disable CS0649
         public int Revision;
         public int BehaviorSize;
         public int MemoryPoolSize;
@@ -18,5 +19,6 @@
         public int Unknown34;
         public int Unknown38;
         public int TotalSize;
+#pragma warning restore CS0649
     }
 }

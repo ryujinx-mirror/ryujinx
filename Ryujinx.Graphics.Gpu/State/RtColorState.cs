@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct RtColorState
     {
+#pragma warning disable CS0649
         public GpuVa        Address;
         public int          WidthOrStride;
         public int          Height;
@@ -20,5 +21,6 @@ namespace Ryujinx.Graphics.Gpu.State
         public int          Padding3;
         public int          Padding4;
         public int          Padding5;
+#pragma warning restore CS0649
     }
 }

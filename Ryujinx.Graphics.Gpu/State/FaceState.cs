@@ -7,8 +7,10 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct FaceState
     {
+#pragma warning disable CS0649
         public Boolean32 CullEnable;
         public FrontFace FrontFace;
         public Face      CullFace;
+#pragma warning restore CS0649
     }
 }

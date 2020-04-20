@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct BlendStateCommon
     {
+#pragma warning disable CS0649
         public Boolean32   SeparateAlpha;
         public BlendOp     ColorOp;
         public BlendFactor ColorSrcFactor;
@@ -15,5 +16,6 @@ namespace Ryujinx.Graphics.Gpu.State
         public BlendFactor AlphaSrcFactor;
         public uint        Unknown0x1354;
         public BlendFactor AlphaDstFactor;
+#pragma warning restore CS0649
     }
 }

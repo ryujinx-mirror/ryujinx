@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </summary>
     struct ShaderState
     {
+#pragma warning disable CS0649
         public uint       Control;
         public uint       Offset;
         public uint       Unknown0x8;
@@ -21,6 +22,7 @@ namespace Ryujinx.Graphics.Gpu.State
         public uint       Unknown0x34;
         public uint       Unknown0x38;
         public uint       Unknown0x3c;
+#pragma warning restore CS0649
 
         /// <summary>
         /// Unpacks shader enable information.

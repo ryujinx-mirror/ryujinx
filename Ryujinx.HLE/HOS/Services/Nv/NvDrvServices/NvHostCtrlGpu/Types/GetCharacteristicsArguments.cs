@@ -44,8 +44,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu.Types
 
     struct CharacteristicsHeader
     {
+#pragma warning disable CS0649
         public long BufferSize;
         public long BufferAddress;
+#pragma warning restore CS0649
     }
 
     [StructLayout(LayoutKind.Sequential)]
