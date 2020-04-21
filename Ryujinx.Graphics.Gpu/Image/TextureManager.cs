@@ -208,6 +208,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets a texture descriptor used on the compute pipeline.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="handle">Shader "fake" handle of the texture</param>
+        /// <returns>The texture descriptor</returns>
+        public TextureDescriptor GetComputeTextureDescriptor(GpuState state, int handle)
+        {
+            return _cpBindingsManager.GetTextureDescriptor(state, 0, handle);
+        }
+
+        /// <summary>
         /// Gets a texture descriptor used on the graphics pipeline.
         /// </summary>
         /// <param name="state">Current GPU state</param>

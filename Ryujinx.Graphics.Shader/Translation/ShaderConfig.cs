@@ -102,6 +102,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                         return 16;
                     case QueryInfoName.SupportsNonConstantTextureOffset:
                         return Convert.ToInt32(true);
+                    case QueryInfoName.TextureFormat:
+                        return (int)TextureFormat.R8G8B8A8Unorm;
                 }
             }
 

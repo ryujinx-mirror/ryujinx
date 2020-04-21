@@ -7,6 +7,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public int Handle { get; private set; }
 
+        public TextureFormat Format { get; set; }
+
         public TextureOperation(
             Instruction      inst,
             SamplerType      type,

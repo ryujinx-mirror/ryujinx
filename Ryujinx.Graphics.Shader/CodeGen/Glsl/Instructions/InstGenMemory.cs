@@ -9,16 +9,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 {
     static class InstGenMemory
     {
-        public static string ImageStore(CodeGenContext context, AstOperation operation)
+        public static string ImageLoadOrStore(CodeGenContext context, AstOperation operation)
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isArray   = (texOp.Type & SamplerType.Array) != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
-            string texCall = "imageStore";
+            string texCall = texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore";
 
             int srcIndex = isBindless ? 1 : 0;
 
@@ -40,14 +40,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             int coordsCount = texOp.Type.GetDimensions();
 
-            int pCount = coordsCount;
-
-            int arrayIndexElem = -1;
-
-            if (isArray)
-            {
-                arrayIndexElem = pCount++;
-            }
+            int pCount = coordsCount + (isArray ? 1 : 0);
 
             void Append(string str)
             {
@@ -70,23 +63,40 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 Append(Src(VariableType.S32));
             }
 
-            string[] cElems = new string[4];
-
-            for (int index = 0; index < 4; index++)
+            if (texOp.Inst == Instruction.ImageStore)
             {
-                if (srcIndex < texOp.SourcesCount)
+                VariableType type = texOp.Format.GetComponentType();
+
+                string[] cElems = new string[4];
+
+                for (int index = 0; index < 4; index++)
                 {
-                    cElems[index] = Src(VariableType.F32);
+                    if (srcIndex < texOp.SourcesCount)
+                    {
+                        cElems[index] = Src(type);
+                    }
+                    else
+                    {
+                        cElems[index] = type switch
+                        {
+                            VariableType.S32 => NumberFormatter.FormatInt(0),
+                            VariableType.U32 => NumberFormatter.FormatUint(0),
+                            _                => NumberFormatter.FormatFloat(0)
+                        };
+                    }
                 }
-                else
+
+                string prefix = type switch
                 {
-                    cElems[index] = NumberFormatter.FormatFloat(0);
-                }
+                    VariableType.S32 => "i",
+                    VariableType.U32 => "u",
+                    _                => string.Empty
+                };
+
+                Append(prefix + "vec4(" + string.Join(", ", cElems) + ")");
             }
 
-            Append("vec4(" + string.Join(", ", cElems) + ")");
-
-            texCall += ")";
+            texCall += ")" + (texOp.Inst == Instruction.ImageLoad ? GetMask(texOp.Index) : "");
 
             return texCall;
         }

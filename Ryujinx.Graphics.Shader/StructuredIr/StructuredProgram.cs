@@ -57,6 +57,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 return new AstTextureOperation(
                     inst,
                     texOp.Type,
+                    texOp.Format,
                     texOp.Flags,
                     texOp.Handle,
                     4, // TODO: Non-hardcoded array size.
@@ -118,6 +119,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 if (operation is TextureOperation texOp)
                 {
+                    if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
+                    {
+                        dest.VarType = texOp.Format.GetComponentType();
+                    }
+
                     AstTextureOperation astTexOp = GetAstTextureOperation(texOp);
 
                     if (texOp.Inst == Instruction.ImageLoad)

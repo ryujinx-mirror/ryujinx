@@ -280,6 +280,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 {
                     return GetOperandVarType((AstOperand)operation.GetSource(0));
                 }
+                else if (operation is AstTextureOperation texOp &&
+                         (texOp.Inst == Instruction.ImageLoad ||
+                          texOp.Inst == Instruction.ImageStore))
+                {
+                    return texOp.Format.GetComponentType();
+                }
 
                 return GetDestVarType(operation.Inst);
             }

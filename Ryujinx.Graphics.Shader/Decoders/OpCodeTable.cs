@@ -219,6 +219,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("1110111101010x", InstEmit.St,      typeof(OpCodeMemory));
             Set("1110111011011x", InstEmit.Stg,     typeof(OpCodeMemory));
             Set("1110111101011x", InstEmit.Sts,     typeof(OpCodeMemory));
+            Set("11101011000xxx", InstEmit.Suld,    typeof(OpCodeImage));
             Set("11101011001xxx", InstEmit.Sust,    typeof(OpCodeImage));
             Set("1111000011111x", InstEmit.Sync,    typeof(OpCodeBranchPop));
             Set("110000xxxx111x", InstEmit.Tex,     typeof(OpCodeTex));

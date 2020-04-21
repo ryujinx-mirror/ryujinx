@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Shader
         IsTextureRectangle,
         PrimitiveTopology,
         StorageBufferOffsetAlignment,
-        SupportsNonConstantTextureOffset
+        SupportsNonConstantTextureOffset,
+        TextureFormat
     }
 }

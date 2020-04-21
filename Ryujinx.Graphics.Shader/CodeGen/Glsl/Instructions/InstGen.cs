@@ -4,6 +4,7 @@ using System;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenPacking;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
@@ -115,53 +116,56 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 switch (inst)
                 {
+                    case Instruction.ImageLoad:
+                        return ImageLoadOrStore(context, operation);
+
                     case Instruction.ImageStore:
-                        return InstGenMemory.ImageStore(context, operation);
+                        return ImageLoadOrStore(context, operation);
 
                     case Instruction.LoadAttribute:
-                        return InstGenMemory.LoadAttribute(context, operation);
+                        return LoadAttribute(context, operation);
 
                     case Instruction.LoadConstant:
-                        return InstGenMemory.LoadConstant(context, operation);
+                        return LoadConstant(context, operation);
 
                     case Instruction.LoadLocal:
-                        return InstGenMemory.LoadLocal(context, operation);
+                        return LoadLocal(context, operation);
 
                     case Instruction.LoadShared:
-                        return InstGenMemory.LoadShared(context, operation);
+                        return LoadShared(context, operation);
 
                     case Instruction.LoadStorage:
-                        return InstGenMemory.LoadStorage(context, operation);
+                        return LoadStorage(context, operation);
 
                     case Instruction.Lod:
-                        return InstGenMemory.Lod(context, operation);
+                        return Lod(context, operation);
 
                     case Instruction.PackDouble2x32:
-                        return InstGenPacking.PackDouble2x32(context, operation);
+                        return PackDouble2x32(context, operation);
 
                     case Instruction.PackHalf2x16:
-                        return InstGenPacking.PackHalf2x16(context, operation);
+                        return PackHalf2x16(context, operation);
 
                     case Instruction.StoreLocal:
-                        return InstGenMemory.StoreLocal(context, operation);
+                        return StoreLocal(context, operation);
 
                     case Instruction.StoreShared:
-                        return InstGenMemory.StoreShared(context, operation);
+                        return StoreShared(context, operation);
 
                     case Instruction.StoreStorage:
-                        return InstGenMemory.StoreStorage(context, operation);
+                        return StoreStorage(context, operation);
 
                     case Instruction.TextureSample:
-                        return InstGenMemory.TextureSample(context, operation);
+                        return TextureSample(context, operation);
 
                     case Instruction.TextureSize:
-                        return InstGenMemory.TextureSize(context, operation);
+                        return TextureSize(context, operation);
 
                     case Instruction.UnpackDouble2x32:
-                        return InstGenPacking.UnpackDouble2x32(context, operation);
+                        return UnpackDouble2x32(context, operation);
 
                     case Instruction.UnpackHalf2x16:
-                        return InstGenPacking.UnpackHalf2x16(context, operation);
+                        return UnpackHalf2x16(context, operation);
                 }
             }
 

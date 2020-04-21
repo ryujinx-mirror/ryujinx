@@ -4,12 +4,152 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 
+using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
+        public static void Suld(EmitterContext context)
+        {
+            OpCodeImage op = (OpCodeImage)context.CurrOp;
+
+            SamplerType type = ConvertSamplerType(op.Dimensions);
+
+            if (type == SamplerType.None)
+            {
+                context.Config.PrintLog("Invalid image store sampler type.");
+
+                return;
+            }
+
+            // Rb is Rd on the SULD instruction.
+            int rdIndex = op.Rb.Index;
+            int raIndex = op.Ra.Index;
+
+            Operand Ra()
+            {
+                if (raIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return context.Copy(Register(raIndex++, RegisterType.Gpr));
+            }
+
+            bool isArray = op.Dimensions == ImageDimensions.Image1DArray ||
+                           op.Dimensions == ImageDimensions.Image2DArray;
+
+            Operand arrayIndex = isArray ? Ra() : null;
+
+            List<Operand> sourcesList = new List<Operand>();
+
+            if (op.IsBindless)
+            {
+                sourcesList.Add(context.Copy(Register(op.Rc)));
+            }
+
+            int coordsCount = type.GetDimensions();
+
+            for (int index = 0; index < coordsCount; index++)
+            {
+                sourcesList.Add(Ra());
+            }
+
+            if (isArray)
+            {
+                sourcesList.Add(arrayIndex);
+
+                type |= SamplerType.Array;
+            }
+
+            Operand[] sources = sourcesList.ToArray();
+
+            int handle = !op.IsBindless ? op.Immediate : 0;
+
+            TextureFlags flags = op.IsBindless ? TextureFlags.Bindless : TextureFlags.None;
+
+            if (op.UseComponents)
+            {
+                int componentMask = (int)op.Components;
+
+                for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
+                {
+                    if ((compMask & 1) == 0)
+                    {
+                        continue;
+                    }
+
+                    if (rdIndex == RegisterConsts.RegisterZeroIndex)
+                    {
+                        break;
+                    }
+
+                    Operand rd = Register(rdIndex++, RegisterType.Gpr);
+
+                    TextureOperation operation = new TextureOperation(
+                        Instruction.ImageLoad,
+                        type,
+                        flags,
+                        handle,
+                        compIndex,
+                        rd,
+                        sources);
+
+                    if (!op.IsBindless)
+                    {
+                        operation.Format = GetTextureFormat(context, handle);
+                    }
+
+                    context.Add(operation);
+                }
+            }
+            else
+            {
+                if (op.ByteAddress)
+                {
+                    int xIndex = op.IsBindless ? 1 : 0;
+
+                    sources[xIndex] = context.ShiftRightS32(sources[xIndex], Const(GetComponentSizeInBytesLog2(op.Size)));
+                }
+
+                int components = GetComponents(op.Size);
+
+                for (int compIndex = 0; compIndex < components; compIndex++)
+                {
+                    if (rdIndex == RegisterConsts.RegisterZeroIndex)
+                    {
+                        break;
+                    }
+
+                    Operand rd = Register(rdIndex++, RegisterType.Gpr);
+
+                    TextureOperation operation = new TextureOperation(
+                        Instruction.ImageLoad,
+                        type,
+                        flags,
+                        handle,
+                        compIndex,
+                        rd,
+                        sources)
+                    {
+                        Format = GetTextureFormat(op.Size)
+                    };
+
+                    context.Add(operation);
+
+                    switch (op.Size)
+                    {
+                        case IntegerSize.U8:  context.Copy(rd, ZeroExtendTo32(context, rd, 8));  break;
+                        case IntegerSize.U16: context.Copy(rd, ZeroExtendTo32(context, rd, 16)); break;
+                        case IntegerSize.S8:  context.Copy(rd, SignExtendTo32(context, rd, 8));  break;
+                        case IntegerSize.S16: context.Copy(rd, SignExtendTo32(context, rd, 16)); break;
+                    }
+                }
+            }
+        }
+
         public static void Sust(EmitterContext context)
         {
             OpCodeImage op = (OpCodeImage)context.CurrOp;
@@ -72,6 +212,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 type |= SamplerType.Array;
             }
 
+            TextureFormat format = TextureFormat.Unknown;
+
             if (op.UseComponents)
             {
                 int componentMask = (int)op.Components;
@@ -83,11 +225,32 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         sourcesList.Add(Rb());
                     }
                 }
+
+                if (!op.IsBindless)
+                {
+                    format = GetTextureFormat(context, op.Immediate);
+                }
             }
             else
             {
-                context.Config.PrintLog("Unsized image store not supported.");
+                if (op.ByteAddress)
+                {
+                    int xIndex = op.IsBindless ? 1 : 0;
+
+                    sourcesList[xIndex] = context.ShiftRightS32(sourcesList[xIndex], Const(GetComponentSizeInBytesLog2(op.Size)));
+                }
+
+                int components = GetComponents(op.Size);
+
+                for (int compIndex = 0; compIndex < components; compIndex++)
+                {
+                    sourcesList.Add(Rb());
+                }
+
+                format = GetTextureFormat(op.Size);
             }
+
+            System.Console.WriteLine(format.ToString());
 
             Operand[] sources = sourcesList.ToArray();
 
@@ -102,7 +265,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 handle,
                 0,
                 null,
-                sources);
+                sources)
+            {
+                Format = format
+            };
 
             context.Add(operation);
         }
@@ -880,43 +1046,87 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        private static SamplerType ConvertSamplerType(ImageDimensions target)
+        private static int GetComponents(IntegerSize size)
         {
-            switch (target)
+            return size switch
             {
-                case ImageDimensions.Image1D:
-                    return SamplerType.Texture1D;
+                IntegerSize.B64   => 2,
+                IntegerSize.B128  => 4,
+                IntegerSize.UB128 => 4,
+                _                 => 1
+            };
+        }
 
-                case ImageDimensions.ImageBuffer:
-                    return SamplerType.TextureBuffer;
+        private static int GetComponentSizeInBytesLog2(IntegerSize size)
+        {
+            return size switch
+            {
+                IntegerSize.U8    => 0,
+                IntegerSize.S8    => 0,
+                IntegerSize.U16   => 1,
+                IntegerSize.S16   => 1,
+                IntegerSize.B32   => 2,
+                IntegerSize.B64   => 3,
+                IntegerSize.B128  => 4,
+                IntegerSize.UB128 => 4,
+                _                 => 2
+            };
+        }
 
-                case ImageDimensions.Image1DArray:
-                    return SamplerType.Texture1D | SamplerType.Array;
+        private static TextureFormat GetTextureFormat(EmitterContext context, int handle)
+        {
+            var format = (TextureFormat)context.Config.QueryInfo(QueryInfoName.TextureFormat, handle);
 
-                case ImageDimensions.Image2D:
-                    return SamplerType.Texture2D;
+            if (format == TextureFormat.Unknown)
+            {
+                context.Config.PrintLog($"Unknown format for texture {handle}.");
 
-                case ImageDimensions.Image2DArray:
-                    return SamplerType.Texture2D | SamplerType.Array;
-
-                case ImageDimensions.Image3D:
-                    return SamplerType.Texture3D;
+                format = TextureFormat.R8G8B8A8Unorm;
             }
 
-            return SamplerType.None;
+            return format;
+        }
+
+        private static TextureFormat GetTextureFormat(IntegerSize size)
+        {
+            return size switch
+            {
+                IntegerSize.U8    => TextureFormat.R8Uint,
+                IntegerSize.S8    => TextureFormat.R8Sint,
+                IntegerSize.U16   => TextureFormat.R16Uint,
+                IntegerSize.S16   => TextureFormat.R16Sint,
+                IntegerSize.B32   => TextureFormat.R32Uint,
+                IntegerSize.B64   => TextureFormat.R32G32Uint,
+                IntegerSize.B128  => TextureFormat.R32G32B32A32Uint,
+                IntegerSize.UB128 => TextureFormat.R32G32B32A32Uint,
+                _                 => TextureFormat.R32Uint
+            };
+        }
+
+        private static SamplerType ConvertSamplerType(ImageDimensions target)
+        {
+            return target switch
+            {
+                ImageDimensions.Image1D      => SamplerType.Texture1D,
+                ImageDimensions.ImageBuffer  => SamplerType.TextureBuffer,
+                ImageDimensions.Image1DArray => SamplerType.Texture1D | SamplerType.Array,
+                ImageDimensions.Image2D      => SamplerType.Texture2D,
+                ImageDimensions.Image2DArray => SamplerType.Texture2D | SamplerType.Array,
+                ImageDimensions.Image3D      => SamplerType.Texture3D,
+                _                            => SamplerType.None
+            };
         }
 
         private static SamplerType ConvertSamplerType(TextureDimensions dimensions)
         {
-            switch (dimensions)
+            return dimensions switch
             {
-                case TextureDimensions.Texture1D:   return SamplerType.Texture1D;
-                case TextureDimensions.Texture2D:   return SamplerType.Texture2D;
-                case TextureDimensions.Texture3D:   return SamplerType.Texture3D;
-                case TextureDimensions.TextureCube: return SamplerType.TextureCube;
-            }
-
-            throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".");
+                TextureDimensions.Texture1D   => SamplerType.Texture1D,
+                TextureDimensions.Texture2D   => SamplerType.Texture2D,
+                TextureDimensions.Texture3D   => SamplerType.Texture3D,
+                TextureDimensions.TextureCube => SamplerType.TextureCube,
+                _ => throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".")
+            };
         }
 
         private static SamplerType ConvertSamplerType(TextureTarget type)

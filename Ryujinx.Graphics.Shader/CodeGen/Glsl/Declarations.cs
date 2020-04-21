@@ -326,9 +326,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     continue;
                 }
 
-                string imageTypeName = GetImageTypeName(texOp.Type);
+                string layout = texOp.Format.ToGlslFormat();
 
-                context.AppendLine("writeonly uniform " + imageTypeName + " " + imageName + ";");
+                if (!string.IsNullOrEmpty(layout))
+                {
+                    layout = "layout(" + layout + ") ";
+                }
+
+                string imageTypeName = GetImageTypeName(texOp.Type, texOp.Format.GetComponentType());
+
+                context.AppendLine("uniform " + layout + imageTypeName + " " + imageName + ";");
             }
 
             foreach (KeyValuePair<string, AstTextureOperation> kv in images)
@@ -455,7 +462,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return typeName;
         }
 
-        private static string GetImageTypeName(SamplerType type)
+        private static string GetImageTypeName(SamplerType type, VariableType componentType)
         {
             string typeName;
 
@@ -478,6 +485,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             if ((type & SamplerType.Array) != 0)
             {
                 typeName += "Array";
+            }
+
+            switch (componentType)
+            {
+                case VariableType.U32: typeName = 'u' + typeName; break;
+                case VariableType.S32: typeName = 'i' + typeName; break;
             }
 
             return typeName;
