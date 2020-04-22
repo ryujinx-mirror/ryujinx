@@ -1,3 +1,5 @@
+using System;
+
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     /// <summary>
@@ -27,7 +29,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private const ulong PteUnmapped = 0xffffffff_ffffffff;
         private const ulong PteReserved = 0xffffffff_fffffffe;
 
-        private ulong[][] _pageTable;
+        private readonly ulong[][] _pageTable;
+
+        public event EventHandler<UnmapEventArgs> MemoryUnmapped;
 
         /// <summary>
         /// Creates a new instance of the GPU memory manager.
@@ -181,6 +185,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 {
                     SetPte(va + offset, PteUnmapped);
                 }
+
+                // Event handlers are not expected to be thread safe.
+                MemoryUnmapped?.Invoke(this, new UnmapEventArgs(va, size));
             }
         }
 

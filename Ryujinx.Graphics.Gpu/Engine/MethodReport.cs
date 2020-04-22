@@ -1,5 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Runtime.InteropServices;
@@ -10,6 +11,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private const int NsToTicksFractionNumerator   = 384;
         private const int NsToTicksFractionDenominator = 625;
+
+        private ulong _runningCounter;
+
+        private readonly CounterCache _counterCache = new CounterCache();
 
         /// <summary>
         /// Writes a GPU counter to guest memory.
@@ -98,6 +103,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             var rs = state.Get<ReportState>(MethodOffset.ReportState);
 
             _context.MemoryAccessor.Write(rs.Address.Pack(), data);
+
+            _counterCache.AddOrUpdate(rs.Address.Pack());
         }
 
         /// <summary>

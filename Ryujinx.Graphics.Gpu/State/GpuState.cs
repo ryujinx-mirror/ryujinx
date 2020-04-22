@@ -133,6 +133,9 @@ namespace Ryujinx.Graphics.Gpu.State
             // Default front stencil mask.
             _backingMemory[0x4e7] = 0xff;
 
+            // Conditional rendering condition.
+            _backingMemory[0x556] = (int)Condition.Always;
+
             // Default color mask.
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {

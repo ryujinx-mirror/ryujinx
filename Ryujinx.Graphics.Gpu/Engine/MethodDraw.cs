@@ -35,8 +35,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void DrawEnd(GpuState state, int argument)
         {
-            if (_instancedDrawPending)
+            bool renderEnable = GetRenderEnable(state);
+
+            if (!renderEnable || _instancedDrawPending)
             {
+                if (!renderEnable)
+                {
+                    PerformDeferredDraws();
+                }
+
                 _drawIndexed = false;
 
                 return;
