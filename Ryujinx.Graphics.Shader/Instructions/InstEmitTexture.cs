@@ -250,8 +250,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 format = GetTextureFormat(op.Size);
             }
 
-            System.Console.WriteLine(format.ToString());
-
             Operand[] sources = sourcesList.ToArray();
 
             int handle = !op.IsBindless ? op.Immediate : 0;
