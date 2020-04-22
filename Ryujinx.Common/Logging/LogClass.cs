@@ -46,6 +46,7 @@ namespace Ryujinx.Common.Logging
         ServiceSsl,
         ServiceSss,
         ServiceTime,
-        ServiceVi
+        ServiceVi,
+        SurfaceFlinger
     }
 }

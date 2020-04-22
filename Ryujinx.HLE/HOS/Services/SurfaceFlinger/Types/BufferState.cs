@@ -1,10 +1,10 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    enum BufferState
+    internal enum BufferState
     {
-        Free,
-        Dequeued,
-        Queued,
-        Acquired
+        Free     = 0,
+        Dequeued = 1,
+        Queued   = 2,
+        Acquired = 3
     }
 }

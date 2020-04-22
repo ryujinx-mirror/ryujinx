@@ -32,8 +32,6 @@ namespace Ryujinx.HLE
 
         public bool EnableDeviceVsync { get; set; } = true;
 
-        public AutoResetEvent VsyncEvent { get; private set; }
-
         public Switch(VirtualFileSystem fileSystem, ContentManager contentManager, IRenderer renderer, IAalOutput audioOut)
         {
             if (renderer == null)
@@ -60,8 +58,6 @@ namespace Ryujinx.HLE
 
             Hid = new Hid(this, System.HidBaseAddress);
             Hid.InitDevices();
-
-            VsyncEvent = new AutoResetEvent(true);
         }
 
         public void Initialize()
@@ -156,7 +152,6 @@ namespace Ryujinx.HLE
             if (disposing)
             {
                 System.Dispose();
-                VsyncEvent.Dispose();
                 AudioOut.Dispose();
             }
         }

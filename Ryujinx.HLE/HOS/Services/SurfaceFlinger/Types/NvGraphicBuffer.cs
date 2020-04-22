@@ -2,7 +2,7 @@
 
 namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    [StructLayout(LayoutKind.Explicit, Size = 0x144)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x144, Pack = 1)]
     struct NvGraphicBuffer
     {
         [FieldOffset(0x4)]

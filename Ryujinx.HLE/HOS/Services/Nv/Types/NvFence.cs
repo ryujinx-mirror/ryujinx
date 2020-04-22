@@ -23,6 +23,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.Types
             Value = hostSyncpt.ReadSyncpointValue(Id);
         }
 
+        public void Increment(GpuContext gpuContext)
+        {
+            Value = gpuContext.Synchronization.IncrementSyncpoint(Id);
+        }
+
         public bool Wait(GpuContext gpuContext, TimeSpan timeout)
         {
             if (IsValid())

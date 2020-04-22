@@ -35,5 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 throw new IndexOutOfRangeException();
             }
         }
+
+        public int Length => 3;
     }
 }

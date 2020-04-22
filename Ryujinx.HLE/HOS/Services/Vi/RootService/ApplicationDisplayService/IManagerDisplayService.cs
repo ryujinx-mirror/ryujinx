@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 {
@@ -15,9 +16,12 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi);
+            long layerFlags = context.RequestData.ReadInt64();
+            long displayId  = context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(0L); //LayerId
+            context.Device.System.SurfaceFlinger.CreateLayer(context.Process, out long layerId);
+
+            context.ResponseData.Write(layerId);
 
             return ResultCode.Success;
         }
@@ -26,7 +30,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // DestroyManagedLayer(u64)
         public ResultCode DestroyManagedLayer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi);
+            long layerId = context.RequestData.ReadInt64();
+
+            context.Device.System.SurfaceFlinger.CloseLayer(layerId);
 
             return ResultCode.Success;
         }
@@ -35,8 +41,6 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi);
-
             return _applicationDisplayService.CreateStrayLayer(context);
         }
 

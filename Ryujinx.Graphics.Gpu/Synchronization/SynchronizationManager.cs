@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Common.Logging;
+using System;
 using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Synchronization
@@ -111,6 +112,16 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
                 throw new ArgumentOutOfRangeException(nameof(id));
             }
 
+            bool warnAboutTimeout = false;
+
+            // TODO: Remove this when GPU channel scheduling will be implemented.
+            if (timeout == Timeout.InfiniteTimeSpan)
+            {
+                timeout = TimeSpan.FromSeconds(1);
+
+                warnAboutTimeout = true;
+            }
+
             using (ManualResetEvent waitEvent = new ManualResetEvent(false))
             {
                 var info = _syncpoints[id].RegisterCallback(threshold, () => waitEvent.Set());
@@ -124,6 +135,11 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 
                 if (!signaled && info != null)
                 {
+                    if (warnAboutTimeout)
+                    {
+                        Logger.PrintError(LogClass.Gpu, $"Wait on syncpoint {id} for threshold {threshold} took more than {timeout.TotalMilliseconds}ms, resuming execution...");
+                    }
+
                     _syncpoints[id].UnregisterCallback(info);
                 }
 
