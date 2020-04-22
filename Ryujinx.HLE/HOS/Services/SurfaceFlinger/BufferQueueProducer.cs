@@ -593,6 +593,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Core.Slots[slot].BufferState           = BufferState.Free;
                 Core.Slots[slot].Fence                 = AndroidFence.NoFence;
                 Core.Slots[slot].RequestBufferCalled   = false;
+                Core.Slots[slot].AcquireCalled         = false;
                 Core.Slots[slot].NeedsCleanupOnRelease = false;
                 Core.Slots[slot].FrameNumber           = 0;
 
