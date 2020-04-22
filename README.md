@@ -21,7 +21,7 @@
 
 ## Usage
 
-To run this emulator, you need the [.NET Core 3.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).
+To run this emulator, you need the [.NET Core 3.1 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).
 
 If you use a pre-built version, you can use the graphical interface to run your games and homebrew.
 

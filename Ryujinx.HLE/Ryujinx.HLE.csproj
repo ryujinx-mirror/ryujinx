@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
   </PropertyGroup>
@@ -54,7 +54,6 @@
     <PackageReference Include="Concentus" Version="1.1.7" />
     <PackageReference Include="LibHac" Version="0.10.0" />
     <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
-    <PackageReference Include="TimeZoneConverter.Posix" Version="2.1.0" />
   </ItemGroup>
 
 </Project>

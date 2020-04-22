@@ -4,6 +4,7 @@ branches:
   - master
 image: Visual Studio 2019
 environment:
+  appveyor_dotnet_runtime: netcoreapp3.1
   matrix:
     - config: Release
       config_name: '-'
@@ -20,13 +21,13 @@ build_script:
 
     dotnet publish -c $env:config -r osx-x64 /p:Version=$env:APPVEYOR_BUILD_VERSION
 
-    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-win_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\netcoreapp3.0\win-x64\publish\
+    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-win_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\$env:appveyor_dotnet_runtime\win-x64\publish\
 
-    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-linux_x64.tar $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\netcoreapp3.0\linux-x64\publish\
+    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-linux_x64.tar $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\$env:appveyor_dotnet_runtime\linux-x64\publish\
 
     7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-linux_x64.tar.gz ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-linux_x64.tar
 
-    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-osx_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\netcoreapp3.0\osx-x64\publish\
+    7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-osx_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\$env:appveyor_dotnet_runtime\osx-x64\publish\
 
 artifacts:
 - path: ryujinx%config_name%%APPVEYOR_BUILD_VERSION%-win_x64.zip

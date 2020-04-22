@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -19,7 +19,7 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
 
-  <!-- Due to .net core 3.0 embedded resource loading -->
+  <!-- Due to .net core 3.1 embedded resource loading -->
   <PropertyGroup>
     <EmbeddedResourceUseDependentUponConvention>false</EmbeddedResourceUseDependentUponConvention>
     <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
@@ -74,10 +74,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.147" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.150" />
     <PackageReference Include="GLWidget" Version="1.0.1" />
     <PackageReference Include="GtkSharp" Version="3.22.25.56" />
-    <PackageReference Include="GtkSharp.Dependencies" Version="1.1.0" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
+    <PackageReference Include="GtkSharp.Dependencies" Version="1.1.0" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.5.12" />
   </ItemGroup>
 

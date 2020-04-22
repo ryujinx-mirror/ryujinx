@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
   </PropertyGroup>
@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.5.12" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
