@@ -1,4 +1,3 @@
-using JsonPrettyPrinterPlus;
 using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
@@ -17,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using Utf8Json;
@@ -511,7 +509,7 @@ namespace Ryujinx.Ui
             string metadataFolder = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "gui");
             string metadataFile   = Path.Combine(metadataFolder, "metadata.json");
 
-            IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
+            IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
 
             ApplicationMetadata appMetadata;
 
@@ -526,21 +524,39 @@ namespace Ryujinx.Ui
                     LastPlayed = "Never"
                 };
 
-                byte[] data = JsonSerializer.Serialize(appMetadata, resolver);
-                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
+                using (FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough))
+                {
+                    JsonSerializer.Serialize(stream, appMetadata, resolver);
+                }
             }
 
             using (Stream stream = File.OpenRead(metadataFile))
             {
-                appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
+                try
+                {
+                    appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
+                }
+                catch (JsonParsingException)
+                {
+                    Logger.PrintWarning(LogClass.Application, $"Failed to parse metadata json for {titleId}. Loading defaults.");
+                    
+                    appMetadata = new ApplicationMetadata
+                    {
+                        Favorite   = false,
+                        TimePlayed = 0,
+                        LastPlayed = "Never"
+                    };
+                }
             }
 
             if (modifyFunction != null)
             {
                 modifyFunction(appMetadata);
 
-                byte[] saveData = JsonSerializer.Serialize(appMetadata, resolver);
-                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+                using (FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough))
+                {
+                    JsonSerializer.Serialize(stream, appMetadata, resolver);
+                }
             }
 
             return appMetadata;
