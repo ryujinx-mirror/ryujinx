@@ -8,6 +8,8 @@ using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
 using LibHac.Ns;
+using LibHac.Spl;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using System;
@@ -17,7 +19,8 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-
+using Utf8Json;
+using Utf8Json.Resolvers;
 using static LibHac.Fs.ApplicationSaveDataManagement;
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -195,7 +198,7 @@ namespace Ryujinx.Ui
                             SecondaryText  = $"Extracting {ncaSectionType} section from {System.IO.Path.GetFileName(sourceFile)}...",
                             WindowPosition = WindowPosition.Center
                         };
-                        
+
                         int dialogResponse = _dialog.Run();
                         if (dialogResponse == (int)ResponseType.Cancel || dialogResponse == (int)ResponseType.DeleteEvent)
                         {
@@ -262,6 +265,52 @@ namespace Ryujinx.Ui
                             });
 
                             return;
+                        }
+
+                        string titleUpdateMetadataPath = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", mainNca.Header.TitleId.ToString("x16"), "updates.json");
+
+                        if (File.Exists(titleUpdateMetadataPath))
+                        {
+                            using (Stream stream = File.OpenRead(titleUpdateMetadataPath))
+                            {
+                                IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
+                                string updatePath = JsonSerializer.Deserialize<TitleUpdateMetadata>(stream, resolver).Selected;
+
+                                if (File.Exists(updatePath))
+                                {
+                                    FileStream updateFile = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
+                                    PartitionFileSystem nsp = new PartitionFileSystem(updateFile.AsStorage());
+
+                                    foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
+                                    {
+                                        Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+
+                                        if (result.IsSuccess())
+                                        {
+                                            Ticket ticket = new Ticket(ticketFile.AsStream());
+
+                                            _virtualFileSystem.KeySet.ExternalKeySet.Add(new LibHac.Fs.RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
+                                        }
+                                    }
+
+                                    foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
+                                    {
+                                        nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                                        Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+
+                                        if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != mainNca.Header.TitleId.ToString("x16"))
+                                        {
+                                            break;
+                                        }
+
+                                        if (nca.Header.ContentType == NcaContentType.Program)
+                                        {
+                                            patchNca = nca;
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         int index = Nca.GetSectionIndexFromType(ncaSectionType, mainNca.Header.ContentType);
