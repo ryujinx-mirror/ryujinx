@@ -7,6 +7,7 @@ using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Spl;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
@@ -16,7 +17,9 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Mii;
+using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 using Ryujinx.HLE.HOS.Services.Settings;
@@ -41,7 +44,6 @@ using TimeServiceManager = Ryujinx.HLE.HOS.Services.Time.TimeManager;
 using NsoExecutable      = Ryujinx.HLE.Loaders.Executables.NsoExecutable;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
-using Ryujinx.HLE.HOS.Services.Nv;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -113,6 +115,8 @@ namespace Ryujinx.HLE.HOS
         internal ContentManager ContentManager { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
+
+        internal KEvent DisplayResolutionChangeEvent { get; private set; }
 
         public Keyset KeySet => Device.FileSystem.KeySet;
 
@@ -224,6 +228,8 @@ namespace Ryujinx.HLE.HOS
 
             VsyncEvent = new KEvent(this);
 
+            DisplayResolutionChangeEvent = new KEvent(this);
+
             ContentManager = contentManager;
 
             // TODO: use set:sys (and get external clock source id from settings)
@@ -272,6 +278,20 @@ namespace Ryujinx.HLE.HOS
             HostSyncpoint = new NvHostSyncpt(device);
 
             SurfaceFlinger = new SurfaceFlinger(device);
+
+            ConfigurationState.Instance.System.EnableDockedMode.Event += OnDockedModeChange;
+        }
+
+        private void OnDockedModeChange(object sender, ReactiveEventArgs<bool> e)
+        {
+            if (e.NewValue != State.DockedMode)
+            {
+                State.DockedMode = e.NewValue;
+
+                AppletState.EnqueueMessage(MessageInfo.OperationModeChanged);
+                AppletState.EnqueueMessage(MessageInfo.PerformanceModeChanged);
+                SignalDisplayResolutionChange();
+            }
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -807,6 +827,11 @@ namespace Ryujinx.HLE.HOS
             return rc;
         }
 
+        public void SignalDisplayResolutionChange()
+        {
+            DisplayResolutionChangeEvent.ReadableEvent.Signal();
+        }
+
         public void SignalVsync()
         {
             VsyncEvent.ReadableEvent.Signal();
@@ -852,6 +877,8 @@ namespace Ryujinx.HLE.HOS
         {
             if (!_isDisposed && disposing)
             {
+                ConfigurationState.Instance.System.EnableDockedMode.Event -= OnDockedModeChange;
+
                 _isDisposed = true;
 
                 SurfaceFlinger.Dispose();

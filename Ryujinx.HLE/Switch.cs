@@ -68,7 +68,6 @@ namespace Ryujinx.HLE
 
             EnableDeviceVsync = ConfigurationState.Instance.Graphics.EnableVsync;
 
-            // TODO: Make this reloadable and implement Docking/Undocking logic.
             System.State.DockedMode = ConfigurationState.Instance.System.EnableDockedMode;
 
             if (ConfigurationState.Instance.System.EnableMulticoreScheduling)

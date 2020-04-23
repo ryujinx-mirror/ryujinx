@@ -9,14 +9,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class ICommonStateGetter : IpcService
     {
-        private KEvent _displayResolutionChangeEvent;
-
         private CpuBoostMode _cpuBoostMode = CpuBoostMode.Disabled;
 
-        public ICommonStateGetter(Horizon system)
-        {
-            _displayResolutionChangeEvent = new KEvent(system);
-        }
+        public ICommonStateGetter() { }
 
         [Command(0)]
         // GetEventHandle() -> handle<copy>
@@ -108,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetDefaultDisplayResolutionChangeEvent() -> handle<copy>
         public ResultCode GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_displayResolutionChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(context.Device.System.DisplayResolutionChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
