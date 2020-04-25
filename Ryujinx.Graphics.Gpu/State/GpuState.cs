@@ -141,6 +141,14 @@ namespace Ryujinx.Graphics.Gpu.State
             {
                 _backingMemory[(int)MethodOffset.RtColorMask + index] = 0x1111;
             }
+
+            // Default blend states
+            Set(MethodOffset.BlendStateCommon, BlendStateCommon.Default);
+
+            for (int index = 0; index < Constants.TotalRenderTargets; index++)
+            {
+                Set(MethodOffset.BlendState, index, BlendState.Default);
+            }
         }
 
         /// <summary>
@@ -199,7 +207,7 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
-        /// Checks if two registers have been modified since the last call to this method.
+        /// Checks if three registers have been modified since the last call to this method.
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
@@ -219,7 +227,7 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
-        /// Checks if two registers have been modified since the last call to this method.
+        /// Checks if four registers have been modified since the last call to this method.
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
@@ -242,7 +250,7 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
-        /// Checks if two registers have been modified since the last call to this method.
+        /// Checks if five registers have been modified since the last call to this method.
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
@@ -268,6 +276,41 @@ namespace Ryujinx.Graphics.Gpu.State
             _registers[(int)m3].Modified = false;
             _registers[(int)m4].Modified = false;
             _registers[(int)m5].Modified = false;
+
+            return modified;
+        }
+
+        /// <summary>
+        /// Checks if six registers have been modified since the last call to this method.
+        /// </summary>
+        /// <param name="m1">First register offset</param>
+        /// <param name="m2">Second register offset</param>
+        /// <param name="m3">Third register offset</param>
+        /// <param name="m4">Fourth register offset</param>
+        /// <param name="m5">Fifth register offset</param>
+        /// <param name="m6">Sixth register offset</param>
+        /// <returns>True if any register was modified, false otherwise</returns>
+        public bool QueryModified(
+            MethodOffset m1,
+            MethodOffset m2,
+            MethodOffset m3,
+            MethodOffset m4,
+            MethodOffset m5,
+            MethodOffset m6)
+        {
+            bool modified = _registers[(int)m1].Modified ||
+                            _registers[(int)m2].Modified ||
+                            _registers[(int)m3].Modified ||
+                            _registers[(int)m4].Modified ||
+                            _registers[(int)m5].Modified ||
+                            _registers[(int)m6].Modified;
+
+            _registers[(int)m1].Modified = false;
+            _registers[(int)m2].Modified = false;
+            _registers[(int)m3].Modified = false;
+            _registers[(int)m4].Modified = false;
+            _registers[(int)m5].Modified = false;
+            _registers[(int)m6].Modified = false;
 
             return modified;
         }
@@ -300,6 +343,37 @@ namespace Ryujinx.Graphics.Gpu.State
         public T Get<T>(MethodOffset offset) where T : struct
         {
             return MemoryMarshal.Cast<int, T>(_backingMemory.AsSpan().Slice((int)offset))[0];
+        }
+
+        /// <summary>
+        /// Sets indexed data to a given register offset.
+        /// </summary>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="offset">Register offset</param>
+        /// <param name="index">Index for indexed data</param>
+        /// <param name="data">The data to set</param>
+        public void Set<T>(MethodOffset offset, int index, T data) where T : struct
+        {
+            Register register = _registers[(int)offset];
+
+            if ((uint)index >= register.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            Set(offset + index * register.Stride, data);
+        }
+
+        /// <summary>
+        /// Sets data to a given register offset.
+        /// </summary>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="offset">Register offset</param>
+        /// <param name="data">The data to set</param>
+        public void Set<T>(MethodOffset offset, T data) where T : struct
+        {
+            ReadOnlySpan<int> intSpan = MemoryMarshal.Cast<T, int>(MemoryMarshal.CreateReadOnlySpan(ref data, 1));
+            intSpan.CopyTo(_backingMemory.AsSpan().Slice((int)offset, intSpan.Length));
         }
     }
 }

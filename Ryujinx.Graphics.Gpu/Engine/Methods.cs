@@ -229,6 +229,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             if (state.QueryModified(MethodOffset.BlendIndependent,
+                                    MethodOffset.BlendConstant,
                                     MethodOffset.BlendStateCommon,
                                     MethodOffset.BlendEnableCommon,
                                     MethodOffset.BlendEnable,
@@ -749,8 +750,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void UpdateBlendState(GpuState state)
         {
             bool blendIndependent = state.Get<Boolean32>(MethodOffset.BlendIndependent);
+            ColorF blendConstant = state.Get<ColorF>(MethodOffset.BlendConstant);
 
-            for (int index = 0; index < 8; index++)
+            for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
                 BlendDescriptor descriptor;
 
@@ -761,6 +763,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     descriptor = new BlendDescriptor(
                         enable,
+                        blendConstant,
                         blend.ColorOp,
                         blend.ColorSrcFactor,
                         blend.ColorDstFactor,
@@ -775,6 +778,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     descriptor = new BlendDescriptor(
                         enable,
+                        blendConstant,
                         blend.ColorOp,
                         blend.ColorSrcFactor,
                         blend.ColorDstFactor,

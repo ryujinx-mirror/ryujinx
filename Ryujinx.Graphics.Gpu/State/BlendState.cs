@@ -17,5 +17,15 @@ namespace Ryujinx.Graphics.Gpu.State
         public BlendFactor AlphaDstFactor;
         public uint        Padding;
 #pragma warning restore CS0649
+
+        public static BlendState Default = new BlendState
+        {
+            ColorOp = BlendOp.Add,
+            ColorSrcFactor = BlendFactor.One,
+            ColorDstFactor = BlendFactor.Zero,
+            AlphaOp = BlendOp.Add,
+            AlphaSrcFactor = BlendFactor.One,
+            AlphaDstFactor = BlendFactor.Zero
+        };
     }
 }

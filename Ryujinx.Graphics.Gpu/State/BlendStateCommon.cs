@@ -17,5 +17,15 @@ namespace Ryujinx.Graphics.Gpu.State
         public uint        Unknown0x1354;
         public BlendFactor AlphaDstFactor;
 #pragma warning restore CS0649
+
+        public static BlendStateCommon Default = new BlendStateCommon
+        {
+            ColorOp = BlendOp.Add,
+            ColorSrcFactor = BlendFactor.One,
+            ColorDstFactor = BlendFactor.Zero,
+            AlphaOp = BlendOp.Add,
+            AlphaSrcFactor = BlendFactor.One,
+            AlphaDstFactor = BlendFactor.Zero
+        };
     }
 }

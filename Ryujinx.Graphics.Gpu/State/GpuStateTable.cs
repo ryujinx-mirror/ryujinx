@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.GAL;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -52,7 +53,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// </summary>
         public static TableItem[] Table = new TableItem[]
         {
-            new TableItem(MethodOffset.RtColorState,           typeof(RtColorState),          8),
+            new TableItem(MethodOffset.RtColorState,           typeof(RtColorState),          Constants.TotalRenderTargets),
             new TableItem(MethodOffset.ViewportTransform,      typeof(ViewportTransform),     Constants.TotalViewports),
             new TableItem(MethodOffset.ViewportExtents,        typeof(ViewportExtents),       Constants.TotalViewports),
             new TableItem(MethodOffset.VertexBufferDrawState,  typeof(VertexBufferDrawState), 1),
@@ -62,7 +63,7 @@ namespace Ryujinx.Graphics.Gpu.State
             new TableItem(MethodOffset.RtDepthStencilState,    typeof(RtDepthStencilState),   1),
             new TableItem(MethodOffset.VertexAttribState,      typeof(VertexAttribState),     16),
             new TableItem(MethodOffset.RtDepthStencilSize,     typeof(Size3D),                1),
-            new TableItem(MethodOffset.BlendEnable,            typeof(Boolean32),             8),
+            new TableItem(MethodOffset.BlendEnable,            typeof(Boolean32),             Constants.TotalRenderTargets),
             new TableItem(MethodOffset.StencilTestState,       typeof(StencilTestState),      1),
             new TableItem(MethodOffset.SamplerPoolState,       typeof(PoolState),             1),
             new TableItem(MethodOffset.TexturePoolState,       typeof(PoolState),             1),
@@ -72,9 +73,10 @@ namespace Ryujinx.Graphics.Gpu.State
             new TableItem(MethodOffset.IndexBufferState,       typeof(IndexBufferState),      1),
             new TableItem(MethodOffset.VertexBufferInstanced,  typeof(Boolean32),             16),
             new TableItem(MethodOffset.FaceState,              typeof(FaceState),             1),
-            new TableItem(MethodOffset.RtColorMask,            typeof(RtColorMask),           8),
+            new TableItem(MethodOffset.RtColorMask,            typeof(RtColorMask),           Constants.TotalRenderTargets),
             new TableItem(MethodOffset.VertexBufferState,      typeof(VertexBufferState),     16),
-            new TableItem(MethodOffset.BlendState,             typeof(BlendState),            8),
+            new TableItem(MethodOffset.BlendConstant,          typeof(ColorF),                1),
+            new TableItem(MethodOffset.BlendState,             typeof(BlendState),            Constants.TotalRenderTargets),
             new TableItem(MethodOffset.VertexBufferEndAddress, typeof(GpuVa),                 16),
             new TableItem(MethodOffset.ShaderState,            typeof(ShaderState),           6),
         };

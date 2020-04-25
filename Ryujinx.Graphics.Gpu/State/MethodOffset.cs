@@ -58,6 +58,7 @@ namespace Ryujinx.Graphics.Gpu.State
         BlendIndependent                = 0x4b9,
         DepthWriteEnable                = 0x4ba,
         DepthTestFunc                   = 0x4c3,
+        BlendConstant                   = 0x4c7,
         BlendStateCommon                = 0x4cf,
         BlendEnableCommon               = 0x4d7,
         BlendEnable                     = 0x4d8,
