@@ -38,10 +38,11 @@ namespace Ryujinx.Graphics.Texture
 
             int outOffs = 0;
 
-            int wAlignment = gobBlocksInTileX * (GobStride / bytesPerPixel);
-
             int mipGobBlocksInY = gobBlocksInY;
             int mipGobBlocksInZ = gobBlocksInZ;
+
+            int gobWidth  = (GobStride / bytesPerPixel) * gobBlocksInTileX;
+            int gobHeight = gobBlocksInY * GobHeight;
 
             for (int level = 0; level < levels; level++)
             {
@@ -66,8 +67,16 @@ namespace Ryujinx.Graphics.Texture
 
                 int xStart = strideTrunc / bytesPerPixel;
 
-                int stride   = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
-                int wAligned = BitUtils.AlignUp(w, wAlignment);
+                int stride = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
+
+                int alignment = gobWidth;
+
+                if (d < gobBlocksInZ || w <= gobWidth || h <= gobHeight)
+                {
+                    alignment = GobStride / bytesPerPixel;
+                }
+
+                int wAligned = BitUtils.AlignUp(w, alignment);
 
                 BlockLinearLayout layoutConverter = new BlockLinearLayout(
                     wAligned,
@@ -164,10 +173,11 @@ namespace Ryujinx.Graphics.Texture
 
             int inOffs = 0;
 
-            int wAlignment = gobBlocksInTileX * (GobStride / bytesPerPixel);
-
             int mipGobBlocksInY = gobBlocksInY;
             int mipGobBlocksInZ = gobBlocksInZ;
+
+            int gobWidth  = (GobStride / bytesPerPixel) * gobBlocksInTileX;
+            int gobHeight = gobBlocksInY * GobHeight;
 
             for (int level = 0; level < levels; level++)
             {
@@ -188,8 +198,16 @@ namespace Ryujinx.Graphics.Texture
                     mipGobBlocksInZ >>= 1;
                 }
 
-                int stride   = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
-                int wAligned = BitUtils.AlignUp(w, wAlignment);
+                int stride = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
+
+                int alignment = gobWidth;
+
+                if (d < gobBlocksInZ || w <= gobWidth || h <= gobHeight)
+                {
+                    alignment = GobStride / bytesPerPixel;
+                }
+
+                int wAligned = BitUtils.AlignUp(w, alignment);
 
                 BlockLinearLayout layoutConverter = new BlockLinearLayout(
                     wAligned,

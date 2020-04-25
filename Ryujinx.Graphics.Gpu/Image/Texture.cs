@@ -870,13 +870,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 int depth = Math.Max(1, info.GetDepth() >> level);
 
-                (int gobBlocksInY, int gobBlocksInZ) = SizeCalculator.GetMipGobBlockSizes(
-                    height,
-                    depth,
-                    info.FormatInfo.BlockHeight,
-                    info.GobBlocksInY,
-                    info.GobBlocksInZ);
-
                 return SizeCalculator.GetBlockLinearAlignedSize(
                     width,
                     height,
@@ -884,8 +877,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                     info.FormatInfo.BlockWidth,
                     info.FormatInfo.BlockHeight,
                     info.FormatInfo.BytesPerPixel,
-                    gobBlocksInY,
-                    gobBlocksInZ,
+                    info.GobBlocksInY,
+                    info.GobBlocksInZ,
                     info.GobBlocksInTileX);
             }
         }
