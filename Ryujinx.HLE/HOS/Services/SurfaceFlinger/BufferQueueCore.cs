@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             IsAbandoned              = false;
             OverrideMaxBufferCount   = 0;
             DequeueBufferCannotBlock = false;
-            UseAsyncBuffer           = false;
+            UseAsyncBuffer           = true;
             DefaultWidth             = 1;
             DefaultHeight            = 1;
             DefaultMaxBufferCount    = 2;

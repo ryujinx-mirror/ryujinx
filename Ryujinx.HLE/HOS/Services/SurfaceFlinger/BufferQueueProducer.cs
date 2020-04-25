@@ -604,6 +604,19 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     Core.Slots[slot].GraphicBuffer.Object.Buffer.Usage &= (int)Core.ConsumerUsageBits;
                 }
 
+                int bufferCount = 0;
+
+                for (int i = 0; i < Core.Slots.Length; i++)
+                {
+                    if (!Core.Slots[i].GraphicBuffer.IsNull)
+                    {
+                        bufferCount++;
+                    }
+                }
+
+                Core.OverrideMaxBufferCount = bufferCount;
+                Core.UseAsyncBuffer = false;
+
                 bool cleared = false;
 
                 if (!graphicBuffer.IsNull)
