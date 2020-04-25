@@ -12,20 +12,68 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public int   Order;
         public int   NextOrder;
 
-        public bool TryCoalesce(int index, int size)
+        public bool TryCoalesce(int index, int count)
         {
-            long mask = ((1L << size) - 1) << (index & 63);
+            long mask = ((1L << count) - 1) << (index & 63);
 
             index /= 64;
 
-            if ((mask & ~Masks[MaxLevel - 1][index]) != 0)
+            if (count >= 64)
             {
-                return false;
+                int remaining = count;
+                int tempIdx = index;
+
+                do
+                {
+                    if (Masks[MaxLevel - 1][tempIdx++] != -1L)
+                    {
+                        return false;
+                    }
+
+                    remaining -= 64;
+                }
+                while (remaining != 0);
+
+                remaining = count;
+                tempIdx = index;
+
+                do
+                {
+                    Masks[MaxLevel - 1][tempIdx] = 0;
+
+                    ClearMaskBit(MaxLevel - 2, tempIdx++);
+
+                    remaining -= 64;
+                }
+                while (remaining != 0);
+            }
+            else
+            {
+                long value = Masks[MaxLevel - 1][index];
+
+                if ((mask & ~value) != 0)
+                {
+                    return false;
+                }
+
+                value &= ~mask;
+
+                Masks[MaxLevel - 1][index] = value;
+
+                if (value == 0)
+                {
+                    ClearMaskBit(MaxLevel - 2, index);
+                }
             }
 
-            Masks[MaxLevel - 1][index] &= ~mask;
+            FreeCount -= (ulong)count;
 
-            for (int level = MaxLevel - 2; level >= 0; level--, index /= 64)
+            return true;
+        }
+
+        public void ClearMaskBit(int startLevel, int index)
+        {
+            for (int level = startLevel; level >= 0; level--, index /= 64)
             {
                 Masks[level][index / 64] &= ~(1L << (index & 63));
 
@@ -34,10 +82,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     break;
                 }
             }
-
-            FreeCount -= (ulong)size;
-
-            return true;
         }
     }
 }
