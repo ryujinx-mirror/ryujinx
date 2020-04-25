@@ -192,7 +192,7 @@ namespace Ryujinx.Graphics.Gpu
             else if (meth.Method < 0x60)
             {
                 // TODO: check if macros are shared between subchannels or not. For now let's assume they are.
-                _fifoChannel.State.CallMethod(meth);
+                _fifoChannel.State.CallMethod(meth, _shadowCtrl);
             }
             else if (meth.Method < 0xe00)
             {

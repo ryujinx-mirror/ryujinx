@@ -132,7 +132,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <summary>
         /// Initializes registers with the default state.
         /// </summary>
-        private static void InitializeDefaultState(int[] memory)
+        private void InitializeDefaultState(int[] memory)
         {
             // Enable Rasterizer
             memory[(int)MethodOffset.RasterizeEnable] = 1;
@@ -151,7 +151,7 @@ namespace Ryujinx.Graphics.Gpu.State
             memory[0x4e7] = 0xff;
 
             // Conditional rendering condition.
-            _backingMemory[0x556] = (int)Condition.Always;
+            memory[0x556] = (int)Condition.Always;
 
             // Default color mask.
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
@@ -390,7 +390,7 @@ namespace Ryujinx.Graphics.Gpu.State
         public void Set<T>(MethodOffset offset, T data) where T : struct
         {
             ReadOnlySpan<int> intSpan = MemoryMarshal.Cast<T, int>(MemoryMarshal.CreateReadOnlySpan(ref data, 1));
-            intSpan.CopyTo(_backingMemory.AsSpan().Slice((int)offset, intSpan.Length));
+            intSpan.CopyTo(_memory.AsSpan().Slice((int)offset, intSpan.Length));
         }
     }
 }
