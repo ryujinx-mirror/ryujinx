@@ -82,8 +82,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="param">Optional argument passed to the program, 0 if not used</param>
         /// <param name="shadowCtrl">Shadow RAM control register value</param>
         /// <param name="state">Current GPU state</param>
-        /// <param name="shadowState">Shadow GPU state</param>
-        public void Execute(int[] mme, int position, int param, ShadowRamControl shadowCtrl, GpuState state, GpuState shadowState)
+        public void Execute(int[] mme, int position, int param, ShadowRamControl shadowCtrl, GpuState state)
         {
             Reset();
 
@@ -95,11 +94,11 @@ namespace Ryujinx.Graphics.Gpu
 
             FetchOpCode(mme);
 
-            while (Step(mme, state, shadowState));
+            while (Step(mme, state));
 
             // Due to the delay slot, we still need to execute
             // one more instruction before we actually exit.
-            Step(mme, state, shadowState);
+            Step(mme, state);
         }
 
         /// <summary>
@@ -124,9 +123,8 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         /// <param name="mme">Program code to execute</param>
         /// <param name="state">Current GPU state</param>
-        /// <param name="shadowState">Shadow GPU state</param>
         /// <returns>True to continue execution, false if the program exited</returns>
-        private bool Step(int[] mme, GpuState state, GpuState shadowState)
+        private bool Step(int[] mme, GpuState state)
         {
             int baseAddr = _pc - 1;
 
@@ -172,7 +170,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         SetDstGpr(FetchParam());
 
-                        Send(state, shadowState, result);
+                        Send(state, result);
 
                         break;
                     }
@@ -182,7 +180,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         SetDstGpr(result);
 
-                        Send(state, shadowState, result);
+                        Send(state, result);
 
                         break;
                     }
@@ -204,7 +202,7 @@ namespace Ryujinx.Graphics.Gpu
 
                         SetMethAddr(result);
 
-                        Send(state, shadowState, FetchParam());
+                        Send(state, FetchParam());
 
                         break;
                     }
@@ -216,7 +214,7 @@ namespace Ryujinx.Graphics.Gpu
 
                         SetMethAddr(result);
 
-                        Send(state, shadowState,(result >> 12) & 0x3f);
+                        Send(state, (result >> 12) & 0x3f);
 
                         break;
                     }
@@ -489,24 +487,12 @@ namespace Ryujinx.Graphics.Gpu
         /// Performs a GPU method call.
         /// </summary>
         /// <param name="state">Current GPU state</param>
-        /// <param name="shadowState">Shadow GPU state</param>
         /// <param name="value">Call argument</param>
-        private void Send(GpuState state, GpuState shadowState, int value)
+        private void Send(GpuState state, int value)
         {
-            // TODO: Figure out what TrackWithFilter does, compared to Track.
-            if (_shadowCtrl == ShadowRamControl.Track ||
-                _shadowCtrl == ShadowRamControl.TrackWithFilter)
-            {
-                shadowState.Write(_methAddr, value);
-            }
-            else if (_shadowCtrl == ShadowRamControl.Replay)
-            {
-                value = shadowState.Read(_methAddr);
-            }
-
             MethodParams meth = new MethodParams(_methAddr, value);
 
-            state.CallMethod(meth);
+            state.CallMethod(meth, _shadowCtrl);
 
             _methAddr += _methIncr;
         }

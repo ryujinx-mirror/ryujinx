@@ -12,7 +12,8 @@ namespace Ryujinx.Graphics.Gpu.State
 
         public delegate void MethodCallback(GpuState state, int argument);
 
-        private int[] _backingMemory;
+        private readonly int[] _memory;
+        private readonly int[] _shadow;
 
         /// <summary>
         /// GPU register information.
@@ -29,14 +30,15 @@ namespace Ryujinx.Graphics.Gpu.State
             public bool Modified;
         }
 
-        private Register[] _registers;
+        private readonly Register[] _registers;
 
         /// <summary>
         /// Creates a new instance of the GPU state.
         /// </summary>
         public GpuState()
         {
-            _backingMemory = new int[RegistersCount];
+            _memory = new int[RegistersCount];
+            _shadow = new int[RegistersCount];
 
             _registers = new Register[RegistersCount];
 
@@ -62,25 +64,40 @@ namespace Ryujinx.Graphics.Gpu.State
                 }
             }
 
-            InitializeDefaultState();
+            InitializeDefaultState(_memory);
+            InitializeDefaultState(_shadow);
         }
 
         /// <summary>
         /// Calls a GPU method, using this state.
         /// </summary>
         /// <param name="meth">The GPU method to be called</param>
-        public void CallMethod(MethodParams meth)
+        /// <param name="shadowCtrl">Shadow RAM control register value</param>
+        public void CallMethod(MethodParams meth, ShadowRamControl shadowCtrl)
         {
+            int value = meth.Argument;
+
+            // TODO: Figure out what TrackWithFilter does, compared to Track.
+            if (shadowCtrl == ShadowRamControl.Track ||
+                shadowCtrl == ShadowRamControl.TrackWithFilter)
+            {
+                _shadow[meth.Method] = value;
+            }
+            else if (shadowCtrl == ShadowRamControl.Replay)
+            {
+                value = _shadow[meth.Method];
+            }
+
             Register register = _registers[meth.Method];
 
-            if (_backingMemory[meth.Method] != meth.Argument)
+            if (_memory[meth.Method] != value)
             {
                 _registers[(int)register.BaseOffset].Modified = true;
             }
 
-            _backingMemory[meth.Method] = meth.Argument;
+            _memory[meth.Method] = value;
 
-            register.Callback?.Invoke(this, meth.Argument);
+            register.Callback?.Invoke(this, value);
         }
 
         /// <summary>
@@ -90,7 +107,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <returns>Data at the register</returns>
         public int Read(int offset)
         {
-            return _backingMemory[offset];
+            return _memory[offset];
         }
 
         /// <summary>
@@ -100,7 +117,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <param name="value">Value to be written</param>
         public void Write(int offset, int value)
         {
-            _backingMemory[offset] = value;
+            _memory[offset] = value;
         }
 
         /// <summary>
@@ -109,29 +126,29 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <param name="offset">The offset to be written</param>
         public void SetUniformBufferOffset(int offset)
         {
-            _backingMemory[(int)MethodOffset.UniformBufferState + 3] = offset;
+            _memory[(int)MethodOffset.UniformBufferState + 3] = offset;
         }
 
         /// <summary>
         /// Initializes registers with the default state.
         /// </summary>
-        private void InitializeDefaultState()
+        private static void InitializeDefaultState(int[] memory)
         {
             // Enable Rasterizer
-            _backingMemory[(int)MethodOffset.RasterizeEnable] = 1;
+            memory[(int)MethodOffset.RasterizeEnable] = 1;
 
             // Depth ranges.
             for (int index = 0; index < Constants.TotalViewports; index++)
             {
-                _backingMemory[(int)MethodOffset.ViewportExtents + index * 4 + 2] = 0;
-                _backingMemory[(int)MethodOffset.ViewportExtents + index * 4 + 3] = 0x3F800000;
+                memory[(int)MethodOffset.ViewportExtents + index * 4 + 2] = 0;
+                memory[(int)MethodOffset.ViewportExtents + index * 4 + 3] = 0x3F800000;
             }
 
             // Viewport transform enable.
-            _backingMemory[(int)MethodOffset.ViewportTransformEnable] = 1;
+            memory[(int)MethodOffset.ViewportTransformEnable] = 1;
 
             // Default front stencil mask.
-            _backingMemory[0x4e7] = 0xff;
+            memory[0x4e7] = 0xff;
 
             // Conditional rendering condition.
             _backingMemory[0x556] = (int)Condition.Always;
@@ -139,7 +156,7 @@ namespace Ryujinx.Graphics.Gpu.State
             // Default color mask.
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                _backingMemory[(int)MethodOffset.RtColorMask + index] = 0x1111;
+                memory[(int)MethodOffset.RtColorMask + index] = 0x1111;
             }
 
             // Default blend states
@@ -342,7 +359,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <returns>The data at the specified location</returns>
         public T Get<T>(MethodOffset offset) where T : struct
         {
-            return MemoryMarshal.Cast<int, T>(_backingMemory.AsSpan().Slice((int)offset))[0];
+            return MemoryMarshal.Cast<int, T>(_memory.AsSpan().Slice((int)offset))[0];
         }
 
         /// <summary>
