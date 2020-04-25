@@ -598,24 +598,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool signedA = context.CurrOp.RawOpCode.Extract(48);
             bool signedB = context.CurrOp.RawOpCode.Extract(49);
             bool highA   = context.CurrOp.RawOpCode.Extract(53);
-            bool highB   = false;
 
-            XmadCMode mode;
+            bool isReg = (op is OpCodeAluReg) && !(op is OpCodeAluRegCbuf);
+            bool isImm = (op is OpCodeAluImm);
 
-            if (op is OpCodeAluReg)
+            XmadCMode mode = isReg || isImm
+                ? (XmadCMode)context.CurrOp.RawOpCode.Extract(50, 3)
+                : (XmadCMode)context.CurrOp.RawOpCode.Extract(50, 2);
+
+            bool highB = false;
+
+            if (isReg)
             {
                 highB = context.CurrOp.RawOpCode.Extract(35);
-
-                mode = (XmadCMode)context.CurrOp.RawOpCode.Extract(50, 3);
             }
-            else
+            else if (!isImm)
             {
-                mode = (XmadCMode)context.CurrOp.RawOpCode.Extract(50, 2);
-
-                if (!(op is OpCodeAluImm))
-                {
-                    highB = context.CurrOp.RawOpCode.Extract(52);
-                }
+                highB = context.CurrOp.RawOpCode.Extract(52);
             }
 
             Operand srcA = GetSrcA(context);
