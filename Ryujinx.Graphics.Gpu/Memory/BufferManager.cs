@@ -273,6 +273,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 return 0;
             }
 
+            CreateBuffer(address, size);
+
+            return address;
+        }
+
+        /// <summary>
+        /// Creates a new buffer for the specified range, if it does not yet exist.
+        /// This can be used to ensure the existance of a buffer.
+        /// </summary>
+        /// <param name="address">Address of the buffer in memory</param>
+        /// <param name="size">Size of the buffer in bytes</param>
+        public void CreateBuffer(ulong address, ulong size)
+        {
             ulong endAddress = address + size;
 
             ulong alignedAddress = address & ~BufferAlignmentMask;
@@ -285,9 +298,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 alignedEndAddress += BufferAlignmentSize;
             }
 
-            CreateBuffer(alignedAddress, alignedEndAddress - alignedAddress);
-
-            return address;
+            CreateBufferAligned(alignedAddress, alignedEndAddress - alignedAddress);
         }
 
         /// <summary>
@@ -297,7 +308,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in guest memory</param>
         /// <param name="size">Size in bytes of the buffer</param>
-        private void CreateBuffer(ulong address, ulong size)
+        private void CreateBufferAligned(ulong address, ulong size)
         {
             int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref _bufferOverlaps);
 
@@ -339,6 +350,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         buffer.Dispose();
                     }
 
+                    // Existing buffers were modified, we need to rebind everything.
                     _rebind = true;
                 }
             }
@@ -441,7 +453,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Ensures that the graphics engine bindings are visible to the host GPU.
         /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
-        public void CommitBindings()
+        public void CommitGraphicsBindings()
         {
             if (_indexBufferDirty || _rebind)
             {
@@ -604,6 +616,34 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _context.Renderer.Pipeline.SetUniformBuffer(index, stage, buffer);
             }
+        }
+
+        /// <summary>
+        /// Sets the buffer storage of a buffer texture.
+        /// </summary>
+        /// <param name="texture">Buffer texture</param>
+        /// <param name="address">Address of the buffer in memory</param>
+        /// <param name="size">Size of the buffer in bytes</param>
+        /// <param name="compute">Indicates if the buffer texture belongs to the compute or graphics pipeline</param>
+        public void SetBufferTextureStorage(ITexture texture, ulong address, ulong size, bool compute)
+        {
+            CreateBuffer(address, size);
+
+            if (_rebind)
+            {
+                // We probably had to modify existing buffers to create the texture buffer,
+                // so rebind everything to ensure we're using the new buffers for all bound resources.
+                if (compute)
+                {
+                    CommitComputeBindings();
+                }
+                else
+                {
+                    CommitGraphicsBindings();
+                }
+            }
+
+            texture.SetStorage(GetBufferRange(address, size));
         }
 
         /// <summary>

@@ -489,7 +489,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             // Calculate texture sizes, used to find all overlapping textures.
             SizeInfo sizeInfo;
 
-            if (info.IsLinear)
+            if (info.Target == Target.TextureBuffer)
+            {
+                sizeInfo = new SizeInfo(info.Width * info.FormatInfo.BytesPerPixel);
+            }
+            else if (info.IsLinear)
             {
                 sizeInfo = SizeCalculator.GetLinearTextureSize(
                     info.Stride,

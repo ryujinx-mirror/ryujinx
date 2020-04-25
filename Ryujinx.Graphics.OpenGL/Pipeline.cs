@@ -26,7 +26,7 @@ namespace Ryujinx.Graphics.OpenGL
         private bool _depthTest;
         private bool _hasDepthBuffer;
 
-        private TextureView _unit0Texture;
+        private TextureBase _unit0Texture;
 
         private ClipOrigin _clipOrigin;
         private ClipDepthMode _clipDepthMode;
@@ -616,13 +616,13 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (unit != -1 && texture != null)
             {
-                TextureView view = (TextureView)texture;
+                TextureBase texBase = (TextureBase)texture;
 
-                FormatInfo formatInfo = FormatTable.GetFormatInfo(view.Format);
+                FormatInfo formatInfo = FormatTable.GetFormatInfo(texBase.Format);
 
                 SizedInternalFormat format = (SizedInternalFormat)formatInfo.PixelInternalFormat;
 
-                GL.BindImageTexture(unit, view.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
+                GL.BindImageTexture(unit, texBase.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
             }
         }
 
@@ -801,11 +801,11 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 if (unit == 0)
                 {
-                    _unit0Texture = ((TextureView)texture);
+                    _unit0Texture = (TextureBase)texture;
                 }
                 else
                 {
-                    ((TextureView)texture).Bind(unit);
+                    ((TextureBase)texture).Bind(unit);
                 }
             }
         }

@@ -376,6 +376,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     {
                         case TextureTarget.Texture1DLodZero:
                             sourcesList.Add(Ra());
+                            sourcesList.Add(ConstF(0));
                             break;
 
                         case TextureTarget.Texture2D:
@@ -429,11 +430,21 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 flags = ConvertTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
+                if (tldsOp.Target == TexelLoadTarget.Texture1DLodZero && context.Config.QueryInfoBool(QueryInfoName.IsTextureBuffer, tldsOp.Immediate))
+                {
+                    type   = SamplerType.TextureBuffer;
+                    flags &= ~TextureFlags.LodLevel;
+                }
+
                 switch (tldsOp.Target)
                 {
                     case TexelLoadTarget.Texture1DLodZero:
                         sourcesList.Add(Ra());
-                        sourcesList.Add(Const(0));
+
+                        if (type != SamplerType.TextureBuffer)
+                        {
+                            sourcesList.Add(Const(0));
+                        }
                         break;
 
                     case TexelLoadTarget.Texture1DLodLevel:
@@ -615,8 +626,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             List<Operand> sourcesList = new List<Operand>();
 
-            SamplerType type = ConvertSamplerType(op.Dimensions);
-
+            SamplerType  type  = ConvertSamplerType(op.Dimensions);
             TextureFlags flags = TextureFlags.Gather;
 
             if (op.Bindless)
@@ -1008,6 +1018,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 type |= SamplerType.Multisample;
             }
 
+            if (type == SamplerType.Texture1D && flags == TextureFlags.IntCoords && !isBindless)
+            {
+                bool isTypeBuffer = context.Config.QueryInfoBool(QueryInfoName.IsTextureBuffer, op.Immediate);
+
+                if (isTypeBuffer)
+                {
+                    type = SamplerType.TextureBuffer;
+                }
+            }
+
             Operand[] sources = sourcesList.ToArray();
 
             int rdIndex = op.Rd.Index;
@@ -1190,7 +1210,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             return SamplerType.None;
         }
 
-        private static TextureFlags ConvertTextureFlags(Decoders.TextureTarget type)
+        private static TextureFlags ConvertTextureFlags(TextureTarget type)
         {
             switch (type)
             {

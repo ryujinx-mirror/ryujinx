@@ -69,7 +69,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void SetTextures(int stage, TextureBindingInfo[] bindings)
         {
             _textureBindings[stage] = bindings;
-
             _textureState[stage] = new TextureStatePerStage[bindings.Length];
         }
 
@@ -81,7 +80,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void SetImages(int stage, TextureBindingInfo[] bindings)
         {
             _imageBindings[stage] = bindings;
-
             _imageState[stage] = new TextureStatePerStage[bindings.Length];
         }
 
@@ -201,7 +199,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
                 else
                 {
-                    packedId = ReadPackedId(stageIndex, binding.Handle);
+                    packedId = ReadPackedId(stageIndex, binding.Handle, _textureBufferIndex);
                 }
 
                 int textureId = UnpackTextureId(packedId);
@@ -225,6 +223,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _textureState[stageIndex][index].Texture = hostTexture;
 
                     _context.Renderer.Pipeline.SetTexture(index, stage, hostTexture);
+                }
+
+                if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
+                {
+                    // Ensure that the buffer texture is using the correct buffer as storage.
+                    // Buffers are frequently re-created to accomodate larger data, so we need to re-bind
+                    // to ensure we're not using a old buffer that was already deleted.
+                    _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Address, texture.Size, _isCompute);
                 }
 
                 Sampler sampler = _samplerPool.Get(samplerId);
@@ -258,8 +264,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo binding = _imageBindings[stageIndex][index];
 
-                int packedId = ReadPackedId(stageIndex, binding.Handle);
-
+                int packedId = ReadPackedId(stageIndex, binding.Handle, _textureBufferIndex);
                 int textureId = UnpackTextureId(packedId);
 
                 Texture texture = pool.Get(textureId);
@@ -284,8 +289,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture descriptor for the specified texture</returns>
         public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle)
         {
-            int packedId = ReadPackedId(stageIndex, handle);
-
+            int packedId = ReadPackedId(stageIndex, handle, state.Get<int>(MethodOffset.TextureBufferIndex));
             int textureId = UnpackTextureId(packedId);
 
             var poolState = state.Get<PoolState>(MethodOffset.TexturePoolState);
@@ -303,8 +307,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="stageIndex">The number of the shader stage where the texture is bound</param>
         /// <param name="wordOffset">A word offset of the handle on the buffer (the "fake" shader handle)</param>
+        /// <param name="textureBufferIndex">Index of the constant buffer holding the texture handles</param>
         /// <returns>The packed texture and sampler ID (the real texture handle)</returns>
-        private int ReadPackedId(int stageIndex, int wordOffset)
+        private int ReadPackedId(int stageIndex, int wordOffset, int textureBufferIndex)
         {
             ulong address;
 
@@ -312,11 +317,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (_isCompute)
             {
-                address = bufferManager.GetComputeUniformBufferAddress(_textureBufferIndex);
+                address = bufferManager.GetComputeUniformBufferAddress(textureBufferIndex);
             }
             else
             {
-                address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, _textureBufferIndex);
+                address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, textureBufferIndex);
             }
 
             address += (uint)wordOffset * 4;

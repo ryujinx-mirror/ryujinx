@@ -1,19 +1,27 @@
-using Ryujinx.Common;
 using System;
 
 namespace Ryujinx.Graphics.Texture
 {
     public struct SizeInfo
     {
-        private int[] _mipOffsets;
-        private int[] _allOffsets;
+        private readonly int[] _mipOffsets;
+        private readonly int[] _allOffsets;
 
-        private int _levels;
+        private readonly int _levels;
 
         public int LayerSize { get; }
         public int TotalSize { get; }
 
-        public SizeInfo(
+        public SizeInfo(int size)
+        {
+            _mipOffsets = new int[] { 0 };
+            _allOffsets = new int[] { 0 };
+            _levels     = 1;
+            LayerSize   = size;
+            TotalSize   = size;
+        }
+
+        internal SizeInfo(
             int[] mipOffsets,
             int[] allOffsets,
             int   levels,
@@ -29,7 +37,7 @@ namespace Ryujinx.Graphics.Texture
 
         public int GetMipOffset(int level)
         {
-            if ((uint)level > _mipOffsets.Length)
+            if ((uint)level >= _mipOffsets.Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(level));
             }

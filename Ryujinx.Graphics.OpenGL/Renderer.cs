@@ -20,19 +20,14 @@ namespace Ryujinx.Graphics.OpenGL
         internal TextureCopy TextureCopy { get; }
 
         public string GpuVendor { get; private set; }
-
         public string GpuRenderer { get; private set; }
-
         public string GpuVersion { get; private set; }
 
         public Renderer()
         {
             _pipeline = new Pipeline();
-
             _counters = new Counters();
-
             _window = new Window(this);
-
             TextureCopy = new TextureCopy(this);
         }
 
@@ -58,7 +53,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public ITexture CreateTexture(TextureCreateInfo info)
         {
-            return new TextureStorage(this, info).CreateDefaultView();
+            return info.Target == Target.TextureBuffer ? new TextureBuffer(info) : new TextureStorage(this, info).CreateDefaultView();
         }
 
         public Capabilities GetCapabilities()

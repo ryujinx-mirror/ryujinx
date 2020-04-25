@@ -4,10 +4,8 @@ using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    class TextureView : ITexture
+    class TextureView : TextureBase, ITexture
     {
-        public int Handle { get; private set; }
-
         private readonly Renderer _renderer;
 
         private readonly TextureStorage _parent;
@@ -16,32 +14,21 @@ namespace Ryujinx.Graphics.OpenGL
 
         private TextureView _incompatibleFormatView;
 
-        private readonly TextureCreateInfo _info;
-
         public int FirstLayer { get; private set; }
         public int FirstLevel { get; private set; }
-
-        public int Width  => _info.Width;
-        public int Height => _info.Height;
-
-        public Target Target => _info.Target;
-        public Format Format => _info.Format;
 
         public TextureView(
             Renderer          renderer,
             TextureStorage    parent,
             TextureCreateInfo info,
             int               firstLayer,
-            int               firstLevel)
+            int               firstLevel) : base(info)
         {
             _renderer = renderer;
             _parent   = parent;
-            _info     = info;
 
             FirstLayer = firstLayer;
             FirstLevel = firstLevel;
-
-            Handle = GL.GenTexture();
 
             CreateView();
         }
@@ -50,7 +37,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             TextureTarget target = Target.Convert();
 
-            FormatInfo format = FormatTable.GetFormatInfo(_info.Format);
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
             PixelInternalFormat pixelInternalFormat;
 
@@ -69,9 +56,9 @@ namespace Ryujinx.Graphics.OpenGL
                 _parent.Handle,
                 pixelInternalFormat,
                 FirstLevel,
-                _info.Levels,
+                Info.Levels,
                 FirstLayer,
-                _info.GetLayers());
+                Info.GetLayers());
 
             GL.ActiveTexture(TextureUnit.Texture0);
 
@@ -79,15 +66,15 @@ namespace Ryujinx.Graphics.OpenGL
 
             int[] swizzleRgba = new int[]
             {
-                (int)_info.SwizzleR.Convert(),
-                (int)_info.SwizzleG.Convert(),
-                (int)_info.SwizzleB.Convert(),
-                (int)_info.SwizzleA.Convert()
+                (int)Info.SwizzleR.Convert(),
+                (int)Info.SwizzleG.Convert(),
+                (int)Info.SwizzleB.Convert(),
+                (int)Info.SwizzleA.Convert()
             };
 
             GL.TexParameter(target, TextureParameterName.TextureSwizzleRgba, swizzleRgba);
 
-            int maxLevel = _info.Levels - 1;
+            int maxLevel = Info.Levels - 1;
 
             if (maxLevel < 0)
             {
@@ -95,12 +82,12 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             GL.TexParameter(target, TextureParameterName.TextureMaxLevel, maxLevel);
-            GL.TexParameter(target, TextureParameterName.DepthStencilTextureMode, (int)_info.DepthStencilMode.Convert());
+            GL.TexParameter(target, TextureParameterName.DepthStencilTextureMode, (int)Info.DepthStencilMode.Convert());
         }
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)
         {
-            if (_info.IsCompressed == info.IsCompressed)
+            if (Info.IsCompressed == info.IsCompressed)
             {
                 firstLayer += FirstLayer;
                 firstLevel += FirstLevel;
@@ -135,10 +122,10 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 if (_incompatibleFormatView == null)
                 {
-                    _incompatibleFormatView = (TextureView)_renderer.CreateTexture(_info);
+                    _incompatibleFormatView = (TextureView)_renderer.CreateTexture(Info);
                 }
 
-                TextureCopyUnscaled.Copy(_parent.Info, _incompatibleFormatView._info, _parent.Handle, _incompatibleFormatView.Handle, FirstLayer, 0, FirstLevel, 0);
+                TextureCopyUnscaled.Copy(_parent.Info, _incompatibleFormatView.Info, _parent.Handle, _incompatibleFormatView.Handle, FirstLayer, 0, FirstLevel, 0);
 
                 return _incompatibleFormatView.Handle;
             }
@@ -150,7 +137,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (_incompatibleFormatView != null)
             {
-                TextureCopyUnscaled.Copy(_incompatibleFormatView._info, _parent.Info, _incompatibleFormatView.Handle, _parent.Handle, 0, FirstLayer, 0, FirstLevel);
+                TextureCopyUnscaled.Copy(_incompatibleFormatView.Info, _parent.Info, _incompatibleFormatView.Handle, _parent.Handle, 0, FirstLayer, 0, FirstLevel);
             }
         }
 
@@ -158,13 +145,13 @@ namespace Ryujinx.Graphics.OpenGL
         {
             TextureView destinationView = (TextureView)destination;
 
-            TextureCopyUnscaled.Copy(_info, destinationView._info, Handle, destinationView.Handle, 0, firstLayer, 0, firstLevel);
+            TextureCopyUnscaled.Copy(Info, destinationView.Info, Handle, destinationView.Handle, 0, firstLayer, 0, firstLevel);
 
             if (destinationView._emulatedViewParent != null)
             {
                 TextureCopyUnscaled.Copy(
-                    _info,
-                    destinationView._emulatedViewParent._info,
+                    Info,
+                    destinationView._emulatedViewParent.Info,
                     Handle,
                     destinationView._emulatedViewParent.Handle,
                     0,
@@ -183,9 +170,9 @@ namespace Ryujinx.Graphics.OpenGL
         {
             int size = 0;
 
-            for (int level = 0; level < _info.Levels; level++)
+            for (int level = 0; level < Info.Levels; level++)
             {
-                size += _info.GetMipSize(level);
+                size += Info.GetMipSize(level);
             }
 
             byte[] data = new byte[size];
@@ -207,7 +194,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             Bind(target, 0);
 
-            FormatInfo format = FormatTable.GetFormatInfo(_info.Format);
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
             int faces = 1;
 
@@ -218,11 +205,11 @@ namespace Ryujinx.Graphics.OpenGL
                 faces = 6;
             }
 
-            for (int level = 0; level < _info.Levels; level++)
+            for (int level = 0; level < Info.Levels; level++)
             {
                 for (int face = 0; face < faces; face++)
                 {
-                    int faceOffset = face * _info.GetMipSize2D(level);
+                    int faceOffset = face * Info.GetMipSize2D(level);
 
                     if (format.IsCompressed)
                     {
@@ -239,7 +226,7 @@ namespace Ryujinx.Graphics.OpenGL
                     }
                 }
 
-                ptr += _info.GetMipSize(level);
+                ptr += Info.GetMipSize(level);
             }
         }
 
@@ -260,17 +247,17 @@ namespace Ryujinx.Graphics.OpenGL
 
             Bind(target, 0);
 
-            FormatInfo format = FormatTable.GetFormatInfo(_info.Format);
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
-            int width  = _info.Width;
-            int height = _info.Height;
-            int depth  = _info.Depth;
+            int width  = Info.Width;
+            int height = Info.Height;
+            int depth  = Info.Depth;
 
             int offset = 0;
 
-            for (int level = 0; level < _info.Levels; level++)
+            for (int level = 0; level < Info.Levels; level++)
             {
-                int mipSize = _info.GetMipSize(level);
+                int mipSize = Info.GetMipSize(level);
 
                 int endOffset = offset + mipSize;
 
@@ -279,7 +266,7 @@ namespace Ryujinx.Graphics.OpenGL
                     return;
                 }
 
-                switch (_info.Target)
+                switch (Info.Target)
                 {
                     case Target.Texture1D:
                         if (format.IsCompressed)
@@ -419,16 +406,9 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void Bind(int unit)
+        public void SetStorage(BufferRange buffer)
         {
-            Bind(Target.Convert(), unit);
-        }
-
-        private void Bind(TextureTarget target, int unit)
-        {
-            GL.ActiveTexture(TextureUnit.Texture0 + unit);
-
-            GL.BindTexture(target, Handle);
+            throw new NotSupportedException();
         }
 
         public void Dispose()
