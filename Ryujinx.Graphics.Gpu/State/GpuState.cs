@@ -77,15 +77,19 @@ namespace Ryujinx.Graphics.Gpu.State
         {
             int value = meth.Argument;
 
-            // TODO: Figure out what TrackWithFilter does, compared to Track.
-            if (shadowCtrl == ShadowRamControl.Track ||
-                shadowCtrl == ShadowRamControl.TrackWithFilter)
+            // Methods < 0x80 shouldn't be affected by shadow RAM at all.
+            if (meth.Method >= 0x80)
             {
-                _shadow[meth.Method] = value;
-            }
-            else if (shadowCtrl == ShadowRamControl.Replay)
-            {
-                value = _shadow[meth.Method];
+                // TODO: Figure out what TrackWithFilter does, compared to Track.
+                if (shadowCtrl == ShadowRamControl.Track ||
+                    shadowCtrl == ShadowRamControl.TrackWithFilter)
+                {
+                    _shadow[meth.Method] = value;
+                }
+                else if (shadowCtrl == ShadowRamControl.Replay)
+                {
+                    value = _shadow[meth.Method];
+                }
             }
 
             Register register = _registers[meth.Method];
