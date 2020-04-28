@@ -40,6 +40,7 @@ namespace Ryujinx.Common.Logging
         ServicePl,
         ServicePrepo,
         ServicePsm,
+        ServicePtm,
         ServiceSet,
         ServiceSfdnsres,
         ServiceSm,
