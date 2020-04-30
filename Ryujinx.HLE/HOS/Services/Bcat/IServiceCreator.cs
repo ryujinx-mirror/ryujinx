@@ -1,18 +1,25 @@
+using LibHac;
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator;
 using Ryujinx.HLE.HOS.Services.Arp;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat
 {
-    [Service("bcat:a")]
-    [Service("bcat:m")]
-    [Service("bcat:u")]
-    [Service("bcat:s")]
+    [Service("bcat:a", "bcat:a")]
+    [Service("bcat:m", "bcat:m")]
+    [Service("bcat:u", "bcat:u")]
+    [Service("bcat:s", "bcat:s")]
     class IServiceCreator : IpcService
     {
-        public IServiceCreator(ServiceCtx context) { }
+        private LibHac.Bcat.Detail.Ipc.IServiceCreator _base;
+
+        public IServiceCreator(ServiceCtx context, string serviceName)
+        {
+            context.Device.System.LibHacHorizonClient.Sm.GetService(out _base, serviceName).ThrowIfFailure();
+        }
 
         [Command(0)]
-        // CreateBcatService(u64, pid) -> object<nn::bcat::detail::ipc::IBcatService>
+        // CreateBcatService(pid) -> object<nn::bcat::detail::ipc::IBcatService>
         public ResultCode CreateBcatService(ServiceCtx context)
         {
             // TODO: Call arp:r GetApplicationLaunchProperty with the pid to get the TitleId.
@@ -30,21 +37,36 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
         }
 
         [Command(1)]
-        // CreateDeliveryCacheStorageService(u64, pid) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
+        // CreateDeliveryCacheStorageService(pid) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public ResultCode CreateDeliveryCacheStorageService(ServiceCtx context)
         {
-            // TODO: Call arp:r GetApplicationLaunchProperty with the pid to get the TitleId.
-            //       Add an instance of nn::bcat::detail::service::core::ApplicationStorageManager who load "bcat-dc-X:/" system save data,
-            //       return ResultCode.NullSaveData if failed.
-            //       Where X depend of the ApplicationLaunchProperty stored in an array (range 0-3).
-            //       Add an instance of nn::bcat::detail::service::ServiceMemoryManager.
+            ulong pid = context.RequestData.ReadUInt64();
 
-            MakeObject(context, new IDeliveryCacheStorageService(context, ApplicationLaunchProperty.GetByPid(context)));
+            Result rc = _base.CreateDeliveryCacheStorageService(out LibHac.Bcat.Detail.Ipc.IDeliveryCacheStorageService serv, pid);
 
-            // NOTE: If the IDeliveryCacheStorageService is null this error is returned, Doesn't occur in our case. 
-            //       return ResultCode.NullObject;
+            if (rc.IsSuccess())
+            {
+                MakeObject(context, new IDeliveryCacheStorageService(context, serv));
+            }
 
-            return ResultCode.Success;
+            return (ResultCode)rc.Value;
+        }
+
+        [Command(2)]
+        // CreateDeliveryCacheStorageServiceWithApplicationId(nn::ApplicationId) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
+        public ResultCode CreateDeliveryCacheStorageServiceWithApplicationId(ServiceCtx context)
+        {
+            ApplicationId applicationId = context.RequestData.ReadStruct<ApplicationId>();
+
+            Result rc = _base.CreateDeliveryCacheStorageServiceWithApplicationId(out LibHac.Bcat.Detail.Ipc.IDeliveryCacheStorageService serv,
+               applicationId);
+
+            if (rc.IsSuccess())
+            {
+                MakeObject(context, new IDeliveryCacheStorageService(context, serv));
+            }
+
+            return (ResultCode)rc.Value;
         }
     }
 }

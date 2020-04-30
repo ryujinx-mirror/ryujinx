@@ -24,6 +24,15 @@
       </object>
     </child>
     <child>
+      <object class="GtkMenuItem" id="_openSaveBcatDir">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Open the folder where the BCAT save for the application is loaded</property>
+        <property name="label" translatable="yes">Open BCAT Save Directory</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
       <object class="GtkSeparatorMenuItem">
         <property name="visible">True</property>
         <property name="can_focus">False</property>

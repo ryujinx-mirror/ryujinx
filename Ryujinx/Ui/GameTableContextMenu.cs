@@ -40,6 +40,7 @@ namespace Ryujinx.Ui
 #pragma warning disable IDE0044
         [GUI] MenuItem _openSaveUserDir;
         [GUI] MenuItem _openSaveDeviceDir;
+        [GUI] MenuItem _openSaveBcatDir;
         [GUI] MenuItem _manageTitleUpdates;
         [GUI] MenuItem _extractRomFs;
         [GUI] MenuItem _extractExeFs;
@@ -61,6 +62,7 @@ namespace Ryujinx.Ui
 
             _openSaveUserDir.Activated    += OpenSaveUserDir_Clicked;
             _openSaveDeviceDir.Activated  += OpenSaveDeviceDir_Clicked;
+            _openSaveBcatDir.Activated    += OpenSaveBcatDir_Clicked;
             _manageTitleUpdates.Activated += ManageTitleUpdates_Clicked;
             _extractRomFs.Activated       += ExtractRomFs_Clicked;
             _extractExeFs.Activated       += ExtractExeFs_Clicked;
@@ -68,6 +70,7 @@ namespace Ryujinx.Ui
 
             _openSaveUserDir.Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0;
             _openSaveDeviceDir.Sensitive = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0;
+            _openSaveBcatDir.Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0;
 
             string ext = System.IO.Path.GetExtension(_gameTableStore.GetValue(_rowIter, 9).ToString()).ToLower();
             if (ext != ".nca" && ext != ".nsp" && ext != ".pfs0" && ext != ".xci")
@@ -512,6 +515,24 @@ namespace Ryujinx.Ui
 
             SaveDataFilter filter = new SaveDataFilter();
             filter.SetSaveDataType(SaveDataType.Device);
+
+            OpenSaveDir(titleName, titleIdNumber, filter);
+        }
+
+        private void OpenSaveBcatDir_Clicked(object sender, EventArgs args)
+        {
+            string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
+            string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+
+            if (!ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
+            {
+                GtkDialog.CreateErrorDialog("UI error: The selected game did not have a valid title ID");
+
+                return;
+            }
+
+            SaveDataFilter filter = new SaveDataFilter();
+            filter.SetSaveDataType(SaveDataType.Bcat);
 
             OpenSaveDir(titleName, titleIdNumber, filter);
         }

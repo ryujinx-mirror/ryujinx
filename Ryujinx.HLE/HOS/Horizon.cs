@@ -1,5 +1,6 @@
 using LibHac;
 using LibHac.Account;
+using LibHac.Bcat;
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
@@ -18,6 +19,7 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
+using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
@@ -143,6 +145,9 @@ namespace Ryujinx.HLE.HOS
         internal long HidBaseAddress { get; private set; }
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
+
+        internal LibHac.Horizon LibHacHorizonServer { get; private set; }
+        internal HorizonClient LibHacHorizonClient { get; private set; }
 
         public Horizon(Switch device, ContentManager contentManager)
         {
@@ -280,6 +285,22 @@ namespace Ryujinx.HLE.HOS
             SurfaceFlinger = new SurfaceFlinger(device);
 
             ConfigurationState.Instance.System.EnableDockedMode.Event += OnDockedModeChange;
+
+            InitLibHacHorizon();
+        }
+
+        private void InitLibHacHorizon()
+        {
+            LibHac.Horizon horizon = new LibHac.Horizon(null, Device.FileSystem.FsServer);
+
+            horizon.CreateHorizonClient(out HorizonClient ryujinxClient).ThrowIfFailure();
+            horizon.CreateHorizonClient(out HorizonClient bcatClient).ThrowIfFailure();
+
+            ryujinxClient.Sm.RegisterService(new LibHacIReader(this), "arp:r").ThrowIfFailure();
+            new BcatServer(bcatClient);
+
+            LibHacHorizonServer = horizon;
+            LibHacHorizonClient = ryujinxClient;
         }
 
         private void OnDockedModeChange(object sender, ReactiveEventArgs<bool> e)
