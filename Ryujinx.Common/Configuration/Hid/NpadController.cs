@@ -5,31 +5,31 @@
         /// <summary>
         /// Enables or disables controller support
         /// </summary>
-        public bool Enabled;
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Controller Device Index
         /// </summary>
-        public int Index;
+        public int Index { get; set; }
 
         /// <summary>
         /// Controller Analog Stick Deadzone
         /// </summary>
-        public float Deadzone;
+        public float Deadzone { get; set; }
 
         /// <summary>
         /// Controller Trigger Threshold
         /// </summary>
-        public float TriggerThreshold;
+        public float TriggerThreshold { get; set; }
 
         /// <summary>
         /// Left JoyCon Controller Bindings
         /// </summary>
-        public NpadControllerLeft LeftJoycon;
+        public NpadControllerLeft LeftJoycon { get; set; }
 
         /// <summary>
         /// Right JoyCon Controller Bindings
         /// </summary>
-        public NpadControllerRight RightJoycon;
+        public NpadControllerRight RightJoycon { get; set; }
     }
 }

@@ -18,10 +18,10 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using Utf8Json;
-using Utf8Json.Resolvers;
+using System.Text.Json;
 
 using RightsId = LibHac.Fs.RightsId;
+using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
 
 namespace Ryujinx.Ui
 {
@@ -509,8 +509,6 @@ namespace Ryujinx.Ui
             string metadataFolder = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "gui");
             string metadataFile   = Path.Combine(metadataFolder, "metadata.json");
 
-            IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
-
             ApplicationMetadata appMetadata;
 
             if (!File.Exists(metadataFile))
@@ -526,27 +524,24 @@ namespace Ryujinx.Ui
 
                 using (FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough))
                 {
-                    JsonSerializer.Serialize(stream, appMetadata, resolver);
+                    JsonHelper.Serialize(stream, appMetadata, true);
                 }
             }
 
-            using (Stream stream = File.OpenRead(metadataFile))
+            try
             {
-                try
+                appMetadata = JsonHelper.DeserializeFromFile<ApplicationMetadata>(metadataFile);
+            }
+            catch (JsonException)
+            {
+                Logger.PrintWarning(LogClass.Application, $"Failed to parse metadata json for {titleId}. Loading defaults.");
+
+                appMetadata = new ApplicationMetadata
                 {
-                    appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
-                }
-                catch (JsonParsingException)
-                {
-                    Logger.PrintWarning(LogClass.Application, $"Failed to parse metadata json for {titleId}. Loading defaults.");
-                    
-                    appMetadata = new ApplicationMetadata
-                    {
-                        Favorite   = false,
-                        TimePlayed = 0,
-                        LastPlayed = "Never"
-                    };
-                }
+                    Favorite   = false,
+                    TimePlayed = 0,
+                    LastPlayed = "Never"
+                };
             }
 
             if (modifyFunction != null)
@@ -555,7 +550,7 @@ namespace Ryujinx.Ui
 
                 using (FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough))
                 {
-                    JsonSerializer.Serialize(stream, appMetadata, resolver);
+                    JsonHelper.Serialize(stream, appMetadata, true);
                 }
             }
 
@@ -653,57 +648,53 @@ namespace Ryujinx.Ui
 
             if (File.Exists(jsonPath))
             {
-                using (Stream stream = File.OpenRead(jsonPath))
+                string updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(jsonPath).Selected;
+
+                if (!File.Exists(updatePath))
                 {
-                    IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
-                    string updatePath = JsonSerializer.Deserialize<TitleUpdateMetadata>(stream, resolver).Selected;
+                    version = "";
 
-                    if (!File.Exists(updatePath))
+                    return false;
+                }
+
+                using (FileStream file = new FileStream(updatePath, FileMode.Open, FileAccess.Read))
+                {
+                    PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+
+                    foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
                     {
-                        version = "";
+                        Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
-                        return false;
+                        if (result.IsSuccess())
+                        {
+                            Ticket ticket = new Ticket(ticketFile.AsStream());
+
+                            _virtualFileSystem.KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
+                        }
                     }
 
-                    using (FileStream file = new FileStream(updatePath, FileMode.Open, FileAccess.Read))
+                    foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
                     {
-                        PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+                        nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                        foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
+                        Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+
+                        if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
                         {
-                            Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
-
-                            if (result.IsSuccess())
-                            {
-                                Ticket ticket = new Ticket(ticketFile.AsStream());
-
-                                _virtualFileSystem.KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
-                            }
+                            break;
                         }
 
-                        foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
+                        if (nca.Header.ContentType == NcaContentType.Control)
                         {
-                            nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                            ApplicationControlProperty controlData = new ApplicationControlProperty();
 
-                            Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+                            nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                            if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
-                            {
-                                break;
-                            }
+                            nacpFile.Read(out long _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                            if (nca.Header.ContentType == NcaContentType.Control)
-                            {
-                                ApplicationControlProperty controlData = new ApplicationControlProperty();
+                            version = controlData.DisplayVersion.ToString();
 
-                                nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-                                
-                                nacpFile.Read(out long _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
-
-                                version = controlData.DisplayVersion.ToString();
-
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }

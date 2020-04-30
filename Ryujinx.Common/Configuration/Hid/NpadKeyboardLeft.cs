@@ -2,17 +2,17 @@
 {
     public struct NpadKeyboardLeft
     {
-        public Key StickUp;
-        public Key StickDown;
-        public Key StickLeft;
-        public Key StickRight;
-        public Key StickButton;
-        public Key DPadUp;
-        public Key DPadDown;
-        public Key DPadLeft;
-        public Key DPadRight;
-        public Key ButtonMinus;
-        public Key ButtonL;
-        public Key ButtonZl;
+        public Key StickUp     { get; set; }
+        public Key StickDown   { get; set; }
+        public Key StickLeft   { get; set; }
+        public Key StickRight  { get; set; }
+        public Key StickButton { get; set; }
+        public Key DPadUp      { get; set; }
+        public Key DPadDown    { get; set; }
+        public Key DPadLeft    { get; set; }
+        public Key DPadRight   { get; set; }
+        public Key ButtonMinus { get; set; }
+        public Key ButtonL     { get; set; }
+        public Key ButtonZl    { get; set; }
     }
 }

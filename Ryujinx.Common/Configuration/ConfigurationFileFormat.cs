@@ -1,16 +1,12 @@
-using JsonPrettyPrinterPlus;
-using Ryujinx.Common.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Utf8Json;
-using Utf8Json.Resolvers;
+using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Configuration.System;
 using Ryujinx.Configuration.Hid;
-using Ryujinx.Common.Configuration.Hid;
-using Ryujinx.UI.Input;
 using Ryujinx.Configuration.Ui;
+using Ryujinx.UI.Input;
 
 namespace Ryujinx.Configuration
 {
@@ -179,15 +175,7 @@ namespace Ryujinx.Configuration
         /// <param name="path">The path to the JSON configuration file</param>
         public static ConfigurationFileFormat Load(string path)
         {
-            var resolver = CompositeResolver.Create(
-                new[] { new ConfigurationEnumFormatter<Key>() },
-                new[] { StandardResolver.AllowPrivateSnakeCase }
-            );
-
-            using (Stream stream = File.OpenRead(path))
-            {
-                return JsonSerializer.Deserialize<ConfigurationFileFormat>(stream, resolver);
-            }
+            return JsonHelper.DeserializeFromFile<ConfigurationFileFormat>(path);
         }
 
         /// <summary>
@@ -196,41 +184,7 @@ namespace Ryujinx.Configuration
         /// <param name="path">The path to the JSON configuration file</param>
         public void SaveConfig(string path)
         {
-            IJsonFormatterResolver resolver = CompositeResolver.Create(
-                new[] { new ConfigurationEnumFormatter<Key>()  },
-                new[] { StandardResolver.AllowPrivateSnakeCase }
-            );
-
-            byte[] data = JsonSerializer.Serialize(this, resolver);
-            File.WriteAllText(path, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
-        }
-
-        public class ConfigurationEnumFormatter<T> : IJsonFormatter<T>
-            where T : struct
-        {
-            public void Serialize(ref JsonWriter writer, T value, IJsonFormatterResolver formatterResolver)
-            {
-                formatterResolver.GetFormatterWithVerify<string>()
-                                 .Serialize(ref writer, value.ToString(), formatterResolver);
-            }
-
-            public T Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
-            {
-                if (reader.ReadIsNull())
-                {
-                    return default(T);
-                }
-
-                string enumName = formatterResolver.GetFormatterWithVerify<string>()
-                                                   .Deserialize(ref reader, formatterResolver);
-
-                if (Enum.TryParse<T>(enumName, out T result))
-                {
-                    return result;
-                }
-
-                return default(T);
-            }
+            File.WriteAllText(path, JsonHelper.Serialize(this, true));
         }
     }
 }

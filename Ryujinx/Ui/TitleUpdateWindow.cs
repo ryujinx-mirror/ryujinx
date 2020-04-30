@@ -1,5 +1,4 @@
 using Gtk;
-using JsonPrettyPrinterPlus;
 using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
@@ -12,11 +11,9 @@ using Ryujinx.HLE.FileSystem;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Utf8Json;
-using Utf8Json.Resolvers;
 
 using GUI = Gtk.Builder.ObjectAttribute;
+using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
 
 namespace Ryujinx.Ui
 {
@@ -47,12 +44,9 @@ namespace Ryujinx.Ui
 
             try
             {
-                using (Stream stream = File.OpenRead(System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json")))
-                {
-                    IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
+                string path = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json");
 
-                    _titleUpdateWindowData = JsonSerializer.Deserialize<TitleUpdateMetadata>(stream, resolver);
-                }
+                _titleUpdateWindowData = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(path);
             }
             catch
             {
@@ -185,12 +179,9 @@ namespace Ryujinx.Ui
                 }
             }
 
-            IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
-
             string path = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json");
-            byte[] data = JsonSerializer.Serialize(_titleUpdateWindowData, resolver);
 
-            File.WriteAllText(path, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
+            File.WriteAllText(path, JsonHelper.Serialize(_titleUpdateWindowData, true));
 
             MainWindow.UpdateGameTable();
             Dispose();

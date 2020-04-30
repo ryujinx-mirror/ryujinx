@@ -2,6 +2,6 @@
 {
     public struct KeyboardHotkeys
     {
-        public Key ToggleVsync;
+        public Key ToggleVsync { get; set; }
     }
 }

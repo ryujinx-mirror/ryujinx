@@ -2,15 +2,15 @@
 {
     public struct GuiColumns
     {
-        public bool FavColumn;
-        public bool IconColumn;
-        public bool AppColumn;
-        public bool DevColumn;
-        public bool VersionColumn;
-        public bool TimePlayedColumn;
-        public bool LastPlayedColumn;
-        public bool FileExtColumn;
-        public bool FileSizeColumn;
-        public bool PathColumn;
+        public bool FavColumn        { get; set; }
+        public bool IconColumn       { get; set; }
+        public bool AppColumn        { get; set; }
+        public bool DevColumn        { get; set; }
+        public bool VersionColumn    { get; set; }
+        public bool TimePlayedColumn { get; set; }
+        public bool LastPlayedColumn { get; set; }
+        public bool FileExtColumn    { get; set; }
+        public bool FileSizeColumn   { get; set; }
+        public bool PathColumn       { get; set; }
     }
 }
