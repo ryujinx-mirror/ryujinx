@@ -394,8 +394,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void UpdateDepthClampState(GpuState state)
         {
             ViewVolumeClipControl clip = state.Get<ViewVolumeClipControl>(MethodOffset.ViewVolumeClipControl);
-            _context.Renderer.Pipeline.SetDepthClamp((clip & ViewVolumeClipControl.DepthClampNear) != 0,
-                                                     (clip & ViewVolumeClipControl.DepthClampFar) != 0);
+            _context.Renderer.Pipeline.SetDepthClamp((clip & ViewVolumeClipControl.DepthClampDisabled) == 0);
         }
 
         /// <summary>

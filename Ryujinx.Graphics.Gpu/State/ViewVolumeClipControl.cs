@@ -6,7 +6,6 @@ namespace Ryujinx.Graphics.Gpu.State
     enum ViewVolumeClipControl
     {
         ForceDepthRangeZeroToOne = 1 << 0,
-        DepthClampNear           = 1 << 3,
-        DepthClampFar            = 1 << 4,
+        DepthClampDisabled       = 1 << 11,
     }
 }
