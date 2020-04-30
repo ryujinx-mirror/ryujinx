@@ -40,6 +40,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
         private PlayState _playState;
 
+        private ulong _elapsedFrameCount;
+
         public IAudioRenderer(
             Horizon                system,
             MemoryManager          memory,
@@ -62,6 +64,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             _voices = CreateArray<VoiceContext>(rendererParams.VoiceCount);
 
             _effects = CreateArray<EffectContext>(rendererParams.EffectCount);
+
+            _elapsedFrameCount = 0;
 
             InitializeAudioOut();
 
@@ -264,6 +268,18 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
                 writer.Write(effect.OutStatus);
             }
 
+            writer.SkipBytes(_params.SinkCount * 0x20);
+            writer.SkipBytes(outputHeader.PerformanceManagerSize);
+            writer.SkipBytes(outputHeader.BehaviorSize);
+
+            if (behaviorInfo.IsElapsedFrameCountSupported())
+            {
+                writer.Write(new RendererInfoOut
+                {
+                    ElapsedFrameCount = _elapsedFrameCount
+                });
+            }
+
             return ResultCode.Success;
         }
 
@@ -331,6 +347,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             {
                 AppendMixedBuffer(released[index]);
             }
+
+            _elapsedFrameCount++;
         }
 
         private void AppendMixedBuffer(long tag)

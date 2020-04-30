@@ -21,5 +21,10 @@ namespace Ryujinx.HLE.Utilities
 
             Position += Marshal.SizeOf<T>();
         }
+
+        public void SkipBytes(long count)
+        {
+            Position += count;
+        }
     }
 }
