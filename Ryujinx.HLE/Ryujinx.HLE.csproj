@@ -52,7 +52,7 @@
 
   <ItemGroup>
     <PackageReference Include="Concentus" Version="1.1.7" />
-    <PackageReference Include="LibHac" Version="0.11.0" />
+    <PackageReference Include="LibHac" Version="0.11.1" />
     <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
   </ItemGroup>
 
