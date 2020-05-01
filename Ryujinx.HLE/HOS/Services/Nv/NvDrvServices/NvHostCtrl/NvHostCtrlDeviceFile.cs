@@ -310,6 +310,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
             hostEvent.State = NvHostEventState.Cancelled;
 
+            _device.System.HostSyncpoint.UpdateMin(hostEvent.Fence.Id);
+
             return NvInternalResult.Success;
         }
 
@@ -398,20 +400,29 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                 hostEvent.State == NvHostEventState.Signaled  ||
                 hostEvent.State == NvHostEventState.Cancelled))
             {
-                hostEvent.Wait(_device.Gpu, fence);
+                bool timedOut = hostEvent.Wait(_device.Gpu, fence);
 
-                if (isWaitEventCmd)
+                if (timedOut)
                 {
-                    value = ((fence.Id & 0xfff) << 16) | 0x10000000;
+                    if (isWaitEventCmd)
+                    {
+                        value = ((fence.Id & 0xfff) << 16) | 0x10000000;
+                    }
+                    else
+                    {
+                        value = fence.Id << 4;
+                    }
+
+                    value |= eventIndex;
+
+                    result = NvInternalResult.TryAgain;
                 }
                 else
                 {
-                    value = fence.Id << 4;
+                    value = fence.Value;
+
+                    return NvInternalResult.Success;
                 }
-
-                value |= eventIndex;
-
-                result = NvInternalResult.TryAgain;
             }
             else
             {
