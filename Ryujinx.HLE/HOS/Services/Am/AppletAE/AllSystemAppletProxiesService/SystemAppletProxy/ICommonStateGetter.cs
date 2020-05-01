@@ -9,7 +9,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class ICommonStateGetter : IpcService
     {
-        private CpuBoostMode _cpuBoostMode = CpuBoostMode.Disabled;
+        private CpuBoostMode _cpuBoostMode  = CpuBoostMode.Disabled;
+        private bool         _vrModeEnabled = false;
 
         public ICommonStateGetter() { }
 
@@ -85,6 +86,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode GetCurrentFocusState(ServiceCtx context)
         {
             context.ResponseData.Write((byte)context.Device.System.AppletState.FocusState);
+
+            return ResultCode.Success;
+        }
+
+        [Command(50)] // 3.0.0+
+        // IsVrModeEnabled() -> b8
+        public ResultCode IsVrModeEnabled(ServiceCtx context)
+        {
+            context.ResponseData.Write(_vrModeEnabled);
 
             return ResultCode.Success;
         }
