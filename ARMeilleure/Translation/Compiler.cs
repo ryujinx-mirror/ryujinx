@@ -22,8 +22,11 @@ namespace ARMeilleure.Translation
         {
             Logger.StartPass(PassName.Dominance);
 
-            Dominance.FindDominators(cfg);
-            Dominance.FindDominanceFrontiers(cfg);
+            if ((options & CompilerOptions.SsaForm) != 0)
+            {
+                Dominance.FindDominators(cfg);
+                Dominance.FindDominanceFrontiers(cfg);
+            }
 
             Logger.EndPass(PassName.Dominance);
 
