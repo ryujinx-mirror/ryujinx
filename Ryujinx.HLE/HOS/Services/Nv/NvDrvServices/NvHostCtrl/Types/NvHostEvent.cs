@@ -21,6 +21,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private NvFence _previousFailingFence;
         private uint    _failingCount;
 
+        public object Lock = new object();
+
         /// <summary>
         /// Max failing count until waiting on CPU.
         /// FIXME: This seems enough for most of the cases, reduce if needed.
@@ -49,83 +51,88 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             _failingCount               = 0;
         }
 
-        public void Reset()
-        {
-            Fence.Id    = 0;
-            Fence.Value = 0;
-            State       = NvHostEventState.Available;
-        }
-
         private void Signal()
         {
-            NvHostEventState oldState = State;
-
-            State = NvHostEventState.Signaling;
-
-            if (oldState == NvHostEventState.Waiting)
+            lock (Lock)
             {
-                Event.WritableEvent.Signal();
-            }
+                NvHostEventState oldState = State;
 
-            State = NvHostEventState.Signaled;
+                State = NvHostEventState.Signaling;
+
+                if (oldState == NvHostEventState.Waiting)
+                {
+                    Event.WritableEvent.Signal();
+                }
+
+                State = NvHostEventState.Signaled;
+            }
         }
 
         private void GpuSignaled()
         {
-            ResetFailingState();
+            lock (Lock)
+            {
+                ResetFailingState();
 
-            Signal();
+                Signal();
+            }
         }
 
         public void Cancel(GpuContext gpuContext)
         {
-            if (_waiterInformation != null)
+            lock (Lock)
             {
-                gpuContext.Synchronization.UnregisterCallback(Fence.Id, _waiterInformation);
-
-                if (_previousFailingFence.Id == Fence.Id && _previousFailingFence.Value == Fence.Value)
+                if (_waiterInformation != null)
                 {
-                    _failingCount++;
-                }
-                else
-                {
-                    _failingCount = 1;
+                    gpuContext.Synchronization.UnregisterCallback(Fence.Id, _waiterInformation);
 
-                    _previousFailingFence = Fence;
+                    if (_previousFailingFence.Id == Fence.Id && _previousFailingFence.Value == Fence.Value)
+                    {
+                        _failingCount++;
+                    }
+                    else
+                    {
+                        _failingCount = 1;
+
+                        _previousFailingFence = Fence;
+                    }
+
+                    Signal();
                 }
 
-                Signal();
+                Event.WritableEvent.Clear();
             }
-
-            Event.WritableEvent.Clear();
         }
 
         public bool Wait(GpuContext gpuContext, NvFence fence)
         {
-            Fence = fence;
-            State = NvHostEventState.Waiting;
-
-            // NOTE: nvservices code should always wait on the GPU side.
-            //       If we do this, we may get an abort or undefined behaviour when the GPU processing thread is blocked for a long period (for example, during shader compilation).
-            //       The reason for this is that the NVN code will try to wait until giving up.
-            //       This is done by trying to wait and signal multiple times until aborting after you are past the timeout.
-            //       As such, if it fails too many time, we enforce a wait on the CPU side indefinitely.
-            //       This allows to keep GPU and CPU in sync when we are slow.
-            if (_failingCount == FailingCountMax)
+            lock (Lock)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, "GPU processing thread is too slow, waiting on CPU...");
+                Fence = fence;
+                State = NvHostEventState.Waiting;
 
-                bool timedOut = Fence.Wait(gpuContext, Timeout.InfiniteTimeSpan);
+                // NOTE: nvservices code should always wait on the GPU side.
+                //       If we do this, we may get an abort or undefined behaviour when the GPU processing thread is blocked for a long period (for example, during shader compilation).
+                //       The reason for this is that the NVN code will try to wait until giving up.
+                //       This is done by trying to wait and signal multiple times until aborting after you are past the timeout.
+                //       As such, if it fails too many time, we enforce a wait on the CPU side indefinitely.
+                //       This allows to keep GPU and CPU in sync when we are slow.
+                if (_failingCount == FailingCountMax)
+                {
+                    Logger.PrintWarning(LogClass.ServiceNv, "GPU processing thread is too slow, waiting on CPU...");
 
-                GpuSignaled();
+                    bool timedOut = Fence.Wait(gpuContext, Timeout.InfiniteTimeSpan);
 
-                return timedOut;
-            }
-            else
-            {
-                _waiterInformation = gpuContext.Synchronization.RegisterCallbackOnSyncpoint(Fence.Id, Fence.Value, GpuSignaled);
+                    GpuSignaled();
 
-                return true;
+                    return timedOut;
+                }
+                else
+                {
+                    _waiterInformation = gpuContext.Synchronization.RegisterCallbackOnSyncpoint(Fence.Id, Fence.Value, GpuSignaled);
+
+                    return true;
+                }
             }
         }
 

@@ -26,8 +26,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private Stopwatch _chrono;
 
-        private AndroidFence _vblankFence;
-
         private long _ticks;
         private long _ticksPerFrame;
 
@@ -49,7 +47,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             public Layer        Layer;
             public BufferItem   Item;
-            public AndroidFence Fence;
         }
 
         public SurfaceFlinger(Switch device)
@@ -68,13 +65,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             _ticks = 0;
 
             UpdateSwapInterval(1);
-
-            _vblankFence = AndroidFence.NoFence;
-            _vblankFence.AddFence(new NvFence
-            {
-                Id    = NvHostSyncpt.VBlank0SyncpointId,
-                Value = 0
-            });
 
             _composerThread.Start();
         }
@@ -222,8 +212,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             lock (Lock)
             {
-                _vblankFence.NvFences[0].Increment(_device.Gpu);
-
                 // TODO: support multilayers (& multidisplay ?)
                 if (_layers.Count == 0)
                 {
@@ -298,14 +286,10 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 flipX,
                 flipY);
 
-            // Enforce that dequeueBuffer wait for the next vblank
-            _vblankFence.NvFences[0].Value++;
-
             TextureCallbackInformation textureCallbackInformation = new TextureCallbackInformation
             {
                 Layer = layer,
                 Item  = item,
-                Fence = _vblankFence
             };
 
             _device.Gpu.Window.EnqueueFrameThreadSafe(
@@ -330,7 +314,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private void ReleaseBuffer(TextureCallbackInformation information)
         {
-            information.Layer.Consumer.ReleaseBuffer(information.Item, ref information.Fence);
+            AndroidFence fence = AndroidFence.NoFence;
+
+            information.Layer.Consumer.ReleaseBuffer(information.Item, ref fence);
         }
 
         private void AcquireBuffer(GpuContext ignored, object obj)
