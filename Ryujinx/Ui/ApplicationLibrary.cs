@@ -84,7 +84,7 @@ namespace Ryujinx.Ui
         public static void ReadControlData(IFileSystem controlFs, Span<byte> outProperty)
         {
             controlFs.OpenFile(out IFile controlFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-            controlFile.Read(out long _, 0, outProperty, ReadOption.None).ThrowIfFailure();
+            controlFile.Read(out _, 0, outProperty, ReadOption.None).ThrowIfFailure();
         }
 
         public static void LoadApplications(List<string> appDirs, VirtualFileSystem virtualFileSystem, Language desiredTitleLanguage)
@@ -677,24 +677,41 @@ namespace Ryujinx.Ui
                     {
                         nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                        Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
-
-                        if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
+                        try
                         {
+                            Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+
+                            if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
+                            {
+                                break;
+                            }
+
+                            if (nca.Header.ContentType == NcaContentType.Control)
+                            {
+                                ApplicationControlProperty controlData = new ApplicationControlProperty();
+
+                                nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                                nacpFile.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
+
+                                version = controlData.DisplayVersion.ToString();
+
+                                return true;
+                            }
+                        }
+                        catch (InvalidDataException)
+                        {
+                            Logger.PrintWarning(LogClass.Application,
+                                $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {updatePath}");
+
                             break;
                         }
-
-                        if (nca.Header.ContentType == NcaContentType.Control)
+                        catch (MissingKeyException exception)
                         {
-                            ApplicationControlProperty controlData = new ApplicationControlProperty();
+                            Logger.PrintWarning(LogClass.Application,
+                                $"Your key set is missing a key with the name: {exception.Name}. Errored File: {updatePath}");
 
-                            nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                            nacpFile.Read(out long _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
-
-                            version = controlData.DisplayVersion.ToString();
-
-                            return true;
+                            break;
                         }
                     }
                 }
