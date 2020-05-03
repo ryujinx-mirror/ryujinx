@@ -914,6 +914,8 @@ namespace Ryujinx.Ui
                 }
             }
 
+            MainWindow.SaveConfig();
+
             Dispose();
         }
 

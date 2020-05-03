@@ -558,7 +558,7 @@ namespace Ryujinx.Ui
 
         public static void SaveConfig()
         {
-            ConfigurationState.Instance.ToFileFormat().SaveConfig(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"));
+            ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
         }
 
         private void End(HLE.Switch device)
