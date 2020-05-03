@@ -179,6 +179,22 @@ namespace Ryujinx.Graphics.Gpu.Image
                 swizzleB,
                 swizzleA);
 
+            if (IsDepthStencil(formatInfo.Format))
+            {
+                swizzleR = SwizzleComponent.Red;
+                swizzleG = SwizzleComponent.Red;
+                swizzleB = SwizzleComponent.Red;
+
+                if (depthStencilMode == DepthStencilMode.Depth)
+                {
+                    swizzleA = SwizzleComponent.One;
+                }
+                else
+                {
+                    swizzleA = SwizzleComponent.Red;
+                }
+            }
+
             return new TextureInfo(
                 address,
                 width,
@@ -250,6 +266,26 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             return component == SwizzleComponent.Red ||
                    component == SwizzleComponent.Green;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is a depth, stencil or depth-stencil format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the format is a depth, stencil or depth-stencil format, false otherwise</returns>
+        private static bool IsDepthStencil(Format format)
+        {
+            switch (format)
+            {
+                case Format.D16Unorm:
+                case Format.D24UnormS8Uint:
+                case Format.D24X8Unorm:
+                case Format.D32Float:
+                case Format.D32FloatS8Uint:
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
