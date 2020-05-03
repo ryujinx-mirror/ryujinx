@@ -1,17 +1,17 @@
 using Gtk;
 using OpenTK.Input;
+using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Utilities;
+using Ryujinx.Configuration;
+using Ryujinx.HLE.FileSystem;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
-using Ryujinx.Configuration;
-using Ryujinx.Common.Configuration.Hid;
-using Ryujinx.Common.Utilities;
-using Ryujinx.HLE.FileSystem;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 using Key = Ryujinx.Configuration.Hid.Key;
-using Ryujinx.Common.Logging;
 
 namespace Ryujinx.Ui
 {
@@ -821,20 +821,23 @@ namespace Ryujinx.Ui
                     return;
                 }
 
-                using (Stream stream = File.OpenRead(path))
+                try
                 {
-                    try
+                    using (Stream stream = File.OpenRead(path))
                     {
                         config = JsonHelper.Deserialize<ControllerConfig>(stream);
                     }
-                    catch (ArgumentException)
+                }
+                catch (JsonException)
+                {
+                    try
                     {
-                        try
+                        using (Stream stream = File.OpenRead(path))
                         {
                             config = JsonHelper.Deserialize<KeyboardConfig>(stream);
                         }
-                        catch { }
                     }
+                    catch { }
                 }
             }
 
