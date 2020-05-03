@@ -556,6 +556,20 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            // Only needed for version 6 configurations.
+            if (configurationFileFormat.Version == 6)
+            {
+                Common.Logging.Logger.PrintWarning(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 7.");
+
+                for (int i = 0; i < configurationFileFormat.KeyboardConfig.Count; i++)
+                {
+                    if (configurationFileFormat.KeyboardConfig[i].Index != KeyboardConfig.AllKeyboardsIndex)
+                    {
+                        configurationFileFormat.KeyboardConfig[i].Index++;
+                    }
+                }
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             foreach (ControllerConfig controllerConfig in configurationFileFormat.ControllerConfig)
             {

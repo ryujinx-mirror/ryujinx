@@ -11,6 +11,7 @@ using Ryujinx.HLE.FileSystem;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 using Key = Ryujinx.Configuration.Hid.Key;
+using Ryujinx.Common.Logging;
 
 namespace Ryujinx.Ui
 {
@@ -138,10 +139,12 @@ namespace Ryujinx.Ui
             _inputDevice.Append("disabled", "Disabled");
             _inputDevice.SetActiveId("disabled");
 
+            _inputDevice.Append($"keyboard/{KeyboardConfig.AllKeyboardsIndex}", "All keyboards");
+
             for (int i = 0; i < 20; i++)
             {
-                if (Keyboard.GetState(i).IsConnected)
-                    _inputDevice.Append($"keyboard/{i}", $"Keyboard/{i}");
+                if (KeyboardController.GetKeyboardState(i + 1).IsConnected)
+                    _inputDevice.Append($"keyboard/{i + 1}", $"Keyboard/{i + 1}");
 
                 if (GamePad.GetState(i).IsConnected)
                     _inputDevice.Append($"controller/{i}", $"Controller/{i} ({GamePad.GetName(i)})");
@@ -505,9 +508,9 @@ namespace Ryujinx.Ui
             return null;
         }
 
-        private static bool IsAnyKeyPressed(out Key pressedKey, int index = 0)
+        private static bool IsAnyKeyPressed(out Key pressedKey, int index)
         {
-            KeyboardState keyboardState = Keyboard.GetState(index);
+            KeyboardState keyboardState = KeyboardController.GetKeyboardState(index);
 
             foreach (Key key in Enum.GetValues(typeof(Key)))
             {

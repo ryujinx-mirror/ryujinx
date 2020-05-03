@@ -12,8 +12,6 @@ namespace Ryujinx.Ui
     {
         private readonly ControllerConfig _config;
 
-        // NOTE: This should be initialized AFTER GTK for compat reasons with OpenTK SDL2 backend and GTK on Linux.
-        // BODY: Usage of Joystick.GetState must be defer to after GTK full initialization. Otherwise, GTK will segfault because SDL2 was already init *sighs*
         public JoystickController(ControllerConfig config)
         {
             _config = config;
@@ -26,6 +24,8 @@ namespace Ryujinx.Ui
 
         public ControllerKeys GetButtons()
         {
+            // NOTE: This should be initialized AFTER GTK for compat reasons with OpenTK SDL2 backend and GTK on Linux.
+            // BODY: Usage of Joystick.GetState must be defer to after GTK full initialization. Otherwise, GTK will segfault because SDL2 was already init *sighs*
             if (!IsEnabled())
             {
                 return 0;

@@ -15,16 +15,24 @@ namespace Ryujinx.Ui
     {
         private readonly KeyboardConfig _config;
 
-        // NOTE: This should be initialized AFTER GTK for compat reasons with OpenTK SDL2 backend and GTK on Linux.
-        // BODY: Usage of Joystick.GetState must be defer to after GTK full initialization. Otherwise, GTK will segfault because SDL2 was already init *sighs*
         public KeyboardController(KeyboardConfig config)
         {
             _config = config;
         }
 
+        public static KeyboardState GetKeyboardState(int index)
+        {
+            if (index == KeyboardConfig.AllKeyboardsIndex || index < 0)
+            {
+                return Keyboard.GetState();
+            }
+
+            return Keyboard.GetState(index - 1);
+        }
+
         public ControllerKeys GetButtons()
         {
-            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+            KeyboardState keyboard = GetKeyboardState(_config.Index);
 
             ControllerKeys buttons = 0;
 
@@ -55,7 +63,7 @@ namespace Ryujinx.Ui
 
         public (short, short) GetLeftStick()
         {
-            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+            KeyboardState keyboard = GetKeyboardState(_config.Index);
 
             short dx = 0;
             short dy = 0;
@@ -70,7 +78,7 @@ namespace Ryujinx.Ui
 
         public (short, short) GetRightStick()
         {
-            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+            KeyboardState keyboard = GetKeyboardState(_config.Index);
 
             short dx = 0;
             short dy = 0;
@@ -85,7 +93,7 @@ namespace Ryujinx.Ui
 
         public HotkeyButtons GetHotkeyButtons()
         {
-            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+            KeyboardState keyboard = GetKeyboardState(_config.Index);
 
             HotkeyButtons buttons = 0;
 
@@ -246,7 +254,7 @@ namespace Ryujinx.Ui
 
         public KeyboardInput GetKeysDown()
         {
-            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+            KeyboardState keyboard = GetKeyboardState(_config.Index);
 
             KeyboardInput hidKeyboard = new KeyboardInput
             {
