@@ -47,8 +47,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
             HostBuffer = context.Renderer.CreateBuffer((int)size);
 
             _sequenceNumbers = new int[size / MemoryManager.PageSize];
-
-            Invalidate();
         }
 
         /// <summary>
@@ -150,14 +148,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
             byte[] data = HostBuffer.GetData(offset, (int)size);
 
             _context.PhysicalMemory.Write(address, data);
-        }
-
-        /// <summary>
-        /// Invalidates all the buffer data, causing it to be read from guest memory.
-        /// </summary>
-        public void Invalidate()
-        {
-            HostBuffer.SetData(0, _context.PhysicalMemory.GetSpan(Address, Size));
         }
 
         /// <summary>
