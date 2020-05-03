@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             long position = context.Request.RecvListBuff[0].Position;
             long size     = context.Request.RecvListBuff[0].Size;
 
-            context.Memory.WriteInt32(position, _generalServiceDetail.ClientId);
+            context.Memory.Write((ulong)position, _generalServiceDetail.ClientId);
 
             return ResultCode.Success;
         }
@@ -120,7 +120,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             long position = context.Request.PtrBuff[0].Position;
             long size     = context.Request.PtrBuff[0].Size;
 
-            int clientId = context.Memory.ReadInt32(position);
+            int clientId = context.Memory.Read<int>((ulong)position);
 
             context.ResponseData.Write(GeneralServiceManager.Get(clientId).IsAnyInternetRequestAccepted);
 

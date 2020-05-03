@@ -1,5 +1,5 @@
-﻿using ARMeilleure.Memory;
-using Ryujinx.Common;
+﻿using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService.Types;
 using System;
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 
             for (int i = 0; i < inputSize / sizeof(ulong); i++)
             {
-                titleIds.Add(BitConverter.ToUInt64(context.Memory.ReadBytes(inputPosition, inputSize), 0));
+                titleIds.Add(context.Memory.Read<ulong>((ulong)inputPosition));
             }
 
             if (queryCapability == PlayLogQueryCapability.WhiteList)

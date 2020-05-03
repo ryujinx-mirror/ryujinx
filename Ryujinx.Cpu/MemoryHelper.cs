@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ARMeilleure.Memory
+namespace Ryujinx.Cpu
 {
     public static class MemoryHelper
     {
@@ -13,12 +13,12 @@ namespace ARMeilleure.Memory
 
             for (int offs = 0; offs < size8; offs += 8)
             {
-                memory.WriteInt64(position + offs, 0);
+                memory.Write<long>((ulong)(position + offs), 0);
             }
 
             for (int offs = size8; offs < (size - size8); offs++)
             {
-                memory.WriteByte(position + offs, 0);
+                memory.Write<byte>((ulong)(position + offs), 0);
             }
         }
 
@@ -26,7 +26,9 @@ namespace ARMeilleure.Memory
         {
             long size = Marshal.SizeOf<T>();
 
-            byte[] data = memory.ReadBytes(position, size);
+            byte[] data = new byte[size];
+
+            memory.Read((ulong)position, data);
 
             fixed (byte* ptr = data)
             {
@@ -45,7 +47,7 @@ namespace ARMeilleure.Memory
                 Marshal.StructureToPtr<T>(value, (IntPtr)ptr, false);
             }
 
-            memory.WriteBytes(position, data);
+            memory.Write((ulong)position, data);
         }
 
         public static string ReadAsciiString(MemoryManager memory, long position, long maxSize = -1)
@@ -54,7 +56,7 @@ namespace ARMeilleure.Memory
             {
                 for (long offs = 0; offs < maxSize || maxSize == -1; offs++)
                 {
-                    byte value = (byte)memory.ReadByte(position + offs);
+                    byte value = memory.Read<byte>((ulong)(position + offs));
 
                     if (value == 0)
                     {

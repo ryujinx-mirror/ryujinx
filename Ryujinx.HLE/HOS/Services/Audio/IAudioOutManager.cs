@@ -1,6 +1,6 @@
-using ARMeilleure.Memory;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Audio.AudioOutManager;
 using System.Text;
@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             if ((ulong)deviceNameBuffer.Length <= (ulong)size)
             {
-                context.Memory.WriteBytes(position, deviceNameBuffer);
+                context.Memory.Write((ulong)position, deviceNameBuffer);
 
                 nameCount++;
             }
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             if ((ulong)deviceNameBuffer.Length <= (ulong)receiveSize)
             {
-                context.Memory.WriteBytes(receivePosition, deviceNameBuffer);
+                context.Memory.Write((ulong)receivePosition, deviceNameBuffer);
             }
             else
             {

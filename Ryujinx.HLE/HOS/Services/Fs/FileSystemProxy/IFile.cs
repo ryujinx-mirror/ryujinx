@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             Result result = _baseFile.Read(out long bytesRead, offset, data, readOption);
 
-            context.Memory.WriteBytes(position, data);
+            context.Memory.Write((ulong)position, data);
 
             context.ResponseData.Write(bytesRead);
 
@@ -48,7 +48,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             long offset = context.RequestData.ReadInt64();
             long size   = context.RequestData.ReadInt64();
 
-            byte[] data = context.Memory.ReadBytes(position, size);
+            byte[] data = new byte[size];
+
+            context.Memory.Read((ulong)position, data);
 
             return (ResultCode)_baseFile.Write(offset, data, writeOption).Value;
         }

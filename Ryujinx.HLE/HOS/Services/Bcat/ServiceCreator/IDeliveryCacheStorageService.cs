@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 
             Result result = _base.EnumerateDeliveryCacheDirectory(out int count, MemoryMarshal.Cast<byte, DirectoryName>(data));
 
-            context.Memory.WriteBytes(position, data);
+            context.Memory.Write((ulong)position, data);
 
             context.ResponseData.Write(count);
 

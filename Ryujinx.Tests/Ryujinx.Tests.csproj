@@ -33,6 +33,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Cpu\Ryujinx.Cpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
     <ProjectReference Include="..\Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj" />
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
   </ItemGroup>

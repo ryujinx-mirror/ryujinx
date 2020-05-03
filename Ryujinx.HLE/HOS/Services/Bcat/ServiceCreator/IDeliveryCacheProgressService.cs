@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             using (BinaryWriter bufferWriter = new BinaryWriter(memory))
             {
                 bufferWriter.WriteStruct(deliveryCacheProgress);
-                context.Memory.WriteBytes(ipcDesc.Position, memory.ToArray());
+                context.Memory.Write((ulong)ipcDesc.Position, memory.ToArray());
             }
         }
     }

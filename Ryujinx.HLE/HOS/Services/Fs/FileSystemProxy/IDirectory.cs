@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             Result result = _baseDirectory.Read(out long entriesRead, entries);
 
-            context.Memory.WriteBytes(bufferPosition, entriesBytes);
+            context.Memory.Write((ulong)bufferPosition, entriesBytes);
             context.ResponseData.Write(entriesRead);
 
             return (ResultCode)result.Value;

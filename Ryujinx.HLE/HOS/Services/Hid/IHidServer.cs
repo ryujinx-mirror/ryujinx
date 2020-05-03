@@ -580,7 +580,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             for (int i = 0; i < arraySize; ++i)
             {
-                supportedPlayerIds[i] = (NpadIdType)context.Memory.ReadInt32(context.Request.PtrBuff[0].Position + i * 4);
+                supportedPlayerIds[i] = context.Memory.Read<NpadIdType>((ulong)(context.Request.PtrBuff[0].Position + i * 4));
             }
 
             Logger.PrintStub(LogClass.ServiceHid, $"{arraySize} " + string.Join(",", supportedPlayerIds));
@@ -980,13 +980,13 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            byte[] vibrationDeviceHandleBuffer = context.Memory.ReadBytes(
-                context.Request.PtrBuff[0].Position,
-                context.Request.PtrBuff[0].Size);
+            byte[] vibrationDeviceHandleBuffer = new byte[context.Request.PtrBuff[0].Size];
 
-            byte[] vibrationValueBuffer = context.Memory.ReadBytes(
-                context.Request.PtrBuff[1].Position,
-                context.Request.PtrBuff[1].Size);
+            context.Memory.Read((ulong)context.Request.PtrBuff[0].Position, vibrationDeviceHandleBuffer);
+
+            byte[] vibrationValueBuffer = new byte[context.Request.PtrBuff[1].Size];
+
+            context.Memory.Read((ulong)context.Request.PtrBuff[1].Position, vibrationValueBuffer);
 
             // TODO: Read all handles and values from buffer.
 

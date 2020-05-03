@@ -1,6 +1,5 @@
-﻿using ARMeilleure.Memory;
-using Ryujinx.Common;
-using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -69,7 +68,11 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             for (int i = 0; i < header.HashCount; i++)
             {
-                hashes.Add(context.Memory.ReadBytes(nrrAddress + header.HashOffset + (i * 0x20), 0x20));
+                byte[] temp = new byte[0x20];
+
+                context.Memory.Read((ulong)(nrrAddress + header.HashOffset + (i * 0x20)), temp);
+
+                hashes.Add(temp);
             }
 
             nrrInfo = new NrrInfo(nrrAddress, header, hashes);
@@ -127,15 +130,18 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidAddress;
             }
 
-            uint magic       = context.Memory.ReadUInt32((long)nroAddress + 0x10);
-            uint nroFileSize = context.Memory.ReadUInt32((long)nroAddress + 0x18);
+            uint magic       = context.Memory.Read<uint>(nroAddress + 0x10);
+            uint nroFileSize = context.Memory.Read<uint>(nroAddress + 0x18);
 
             if (magic != NroMagic || nroSize != nroFileSize)
             {
                 return ResultCode.InvalidNro;
             }
 
-            byte[] nroData = context.Memory.ReadBytes((long)nroAddress, (long)nroSize);
+            byte[] nroData = new byte[nroSize];
+
+            context.Memory.Read(nroAddress, nroData);
+
             byte[] nroHash = null;
 
             MemoryStream stream = new MemoryStream(nroData);
@@ -319,9 +325,9 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             ulong bssEnd = BitUtils.AlignUp(bssStart + (ulong)relocatableObject.BssSize, KMemoryManager.PageSize);
 
-            process.CpuMemory.WriteBytes((long)textStart, relocatableObject.Text);
-            process.CpuMemory.WriteBytes((long)roStart,   relocatableObject.Ro);
-            process.CpuMemory.WriteBytes((long)dataStart, relocatableObject.Data);
+            process.CpuMemory.Write(textStart, relocatableObject.Text);
+            process.CpuMemory.Write(roStart,   relocatableObject.Ro);
+            process.CpuMemory.Write(dataStart, relocatableObject.Data);
 
             MemoryHelper.FillWithZeros(process.CpuMemory, (long)bssStart, (int)(bssEnd - bssStart));
 

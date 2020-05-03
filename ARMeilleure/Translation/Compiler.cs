@@ -11,14 +11,14 @@ namespace ARMeilleure.Translation
     {
         public static T Compile<T>(ControlFlowGraph cfg, OperandType[] argTypes, OperandType retType, CompilerOptions options)
         {
-            CompiledFunction func = CompileAndGetCf(cfg, argTypes, retType, options);
+            CompiledFunction func = Compile(cfg, argTypes, retType, options);
 
             IntPtr codePtr = JitCache.Map(func);
 
             return Marshal.GetDelegateForFunctionPointer<T>(codePtr);
         }
 
-        public static CompiledFunction CompileAndGetCf(ControlFlowGraph cfg, OperandType[] argTypes, OperandType retType, CompilerOptions options)
+        public static CompiledFunction Compile(ControlFlowGraph cfg, OperandType[] argTypes, OperandType retType, CompilerOptions options)
         {
             Logger.StartPass(PassName.Dominance);
 

@@ -1,5 +1,5 @@
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
-using ARMeilleure.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
 {
@@ -9,10 +9,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             KProcess currentProcess = system.Scheduler.GetCurrentProcess();
 
-            if (currentProcess.CpuMemory.IsMapped((long)address) &&
-                currentProcess.CpuMemory.IsMapped((long)address + 3))
+            if (currentProcess.CpuMemory.IsMapped(address) &&
+                currentProcess.CpuMemory.IsMapped(address + 3))
             {
-                value = currentProcess.CpuMemory.ReadInt32((long)address);
+                value = currentProcess.CpuMemory.Read<int>(address);
 
                 return true;
             }
@@ -28,10 +28,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             for (int index = 0; index < values.Length; index++, address += 4)
             {
-                if (currentProcess.CpuMemory.IsMapped((long)address) &&
-                    currentProcess.CpuMemory.IsMapped((long)address + 3))
+                if (currentProcess.CpuMemory.IsMapped(address) &&
+                    currentProcess.CpuMemory.IsMapped(address + 3))
                 {
-                    values[index]= currentProcess.CpuMemory.ReadInt32((long)address);
+                    values[index]= currentProcess.CpuMemory.Read<int>(address);
                 }
                 else
                 {
@@ -46,8 +46,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             KProcess currentProcess = system.Scheduler.GetCurrentProcess();
 
-            if (currentProcess.CpuMemory.IsMapped((long)address) &&
-                currentProcess.CpuMemory.IsMapped((long)address + size - 1))
+            if (currentProcess.CpuMemory.IsMapped(address) &&
+                currentProcess.CpuMemory.IsMapped(address + (ulong)size - 1))
             {
                 value = MemoryHelper.ReadAsciiString(currentProcess.CpuMemory, (long)address, size);
 
@@ -63,10 +63,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             KProcess currentProcess = system.Scheduler.GetCurrentProcess();
 
-            if (currentProcess.CpuMemory.IsMapped((long)address) &&
-                currentProcess.CpuMemory.IsMapped((long)address + 3))
+            if (currentProcess.CpuMemory.IsMapped(address) &&
+                currentProcess.CpuMemory.IsMapped(address + 3))
             {
-                currentProcess.CpuMemory.WriteInt32((long)address, value);
+                currentProcess.CpuMemory.Write(address, value);
 
                 return true;
             }
@@ -78,10 +78,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             KProcess currentProcess = system.Scheduler.GetCurrentProcess();
 
-            if (currentProcess.CpuMemory.IsMapped((long)address) &&
-                currentProcess.CpuMemory.IsMapped((long)address + 7))
+            if (currentProcess.CpuMemory.IsMapped(address) &&
+                currentProcess.CpuMemory.IsMapped(address + 7))
             {
-                currentProcess.CpuMemory.WriteInt64((long)address, value);
+                currentProcess.CpuMemory.Write(address, value);
 
                 return true;
             }

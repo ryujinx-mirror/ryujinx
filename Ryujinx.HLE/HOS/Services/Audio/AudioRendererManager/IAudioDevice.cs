@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
                     break;
                 }
 
-                context.Memory.WriteBytes(position, buffer);
+                context.Memory.Write((ulong)position, buffer);
 
                 position += buffer.Length;
             }
@@ -61,7 +61,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             long position = context.Request.SendBuff[0].Position;
             long size     = context.Request.SendBuff[0].Size;
 
-            byte[] deviceNameBuffer = context.Memory.ReadBytes(position, size);
+            byte[] deviceNameBuffer = new byte[size];
+            
+            context.Memory.Read((ulong)position, deviceNameBuffer);
 
             string deviceName = Encoding.ASCII.GetString(deviceNameBuffer);
 
@@ -83,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             if ((ulong)deviceNameBuffer.Length <= (ulong)size)
             {
-                context.Memory.WriteBytes(position, deviceNameBuffer);
+                context.Memory.Write((ulong)position, deviceNameBuffer);
             }
             else
             {
@@ -143,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
                     break;
                 }
 
-                context.Memory.WriteBytes(position, buffer);
+                context.Memory.Write((ulong)position, buffer);
 
                 position += buffer.Length;
             }
@@ -159,7 +161,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             (long position, long size) = context.Request.GetBufferType0x21();
 
-            byte[] deviceNameBuffer = context.Memory.ReadBytes(position, size);
+            byte[] deviceNameBuffer = new byte[size];
+
+            context.Memory.Read((ulong)position, deviceNameBuffer);
 
             string deviceName = Encoding.UTF8.GetString(deviceNameBuffer);
 
@@ -191,7 +195,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             if ((ulong)deviceNameBuffer.Length <= (ulong)size)
             {
-                context.Memory.WriteBytes(position, deviceNameBuffer);
+                context.Memory.Write((ulong)position, deviceNameBuffer);
             }
             else
             {

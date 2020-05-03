@@ -119,7 +119,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             long position = context.Request.PtrBuff[index].Position;
             long size     = context.Request.PtrBuff[index].Size;
 
-            byte[] pathBytes = context.Memory.ReadBytes(position, size);
+            byte[] pathBytes = new byte[size];
+
+            context.Memory.Read((ulong)position, pathBytes);
 
             return FsPath.FromSpan(out path, pathBytes);
         }

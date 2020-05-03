@@ -1,4 +1,4 @@
-using ARMeilleure.Memory;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                     throw new NotImplementedException(request.Type.ToString());
                 }
 
-                memory.WriteBytes(cmdPtr, response.GetBytes(cmdPtr));
+                memory.Write((ulong)cmdPtr, response.GetBytes(cmdPtr));
             }
 
             return KernelResult.Success;

@@ -116,11 +116,9 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
                 return false;
             }
 
-            context.Memory.WriteInt32(typesPosition + offset, (int)fontType);
-
-            context.Memory.WriteInt32(offsetsPosition + offset, context.Device.System.Font.GetSharedMemoryAddressOffset(fontType));
-
-            context.Memory.WriteInt32(fontSizeBufferPosition + offset, context.Device.System.Font.GetFontSize(fontType));
+            context.Memory.Write((ulong)(typesPosition + offset), (int)fontType);
+            context.Memory.Write((ulong)(offsetsPosition + offset), context.Device.System.Font.GetSharedMemoryAddressOffset(fontType));
+            context.Memory.Write((ulong)(fontSizeBufferPosition + offset), context.Device.System.Font.GetFontSize(fontType));
 
             return true;
         }

@@ -33,7 +33,10 @@ namespace Ryujinx.HLE.HOS.Services.Lm.LogService
         public ResultCode Log(ServiceCtx context)
         {
             (long bufPos, long bufSize) = context.Request.GetBufferType0x21();
-            byte[] logBuffer = context.Memory.ReadBytes(bufPos, bufSize);
+
+            byte[] logBuffer = new byte[bufSize];
+
+            context.Memory.Read((ulong)bufPos, logBuffer);
 
             using (MemoryStream ms = new MemoryStream(logBuffer))
             {

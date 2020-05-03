@@ -1,8 +1,7 @@
-using System;
-using System.Runtime.CompilerServices;
+﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ARMeilleure.Memory
+namespace Ryujinx.Memory
 {
     public static class MemoryManagement
     {
@@ -25,18 +24,18 @@ namespace ARMeilleure.Memory
             }
         }
 
-        public static IntPtr AllocateWriteTracked(ulong size)
+        public static IntPtr Reserve(ulong size)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 IntPtr sizeNint = new IntPtr((long)size);
 
-                return MemoryManagementWindows.AllocateWriteTracked(sizeNint);
+                return MemoryManagementWindows.Reserve(sizeNint);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
                      RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return MemoryManagementUnix.Allocate(size);
+                return MemoryManagementUnix.Reserve(size);
             }
             else
             {
@@ -63,7 +62,7 @@ namespace ARMeilleure.Memory
             }
         }
 
-        public static void Reprotect(IntPtr address, ulong size, MemoryProtection permission)
+        public static void Reprotect(IntPtr address, ulong size, MemoryPermission permission)
         {
             bool result;
 
@@ -86,25 +85,6 @@ namespace ARMeilleure.Memory
             if (!result)
             {
                 throw new MemoryProtectionException(permission);
-            }
-        }
-
-        public static IntPtr Reserve(ulong size)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.Reserve(sizeNint);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
-                     RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                return MemoryManagementUnix.Reserve(size);
-            }
-            else
-            {
-                throw new PlatformNotSupportedException();
             }
         }
 

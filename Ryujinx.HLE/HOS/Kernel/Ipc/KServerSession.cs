@@ -322,8 +322,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 serverHeader.ReceiveListType,
                 serverHeader.ReceiveListOffset);
 
-            serverProcess.CpuMemory.WriteUInt32((long)serverMsg.Address + 0, clientHeader.Word0);
-            serverProcess.CpuMemory.WriteUInt32((long)serverMsg.Address + 4, clientHeader.Word1);
+            serverProcess.CpuMemory.Write(serverMsg.Address + 0, clientHeader.Word0);
+            serverProcess.CpuMemory.Write(serverMsg.Address + 4, clientHeader.Word1);
 
             uint offset;
 
@@ -337,13 +337,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     return KernelResult.InvalidCombination;
                 }
 
-                serverProcess.CpuMemory.WriteUInt32((long)serverMsg.Address + 8, clientHeader.Word2);
+                serverProcess.CpuMemory.Write(serverMsg.Address + 8, clientHeader.Word2);
 
                 offset = 3;
 
                 if (clientHeader.HasPid)
                 {
-                    serverProcess.CpuMemory.WriteInt64((long)serverMsg.Address + offset * 4, clientProcess.Pid);
+                    serverProcess.CpuMemory.Write(serverMsg.Address + offset * 4, clientProcess.Pid);
 
                     offset += 2;
                 }
@@ -352,14 +352,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 {
                     int newHandle = 0;
 
-                    int handle = System.Device.Memory.ReadInt32((long)clientMsg.DramAddress + offset * 4);
+                    int handle = System.Device.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
 
                     if (clientResult == KernelResult.Success && handle != 0)
                     {
                         clientResult = GetCopyObjectHandle(clientThread, serverProcess, handle, out newHandle);
                     }
 
-                    serverProcess.CpuMemory.WriteInt32((long)serverMsg.Address + offset * 4, newHandle);
+                    serverProcess.CpuMemory.Write(serverMsg.Address + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -368,7 +368,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 {
                     int newHandle = 0;
 
-                    int handle = System.Device.Memory.ReadInt32((long)clientMsg.DramAddress + offset * 4);
+                    int handle = System.Device.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
 
                     if (handle != 0)
                     {
@@ -382,7 +382,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         }
                     }
 
-                    serverProcess.CpuMemory.WriteInt32((long)serverMsg.Address + offset * 4, newHandle);
+                    serverProcess.CpuMemory.Write(serverMsg.Address + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -404,7 +404,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < clientHeader.PointerBuffersCount; index++)
             {
-                ulong pointerDesc = System.Device.Memory.ReadUInt64((long)clientMsg.DramAddress + offset * 4);
+                ulong pointerDesc = System.Device.Memory.Read<ulong>(clientMsg.DramAddress + offset * 4);
 
                 PointerBufferDesc descriptor = new PointerBufferDesc(pointerDesc);
 
@@ -450,7 +450,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     descriptor.BufferAddress = 0;
                 }
 
-                serverProcess.CpuMemory.WriteUInt64((long)serverMsg.Address + offset * 4, descriptor.Pack());
+                serverProcess.CpuMemory.Write(serverMsg.Address + offset * 4, descriptor.Pack());
 
                 offset += 2;
             }
@@ -463,11 +463,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < totalBuffersCount; index++)
             {
-                long clientDescAddress = (long)clientMsg.DramAddress + offset * 4;
+                ulong clientDescAddress = clientMsg.DramAddress + offset * 4;
 
-                uint descWord0 = System.Device.Memory.ReadUInt32(clientDescAddress + 0);
-                uint descWord1 = System.Device.Memory.ReadUInt32(clientDescAddress + 4);
-                uint descWord2 = System.Device.Memory.ReadUInt32(clientDescAddress + 8);
+                uint descWord0 = System.Device.Memory.Read<uint>(clientDescAddress + 0);
+                uint descWord1 = System.Device.Memory.Read<uint>(clientDescAddress + 4);
+                uint descWord2 = System.Device.Memory.Read<uint>(clientDescAddress + 8);
 
                 bool isSendDesc     = index <  clientHeader.SendBuffersCount;
                 bool isExchangeDesc = index >= clientHeader.SendBuffersCount + clientHeader.ReceiveBuffersCount;
@@ -542,11 +542,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 descWord2 |= (uint)(dstAddress >> 34) & 0x3ffffffc;
                 descWord2 |= (uint)(dstAddress >> 4)  & 0xf0000000;
 
-                long serverDescAddress = (long)serverMsg.Address + offset * 4;
+                ulong serverDescAddress = serverMsg.Address + offset * 4;
 
-                serverProcess.CpuMemory.WriteUInt32(serverDescAddress + 0, descWord0);
-                serverProcess.CpuMemory.WriteUInt32(serverDescAddress + 4, descWord1);
-                serverProcess.CpuMemory.WriteUInt32(serverDescAddress + 8, descWord2);
+                serverProcess.CpuMemory.Write(serverDescAddress + 0, descWord0);
+                serverProcess.CpuMemory.Write(serverDescAddress + 4, descWord1);
+                serverProcess.CpuMemory.Write(serverDescAddress + 8, descWord2);
 
                 offset += 3;
             }
@@ -700,8 +700,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
 
             // Copy header.
-            System.Device.Memory.WriteUInt32((long)clientMsg.DramAddress + 0, serverHeader.Word0);
-            System.Device.Memory.WriteUInt32((long)clientMsg.DramAddress + 4, serverHeader.Word1);
+            System.Device.Memory.Write(clientMsg.DramAddress + 0, serverHeader.Word0);
+            System.Device.Memory.Write(clientMsg.DramAddress + 4, serverHeader.Word1);
 
             // Copy handles.
             uint offset;
@@ -710,11 +710,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 offset = 3;
 
-                System.Device.Memory.WriteUInt32((long)clientMsg.DramAddress + 8, serverHeader.Word2);
+                System.Device.Memory.Write(clientMsg.DramAddress + 8, serverHeader.Word2);
 
                 if (serverHeader.HasPid)
                 {
-                    System.Device.Memory.WriteInt64((long)clientMsg.DramAddress + offset * 4, serverProcess.Pid);
+                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, serverProcess.Pid);
 
                     offset += 2;
                 }
@@ -723,14 +723,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 {
                     int newHandle = 0;
 
-                    int handle = serverProcess.CpuMemory.ReadInt32((long)serverMsg.Address + offset * 4);
+                    int handle = serverProcess.CpuMemory.Read<int>(serverMsg.Address + offset * 4);
 
                     if (handle != 0)
                     {
                         GetCopyObjectHandle(serverThread, clientProcess, handle, out newHandle);
                     }
 
-                    System.Device.Memory.WriteInt32((long)clientMsg.DramAddress + offset * 4, newHandle);
+                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -739,7 +739,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 {
                     int newHandle = 0;
 
-                    int handle = serverProcess.CpuMemory.ReadInt32((long)serverMsg.Address + offset * 4);
+                    int handle = serverProcess.CpuMemory.Read<int>(serverMsg.Address + offset * 4);
 
                     if (handle != 0)
                     {
@@ -753,7 +753,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         }
                     }
 
-                    System.Device.Memory.WriteInt32((long)clientMsg.DramAddress + offset * 4, newHandle);
+                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -768,7 +768,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < serverHeader.PointerBuffersCount; index++)
             {
-                ulong pointerDesc = serverProcess.CpuMemory.ReadUInt64((long)serverMsg.Address + offset * 4);
+                ulong pointerDesc = serverProcess.CpuMemory.Read<ulong>(serverMsg.Address + offset * 4);
 
                 PointerBufferDesc descriptor = new PointerBufferDesc(pointerDesc);
 
@@ -819,11 +819,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < totalBuffersCount; index++)
             {
-                long dstDescAddress = (long)clientMsg.DramAddress + offset * 4;
+                ulong dstDescAddress = clientMsg.DramAddress + offset * 4;
 
-                System.Device.Memory.WriteUInt32(dstDescAddress + 0, 0);
-                System.Device.Memory.WriteUInt32(dstDescAddress + 4, 0);
-                System.Device.Memory.WriteUInt32(dstDescAddress + 8, 0);
+                System.Device.Memory.Write(dstDescAddress + 0, 0);
+                System.Device.Memory.Write(dstDescAddress + 4, 0);
+                System.Device.Memory.Write(dstDescAddress + 8, 0);
 
                 offset += 3;
             }
@@ -878,9 +878,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private MessageHeader GetClientMessageHeader(Message clientMsg)
         {
-            uint word0 = System.Device.Memory.ReadUInt32((long)clientMsg.DramAddress + 0);
-            uint word1 = System.Device.Memory.ReadUInt32((long)clientMsg.DramAddress + 4);
-            uint word2 = System.Device.Memory.ReadUInt32((long)clientMsg.DramAddress + 8);
+            uint word0 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 0);
+            uint word1 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 4);
+            uint word2 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 8);
 
             return new MessageHeader(word0, word1, word2);
         }
@@ -889,9 +889,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             KProcess currentProcess = System.Scheduler.GetCurrentProcess();
 
-            uint word0 = currentProcess.CpuMemory.ReadUInt32((long)serverMsg.Address + 0);
-            uint word1 = currentProcess.CpuMemory.ReadUInt32((long)serverMsg.Address + 4);
-            uint word2 = currentProcess.CpuMemory.ReadUInt32((long)serverMsg.Address + 8);
+            uint word0 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 0);
+            uint word1 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 4);
+            uint word2 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 8);
 
             return new MessageHeader(word0, word1, word2);
         }
@@ -970,11 +970,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             ulong[] receiveList = new ulong[recvListSize];
 
-            long recvListAddress = (long)message.DramAddress + recvListOffset;
+            ulong recvListAddress = message.DramAddress + recvListOffset;
 
             for (int index = 0; index < recvListSize; index++)
             {
-                receiveList[index] = System.Device.Memory.ReadUInt64(recvListAddress + index * 8);
+                receiveList[index] = System.Device.Memory.Read<ulong>(recvListAddress + (ulong)index * 8);
             }
 
             return receiveList;
@@ -1067,20 +1067,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                 if (header.HasPid)
                 {
-                    process.CpuMemory.WriteInt64((long)message.Address + offset * 4, 0);
+                    process.CpuMemory.Write(message.Address + offset * 4, 0L);
 
                     offset += 2;
                 }
 
                 for (int index = 0; index < totalHandeslCount; index++)
                 {
-                    int handle = process.CpuMemory.ReadInt32((long)message.Address + offset * 4);
+                    int handle = process.CpuMemory.Read<int>(message.Address + offset * 4);
 
                     if (handle != 0)
                     {
                         process.HandleTable.CloseHandle(handle);
 
-                        process.CpuMemory.WriteInt32((long)message.Address + offset * 4, 0);
+                        process.CpuMemory.Write(message.Address + offset * 4, 0);
                     }
 
                     offset++;
@@ -1225,8 +1225,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             ulong address = clientProcess.MemoryManager.GetDramAddressFromVa(request.CustomCmdBuffAddr);
 
-            System.Device.Memory.WriteInt64((long)address + 0, 0);
-            System.Device.Memory.WriteInt32((long)address + 8, (int)result);
+            System.Device.Memory.Write<ulong>(address, 0);
+            System.Device.Memory.Write(address + 8, (int)result);
 
             clientProcess.MemoryManager.UnborrowIpcBuffer(
                 request.CustomCmdBuffAddr,

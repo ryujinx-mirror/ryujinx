@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                 Result result = _baseStorage.Read(offset, data);
 
-                context.Memory.WriteBytes(buffDesc.Position, data);
+                context.Memory.Write((ulong)buffDesc.Position, data);
 
                 return (ResultCode)result.Value;
             }

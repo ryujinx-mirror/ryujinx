@@ -1,6 +1,5 @@
-using ARMeilleure.Memory;
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
 using System.Text;
@@ -71,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                         return ResultCode.LocationNameTooLong;
                     }
 
-                    context.Memory.WriteBytes(bufferPosition + offset, Encoding.ASCII.GetBytes(locationName));
+                    context.Memory.Write((ulong)bufferPosition + offset, Encoding.ASCII.GetBytes(locationName));
                     MemoryHelper.FillWithZeros(context.Memory, bufferPosition + offset + locationName.Length, padding);
 
                     offset += 0x24;

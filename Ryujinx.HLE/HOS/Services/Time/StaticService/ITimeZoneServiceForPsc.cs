@@ -1,6 +1,6 @@
-﻿using ARMeilleure.Memory;
-using Ryujinx.Common;
+﻿using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.HLE.Utilities;
@@ -129,7 +129,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 
             ResultCode result;
 
-            using (MemoryStream timeZoneBinaryStream = new MemoryStream(context.Memory.ReadBytes(bufferPosition, bufferSize)))
+            byte[] temp = new byte[bufferSize];
+
+            context.Memory.Read((ulong)bufferPosition, temp);
+
+            using (MemoryStream timeZoneBinaryStream = new MemoryStream(temp))
             {
                 result = _timeZoneManager.SetDeviceLocationNameWithTimeZoneRule(locationName, timeZoneBinaryStream);
             }
@@ -156,7 +160,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 
             ResultCode result;
 
-            using (MemoryStream timeZoneBinaryStream = new MemoryStream(context.Memory.ReadBytes(bufferPosition, bufferSize)))
+            byte[] temp = new byte[bufferSize];
+
+            context.Memory.Read((ulong)bufferPosition, temp);
+
+            using (MemoryStream timeZoneBinaryStream = new MemoryStream(temp))
             {
                 result = _timeZoneManager.ParseTimeZoneRuleBinary(out TimeZoneRule timeZoneRule, timeZoneBinaryStream);
 
@@ -246,7 +254,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 long outBufferPosition = context.Request.RecvListBuff[0].Position;
                 long outBufferSize     = context.Request.RecvListBuff[0].Size;
 
-                context.Memory.WriteInt64(outBufferPosition, posixTime);
+                context.Memory.Write((ulong)outBufferPosition, posixTime);
                 context.ResponseData.Write(1);
             }
 
@@ -266,7 +274,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 long outBufferPosition = context.Request.RecvListBuff[0].Position;
                 long outBufferSize     = context.Request.RecvListBuff[0].Size;
 
-                context.Memory.WriteInt64(outBufferPosition, posixTime);
+                context.Memory.Write((ulong)outBufferPosition, posixTime);
 
                 // There could be only one result on one calendar as leap seconds aren't supported.
                 context.ResponseData.Write(1);

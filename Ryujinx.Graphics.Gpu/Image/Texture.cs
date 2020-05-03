@@ -78,6 +78,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public ulong Size => (ulong)_sizeInfo.TotalSize;
 
+        private (ulong, ulong)[] _modifiedRanges;
+
         private int _referenceCount;
 
         private int _sequenceNumber;
@@ -132,6 +134,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             _context  = context;
             _sizeInfo = sizeInfo;
+
+            _modifiedRanges = new (ulong, ulong)[(sizeInfo.TotalSize / PhysicalMemory.PageSize) + 1];
 
             SetInfo(info);
 
@@ -304,9 +308,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _sequenceNumber = _context.SequenceNumber;
 
-            (ulong, ulong)[] modifiedRanges = _context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.Texture);
+            int modifiedCount = _context.PhysicalMemory.QueryModified(Address, Size, ResourceName.Texture, _modifiedRanges);
 
-            if (modifiedRanges.Length == 0 && _hasData)
+            if (modifiedCount == 0 && _hasData)
             {
                 return;
             }
@@ -325,9 +329,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ulong endAddress = Address + Size;
 
-                for (int i = 0; i < modifiedRanges.Length; i++)
+                for (int i = 0; i < modifiedCount; i++)
                 {
-                    (ulong modifiedAddress, ulong modifiedSize) = modifiedRanges[i];
+                    (ulong modifiedAddress, ulong modifiedSize) = _modifiedRanges[i];
 
                     ulong endModifiedAddress = modifiedAddress + modifiedSize;
 

@@ -21,37 +21,37 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             string hostName = hostEntry.HostName + '\0';
 
             // h_name
-            context.Memory.WriteBytes(bufferPosition, Encoding.ASCII.GetBytes(hostName));
+            context.Memory.Write((ulong)bufferPosition, Encoding.ASCII.GetBytes(hostName));
             bufferPosition += hostName.Length;
 
             // h_aliases list size
-            context.Memory.WriteInt32(bufferPosition, IPAddress.HostToNetworkOrder(hostEntry.Aliases.Length));
+            context.Memory.Write((ulong)bufferPosition, IPAddress.HostToNetworkOrder(hostEntry.Aliases.Length));
             bufferPosition += 4;
 
             // Actual aliases
             foreach (string alias in hostEntry.Aliases)
             {
-                context.Memory.WriteBytes(bufferPosition, Encoding.ASCII.GetBytes(alias + '\0'));
+                context.Memory.Write((ulong)bufferPosition, Encoding.ASCII.GetBytes(alias + '\0'));
                 bufferPosition += alias.Length + 1;
             }
 
             // h_addrtype but it's a short (also only support IPv4)
-            context.Memory.WriteInt16(bufferPosition, IPAddress.HostToNetworkOrder((short)2));
+            context.Memory.Write((ulong)bufferPosition, IPAddress.HostToNetworkOrder((short)2));
             bufferPosition += 2;
 
             // h_length but it's a short
-            context.Memory.WriteInt16(bufferPosition, IPAddress.HostToNetworkOrder((short)4));
+            context.Memory.Write((ulong)bufferPosition, IPAddress.HostToNetworkOrder((short)4));
             bufferPosition += 2;
 
             // Ip address count, we can only support ipv4 (blame Nintendo)
-            context.Memory.WriteInt32(bufferPosition, addresses != null ? IPAddress.HostToNetworkOrder(addresses.Count) : 0);
+            context.Memory.Write((ulong)bufferPosition, addresses != null ? IPAddress.HostToNetworkOrder(addresses.Count) : 0);
             bufferPosition += 4;
 
             if (addresses != null)
             {
                 foreach (IPAddress ip in addresses)
                 {
-                    context.Memory.WriteInt32(bufferPosition, IPAddress.HostToNetworkOrder(BitConverter.ToInt32(ip.GetAddressBytes(), 0)));
+                    context.Memory.Write((ulong)bufferPosition, IPAddress.HostToNetworkOrder(BitConverter.ToInt32(ip.GetAddressBytes(), 0)));
                     bufferPosition += 4;
                 }
             }
@@ -168,8 +168,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
         // GetHostByName(u8, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public ResultCode GetHostByName(ServiceCtx context)
         {
-            byte[] rawName = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
-            string name    = Encoding.ASCII.GetString(rawName).TrimEnd('\0');
+            byte[] rawName = new byte[context.Request.SendBuff[0].Size];
+
+            context.Memory.Read((ulong)context.Request.SendBuff[0].Position, rawName);
+
+            string name = Encoding.ASCII.GetString(rawName).TrimEnd('\0');
 
             // TODO: use params
             bool  enableNsdResolve = context.RequestData.ReadInt32() == 1;
@@ -248,7 +251,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
         // GetHostByAddr(u32, u32, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public ResultCode GetHostByAddress(ServiceCtx context)
         {
-            byte[] rawIp = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
+            byte[] rawIp = new byte[context.Request.SendBuff[0].Size];
+
+            context.Memory.Read((ulong)context.Request.SendBuff[0].Position, rawIp);
 
             // TODO: use params
             uint  socketLength   = context.RequestData.ReadUInt32();
@@ -325,7 +330,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             if (errorString.Length + 1 <= context.Request.ReceiveBuff[0].Size)
             {
                 resultCode = 0;
-                context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
+                context.Memory.Write((ulong)context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
             }
 
             return resultCode;
@@ -342,7 +347,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             if (errorString.Length + 1 <= context.Request.ReceiveBuff[0].Size)
             {
                 resultCode = 0;
-                context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
+                context.Memory.Write((ulong)context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
             }
 
             return resultCode;

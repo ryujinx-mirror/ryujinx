@@ -191,14 +191,14 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             KMemoryInfo blkInfo = _process.MemoryManager.QueryMemory(position);
 
-            _process.CpuMemory.WriteUInt64((long)infoPtr + 0x00, blkInfo.Address);
-            _process.CpuMemory.WriteUInt64((long)infoPtr + 0x08, blkInfo.Size);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x10, (int)blkInfo.State & 0xff);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x14, (int)blkInfo.Attribute);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x18, (int)blkInfo.Permission);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x1c, blkInfo.IpcRefCount);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x20, blkInfo.DeviceRefCount);
-            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x24, 0);
+            _process.CpuMemory.Write(infoPtr + 0x00, blkInfo.Address);
+            _process.CpuMemory.Write(infoPtr + 0x08, blkInfo.Size);
+            _process.CpuMemory.Write(infoPtr + 0x10, (int)blkInfo.State & 0xff);
+            _process.CpuMemory.Write(infoPtr + 0x14, (int)blkInfo.Attribute);
+            _process.CpuMemory.Write(infoPtr + 0x18, (int)blkInfo.Permission);
+            _process.CpuMemory.Write(infoPtr + 0x1c, blkInfo.IpcRefCount);
+            _process.CpuMemory.Write(infoPtr + 0x20, blkInfo.DeviceRefCount);
+            _process.CpuMemory.Write(infoPtr + 0x24, 0);
 
             pageInfo = 0;
 

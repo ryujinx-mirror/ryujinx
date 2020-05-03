@@ -1,7 +1,6 @@
-using ARMeilleure.Memory;
-using LibHac;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -270,9 +269,9 @@ namespace Ryujinx.HLE.HOS
                 end = bssStart + (ulong)image.BssSize;
             }
 
-            process.CpuMemory.WriteBytes((long)textStart, image.Text);
-            process.CpuMemory.WriteBytes((long)roStart,   image.Ro);
-            process.CpuMemory.WriteBytes((long)dataStart, image.Data);
+            process.CpuMemory.Write(textStart, image.Text);
+            process.CpuMemory.Write(roStart,   image.Ro);
+            process.CpuMemory.Write(dataStart, image.Data);
 
             MemoryHelper.FillWithZeros(process.CpuMemory, (long)bssStart, image.BssSize);
 

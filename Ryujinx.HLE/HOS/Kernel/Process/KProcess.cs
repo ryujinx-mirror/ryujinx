@@ -1,7 +1,6 @@
-using ARMeilleure.Memory;
 using ARMeilleure.State;
-using ARMeilleure.Translation;
 using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -79,8 +78,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public bool IsPaused { get; private set; }
 
         public MemoryManager CpuMemory { get; private set; }
-
-        public Translator Translator { get; private set; }
+        public CpuContext CpuContext { get; private set; }
 
         private SvcHandler _svcHandler;
 
@@ -1109,11 +1107,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 default: throw new ArgumentException(nameof(addrSpaceType));
             }
 
-            bool useFlatPageTable = memRegion == MemoryRegion.Application;
-
-            CpuMemory = new MemoryManager(_system.Device.Memory.RamPointer, addrSpaceBits, useFlatPageTable);
-
-            Translator = new Translator(CpuMemory);
+            CpuMemory = new MemoryManager(_system.Device.Memory, 1UL << addrSpaceBits);
+            CpuContext = new CpuContext(CpuMemory);
 
             // TODO: This should eventually be removed.
             // The GPU shouldn't depend on the CPU memory manager at all.

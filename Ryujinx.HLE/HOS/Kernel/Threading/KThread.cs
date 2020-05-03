@@ -1,5 +1,5 @@
-using ARMeilleure.Memory;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
@@ -163,7 +163,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             HostThread = new Thread(customHostThreadStart ?? (() => ThreadStart(entrypoint)));
 
-            Context = new ARMeilleure.State.ExecutionContext();
+            Context = CpuContext.CreateExecutionContext();
 
             bool isAarch32 = (Owner.MmuFlags & 1) == 0;
 
@@ -1141,7 +1141,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void ThreadStart(ulong entrypoint)
         {
-            Owner.Translator.Execute(Context, entrypoint);
+            Owner.CpuContext.Execute(Context, entrypoint);
 
             ThreadExit();
 

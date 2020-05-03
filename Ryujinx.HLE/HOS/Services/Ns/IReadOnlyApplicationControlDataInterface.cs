@@ -15,7 +15,7 @@
 
             byte[] nacpData = context.Device.System.ControlData.ByteSpan.ToArray();
 
-            context.Memory.WriteBytes(position, nacpData);
+            context.Memory.Write((ulong)position, nacpData);
 
             return ResultCode.Success;
         }

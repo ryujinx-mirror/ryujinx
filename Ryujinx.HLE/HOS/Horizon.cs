@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS
 
         public int GlobalAccessLogMode { get; set; }
 
-        internal long HidBaseAddress { get; private set; }
+        internal ulong HidBaseAddress { get; private set; }
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
 
@@ -202,7 +202,7 @@ namespace Ryujinx.HLE.HOS
             ulong iirsPa = region.Address + HidSize + FontSize;
             ulong timePa = region.Address + HidSize + FontSize + IirsSize;
 
-            HidBaseAddress = (long)(hidPa - DramMemoryMap.DramBase);
+            HidBaseAddress = hidPa - DramMemoryMap.DramBase;
 
             KPageList hidPageList  = new KPageList();
             KPageList fontPageList = new KPageList();
@@ -220,13 +220,13 @@ namespace Ryujinx.HLE.HOS
 
             KSharedMemory timeSharedMemory = new KSharedMemory(this, timePageList, 0, 0, MemoryPermission.Read);
 
-            TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, (long)(timePa - DramMemoryMap.DramBase), TimeSize);
+            TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timePa - DramMemoryMap.DramBase, TimeSize);
 
             AppletState = new AppletStateMgr(this);
 
             AppletState.SetFocus(true);
 
-            Font = new SharedFontManager(device, (long)(fontPa - DramMemoryMap.DramBase));
+            Font = new SharedFontManager(device, fontPa - DramMemoryMap.DramBase);
 
             IUserInterface.InitializePort(this);
 

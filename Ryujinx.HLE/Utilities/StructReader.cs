@@ -1,4 +1,4 @@
-using ARMeilleure.Memory;
+using Ryujinx.Cpu;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.Utilities

@@ -95,7 +95,9 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
                 return ResultCode.InvalidBufferSize;
             }
 
-            byte[] inputBuffer = context.Memory.ReadBytes(inputPosition, inputSize);
+            byte[] inputBuffer = new byte[inputSize];
+
+            context.Memory.Read((ulong)inputPosition, inputBuffer);
 
             Logger.PrintInfo(LogClass.ServicePrepo, ReadReportBuffer(inputBuffer, gameRoom, userId));
 

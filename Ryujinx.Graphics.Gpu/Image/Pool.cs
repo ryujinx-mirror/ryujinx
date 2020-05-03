@@ -33,6 +33,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public ulong Size { get; }
 
+        private readonly (ulong, ulong)[] _modifiedRanges;
+
         public Pool(GpuContext context, ulong address, int maximumId)
         {
             Context   = context;
@@ -46,6 +48,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             Address = address;
             Size    = size;
+
+            _modifiedRanges = new (ulong, ulong)[size / PhysicalMemory.PageSize];
         }
 
         /// <summary>
@@ -62,11 +66,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SynchronizeMemory()
         {
-            (ulong, ulong)[] modifiedRanges = Context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.TexturePool);
+            int count = Context.PhysicalMemory.QueryModified(Address, Size, ResourceName.TexturePool, _modifiedRanges);
 
-            for (int index = 0; index < modifiedRanges.Length; index++)
+            for (int index = 0; index < count; index++)
             {
-                (ulong mAddress, ulong mSize) = modifiedRanges[index];
+                (ulong mAddress, ulong mSize) = _modifiedRanges[index];
 
                 if (mAddress < Address)
                 {
@@ -82,6 +86,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 InvalidateRangeImpl(mAddress, mSize);
             }
+        }
+
+        private void InvalidateRangeInternal(ulong offset, int size)
+        {
+            InvalidateRangeImpl(Address + offset, (ulong)size);
         }
 
         /// <summary>

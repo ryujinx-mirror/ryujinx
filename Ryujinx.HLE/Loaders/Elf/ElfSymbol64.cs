@@ -4,8 +4,8 @@
     {
 #pragma warning disable CS0649
         public uint   NameOffset;
-        public char   Info;
-        public char   Other;
+        public byte   Info;
+        public byte   Other;
         public ushort SectionIndex;
         public ulong  ValueAddress;
         public ulong  Size;

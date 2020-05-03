@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             {
                 byte[] settingNameBuffer = Encoding.UTF8.GetBytes(settingName + '\0');
 
-                context.Memory.WriteBytes(outputPosition, settingNameBuffer);
+                context.Memory.Write((ulong)outputPosition, settingNameBuffer);
             }
 
             return result;
@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             {
                 byte[] identifierBuffer = Encoding.UTF8.GetBytes(identifier + '\0');
 
-                context.Memory.WriteBytes(outputPosition, identifierBuffer);
+                context.Memory.Write((ulong)outputPosition, identifierBuffer);
             }
 
             return result;
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
             byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress + '\0');
 
-            context.Memory.WriteBytes(outputPosition, resolvedAddressBuffer);
+            context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
 
             return result;
         }
@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
             byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress + '\0');
 
-            context.Memory.WriteBytes(outputPosition, resolvedAddressBuffer);
+            context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
 
             context.ResponseData.Write((int)errorCode);
 

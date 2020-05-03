@@ -30,7 +30,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public ulong EndAddress => Address + Size;
 
-        private int[] _sequenceNumbers;
+        private readonly (ulong, ulong)[] _modifiedRanges;
+
+        private readonly int[] _sequenceNumbers;
 
         /// <summary>
         /// Creates a new instance of the buffer.
@@ -45,6 +47,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             Size     = size;
 
             HostBuffer = context.Renderer.CreateBuffer((int)size);
+
+            _modifiedRanges = new (ulong, ulong)[size / PhysicalMemory.PageSize];
 
             _sequenceNumbers = new int[size / MemoryManager.PageSize];
         }
@@ -113,11 +117,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 return;
             }
 
-            (ulong, ulong)[] modifiedRanges = _context.PhysicalMemory.GetModifiedRanges(address, size, ResourceName.Buffer);
+            int count = _context.PhysicalMemory.QueryModified(address, size, ResourceName.Buffer, _modifiedRanges);
 
-            for (int index = 0; index < modifiedRanges.Length; index++)
+            for (int index = 0; index < count; index++)
             {
-                (ulong mAddress, ulong mSize) = modifiedRanges[index];
+                (ulong mAddress, ulong mSize) = _modifiedRanges[index];
 
                 int offset = (int)(mAddress - Address);
 

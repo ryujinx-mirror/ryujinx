@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
 
             _rng.GetBytes(randomBytes);
 
-            context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, randomBytes);
+            context.Memory.Write((ulong)context.Request.ReceiveBuff[0].Position, randomBytes);
 
             return ResultCode.Success;
         }

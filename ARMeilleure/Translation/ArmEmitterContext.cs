@@ -37,7 +37,7 @@ namespace ARMeilleure.Translation
 
         public OpCode CurrOp { get; set; }
 
-        public MemoryManager Memory { get; }
+        public IMemoryManager Memory { get; }
 
         public Aarch32Mode Mode { get; }
 
@@ -47,7 +47,7 @@ namespace ARMeilleure.Translation
 
         public bool HighCq { get; }
 
-        public ArmEmitterContext(MemoryManager memory, JumpTable jumpTable, long baseAddress, bool highCq, Aarch32Mode mode)
+        public ArmEmitterContext(IMemoryManager memory, JumpTable jumpTable, long baseAddress, bool highCq, Aarch32Mode mode)
         {
             Memory      = memory;
             JumpTable   = jumpTable;

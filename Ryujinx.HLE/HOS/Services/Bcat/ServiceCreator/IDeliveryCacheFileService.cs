@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 
             Result result = _base.Read(out long bytesRead, offset, data);
 
-            context.Memory.WriteBytes(position, data);
+            context.Memory.Write((ulong)position, data);
 
             context.ResponseData.Write(bytesRead);
 

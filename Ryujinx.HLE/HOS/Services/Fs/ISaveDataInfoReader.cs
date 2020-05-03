@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 
             Result result = _baseReader.ReadSaveDataInfo(out long readCount, infoBuffer);
 
-            context.Memory.WriteBytes(bufferPosition, infoBuffer);
+            context.Memory.Write((ulong)bufferPosition, infoBuffer);
             context.ResponseData.Write(readCount);
 
             return (ResultCode)result.Value;

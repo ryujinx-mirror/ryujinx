@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private Switch _device;
 
-        private ARMeilleure.Memory.MemoryManager _memory;
+        private Cpu.MemoryManager _memory;
 
         public enum ResourcePolicy
         {
@@ -143,7 +143,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
                 for (int offset = 0; offset < commandBufferData.Length; offset++)
                 {
-                    commandBufferData[offset] = _memory.ReadInt32(map.Address + commandBufferEntry.Offset + offset * 4);
+                    commandBufferData[offset] = _memory.Read<int>((ulong)(map.Address + commandBufferEntry.Offset + offset * 4));
                 }
 
                 // TODO: Submit command to engines.

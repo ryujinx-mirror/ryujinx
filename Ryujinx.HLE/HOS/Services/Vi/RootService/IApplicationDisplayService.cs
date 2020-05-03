@@ -1,4 +1,4 @@
-using ARMeilleure.Memory;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
@@ -62,11 +62,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             MemoryHelper.FillWithZeros(context.Memory, recBuffPtr, 0x60);
 
             // Add only the default display to buffer
-            context.Memory.WriteBytes(recBuffPtr, Encoding.ASCII.GetBytes("Default"));
-            context.Memory.WriteInt64(recBuffPtr + 0x40, 0x1L);
-            context.Memory.WriteInt64(recBuffPtr + 0x48, 0x1L);
-            context.Memory.WriteInt64(recBuffPtr + 0x50, 1280L);
-            context.Memory.WriteInt64(recBuffPtr + 0x58, 720L);
+            context.Memory.Write((ulong)recBuffPtr, Encoding.ASCII.GetBytes("Default"));
+            context.Memory.Write((ulong)recBuffPtr + 0x40, 0x1L);
+            context.Memory.Write((ulong)recBuffPtr + 0x48, 0x1L);
+            context.Memory.Write((ulong)recBuffPtr + 0x50, 1280L);
+            context.Memory.Write((ulong)recBuffPtr + 0x58, 720L);
 
             context.ResponseData.Write(1L);
 
@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             ReadOnlySpan<byte> parcelData = parcel.Finish();
 
-            context.Memory.WriteBytes(parcelPtr, parcelData.ToArray());
+            context.Memory.Write((ulong)parcelPtr, parcelData);
 
             context.ResponseData.Write((long)parcelData.Length);
 
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             ReadOnlySpan<byte> parcelData = parcel.Finish();
 
-            context.Memory.WriteBytes(parcelPtr, parcelData.ToArray());
+            context.Memory.Write((ulong)parcelPtr, parcelData);
 
             context.ResponseData.Write(layerId);
             context.ResponseData.Write((long)parcelData.Length);

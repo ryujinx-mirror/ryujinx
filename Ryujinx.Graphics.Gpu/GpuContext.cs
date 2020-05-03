@@ -108,7 +108,7 @@ namespace Ryujinx.Graphics.Gpu
         /// This is required for any GPU memory access.
         /// </summary>
         /// <param name="cpuMemory">CPU memory manager</param>
-        public void SetVmm(ARMeilleure.Memory.MemoryManager cpuMemory)
+        public void SetVmm(Cpu.MemoryManager cpuMemory)
         {
             PhysicalMemory = new PhysicalMemory(cpuMemory);
         }

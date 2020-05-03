@@ -1,5 +1,5 @@
-using ARMeilleure.Memory;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Utilities;
 using System.IO;
 using System.Reflection;
@@ -28,9 +28,9 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             MemoryHelper.FillWithZeros(context.Memory, position, 0x80);
 
-            context.Memory.WriteInt32(position, 0);
-            context.Memory.WriteInt32(position + 4, 1);
-            context.Memory.WriteInt64(position + 8, 1);
+            context.Memory.Write((ulong)position, 0);
+            context.Memory.Write((ulong)position + 4, 1);
+            context.Memory.Write((ulong)position + 8, 1L);
 
             return GetBase(context);
         }
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             _profilePictureStream.Read(profilePictureData, 0, profilePictureData.Length);
 
-            context.Memory.WriteBytes(bufferPosition, profilePictureData);
+            context.Memory.Write((ulong)bufferPosition, profilePictureData);
 
             context.ResponseData.Write(_profilePictureStream.Length);
 

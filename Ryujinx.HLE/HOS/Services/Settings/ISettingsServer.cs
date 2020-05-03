@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             for (int index = 0; index < count; index++)
             {
-                context.Memory.WriteInt64(position, SystemStateMgr.GetLanguageCode(index));
+                context.Memory.Write((ulong)position, SystemStateMgr.GetLanguageCode(index));
 
                 position += 8;
             }

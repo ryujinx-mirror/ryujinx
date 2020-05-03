@@ -31,7 +31,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             long inputPosition = context.Request.SendBuff[0].Position;
             long inputSize     = context.Request.SendBuff[0].Size;
 
-            byte[] unknownBuffer = context.Memory.ReadBytes(inputPosition, inputSize);
+            byte[] unknownBuffer = new byte[inputSize];
+
+            context.Memory.Read((ulong)inputPosition, unknownBuffer);
 
             // NOTE: appletResourceUserId, mcuVersionData and the buffer are stored inside an internal struct.
             //       The buffer seems to contains entries with a size of 0x40 bytes each.
@@ -89,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             for (int i = 0; i < _devices.Count; i++)
             {
-                context.Memory.WriteUInt32(outputPosition + (i * sizeof(long)), (uint)_devices[i].Handle);
+                context.Memory.Write((ulong)(outputPosition + (i * sizeof(long))), (uint)_devices[i].Handle);
             }
 
             context.ResponseData.Write(_devices.Count);

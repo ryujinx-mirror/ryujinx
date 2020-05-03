@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 
             Result result = _base.Read(out int entriesRead, MemoryMarshal.Cast<byte, DeliveryCacheDirectoryEntry>(data));
 
-            context.Memory.WriteBytes(position, data);
+            context.Memory.Write((ulong)position, data);
 
             context.ResponseData.Write(entriesRead);
 
