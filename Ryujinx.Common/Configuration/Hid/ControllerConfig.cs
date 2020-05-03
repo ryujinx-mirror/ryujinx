@@ -1,21 +1,16 @@
 ﻿namespace Ryujinx.Common.Configuration.Hid
 {
-    public class NpadController
+    public class ControllerConfig : InputConfig
     {
         /// <summary>
-        /// Enables or disables controller support
+        /// Controller Left Analog Stick Deadzone
         /// </summary>
-        public bool Enabled { get; set; }
+        public float DeadzoneLeft { get; set; }
 
         /// <summary>
-        /// Controller Device Index
+        /// Controller Right Analog Stick Deadzone
         /// </summary>
-        public int Index { get; set; }
-
-        /// <summary>
-        /// Controller Analog Stick Deadzone
-        /// </summary>
-        public float Deadzone { get; set; }
+        public float DeadzoneRight { get; set; }
 
         /// <summary>
         /// Controller Trigger Threshold

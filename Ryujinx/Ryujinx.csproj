@@ -31,9 +31,10 @@
 
   <ItemGroup>
     <None Remove="Ui\AboutWindow.glade" />
-    <None Remove="Ui\assets\BlueCon.png" />
-    <None Remove="Ui\assets\ProCon.png" />
-    <None Remove="Ui\assets\RedCon.png" />
+    <None Remove="Ui\assets\JoyConLeft.svg" />
+    <None Remove="Ui\assets\JoyConPair.svg" />
+    <None Remove="Ui\assets\JoyConRight.svg" />
+    <None Remove="Ui\assets\ProCon.svg" />
     <None Remove="Ui\assets\NCAIcon.png" />
     <None Remove="Ui\assets\NROIcon.png" />
     <None Remove="Ui\assets\NSOIcon.png" />
@@ -41,21 +42,23 @@
     <None Remove="Ui\assets\XCIIcon.png" />
     <None Remove="Ui\assets\DiscordLogo.png" />
     <None Remove="Ui\assets\GitHubLogo.png" />
-    <None Remove="Ui\assets\JoyCon.png" />
     <None Remove="Ui\assets\PatreonLogo.png" />
     <None Remove="Ui\assets\Icon.png" />
     <None Remove="Ui\assets\TwitterLogo.png" />
+    <None Remove="Ui\ControllerWindow.glade" />
     <None Remove="Ui\GameTableContextMenu.glade" />
     <None Remove="Ui\MainWindow.glade" />
-    <None Remove="Ui\SwitchSettings.glade" />
+    <None Remove="Ui\ProfileDialog.glade" />
+    <None Remove="Ui\SettingsWindow.glade" />
     <None Remove="Ui\TitleUpdateWindow.glade" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Ui\AboutWindow.glade" />
-    <EmbeddedResource Include="Ui\assets\BlueCon.png" />
-    <EmbeddedResource Include="Ui\assets\ProCon.png" />
-    <EmbeddedResource Include="Ui\assets\RedCon.png" />
+    <EmbeddedResource Include="Ui\assets\JoyConLeft.svg" />
+    <EmbeddedResource Include="Ui\assets\JoyConPair.svg" />
+    <EmbeddedResource Include="Ui\assets\JoyConRight.svg" />
+    <EmbeddedResource Include="Ui\assets\ProCon.svg" />
     <EmbeddedResource Include="Ui\assets\NCAIcon.png" />
     <EmbeddedResource Include="Ui\assets\NROIcon.png" />
     <EmbeddedResource Include="Ui\assets\NSOIcon.png" />
@@ -63,13 +66,14 @@
     <EmbeddedResource Include="Ui\assets\XCIIcon.png" />
     <EmbeddedResource Include="Ui\assets\DiscordLogo.png" />
     <EmbeddedResource Include="Ui\assets\GitHubLogo.png" />
-    <EmbeddedResource Include="Ui\assets\JoyCon.png" />
     <EmbeddedResource Include="Ui\assets\PatreonLogo.png" />
     <EmbeddedResource Include="Ui\assets\Icon.png" />
     <EmbeddedResource Include="Ui\assets\TwitterLogo.png" />
+    <EmbeddedResource Include="Ui\ControllerWindow.glade" />
     <EmbeddedResource Include="Ui\GameTableContextMenu.glade" />
     <EmbeddedResource Include="Ui\MainWindow.glade" />
-    <EmbeddedResource Include="Ui\SwitchSettings.glade" />
+    <EmbeddedResource Include="Ui\ProfileDialog.glade" />
+    <EmbeddedResource Include="Ui\SettingsWindow.glade" />
     <EmbeddedResource Include="Ui\TitleUpdateWindow.glade" />
   </ItemGroup>
 

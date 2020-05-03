@@ -413,7 +413,7 @@ namespace Ryujinx.Ui
                     Version       = version,
                     TimePlayed    = ConvertSecondsToReadableString(appMetadata.TimePlayed),
                     LastPlayed    = appMetadata.LastPlayed,
-                    FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0 ,1),
+                    FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0, 1),
                     FileSize      = (fileSize < 1) ? (fileSize * 1024).ToString("0.##") + "MB" : fileSize.ToString("0.##") + "GB",
                     Path          = applicationPath,
                     SaveDataPath  = saveDataPath,

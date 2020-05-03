@@ -12,7 +12,6 @@ namespace Ryujinx.Ui
     {
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
-        [GUI] Window _aboutWin;
         [GUI] Label  _versionText;
         [GUI] Image  _ryujinxLogo;
         [GUI] Image  _patreonLogo;
@@ -28,7 +27,7 @@ namespace Ryujinx.Ui
         {
             builder.Autoconnect(this);
 
-            _aboutWin.Icon      = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
+            this.Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
             _ryujinxLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"       , 100, 100);
             _patreonLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.PatreonLogo.png", 30 , 30 );
             _gitHubLogo.Pixbuf  = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.GitHubLogo.png" , 30 , 30 );

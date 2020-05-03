@@ -1,7 +1,7 @@
 ﻿using System;
 using OpenTK.Input;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.UI.Input;
 
 namespace Ryujinx.Ui
 {
@@ -11,64 +11,85 @@ namespace Ryujinx.Ui
         ToggleVSync = 1 << 0,
     }
 
-    public static class KeyboardControls
+    public class KeyboardController
     {
-        public static ControllerKeys GetButtons(NpadKeyboard npad, KeyboardState keyboard)
+        private readonly KeyboardConfig _config;
+
+        // NOTE: This should be initialized AFTER GTK for compat reasons with OpenTK SDL2 backend and GTK on Linux.
+        // BODY: Usage of Joystick.GetState must be defer to after GTK full initialization. Otherwise, GTK will segfault because SDL2 was already init *sighs*
+        public KeyboardController(KeyboardConfig config)
         {
+            _config = config;
+        }
+
+        public ControllerKeys GetButtons()
+        {
+            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+
             ControllerKeys buttons = 0;
 
-            if (keyboard[(Key)npad.LeftJoycon.StickButton]) buttons |= ControllerKeys.LStick;
-            if (keyboard[(Key)npad.LeftJoycon.DPadUp])      buttons |= ControllerKeys.DpadUp;
-            if (keyboard[(Key)npad.LeftJoycon.DPadDown])    buttons |= ControllerKeys.DpadDown;
-            if (keyboard[(Key)npad.LeftJoycon.DPadLeft])    buttons |= ControllerKeys.DpadLeft;
-            if (keyboard[(Key)npad.LeftJoycon.DPadRight])   buttons |= ControllerKeys.DpadRight;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonMinus]) buttons |= ControllerKeys.Minus;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonL])     buttons |= ControllerKeys.L | ControllerKeys.Sl;
-            if (keyboard[(Key)npad.LeftJoycon.ButtonZl])    buttons |= ControllerKeys.Zl;
+            if (keyboard[(Key)_config.LeftJoycon.StickButton]) buttons |= ControllerKeys.LStick;
+            if (keyboard[(Key)_config.LeftJoycon.DPadUp])      buttons |= ControllerKeys.DpadUp;
+            if (keyboard[(Key)_config.LeftJoycon.DPadDown])    buttons |= ControllerKeys.DpadDown;
+            if (keyboard[(Key)_config.LeftJoycon.DPadLeft])    buttons |= ControllerKeys.DpadLeft;
+            if (keyboard[(Key)_config.LeftJoycon.DPadRight])   buttons |= ControllerKeys.DpadRight;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonMinus]) buttons |= ControllerKeys.Minus;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonL])     buttons |= ControllerKeys.L;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonZl])    buttons |= ControllerKeys.Zl;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonSl])    buttons |= ControllerKeys.SlLeft;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonSr])    buttons |= ControllerKeys.SlRight;
             
-            if (keyboard[(Key)npad.RightJoycon.StickButton]) buttons |= ControllerKeys.RStick;
-            if (keyboard[(Key)npad.RightJoycon.ButtonA])     buttons |= ControllerKeys.A;
-            if (keyboard[(Key)npad.RightJoycon.ButtonB])     buttons |= ControllerKeys.B;
-            if (keyboard[(Key)npad.RightJoycon.ButtonX])     buttons |= ControllerKeys.X;
-            if (keyboard[(Key)npad.RightJoycon.ButtonY])     buttons |= ControllerKeys.Y;
-            if (keyboard[(Key)npad.RightJoycon.ButtonPlus])  buttons |= ControllerKeys.Plus;
-            if (keyboard[(Key)npad.RightJoycon.ButtonR])     buttons |= ControllerKeys.R | ControllerKeys.Sr;
-            if (keyboard[(Key)npad.RightJoycon.ButtonZr])    buttons |= ControllerKeys.Zr;
+            if (keyboard[(Key)_config.RightJoycon.StickButton]) buttons |= ControllerKeys.RStick;
+            if (keyboard[(Key)_config.RightJoycon.ButtonA])     buttons |= ControllerKeys.A;
+            if (keyboard[(Key)_config.RightJoycon.ButtonB])     buttons |= ControllerKeys.B;
+            if (keyboard[(Key)_config.RightJoycon.ButtonX])     buttons |= ControllerKeys.X;
+            if (keyboard[(Key)_config.RightJoycon.ButtonY])     buttons |= ControllerKeys.Y;
+            if (keyboard[(Key)_config.RightJoycon.ButtonPlus])  buttons |= ControllerKeys.Plus;
+            if (keyboard[(Key)_config.RightJoycon.ButtonR])     buttons |= ControllerKeys.R;
+            if (keyboard[(Key)_config.RightJoycon.ButtonZr])    buttons |= ControllerKeys.Zr;
+            if (keyboard[(Key)_config.RightJoycon.ButtonSl])    buttons |= ControllerKeys.SrLeft;
+            if (keyboard[(Key)_config.RightJoycon.ButtonSr])    buttons |= ControllerKeys.SrRight;
 
             return buttons;
         }
 
-        public static (short, short) GetLeftStick(NpadKeyboard npad, KeyboardState keyboard)
+        public (short, short) GetLeftStick()
         {
+            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+
             short dx = 0;
             short dy = 0;
             
-            if (keyboard[(Key)npad.LeftJoycon.StickUp])    dy =  short.MaxValue;
-            if (keyboard[(Key)npad.LeftJoycon.StickDown])  dy = -short.MaxValue;
-            if (keyboard[(Key)npad.LeftJoycon.StickLeft])  dx = -short.MaxValue;
-            if (keyboard[(Key)npad.LeftJoycon.StickRight]) dx =  short.MaxValue;
+            if (keyboard[(Key)_config.LeftJoycon.StickUp])    dy =  short.MaxValue;
+            if (keyboard[(Key)_config.LeftJoycon.StickDown])  dy = -short.MaxValue;
+            if (keyboard[(Key)_config.LeftJoycon.StickLeft])  dx = -short.MaxValue;
+            if (keyboard[(Key)_config.LeftJoycon.StickRight]) dx =  short.MaxValue;
 
             return (dx, dy);
         }
 
-        public static (short, short) GetRightStick(NpadKeyboard npad, KeyboardState keyboard)
+        public (short, short) GetRightStick()
         {
+            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+
             short dx = 0;
             short dy = 0;
 
-            if (keyboard[(Key)npad.RightJoycon.StickUp])    dy =  short.MaxValue;
-            if (keyboard[(Key)npad.RightJoycon.StickDown])  dy = -short.MaxValue;
-            if (keyboard[(Key)npad.RightJoycon.StickLeft])  dx = -short.MaxValue;
-            if (keyboard[(Key)npad.RightJoycon.StickRight]) dx =  short.MaxValue;
+            if (keyboard[(Key)_config.RightJoycon.StickUp])    dy =  short.MaxValue;
+            if (keyboard[(Key)_config.RightJoycon.StickDown])  dy = -short.MaxValue;
+            if (keyboard[(Key)_config.RightJoycon.StickLeft])  dx = -short.MaxValue;
+            if (keyboard[(Key)_config.RightJoycon.StickRight]) dx =  short.MaxValue;
 
             return (dx, dy);
         }
 
-        public static HotkeyButtons GetHotkeyButtons(NpadKeyboard npad, KeyboardState keyboard)
+        public HotkeyButtons GetHotkeyButtons()
         {
+            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+
             HotkeyButtons buttons = 0;
 
-            if (keyboard[(Key)npad.Hotkeys.ToggleVsync]) buttons |= HotkeyButtons.ToggleVSync;
+            if (keyboard[(Key)_config.Hotkeys.ToggleVsync]) buttons |= HotkeyButtons.ToggleVSync;
 
             return buttons;
         }
@@ -223,12 +244,14 @@ namespace Ryujinx.Ui
             new KeyMappingEntry { TargetKey = Key.NumLock,      Target = 10 },
         };
 
-        public static KeyboardInput GetKeysDown(NpadKeyboard npad, KeyboardState keyboard)
+        public KeyboardInput GetKeysDown()
         {
+            KeyboardState keyboard = Keyboard.GetState(_config.Index);
+
             KeyboardInput hidKeyboard = new KeyboardInput
             {
-                    Modifier = 0,
-                    Keys     = new int[0x8]
+                Modifier = 0,
+                Keys     = new int[0x8]
             };
 
             foreach (KeyMappingEntry entry in KeyMapping)

@@ -1,10 +1,9 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration.Hid;
 using Ryujinx.Configuration.System;
 using Ryujinx.Configuration.Ui;
-using Ryujinx.UI.Input;
 using System;
 using System.Collections.Generic;
 
@@ -159,7 +158,7 @@ namespace Ryujinx.Configuration
             public ReactiveObject<string> TimeZone { get; private set; }
 
             /// <summary>
-            /// System Time Offset in seconds
+            /// System Time Offset in Seconds
             /// </summary>
             public ReactiveObject<long> SystemTimeOffset { get; private set; }
 
@@ -208,31 +207,21 @@ namespace Ryujinx.Configuration
         public class HidSection
         {
             /// <summary>
-            ///  The primary controller's type
-            /// </summary>
-            public ReactiveObject<ControllerType> ControllerType { get; private set; }
-
-            /// <summary>
             /// Enable or disable keyboard support (Independent from controllers binding)
             /// </summary>
             public ReactiveObject<bool> EnableKeyboard { get; private set; }
 
             /// <summary>
-            /// Keyboard control bindings
+            /// Input device configuration.
+            /// NOTE: This ReactiveObject won't issue an event when the List has elements added or removed.
+            /// TODO: Implement a ReactiveList class.
             /// </summary>
-            public ReactiveObject<NpadKeyboard> KeyboardControls { get; private set; }
-
-            /// <summary>
-            /// Controller control bindings
-            /// </summary>
-            public ReactiveObject<NpadController> JoystickControls { get; private set; }
+            public ReactiveObject<List<InputConfig>> InputConfig { get; private set; }
 
             public HidSection()
             {
-                ControllerType   = new ReactiveObject<ControllerType>();
-                EnableKeyboard   = new ReactiveObject<bool>();
-                KeyboardControls = new ReactiveObject<NpadKeyboard>();
-                JoystickControls = new ReactiveObject<NpadController>();
+                EnableKeyboard = new ReactiveObject<bool>();
+                InputConfig    = new ReactiveObject<List<InputConfig>>();
             }
         }
 
@@ -311,6 +300,21 @@ namespace Ryujinx.Configuration
 
         public ConfigurationFileFormat ToFileFormat()
         {
+            List<ControllerConfig> controllerConfigList = new List<ControllerConfig>();
+            List<KeyboardConfig>   keyboardConfigList   = new List<KeyboardConfig>();
+
+            foreach (InputConfig inputConfig in Hid.InputConfig.Value)
+            {
+                if (inputConfig is ControllerConfig controllerConfig)
+                {
+                    controllerConfigList.Add(controllerConfig);
+                }
+                else if (inputConfig is KeyboardConfig keyboardConfig)
+                {
+                    keyboardConfigList.Add(keyboardConfig);
+                }
+            }
+
             ConfigurationFileFormat configurationFile = new ConfigurationFileFormat
             {
                 Version                   = ConfigurationFileFormat.CurrentVersion,
@@ -336,7 +340,6 @@ namespace Ryujinx.Configuration
                 EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
                 FsGlobalAccessLogMode     = System.FsGlobalAccessLogMode,
                 IgnoreMissingServices     = System.IgnoreMissingServices,
-                ControllerType            = Hid.ControllerType,
                 GuiColumns                = new GuiColumns()
                 {
                     FavColumn        = Ui.GuiColumns.FavColumn,
@@ -354,8 +357,8 @@ namespace Ryujinx.Configuration
                 EnableCustomTheme         = Ui.EnableCustomTheme,
                 CustomThemePath           = Ui.CustomThemePath,
                 EnableKeyboard            = Hid.EnableKeyboard,
-                KeyboardControls          = Hid.KeyboardControls,
-                JoystickControls          = Hid.JoystickControls
+                KeyboardConfig            = keyboardConfigList,
+                ControllerConfig          = controllerConfigList
             };
 
             return configurationFile;
@@ -385,7 +388,6 @@ namespace Ryujinx.Configuration
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
             System.IgnoreMissingServices.Value     = false;
-            Hid.ControllerType.Value               = ControllerType.Handheld;
             Ui.GuiColumns.FavColumn.Value          = true;
             Ui.GuiColumns.IconColumn.Value         = true;
             Ui.GuiColumns.AppColumn.Value          = true;
@@ -401,73 +403,51 @@ namespace Ryujinx.Configuration
             Ui.CustomThemePath.Value               = "";
             Hid.EnableKeyboard.Value               = false;
 
-            Hid.KeyboardControls.Value = new NpadKeyboard
+            Hid.InputConfig.Value = new List<InputConfig>
             {
-                LeftJoycon  = new NpadKeyboardLeft
+                new KeyboardConfig
                 {
-                    StickUp     = Key.W,
-                    StickDown   = Key.S,
-                    StickLeft   = Key.A,
-                    StickRight  = Key.D,
-                    StickButton = Key.F,
-                    DPadUp      = Key.Up,
-                    DPadDown    = Key.Down,
-                    DPadLeft    = Key.Left,
-                    DPadRight   = Key.Right,
-                    ButtonMinus = Key.Minus,
-                    ButtonL     = Key.E,
-                    ButtonZl    = Key.Q,
-                },
-                RightJoycon = new NpadKeyboardRight
-                {
-                    StickUp     = Key.I,
-                    StickDown   = Key.K,
-                    StickLeft   = Key.J,
-                    StickRight  = Key.L,
-                    StickButton = Key.H,
-                    ButtonA     = Key.Z,
-                    ButtonB     = Key.X,
-                    ButtonX     = Key.C,
-                    ButtonY     = Key.V,
-                    ButtonPlus  = Key.Plus,
-                    ButtonR     = Key.U,
-                    ButtonZr    = Key.O,
-                },
-                Hotkeys     = new KeyboardHotkeys
-                {
-                    ToggleVsync = Key.Tab
-                }
-            };
-
-            Hid.JoystickControls.Value = new NpadController
-            {
-                Enabled          = true,
-                Index            = 0,
-                Deadzone         = 0.05f,
-                TriggerThreshold = 0.5f,
-                LeftJoycon       = new NpadControllerLeft
-                {
-                    Stick       = ControllerInputId.Axis0,
-                    StickButton = ControllerInputId.Button8,
-                    DPadUp      = ControllerInputId.Hat0Up,
-                    DPadDown    = ControllerInputId.Hat0Down,
-                    DPadLeft    = ControllerInputId.Hat0Left,
-                    DPadRight   = ControllerInputId.Hat0Right,
-                    ButtonMinus = ControllerInputId.Button6,
-                    ButtonL     = ControllerInputId.Button4,
-                    ButtonZl    = ControllerInputId.Axis2,
-                },
-                RightJoycon      = new NpadControllerRight
-                {
-                    Stick       = ControllerInputId.Axis3,
-                    StickButton = ControllerInputId.Button9,
-                    ButtonA     = ControllerInputId.Button1,
-                    ButtonB     = ControllerInputId.Button0,
-                    ButtonX     = ControllerInputId.Button3,
-                    ButtonY     = ControllerInputId.Button2,
-                    ButtonPlus  = ControllerInputId.Button7,
-                    ButtonR     = ControllerInputId.Button5,
-                    ButtonZr    = ControllerInputId.Axis5,
+                    Index          = 0,
+                    ControllerType = ControllerType.JoyconPair,
+                    PlayerIndex    = PlayerIndex.Player1,
+                    LeftJoycon     = new NpadKeyboardLeft
+                    {
+                        StickUp     = Key.W,
+                        StickDown   = Key.S,
+                        StickLeft   = Key.A,
+                        StickRight  = Key.D,
+                        StickButton = Key.F,
+                        DPadUp      = Key.Up,
+                        DPadDown    = Key.Down,
+                        DPadLeft    = Key.Left,
+                        DPadRight   = Key.Right,
+                        ButtonMinus = Key.Minus,
+                        ButtonL     = Key.E,
+                        ButtonZl    = Key.Q,
+                        ButtonSl    = Key.Home,
+                        ButtonSr    = Key.End
+                    },
+                    RightJoycon    = new NpadKeyboardRight
+                    {
+                        StickUp     = Key.I,
+                        StickDown   = Key.K,
+                        StickLeft   = Key.J,
+                        StickRight  = Key.L,
+                        StickButton = Key.H,
+                        ButtonA     = Key.Z,
+                        ButtonB     = Key.X,
+                        ButtonX     = Key.C,
+                        ButtonY     = Key.V,
+                        ButtonPlus  = Key.Plus,
+                        ButtonR     = Key.U,
+                        ButtonZr    = Key.O,
+                        ButtonSl    = Key.PageUp,
+                        ButtonSr    = Key.PageDown
+                    },
+                    Hotkeys        = new KeyboardHotkeys
+                    {
+                        ToggleVsync = Key.Tab
+                    }
                 }
             };
         }
@@ -521,6 +501,71 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 6)
+            {
+                Common.Logging.Logger.PrintWarning(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 6.");
+
+                configurationFileFormat.ControllerConfig = new List<ControllerConfig>();
+                configurationFileFormat.KeyboardConfig   = new List<KeyboardConfig>{
+                    new KeyboardConfig
+                    {
+                        Index          = 0,
+                        ControllerType = ControllerType.JoyconPair,
+                        PlayerIndex    = PlayerIndex.Player1,
+                        LeftJoycon     = new NpadKeyboardLeft
+                        {
+                            StickUp     = Key.W,
+                            StickDown   = Key.S,
+                            StickLeft   = Key.A,
+                            StickRight  = Key.D,
+                            StickButton = Key.F,
+                            DPadUp      = Key.Up,
+                            DPadDown    = Key.Down,
+                            DPadLeft    = Key.Left,
+                            DPadRight   = Key.Right,
+                            ButtonMinus = Key.Minus,
+                            ButtonL     = Key.E,
+                            ButtonZl    = Key.Q,
+                            ButtonSl    = Key.Unbound,
+                            ButtonSr    = Key.Unbound
+                        },
+                        RightJoycon    = new NpadKeyboardRight
+                        {
+                            StickUp     = Key.I,
+                            StickDown   = Key.K,
+                            StickLeft   = Key.J,
+                            StickRight  = Key.L,
+                            StickButton = Key.H,
+                            ButtonA     = Key.Z,
+                            ButtonB     = Key.X,
+                            ButtonX     = Key.C,
+                            ButtonY     = Key.V,
+                            ButtonPlus  = Key.Plus,
+                            ButtonR     = Key.U,
+                            ButtonZr    = Key.O,
+                            ButtonSl    = Key.Unbound,
+                            ButtonSr    = Key.Unbound
+                        },
+                        Hotkeys        = new KeyboardHotkeys
+                        {
+                            ToggleVsync = Key.Tab
+                        }
+                    }
+                };
+
+                configurationFileUpdated = true;
+            }
+
+            List<InputConfig> inputConfig = new List<InputConfig>();
+            foreach (ControllerConfig controllerConfig in configurationFileFormat.ControllerConfig)
+            {
+                inputConfig.Add(controllerConfig);
+            }
+            foreach (KeyboardConfig keyboardConfig in configurationFileFormat.KeyboardConfig)
+            {
+                inputConfig.Add(keyboardConfig);
+            }
+
             Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;
             Graphics.ShadersDumpPath.Value         = configurationFileFormat.GraphicsShadersDumpPath;
             Logger.EnableDebug.Value               = configurationFileFormat.LoggingEnableDebug;
@@ -544,7 +589,6 @@ namespace Ryujinx.Configuration
             System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;
             System.FsGlobalAccessLogMode.Value     = configurationFileFormat.FsGlobalAccessLogMode;
             System.IgnoreMissingServices.Value     = configurationFileFormat.IgnoreMissingServices;
-            Hid.ControllerType.Value               = configurationFileFormat.ControllerType;
             Ui.GuiColumns.FavColumn.Value          = configurationFileFormat.GuiColumns.FavColumn;
             Ui.GuiColumns.IconColumn.Value         = configurationFileFormat.GuiColumns.IconColumn;
             Ui.GuiColumns.AppColumn.Value          = configurationFileFormat.GuiColumns.AppColumn;
@@ -559,14 +603,13 @@ namespace Ryujinx.Configuration
             Ui.EnableCustomTheme.Value             = configurationFileFormat.EnableCustomTheme;
             Ui.CustomThemePath.Value               = configurationFileFormat.CustomThemePath;
             Hid.EnableKeyboard.Value               = configurationFileFormat.EnableKeyboard;
-            Hid.KeyboardControls.Value             = configurationFileFormat.KeyboardControls;
-            Hid.JoystickControls.Value             = configurationFileFormat.JoystickControls;
+            Hid.InputConfig.Value                  = inputConfig;
 
             if (configurationFileUpdated)
             {
                 ToFileFormat().SaveConfig(configurationFilePath);
 
-                Common.Logging.Logger.PrintWarning(LogClass.Application, "Configuration file is updated!");
+                Common.Logging.Logger.PrintWarning(LogClass.Application, "Configuration file has been updated!");
             }
         }
 

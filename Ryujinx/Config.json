@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "max_anisotropy": -1,
   "graphics_shaders_dump_path": "",
   "logging_enable_debug": false,
@@ -22,7 +22,6 @@
   "enable_fs_integrity_checks": true,
   "fs_global_access_log_mode": 0,
   "ignore_missing_services": false,
-  "controller_type": "Handheld",
   "gui_columns": {
     "fav_column": true,
     "icon_column": true,
@@ -39,65 +38,47 @@
   "enable_custom_theme": false,
   "custom_theme_path": "",
   "enable_keyboard": false,
-  "keyboard_controls": {
-    "left_joycon": {
-      "stick_up": "W",
-      "stick_down": "S",
-      "stick_left": "A",
-      "stick_right": "D",
-      "stick_button": "F",
-      "dpad_up": "Up",
-      "dpad_down": "Down",
-      "dpad_left": "Left",
-      "dpad_right": "Right",
-      "button_minus": "Minus",
-      "button_l": "E",
-      "button_zl": "Q"
-    },
-    "right_joycon": {
-      "stick_up": "I",
-      "stick_down": "K",
-      "stick_left": "J",
-      "stick_right": "L",
-      "stick_button": "H",
-      "button_a": "Z",
-      "button_b": "X",
-      "button_x": "C",
-      "button_y": "V",
-      "button_plus": "Plus",
-      "button_r": "U",
-      "button_zr": "O"
-    },
-    "hotkeys": {
-      "toggle_vsync": "Tab"
+  "keyboard_config": [
+    {
+      "index": 0,
+      "controller_type": "JoyconPair",
+      "player_index": "Player1",
+      "left_joycon": {
+        "stick_up": "W",
+        "stick_down": "S",
+        "stick_left": "A",
+        "stick_right": "D",
+        "stick_button": "F",
+        "dpad_up": "Up",
+        "dpad_down": "Down",
+        "dpad_left": "Left",
+        "dpad_right": "Right",
+        "button_minus": "Minus",
+        "button_l": "E",
+        "button_zl": "Q",
+        "button_sl": "Unbound",
+        "button_sr": "Unbound"
+      },
+      "right_joycon": {
+        "stick_up": "I",
+        "stick_down": "K",
+        "stick_left": "J",
+        "stick_right": "L",
+        "stick_button": "H",
+        "button_a": "Z",
+        "button_b": "X",
+        "button_x": "C",
+        "button_y": "V",
+        "button_plus": "Plus",
+        "button_r": "U",
+        "button_zr": "O",
+        "button_sl": "Unbound",
+        "button_sr": "Unbound"
+      },
+      "hotkeys": {
+        "toggle_vsync": "Tab"
+      }
     }
-  },
-  "joystick_controls": {
-    "enabled": true,
-    "index": 0,
-    "deadzone": 0.05,
-    "trigger_threshold": 0.5,
-    "left_joycon": {
-      "stick": "Axis0",
-      "stick_button": "Button8",
-      "button_minus": "Button6",
-      "button_l": "Button4",
-      "button_zl": "Axis2",
-      "dpad_up": "Hat0Up",
-      "dpad_down": "Hat0Down",
-      "dpad_left": "Hat0Left",
-      "dpad_right": "Hat0Right"
-    },
-    "right_joycon": {
-      "stick": "Axis3",
-      "stick_button": "Button9",
-      "button_a": "Button1",
-      "button_b": "Button0",
-      "button_x": "Button3",
-      "button_y": "Button2",
-      "button_plus": "Button7",
-      "button_r": "Button5",
-      "button_zr": "Axis5"
-    }
-  }
+  ],
+  "controller_config": []
 }

@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.Configuration.Hid
+﻿using Ryujinx.Configuration.Hid;
+
+namespace Ryujinx.Common.Configuration.Hid
 {
     public struct KeyboardHotkeys
     {

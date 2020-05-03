@@ -133,7 +133,7 @@ namespace Ryujinx.Ui
 
                             if (showErrorDialog)
                             {
-                                GtkDialog.CreateDialog("Ryujinx - Error", "Add Update Failed!", "The NCA header content type check has failed. This is usually because the header key is incorrect or missing.");
+                                GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", "The NCA header content type check has failed. This is usually because the header key is incorrect or missing.");
                             }
                             
                             break;
@@ -144,7 +144,7 @@ namespace Ryujinx.Ui
 
                             if (showErrorDialog)
                             {
-                                GtkDialog.CreateDialog("Ryujinx - Error", "Add Update Failed!", $"Your key set is missing a key with the name: {exception.Name}");
+                                GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", $"Your key set is missing a key with the name: {exception.Name}");
                             }
 
                             break;

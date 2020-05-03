@@ -840,8 +840,8 @@
           "title": "Joystick Deadzone",
           "description": "Controller Analog Stick Deadzone",
           "default": 0.05,
-          "minimum": -32768.0,
-          "maximum": 32767.0,
+          "minimum": 0.00,
+          "maximum": 1.00,
           "examples": [
             0.05
           ]
