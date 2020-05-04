@@ -5,10 +5,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public KReadableEvent ReadableEvent { get; private set; }
         public KWritableEvent WritableEvent { get; private set; }
 
-        public KEvent(Horizon system)
+        public KEvent(KernelContext context)
         {
-            ReadableEvent = new KReadableEvent(system, this);
-            WritableEvent = new KWritableEvent(system, this);
+            ReadableEvent = new KReadableEvent(context, this);
+            WritableEvent = new KWritableEvent(context, this);
         }
     }
 }

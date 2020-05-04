@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         {
             if (_operationEventReadableHandle == 0)
             {
-                KEvent kEvent = new KEvent(context.Device.System);
+                KEvent kEvent = new KEvent(context.Device.System.KernelContext);
 
                 _clockCore.RegisterOperationEvent(kEvent.WritableEvent);
 

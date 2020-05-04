@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     class KWritableEvent : KAutoObject
     {
-        private KEvent _parent;
+        private readonly KEvent _parent;
 
-        public KWritableEvent(Horizon system, KEvent parent) : base(system)
+        public KWritableEvent(KernelContext context, KEvent parent) : base(context)
         {
             _parent = parent;
         }

@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public const int SelfThreadHandle  = (0x1ffff << 15) | 0;
         public const int SelfProcessHandle = (0x1ffff << 15) | 1;
 
-        private Horizon _system;
+        private readonly KernelContext _context;
 
         private KHandleEntry[] _table;
 
@@ -22,9 +22,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private ushort _idCounter;
 
-        public KHandleTable(Horizon system)
+        public KHandleTable(KernelContext context)
         {
-            _system = system;
+            _context = context;
         }
 
         public KernelResult Initialize(int size)
@@ -136,8 +136,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public void CancelHandleReservation(int handle)
         {
-            int index    = (handle >> 0) & 0x7fff;
-            int handleId = (handle >> 15);
+            int index = (handle >> 0) & 0x7fff;
 
             lock (_table)
             {
@@ -162,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 KHandleEntry entry = _table[index];
 
                 entry.Obj      = obj;
-                entry.HandleId = (ushort)(handle >> 15);
+                entry.HandleId = (ushort)handleId;
 
                 obj.IncrementReferenceCount();
             }
@@ -230,14 +229,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public KThread GetKThread(int handle)
         {
             if (handle == SelfThreadHandle)
             {
-                return _system.Scheduler.GetCurrentThread();
+                return _context.Scheduler.GetCurrentThread();
             }
             else
             {
@@ -249,7 +248,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             if (handle == SelfProcessHandle)
             {
-                return _system.Scheduler.GetCurrentProcess();
+                return _context.Scheduler.GetCurrentProcess();
             }
             else
             {

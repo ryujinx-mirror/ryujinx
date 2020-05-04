@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         public static void InitializePort(Horizon system)
         {
-            KPort port = new KPort(system, 256, false, 0);
+            KPort port = new KPort(system.KernelContext, 256, false, 0);
 
             port.ClientPort.SetName("sm:");
 
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 return ResultCode.InvalidName;
             }
 
-            KSession session = new KSession(context.Device.System);
+            KSession session = new KSession(context.Device.System.KernelContext);
 
             if (_registeredServices.TryGetValue(name, out KPort port))
             {
@@ -135,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             Logger.PrintInfo(LogClass.ServiceSm, $"Register \"{name}\".");
 
-            KPort port = new KPort(context.Device.System, maxSessions, isLight, 0);
+            KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, 0);
 
             if (!_registeredServices.TryAdd(name, port))
             {

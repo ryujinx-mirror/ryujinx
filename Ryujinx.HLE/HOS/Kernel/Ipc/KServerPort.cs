@@ -5,14 +5,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
     class KServerPort : KSynchronizationObject
     {
-        private LinkedList<KServerSession>      _incomingConnections;
-        private LinkedList<KLightServerSession> _lightIncomingConnections;
+        private readonly LinkedList<KServerSession>      _incomingConnections;
+        private readonly LinkedList<KLightServerSession> _lightIncomingConnections;
 
-        private KPort _parent;
+        private readonly KPort _parent;
 
         public bool IsLight => _parent.IsLight;
 
-        public KServerPort(Horizon system, KPort parent) : base(system)
+        public KServerPort(KernelContext context, KPort parent) : base(context)
         {
             _parent = parent;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private void AcceptIncomingConnection<T>(LinkedList<T> list, T session)
         {
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             list.AddLast(session);
 
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 Signal();
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
         }
 
         public KServerSession AcceptIncomingConnection()
@@ -56,9 +56,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private T AcceptIncomingConnection<T>(LinkedList<T> list)
         {
-            T session = default(T);
+            T session = default;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (list.Count != 0)
             {
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 list.RemoveFirst();
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             return session;
         }

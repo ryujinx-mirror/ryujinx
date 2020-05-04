@@ -5,11 +5,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     static class KConditionVariable
     {
-        public static void Wait(Horizon system, LinkedList<KThread> threadList, object mutex, long timeout)
+        public static void Wait(KernelContext context, LinkedList<KThread> threadList, object mutex, long timeout)
         {
-            KThread currentThread = system.Scheduler.GetCurrentThread();
+            KThread currentThread = context.Scheduler.GetCurrentThread();
 
-            system.CriticalSection.Enter();
+            context.CriticalSection.Enter();
 
             Monitor.Exit(mutex);
 
@@ -28,29 +28,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 currentThread.Withholder = null;
 
-                system.CriticalSection.Leave();
+                context.CriticalSection.Leave();
             }
             else
             {
                 if (timeout > 0)
                 {
-                    system.TimeManager.ScheduleFutureInvocation(currentThread, timeout);
+                    context.TimeManager.ScheduleFutureInvocation(currentThread, timeout);
                 }
 
-                system.CriticalSection.Leave();
+                context.CriticalSection.Leave();
 
                 if (timeout > 0)
                 {
-                    system.TimeManager.UnscheduleFutureInvocation(currentThread);
+                    context.TimeManager.UnscheduleFutureInvocation(currentThread);
                 }
             }
 
             Monitor.Enter(mutex);
         }
 
-        public static void NotifyAll(Horizon system, LinkedList<KThread> threadList)
+        public static void NotifyAll(KernelContext context, LinkedList<KThread> threadList)
         {
-            system.CriticalSection.Enter();
+            context.CriticalSection.Enter();
 
             LinkedListNode<KThread> node = threadList.First;
 
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 thread.Reschedule(ThreadSchedState.Running);
             }
 
-            system.CriticalSection.Leave();
+            context.CriticalSection.Leave();
         }
     }
 }

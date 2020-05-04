@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         private const int PreemptionPriorityCores012 = 59;
         private const int PreemptionPriorityCore3    = 63;
 
-        private Horizon _system;
+        private readonly KernelContext _context;
 
         public KSchedulingData SchedulingData { get; private set; }
 
@@ -21,9 +21,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public bool ThreadReselectionRequested { get; set; }
 
-        public KScheduler(Horizon system)
+        public KScheduler(KernelContext context)
         {
-            _system = system;
+            _context = context;
 
             SchedulingData = new KSchedulingData();
 
@@ -39,14 +39,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void PreemptThreads()
         {
-            _system.CriticalSection.Enter();
+            _context.CriticalSection.Enter();
 
             PreemptThread(PreemptionPriorityCores012, 0);
             PreemptThread(PreemptionPriorityCores012, 1);
             PreemptThread(PreemptionPriorityCores012, 2);
             PreemptThread(PreemptionPriorityCore3,    3);
 
-            _system.CriticalSection.Leave();
+            _context.CriticalSection.Leave();
         }
 
         private void PreemptThread(int prio, int core)
@@ -224,9 +224,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return _dummyThread;
             }
 
-            KProcess dummyProcess = new KProcess(_system);
+            KProcess dummyProcess = new KProcess(_context);
 
-            KThread dummyThread = new KThread(_system);
+            KThread dummyThread = new KThread(_context);
 
             dummyThread.Initialize(0, 0, 0, 44, 0, dummyProcess, ThreadType.Dummy);
 

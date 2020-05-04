@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             _userId            = userId;
             _permissionLevel   = permissionLevel;
             _notifications     = new LinkedList<NotificationInfo>();
-            _notificationEvent = new KEvent(context.Device.System);
+            _notificationEvent = new KEvent(context.Device.System.KernelContext);
 
             _hasNewFriendRequest = false;
             _hasFriendListUpdate = false;

@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong Address { get; private set; }
         public ulong Size    { get; private set; }
 
-        public KTransferMemory(Horizon system, ulong address, ulong size) : base(system)
+        public KTransferMemory(KernelContext context, ulong address, ulong size) : base(context)
         {
             Address = address;
             Size    = size;

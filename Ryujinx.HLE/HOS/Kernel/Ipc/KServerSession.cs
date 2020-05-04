@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private KSessionRequest _activeRequest;
 
-        public KServerSession(Horizon system, KSession parent) : base(system)
+        public KServerSession(KernelContext context, KSession parent) : base(context)
         {
             _parent = parent;
 
@@ -214,28 +214,28 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KernelResult Receive(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
-            KThread  serverThread  = System.Scheduler.GetCurrentThread();
+            KThread  serverThread  = KernelContext.Scheduler.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_parent.ClientSession.State != ChannelState.Open)
             {
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 return KernelResult.PortRemoteClosed;
             }
 
             if (_activeRequest != null || !DequeueRequest(out KSessionRequest request))
             {
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 return KernelResult.NotFound;
             }
 
             if (request.ClientThread == null)
             {
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 return KernelResult.PortRemoteClosed;
             }
@@ -243,7 +243,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             KThread  clientThread  = request.ClientThread;
             KProcess clientProcess = clientThread.Owner;
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             _activeRequest = request;
 
@@ -267,7 +267,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                 CloseAllHandles(serverMsg, clientHeader, serverProcess);
 
-                System.CriticalSection.Enter();
+                KernelContext.CriticalSection.Enter();
 
                 _activeRequest = null;
 
@@ -276,7 +276,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     Signal();
                 }
 
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 WakeClientThread(request, clientResult);
             }
@@ -351,8 +351,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 for (int index = 0; index < clientHeader.CopyHandlesCount; index++)
                 {
                     int newHandle = 0;
-
-                    int handle = System.Device.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
+                    int handle = KernelContext.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
 
                     if (clientResult == KernelResult.Success && handle != 0)
                     {
@@ -367,8 +366,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 for (int index = 0; index < clientHeader.MoveHandlesCount; index++)
                 {
                     int newHandle = 0;
-
-                    int handle = System.Device.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
+                    int handle = KernelContext.Memory.Read<int>(clientMsg.DramAddress + offset * 4);
 
                     if (handle != 0)
                     {
@@ -404,7 +402,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < clientHeader.PointerBuffersCount; index++)
             {
-                ulong pointerDesc = System.Device.Memory.Read<ulong>(clientMsg.DramAddress + offset * 4);
+                ulong pointerDesc = KernelContext.Memory.Read<ulong>(clientMsg.DramAddress + offset * 4);
 
                 PointerBufferDesc descriptor = new PointerBufferDesc(pointerDesc);
 
@@ -465,9 +463,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 ulong clientDescAddress = clientMsg.DramAddress + offset * 4;
 
-                uint descWord0 = System.Device.Memory.Read<uint>(clientDescAddress + 0);
-                uint descWord1 = System.Device.Memory.Read<uint>(clientDescAddress + 4);
-                uint descWord2 = System.Device.Memory.Read<uint>(clientDescAddress + 8);
+                uint descWord0 = KernelContext.Memory.Read<uint>(clientDescAddress + 0);
+                uint descWord1 = KernelContext.Memory.Read<uint>(clientDescAddress + 4);
+                uint descWord2 = KernelContext.Memory.Read<uint>(clientDescAddress + 8);
 
                 bool isSendDesc     = index <  clientHeader.SendBuffersCount;
                 bool isExchangeDesc = index >= clientHeader.SendBuffersCount + clientHeader.ReceiveBuffersCount;
@@ -580,7 +578,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     copySrc = clientProcess.MemoryManager.GetDramAddressFromVa(copySrc);
                     copyDst = serverProcess.MemoryManager.GetDramAddressFromVa(copyDst);
 
-                    System.Device.Memory.Copy(copyDst, copySrc, copySize);
+                    KernelContext.Memory.Copy(copyDst, copySrc, copySize);
                 }
 
                 if (clientResult != KernelResult.Success)
@@ -596,14 +594,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KernelResult Reply(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
-            KThread  serverThread  = System.Scheduler.GetCurrentThread();
+            KThread  serverThread  = KernelContext.Scheduler.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_activeRequest == null)
             {
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 return KernelResult.InvalidState;
             }
@@ -617,7 +615,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 Signal();
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             KThread  clientThread  = request.ClientThread;
             KProcess clientProcess = clientThread.Owner;
@@ -700,8 +698,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
 
             // Copy header.
-            System.Device.Memory.Write(clientMsg.DramAddress + 0, serverHeader.Word0);
-            System.Device.Memory.Write(clientMsg.DramAddress + 4, serverHeader.Word1);
+            KernelContext.Memory.Write(clientMsg.DramAddress + 0, serverHeader.Word0);
+            KernelContext.Memory.Write(clientMsg.DramAddress + 4, serverHeader.Word1);
 
             // Copy handles.
             uint offset;
@@ -710,11 +708,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 offset = 3;
 
-                System.Device.Memory.Write(clientMsg.DramAddress + 8, serverHeader.Word2);
+                KernelContext.Memory.Write(clientMsg.DramAddress + 8, serverHeader.Word2);
 
                 if (serverHeader.HasPid)
                 {
-                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, serverProcess.Pid);
+                    KernelContext.Memory.Write(clientMsg.DramAddress + offset * 4, serverProcess.Pid);
 
                     offset += 2;
                 }
@@ -730,7 +728,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         GetCopyObjectHandle(serverThread, clientProcess, handle, out newHandle);
                     }
 
-                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
+                    KernelContext.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -753,7 +751,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         }
                     }
 
-                    System.Device.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
+                    KernelContext.Memory.Write(clientMsg.DramAddress + offset * 4, newHandle);
 
                     offset++;
                 }
@@ -821,9 +819,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 ulong dstDescAddress = clientMsg.DramAddress + offset * 4;
 
-                System.Device.Memory.Write(dstDescAddress + 0, 0);
-                System.Device.Memory.Write(dstDescAddress + 4, 0);
-                System.Device.Memory.Write(dstDescAddress + 8, 0);
+                KernelContext.Memory.Write(dstDescAddress + 0, 0);
+                KernelContext.Memory.Write(dstDescAddress + 4, 0);
+                KernelContext.Memory.Write(dstDescAddress + 8, 0);
 
                 offset += 3;
             }
@@ -857,7 +855,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     copyDst = clientProcess.MemoryManager.GetDramAddressFromVa(copyDst);
                     copySrc = serverProcess.MemoryManager.GetDramAddressFromVa(copySrc);
 
-                    System.Device.Memory.Copy(copyDst, copySrc, copySize);
+                    KernelContext.Memory.Copy(copyDst, copySrc, copySize);
                 }
             }
 
@@ -878,16 +876,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private MessageHeader GetClientMessageHeader(Message clientMsg)
         {
-            uint word0 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 0);
-            uint word1 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 4);
-            uint word2 = System.Device.Memory.Read<uint>(clientMsg.DramAddress + 8);
+            uint word0 = KernelContext.Memory.Read<uint>(clientMsg.DramAddress + 0);
+            uint word1 = KernelContext.Memory.Read<uint>(clientMsg.DramAddress + 4);
+            uint word2 = KernelContext.Memory.Read<uint>(clientMsg.DramAddress + 8);
 
             return new MessageHeader(word0, word1, word2);
         }
 
         private MessageHeader GetServerMessageHeader(Message serverMsg)
         {
-            KProcess currentProcess = System.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
 
             uint word0 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 0);
             uint word1 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 4);
@@ -974,7 +972,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             for (int index = 0; index < recvListSize; index++)
             {
-                receiveList[index] = System.Device.Memory.Read<ulong>(recvListAddress + (ulong)index * 8);
+                receiveList[index] = KernelContext.Memory.Read<ulong>(recvListAddress + (ulong)index * 8);
             }
 
             return receiveList;
@@ -1139,7 +1137,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private IEnumerable<KSessionRequest> IterateWithRemovalOfAllRequests()
         {
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_activeRequest != null)
             {
@@ -1147,13 +1145,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                 _activeRequest = null;
 
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
 
                 yield return request;
             }
             else
             {
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
             }
 
             while (DequeueRequest(out KSessionRequest request))
@@ -1166,7 +1164,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             request = null;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             bool hasRequest = _requests.First != null;
 
@@ -1177,7 +1175,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 _requests.RemoveFirst();
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             return hasRequest;
         }
@@ -1211,11 +1209,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
             else
             {
-                System.CriticalSection.Enter();
+                KernelContext.CriticalSection.Enter();
 
                 WakeAndSetResult(request.ClientThread, result);
 
-                System.CriticalSection.Leave();
+                KernelContext.CriticalSection.Leave();
             }
         }
 
@@ -1225,8 +1223,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             ulong address = clientProcess.MemoryManager.GetDramAddressFromVa(request.CustomCmdBuffAddr);
 
-            System.Device.Memory.Write<ulong>(address, 0);
-            System.Device.Memory.Write(address + 8, (int)result);
+            KernelContext.Memory.Write<ulong>(address, 0);
+            KernelContext.Memory.Write(address + 8, (int)result);
 
             clientProcess.MemoryManager.UnborrowIpcBuffer(
                 request.CustomCmdBuffAddr,
@@ -1238,14 +1236,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         private void WakeServerThreads(KernelResult result)
         {
             // Wake all server threads waiting for requests.
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             foreach (KThread thread in WaitingThreads)
             {
                 WakeAndSetResult(thread, result);
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
         }
 
         private void WakeAndSetResult(KThread thread, KernelResult result)

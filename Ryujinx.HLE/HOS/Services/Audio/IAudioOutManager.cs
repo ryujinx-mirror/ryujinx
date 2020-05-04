@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
                 channels = DefaultChannelsCount;
             }
 
-            KEvent releaseEvent = new KEvent(context.Device.System);
+            KEvent releaseEvent = new KEvent(context.Device.System.KernelContext);
 
             ReleaseCallback callback = () =>
             {

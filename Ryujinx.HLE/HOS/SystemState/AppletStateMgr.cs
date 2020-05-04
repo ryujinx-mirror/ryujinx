@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.SystemState
         {
             _messages = new ConcurrentQueue<MessageInfo>();
 
-            MessageEvent = new KEvent(system);
+            MessageEvent = new KEvent(system.KernelContext);
         }
 
         public void SetFocus(bool isFocused)

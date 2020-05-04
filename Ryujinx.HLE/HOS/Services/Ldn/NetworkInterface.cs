@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         {
             // TODO(Ac_K): Determine where the internal state is set.
             NifmState        = ResultCode.Success;
-            StateChangeEvent = new KEvent(system);
+            StateChangeEvent = new KEvent(system.KernelContext);
 
             _state = NetworkState.None;
         }

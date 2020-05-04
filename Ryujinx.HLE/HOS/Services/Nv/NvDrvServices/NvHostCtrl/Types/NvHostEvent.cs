@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
             State = NvHostEventState.Available;
 
-            Event = new KEvent(system);
+            Event = new KEvent(system.KernelContext);
 
             _eventId = eventId;
 

@@ -37,8 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public IHidServer(ServiceCtx context)
         {
-            _xpadIdEvent                 = new KEvent(context.Device.System);
-            _palmaOperationCompleteEvent = new KEvent(context.Device.System);
+            _xpadIdEvent                 = new KEvent(context.Device.System.KernelContext);
+            _palmaOperationCompleteEvent = new KEvent(context.Device.System.KernelContext);
 
             _npadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
             _npadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;

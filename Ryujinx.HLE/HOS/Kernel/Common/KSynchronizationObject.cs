@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
     {
         public LinkedList<KThread> WaitingThreads { get; }
 
-        public KSynchronizationObject(Horizon system) : base(system)
+        public KSynchronizationObject(KernelContext context) : base(context)
         {
             WaitingThreads = new LinkedList<KThread>();
         }
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public virtual void Signal()
         {
-            System.Synchronization.SignalObject(this);
+            KernelContext.Synchronization.SignalObject(this);
         }
 
         public virtual bool IsSignaled()

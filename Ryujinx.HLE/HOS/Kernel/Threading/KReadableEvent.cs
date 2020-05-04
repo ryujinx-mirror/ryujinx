@@ -4,18 +4,18 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     class KReadableEvent : KSynchronizationObject
     {
-        private KEvent _parent;
+        private readonly KEvent _parent;
 
         private bool _signaled;
 
-        public KReadableEvent(Horizon system, KEvent parent) : base(system)
+        public KReadableEvent(KernelContext context, KEvent parent) : base(context)
         {
             _parent = parent;
         }
 
         public override void Signal()
         {
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (!_signaled)
             {
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 base.Signal();
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
         }
 
         public KernelResult Clear()
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             KernelResult result;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_signaled)
             {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 result = KernelResult.InvalidState;
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             return result;
         }

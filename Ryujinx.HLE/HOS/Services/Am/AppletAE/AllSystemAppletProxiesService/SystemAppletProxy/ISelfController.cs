@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
         public ISelfController(Horizon system)
         {
-            _libraryAppletLaunchableEvent = new KEvent(system);
+            _libraryAppletLaunchableEvent = new KEvent(system.KernelContext);
         }
 
         [Command(0)]
@@ -230,7 +230,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             if (_accumulatedSuspendedTickChangedEventHandle == 0)
             {
-                _accumulatedSuspendedTickChangedEvent = new KEvent(context.Device.System);
+                _accumulatedSuspendedTickChangedEvent = new KEvent(context.Device.System.KernelContext);
 
                 _accumulatedSuspendedTickChangedEvent.ReadableEvent.Signal();
 

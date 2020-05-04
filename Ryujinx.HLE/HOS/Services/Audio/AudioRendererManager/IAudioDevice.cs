@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
         public IAudioDevice(Horizon system)
         {
-            _systemEvent = new KEvent(system);
+            _systemEvent = new KEvent(system.KernelContext);
 
             // TODO: We shouldn't be signaling this here.
             _systemEvent.ReadableEvent.Signal();

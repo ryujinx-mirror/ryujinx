@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
 
         public IPsmSession(Horizon system)
         {
-            _stateChangeEvent       = new KEvent(system);
+            _stateChangeEvent       = new KEvent(system.KernelContext);
             _stateChangeEventHandle = -1;
         }
 

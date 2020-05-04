@@ -1,19 +1,18 @@
-using ARMeilleure;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     class KCriticalSection
     {
-        private Horizon _system;
+        private readonly KernelContext _context;
 
         public object LockObj { get; private set; }
 
         private int _recursionCount;
 
-        public KCriticalSection(Horizon system)
+        public KCriticalSection(KernelContext context)
         {
-            _system = system;
+            _context = context;
 
             LockObj = new object();
         }
@@ -36,20 +35,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (--_recursionCount == 0)
             {
-                if (_system.Scheduler.ThreadReselectionRequested)
+                if (_context.Scheduler.ThreadReselectionRequested)
                 {
-                    _system.Scheduler.SelectThreads();
+                    _context.Scheduler.SelectThreads();
                 }
 
                 Monitor.Exit(LockObj);
 
-                if (_system.Scheduler.MultiCoreScheduling)
+                if (_context.Scheduler.MultiCoreScheduling)
                 {
-                    lock (_system.Scheduler.CoreContexts)
+                    lock (_context.Scheduler.CoreContexts)
                     {
                         for (int core = 0; core < KScheduler.CpuCoresCount; core++)
                         {
-                            KCoreContext coreContext = _system.Scheduler.CoreContexts[core];
+                            KCoreContext coreContext = _context.Scheduler.CoreContexts[core];
 
                             if (coreContext.ContextSwitchNeeded)
                             {
@@ -86,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (doContextSwitch)
             {
-                _system.Scheduler.ContextSwitch();
+                _context.Scheduler.ContextSwitch();
             }
         }
     }

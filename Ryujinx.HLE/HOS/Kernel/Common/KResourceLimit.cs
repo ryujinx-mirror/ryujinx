@@ -8,17 +8,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
     {
         private const int Time10SecondsMs = 10000;
 
-        private long[] _current;
-        private long[] _limit;
-        private long[] _available;
+        private readonly long[] _current;
+        private readonly long[] _limit;
+        private readonly long[] _available;
 
-        private object _lockObj;
+        private readonly object _lockObj;
 
-        private LinkedList<KThread> _waitingThreads;
+        private readonly LinkedList<KThread> _waitingThreads;
 
         private int _waitingThreadsCount;
 
-        public KResourceLimit(Horizon system) : base(system)
+        public KResourceLimit(KernelContext context) : base(context)
         {
             _current   = new long[(int)LimitableResource.Count];
             _limit     = new long[(int)LimitableResource.Count];
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 {
                     _waitingThreadsCount++;
 
-                    KConditionVariable.Wait(System, _waitingThreads, _lockObj, timeout);
+                    KConditionVariable.Wait(KernelContext, _waitingThreads, _lockObj, timeout);
 
                     _waitingThreadsCount--;
 
@@ -101,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
                 if (_waitingThreadsCount > 0)
                 {
-                    KConditionVariable.NotifyAll(System, _waitingThreads);
+                    KConditionVariable.NotifyAll(KernelContext, _waitingThreads);
                 }
             }
         }

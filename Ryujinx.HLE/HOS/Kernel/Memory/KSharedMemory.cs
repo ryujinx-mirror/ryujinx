@@ -6,19 +6,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KSharedMemory : KAutoObject
     {
-        private KPageList _pageList;
+        private readonly KPageList _pageList;
 
-        private long _ownerPid;
+        private readonly long _ownerPid;
 
-        private MemoryPermission _ownerPermission;
-        private MemoryPermission _userPermission;
+        private readonly MemoryPermission _ownerPermission;
+        private readonly MemoryPermission _userPermission;
 
         public KSharedMemory(
-            Horizon          system,
+            KernelContext    context,
             KPageList        pageList,
             long             ownerPid,
             MemoryPermission ownerPermission,
-            MemoryPermission userPermission) : base(system)
+            MemoryPermission userPermission) : base(context)
         {
             _pageList        = pageList;
             _ownerPid        = ownerPid;

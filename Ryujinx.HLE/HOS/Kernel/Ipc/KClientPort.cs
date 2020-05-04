@@ -8,19 +8,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
     {
         private int _sessionsCount;
         private int _currentCapacity;
-        private int _maxSessions;
+        private readonly int _maxSessions;
 
-        private KPort _parent;
+        private readonly KPort _parent;
 
         public bool IsLight => _parent.IsLight;
 
-        private object _countIncLock;
+        private readonly object _countIncLock;
 
         // TODO: Remove that, we need it for now to allow HLE
         // SM implementation to work with the new IPC system.
         public IpcService Service { get; set; }
 
-        public KClientPort(Horizon system, KPort parent, int maxSessions) : base(system)
+        public KClientPort(KernelContext context, KPort parent, int maxSessions) : base(context)
         {
             _maxSessions = maxSessions;
             _parent      = parent;
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             clientSession = null;
 
-            KProcess currentProcess = System.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
 
             if (currentProcess.ResourceLimit != null &&
                !currentProcess.ResourceLimit.Reserve(LimitableResource.Session, 1))
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
             }
 
-            KSession session = new KSession(System);
+            KSession session = new KSession(KernelContext);
 
             if (Service != null)
             {
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             clientSession = null;
 
-            KProcess currentProcess = System.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
 
             if (currentProcess.ResourceLimit != null &&
                !currentProcess.ResourceLimit.Reserve(LimitableResource.Session, 1))
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
             }
 
-            KLightSession session = new KLightSession(System);
+            KLightSession session = new KLightSession(KernelContext);
 
             KernelResult result = _parent.EnqueueIncomingLightSession(session.ServerSession);
 
@@ -124,16 +124,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return result;
         }
 
-        public new static KernelResult RemoveName(Horizon system, string name)
+        public new static KernelResult RemoveName(KernelContext context, string name)
         {
-            KAutoObject foundObj = FindNamedObject(system, name);
+            KAutoObject foundObj = FindNamedObject(context, name);
 
             if (!(foundObj is KClientPort))
             {
                 return KernelResult.NotFound;
             }
 
-            return KAutoObject.RemoveName(system, name);
+            return KAutoObject.RemoveName(context, name);
         }
     }
 }

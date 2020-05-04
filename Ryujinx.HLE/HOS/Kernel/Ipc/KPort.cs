@@ -13,10 +13,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public bool IsLight { get; private set; }
 
-        public KPort(Horizon system, int maxSessions, bool isLight, long nameAddress) : base(system)
+        public KPort(KernelContext context, int maxSessions, bool isLight, long nameAddress) : base(context)
         {
-            ServerPort = new KServerPort(system, this);
-            ClientPort = new KClientPort(system, this, maxSessions);
+            ServerPort = new KServerPort(context, this);
+            ClientPort = new KClientPort(context, this, maxSessions);
 
             IsLight      = isLight;
             _nameAddress = nameAddress;
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             KernelResult result;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_state == ChannelState.Open)
             {
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 result = KernelResult.PortClosed;
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             return result;
         }
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             KernelResult result;
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             if (_state == ChannelState.Open)
             {
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 result = KernelResult.PortClosed;
             }
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             return result;
         }

@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
         internal void CreateAutomaticCorrectionEvent(Horizon system)
         {
-            _autoCorrectionEvent = new KEvent(system);
+            _autoCorrectionEvent = new KEvent(system.KernelContext);
         }
 
         public ResultCode SetAutomaticCorrectionEnabled(KThread thread, bool autoCorrectionEnabled)

@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
     class KLightServerSession : KAutoObject
     {
-        private KLightSession _parent;
+        private readonly KLightSession _parent;
 
-        public KLightServerSession(Horizon system, KLightSession parent) : base(system)
+        public KLightServerSession(KernelContext context, KLightSession parent) : base(context)
         {
             _parent = parent;
         }

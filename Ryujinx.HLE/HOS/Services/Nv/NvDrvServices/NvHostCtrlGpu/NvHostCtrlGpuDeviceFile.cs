@@ -17,8 +17,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
 
         public NvHostCtrlGpuDeviceFile(ServiceCtx context) : base(context)
         {
-            _errorEvent   = new KEvent(context.Device.System);
-            _unknownEvent = new KEvent(context.Device.System);
+            _errorEvent   = new KEvent(context.Device.System.KernelContext);
+            _unknownEvent = new KEvent(context.Device.System.KernelContext);
         }
 
         static NvHostCtrlGpuDeviceFile()

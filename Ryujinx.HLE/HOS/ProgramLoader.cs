@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -17,7 +18,7 @@ namespace Ryujinx.HLE.HOS
         private const int ArgsDataSize   = 0x9000;
         private const int ArgsTotalSize  = ArgsHeaderSize + ArgsDataSize;
 
-        public static bool LoadKernelInitalProcess(Horizon system, KipExecutable kip)
+        public static bool LoadKip(KernelContext context, KipExecutable kip)
         {
             int endOffset = kip.DataOffset + kip.Data.Length;
 
@@ -67,7 +68,7 @@ namespace Ryujinx.HLE.HOS
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
-            KMemoryRegionManager region = system.MemoryRegions[(int)memoryRegion];
+            KMemoryRegionManager region = context.MemoryRegions[(int)memoryRegion];
 
             KernelResult result = region.AllocatePages((ulong)codePagesCount, false, out KPageList pageList);
 
@@ -78,13 +79,13 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            KProcess process = new KProcess(system);
+            KProcess process = new KProcess(context);
 
             result = process.InitializeKip(
                 creationInfo,
                 kip.Capabilities,
                 pageList,
-                system.ResourceLimit,
+                context.ResourceLimit,
                 memoryRegion);
 
             if (result != KernelResult.Success)
@@ -114,15 +115,15 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            system.Processes.Add(process.Pid, process);
+            context.Processes.TryAdd(process.Pid, process);
 
             return true;
         }
 
-        public static bool LoadStaticObjects(
-            Horizon       system,
+        public static bool LoadNsos(
+            KernelContext context,
             Npdm          metaData,
-            IExecutable[] staticObjects,
+            IExecutable[] nsos,
             byte[]        arguments = null)
         {
             ulong argsStart = 0;
@@ -130,11 +131,11 @@ namespace Ryujinx.HLE.HOS
             ulong codeStart = metaData.Is64Bit ? 0x8000000UL : 0x200000UL;
             int   codeSize  = 0;
 
-            ulong[] nsoBase = new ulong[staticObjects.Length];
+            ulong[] nsoBase = new ulong[nsos.Length];
 
-            for (int index = 0; index < staticObjects.Length; index++)
+            for (int index = 0; index < nsos.Length; index++)
             {
-                IExecutable staticObject = staticObjects[index];
+                IExecutable staticObject = nsos[index];
 
                 int textEnd = staticObject.TextOffset + staticObject.Text.Length;
                 int roEnd   = staticObject.RoOffset   + staticObject.Ro.Length;
@@ -184,9 +185,9 @@ namespace Ryujinx.HLE.HOS
 
             KernelResult result;
 
-            KResourceLimit resourceLimit = new KResourceLimit(system);
+            KResourceLimit resourceLimit = new KResourceLimit(context);
 
-            long applicationRgSize = (long)system.MemoryRegions[(int)MemoryRegion.Application].Size;
+            long applicationRgSize = (long)context.MemoryRegions[(int)MemoryRegion.Application].Size;
 
             result  = resourceLimit.SetLimitValue(LimitableResource.Memory,         applicationRgSize);
             result |= resourceLimit.SetLimitValue(LimitableResource.Thread,         608);
@@ -201,7 +202,7 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            KProcess process = new KProcess(system);
+            KProcess process = new KProcess(context);
 
             MemoryRegion memoryRegion = (MemoryRegion)((metaData.Acid.Flags >> 2) & 0xf);
 
@@ -225,11 +226,11 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            for (int index = 0; index < staticObjects.Length; index++)
+            for (int index = 0; index < nsos.Length; index++)
             {
                 Logger.PrintInfo(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
 
-                result = LoadIntoMemory(process, staticObjects[index], nsoBase[index]);
+                result = LoadIntoMemory(process, nsos[index], nsoBase[index]);
 
                 if (result != KernelResult.Success)
                 {
@@ -250,7 +251,7 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            system.Processes.Add(process.Pid, process);
+            context.Processes.TryAdd(process.Pid, process);
 
             return true;
         }

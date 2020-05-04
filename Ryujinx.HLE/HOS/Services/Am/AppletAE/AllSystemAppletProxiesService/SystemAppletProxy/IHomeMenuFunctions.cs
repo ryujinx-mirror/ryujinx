@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public IHomeMenuFunctions(Horizon system)
         {
             // TODO: Signal this Event somewhere in future.
-            _channelEvent = new KEvent(system);
+            _channelEvent = new KEvent(system.KernelContext);
         }
 
         [Command(10)]

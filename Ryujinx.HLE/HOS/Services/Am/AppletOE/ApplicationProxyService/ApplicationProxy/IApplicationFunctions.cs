@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
         public IApplicationFunctions(Horizon system)
         {
-            _gpuErrorDetectedSystemEvent = new KEvent(system);
+            _gpuErrorDetectedSystemEvent = new KEvent(system.KernelContext);
         }
 
         [Command(1)]

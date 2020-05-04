@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             for (int i = 0; i < _styleSetUpdateEvents.Length; ++i)
             {
-                _styleSetUpdateEvents[i] = new KEvent(_device.System);
+                _styleSetUpdateEvents[i] = new KEvent(_device.System.KernelContext);
             }
 
             _fullBattery[0] = _fullBattery[1] = _fullBattery[2] = BatteryCharge.Percent100;

@@ -20,9 +20,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
         public ILibraryAppletAccessor(AppletId appletId, Horizon system)
         {
-            _stateChangedEvent       = new KEvent(system);
-            _normalOutDataEvent      = new KEvent(system);
-            _interactiveOutDataEvent = new KEvent(system);
+            _stateChangedEvent       = new KEvent(system.KernelContext);
+            _normalOutDataEvent      = new KEvent(system.KernelContext);
+            _interactiveOutDataEvent = new KEvent(system.KernelContext);
 
             _applet = AppletManager.Create(appletId, system);
 

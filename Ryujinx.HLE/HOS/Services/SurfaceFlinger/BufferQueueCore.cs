@@ -60,8 +60,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             // TODO: CreateGraphicBufferAlloc?
 
-            _waitBufferFreeEvent  = new KEvent(device.System);
-            _frameAvailableEvent = new KEvent(device.System);
+            _waitBufferFreeEvent  = new KEvent(device.System.KernelContext);
+            _frameAvailableEvent = new KEvent(device.System.KernelContext);
 
             Owner = process;
         }

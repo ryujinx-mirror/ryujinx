@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             IAalOutput             audioOut,
             AudioRendererParameter rendererParams)
         {
-            _updateEvent = new KEvent(system);
+            _updateEvent = new KEvent(system.KernelContext);
 
             _memory   = memory;
             _audioOut = audioOut;

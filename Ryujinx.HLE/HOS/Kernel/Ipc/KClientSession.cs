@@ -17,31 +17,31 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         // services implementation to work with the new IPC system.
         public IpcService Service { get; set; }
 
-        public KClientSession(Horizon system, KSession parent) : base(system)
+        public KClientSession(KernelContext context, KSession parent) : base(context)
         {
             _parent = parent;
 
             State = ChannelState.Open;
 
-            CreatorProcess = system.Scheduler.GetCurrentProcess();
+            CreatorProcess = context.Scheduler.GetCurrentProcess();
 
             CreatorProcess.IncrementReferenceCount();
         }
 
         public KernelResult SendSyncRequest(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
-            KThread currentThread = System.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelContext.Scheduler.GetCurrentThread();
 
             KSessionRequest request = new KSessionRequest(currentThread, customCmdBuffAddr, customCmdBuffSize);
 
-            System.CriticalSection.Enter();
+            KernelContext.CriticalSection.Enter();
 
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.Success;
 
             KernelResult result = _parent.ServerSession.EnqueueRequest(request);
 
-            System.CriticalSection.Leave();
+            KernelContext.CriticalSection.Leave();
 
             if (result == KernelResult.Success)
             {

@@ -14,7 +14,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Font;
-using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -33,78 +33,32 @@ using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Utilities;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-
-using TimeServiceManager = Ryujinx.HLE.HOS.Services.Time.TimeManager;
-using NsoExecutable      = Ryujinx.HLE.Loaders.Executables.NsoExecutable;
-using JsonHelper         = Ryujinx.Common.Utilities.JsonHelper;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
 
 namespace Ryujinx.HLE.HOS
 {
+    using TimeServiceManager = Services.Time.TimeManager;
+    using JsonHelper         = Common.Utilities.JsonHelper;
+
     public class Horizon : IDisposable
     {
-        internal const int InitialKipId     = 1;
-        internal const int InitialProcessId = 0x51;
-
         internal const int HidSize  = 0x40000;
         internal const int FontSize = 0x1100000;
         internal const int IirsSize = 0x8000;
         internal const int TimeSize = 0x1000;
 
-        private const int MemoryBlockAllocatorSize = 0x2710;
-
-        private const ulong UserSlabHeapBase     = DramMemoryMap.SlabHeapBase;
-        private const ulong UserSlabHeapItemSize = KMemoryManager.PageSize;
-        private const ulong UserSlabHeapSize     = 0x3de000;
-
-        internal long PrivilegedProcessLowestId  { get; set; } = 1;
-        internal long PrivilegedProcessHighestId { get; set; } = 8;
+        internal KernelContext KernelContext { get; }
 
         internal Switch Device { get; private set; }
 
         internal SurfaceFlinger SurfaceFlinger { get; private set; }
 
         public SystemStateMgr State { get; private set; }
-
-        internal bool KernelInitialized { get; private set; }
-
-        internal KResourceLimit ResourceLimit { get; private set; }
-
-        internal KMemoryRegionManager[] MemoryRegions { get; private set; }
-
-        internal KMemoryBlockAllocator LargeMemoryBlockAllocator { get; private set; }
-        internal KMemoryBlockAllocator SmallMemoryBlockAllocator { get; private set; }
-
-        internal KSlabHeap UserSlabHeapPages { get; private set; }
-
-        internal KCriticalSection CriticalSection { get; private set; }
-
-        internal KScheduler Scheduler { get; private set; }
-
-        internal KTimeManager TimeManager { get; private set; }
-
-        internal KSynchronization Synchronization { get; private set; }
-
-        internal KContextIdManager ContextIdManager { get; private set; }
-
-        private long _kipId;
-        private long _processId;
-        private long _threadUid;
-
-        internal CountdownEvent ThreadCounter;
-
-        internal SortedDictionary<long, KProcess> Processes;
-
-        internal ConcurrentDictionary<string, KAutoObject> AutoObjectNames;
-
-        internal bool EnableVersionChecks { get; private set; }
 
         internal AppletStateMgr AppletState { get; private set; }
 
@@ -152,50 +106,15 @@ namespace Ryujinx.HLE.HOS
         {
             ControlData = new BlitStruct<ApplicationControlProperty>(1);
 
+            KernelContext = new KernelContext(device, device.Memory);
+
             Device = device;
 
             State = new SystemStateMgr();
 
-            ResourceLimit = new KResourceLimit(this);
-
-            KernelInit.InitializeResourceLimit(ResourceLimit);
-
-            MemoryRegions = KernelInit.GetMemoryRegions();
-
-            LargeMemoryBlockAllocator = new KMemoryBlockAllocator(MemoryBlockAllocatorSize * 2);
-            SmallMemoryBlockAllocator = new KMemoryBlockAllocator(MemoryBlockAllocatorSize);
-
-            UserSlabHeapPages = new KSlabHeap(
-                UserSlabHeapBase,
-                UserSlabHeapItemSize,
-                UserSlabHeapSize);
-
-            CriticalSection = new KCriticalSection(this);
-
-            Scheduler = new KScheduler(this);
-
-            TimeManager = new KTimeManager();
-
-            Synchronization = new KSynchronization(this);
-
-            ContextIdManager = new KContextIdManager();
-
-            _kipId     = InitialKipId;
-            _processId = InitialProcessId;
-
-            Scheduler.StartAutoPreemptionThread();
-
-            KernelInitialized = true;
-
-            ThreadCounter = new CountdownEvent(1);
-
-            Processes = new SortedDictionary<long, KProcess>();
-
-            AutoObjectNames = new ConcurrentDictionary<string, KAutoObject>();
-
             // Note: This is not really correct, but with HLE of services, the only memory
             // region used that is used is Application, so we can use the other ones for anything.
-            KMemoryRegionManager region = MemoryRegions[(int)MemoryRegion.NvServices];
+            KMemoryRegionManager region = KernelContext.MemoryRegions[(int)MemoryRegion.NvServices];
 
             ulong hidPa  = region.Address;
             ulong fontPa = region.Address + HidSize;
@@ -214,11 +133,11 @@ namespace Ryujinx.HLE.HOS
             iirsPageList.AddRange(iirsPa, IirsSize / KMemoryManager.PageSize);
             timePageList.AddRange(timePa, TimeSize / KMemoryManager.PageSize);
 
-            HidSharedMem  = new KSharedMemory(this, hidPageList,  0, 0, MemoryPermission.Read);
-            FontSharedMem = new KSharedMemory(this, fontPageList, 0, 0, MemoryPermission.Read);
-            IirsSharedMem = new KSharedMemory(this, iirsPageList, 0, 0, MemoryPermission.Read);
+            HidSharedMem  = new KSharedMemory(KernelContext, hidPageList,  0, 0, MemoryPermission.Read);
+            FontSharedMem = new KSharedMemory(KernelContext, fontPageList, 0, 0, MemoryPermission.Read);
+            IirsSharedMem = new KSharedMemory(KernelContext, iirsPageList, 0, 0, MemoryPermission.Read);
 
-            KSharedMemory timeSharedMemory = new KSharedMemory(this, timePageList, 0, 0, MemoryPermission.Read);
+            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timePageList, 0, 0, MemoryPermission.Read);
 
             TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timePa - DramMemoryMap.DramBase, TimeSize);
 
@@ -230,9 +149,9 @@ namespace Ryujinx.HLE.HOS
 
             IUserInterface.InitializePort(this);
 
-            VsyncEvent = new KEvent(this);
+            VsyncEvent = new KEvent(KernelContext);
 
-            DisplayResolutionChangeEvent = new KEvent(this);
+            DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
             ContentManager = contentManager;
 
@@ -355,7 +274,7 @@ namespace Ryujinx.HLE.HOS
         {
             using (IStorage fs = new LocalStorage(kipFile, FileAccess.Read))
             {
-                ProgramLoader.LoadKernelInitalProcess(this, new KipExecutable(fs));
+                ProgramLoader.LoadKip(KernelContext, new KipExecutable(fs));
             }
         }
 
@@ -694,7 +613,7 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager.LoadEntries(Device);
 
-            ProgramLoader.LoadStaticObjects(this, metaData, staticObjects.ToArray());
+            ProgramLoader.LoadNsos(KernelContext, metaData, staticObjects.ToArray());
         }
 
         public void LoadProgram(string filePath)
@@ -791,7 +710,7 @@ namespace Ryujinx.HLE.HOS
             TitleId      = metaData.Aci0.TitleId;
             TitleIs64Bit = metaData.Is64Bit;
 
-            ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });
+            ProgramLoader.LoadNsos(KernelContext, metaData, new IExecutable[] { staticObject });
         }
 
         private Npdm GetDefaultNpdm()
@@ -855,26 +774,11 @@ namespace Ryujinx.HLE.HOS
             VsyncEvent.ReadableEvent.Signal();
         }
 
-        internal long GetThreadUid()
-        {
-            return Interlocked.Increment(ref _threadUid) - 1;
-        }
-
-        internal long GetKipId()
-        {
-            return Interlocked.Increment(ref _kipId) - 1;
-        }
-
-        internal long GetProcessId()
-        {
-            return Interlocked.Increment(ref _processId) - 1;
-        }
-
         public void EnableMultiCoreScheduling()
         {
             if (!_hasStarted)
             {
-                Scheduler.MultiCoreScheduling = true;
+                KernelContext.Scheduler.MultiCoreScheduling = true;
             }
         }
 
@@ -882,7 +786,7 @@ namespace Ryujinx.HLE.HOS
         {
             if (!_hasStarted)
             {
-                Scheduler.MultiCoreScheduling = false;
+                KernelContext.Scheduler.MultiCoreScheduling = false;
             }
         }
 
@@ -901,25 +805,24 @@ namespace Ryujinx.HLE.HOS
 
                 SurfaceFlinger.Dispose();
 
-                KProcess terminationProcess = new KProcess(this);
-
-                KThread terminationThread = new KThread(this);
+                KProcess terminationProcess = new KProcess(KernelContext);
+                KThread terminationThread = new KThread(KernelContext);
 
                 terminationThread.Initialize(0, 0, 0, 3, 0, terminationProcess, ThreadType.Kernel, () =>
                 {
                     // Force all threads to exit.
-                    lock (Processes)
+                    lock (KernelContext.Processes)
                     {
-                        foreach (KProcess process in Processes.Values)
+                        foreach (KProcess process in KernelContext.Processes.Values)
                         {
                             process.Terminate();
                         }
                     }
 
                     // Exit ourself now!
-                    Scheduler.ExitThread(terminationThread);
-                    Scheduler.GetCurrentThread().Exit();
-                    Scheduler.RemoveThread(terminationThread);
+                    KernelContext.Scheduler.ExitThread(terminationThread);
+                    KernelContext.Scheduler.GetCurrentThread().Exit();
+                    KernelContext.Scheduler.RemoveThread(terminationThread);
                 });
 
                 terminationThread.Start();
@@ -929,16 +832,14 @@ namespace Ryujinx.HLE.HOS
                 INvDrvServices.Destroy();
 
                 // This is needed as the IPC Dummy KThread is also counted in the ThreadCounter.
-                ThreadCounter.Signal();
+                KernelContext.ThreadCounter.Signal();
 
                 // It's only safe to release resources once all threads
                 // have exited.
-                ThreadCounter.Signal();
-                ThreadCounter.Wait();
+                KernelContext.ThreadCounter.Signal();
+                KernelContext.ThreadCounter.Wait();
 
-                Scheduler.Dispose();
-
-                TimeManager.Dispose();
+                KernelContext.Dispose();
 
                 Device.Unload();
             }

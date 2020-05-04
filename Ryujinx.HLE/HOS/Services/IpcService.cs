@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services
             }
             else
             {
-                KSession session = new KSession(context.Device.System);
+                KSession session = new KSession(context.Device.System.KernelContext);
 
                 session.ClientSession.Service = obj;
 
