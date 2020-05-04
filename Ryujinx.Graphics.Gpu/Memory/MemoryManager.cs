@@ -181,13 +181,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             lock (_pageTable)
             {
+                // Event handlers are not expected to be thread safe.
+                MemoryUnmapped?.Invoke(this, new UnmapEventArgs(va, size));
+
                 for (ulong offset = 0; offset < size; offset += PageSize)
                 {
                     SetPte(va + offset, PteUnmapped);
                 }
-
-                // Event handlers are not expected to be thread safe.
-                MemoryUnmapped?.Invoke(this, new UnmapEventArgs(va, size));
             }
         }
 

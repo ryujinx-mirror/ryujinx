@@ -1,26 +1,34 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.State;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        enum ConditionalRenderEnabled
+        {
+            False,
+            True,
+            Host
+        }
+
         /// <summary>
         /// Checks if draws and clears should be performed, according
         /// to currently set conditional rendering conditions.
         /// </summary>
         /// <param name="state">GPU state</param>
         /// <returns>True if rendering is enabled, false otherwise</returns>
-        private bool GetRenderEnable(GpuState state)
+        private ConditionalRenderEnabled GetRenderEnable(GpuState state)
         {
             ConditionState condState = state.Get<ConditionState>(MethodOffset.ConditionState);
 
             switch (condState.Condition)
             {
                 case Condition.Always:
-                    return true;
+                    return ConditionalRenderEnabled.True;
                 case Condition.Never:
-                    return false;
+                    return ConditionalRenderEnabled.False;
                 case Condition.ResultNonZero:
                     return CounterNonZero(condState.Address.Pack());
                 case Condition.Equal:
@@ -31,22 +39,32 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             Logger.PrintWarning(LogClass.Gpu, $"Invalid conditional render condition \"{condState.Condition}\".");
 
-            return true;
+            return ConditionalRenderEnabled.True;
         }
 
         /// <summary>
         /// Checks if the counter value at a given GPU memory address is non-zero.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address of the counter value</param>
-        /// <returns>True if the value is not zero, false otherwise</returns>
-        private bool CounterNonZero(ulong gpuVa)
+        /// <returns>True if the value is not zero, false otherwise. Returns host if handling with host conditional rendering</returns>
+        private ConditionalRenderEnabled CounterNonZero(ulong gpuVa)
         {
-            if (!FindAndFlush(gpuVa))
+            ICounterEvent evt = _counterCache.FindEvent(gpuVa);
+
+            if (evt == null)
             {
-                return false;
+                return ConditionalRenderEnabled.False;
             }
 
-            return _context.MemoryAccessor.ReadUInt64(gpuVa) != 0;
+            if (_context.Renderer.Pipeline.TryHostConditionalRendering(evt, 0L, false))
+            {
+                return ConditionalRenderEnabled.Host;
+            }
+            else
+            {
+                evt.Flush();
+                return (_context.MemoryAccessor.ReadUInt64(gpuVa) != 0) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
+            }
         }
 
         /// <summary>
@@ -54,29 +72,57 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// </summary>
         /// <param name="gpuVa">GPU virtual address</param>
         /// <param name="isEqual">True to check if the values are equal, false to check if they are not equal</param>
-        /// <returns>True if the condition is met, false otherwise</returns>
-        private bool CounterCompare(ulong gpuVa, bool isEqual)
+        /// <returns>True if the condition is met, false otherwise. Returns host if handling with host conditional rendering</returns>
+        private ConditionalRenderEnabled CounterCompare(ulong gpuVa, bool isEqual)
         {
-            if (!FindAndFlush(gpuVa) && !FindAndFlush(gpuVa + 16))
+            ICounterEvent evt = FindEvent(gpuVa);
+            ICounterEvent evt2 = FindEvent(gpuVa + 16);
+
+            if (evt == null && evt2 == null)
             {
-                return false;
+                return ConditionalRenderEnabled.False;
             }
 
-            ulong x = _context.MemoryAccessor.ReadUInt64(gpuVa);
-            ulong y = _context.MemoryAccessor.ReadUInt64(gpuVa + 16);
+            bool useHost;
 
-            return isEqual ? x == y : x != y;
+            if (evt != null && evt2 == null)
+            {
+                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt, _context.MemoryAccessor.ReadUInt64(gpuVa + 16), isEqual);
+            }
+            else if (evt == null && evt2 != null)
+            {
+                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt2, _context.MemoryAccessor.ReadUInt64(gpuVa), isEqual);
+            }
+            else
+            {
+                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt, evt2, isEqual);
+            }
+
+            if (useHost)
+            {
+                return ConditionalRenderEnabled.Host;
+            }
+            else
+            {
+                evt?.Flush();
+                evt2?.Flush();
+
+                ulong x = _context.MemoryAccessor.ReadUInt64(gpuVa);
+                ulong y = _context.MemoryAccessor.ReadUInt64(gpuVa + 16);
+
+                return (isEqual ? x == y : x != y) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
+            }
         }
 
         /// <summary>
         /// Tries to find a counter that is supposed to be written at the specified address,
-        /// flushing if necessary.
+        /// returning the related event.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the counter is supposed to be written</param>
-        /// <returns>True if a counter value is found at the specified address, false otherwise</returns>
-        private bool FindAndFlush(ulong gpuVa)
+        /// <returns>The counter event, or null if not present</returns>
+        private ICounterEvent FindEvent(ulong gpuVa)
         {
-            return _counterCache.Contains(gpuVa);
+            return _counterCache.FindEvent(gpuVa);
         }
     }
 }

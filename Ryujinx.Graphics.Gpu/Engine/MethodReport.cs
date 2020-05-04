@@ -64,23 +64,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             CounterData counterData = new CounterData();
 
-            ulong counter = 0;
+            var rs = state.Get<ReportState>(MethodOffset.ReportState);
 
-            switch (type)
-            {
-                case ReportCounterType.Zero:
-                    counter = 0;
-                    break;
-                case ReportCounterType.SamplesPassed:
-                    counter = _context.Renderer.GetCounter(CounterType.SamplesPassed);
-                    break;
-                case ReportCounterType.PrimitivesGenerated:
-                    counter = _context.Renderer.GetCounter(CounterType.PrimitivesGenerated);
-                    break;
-                case ReportCounterType.TransformFeedbackPrimitivesWritten:
-                    counter = _context.Renderer.GetCounter(CounterType.TransformFeedbackPrimitivesWritten);
-                    break;
-            }
+            ulong gpuVa = rs.Address.Pack();
 
             ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
 
@@ -91,18 +77,40 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 ticks /= 256;
             }
 
-            counterData.Counter   = counter;
-            counterData.Timestamp = ticks;
+            ICounterEvent counter = null;
 
-            Span<CounterData> counterDataSpan = MemoryMarshal.CreateSpan(ref counterData, 1);
+            EventHandler<ulong> resultHandler = (object evt, ulong result) =>
+            {
+                counterData.Counter = result;
+                counterData.Timestamp = ticks;
 
-            Span<byte> data = MemoryMarshal.Cast<CounterData, byte>(counterDataSpan);
+                Span<CounterData> counterDataSpan = MemoryMarshal.CreateSpan(ref counterData, 1);
 
-            var rs = state.Get<ReportState>(MethodOffset.ReportState);
+                Span<byte> data = MemoryMarshal.Cast<CounterData, byte>(counterDataSpan);
 
-            _context.MemoryAccessor.Write(rs.Address.Pack(), data);
+                if (counter?.Invalid != true)
+                {
+                    _context.MemoryAccessor.Write(gpuVa, data);
+                }
+            };
 
-            _counterCache.AddOrUpdate(rs.Address.Pack());
+            switch (type)
+            {
+                case ReportCounterType.Zero:
+                    resultHandler(null, 0);
+                    break;
+                case ReportCounterType.SamplesPassed:
+                    counter = _context.Renderer.ReportCounter(CounterType.SamplesPassed, resultHandler);
+                    break;
+                case ReportCounterType.PrimitivesGenerated:
+                    counter = _context.Renderer.ReportCounter(CounterType.PrimitivesGenerated, resultHandler);
+                    break;
+                case ReportCounterType.TransformFeedbackPrimitivesWritten:
+                    counter = _context.Renderer.ReportCounter(CounterType.TransformFeedbackPrimitivesWritten, resultHandler);
+                    break;
+            }
+
+            _counterCache.AddOrUpdate(gpuVa, counter);
         }
 
         /// <summary>

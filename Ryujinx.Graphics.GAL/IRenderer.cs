@@ -20,10 +20,12 @@ namespace Ryujinx.Graphics.GAL
 
         Capabilities GetCapabilities();
 
-        ulong GetCounter(CounterType type);
+        void UpdateCounters();
 
-        void Initialize();
+        ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler);
 
         void ResetCounter(CounterType type);
+
+        void Initialize();
     }
 }

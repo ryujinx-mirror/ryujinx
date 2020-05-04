@@ -35,16 +35,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void DrawEnd(GpuState state, int argument)
         {
-            bool renderEnable = GetRenderEnable(state);
+            ConditionalRenderEnabled renderEnable = GetRenderEnable(state);
 
-            if (!renderEnable || _instancedDrawPending)
+            if (renderEnable == ConditionalRenderEnabled.False || _instancedDrawPending)
             {
-                if (!renderEnable)
+                if (renderEnable == ConditionalRenderEnabled.False)
                 {
                     PerformDeferredDraws();
                 }
 
                 _drawIndexed = false;
+
+                if (renderEnable == ConditionalRenderEnabled.Host)
+                {
+                    _context.Renderer.Pipeline.EndHostConditionalRendering();
+                }
 
                 return;
             }
@@ -71,6 +76,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 _instancedDrawStateCount = drawState.Count;
 
                 _drawIndexed = false;
+
+                if (renderEnable == ConditionalRenderEnabled.Host)
+                {
+                    _context.Renderer.Pipeline.EndHostConditionalRendering();
+                }
 
                 return;
             }
@@ -99,6 +109,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     1,
                     drawState.First,
                     firstInstance);
+            }
+
+            if (renderEnable == ConditionalRenderEnabled.Host)
+            {
+                _context.Renderer.Pipeline.EndHostConditionalRendering();
             }
         }
 

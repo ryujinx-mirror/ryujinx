@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Ryujinx.Graphics.GAL;
+using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
@@ -10,10 +11,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private struct CounterEntry
         {
             public ulong Address { get; }
+            public ICounterEvent Event { get; }
 
-            public CounterEntry(ulong address)
+            public CounterEntry(ulong address, ICounterEvent evt)
             {
                 Address = address;
+                Event = evt;
             }
         }
 
@@ -31,11 +34,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Adds a new counter to the counter cache, or updates a existing one.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the counter will be written in memory</param>
-        public void AddOrUpdate(ulong gpuVa)
+        public void AddOrUpdate(ulong gpuVa, ICounterEvent evt)
         {
             int index = BinarySearch(gpuVa);
 
-            CounterEntry entry = new CounterEntry(gpuVa);
+            CounterEntry entry = new CounterEntry(gpuVa, evt);
 
             if (index < 0)
             {
@@ -76,6 +79,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 count++;
             }
 
+            // Notify the removed counter events that their result should no longer be written out.
+            for (int i = 0; i < count; i++)
+            {
+                ICounterEvent evt = _items[index + i].Event;
+                if (evt != null)
+                {
+                    evt.Invalid = true;
+                }
+            }
+
             _items.RemoveRange(index, count);
         }
 
@@ -99,6 +112,44 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public bool Contains(ulong gpuVa)
         {
             return BinarySearch(gpuVa) >= 0;
+        }
+
+        /// <summary>
+        /// Flush any counter value written to the specified GPU virtual memory address.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address</param>
+        /// <returns>True if any counter value was written on the specified address, false otherwise</returns>
+        public bool FindAndFlush(ulong gpuVa)
+        {
+            int index = BinarySearch(gpuVa);
+            if (index > 0)
+            {
+                _items[index].Event?.Flush();
+
+                return true;
+            } 
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Find any counter event that would write to the specified GPU virtual memory address.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address</param>
+        /// <returns>The counter event, or null if not present</returns>
+        public ICounterEvent FindEvent(ulong gpuVa)
+        {
+            int index = BinarySearch(gpuVa);
+            if (index > 0)
+            {
+                return _items[index].Event;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

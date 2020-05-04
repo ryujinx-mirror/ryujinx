@@ -1,7 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -66,9 +68,14 @@ namespace Ryujinx.Graphics.OpenGL
                 HwCapabilities.MaxSupportedAnisotropy);
         }
 
-        public ulong GetCounter(CounterType type)
+        public void UpdateCounters()
         {
-            return _counters.GetCounter(type);
+            _counters.Update();
+        }
+
+        public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler)
+        {
+            return _counters.QueueReport(type, resultHandler);
         }
 
         public void Initialize()
@@ -89,7 +96,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void ResetCounter(CounterType type)
         {
-            _counters.ResetCounter(type);
+            _counters.QueueReset(type);
         }
 
         public void Dispose()
@@ -97,6 +104,7 @@ namespace Ryujinx.Graphics.OpenGL
             TextureCopy.Dispose();
             _pipeline.Dispose();
             _window.Dispose();
+            _counters.Dispose();
         }
     }
 }

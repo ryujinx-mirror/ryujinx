@@ -13,7 +13,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void Clear(GpuState state, int argument)
         {
-            if (!GetRenderEnable(state))
+            ConditionalRenderEnabled renderEnable = GetRenderEnable(state);
+
+            if (renderEnable == ConditionalRenderEnabled.False)
             {
                 return;
             }
@@ -68,6 +70,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             UpdateRenderTargetState(state, useControl: true);
+
+            if (renderEnable == ConditionalRenderEnabled.Host)
+            {
+                _context.Renderer.Pipeline.EndHostConditionalRendering();
+            }
         }
     }
 }

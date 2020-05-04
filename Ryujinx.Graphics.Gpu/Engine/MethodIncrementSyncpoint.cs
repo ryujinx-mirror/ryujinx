@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             uint syncpointId = (uint)(argument) & 0xFFFF;
 
+            _context.Renderer.UpdateCounters(); // Poll the query counters, the game may want an updated result.
             _context.Synchronization.IncrementSyncpoint(syncpointId);
         }
     }
