@@ -326,6 +326,8 @@ namespace Ryujinx.Ui
                     _device.ProcessFrame();
                 }
 
+                string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? "Docked" : "Handheld";
+
                 if (_ticks >= _ticksPerFrame)
                 {
                     _device.PresentFrame(SwapBuffers);
@@ -333,8 +335,9 @@ namespace Ryujinx.Ui
                     _device.Statistics.RecordSystemFrameTime();
 
                     StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
-                        _device.EnableDeviceVsync, 
-                        $"Host: {_device.Statistics.GetSystemFrameRate():00.00} FPS", 
+                        _device.EnableDeviceVsync,
+                        dockedMode,
+                        $"Host: {_device.Statistics.GetSystemFrameRate():00.00} FPS",
                         $"Game: {_device.Statistics.GetGameFrameRate():00.00} FPS",
                         $"GPU:  {_renderer.GpuVendor}"));
 

@@ -66,6 +66,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem  _fileExtToggle;
         [GUI] CheckMenuItem  _pathToggle;
         [GUI] CheckMenuItem  _fileSizeToggle;
+        [GUI] Label          _dockedMode;
         [GUI] Label          _gameStatus;
         [GUI] TreeView       _gameTable;
         [GUI] TreeSelection  _gameTableSelection;
@@ -665,6 +666,7 @@ namespace Ryujinx.Ui
                 _hostStatus.Text = args.HostStatus;
                 _gameStatus.Text = args.GameStatus;
                 _gpuName.Text    = args.GpuName;
+                _dockedMode.Text = args.DockedMode;
 
                 if (args.VSyncEnabled)
                 {

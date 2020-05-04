@@ -494,7 +494,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_hostStatus">
+                      <object class="GtkLabel" id="_dockedMode">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="halign">start</property>
@@ -519,7 +519,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_gameStatus">
+                      <object class="GtkLabel" id="_hostStatus">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="halign">start</property>
@@ -544,6 +544,31 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkLabel" id="_gameStatus">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparator">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">7</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkLabel" id="_gpuName">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -553,7 +578,7 @@
                       <packing>
                         <property name="expand">True</property>
                         <property name="fill">True</property>
-                        <property name="position">6</property>
+                        <property name="position">8</property>
                       </packing>
                     </child>
                   </object>
