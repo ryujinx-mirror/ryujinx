@@ -1,3 +1,4 @@
+using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using System;
@@ -84,6 +85,8 @@ namespace ARMeilleure.Translation
             func = DelegateCache.GetOrAdd(func);
 
             IntPtr ptr = Marshal.GetFunctionPointerForDelegate<Delegate>(func);
+
+            Symbols.Add((ulong)ptr.ToInt64(), func.Method.Name);
 
             OperandType returnType = GetOperandType(func.Method.ReturnType);
 

@@ -2,168 +2,282 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ARMeilleure.Diagnostics
 {
-    static class IRDumper
+    class IRDumper
     {
         private const string Indentation = " ";
 
-        public static string GetDump(ControlFlowGraph cfg)
+        private int _indentLevel;
+
+        private readonly StringBuilder _builder;
+
+        private readonly Dictionary<Operand, string> _localNames;
+        private readonly Dictionary<ulong, string> _symbolNames;
+
+        private IRDumper(int indent)
         {
-            StringBuilder sb = new StringBuilder();
+            _indentLevel = indent;
 
-            Dictionary<Operand, string> localNames = new Dictionary<Operand, string>();
+            _builder = new StringBuilder();
 
-            string indentation = string.Empty;
-
-            void IncreaseIndentation()
-            {
-                indentation += Indentation;
-            }
-
-            void DecreaseIndentation()
-            {
-                indentation = indentation.Substring(0, indentation.Length - Indentation.Length);
-            }
-
-            void AppendLine(string text)
-            {
-                sb.AppendLine(indentation + text);
-            }
-
-            IncreaseIndentation();
-
-            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
-            {
-                string blockName = GetBlockName(block);
-
-                if (block.Next != null)
-                {
-                    blockName += $" (next {GetBlockName(block.Next)})";
-                }
-
-                if (block.Branch != null)
-                {
-                    blockName += $" (branch {GetBlockName(block.Branch)})";
-                }
-
-                blockName += ":";
-
-                AppendLine(blockName);
-
-                IncreaseIndentation();
-
-                for (Node node = block.Operations.First; node != null; node = node.ListNext)
-                {
-                    string[] sources = new string[node.SourcesCount];
-
-                    string instName = string.Empty;
-
-                    if (node is PhiNode phi)
-                    {
-                        for (int index = 0; index < sources.Length; index++)
-                        {
-                            string phiBlockName = GetBlockName(phi.GetBlock(index));
-
-                            string operName = GetOperandName(phi.GetSource(index), localNames);
-
-                            sources[index] = $"({phiBlockName}: {operName})";
-                        }
-
-                        instName = "Phi";
-                    }
-                    else if (node is Operation operation)
-                    {
-                        for (int index = 0; index < sources.Length; index++)
-                        {
-                            sources[index] = GetOperandName(operation.GetSource(index), localNames);
-                        }
-
-                        instName = operation.Instruction.ToString();
-                    }
-
-                    string allSources = string.Join(", ", sources);
-
-                    string line = instName + " " + allSources;
-
-                    if (node.Destination != null)
-                    {
-                        line = GetOperandName(node.Destination, localNames) + " = " + line;
-                    }
-
-                    AppendLine(line);
-                }
-
-                DecreaseIndentation();
-            }
-
-            return sb.ToString();
+            _localNames = new Dictionary<Operand, string>();
+            _symbolNames = new Dictionary<ulong, string>();
         }
 
-        private static string GetBlockName(BasicBlock block)
+        private void Indent()
         {
-            return $"block{block.Index}";
+            _builder.EnsureCapacity(_builder.Capacity + _indentLevel * Indentation.Length);
+
+            for (int index = 0; index < _indentLevel; index++)
+            {
+                _builder.Append(Indentation);
+            }
         }
 
-        private static string GetOperandName(Operand operand, Dictionary<Operand, string> localNames)
+        private void IncreaseIndentation()
+        {
+            _indentLevel++;
+        }
+
+        private void DecreaseIndentation()
+        {
+            _indentLevel--;
+        }
+
+        private void DumpBlockName(BasicBlock block)
+        {
+            _builder.Append("block").Append(block.Index);
+        }
+
+        private void DumpBlockHeader(BasicBlock block)
+        {
+            DumpBlockName(block);
+
+            if (block.Next != null)
+            {
+                _builder.Append(" (next ");
+                DumpBlockName(block.Next);
+                _builder.Append(')');
+            }
+
+            if (block.Branch != null)
+            {
+                _builder.Append(" (branch ");
+                DumpBlockName(block.Branch);
+                _builder.Append(')');
+            }
+
+            _builder.Append(':');
+        }
+
+        private void DumpOperand(Operand operand)
         {
             if (operand == null)
             {
-                return "<NULL>";
+                _builder.Append("<NULL>");
+                return;
             }
 
-            string name = string.Empty;
+            _builder.Append(GetTypeName(operand.Type)).Append(' ');
 
-            if (operand.Kind == OperandKind.LocalVariable)
+            switch (operand.Kind)
             {
-                if (!localNames.TryGetValue(operand, out string localName))
-                {
-                    localName = "%" + localNames.Count;
+                case OperandKind.LocalVariable:
+                    if (!_localNames.TryGetValue(operand, out string localName))
+                    {
+                        localName = $"%{_localNames.Count}";
 
-                    localNames.Add(operand, localName);
+                        _localNames.Add(operand, localName);
+                    }
+
+                    _builder.Append(localName);
+                    break;
+
+                case OperandKind.Register:
+                    Register reg = operand.GetRegister();
+
+                    switch (reg.Type)
+                    {
+                        case RegisterType.Flag:    _builder.Append('b'); break;
+                        case RegisterType.FpFlag:  _builder.Append('f'); break;
+                        case RegisterType.Integer: _builder.Append('r'); break;
+                        case RegisterType.Vector:  _builder.Append('v'); break;
+                    }
+
+                    _builder.Append(reg.Index);
+                    break;
+
+                case OperandKind.Constant:
+                    string symbolName = Symbols.Get(operand.Value);
+
+                    if (symbolName != null && !_symbolNames.ContainsKey(operand.Value))
+                    {
+                        _symbolNames.Add(operand.Value, symbolName);
+                    }
+
+                    _builder.Append("0x").Append(operand.Value.ToString("X"));
+                    break;
+
+                case OperandKind.Memory:
+                    var memOp = (MemoryOperand)operand;
+
+                    _builder.Append('[');
+
+                    DumpOperand(memOp.BaseAddress);
+
+                    if (memOp.Index != null)
+                    {
+                        _builder.Append(" + ");
+
+                        DumpOperand(memOp.Index);
+
+                        switch (memOp.Scale)
+                        {
+                            case Multiplier.x2: _builder.Append("*2"); break;
+                            case Multiplier.x4: _builder.Append("*4"); break;
+                            case Multiplier.x8: _builder.Append("*8"); break;
+                        }
+                    }
+
+                    if (memOp.Displacement != 0)
+                    {
+                        _builder.Append(" + 0x").Append(memOp.Displacement.ToString("X"));
+                    }
+
+                    _builder.Append(']');
+                    break;
+
+                default:
+                    _builder.Append(operand.Type);
+                    break;
+            }
+        }
+
+        private void DumpNode(Node node)
+        {
+            for (int index = 0; index < node.DestinationsCount; index++)
+            {
+                DumpOperand(node.GetDestination(index));
+
+                if (index == node.DestinationsCount - 1)
+                {
+                    _builder.Append(" = ");
+                }
+                else
+                {
+                    _builder.Append(", ");
+                }
+            }
+
+            switch (node)
+            {
+                case PhiNode phi:
+                    _builder.Append("Phi ");
+
+                    for (int index = 0; index < phi.SourcesCount; index++)
+                    {
+                        _builder.Append('(');
+
+                        DumpBlockName(phi.GetBlock(index));
+
+                        _builder.Append(": ");
+
+                        DumpOperand(phi.GetSource(index));
+
+                        _builder.Append(')');
+
+                        if (index < phi.SourcesCount - 1)
+                        {
+                            _builder.Append(", ");
+                        }
+                    }
+                    break;
+
+                case Operation operation:
+                    _builder.Append(operation.Instruction);
+
+                    if (operation.Instruction == Instruction.Extended)
+                    {
+                        var intrinOp = (IntrinsicOperation)operation;
+
+                        _builder.Append('.').Append(intrinOp.Intrinsic);
+                    }
+
+                    _builder.Append(' ');
+
+                    for (int index = 0; index < operation.SourcesCount; index++)
+                    {
+                        DumpOperand(operation.GetSource(index));
+
+                        if (index < operation.SourcesCount - 1)
+                        {
+                            _builder.Append(", ");
+                        }
+                    }
+                    break;
+            }
+
+            if (_symbolNames.Count == 1)
+            {
+                _builder.Append(" ;; ").Append(_symbolNames.First().Value);
+            }
+            else if (_symbolNames.Count > 1)
+            {
+                _builder.Append(" ;;");
+
+                foreach ((ulong value, string name) in _symbolNames)
+                {
+                    _builder.Append(" 0x").Append(value.ToString("X")).Append(" = ").Append(name);
+                }
+            }
+
+            // Reset the set of symbols for the next Node we're going to dump.
+            _symbolNames.Clear();
+        }
+
+        public static string GetDump(ControlFlowGraph cfg)
+        {
+            var dumper = new IRDumper(1);
+
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
+            {
+                dumper.Indent();
+                dumper.DumpBlockHeader(block);
+
+                dumper._builder.AppendLine();
+
+                dumper.IncreaseIndentation();
+
+                for (Node node = block.Operations.First; node != null; node = node.ListNext)
+                {
+                    dumper.Indent();
+                    dumper.DumpNode(node);
+
+                    dumper._builder.AppendLine();
                 }
 
-                name = localName;
-            }
-            else if (operand.Kind == OperandKind.Register)
-            {
-                Register reg = operand.GetRegister();
-
-                switch (reg.Type)
-                {
-                    case RegisterType.Flag:    name = "b" + reg.Index; break;
-                    case RegisterType.FpFlag:  name = "f" + reg.Index; break;
-                    case RegisterType.Integer: name = "r" + reg.Index; break;
-                    case RegisterType.Vector:  name = "v" + reg.Index; break;
-                }
-            }
-            else if (operand.Kind == OperandKind.Constant)
-            {
-                name = "0x" + operand.Value.ToString("X");
-            }
-            else
-            {
-                name = operand.Kind.ToString().ToLower();
+                dumper.DecreaseIndentation();
             }
 
-            return GetTypeName(operand.Type) + " " + name;
+            return dumper._builder.ToString();
         }
 
         private static string GetTypeName(OperandType type)
         {
-            switch (type)
+            return type switch
             {
-                case OperandType.FP32: return "f32";
-                case OperandType.FP64: return "f64";
-                case OperandType.I32:  return "i32";
-                case OperandType.I64:  return "i64";
-                case OperandType.None: return "none";
-                case OperandType.V128: return "v128";
-            }
-
-            throw new ArgumentException($"Invalid operand type \"{type}\".");
+                OperandType.None => "none",
+                OperandType.I32 => "i32",
+                OperandType.I64 => "i64",
+                OperandType.FP32 => "f32",
+                OperandType.FP64 => "f64",
+                OperandType.V128 => "v128",
+                _ => throw new ArgumentException($"Invalid operand type \"{type}\"."),
+            };
         }
     }
 }
