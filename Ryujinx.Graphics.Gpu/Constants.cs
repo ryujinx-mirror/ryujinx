@@ -54,5 +54,10 @@ namespace Ryujinx.Graphics.Gpu
         /// Maximum number of viewports.
         /// </summary>
         public const int TotalViewports = 16;
+
+        /// <summary>
+        /// Maximum size of gl_ClipDistance array in shaders.
+        /// </summary>
+        public const int TotalClipDistances = 8;
     }
 }

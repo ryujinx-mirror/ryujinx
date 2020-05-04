@@ -811,6 +811,17 @@ namespace Ryujinx.Graphics.OpenGL
             SetBuffer(index, stage, buffer, isStorage: false);
         }
 
+        public void SetUserClipDistance(int index, bool enableClip)
+        {
+            if (!enableClip)
+            {
+                GL.Disable(EnableCap.ClipDistance0 + index);
+                return;
+            }
+
+            GL.Enable(EnableCap.ClipDistance0 + index);
+        }
+
         public void SetVertexAttribs(VertexAttribDescriptor[] vertexAttribs)
         {
             EnsureVertexArray();

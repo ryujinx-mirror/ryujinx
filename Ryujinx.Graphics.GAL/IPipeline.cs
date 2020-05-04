@@ -66,6 +66,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
 
+        void SetUserClipDistance(int index, bool enableClip);
+
         void SetVertexAttribs(VertexAttribDescriptor[] vertexAttribs);
         void SetVertexBuffers(VertexBufferDescriptor[] vertexBuffers);
 
