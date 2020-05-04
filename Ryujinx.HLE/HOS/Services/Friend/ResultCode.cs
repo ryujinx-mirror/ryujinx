@@ -8,6 +8,7 @@
         Success = 0,
 
         InvalidArgument        = (2  << ErrorCodeShift) | ModuleId,
+        InternetRequestDenied  = (6  << ErrorCodeShift) | ModuleId,
         NotificationQueueEmpty = (15 << ErrorCodeShift) | ModuleId
     }
 }
