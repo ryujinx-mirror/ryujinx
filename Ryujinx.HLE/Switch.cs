@@ -65,7 +65,7 @@ namespace Ryujinx.HLE
         {
             System.State.SetLanguage((SystemLanguage)ConfigurationState.Instance.System.Language.Value);
 
-            System.State.SetRegion((SystemRegion)ConfigurationState.Instance.System.Region.Value);
+            System.State.SetRegion((RegionCode)ConfigurationState.Instance.System.Region.Value);
 
             EnableDeviceVsync = ConfigurationState.Instance.Graphics.EnableVsync;
 

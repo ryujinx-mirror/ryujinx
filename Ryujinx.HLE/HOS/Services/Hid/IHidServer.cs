@@ -81,6 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Touchscreen.Active = true;
+
             Logger.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
             return ResultCode.Success;
@@ -93,6 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Mouse.Active = true;
+
             Logger.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
             return ResultCode.Success;
@@ -105,7 +107,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Keyboard.Active = true;
+
             Logger.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
+
+            return ResultCode.Success;
+        }
+
+        [Command(32)]
+        // SendKeyboardLockKeyEvent(uint flags, pid)
+        public ResultCode SendKeyboardLockKeyEvent(ServiceCtx context)
+        {
+            uint flags = context.RequestData.ReadUInt32();
+
+            // NOTE: This signal the keyboard driver about lock events.
+
+            Logger.PrintStub(LogClass.ServiceHid, new { flags });
 
             return ResultCode.Success;
         }

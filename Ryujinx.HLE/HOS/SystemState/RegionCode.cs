@@ -1,6 +1,7 @@
 namespace Ryujinx.HLE.HOS.SystemState
 {
-    public enum SystemRegion
+    // nn::settings::RegionCode
+    public enum RegionCode
     {
         Japan,
         USA,
