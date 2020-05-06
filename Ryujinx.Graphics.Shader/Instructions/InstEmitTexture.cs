@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type == SamplerType.None)
             {
-                context.Config.PrintLog("Invalid image store sampler type.");
+                context.Config.GpuAccessor.Log("Invalid image store sampler type.");
 
                 return;
             }
@@ -158,7 +158,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type == SamplerType.None)
             {
-                context.Config.PrintLog("Invalid image store sampler type.");
+                context.Config.GpuAccessor.Log("Invalid image store sampler type.");
 
                 return;
             }
@@ -344,7 +344,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (type == SamplerType.None)
                 {
-                    context.Config.PrintLog("Invalid texture sampler type.");
+                    context.Config.GpuAccessor.Log("Invalid texture sampler type.");
 
                     return;
                 }
@@ -423,14 +423,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (type == SamplerType.None)
                 {
-                    context.Config.PrintLog("Invalid texel fetch sampler type.");
+                    context.Config.GpuAccessor.Log("Invalid texel fetch sampler type.");
 
                     return;
                 }
 
                 flags = ConvertTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
-                if (tldsOp.Target == TexelLoadTarget.Texture1DLodZero && context.Config.QueryInfoBool(QueryInfoName.IsTextureBuffer, tldsOp.Immediate))
+                if (tldsOp.Target == TexelLoadTarget.Texture1DLodZero && context.Config.GpuAccessor.QueryIsTextureBuffer(tldsOp.Immediate))
                 {
                     type   = SamplerType.TextureBuffer;
                     flags &= ~TextureFlags.LodLevel;
@@ -1020,7 +1020,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type == SamplerType.Texture1D && flags == TextureFlags.IntCoords && !isBindless)
             {
-                bool isTypeBuffer = context.Config.QueryInfoBool(QueryInfoName.IsTextureBuffer, op.Immediate);
+                bool isTypeBuffer = context.Config.GpuAccessor.QueryIsTextureBuffer(op.Immediate);
 
                 if (isTypeBuffer)
                 {
@@ -1093,11 +1093,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static TextureFormat GetTextureFormat(EmitterContext context, int handle)
         {
-            var format = (TextureFormat)context.Config.QueryInfo(QueryInfoName.TextureFormat, handle);
+            var format = context.Config.GpuAccessor.QueryTextureFormat(handle);
 
             if (format == TextureFormat.Unknown)
             {
-                context.Config.PrintLog($"Unknown format for texture {handle}.");
+                context.Config.GpuAccessor.Log($"Unknown format for texture {handle}.");
 
                 format = TextureFormat.R8G8B8A8Unorm;
             }

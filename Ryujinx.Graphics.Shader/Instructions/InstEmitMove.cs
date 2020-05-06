@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (isCC)
             {
                 // TODO: Support Register to condition code flags copy.
-                context.Config.PrintLog("R2P.CC not implemented.");
+                context.Config.GpuAccessor.Log("R2P.CC not implemented.");
             }
             else
             {

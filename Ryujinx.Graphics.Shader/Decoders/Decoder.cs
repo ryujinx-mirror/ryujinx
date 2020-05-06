@@ -1,6 +1,5 @@
 using Ryujinx.Graphics.Shader.Instructions;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,15 +9,13 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class Decoder
     {
-        public static Block[] Decode(ReadOnlySpan<byte> code, ulong headerSize)
+        public static Block[] Decode(IGpuAccessor gpuAccessor, ulong startAddress)
         {
             List<Block> blocks = new List<Block>();
 
             Queue<Block> workQueue = new Queue<Block>();
 
             Dictionary<ulong, Block> visited = new Dictionary<ulong, Block>();
-
-            ulong maxAddress = (ulong)code.Length - headerSize;
 
             Block GetBlock(ulong blkAddress)
             {
@@ -56,7 +53,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // If we have a block after the current one, set the limit address.
-                ulong limitAddress = maxAddress;
+                ulong limitAddress = ulong.MaxValue;
 
                 if (nBlkIndex != blocks.Count)
                 {
@@ -74,7 +71,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                 }
 
-                FillBlock(code, currBlock, limitAddress, headerSize);
+                FillBlock(gpuAccessor, currBlock, limitAddress, startAddress);
 
                 if (currBlock.OpCodes.Count != 0)
                 {
@@ -82,11 +79,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     // including those from SSY/PBK instructions.
                     foreach (OpCodePush pushOp in currBlock.PushOpCodes)
                     {
-                        if (pushOp.GetAbsoluteAddress() >= maxAddress)
-                        {
-                            return null;
-                        }
-
                         GetBlock(pushOp.GetAbsoluteAddress());
                     }
 
@@ -98,11 +90,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                     if (lastOp is OpCodeBranch opBr)
                     {
-                        if (opBr.GetAbsoluteAddress() >= maxAddress)
-                        {
-                            return null;
-                        }
-
                         currBlock.Branch = GetBlock(opBr.GetAbsoluteAddress());
                     }
                     else if (lastOp is OpCodeBranchIndir opBrIndir)
@@ -141,7 +128,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // Do we have a block after the current one?
-                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null && currBlock.EndAddress < maxAddress)
+                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null)
                 {
                     bool targetVisited = visited.ContainsKey(currBlock.EndAddress);
 
@@ -203,10 +190,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
         }
 
         private static void FillBlock(
-            ReadOnlySpan<byte> code,
-            Block              block,
-            ulong              limitAddress,
-            ulong              startAddress)
+            IGpuAccessor gpuAccessor,
+            Block        block,
+            ulong        limitAddress,
+            ulong        startAddress)
         {
             ulong address = block.Address;
 
@@ -225,14 +212,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     continue;
                 }
 
-                uint word0 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)(startAddress + address)));
-                uint word1 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)(startAddress + address + 4)));
-
                 ulong opAddress = address;
 
                 address += 8;
 
-                long opCode = word0 | (long)word1 << 32;
+                long opCode = gpuAccessor.MemoryRead<long>(startAddress + opAddress);
 
                 (InstEmitter emitter, OpCodeTable.OpActivator opActivator) = OpCodeTable.GetEmitter(opCode);
 

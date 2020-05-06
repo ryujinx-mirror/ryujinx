@@ -28,9 +28,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="address">Start address of the range</param>
         /// <param name="size">Size in bytes to be range</param>
         /// <returns>A read only span of the data at the specified memory location</returns>
-        public ReadOnlySpan<byte> GetSpan(ulong address, ulong size)
+        public ReadOnlySpan<byte> GetSpan(ulong address, int size)
         {
-            return _cpuMemory.GetSpan(address, (int)size);
+            return _cpuMemory.GetSpan(address, size);
         }
 
         /// <summary>

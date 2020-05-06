@@ -839,7 +839,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 addressesArray[index] = baseAddress + shader.Offset;
             }
 
-            GraphicsShader gs = ShaderCache.GetGraphicsShader(state, addresses);
+            ShaderBundle gs = ShaderCache.GetGraphicsShader(state, addresses);
 
             _vsUsesInstanceId = gs.Shaders[0]?.Program.Info.UsesInstanceId ?? false;
 

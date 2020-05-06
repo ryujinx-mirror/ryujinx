@@ -241,28 +241,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Gets the number of mapped or reserved pages on a given region.
-        /// </summary>
-        /// <param name="gpuVa">Start GPU virtual address of the region</param>
-        /// <param name="maxSize">Maximum size of the data</param>
-        /// <returns>Mapped size in bytes of the specified region</returns>
-        internal ulong GetSubSize(ulong gpuVa, ulong maxSize)
-        {
-            ulong size = 0;
-
-            while (GetPte(gpuVa + size) != PteUnmapped)
-            {
-                size += PageSize;
-                if (size >= maxSize)
-                {
-                    return maxSize;
-                }
-            }
-
-            return size;
-        }
-
-        /// <summary>
         /// Translates a GPU virtual address to a CPU virtual address.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to be translated</param>
@@ -277,25 +255,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
 
             return baseAddress + (gpuVa & PageMask);
-        }
-
-        /// <summary>
-        /// Checks if a given memory region is currently unmapped.
-        /// </summary>
-        /// <param name="gpuVa">Start GPU virtual address of the region</param>
-        /// <param name="size">Size in bytes of the region</param>
-        /// <returns>True if the region is unmapped (free), false otherwise</returns>
-        public bool IsRegionFree(ulong gpuVa, ulong size)
-        {
-            for (ulong offset = 0; offset < size; offset += PageSize)
-            {
-                if (IsPageInUse(gpuVa + offset))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         /// <summary>

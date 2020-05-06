@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (intType == IntegerType.U64)
             {
-                context.Config.PrintLog("Unimplemented 64-bits F2I.");
+                context.Config.GpuAccessor.Log("Unimplemented 64-bits F2I.");
 
                 return;
             }
@@ -184,7 +184,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (srcType == IntegerType.U64 || dstType == IntegerType.U64)
             {
-                context.Config.PrintLog("Invalid I2I encoding.");
+                context.Config.GpuAccessor.Log("Invalid I2I encoding.");
 
                 return;
             }

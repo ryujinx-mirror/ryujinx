@@ -14,46 +14,22 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         private const int HeaderSize = 0x50;
 
-        public static ReadOnlySpan<byte> ExtractCode(ReadOnlySpan<byte> code, bool compute, out int headerSize)
+        public static ShaderProgram Translate(ulong address, IGpuAccessor gpuAccessor, TranslationFlags flags)
         {
-            headerSize = compute ? 0 : HeaderSize;
-
-            Block[] cfg = Decoder.Decode(code, (ulong)headerSize);
-
-            if (cfg == null)
-            {
-                return code;
-            }
-
-            ulong endAddress = 0;
-
-            foreach (Block block in cfg)
-            {
-                if (endAddress < block.EndAddress)
-                {
-                    endAddress = block.EndAddress;
-                }
-            }
-
-            return code.Slice(0, headerSize + (int)endAddress);
-        }
-
-        public static ShaderProgram Translate(ReadOnlySpan<byte> code, TranslatorCallbacks callbacks, TranslationFlags flags)
-        {
-            Operation[] ops = DecodeShader(code, callbacks, flags, out ShaderConfig config, out int size);
+            Operation[] ops = DecodeShader(address, gpuAccessor, flags, out ShaderConfig config, out int size);
 
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(ReadOnlySpan<byte> vpACode, ReadOnlySpan<byte> vpBCode, TranslatorCallbacks callbacks, TranslationFlags flags)
+        public static ShaderProgram Translate(ulong addressA, ulong addressB, IGpuAccessor gpuAccessor, TranslationFlags flags)
         {
-            Operation[] vpAOps = DecodeShader(vpACode, callbacks, flags, out _, out _);
-            Operation[] vpBOps = DecodeShader(vpBCode, callbacks, flags, out ShaderConfig config, out int sizeB);
+            Operation[] opsA = DecodeShader(addressA, gpuAccessor, flags, out _, out int sizeA);
+            Operation[] opsB = DecodeShader(addressB, gpuAccessor, flags, out ShaderConfig config, out int sizeB);
 
-            return Translate(Combine(vpAOps, vpBOps), config, sizeB);
+            return Translate(Combine(opsA, opsB), config, sizeB, sizeA);
         }
 
-        private static ShaderProgram Translate(Operation[] ops, ShaderConfig config, int size)
+        private static ShaderProgram Translate(Operation[] ops, ShaderConfig config, int size, int sizeA = 0)
         {
             BasicBlock[] blocks = ControlFlowGraph.MakeCfg(ops);
 
@@ -83,34 +59,34 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             string glslCode = program.Code;
 
-            return new ShaderProgram(spInfo, config.Stage, glslCode, size);
+            return new ShaderProgram(spInfo, config.Stage, glslCode, size, sizeA);
         }
 
         private static Operation[] DecodeShader(
-            ReadOnlySpan<byte>  code,
-            TranslatorCallbacks callbacks,
-            TranslationFlags    flags,
-            out ShaderConfig    config,
-            out int             size)
+            ulong            address,
+            IGpuAccessor     gpuAccessor,
+            TranslationFlags flags,
+            out ShaderConfig config,
+            out int          size)
         {
             Block[] cfg;
 
             if ((flags & TranslationFlags.Compute) != 0)
             {
-                config = new ShaderConfig(flags, callbacks);
+                config = new ShaderConfig(gpuAccessor, flags);
 
-                cfg = Decoder.Decode(code, 0);
+                cfg = Decoder.Decode(gpuAccessor, address);
             }
             else
             {
-                config = new ShaderConfig(new ShaderHeader(code), flags, callbacks);
+                config = new ShaderConfig(new ShaderHeader(gpuAccessor, address), gpuAccessor, flags);
 
-                cfg = Decoder.Decode(code, HeaderSize);
+                cfg = Decoder.Decode(gpuAccessor, address + HeaderSize);
             }
 
             if (cfg == null)
             {
-                config.PrintLog("Invalid branch detected, failed to build CFG.");
+                gpuAccessor.Log("Invalid branch detected, failed to build CFG.");
 
                 size = 0;
 
@@ -150,7 +126,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         {
                             instName = "???";
 
-                            config.PrintLog($"Invalid instruction at 0x{op.Address:X6} (0x{op.RawOpCode:X16}).");
+                            gpuAccessor.Log($"Invalid instruction at 0x{op.Address:X6} (0x{op.RawOpCode:X16}).");
                         }
 
                         string dbgComment = $"0x{op.Address:X6}: 0x{op.RawOpCode:X16} {instName}";

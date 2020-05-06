@@ -431,7 +431,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (scale.AsFloat() == 1)
                 {
-                    context.Config.PrintLog($"Invalid FP multiply scale \"{op.Scale}\".");
+                    context.Config.GpuAccessor.Log($"Invalid FP multiply scale \"{op.Scale}\".");
                 }
 
                 if (isFP64)

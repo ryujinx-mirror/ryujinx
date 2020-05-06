@@ -315,7 +315,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
-            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, Size);
+            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, (int)Size);
 
             // If the texture was modified by the host GPU, we do partial invalidation
             // of the texture by getting GPU data and merging in the pages of memory

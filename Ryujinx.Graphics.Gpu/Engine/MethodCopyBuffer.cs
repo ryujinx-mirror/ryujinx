@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     ulong srcAddress = srcBaseAddress + (ulong)srcOffset;
                     ulong dstAddress = dstBaseAddress + (ulong)dstOffset;
 
-                    ReadOnlySpan<byte> pixel = _context.PhysicalMemory.GetSpan(srcAddress, (ulong)srcBpp);
+                    ReadOnlySpan<byte> pixel = _context.PhysicalMemory.GetSpan(srcAddress, srcBpp);
 
                     _context.PhysicalMemory.Write(dstAddress, pixel);
                 }

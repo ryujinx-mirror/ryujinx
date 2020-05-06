@@ -10,13 +10,15 @@ namespace Ryujinx.Graphics.Shader
 
         public string Code { get; private set; }
 
+        public int SizeA { get; }
         public int Size { get; }
 
-        internal ShaderProgram(ShaderProgramInfo info, ShaderStage stage, string code, int size)
+        internal ShaderProgram(ShaderProgramInfo info, ShaderStage stage, string code, int size, int sizeA)
         {
             Info  = info;
             Stage = stage;
             Code  = code;
+            SizeA = sizeA;
             Size  = size;
         }
 

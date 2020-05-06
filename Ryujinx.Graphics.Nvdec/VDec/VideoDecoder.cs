@@ -1,6 +1,8 @@
 using Ryujinx.Graphics.Gpu;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.VDec
 {
@@ -70,7 +72,7 @@ namespace Ryujinx.Graphics.VDec
                     ScalingMatrix8 = gpu.MemoryAccessor.ReadBytes(_decoderContextAddress + 0x220, 2 * 64)
                 };
 
-                byte[] frameData = gpu.MemoryAccessor.ReadBytes(_frameDataAddress, (ulong)frameDataSize);
+                byte[] frameData = gpu.MemoryAccessor.ReadBytes(_frameDataAddress, frameDataSize);
 
                 _h264Decoder.Decode(Params, matrices, frameData);
             }
@@ -86,7 +88,7 @@ namespace Ryujinx.Graphics.VDec
                     Ref2Key = (long)gpu.MemoryManager.Translate(_vpxRef2LumaAddress)
                 };
 
-                Vp9FrameHeader header = gpu.MemoryAccessor.Read<Vp9FrameHeader>(_decoderContextAddress + 0x48);
+                Vp9FrameHeader header = ReadStruct<Vp9FrameHeader>(gpu.MemoryAccessor, _decoderContextAddress + 0x48);
 
                 Vp9ProbabilityTables probs = new Vp9ProbabilityTables()
                 {
@@ -117,13 +119,26 @@ namespace Ryujinx.Graphics.VDec
                     MvHpProbs             = gpu.MemoryAccessor.ReadBytes(_vpxProbTablesAddress + 0x54a, 0x2)
                 };
 
-                byte[] frameData = gpu.MemoryAccessor.ReadBytes(_frameDataAddress, (ulong)frameDataSize);
+                byte[] frameData = gpu.MemoryAccessor.ReadBytes(_frameDataAddress, frameDataSize);
 
                 _vp9Decoder.Decode(keys, header, probs, frameData);
             }
             else
             {
                 ThrowUnimplementedCodec();
+            }
+        }
+
+        private T ReadStruct<T>(MemoryAccessor accessor, ulong address) where T : struct
+        {
+            byte[] data = accessor.ReadBytes(address, Marshal.SizeOf<T>());
+
+            unsafe
+            {
+                fixed (byte* ptr = data)
+                {
+                    return Marshal.PtrToStructure<T>((IntPtr)ptr);
+                }
             }
         }
 

@@ -36,7 +36,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                context.Config.PrintLog($"Invalid vote operation: {op.VoteOp}.");
+                context.Config.GpuAccessor.Log($"Invalid vote operation: {op.VoteOp}.");
             }
 
             if (!op.Rd.IsRZ)

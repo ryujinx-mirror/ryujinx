@@ -1,6 +1,5 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
@@ -110,15 +109,13 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool         OmapSampleMask { get; }
         public bool         OmapDepth      { get; }
 
-        public ShaderHeader(ReadOnlySpan<byte> code)
+        public ShaderHeader(IGpuAccessor gpuAccessor, ulong address)
         {
-            ReadOnlySpan<int> header = MemoryMarshal.Cast<byte, int>(code);
-
-            int commonWord0 = header[0];
-            int commonWord1 = header[1];
-            int commonWord2 = header[2];
-            int commonWord3 = header[3];
-            int commonWord4 = header[4];
+            int commonWord0 = gpuAccessor.MemoryRead<int>(address + 0);
+            int commonWord1 = gpuAccessor.MemoryRead<int>(address + 4);
+            int commonWord2 = gpuAccessor.MemoryRead<int>(address + 8);
+            int commonWord3 = gpuAccessor.MemoryRead<int>(address + 12);
+            int commonWord4 = gpuAccessor.MemoryRead<int>(address + 16);
 
             SphType = commonWord0.Extract(0, 5);
             Version = commonWord0.Extract(5, 5);
@@ -163,22 +160,19 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             ImapTypes = new ImapPixelType[32];
 
-            for (int i = 0; i < 8; i++)
+            for (ulong i = 0; i < 32; i++)
             {
-                for (int j = 0; j < 4; j++)
-                {
-                    byte imap = (byte)(header[6 + i] >> (j * 8));
+                byte imap = gpuAccessor.MemoryRead<byte>(address + 0x18 + i);
 
-                    ImapTypes[i * 4 + j] = new ImapPixelType(
-                        (PixelImap)((imap >> 0) & 3),
-                        (PixelImap)((imap >> 2) & 3),
-                        (PixelImap)((imap >> 4) & 3),
-                        (PixelImap)((imap >> 6) & 3));
-                }
+                ImapTypes[i] = new ImapPixelType(
+                    (PixelImap)((imap >> 0) & 3),
+                    (PixelImap)((imap >> 2) & 3),
+                    (PixelImap)((imap >> 4) & 3),
+                    (PixelImap)((imap >> 6) & 3));
             }
 
-            int type2OmapTarget = header[18];
-            int type2Omap       = header[19];
+            int type2OmapTarget = gpuAccessor.MemoryRead<int>(address + 0x48);
+            int type2Omap       = gpuAccessor.MemoryRead<int>(address + 0x4c);
 
             OmapTargets = new OmapTarget[8];
 

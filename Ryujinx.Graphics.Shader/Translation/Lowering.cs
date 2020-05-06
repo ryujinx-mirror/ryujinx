@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 sbSlot        = PrependOperation(Instruction.ConditionalSelect, inRange, Const(slot), sbSlot);
             }
 
-            Operand alignMask = Const(-config.QueryInfo(QueryInfoName.StorageBufferOffsetAlignment));
+            Operand alignMask = Const(-config.GpuAccessor.QueryStorageBufferOffsetAlignment());
 
             Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd,    sbBaseAddrLow, alignMask);
             Operand byteOffset    = PrependOperation(Instruction.Subtract,      addrLow, baseAddrTrunc);
@@ -131,9 +131,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool hasOffset  = (texOp.Flags & TextureFlags.Offset)  != 0;
             bool hasOffsets = (texOp.Flags & TextureFlags.Offsets) != 0;
 
-            bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.QueryInfoBool(QueryInfoName.SupportsNonConstantTextureOffset);
+            bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.GpuAccessor.QuerySupportsNonConstantTextureOffset();
 
-            bool isRect = config.QueryInfoBool(QueryInfoName.IsTextureRectangle, texOp.Handle);
+            bool isRect = config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle);
 
             if (!(hasInvalidOffset || isRect))
             {

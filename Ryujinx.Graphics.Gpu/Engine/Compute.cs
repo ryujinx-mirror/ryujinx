@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 BufferManager.SetComputeUniformBuffer(index, gpuVa, size);
             }
 
-            ComputeShader cs = ShaderCache.GetComputeShader(
+            ShaderBundle cs = ShaderCache.GetComputeShader(
                 state,
                 shaderGpuVa,
                 qmd.CtaThreadDimension0,
@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             TextureManager.SetComputeTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
 
-            ShaderProgramInfo info = cs.Shader.Program.Info;            
+            ShaderProgramInfo info = cs.Shaders[0].Program.Info;            
 
             for (int index = 0; index < info.CBuffers.Count; index++)
             {
