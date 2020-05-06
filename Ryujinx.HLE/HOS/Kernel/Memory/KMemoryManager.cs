@@ -2420,9 +2420,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             while (node != null)
             {
-                KMemoryBlock currBlock = node.Value;
+                LinkedListNode<KMemoryBlock> newNode = node;
 
-                LinkedListNode<KMemoryBlock> nextNode = node.Next;
+                KMemoryBlock currBlock = node.Value;
 
                 ulong currBaseAddr = currBlock.BaseAddress;
                 ulong currEndAddr  = currBlock.PagesCount * PageSize + currBaseAddr;
@@ -2435,12 +2435,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         currBlock.Permission != oldPermission ||
                         currBlockAttr        != oldAttribute)
                     {
-                        node = nextNode;
+                        node = node.Next;
 
                         continue;
                     }
-
-                    LinkedListNode<KMemoryBlock> newNode = node;
 
                     if (baseAddress > currBaseAddr)
                     {
@@ -2454,7 +2452,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     newNode.Value.SetState(newPermission, newState, newAttribute);
 
-                    MergeEqualStateNeighbors(newNode);
+                    newNode = MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2462,7 +2460,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     break;
                 }
 
-                node = nextNode;
+                node = newNode.Next;
             }
 
             _blockAllocator.Count += _blocks.Count - oldCount;
@@ -2485,17 +2483,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             while (node != null)
             {
-                KMemoryBlock currBlock = node.Value;
+                LinkedListNode<KMemoryBlock> newNode = node;
 
-                LinkedListNode<KMemoryBlock> nextNode = node.Next;
+                KMemoryBlock currBlock = node.Value;
 
                 ulong currBaseAddr = currBlock.BaseAddress;
                 ulong currEndAddr  = currBlock.PagesCount * PageSize + currBaseAddr;
 
                 if (baseAddress < currEndAddr && currBaseAddr < endAddr)
                 {
-                    LinkedListNode<KMemoryBlock> newNode = node;
-
                     if (baseAddress > currBaseAddr)
                     {
                         _blocks.AddBefore(node, currBlock.SplitRightAtAddress(baseAddress));
@@ -2508,7 +2504,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     newNode.Value.SetState(permission, state, attribute);
 
-                    MergeEqualStateNeighbors(newNode);
+                    newNode = MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2516,7 +2512,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     break;
                 }
 
-                node = nextNode;
+                node = newNode.Next;
             }
 
             _blockAllocator.Count += _blocks.Count - oldCount;
@@ -2551,17 +2547,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             while (node != null)
             {
-                KMemoryBlock currBlock = node.Value;
+                LinkedListNode<KMemoryBlock> newNode = node;
 
-                LinkedListNode<KMemoryBlock> nextNode = node.Next;
+                KMemoryBlock currBlock = node.Value;
 
                 ulong currBaseAddr = currBlock.BaseAddress;
                 ulong currEndAddr  = currBlock.PagesCount * PageSize + currBaseAddr;
 
                 if (baseAddress < currEndAddr && currBaseAddr < endAddr)
                 {
-                    LinkedListNode<KMemoryBlock> newNode = node;
-
                     if (baseAddress > currBaseAddr)
                     {
                         _blocks.AddBefore(node, currBlock.SplitRightAtAddress(baseAddress));
@@ -2576,7 +2570,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     blockMutate(newBlock, permission);
 
-                    MergeEqualStateNeighbors(newNode);
+                    newNode = MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2584,13 +2578,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     break;
                 }
 
-                node = nextNode;
+                node = newNode.Next;
             }
 
             _blockAllocator.Count += _blocks.Count - oldCount;
         }
 
-        private void MergeEqualStateNeighbors(LinkedListNode<KMemoryBlock> node)
+        private LinkedListNode<KMemoryBlock> MergeEqualStateNeighbors(LinkedListNode<KMemoryBlock> node)
         {
             KMemoryBlock block = node.Value;
 
@@ -2622,6 +2616,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     block.AddPages(nextBlock.PagesCount);
                 }
             }
+
+            return node;
         }
 
         private static bool BlockStateEquals(KMemoryBlock lhs, KMemoryBlock rhs)
