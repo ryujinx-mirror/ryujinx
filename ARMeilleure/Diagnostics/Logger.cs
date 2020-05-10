@@ -10,7 +10,7 @@ namespace ARMeilleure.Diagnostics
         private static long _startTime;
 
         private static long[] _accumulatedTime;
-#pragma warning restore CS0196
+#pragma warning restore CS0169
 
         static Logger()
         {

@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
+#pragma warning disable CS0169
     struct Array2<T> where T : unmanaged
     {
         T e0, e1;
@@ -50,4 +51,5 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ref T this[int index] => ref MemoryMarshal.CreateSpan(ref e0, 17)[index];
         public int Length => 17;
     }
+#pragma warning restore CS0169
 }
