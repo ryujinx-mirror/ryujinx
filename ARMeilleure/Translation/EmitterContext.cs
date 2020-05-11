@@ -609,15 +609,10 @@ namespace ARMeilleure.Translation
 
         private static bool EndsWithUnconditional(BasicBlock block)
         {
-            Operation lastOp = block.GetLastOp() as Operation;
-
-            if (lastOp == null)
-            {
-                return false;
-            }
-
-            return lastOp.Instruction == Instruction.Branch ||
-                   lastOp.Instruction == Instruction.Return;
+            return block.Operations.Last is Operation lastOp &&
+                   (lastOp.Instruction == Instruction.Branch ||
+                    lastOp.Instruction == Instruction.Return ||
+                    lastOp.Instruction == Instruction.Tailcall);
         }
 
         public ControlFlowGraph GetControlFlowGraph()
