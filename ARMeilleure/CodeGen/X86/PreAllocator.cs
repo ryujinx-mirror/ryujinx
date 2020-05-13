@@ -265,38 +265,6 @@ namespace ARMeilleure.CodeGen.X86
                     break;
                 }
 
-                case Instruction.CpuId:
-                {
-                    // Handle the many restrictions of the CPU Id instruction:
-                    // - EAX controls the information returned by this instruction.
-                    // - When EAX is 1, feature information is returned.
-                    // - The information is written to registers EAX, EBX, ECX and EDX.
-                    Debug.Assert(dest.Type == OperandType.I64);
-
-                    Operand eax = Gpr(X86Register.Rax, OperandType.I32);
-                    Operand ebx = Gpr(X86Register.Rbx, OperandType.I32);
-                    Operand ecx = Gpr(X86Register.Rcx, OperandType.I32);
-                    Operand edx = Gpr(X86Register.Rdx, OperandType.I32);
-
-                    // Value 0x01 = Version, family and feature information.
-                    nodes.AddBefore(node, Operation(Instruction.Copy, eax, Const(1)));
-
-                    // Copy results to the destination register.
-                    // The values are split into 2 32-bits registers, we merge them
-                    // into a single 64-bits register.
-                    Operand rcx = Gpr(X86Register.Rcx, OperandType.I64);
-
-                    node = nodes.AddAfter(node, Operation(Instruction.ZeroExtend32, dest, edx));
-                    node = nodes.AddAfter(node, Operation(Instruction.ShiftLeft,    dest, dest, Const(32)));
-                    node = nodes.AddAfter(node, Operation(Instruction.BitwiseOr,    dest, dest, rcx));
-
-                    operation.SetDestinations(new Operand[] { eax, ebx, ecx, edx });
-
-                    operation.SetSources(new Operand[] { eax });
-
-                    break;
-                }
-
                 case Instruction.Divide:
                 case Instruction.DivideUI:
                 {

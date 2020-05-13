@@ -209,11 +209,6 @@ namespace ARMeilleure.Translation
             return Add(Instruction.CountLeadingZeros, Local(op1.Type), op1);
         }
 
-        internal Operand CpuId()
-        {
-            return Add(Instruction.CpuId, Local(OperandType.I64));
-        }
-
         public Operand Divide(Operand op1, Operand op2)
         {
             return Add(Instruction.Divide, Local(op1.Type), op1, op2);

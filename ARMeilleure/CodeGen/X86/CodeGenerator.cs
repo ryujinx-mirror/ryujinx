@@ -53,7 +53,6 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.ConvertToFP,             GenerateConvertToFP);
             Add(Instruction.Copy,                    GenerateCopy);
             Add(Instruction.CountLeadingZeros,       GenerateCountLeadingZeros);
-            Add(Instruction.CpuId,                   GenerateCpuId);
             Add(Instruction.Divide,                  GenerateDivide);
             Add(Instruction.DivideUI,                GenerateDivideUI);
             Add(Instruction.Fill,                    GenerateFill);
@@ -763,11 +762,6 @@ namespace ARMeilleure.CodeGen.X86
             // return the number of 0 bits on the high end. So, we invert the result
             // of the BSR using XOR to get the correct value.
             context.Assembler.Xor(dest, Const(operandMask), OperandType.I32);
-        }
-
-        private static void GenerateCpuId(CodeGenContext context, Operation operation)
-        {
-            context.Assembler.Cpuid();
         }
 
         private static void GenerateDivide(CodeGenContext context, Operation operation)
