@@ -43,6 +43,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private KProcess _owner;
 
+        private bool _transferMemInitialized = false;
+
         public INvDrvServices(ServiceCtx context)
         {
             _owner = null;
@@ -315,6 +317,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             long transferMemSize   = context.RequestData.ReadInt64();
             int  transferMemHandle = context.Request.HandleDesc.ToCopy[0];
 
+            // TODO: When transfer memory will be implemented, this could be removed.
+            _transferMemInitialized = true;
+
             _owner = context.Process;
 
             context.ResponseData.Write((uint)NvResult.Success);
@@ -389,7 +394,29 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // GetStatus() -> (unknown<0x20>, u32 error_code)
         public ResultCode GetStatus(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            // TODO: When transfer memory will be implemented, check if it's mapped instead.
+            if (_transferMemInitialized)
+            {
+                // TODO: Populate values when more RE will be done.
+                NvStatus nvStatus = new NvStatus
+                {
+                    MemoryValue1 = 0, // GetMemStats(transfer_memory + 0x60, 3)
+                    MemoryValue2 = 0, // GetMemStats(transfer_memory + 0x60, 5)
+                    MemoryValue3 = 0, // transfer_memory + 0x78
+                    MemoryValue4 = 0  // transfer_memory + 0x80
+                };
+
+                context.ResponseData.WriteStruct(nvStatus);
+                context.ResponseData.Write((uint)NvResult.Success);
+
+                Logger.PrintStub(LogClass.ServiceNv);
+            }
+            else
+            {
+                context.ResponseData.Write((uint)NvResult.NotInitialized);
+            }
+
+            return ResultCode.Success;
         }
 
         [Command(7)]
