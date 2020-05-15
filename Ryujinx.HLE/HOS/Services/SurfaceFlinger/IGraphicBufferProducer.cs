@@ -237,6 +237,18 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     outputParcel.WriteStatus(status);
 
                     break;
+                case TransactionCode.GetBufferHistory:
+                    int bufferHistoryCount = inputParcel.ReadInt32();
+
+                    status = GetBufferHistory(bufferHistoryCount, out Span<BufferInfo> bufferInfos);
+
+                    outputParcel.WriteStatus(status);
+
+                    outputParcel.WriteInt32(bufferInfos.Length);
+
+                    outputParcel.WriteUnmanagedSpan<BufferInfo>(bufferInfos);
+
+                    break;
                 default:
                     throw new NotImplementedException($"Transaction {(TransactionCode)code} not implemented");
             }
@@ -272,5 +284,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public abstract Status Disconnect(NativeWindowApi api);
 
         public abstract Status SetPreallocatedBuffer(int slot, AndroidStrongPointer<GraphicBuffer> graphicBuffer);
+
+        public abstract Status GetBufferHistory(int bufferHistoryCount, out Span<BufferInfo> bufferInfos);
     }
 }

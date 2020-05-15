@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public ResultCode TransactParcelAuto(ServiceCtx context)
         {
             int binderId = context.RequestData.ReadInt32();
-            
+
             uint code  = context.RequestData.ReadUInt32();
             uint flags = context.RequestData.ReadUInt32();
 

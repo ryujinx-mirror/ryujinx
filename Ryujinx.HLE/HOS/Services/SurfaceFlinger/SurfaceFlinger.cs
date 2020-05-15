@@ -198,7 +198,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 {
                     Compose();
 
-                    _device.System.SignalVsync();
+                    _device.System?.SignalVsync();
 
                     _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
                 }

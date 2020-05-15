@@ -1,4 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types;
+using Ryujinx.HLE.HOS.Services.Time.Clock;
 
 namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
@@ -12,11 +13,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public bool                                AcquireCalled;
         public bool                                NeedsCleanupOnRelease;
         public bool                                AttachedByConsumer;
+        public TimeSpanType                        QueueTime;
+        public TimeSpanType                        PresentationTime;
 
         public BufferSlot()
         {
-            GraphicBuffer = new AndroidStrongPointer<GraphicBuffer>();
-            BufferState   = BufferState.Free;
+            GraphicBuffer    = new AndroidStrongPointer<GraphicBuffer>();
+            BufferState      = BufferState.Free;
+            QueueTime        = TimeSpanType.Zero;
+            PresentationTime = TimeSpanType.Zero;
         }
     }
 }

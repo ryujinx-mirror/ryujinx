@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types;
+using Ryujinx.HLE.HOS.Services.Time.Clock;
 using System;
 using System.Threading;
 
@@ -92,8 +92,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     return Status.BadValue;
                 }
 
+                Core.Queue.Clear();
+                Core.FreeAllBuffersLocked();
                 Core.OverrideMaxBufferCount = bufferCount;
                 Core.SignalDequeueEvent();
+                Core.SignalWaitBufferFreeEvent();
 
                 listener = Core.ConsumerListener;
             }
@@ -363,7 +366,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Core.Slots[slot].Fence       = input.Fence;
                 Core.Slots[slot].BufferState = BufferState.Queued;
                 Core.FrameCounter++;
-                Core.Slots[slot].FrameNumber = Core.FrameCounter;
+                Core.Slots[slot].FrameNumber      = Core.FrameCounter;
+                Core.Slots[slot].QueueTime        = TimeSpanType.FromTimeSpan(ARMeilleure.State.ExecutionContext.ElapsedTime);
+                Core.Slots[slot].PresentationTime = TimeSpanType.Zero;
 
                 item.AcquireCalled             = Core.Slots[slot].AcquireCalled;
                 item.Crop                      = input.Crop;
@@ -380,6 +385,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 item.GraphicBuffer.Set(Core.Slots[slot].GraphicBuffer);
                 item.GraphicBuffer.Object.IncrementNvMapHandleRefCount(Core.Owner);
+
+                Core.BufferHistoryPosition = (Core.BufferHistoryPosition + 1) % BufferQueueCore.BufferHistoryArraySize;
+
+                Core.BufferHistory[Core.BufferHistoryPosition] = new BufferInfo
+                {
+                    FrameNumber = Core.FrameCounter,
+                    QueueTime   = Core.Slots[slot].QueueTime,
+                    State       = BufferState.Queued
+                };
 
                 _stickyTransform = input.StickyTransform;
 
@@ -488,6 +502,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     case NativeWindowAttribute.MinUnqueuedBuffers:
                         outValue = Core.GetMinUndequeuedBufferCountLocked(false);
                         return Status.Success;
+                    case NativeWindowAttribute.ConsumerRunningBehind:
+                        outValue = Core.Queue.Count > 1 ? 1 : 0;
+                        return Status.Success;
                     case NativeWindowAttribute.ConsumerUsageBits:
                         outValue = (int)Core.ConsumerUsageBits;
                         return Status.Success;
@@ -561,6 +578,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     case NativeWindowApi.Camera:
                         if (Core.ConnectedApi == api)
                         {
+                            Core.Queue.Clear();
                             Core.FreeAllBuffersLocked();
 
                             producerListener = Core.ProducerListener;
@@ -761,6 +779,36 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         protected override KReadableEvent GetWaitBufferFreeEvent()
         {
             return Core.GetWaitBufferFreeEvent();
+        }
+
+        public override Status GetBufferHistory(int bufferHistoryCount, out Span<BufferInfo> bufferInfos)
+        {
+            if (bufferHistoryCount <= 0)
+            {
+                bufferInfos = Span<BufferInfo>.Empty;
+
+                return Status.BadValue;
+            }
+
+            lock (Core.Lock)
+            {
+                bufferHistoryCount = Math.Min(bufferHistoryCount, Core.BufferHistory.Length);
+
+                BufferInfo[] result = new BufferInfo[bufferHistoryCount];
+
+                uint position = Core.BufferHistoryPosition;
+
+                for (uint i = 0; i < bufferHistoryCount; i++)
+                {
+                    result[i] = Core.BufferHistory[(position - i) % Core.BufferHistory.Length];
+
+                    position--;
+                }
+
+                bufferInfos = result;
+
+                return Status.Success;
+            }
         }
     }
 }

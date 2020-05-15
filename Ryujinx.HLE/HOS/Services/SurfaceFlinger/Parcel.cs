@@ -173,6 +173,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public void WriteInt64(long value) => WriteUnmanagedType(ref value);
         public void WriteUInt64(ulong value) => WriteUnmanagedType(ref value);
 
+        public void WriteUnmanagedSpan<T>(ReadOnlySpan<T> value) where T : unmanaged
+        {
+            WriteInplace(MemoryMarshal.Cast<T, byte>(value));
+        }
+
         public void WriteUnmanagedType<T>(ref T value) where T : unmanaged
         {
             WriteInplace(SpanHelpers.AsByteSpan(ref value));

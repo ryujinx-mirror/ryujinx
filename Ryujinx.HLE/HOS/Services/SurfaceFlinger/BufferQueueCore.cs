@@ -1,6 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -29,6 +30,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public bool                  ConsumerControlledByApp;
         public uint                  ConsumerUsageBits;
         public List<BufferItem>      Queue;
+        public BufferInfo[]          BufferHistory;
+        public uint                  BufferHistoryPosition;
+        public bool                  EnableExternalEvent;
 
         public readonly object Lock = new object();
 
@@ -36,6 +40,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         private KEvent _frameAvailableEvent;
 
         public KProcess Owner { get; }
+
+        public const int BufferHistoryArraySize = 8;
 
         public BufferQueueCore(Switch device, KProcess process)
         {
@@ -64,6 +70,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             _frameAvailableEvent = new KEvent(device.System.KernelContext);
 
             Owner = process;
+
+            BufferHistory       = new BufferInfo[BufferHistoryArraySize];
+            EnableExternalEvent = true;
         }
 
         public int GetMinUndequeuedBufferCountLocked(bool async)
@@ -129,12 +138,18 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void SignalWaitBufferFreeEvent()
         {
-            _waitBufferFreeEvent.WritableEvent.Signal();
+            if (EnableExternalEvent)
+            {
+                _waitBufferFreeEvent.WritableEvent.Signal();
+            }
         }
 
         public void SignalFrameAvailableEvent()
         {
-            _frameAvailableEvent.WritableEvent.Signal();
+            if (EnableExternalEvent)
+            {
+                _frameAvailableEvent.WritableEvent.Signal();
+            }
         }
 
         // TODO: Find an accurate way to handle a regular condvar here as this will wake up unwanted threads in some edge cases.
@@ -201,6 +216,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void CheckSystemEventsLocked(int maxBufferCount)
         {
+            if (!EnableExternalEvent)
+            {
+                return;
+            }
+
             bool needBufferReleaseSignal  = false;
             bool needFrameAvailableSignal = false;
 

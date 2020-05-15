@@ -32,6 +32,8 @@ namespace ARMeilleure.State
             }
         }
 
+        public static TimeSpan ElapsedTime => _tickCounter.Elapsed;
+
         public long TpidrEl0 { get; set; }
         public long Tpidr    { get; set; }
 
