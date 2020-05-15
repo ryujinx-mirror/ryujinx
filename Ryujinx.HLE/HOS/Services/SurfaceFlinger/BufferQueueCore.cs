@@ -175,8 +175,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void FreeBufferLocked(int slot)
         {
-            Slots[slot].GraphicBuffer.Reset();
-
             if (Slots[slot].BufferState == BufferState.Acquired)
             {
                 Slots[slot].NeedsCleanupOnRelease = true;
