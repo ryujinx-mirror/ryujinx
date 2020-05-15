@@ -1525,30 +1525,27 @@ namespace ARMeilleure.CodeGen.X86
             context.Assembler.Pshufd(dest, dest, 0xfc);
         }
 
+        [Conditional("DEBUG")]
         private static void ValidateUnOp(Operand dest, Operand source)
         {
-#if DEBUG
             EnsureSameReg (dest, source);
             EnsureSameType(dest, source);
-#endif
         }
 
+        [Conditional("DEBUG")]
         private static void ValidateBinOp(Operand dest, Operand src1, Operand src2)
         {
-#if DEBUG
             EnsureSameReg (dest, src1);
             EnsureSameType(dest, src1, src2);
-#endif
         }
 
+        [Conditional("DEBUG")]
         private static void ValidateShift(Operand dest, Operand src1, Operand src2)
         {
-#if DEBUG
             EnsureSameReg (dest, src1);
             EnsureSameType(dest, src1);
 
             Debug.Assert(dest.Type.IsInteger() && src2.Type == OperandType.I32);
-#endif
         }
 
         private static void EnsureSameReg(Operand op1, Operand op2)
@@ -1595,7 +1592,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 context.Assembler.Push(Register((X86Register)bit));
 
-                pushEntries.Add(new UnwindPushEntry(bit, RegisterType.Integer, context.StreamOffset));
+                pushEntries.Add(new UnwindPushEntry(UnwindPseudoOp.PushReg, context.StreamOffset, regIndex: bit));
 
                 mask &= ~(1 << bit);
             }
@@ -1612,6 +1609,8 @@ namespace ARMeilleure.CodeGen.X86
             if (reservedStackSize != 0)
             {
                 context.Assembler.Sub(rsp, Const(reservedStackSize), OperandType.I64);
+
+                pushEntries.Add(new UnwindPushEntry(UnwindPseudoOp.AllocStack, context.StreamOffset, stackOffsetOrAllocSize: reservedStackSize));
             }
 
             int offset = reservedStackSize;
@@ -1628,12 +1627,12 @@ namespace ARMeilleure.CodeGen.X86
 
                 context.Assembler.Movdqu(memOp, Xmm((X86Register)bit));
 
-                pushEntries.Add(new UnwindPushEntry(bit, RegisterType.Vector, context.StreamOffset));
+                pushEntries.Add(new UnwindPushEntry(UnwindPseudoOp.SaveXmm128, context.StreamOffset, bit, offset));
 
                 mask &= ~(1 << bit);
             }
 
-            return new UnwindInfo(pushEntries.ToArray(), context.StreamOffset, reservedStackSize);
+            return new UnwindInfo(pushEntries.ToArray(), context.StreamOffset);
         }
 
         private static void WriteEpilogue(CodeGenContext context)

@@ -3,16 +3,12 @@ namespace ARMeilleure.CodeGen.Unwinding
     struct UnwindInfo
     {
         public UnwindPushEntry[] PushEntries { get; }
+        public int PrologSize { get; }
 
-        public int PrologueSize { get; }
-
-        public int FixedAllocSize { get; }
-
-        public UnwindInfo(UnwindPushEntry[] pushEntries, int prologueSize, int fixedAllocSize)
+        public UnwindInfo(UnwindPushEntry[] pushEntries, int prologSize)
         {
-            PushEntries    = pushEntries;
-            PrologueSize   = prologueSize;
-            FixedAllocSize = fixedAllocSize;
+            PushEntries = pushEntries;
+            PrologSize = prologSize;
         }
     }
 }

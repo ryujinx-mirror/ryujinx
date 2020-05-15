@@ -1,20 +1,18 @@
-using ARMeilleure.IntermediateRepresentation;
-
 namespace ARMeilleure.CodeGen.Unwinding
 {
     struct UnwindPushEntry
     {
-        public int Index { get; }
+        public UnwindPseudoOp PseudoOp { get; }
+        public int PrologOffset { get; }
+        public int RegIndex { get; }
+        public int StackOffsetOrAllocSize { get; }
 
-        public RegisterType Type { get; }
-
-        public int StreamEndOffset { get; }
-
-        public UnwindPushEntry(int index, RegisterType type, int streamEndOffset)
+        public UnwindPushEntry(UnwindPseudoOp pseudoOp, int prologOffset, int regIndex = -1, int stackOffsetOrAllocSize = -1)
         {
-            Index           = index;
-            Type            = type;
-            StreamEndOffset = streamEndOffset;
+            PseudoOp = pseudoOp;
+            PrologOffset = prologOffset;
+            RegIndex = regIndex;
+            StackOffsetOrAllocSize = stackOffsetOrAllocSize;
         }
     }
 }

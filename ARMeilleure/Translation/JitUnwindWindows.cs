@@ -1,12 +1,15 @@
-using ARMeilleure.IntermediateRepresentation;
+// https://github.com/MicrosoftDocs/cpp-docs/blob/master/docs/build/exception-handling-x64.md
+
+using ARMeilleure.CodeGen.Unwinding;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation
 {
     static class JitUnwindWindows
     {
-        private const int MaxUnwindCodesArraySize = 9 + 10 * 2 + 3;
+        private const int MaxUnwindCodesArraySize = 32; // Must be an even value.
 
         private struct RuntimeFunction
         {
@@ -41,12 +44,12 @@ namespace ARMeilleure.Translation
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         private static unsafe extern bool RtlInstallFunctionTableCallback(
-            ulong                      tableIdentifier,
-            ulong                      baseAddress,
-            uint                       length,
+            ulong tableIdentifier,
+            ulong baseAddress,
+            uint length,
             GetRuntimeFunctionCallback callback,
-            IntPtr                     context,
-            string                     outOfProcessCallbackDll);
+            IntPtr context,
+            string outOfProcessCallbackDll);
 
         private static GetRuntimeFunctionCallback _getRuntimeFunctionCallback;
 
@@ -93,59 +96,80 @@ namespace ARMeilleure.Translation
 
             if (!JitCache.TryFind(offset, out JitCacheEntry funcEntry))
             {
-                // Not found.
-                return null;
+                return null; // Not found.
             }
 
             var unwindInfo = funcEntry.UnwindInfo;
 
             int codeIndex = 0;
 
-            int spOffset = unwindInfo.FixedAllocSize;
-
-            foreach (var entry in unwindInfo.PushEntries)
-            {
-                if (entry.Type == RegisterType.Vector)
-                {
-                    spOffset -= 16;
-                }
-            }
-
             for (int index = unwindInfo.PushEntries.Length - 1; index >= 0; index--)
             {
                 var entry = unwindInfo.PushEntries[index];
 
-                if (entry.Type == RegisterType.Vector)
+                switch (entry.PseudoOp)
                 {
-                    ushort uwop = PackUwop(UnwindOperation.SaveXmm128, entry.StreamEndOffset, entry.Index);
+                    case UnwindPseudoOp.SaveXmm128:
+                    {
+                        int stackOffset = entry.StackOffsetOrAllocSize;
 
-                    _unwindInfo->UnwindCodes[codeIndex++] = uwop;
-                    _unwindInfo->UnwindCodes[codeIndex++] = (ushort)spOffset;
+                        Debug.Assert(stackOffset % 16 == 0);
 
-                    spOffset += 16;
+                        if (stackOffset <= 0xFFFF0)
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.SaveXmm128, entry.PrologOffset, entry.RegIndex);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset / 16);
+                        }
+                        else
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.SaveXmm128Far, entry.PrologOffset, entry.RegIndex);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 0);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 16);
+                        }
+
+                        break;
+                    }
+
+                    case UnwindPseudoOp.AllocStack:
+                    {
+                        int allocSize = entry.StackOffsetOrAllocSize;
+
+                        Debug.Assert(allocSize % 8 == 0);
+
+                        if (allocSize <= 128)
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocSmall, entry.PrologOffset, (allocSize / 8) - 1);
+                        }
+                        else if (allocSize <= 0x7FFF8)
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocLarge, entry.PrologOffset, 0);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize / 8);
+                        }
+                        else
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocLarge, entry.PrologOffset, 1);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 0);
+                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 16);
+                        }
+
+                        break;
+                    }
+
+                    case UnwindPseudoOp.PushReg:
+                    {
+                        _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.PushNonvol, entry.PrologOffset, entry.RegIndex);
+
+                        break;
+                    }
+
+                    default: throw new NotImplementedException($"({nameof(entry.PseudoOp)} = {entry.PseudoOp})");
                 }
             }
 
-            _unwindInfo->UnwindCodes[0] = PackUwop(UnwindOperation.AllocLarge, unwindInfo.PrologueSize, 1);
-            _unwindInfo->UnwindCodes[1] = (ushort)(unwindInfo.FixedAllocSize >> 0);
-            _unwindInfo->UnwindCodes[2] = (ushort)(unwindInfo.FixedAllocSize >> 16);
+            Debug.Assert(codeIndex <= MaxUnwindCodesArraySize);
 
-            codeIndex += 3;
-
-            for (int index = unwindInfo.PushEntries.Length - 1; index >= 0; index--)
-            {
-                var entry = unwindInfo.PushEntries[index];
-
-                if (entry.Type == RegisterType.Integer)
-                {
-                    ushort uwop = PackUwop(UnwindOperation.PushNonvol, entry.StreamEndOffset, entry.Index);
-
-                    _unwindInfo->UnwindCodes[codeIndex++] = uwop;
-                }
-            }
-
-            _unwindInfo->VersionAndFlags    = 1;
-            _unwindInfo->SizeOfProlog       = (byte)unwindInfo.PrologueSize;
+            _unwindInfo->VersionAndFlags    = 1; // Flags: The function has no handler.
+            _unwindInfo->SizeOfProlog       = (byte)unwindInfo.PrologSize;
             _unwindInfo->CountOfUnwindCodes = (byte)codeIndex;
             _unwindInfo->FrameRegister      = 0;
 
@@ -156,9 +180,9 @@ namespace ARMeilleure.Translation
             return _runtimeFunction;
         }
 
-        private static ushort PackUwop(UnwindOperation uwop, int prologOffset, int opInfo)
+        private static ushort PackUnwindOp(UnwindOperation op, int prologOffset, int opInfo)
         {
-            return (ushort)(prologOffset | ((int)uwop << 8) | (opInfo << 12));
+            return (ushort)(prologOffset | ((int)op << 8) | (opInfo << 12));
         }
     }
 }
