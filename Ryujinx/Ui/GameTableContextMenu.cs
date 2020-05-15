@@ -280,17 +280,7 @@ namespace Ryujinx.Ui
                                 FileStream updateFile = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
                                 PartitionFileSystem nsp = new PartitionFileSystem(updateFile.AsStorage());
 
-                                foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
-                                {
-                                    Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
-
-                                    if (result.IsSuccess())
-                                    {
-                                        Ticket ticket = new Ticket(ticketFile.AsStream());
-
-                                        _virtualFileSystem.KeySet.ExternalKeySet.Add(new LibHac.Fs.RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
-                                    }
-                                }
+                                _virtualFileSystem.ImportTickets(nsp);
 
                                 foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
                                 {

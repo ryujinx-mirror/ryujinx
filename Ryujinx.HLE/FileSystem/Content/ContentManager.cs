@@ -580,7 +580,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersionZip(ZipArchive archive)
             {
-                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
 
                 SystemVersion systemVersion = null;
 
@@ -743,7 +743,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersion(IFileSystem filesystem)
             {
-                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
 
                 SystemVersion systemVersion = null;
 
@@ -874,7 +874,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public SystemVersion GetCurrentFirmwareVersion()
         {
-            IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+            IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
 
             LoadEntries();
 

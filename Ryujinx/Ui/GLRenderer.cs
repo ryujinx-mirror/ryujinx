@@ -180,16 +180,16 @@ namespace Ryujinx.Ui
             {
                 parent.Present();
 
-                string titleNameSection = string.IsNullOrWhiteSpace(_device.System.TitleName) ? string.Empty
-                    : $" - {_device.System.TitleName}";
+                string titleNameSection = string.IsNullOrWhiteSpace(_device.Application.TitleName) ? string.Empty
+                    : $" - {_device.Application.TitleName}";
 
-                string titleVersionSection = string.IsNullOrWhiteSpace(_device.System.TitleVersionString) ? string.Empty
-                    : $" v{_device.System.TitleVersionString}";
+                string titleVersionSection = string.IsNullOrWhiteSpace(_device.Application.TitleVersionString) ? string.Empty
+                    : $" v{_device.Application.TitleVersionString}";
 
-                string titleIdSection = string.IsNullOrWhiteSpace(_device.System.TitleIdText) ? string.Empty
-                    : $" ({_device.System.TitleIdText.ToUpper()})";
+                string titleIdSection = string.IsNullOrWhiteSpace(_device.Application.TitleIdText) ? string.Empty
+                    : $" ({_device.Application.TitleIdText.ToUpper()})";
 
-                string titleArchSection = _device.System.TitleIs64Bit ? " (64-bit)" : " (32-bit)";
+                string titleArchSection = _device.Application.TitleIs64Bit ? " (64-bit)" : " (32-bit)";
 
                 parent.Title = $"Ryujinx {Program.Version}{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
             });

@@ -435,9 +435,9 @@ namespace Ryujinx.Ui
                 _firmwareInstallFile.Sensitive      = false;
                 _firmwareInstallDirectory.Sensitive = false;
 
-                DiscordIntegrationModule.SwitchToPlayingState(device.System.TitleIdText, device.System.TitleName);
+                DiscordIntegrationModule.SwitchToPlayingState(device.Application.TitleIdText, device.Application.TitleName);
 
-                ApplicationLibrary.LoadAndSaveMetaData(device.System.TitleIdText, appMetadata =>
+                ApplicationLibrary.LoadAndSaveMetaData(device.Application.TitleIdText, appMetadata =>
                 {
                     appMetadata.LastPlayed = DateTime.UtcNow.ToString();
                 });
@@ -580,7 +580,7 @@ namespace Ryujinx.Ui
 
             if (device != null)
             {
-                UpdateGameMetadata(device.System.TitleIdText);
+                UpdateGameMetadata(device.Application.TitleIdText);
 
                 if (_glWidget != null)
                 {

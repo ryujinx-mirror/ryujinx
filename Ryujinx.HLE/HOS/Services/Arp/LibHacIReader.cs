@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty();
 
             launchProperty.BaseStorageId = StorageId.BuiltInUser;
-            launchProperty.ApplicationId = new ApplicationId(System.TitleId);
+            launchProperty.ApplicationId = new ApplicationId(System.Device.Application.TitleId);
 
             return Result.Success;
         }

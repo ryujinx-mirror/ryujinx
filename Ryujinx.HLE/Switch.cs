@@ -27,6 +27,8 @@ namespace Ryujinx.HLE
 
         public Horizon System { get; private set; }
 
+        public ApplicationLoader Application { get; }
+
         public PerformanceStatistics Statistics { get; private set; }
 
         public Hid Hid { get; private set; }
@@ -59,6 +61,8 @@ namespace Ryujinx.HLE
 
             Hid = new Hid(this, System.HidBaseAddress);
             Hid.InitDevices();
+
+            Application = new ApplicationLoader(this, fileSystem, contentManager);
         }
 
         public void Initialize()
@@ -76,14 +80,14 @@ namespace Ryujinx.HLE
                 System.EnableMultiCoreScheduling();
             }
 
-            System.FsIntegrityCheckLevel = GetIntigrityCheckLevel();
+            System.FsIntegrityCheckLevel = GetIntegrityCheckLevel();
 
             System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
 
             ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
         }
 
-        public static IntegrityCheckLevel GetIntigrityCheckLevel()
+        public static IntegrityCheckLevel GetIntegrityCheckLevel()
         {
             return ConfigurationState.Instance.System.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
@@ -92,27 +96,27 @@ namespace Ryujinx.HLE
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
         {
-            System.LoadCart(exeFsDir, romFsFile);
+            Application.LoadCart(exeFsDir, romFsFile);
         }
 
         public void LoadXci(string xciFile)
         {
-            System.LoadXci(xciFile);
+            Application.LoadXci(xciFile);
         }
 
         public void LoadNca(string ncaFile)
         {
-            System.LoadNca(ncaFile);
+            Application.LoadNca(ncaFile);
         }
 
         public void LoadNsp(string nspFile)
         {
-            System.LoadNsp(nspFile);
+            Application.LoadNsp(nspFile);
         }
 
         public void LoadProgram(string fileName)
         {
-            System.LoadProgram(fileName);
+            Application.LoadProgram(fileName);
         }
 
         public bool WaitFifo()

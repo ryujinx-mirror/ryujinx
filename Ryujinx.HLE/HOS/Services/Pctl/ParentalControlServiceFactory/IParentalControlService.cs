@@ -43,8 +43,8 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                         _titleId = titleId;
 
                         // TODO: Call nn::arp::GetApplicationControlProperty here when implemented, if it return ResultCode.Success we assign fields.
-                        _ratingAge                = Array.ConvertAll(context.Device.System.ControlData.Value.RatingAge.ToArray(), Convert.ToInt32);
-                        _freeCommunicationEnabled = context.Device.System.ControlData.Value.ParentalControl == LibHac.Ns.ParentalControlFlagValue.FreeCommunication;
+                        _ratingAge                = Array.ConvertAll(context.Device.Application.ControlData.Value.RatingAge.ToArray(), Convert.ToInt32);
+                        _freeCommunicationEnabled = context.Device.Application.ControlData.Value.ParentalControl == LibHac.Ns.ParentalControlFlagValue.FreeCommunication;
                     }
                 }
 

@@ -81,17 +81,7 @@ namespace Ryujinx.Ui
                 {
                     PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
 
-                    foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
-                    {
-                        Result result = nsp.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
-
-                        if (result.IsSuccess())
-                        {
-                            Ticket ticket = new Ticket(ticketFile.AsStream());
-
-                            _virtualFileSystem.KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
-                        }
-                    }
+                    _virtualFileSystem.ImportTickets(nsp);
 
                     foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
                     {

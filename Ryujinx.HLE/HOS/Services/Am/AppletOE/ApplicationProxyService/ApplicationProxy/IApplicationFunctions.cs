@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             Uid     userId  = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
             TitleId titleId = new TitleId(context.Process.TitleId);
 
-            BlitStruct<ApplicationControlProperty> controlHolder = context.Device.System.ControlData;
+            BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
 
             ref ApplicationControlProperty control = ref controlHolder.Value;
 

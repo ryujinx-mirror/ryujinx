@@ -14,7 +14,7 @@
 
             long position = context.Request.ReceiveBuff[0].Position;
 
-            byte[] nacpData = context.Device.System.ControlData.ByteSpan.ToArray();
+            byte[] nacpData = context.Device.Application.ControlData.ByteSpan.ToArray();
 
             context.Memory.Write((ulong)position, nacpData);
 

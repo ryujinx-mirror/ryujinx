@@ -121,21 +121,21 @@ namespace Ryujinx.HLE.HOS
         }
 
         public static bool LoadNsos(
-            KernelContext context,
-            Npdm          metaData,
-            IExecutable[] nsos,
-            byte[]        arguments = null)
+                   KernelContext context,
+                   Npdm          metaData,
+                   byte[]        arguments = null,
+            params IExecutable[] executables)
         {
             ulong argsStart = 0;
             int   argsSize  = 0;
             ulong codeStart = metaData.Is64Bit ? 0x8000000UL : 0x200000UL;
             int   codeSize  = 0;
 
-            ulong[] nsoBase = new ulong[nsos.Length];
+            ulong[] nsoBase = new ulong[executables.Length];
 
-            for (int index = 0; index < nsos.Length; index++)
+            for (int index = 0; index < executables.Length; index++)
             {
-                IExecutable staticObject = nsos[index];
+                IExecutable staticObject = executables[index];
 
                 int textEnd = staticObject.TextOffset + staticObject.Text.Length;
                 int roEnd   = staticObject.RoOffset   + staticObject.Ro.Length;
@@ -226,11 +226,11 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            for (int index = 0; index < nsos.Length; index++)
+            for (int index = 0; index < executables.Length; index++)
             {
                 Logger.PrintInfo(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
 
-                result = LoadIntoMemory(process, nsos[index], nsoBase[index]);
+                result = LoadIntoMemory(process, executables[index], nsoBase[index]);
 
                 if (result != KernelResult.Success)
                 {

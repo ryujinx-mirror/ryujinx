@@ -1,7 +1,9 @@
 using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsService;
 using LibHac.FsSystem;
+using LibHac.Spl;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using System;
@@ -261,6 +263,21 @@ namespace Ryujinx.HLE.FileSystem
             KeySet = ExternalKeyReader.ReadKeyFile(keyFile, titleKeyFile, consoleKeyFile);
         }
 
+        public void ImportTickets(IFileSystem fs)
+        {
+            foreach (DirectoryEntryEx ticketEntry in fs.EnumerateEntries("/", "*.tik"))
+            {
+                Result result = fs.OpenFile(out IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+
+                if (result.IsSuccess())
+                {
+                    Ticket ticket = new Ticket(ticketFile.AsStream());
+
+                    KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(KeySet)));
+                }
+            }
+        }
+
         public void Unload()
         {
             RomFs?.Dispose();
@@ -283,7 +300,7 @@ namespace Ryujinx.HLE.FileSystem
         {
             if (_isInitialized)
             {
-                throw new InvalidOperationException($"VirtualFileSystem can only be instanciated once!");
+                throw new InvalidOperationException($"VirtualFileSystem can only be instantiated once!");
             }
 
             _isInitialized = true;
