@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Services.Am.AppletAE;
+﻿using Ryujinx.HLE.HOS.Applets.Browser;
+using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using System;
 using System.Collections.Generic;
 
@@ -14,7 +15,10 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 { AppletId.PlayerSelect,     typeof(PlayerSelectApplet)     },
                 { AppletId.Controller,       typeof(ControllerApplet)       },
-                { AppletId.SoftwareKeyboard, typeof(SoftwareKeyboardApplet) }
+                { AppletId.SoftwareKeyboard, typeof(SoftwareKeyboardApplet) },
+                { AppletId.LibAppletWeb,     typeof(BrowserApplet)          },
+                { AppletId.LibAppletShop,    typeof(BrowserApplet)          },
+                { AppletId.LibAppletOff,     typeof(BrowserApplet)          }
             };
         }
 
