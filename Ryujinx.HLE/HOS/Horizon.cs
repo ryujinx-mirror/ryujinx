@@ -161,7 +161,9 @@ namespace Ryujinx.HLE.HOS
             {
                 TimeSpanType standardNetworkClockSufficientAccuracy = new TimeSpanType((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
 
-                TimeServiceManager.Instance.SetupStandardNetworkSystemClock(new SystemClockContext(), standardNetworkClockSufficientAccuracy);
+                // The network system clock needs a valid system clock, as such we setup this system clock using the local system clock.
+                TimeServiceManager.Instance.StandardLocalSystemClock.GetClockContext(null, out SystemClockContext localSytemClockContext);
+                TimeServiceManager.Instance.SetupStandardNetworkSystemClock(localSytemClockContext, standardNetworkClockSufficientAccuracy);
             }
 
             TimeServiceManager.Instance.SetupStandardUserSystemClock(null, false, SteadyClockTimePoint.GetRandom());
