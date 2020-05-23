@@ -46,6 +46,11 @@ namespace Ryujinx.Graphics.Gpu
         public const int ShaderStages = 5;
 
         /// <summary>
+        /// Maximum number of vertex attributes.
+        /// </summary>
+        public const int TotalVertexAttribs = 16;
+
+        /// <summary>
         /// Maximum number of vertex buffers.
         /// </summary>
         public const int TotalVertexBuffers = 16;

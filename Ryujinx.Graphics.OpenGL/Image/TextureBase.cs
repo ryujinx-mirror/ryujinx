@@ -1,10 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureBase
     {

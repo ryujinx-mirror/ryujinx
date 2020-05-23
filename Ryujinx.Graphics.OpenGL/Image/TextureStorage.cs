@@ -2,7 +2,7 @@ using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureStorage
     {

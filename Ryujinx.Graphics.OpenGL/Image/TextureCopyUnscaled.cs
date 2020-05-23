@@ -3,7 +3,7 @@ using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using System;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     static class TextureCopyUnscaled
     {

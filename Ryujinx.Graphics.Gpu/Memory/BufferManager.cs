@@ -477,7 +477,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _vertexBuffersDirty = false;
 
-                VertexBufferDescriptor[] vertexBuffers = new VertexBufferDescriptor[Constants.TotalVertexBuffers];
+                Span<VertexBufferDescriptor> vertexBuffers = stackalloc VertexBufferDescriptor[Constants.TotalVertexBuffers];
 
                 for (int index = 0; (vbEnableMask >> index) != 0; index++)
                 {
@@ -666,8 +666,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
             int srcOffset = (int)(srcAddress - srcBuffer.Address);
             int dstOffset = (int)(dstAddress - dstBuffer.Address);
 
-            srcBuffer.HostBuffer.CopyTo(
-                dstBuffer.HostBuffer,
+            _context.Renderer.Pipeline.CopyBuffer(
+                srcBuffer.Handle,
+                dstBuffer.Handle,
                 srcOffset,
                 dstOffset,
                 (int)size);

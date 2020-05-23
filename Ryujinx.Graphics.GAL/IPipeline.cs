@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.GAL
 {
@@ -13,6 +14,8 @@ namespace Ryujinx.Graphics.GAL
             bool  depthMask,
             int   stencilValue,
             int   stencilMask);
+
+        void CopyBuffer(BufferHandle source, BufferHandle destination, int srcOffset, int dstOffset, int size);
 
         void DispatchCompute(int groupsX, int groupsY, int groupsZ);
 
@@ -49,7 +52,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetRasterizerDiscard(bool discard);
 
-        void SetRenderTargetColorMasks(uint[] componentMask);
+        void SetRenderTargetColorMasks(ReadOnlySpan<uint> componentMask);
 
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
@@ -68,10 +71,10 @@ namespace Ryujinx.Graphics.GAL
 
         void SetUserClipDistance(int index, bool enableClip);
 
-        void SetVertexAttribs(VertexAttribDescriptor[] vertexAttribs);
-        void SetVertexBuffers(VertexBufferDescriptor[] vertexBuffers);
+        void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs);
+        void SetVertexBuffers(ReadOnlySpan<VertexBufferDescriptor> vertexBuffers);
 
-        void SetViewports(int first, Viewport[] viewports);
+        void SetViewports(int first, ReadOnlySpan<Viewport> viewports);
 
         void TextureBarrier();
         void TextureBarrierTiled();

@@ -2,7 +2,7 @@ using Ryujinx.Graphics.GAL;
 using OpenTK.Graphics.OpenGL;
 using System;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureCopy : IDisposable
     {

@@ -1,7 +1,7 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     class Sampler : ISampler
     {

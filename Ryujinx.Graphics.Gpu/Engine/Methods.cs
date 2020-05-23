@@ -570,9 +570,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="state">Current GPU state</param>
         private void UpdateVertexAttribState(GpuState state)
         {
-            VertexAttribDescriptor[] vertexAttribs = new VertexAttribDescriptor[16];
+            Span<VertexAttribDescriptor> vertexAttribs = stackalloc VertexAttribDescriptor[Constants.TotalVertexAttribs];
 
-            for (int index = 0; index < 16; index++)
+            for (int index = 0; index < Constants.TotalVertexAttribs; index++)
             {
                 var vertexAttrib = state.Get<VertexAttribState>(MethodOffset.VertexAttribState, index);
 
@@ -660,7 +660,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             _isAnyVbInstanced = false;
 
-            for (int index = 0; index < 16; index++)
+            for (int index = 0; index < Constants.TotalVertexBuffers; index++)
             {
                 var vertexBuffer = state.Get<VertexBufferState>(MethodOffset.VertexBufferState, index);
 
@@ -728,7 +728,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             bool rtColorMaskShared = state.Get<Boolean32>(MethodOffset.RtColorMaskShared);
 
-            uint[] componentMasks = new uint[Constants.TotalRenderTargets];
+            Span<uint> componentMasks = stackalloc uint[Constants.TotalRenderTargets];
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {

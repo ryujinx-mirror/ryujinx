@@ -2,14 +2,14 @@
 using Ryujinx.Graphics.GAL;
 using System;
 
-namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureBuffer : TextureBase, ITexture
     {
         private int _bufferOffset;
         private int _bufferSize;
 
-        private Buffer _buffer;
+        private BufferHandle _buffer;
 
         public TextureBuffer(TextureCreateInfo info) : base(info) {}
 
@@ -30,24 +30,24 @@ namespace Ryujinx.Graphics.OpenGL
 
         public byte[] GetData()
         {
-            return _buffer?.GetData(_bufferOffset, _bufferSize);
+            return Buffer.GetData(_buffer, _bufferOffset, _bufferSize);
         }
 
         public void SetData(ReadOnlySpan<byte> data)
         {
-            _buffer?.SetData(_bufferOffset, data.Slice(0, Math.Min(data.Length, _bufferSize)));
+            Buffer.SetData(_buffer, _bufferOffset, data.Slice(0, Math.Min(data.Length, _bufferSize)));
         }
 
         public void SetStorage(BufferRange buffer)
         {
-            if (buffer.Buffer == _buffer &&
+            if (buffer.Handle == _buffer &&
                 buffer.Offset == _bufferOffset &&
                 buffer.Size == _bufferSize)
             {
                 return;
             }
 
-            _buffer = (Buffer)buffer.Buffer;
+            _buffer = buffer.Handle;
             _bufferOffset = buffer.Offset;
             _bufferSize = buffer.Size;
 
@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             SizedInternalFormat format = (SizedInternalFormat)FormatTable.GetFormatInfo(Info.Format).PixelInternalFormat;
 
-            GL.TexBufferRange(TextureBufferTarget.TextureBuffer, format, _buffer.Handle, (IntPtr)buffer.Offset, buffer.Size);
+            GL.TexBufferRange(TextureBufferTarget.TextureBuffer, format, _buffer.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
         }
 
         public void Dispose()
