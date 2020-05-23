@@ -136,6 +136,11 @@ namespace ARMeilleure.Instructions
             return GetContext().CntpctEl0;
         }
 
+        public static ulong GetCntvctEl0()
+        {
+            return GetContext().CntvctEl0;
+        }
+
         public static void SetFpcr(ulong value)
         {
             GetContext().Fpcr = (FPCR)value;

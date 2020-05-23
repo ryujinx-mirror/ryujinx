@@ -32,6 +32,10 @@ namespace ARMeilleure.State
             }
         }
 
+        // CNTVCT_EL0 = CNTPCT_EL0 - CNTVOFF_EL2
+        // Since EL2 isn't implemented, CNTVOFF_EL2 = 0
+        public ulong CntvctEl0 => CntpctEl0;
+
         public static TimeSpan ElapsedTime => _tickCounter.Elapsed;
 
         public long TpidrEl0 { get; set; }

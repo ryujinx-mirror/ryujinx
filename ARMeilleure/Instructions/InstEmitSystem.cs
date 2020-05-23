@@ -40,6 +40,7 @@ namespace ARMeilleure.Instructions
                 case 0b11_011_1101_0000_011: dlg = new _U64(NativeInterface.GetTpidr);     break;
                 case 0b11_011_1110_0000_000: dlg = new _U64(NativeInterface.GetCntfrqEl0); break;
                 case 0b11_011_1110_0000_001: dlg = new _U64(NativeInterface.GetCntpctEl0); break;
+                case 0b11_011_1110_0000_010: dlg = new _U64(NativeInterface.GetCntvctEl0); break;
 
                 default: throw new NotImplementedException($"Unknown MRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
