@@ -716,6 +716,130 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
+        public static void TmmlB(EmitterContext context)
+        {
+            EmitTextureMipMapLevel(context, true);
+        }
+
+        public static void Tmml(EmitterContext context)
+        {
+            EmitTextureMipMapLevel(context, false);
+        }
+
+        private static void EmitTextureMipMapLevel(EmitterContext context, bool isBindless)
+        {
+            OpCodeTexture op = (OpCodeTexture)context.CurrOp;
+
+            if (op.Rd.IsRZ)
+            {
+                return;
+            }
+
+            int raIndex = op.Ra.Index;
+            int rbIndex = op.Rb.Index;
+
+            Operand Ra()
+            {
+                if (raIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return context.Copy(Register(raIndex++, RegisterType.Gpr));
+            }
+
+            Operand Rb()
+            {
+                if (rbIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return context.Copy(Register(rbIndex++, RegisterType.Gpr));
+            }
+
+            TextureFlags flags = TextureFlags.None;
+
+            List<Operand> sourcesList = new List<Operand>();
+
+            if (isBindless)
+            {
+                sourcesList.Add(Rb());
+
+                flags |= TextureFlags.Bindless;
+            }
+
+            SamplerType type = ConvertSamplerType(op.Dimensions);
+
+            int coordsCount = type.GetDimensions();
+
+            Operand arrayIndex = op.IsArray ? Ra() : null;
+
+            for (int index = 0; index < coordsCount; index++)
+            {
+                sourcesList.Add(Ra());
+            }
+
+            if (op.IsArray)
+            {
+                sourcesList.Add(arrayIndex);
+
+                type |= SamplerType.Array;
+            }
+
+            Operand[] sources = sourcesList.ToArray();
+
+            int rdIndex = op.Rd.Index;
+
+            Operand GetDest()
+            {
+                if (rdIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return Register(rdIndex++, RegisterType.Gpr);
+            }
+
+            int handle = !isBindless ? op.Immediate : 0;
+
+            for (int compMask = op.ComponentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
+            {
+                if ((compMask & 1) != 0)
+                {
+                    Operand dest = GetDest();
+
+                    // Components z and w aren't standard, we return 0 in this case and add a comment.
+                    if (compIndex >= 2)
+                    {
+                        context.Add(new CommentNode("Unsupported component z or w found"));
+                        context.Copy(dest, Const(0));
+                    }
+                    else
+                    {
+                        Operand tempDest = Local();
+
+                        TextureOperation operation = new TextureOperation(
+                            Instruction.Lod,
+                            type,
+                            flags,
+                            handle,
+                            compIndex,
+                            tempDest,
+                            sources);
+
+                        context.Add(operation);
+
+                        tempDest = context.FPMultiply(tempDest, ConstF(256.0f));
+
+                        Operand finalValue = context.FPConvertToS32(tempDest);
+
+                        context.Copy(dest, finalValue);
+                    }
+                }
+            }
+        }
+
         public static void Txd(EmitterContext context)
         {
             OpCodeTxd op = (OpCodeTxd)context.CurrOp;
