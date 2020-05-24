@@ -28,6 +28,9 @@ namespace Ryujinx.Graphics.OpenGL
         private bool _depthTest;
         private bool _hasDepthBuffer;
 
+        private int _boundDrawFramebuffer;
+        private int _boundReadFramebuffer;
+
         private TextureBase _unit0Texture;
 
         private ClipOrigin _clipOrigin;
@@ -956,10 +959,16 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 _framebuffer = new Framebuffer();
 
-                _framebuffer.Bind();
+                int boundHandle = _framebuffer.Bind();
+                _boundDrawFramebuffer = _boundReadFramebuffer = boundHandle;
 
                 GL.Enable(EnableCap.FramebufferSrgb);
             }
+        }
+
+        internal (int drawHandle, int readHandle) GetBoundFramebuffers()
+        {
+            return (_boundDrawFramebuffer, _boundReadFramebuffer);
         }
 
         private void UpdateDepthTest()

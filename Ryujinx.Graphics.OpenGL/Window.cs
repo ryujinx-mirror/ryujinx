@@ -44,8 +44,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             bool[] oldFramebufferColorWritemask = new bool[4];
 
-            int oldReadFramebufferHandle = GL.GetInteger(GetPName.ReadFramebufferBinding);
-            int oldDrawFramebufferHandle = GL.GetInteger(GetPName.DrawFramebufferBinding);
+            (int oldDrawFramebufferHandle, int oldReadFramebufferHandle) = ((Pipeline)_renderer.Pipeline).GetBoundFramebuffers();
 
             GL.GetBoolean(GetIndexedPName.ColorWritemask, drawFramebuffer, oldFramebufferColorWritemask);
 

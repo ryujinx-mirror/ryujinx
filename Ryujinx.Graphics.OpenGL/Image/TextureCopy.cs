@@ -23,8 +23,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             Extents2D   dstRegion,
             bool        linearFilter)
         {
-            int oldReadFramebufferHandle = GL.GetInteger(GetPName.ReadFramebufferBinding);
-            int oldDrawFramebufferHandle = GL.GetInteger(GetPName.DrawFramebufferBinding);
+            (int oldDrawFramebufferHandle, int oldReadFramebufferHandle) = ((Pipeline)_renderer.Pipeline).GetBoundFramebuffers();
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, GetSrcFramebufferLazy());
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, GetDstFramebufferLazy());
