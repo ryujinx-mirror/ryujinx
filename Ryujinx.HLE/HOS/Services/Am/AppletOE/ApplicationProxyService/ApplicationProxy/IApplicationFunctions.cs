@@ -99,9 +99,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // GetDisplayVersion() -> nn::oe::DisplayVersion
         public ResultCode GetDisplayVersion(ServiceCtx context)
         {
-            // FIXME: Need to check correct version on a switch.
-            context.ResponseData.Write(1L);
-            context.ResponseData.Write(0L);
+            // This should work as DisplayVersion U8Span always gives a 0x10 size byte array.
+            // If an NACP isn't found, the buffer will be all '\0' which seems to be the correct implementation.
+            context.ResponseData.Write(context.Device.Application.ControlData.Value.DisplayVersion);
 
             return ResultCode.Success;
         }
