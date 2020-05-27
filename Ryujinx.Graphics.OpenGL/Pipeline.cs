@@ -1067,11 +1067,15 @@ namespace Ryujinx.Graphics.OpenGL
                 }
             }
 
-            return false; // The GPU will flush the queries to CPU and evaluate the condition there instead.
+            // The GPU will flush the queries to CPU and evaluate the condition there instead.
+
+            GL.Flush(); // The thread will be stalled manually flushing the counter, so flush GL commands now.
+            return false; 
         }
 
         public bool TryHostConditionalRendering(ICounterEvent value, ICounterEvent compare, bool isEqual)
         {
+            GL.Flush(); // The GPU thread will be stalled manually flushing the counter, so flush GL commands now.
             return false; // We don't currently have a way to compare two counters for conditional rendering.
         }
 
