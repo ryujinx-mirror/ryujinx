@@ -12,7 +12,9 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
 using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
+using Ryujinx.HLE.HOS.SystemState;
 using System;
+using System.Numerics;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
 using AccountUid = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
@@ -79,7 +81,36 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // GetDesiredLanguage() -> nn::settings::LanguageCode
         public ResultCode GetDesiredLanguage(ServiceCtx context)
         {
-            context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
+            // This seems to be calling ns:am GetApplicationDesiredLanguage followed by ConvertApplicationLanguageToLanguageCode
+            // Calls are from a IReadOnlyApplicationControlDataInterface object
+            // ConvertApplicationLanguageToLanguageCode compares language code strings and returns the index
+            // TODO: When above calls are implemented, switch to using ns:am
+
+            long desiredLanguageCode = context.Device.System.State.DesiredLanguageCode;
+            
+            int supportedLanguages = (int)context.Device.Application.ControlData.Value.SupportedLanguages;
+            int firstSupported = BitOperations.TrailingZeroCount(supportedLanguages);
+
+            if (firstSupported > (int)SystemState.TitleLanguage.Chinese)
+            {
+                Logger.PrintWarning(LogClass.ServiceAm, "Application has zero supported languages");
+
+                context.ResponseData.Write(desiredLanguageCode);
+
+                return ResultCode.Success;
+            }
+
+            // If desired language is not supported by application, use first supported language from TitleLanguage. 
+            // TODO: In the future, a GUI could enable user-specified search priority
+            if (((1 << (int)context.Device.System.State.DesiredTitleLanguage) & supportedLanguages) == 0)
+            {
+                SystemLanguage newLanguage = Enum.Parse<SystemLanguage>(Enum.GetName(typeof(SystemState.TitleLanguage), firstSupported));
+                desiredLanguageCode = SystemStateMgr.GetLanguageCode((int)newLanguage);
+
+                Logger.PrintInfo(LogClass.ServiceAm, $"Application doesn't support configured language. Using {newLanguage}");
+            }
+
+            context.ResponseData.Write(desiredLanguageCode);
 
             return ResultCode.Success;
         }

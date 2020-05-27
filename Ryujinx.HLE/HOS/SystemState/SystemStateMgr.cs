@@ -37,6 +37,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         internal long DesiredKeyboardLayout { get; private set; }
 
+        internal SystemLanguage DesiredSystemLanguage { get; private set; }
+
         internal long DesiredLanguageCode { get; private set; }
 
         internal uint DesiredRegionCode { get; private set; }
@@ -68,7 +70,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public void SetLanguage(SystemLanguage language)
         {
-            DesiredLanguageCode = GetLanguageCode((int)language);
+            DesiredSystemLanguage = language;
+            DesiredLanguageCode = GetLanguageCode((int)DesiredSystemLanguage);
 
             switch (language)
             {
