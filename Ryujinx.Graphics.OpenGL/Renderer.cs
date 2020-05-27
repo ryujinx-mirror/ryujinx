@@ -73,6 +73,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             return new Capabilities(
                 HwCapabilities.SupportsAstcCompression,
+                HwCapabilities.SupportsImageLoadFormatted,
                 HwCapabilities.SupportsNonConstantTextureOffset,
                 HwCapabilities.MaximumComputeSharedMemorySize,
                 HwCapabilities.StorageBufferOffsetAlignment,

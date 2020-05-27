@@ -176,6 +176,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public int QueryStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
         /// <summary>
+        /// Queries host support for readable images without a explicit format declaration on the shader.
+        /// </summary>
+        /// <returns>True if formatted image load is supported, false otherwise</returns>
+        public bool QuerySupportsImageLoadFormatted() => _context.Capabilities.SupportsImageLoadFormatted;
+
+        /// <summary>
         /// Queries host GPU non-constant texture offset support.
         /// </summary>
         /// <returns>True if the GPU and driver supports non-constant texture offsets, false otherwise</returns>

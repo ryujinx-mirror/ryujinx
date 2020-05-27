@@ -3,6 +3,7 @@ namespace Ryujinx.Graphics.GAL
     public struct Capabilities
     {
         public bool SupportsAstcCompression          { get; }
+        public bool SupportsImageLoadFormatted       { get; }
         public bool SupportsNonConstantTextureOffset { get; }
 
         public int MaximumComputeSharedMemorySize { get; }
@@ -12,12 +13,14 @@ namespace Ryujinx.Graphics.GAL
 
         public Capabilities(
             bool  supportsAstcCompression,
+            bool  supportsImageLoadFormatted,
             bool  supportsNonConstantTextureOffset,
             int   maximumComputeSharedMemorySize,
             int   storageBufferOffsetAlignment,
             float maxSupportedAnisotropy)
         {
             SupportsAstcCompression          = supportsAstcCompression;
+            SupportsImageLoadFormatted       = supportsImageLoadFormatted;
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;
             MaximumComputeSharedMemorySize   = maximumComputeSharedMemorySize;
             StorageBufferOffsetAlignment     = storageBufferOffsetAlignment;

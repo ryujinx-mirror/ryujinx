@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 Size = (IntegerSize)opCode.Extract(20, 4);
             }
 
-            ByteAddress = !opCode.Extract(23);
+            ByteAddress = opCode.Extract(23);
 
             Dimensions = (ImageDimensions)opCode.Extract(33, 3);
 

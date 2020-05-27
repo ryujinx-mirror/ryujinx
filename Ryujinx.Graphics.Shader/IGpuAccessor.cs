@@ -54,6 +54,11 @@
             return 16;
         }
 
+        public bool QuerySupportsImageLoadFormatted()
+        {
+            return true;
+        }
+
         public bool QuerySupportsNonConstantTextureOffset()
         {
             return true;
