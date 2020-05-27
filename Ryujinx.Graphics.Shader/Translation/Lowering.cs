@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 using static Ryujinx.Graphics.Shader.Translation.GlobalMemory;
@@ -27,9 +28,17 @@ namespace Ryujinx.Graphics.Shader.Translation
                         node = RewriteGlobalAccess(node, config);
                     }
 
-                    if (operation.Inst == Instruction.TextureSample)
+                    if (operation is TextureOperation texOp)
                     {
-                        node = RewriteTextureSample(node, config);
+                        if (texOp.Inst == Instruction.TextureSample)
+                        {
+                            node = RewriteTextureSample(node, config);
+                        }
+
+                        if (texOp.Type == SamplerType.TextureBuffer)
+                        {
+                            node = InsertSnormNormalization(node, config);
+                        }
                     }
                 }
             }
@@ -416,6 +425,58 @@ namespace Ryujinx.Graphics.Shader.Translation
             node = node.List.AddBefore(node, newTexOp);
 
             node.List.Remove(oldNode);
+
+            return node;
+        }
+
+        private static LinkedListNode<INode> InsertSnormNormalization(LinkedListNode<INode> node, ShaderConfig config)
+        {
+            TextureOperation texOp = (TextureOperation)node.Value;
+
+            TextureFormat format = config.GpuAccessor.QueryTextureFormat(texOp.Handle);
+
+            int maxPositive = format switch
+            {
+                TextureFormat.R8Snorm           => sbyte.MaxValue,
+                TextureFormat.R8G8Snorm         => sbyte.MaxValue,
+                TextureFormat.R8G8B8A8Snorm     => sbyte.MaxValue,
+                TextureFormat.R16Snorm          => short.MaxValue,
+                TextureFormat.R16G16Snorm       => short.MaxValue,
+                TextureFormat.R16G16B16A16Snorm => short.MaxValue,
+                _                               => 0
+            };
+
+            // The value being 0 means that the format is not a SNORM format, so there's nothing to do here.
+            if (maxPositive == 0)
+            {
+                return node;
+            }
+
+            // Do normalization. We assume SINT formats are being used as replacement for SNORM (that is not supported).
+            INode[] uses = texOp.Dest.UseOps.ToArray();
+
+            Operation convOp = new Operation(Instruction.ConvertS32ToFP, Local(), texOp.Dest);
+            Operation normOp = new Operation(Instruction.FP32 | Instruction.Multiply, Local(), convOp.Dest, ConstF(1f / maxPositive));
+
+            node = node.List.AddAfter(node, convOp);
+            node = node.List.AddAfter(node, normOp);
+
+            foreach (INode useOp in uses)
+            {
+                if (!(useOp is Operation op))
+                {
+                    continue;
+                }
+
+                // Replace all uses of the texture pixel value with the normalized value.
+                for (int index = 0; index < op.SourcesCount; index++)
+                {
+                    if (op.GetSource(index) == texOp.Dest)
+                    {
+                        op.SetSource(index, normOp.Dest);
+                    }
+                }
+            }
 
             return node;
         }

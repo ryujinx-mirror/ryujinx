@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -88,6 +89,22 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
                 BindlessToIndexed.RunPass(blocks[blkIndex]);
+                BindlessElimination.RunPass(blocks[blkIndex]);
+
+                // Try to eliminate any operations that are now unused.
+                LinkedListNode<INode> node = blocks[blkIndex].Operations.First;
+
+                while (node != null)
+                {
+                    LinkedListNode<INode> nextNode = node.Next;
+
+                    if (IsUnused(node.Value))
+                    {
+                        RemoveNode(blocks[blkIndex], node);
+                    }
+
+                    node = nextNode;
+                }
             }
         }
 

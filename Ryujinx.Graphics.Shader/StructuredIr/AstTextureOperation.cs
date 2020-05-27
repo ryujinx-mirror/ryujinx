@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     class AstTextureOperation : AstOperation
     {
         public SamplerType   Type   { get; }
-        public TextureFormat Format { get; }
+        public TextureFormat Format { get; set; }
         public TextureFlags  Flags  { get; }
 
         public int Handle    { get; }

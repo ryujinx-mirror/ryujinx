@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
@@ -31,6 +32,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public ReadOnlySpan<byte> GetSpan(ulong address, int size)
         {
             return _cpuMemory.GetSpan(address, size);
+        }
+
+        /// <summary>
+        /// Reads data from the application process.
+        /// </summary>
+        /// <typeparam name="T">Type of the structure</typeparam>
+        /// <param name="gpuVa">Address to read from</param>
+        /// <returns>The data at the specified memory location</returns>
+        public T Read<T>(ulong address) where T : unmanaged
+        {
+            return MemoryMarshal.Cast<byte, T>(GetSpan(address, Unsafe.SizeOf<T>()))[0];
         }
 
         /// <summary>

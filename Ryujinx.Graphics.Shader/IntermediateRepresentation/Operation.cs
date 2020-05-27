@@ -1,3 +1,5 @@
+using System;
+
 namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
     class Operation : INode
@@ -76,6 +78,18 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             }
 
             _sources[index] = source;
+        }
+
+        protected void RemoveSource(int index)
+        {
+            SetSource(index, null);
+
+            Operand[] newSources = new Operand[_sources.Length - 1];
+
+            Array.Copy(_sources, 0, newSources, 0, index);
+            Array.Copy(_sources, index + 1, newSources, index, _sources.Length - (index + 1));
+
+            _sources = newSources;
         }
 
         public void TurnIntoCopy(Operand source)

@@ -1,6 +1,3 @@
-using System;
-using System.Runtime.InteropServices;
-
 namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
@@ -41,11 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (sampler == null)
             {
-                ulong address = Address + (ulong)(uint)id * DescriptorSize;
-
-                ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
-
-                SamplerDescriptor descriptor = MemoryMarshal.Cast<byte, SamplerDescriptor>(data)[0];
+                SamplerDescriptor descriptor = Context.PhysicalMemory.Read<SamplerDescriptor>(Address + (ulong)id * DescriptorSize);
 
                 sampler = new Sampler(Context, descriptor);
 

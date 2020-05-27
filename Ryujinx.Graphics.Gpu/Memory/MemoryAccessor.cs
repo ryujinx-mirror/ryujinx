@@ -46,11 +46,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Reads a structure from GPU mapped memory.
+        /// Reads data from GPU mapped memory.
         /// </summary>
-        /// <typeparam name="T">Type of the structure</typeparam>
-        /// <param name="gpuVa">GPU virtual address where the structure is located</param>
-        /// <returns>The structure at the specified memory location</returns>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="gpuVa">GPU virtual address where the data is located</param>
+        /// <returns>The data at the specified memory location</returns>
         public T Read<T>(ulong gpuVa) where T : unmanaged
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
@@ -67,7 +67,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
-            return BitConverter.ToInt32(_context.PhysicalMemory.GetSpan(processVa, 4));
+            return _context.PhysicalMemory.Read<int>(processVa);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
-            return BitConverter.ToUInt64(_context.PhysicalMemory.GetSpan(processVa, 8));
+            return _context.PhysicalMemory.Read<ulong>(processVa);
         }
 
         /// <summary>

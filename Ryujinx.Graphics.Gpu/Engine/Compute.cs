@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
@@ -91,9 +90,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 cbDescAddress += (ulong)cbDescOffset;
 
-                ReadOnlySpan<byte> cbDescriptorData = _context.PhysicalMemory.GetSpan(cbDescAddress, 0x10);
-
-                SbDescriptor cbDescriptor = MemoryMarshal.Cast<byte, SbDescriptor>(cbDescriptorData)[0];
+                SbDescriptor cbDescriptor = _context.PhysicalMemory.Read<SbDescriptor>(cbDescAddress);
 
                 BufferManager.SetComputeUniformBuffer(cb.Slot, cbDescriptor.PackAddress(), (uint)cbDescriptor.Size);
             }
@@ -110,9 +107,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 sbDescAddress += (ulong)sbDescOffset;
 
-                ReadOnlySpan<byte> sbDescriptorData = _context.PhysicalMemory.GetSpan(sbDescAddress, 0x10);
-
-                SbDescriptor sbDescriptor = MemoryMarshal.Cast<byte, SbDescriptor>(sbDescriptorData)[0];
+                SbDescriptor sbDescriptor = _context.PhysicalMemory.Read<SbDescriptor>(sbDescAddress);
 
                 BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
             }

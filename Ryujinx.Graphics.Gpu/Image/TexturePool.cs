@@ -1,9 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
-using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -83,11 +81,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture descriptor</returns>
         public TextureDescriptor GetDescriptor(int id)
         {
-            ulong address = Address + (ulong)(uint)id * DescriptorSize;
-
-            ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
-
-            return MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
+            return Context.PhysicalMemory.Read<TextureDescriptor>(Address + (ulong)id * DescriptorSize);
         }
 
         /// <summary>
@@ -107,9 +101,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (texture != null)
                 {
-                    ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
-
-                    TextureDescriptor descriptor = MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
+                    TextureDescriptor descriptor = Context.PhysicalMemory.Read<TextureDescriptor>(address);
 
                     // If the descriptors are the same, the texture is the same,
                     // we don't need to remove as it was not modified. Just continue.

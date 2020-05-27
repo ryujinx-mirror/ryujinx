@@ -324,6 +324,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 if (!images.TryAdd(imageName, texOp))
                 {
+                    // Ensure that all texture operations share the same format.
+                    // This avoid errors like mismatched formats.
+                    texOp.Format = images[imageName].Format;
+
                     continue;
                 }
 
