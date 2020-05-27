@@ -534,6 +534,14 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fmaxnmv_V(ArmEmitterContext context)
+        {
+            EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+            {
+                return context.Call(new _F32_F32_F32(SoftFloat32.FPMaxNum), op1, op2);
+            });
+        }
+
         public static void Fmaxp_V(ArmEmitterContext context)
         {
             if (Optimizations.FastFP && Optimizations.UseSse2)
@@ -607,6 +615,14 @@ namespace ARMeilleure.Instructions
                     return EmitSoftFloatCall(context, SoftFloat32.FPMinNum, SoftFloat64.FPMinNum, op1, op2);
                 });
             }
+        }
+
+        public static void Fminnmv_V(ArmEmitterContext context)
+        {
+            EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+            {
+                return context.Call(new _F32_F32_F32(SoftFloat32.FPMinNum), op1, op2);
+            });
         }
 
         public static void Fminp_V(ArmEmitterContext context)

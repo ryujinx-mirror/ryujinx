@@ -1103,6 +1103,26 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), d);
         }
 
+        public static void EmitVectorAcrossVectorOpF(ArmEmitterContext context, Func2I emit)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            Debug.Assert((op.Size & 1) == 0 && op.RegisterSize == RegisterSize.Simd128);
+
+            Operand res = context.VectorExtract(OperandType.FP32, GetVec(op.Rn), 0);
+
+            for (int index = 1; index < 4; index++)
+            {
+                Operand n = context.VectorExtract(OperandType.FP32, GetVec(op.Rn), index);
+
+                res = emit(res, n);
+            }
+
+            Operand d = context.VectorInsert(context.VectorZero(), res, 0);
+
+            context.Copy(GetVec(op.Rd), d);
+        }
+
         public static void EmitVectorPairwiseOpF(ArmEmitterContext context, Func2I emit)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;

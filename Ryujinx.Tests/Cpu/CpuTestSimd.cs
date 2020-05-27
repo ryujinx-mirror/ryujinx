@@ -913,6 +913,15 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _F_Max_Min_Nm_V_V_4SS_()
+        {
+            return new uint[]
+            {
+                0x6E30C800u, // FMAXNMV S0, V0.4S
+                0x6EB0C800u  // FMINNMV S0, V0.4S
+            };
+        }
+
         private static uint[] _F_Mov_Ftoi_SW_()
         {
             return new uint[]
@@ -2140,6 +2149,28 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Max_Min_Nm_V_V_4SS([ValueSource("_F_Max_Min_Nm_V_V_4SS_")] uint opcodes,
+                                         [Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_2S_F_")] ulong z,
+                                         [ValueSource("_2S_F_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
+
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
+
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
