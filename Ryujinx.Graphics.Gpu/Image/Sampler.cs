@@ -41,7 +41,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             float mipLodBias = descriptor.UnpackMipLodBias();
 
             float maxRequestedAnisotropy = GraphicsConfig.MaxAnisotropy >= 0 && GraphicsConfig.MaxAnisotropy <= 16 ? GraphicsConfig.MaxAnisotropy : descriptor.UnpackMaxAnisotropy();
-            float maxSupportedAnisotropy = context.Capabilities.MaxSupportedAnisotropy;
+            float maxSupportedAnisotropy = context.Capabilities.MaximumSupportedAnisotropy;
 
             if (maxRequestedAnisotropy > maxSupportedAnisotropy)
                 maxRequestedAnisotropy = maxSupportedAnisotropy;

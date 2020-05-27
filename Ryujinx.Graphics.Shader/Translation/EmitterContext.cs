@@ -11,9 +11,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public Block  CurrBlock { get; set; }
         public OpCode CurrOp    { get; set; }
 
-        private ShaderConfig _config;
-
-        public ShaderConfig Config => _config;
+        public ShaderConfig Config { get; }
 
         private List<Operation> _operations;
 
@@ -21,7 +19,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public EmitterContext(ShaderConfig config)
         {
-            _config = config;
+            Config = config;
 
             _operations = new List<Operation>();
 
@@ -61,13 +59,40 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForReturn()
         {
-            if (_config.Stage == ShaderStage.Fragment)
+            if (Config.Stage == ShaderStage.Vertex && (Config.Flags & TranslationFlags.VertexA) == 0)
             {
-                if (_config.OmapDepth)
+                // Here we attempt to implement viewport swizzle on the vertex shader.
+                // Perform permutation and negation of the output gl_Position components.
+                // Note that per-viewport swizzling can't be supported using this approach.
+                int swizzleX = Config.GpuAccessor.QueryViewportSwizzle(0);
+                int swizzleY = Config.GpuAccessor.QueryViewportSwizzle(1);
+                int swizzleZ = Config.GpuAccessor.QueryViewportSwizzle(2);
+                int swizzleW = Config.GpuAccessor.QueryViewportSwizzle(3);
+
+                bool nonStandardSwizzle = swizzleX != 0 || swizzleY != 2 || swizzleZ != 4 || swizzleW != 6;
+
+                if (!Config.GpuAccessor.QuerySupportsViewportSwizzle() && nonStandardSwizzle)
+                {
+                    Operand[] temp = new Operand[4];
+
+                    temp[0] = this.Copy(Attribute(AttributeConsts.PositionX));
+                    temp[1] = this.Copy(Attribute(AttributeConsts.PositionY));
+                    temp[2] = this.Copy(Attribute(AttributeConsts.PositionZ));
+                    temp[3] = this.Copy(Attribute(AttributeConsts.PositionW));
+
+                    this.Copy(Attribute(AttributeConsts.PositionX), this.FPNegate(temp[(swizzleX >> 1) & 3], (swizzleX & 1) != 0));
+                    this.Copy(Attribute(AttributeConsts.PositionY), this.FPNegate(temp[(swizzleY >> 1) & 3], (swizzleY & 1) != 0));
+                    this.Copy(Attribute(AttributeConsts.PositionZ), this.FPNegate(temp[(swizzleZ >> 1) & 3], (swizzleZ & 1) != 0));
+                    this.Copy(Attribute(AttributeConsts.PositionW), this.FPNegate(temp[(swizzleW >> 1) & 3], (swizzleW & 1) != 0));
+                }
+            }
+            else if (Config.Stage == ShaderStage.Fragment)
+            {
+                if (Config.OmapDepth)
                 {
                     Operand dest = Attribute(AttributeConsts.FragmentOutputDepth);
 
-                    Operand src = Register(_config.GetDepthRegister(), RegisterType.Gpr);
+                    Operand src = Register(Config.GetDepthRegister(), RegisterType.Gpr);
 
                     this.Copy(dest, src);
                 }
@@ -76,7 +101,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 for (int attachment = 0; attachment < 8; attachment++)
                 {
-                    OmapTarget target = _config.OmapTargets[attachment];
+                    OmapTarget target = Config.OmapTargets[attachment];
 
                     for (int component = 0; component < 4; component++)
                     {

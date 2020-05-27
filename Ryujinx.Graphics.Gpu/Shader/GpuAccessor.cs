@@ -3,6 +3,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -188,6 +189,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool QuerySupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
         /// <summary>
+        /// Queries host GPU viewport swizzle support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports viewport swizzle, false otherwise</returns>
+        public bool QuerySupportsViewportSwizzle() => _context.Capabilities.SupportsViewportSwizzle;
+
+        /// <summary>
         /// Queries texture format information, for shaders using image load or store.
         /// </summary>
         /// <remarks>
@@ -247,6 +254,24 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Format.R10G10B10A2Uint   => TextureFormat.R10G10B10A2Uint,
                 Format.R11G11B10Float    => TextureFormat.R11G11B10Float,
                 _                        => TextureFormat.Unknown
+            };
+        }
+
+        public int QueryViewportSwizzle(int component)
+        {
+            YControl yControl = _state.Get<YControl>(MethodOffset.YControl);
+
+            bool flipY = yControl.HasFlag(YControl.NegateY) ^ !yControl.HasFlag(YControl.TriangleRastFlip);
+
+            ViewportTransform transform = _state.Get<ViewportTransform>(MethodOffset.ViewportTransform, 0);
+
+            return component switch
+            {
+                0 => (int)(transform.UnpackSwizzleX() ^ (transform.ScaleX < 0 ? ViewportSwizzle.NegativeFlag : 0)),
+                1 => (int)(transform.UnpackSwizzleY() ^ (transform.ScaleY < 0 ? ViewportSwizzle.NegativeFlag : 0) ^ (flipY ? ViewportSwizzle.NegativeFlag : 0)),
+                2 => (int)(transform.UnpackSwizzleZ() ^ (transform.ScaleZ < 0 ? ViewportSwizzle.NegativeFlag : 0)),
+                3 => (int)transform.UnpackSwizzleW(),
+                _ => throw new ArgumentOutOfRangeException(nameof(component))
             };
         }
 

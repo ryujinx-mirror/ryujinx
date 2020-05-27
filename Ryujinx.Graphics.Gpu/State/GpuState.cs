@@ -146,6 +146,9 @@ namespace Ryujinx.Graphics.Gpu.State
             {
                 memory[(int)MethodOffset.ViewportExtents + index * 4 + 2] = 0;
                 memory[(int)MethodOffset.ViewportExtents + index * 4 + 3] = 0x3F800000;
+
+                // Set swizzle to +XYZW
+                memory[(int)MethodOffset.ViewportTransform + index * 8 + 6] = 0x6420;
             }
 
             // Viewport transform enable.

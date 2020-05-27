@@ -75,9 +75,10 @@ namespace Ryujinx.Graphics.OpenGL
                 HwCapabilities.SupportsAstcCompression,
                 HwCapabilities.SupportsImageLoadFormatted,
                 HwCapabilities.SupportsNonConstantTextureOffset,
+                HwCapabilities.SupportsViewportSwizzle,
                 HwCapabilities.MaximumComputeSharedMemorySize,
-                HwCapabilities.StorageBufferOffsetAlignment,
-                HwCapabilities.MaxSupportedAnisotropy);
+                HwCapabilities.MaximumSupportedAnisotropy,
+                HwCapabilities.StorageBufferOffsetAlignment);
         }
 
         public void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data)

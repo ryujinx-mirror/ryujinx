@@ -416,5 +416,32 @@ namespace Ryujinx.Graphics.OpenGL
 
             return TextureTarget.Texture2D;
         }
+
+        public static NvViewportSwizzle Convert(this ViewportSwizzle swizzle)
+        {
+            switch (swizzle)
+            {
+                case ViewportSwizzle.PositiveX:
+                    return NvViewportSwizzle.ViewportSwizzlePositiveXNv;
+                case ViewportSwizzle.PositiveY:
+                    return NvViewportSwizzle.ViewportSwizzlePositiveYNv;
+                case ViewportSwizzle.PositiveZ:
+                    return NvViewportSwizzle.ViewportSwizzlePositiveZNv;
+                case ViewportSwizzle.PositiveW:
+                    return NvViewportSwizzle.ViewportSwizzlePositiveWNv;
+                case ViewportSwizzle.NegativeX:
+                    return NvViewportSwizzle.ViewportSwizzleNegativeXNv;
+                case ViewportSwizzle.NegativeY:
+                    return NvViewportSwizzle.ViewportSwizzleNegativeYNv;
+                case ViewportSwizzle.NegativeZ:
+                    return NvViewportSwizzle.ViewportSwizzleNegativeZNv;
+                case ViewportSwizzle.NegativeW:
+                    return NvViewportSwizzle.ViewportSwizzleNegativeWNv;
+            }
+
+            Logger.PrintDebug(LogClass.Gpu, $"Invalid {nameof(ViewportSwizzle)} enum value: {swizzle}.");
+
+            return NvViewportSwizzle.ViewportSwizzlePositiveXNv;
+        }
     }
 }

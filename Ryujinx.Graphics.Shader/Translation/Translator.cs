@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static ShaderProgram Translate(ulong addressA, ulong addressB, IGpuAccessor gpuAccessor, TranslationFlags flags)
         {
-            Operation[] opsA = DecodeShader(addressA, gpuAccessor, flags, out _, out int sizeA);
+            Operation[] opsA = DecodeShader(addressA, gpuAccessor, flags | TranslationFlags.VertexA, out _, out int sizeA);
             Operation[] opsB = DecodeShader(addressB, gpuAccessor, flags, out ShaderConfig config, out int sizeB);
 
             return Translate(Combine(opsA, opsB), config, sizeB, sizeA);

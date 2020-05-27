@@ -7,7 +7,8 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         None = 0,
 
-        Compute   = 1 << 0,
-        DebugMode = 1 << 1
+        VertexA   = 1 << 0,
+        Compute   = 1 << 1,
+        DebugMode = 1 << 2
     }
 }

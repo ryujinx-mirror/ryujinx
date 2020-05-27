@@ -42,6 +42,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetImage(int index, ShaderStage stage, ITexture texture);
 
+        void SetOrigin(Origin origin);
+
         void SetPointSize(float size);
 
         void SetPrimitiveRestart(bool enable, int index);

@@ -650,6 +650,13 @@ namespace Ryujinx.Graphics.OpenGL
             _vertexArray.SetIndexBuffer(buffer.Handle);
         }
 
+        public void SetOrigin(Origin origin)
+        {
+            ClipOrigin clipOrigin = origin == Origin.UpperLeft ? ClipOrigin.UpperLeft : ClipOrigin.LowerLeft;
+
+            SetOrigin(clipOrigin);
+        }
+
         public void SetPointSize(float size)
         {
             GL.PointSize(size);
@@ -854,8 +861,6 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void SetViewports(int first, ReadOnlySpan<Viewport> viewports)
         {
-            bool flipY = false;
-
             float[] viewportArray = new float[viewports.Length * 4];
 
             double[] depthRangeArray = new double[viewports.Length * 2];
@@ -869,17 +874,14 @@ namespace Ryujinx.Graphics.OpenGL
                 viewportArray[viewportElemIndex + 0] = viewport.Region.X;
                 viewportArray[viewportElemIndex + 1] = viewport.Region.Y;
 
-                // OpenGL does not support per-viewport flipping, so
-                // instead we decide that based on the viewport 0 value.
-                // It will apply to all viewports.
-                if (index == 0)
+                if (HwCapabilities.SupportsViewportSwizzle)
                 {
-                    flipY = viewport.Region.Height < 0;
-                }
-
-                if (viewport.SwizzleY == ViewportSwizzle.NegativeY)
-                {
-                    flipY = !flipY;
+                    GL.NV.ViewportSwizzle(
+                        index,
+                        viewport.SwizzleX.Convert(),
+                        viewport.SwizzleY.Convert(),
+                        viewport.SwizzleZ.Convert(),
+                        viewport.SwizzleW.Convert());
                 }
 
                 viewportArray[viewportElemIndex + 2] = MathF.Abs(viewport.Region.Width);
@@ -892,8 +894,6 @@ namespace Ryujinx.Graphics.OpenGL
             GL.ViewportArray(first, viewports.Length, viewportArray);
 
             GL.DepthRangeArray(first, viewports.Length, depthRangeArray);
-
-            SetOrigin(flipY ? ClipOrigin.UpperLeft : ClipOrigin.LowerLeft);
         }
 
         public void TextureBarrier()

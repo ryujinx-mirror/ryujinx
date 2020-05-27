@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private static readonly Lazy<bool> _supportsAstcCompression    = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
         private static readonly Lazy<bool> _supportsImageLoadFormatted = new Lazy<bool>(() => HasExtension("GL_EXT_shader_image_load_formatted"));
+        private static readonly Lazy<bool> _supportsViewportSwizzle    = new Lazy<bool>(() => HasExtension("GL_NV_viewport_swizzle"));
 
         private static readonly Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
         private static readonly Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
@@ -27,12 +28,13 @@ namespace Ryujinx.Graphics.OpenGL
 
         public static bool SupportsAstcCompression          => _supportsAstcCompression.Value;
         public static bool SupportsImageLoadFormatted       => _supportsImageLoadFormatted.Value;
+        public static bool SupportsViewportSwizzle          => _supportsViewportSwizzle.Value;
         public static bool SupportsNonConstantTextureOffset => _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
 
-        public static float MaxSupportedAnisotropy => _maxSupportedAnisotropy.Value;
+        public static float MaximumSupportedAnisotropy => _maxSupportedAnisotropy.Value;
 
         private static bool HasExtension(string name)
         {
