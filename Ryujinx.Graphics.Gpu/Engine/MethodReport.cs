@@ -21,14 +21,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void Report(GpuState state, int argument)
         {
-            ReportMode mode = (ReportMode)(argument & 3);
-
+            SemaphoreOperation op = (SemaphoreOperation)(argument & 3);
             ReportCounterType type = (ReportCounterType)((argument >> 23) & 0x1f);
 
-            switch (mode)
+            switch (op)
             {
-                case ReportMode.Release: ReleaseSemaphore(state);    break;
-                case ReportMode.Counter: ReportCounter(state, type); break;
+                case SemaphoreOperation.Release: ReleaseSemaphore(state);    break;
+                case SemaphoreOperation.Counter: ReportCounter(state, type); break;
             }
         }
 
@@ -38,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="state">Current GPU state</param>
         private void ReleaseSemaphore(GpuState state)
         {
-            var rs = state.Get<ReportState>(MethodOffset.ReportState);
+            var rs = state.Get<SemaphoreState>(MethodOffset.ReportState);
 
             _context.MemoryAccessor.Write(rs.Address.Pack(), rs.Payload);
 
@@ -64,7 +63,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             CounterData counterData = new CounterData();
 
-            var rs = state.Get<ReportState>(MethodOffset.ReportState);
+            var rs = state.Get<SemaphoreState>(MethodOffset.ReportState);
 
             ulong gpuVa = rs.Address.Pack();
 

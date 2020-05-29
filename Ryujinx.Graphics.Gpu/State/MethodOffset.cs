@@ -8,7 +8,8 @@ namespace Ryujinx.Graphics.Gpu.State
     /// </remarks>
     enum MethodOffset
     {
-        BindChannel                     = 0x00,
+        BindChannel                     = 0x0,
+        Semaphore                       = 0x4,
         FenceValue                      = 0x1c,
         FenceAction                     = 0x1d,
         WaitForIdle                     = 0x44,

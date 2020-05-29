@@ -1,11 +1,37 @@
 ﻿using Ryujinx.Graphics.Gpu.State;
-using System;
 using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Writes a GPU counter to guest memory.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        public void Semaphore(GpuState state, int argument)
+        {
+            FifoSemaphoreOperation op = (FifoSemaphoreOperation)(argument & 3);
+
+            var semaphore = state.Get<SemaphoreState>(MethodOffset.Semaphore);
+
+            int value = semaphore.Payload;
+
+            if (op == FifoSemaphoreOperation.Counter)
+            {
+                // TODO: There's much more that should be done here.
+                // NVN only supports the "Accumulate" mode, so we
+                // can't currently guess which bits specify the
+                // reduction operation.
+                value += _context.MemoryAccessor.Read<int>(semaphore.Address.Pack());
+            }
+
+            _context.MemoryAccessor.Write(semaphore.Address.Pack(), value);
+
+            _context.AdvanceSequence();
+        }
+
         /// <summary>
         /// Waits for the GPU to be idle.
         /// </summary>

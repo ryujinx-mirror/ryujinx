@@ -1,9 +1,9 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
     /// <summary>
-    /// GPU counter report mode.
+    /// GPU semaphore operation.
     /// </summary>
-    enum ReportMode
+    enum SemaphoreOperation
     {
         Release = 0,
         Acquire = 1,

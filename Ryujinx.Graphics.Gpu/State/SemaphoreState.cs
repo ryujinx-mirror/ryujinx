@@ -1,9 +1,9 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
     /// <summary>
-    /// GPU counter report state.
+    /// GPU semaphore state.
     /// </summary>
-    struct ReportState
+    struct SemaphoreState
     {
 #pragma warning disable CS0649
         public GpuVa Address;

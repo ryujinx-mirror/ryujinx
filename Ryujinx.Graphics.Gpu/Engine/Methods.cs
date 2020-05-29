@@ -104,6 +104,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="state">GPU state where the triggers will be registered</param>
         public void RegisterCallbacksForFifo(GpuState state)
         {
+            state.RegisterCallback(MethodOffset.Semaphore,              Semaphore);
             state.RegisterCallback(MethodOffset.FenceAction,            FenceAction);
             state.RegisterCallback(MethodOffset.WaitForIdle,            WaitForIdle);
             state.RegisterCallback(MethodOffset.SendMacroCodeData,      SendMacroCodeData);
@@ -430,7 +431,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetOrigin(origin);
 
             // The triangle rast flip flag only affects rasterization, the viewport is not flipped.
-            // Setting the origin mode to upper left on the host, however, not onlyy affects rasterization,
+            // Setting the origin mode to upper left on the host, however, not only affects rasterization,
             // but also flips the viewport.
             // We negate the effects of flipping the viewport by flipping it again using the viewport swizzle.
             if (origin == Origin.UpperLeft)
