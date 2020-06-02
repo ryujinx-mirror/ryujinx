@@ -15,6 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public bool                                AttachedByConsumer;
         public TimeSpanType                        QueueTime;
         public TimeSpanType                        PresentationTime;
+        public bool                                IsPreallocated;
 
         public BufferSlot()
         {
@@ -22,6 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             BufferState      = BufferState.Free;
             QueueTime        = TimeSpanType.Zero;
             PresentationTime = TimeSpanType.Zero;
+            IsPreallocated   = false;
         }
     }
 }

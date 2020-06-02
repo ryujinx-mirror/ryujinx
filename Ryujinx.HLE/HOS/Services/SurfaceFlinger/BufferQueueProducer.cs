@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using System;
@@ -92,9 +93,22 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     return Status.BadValue;
                 }
 
-                Core.Queue.Clear();
-                Core.FreeAllBuffersLocked();
+                int preallocatedBufferCount = GetPreallocatedBufferCountLocked();
+
+                if (preallocatedBufferCount <= 0)
+                {
+                    Core.Queue.Clear();
+                    Core.FreeAllBuffersLocked();
+                }
+                else if (preallocatedBufferCount < bufferCount)
+                {
+                    Logger.PrintError(LogClass.SurfaceFlinger, "Not enough buffers. Try with more pre-allocated buffers");
+
+                    return Status.Success;
+                }
+
                 Core.OverrideMaxBufferCount = bufferCount;
+
                 Core.SignalDequeueEvent();
                 Core.SignalWaitBufferFreeEvent();
 
@@ -162,8 +176,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     height = (uint)Core.DefaultHeight;
                 }
 
-                Core.Slots[slot].BufferState = BufferState.Dequeued;
-
                 GraphicBuffer graphicBuffer = Core.Slots[slot].GraphicBuffer.Object;
 
                 if (Core.Slots[slot].GraphicBuffer.IsNull
@@ -172,7 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     || graphicBuffer.Format != format
                     || (graphicBuffer.Usage & usage) != usage)
                 {
-                    if (Core.Slots[slot].GraphicBuffer.IsNull)
+                    if (!Core.Slots[slot].IsPreallocated)
                     {
                         slot  = BufferSlotArray.InvalidBufferSlot;
                         fence = AndroidFence.NoFence;
@@ -194,9 +206,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     }
                 }
 
+                Core.Slots[slot].BufferState = BufferState.Dequeued;
+
+                Core.UpdateMaxBufferCountCachedLocked(slot);
+
                 fence = Core.Slots[slot].Fence;
 
-                Core.Slots[slot].Fence = AndroidFence.NoFence;
+                Core.Slots[slot].Fence            = AndroidFence.NoFence;
+                Core.Slots[slot].QueueTime        = TimeSpanType.Zero;
+                Core.Slots[slot].PresentationTime = TimeSpanType.Zero;
 
                 Core.CheckSystemEventsLocked(Core.GetMaxBufferCountLocked(async));
             }
@@ -285,6 +303,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             lock (Core.Lock)
             {
+                Core.WaitWhileAllocatingLocked();
+
                 Status status = WaitForFreeSlotThenRelock(false, out slot, out Status returnFlags);
 
                 if (status != Status.Success)
@@ -298,6 +318,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     return Status.Busy;
                 }
+
+                Core.UpdateMaxBufferCountCachedLocked(slot);
 
                 Core.Slots[slot].GraphicBuffer.Set(graphicBuffer);
 
@@ -441,6 +463,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     NumPendingBuffers = (uint)Core.Queue.Count
                 };
 
+                if ((input.StickyTransform & 8) != 0)
+                {
+                    output.TransformHint |= NativeWindowTransform.ReturnFrameNumber;
+                    output.FrameNumber = Core.Slots[slot].FrameNumber;
+                }
+
                 _callbackTicket = _nextCallbackTicket++;
             }
 
@@ -475,6 +503,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Core.Slots[slot].FrameNumber = 0;
                 Core.Slots[slot].Fence       = fence;
                 Core.SignalDequeueEvent();
+                Core.SignalWaitBufferFreeEvent();
             }
         }
 
@@ -550,6 +579,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                         output.Height            = (uint)Core.DefaultHeight;
                         output.TransformHint     = Core.TransformHint;
                         output.NumPendingBuffers = (uint)Core.Queue.Count;
+
+                        if (NxSettings.Settings.TryGetValue("nv!nvn_no_vsync_capability", out object noVSyncCapability) && (bool)noVSyncCapability)
+                        {
+                            output.TransformHint |= NativeWindowTransform.NoVSyncCapability;
+                        }
+
                         return Status.Success;
                     default:
                         return Status.BadValue;
@@ -565,6 +600,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             lock (Core.Lock)
             {
+                Core.WaitWhileAllocatingLocked();
+
                 if (Core.IsAbandoned)
                 {
                     return Status.Success;
@@ -580,13 +617,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                         {
                             Core.Queue.Clear();
                             Core.FreeAllBuffersLocked();
+                            Core.SignalDequeueEvent();
 
                             producerListener = Core.ProducerListener;
 
                             Core.ProducerListener = null;
                             Core.ConnectedApi     = NativeWindowApi.NoApi;
 
-                            Core.SignalDequeueEvent();
+                            Core.SignalWaitBufferFreeEvent();
+                            Core.SignalFrameAvailableEvent();
 
                             status = Status.Success;
                         }
@@ -597,6 +636,21 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             producerListener?.OnBufferReleased();
 
             return status;
+        }
+
+        private int GetPreallocatedBufferCountLocked()
+        {
+            int bufferCount = 0;
+
+            for (int i = 0; i < Core.Slots.Length; i++)
+            {
+                if (Core.Slots[i].IsPreallocated)
+                {
+                    bufferCount++;
+                }
+            }
+
+            return bufferCount;
         }
 
         public override Status SetPreallocatedBuffer(int slot, AndroidStrongPointer<GraphicBuffer> graphicBuffer)
@@ -613,6 +667,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Core.Slots[slot].RequestBufferCalled   = false;
                 Core.Slots[slot].AcquireCalled         = false;
                 Core.Slots[slot].NeedsCleanupOnRelease = false;
+                Core.Slots[slot].IsPreallocated        = !graphicBuffer.IsNull;
                 Core.Slots[slot].FrameNumber           = 0;
 
                 Core.Slots[slot].GraphicBuffer.Set(graphicBuffer);
@@ -622,20 +677,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     Core.Slots[slot].GraphicBuffer.Object.Buffer.Usage &= (int)Core.ConsumerUsageBits;
                 }
 
-                int bufferCount = 0;
-
-                for (int i = 0; i < Core.Slots.Length; i++)
-                {
-                    if (!Core.Slots[i].GraphicBuffer.IsNull)
-                    {
-                        bufferCount++;
-                    }
-                }
-
-                Core.OverrideMaxBufferCount = bufferCount;
+                Core.OverrideMaxBufferCount = GetPreallocatedBufferCountLocked();
                 Core.UseAsyncBuffer = false;
-
-                bool cleared = false;
 
                 if (!graphicBuffer.IsNull)
                 {
@@ -647,30 +690,30 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 }
                 else
                 {
-                    foreach (BufferItem item in Core.Queue)
+                    bool allBufferFreed = true;
+
+                    for (int i = 0; i < Core.Slots.Length; i++)
                     {
-                        if (item.Slot >= BufferSlotArray.NumBufferSlots)
+                        if (!Core.Slots[i].GraphicBuffer.IsNull)
                         {
-                            Core.Queue.Clear();
-                            Core.FreeAllBuffersLocked();
-                            Core.SignalDequeueEvent();
-                            Core.SignalWaitBufferFreeEvent();
-                            Core.SignalFrameAvailableEvent();
-
-                            cleared = true;
-
+                            allBufferFreed = false;
                             break;
                         }
                     }
+
+                    if (allBufferFreed)
+                    {
+                        Core.Queue.Clear();
+                        Core.FreeAllBuffersLocked();
+                        Core.SignalDequeueEvent();
+                        Core.SignalWaitBufferFreeEvent();
+                        Core.SignalFrameAvailableEvent();
+
+                        return Status.Success;
+                    }
                 }
 
-                // The dequeue event must not be signaled two times in case of clean up,
-                // but for some reason, it still signals the wait buffer free event two times...
-                if (!cleared)
-                {
-                    Core.SignalDequeueEvent();
-                }
-
+                Core.SignalDequeueEvent();
                 Core.SignalWaitBufferFreeEvent();
 
                 return Status.Success;
@@ -702,12 +745,16 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     return Status.BadValue;
                 }
 
-                for (int slot = maxBufferCount; slot < Core.Slots.Length; slot++)
+
+                if (maxBufferCount < Core.MaxBufferCountCached)
                 {
-                    if (!Core.Slots[slot].GraphicBuffer.IsNull)
+                    for (int slot = maxBufferCount; slot < Core.MaxBufferCountCached; slot++)
                     {
-                        Core.FreeBufferLocked(slot);
-                        returnStatus |= Status.ReleaseAllBuffers;
+                        if (Core.Slots[slot].BufferState == BufferState.Free && !Core.Slots[slot].GraphicBuffer.IsNull && !Core.Slots[slot].IsPreallocated)
+                        {
+                            Core.FreeBufferLocked(slot);
+                            returnStatus |= Status.ReleaseAllBuffers;
+                        }
                     }
                 }
 

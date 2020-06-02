@@ -33,6 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public BufferInfo[]          BufferHistory;
         public uint                  BufferHistoryPosition;
         public bool                  EnableExternalEvent;
+        public int                   MaxBufferCountCached;
 
         public readonly object Lock = new object();
 
@@ -71,8 +72,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             Owner = process;
 
-            BufferHistory       = new BufferInfo[BufferHistoryArraySize];
-            EnableExternalEvent = true;
+            BufferHistory        = new BufferInfo[BufferHistoryArraySize];
+            EnableExternalEvent  = true;
+            MaxBufferCountCached = 0;
         }
 
         public int GetMinUndequeuedBufferCountLocked(bool async)
@@ -95,6 +97,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return GetMinUndequeuedBufferCountLocked(async);
         }
 
+        public void UpdateMaxBufferCountCachedLocked(int slot)
+        {
+            if (MaxBufferCountCached <= slot)
+            {
+                MaxBufferCountCached = slot + 1;
+            }
+        }
+
         public int GetMaxBufferCountLocked(bool async)
         {
             int minMaxBufferCount = GetMinMaxBufferCountLocked(async);
@@ -103,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (OverrideMaxBufferCount != 0)
             {
-                maxBufferCount = OverrideMaxBufferCount;
+                return OverrideMaxBufferCount;
             }
 
             // Preserve all buffers already in control of the producer and the consumer.
@@ -163,18 +173,20 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             Monitor.Wait(Lock);
         }
 
-        public void SignalIsAbandonedEvent()
+        public void SignalIsAllocatingEvent()
         {
             Monitor.PulseAll(Lock);
         }
 
-        public void WaitIsAbandonedEvent()
+        public void WaitIsAllocatingEvent()
         {
             Monitor.Wait(Lock);
         }
 
         public void FreeBufferLocked(int slot)
         {
+            Slots[slot].GraphicBuffer.Reset();
+
             if (Slots[slot].BufferState == BufferState.Acquired)
             {
                 Slots[slot].NeedsCleanupOnRelease = true;
@@ -206,9 +218,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void WaitWhileAllocatingLocked()
         {
-            while (IsAbandoned)
+            while (IsAllocating)
             {
-                WaitIsAbandonedEvent();
+                WaitIsAllocatingEvent();
             }
         }
 

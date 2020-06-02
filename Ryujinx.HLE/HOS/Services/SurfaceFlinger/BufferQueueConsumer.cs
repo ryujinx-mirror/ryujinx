@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             {
                 int numAcquiredBuffers = 0;
 
-                for (int i = 0; i < Core.Slots.Length; i++)
+                for (int i = 0; i < Core.MaxBufferCountCached; i++)
                 {
                     if (Core.Slots[i].BufferState == BufferState.Acquired)
                     {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     }
                 }
 
-                if (numAcquiredBuffers >= Core.MaxAcquiredBufferCount + 1)
+                if (numAcquiredBuffers > Core.MaxAcquiredBufferCount)
                 {
                     bufferItem = null;
 
@@ -152,6 +152,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     return Status.NoMemory;
                 }
+
+                Core.UpdateMaxBufferCountCachedLocked(freeSlot);
 
                 slot = freeSlot;
 
