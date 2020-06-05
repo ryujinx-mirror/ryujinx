@@ -98,6 +98,7 @@ namespace ARMeilleure.CodeGen.X86
         Pavgb,
         Pavgw,
         Pblendvb,
+        Pclmulqdq,
         Pcmpeqb,
         Pcmpeqd,
         Pcmpeqq,

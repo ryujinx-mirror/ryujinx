@@ -82,6 +82,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Pavgb,      new IntrinsicInfo(X86Instruction.Pavgb,      IntrinsicType.Binary));
             Add(Intrinsic.X86Pavgw,      new IntrinsicInfo(X86Instruction.Pavgw,      IntrinsicType.Binary));
             Add(Intrinsic.X86Pblendvb,   new IntrinsicInfo(X86Instruction.Pblendvb,   IntrinsicType.Ternary));
+            Add(Intrinsic.X86Pclmulqdq,  new IntrinsicInfo(X86Instruction.Pclmulqdq,  IntrinsicType.TernaryImm));
             Add(Intrinsic.X86Pcmpeqb,    new IntrinsicInfo(X86Instruction.Pcmpeqb,    IntrinsicType.Binary));
             Add(Intrinsic.X86Pcmpeqd,    new IntrinsicInfo(X86Instruction.Pcmpeqd,    IntrinsicType.Binary));
             Add(Intrinsic.X86Pcmpeqq,    new IntrinsicInfo(X86Instruction.Pcmpeqq,    IntrinsicType.Binary));

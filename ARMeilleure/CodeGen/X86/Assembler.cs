@@ -165,6 +165,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Pavgb,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fe0, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pavgw,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fe3, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pblendvb,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3810, InstructionFlags.Prefix66));
+            Add(X86Instruction.Pclmulqdq,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a44, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pcmpeqb,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f74, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pcmpeqd,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f76, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pcmpeqq,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3829, InstructionFlags.Vex | InstructionFlags.Prefix66));
@@ -631,6 +632,13 @@ namespace ARMeilleure.CodeGen.X86
         public void Or(Operand dest, Operand source, OperandType type)
         {
             WriteInstruction(dest, source, type, X86Instruction.Or);
+        }
+
+        public void Pclmulqdq(Operand dest, Operand source, byte imm)
+        {
+            WriteInstruction(dest, null, source, X86Instruction.Pclmulqdq);
+
+            WriteByte(imm);
         }
 
         public void Pcmpeqw(Operand dest, Operand src1, Operand src2)

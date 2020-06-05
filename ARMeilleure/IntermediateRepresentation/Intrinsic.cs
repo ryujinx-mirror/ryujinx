@@ -71,6 +71,7 @@ namespace ARMeilleure.IntermediateRepresentation
         X86Pavgb,
         X86Pavgw,
         X86Pblendvb,
+        X86Pclmulqdq,
         X86Pcmpeqb,
         X86Pcmpeqd,
         X86Pcmpeqq,
