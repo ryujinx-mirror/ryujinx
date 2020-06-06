@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 
             Logger.PrintStub(LogClass.ServiceSsl, new { sslVersion, unknown });
 
-            MakeObject(context, new ISslContext());
+            MakeObject(context, new ISslContext(context));
 
             return ResultCode.Success;
         }
