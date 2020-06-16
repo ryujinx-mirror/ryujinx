@@ -4,6 +4,7 @@ using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
+using System.Reflection;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -20,7 +21,7 @@ namespace ARMeilleure.Instructions
             {
                 // Move the low bit to the top.
                 return ((vd & 0x1) << 4) | (vd >> 1);
-            } 
+            }
             else
             {
                 // Move the high bit to the bottom.
@@ -30,29 +31,22 @@ namespace ARMeilleure.Instructions
 
         private static Operand EmitSaturateFloatToInt(ArmEmitterContext context, Operand op1, bool unsigned)
         {
+            MethodInfo info;
+
             if (op1.Type == OperandType.FP64)
             {
-                if (unsigned)
-                {
-                    return context.Call(new _U32_F64(SoftFallback.SatF64ToU32), op1);
-                }
-                else
-                {
-                    return context.Call(new _S32_F64(SoftFallback.SatF64ToS32), op1);
-                }
-
+                info = unsigned
+                    ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF64ToU32))
+                    : typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF64ToS32));
             }
             else
             {
-                if (unsigned)
-                {
-                    return context.Call(new _U32_F32(SoftFallback.SatF32ToU32), op1);
-                }
-                else
-                {
-                    return context.Call(new _S32_F32(SoftFallback.SatF32ToS32), op1);
-                }
+                info = unsigned
+                    ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF32ToU32))
+                    : typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF32ToS32));
             }
+
+            return context.Call(info, op1);
         }
 
         public static void Vcvt_V(ArmEmitterContext context)
@@ -96,7 +90,7 @@ namespace ARMeilleure.Instructions
                             res2 = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, res2);
 
                             return context.AddIntrinsic(Intrinsic.X86Addps, res, res2);
-                        } 
+                        }
                         else
                         {
                             return context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, n);
@@ -114,9 +108,7 @@ namespace ARMeilleure.Instructions
                         EmitVectorUnaryOpSx32(context, (op1) => EmitFPConvert(context, op1, floatSize, true));
                     }
                 }
-
             }
-            
         }
 
         public static void Vcvt_FD(ArmEmitterContext context)
@@ -173,29 +165,22 @@ namespace ARMeilleure.Instructions
                     // TODO: Fast Path.
                     if (roundWithFpscr)
                     {
+                        MethodInfo info;
+
                         if (floatSize == OperandType.FP64)
                         {
-                            if (unsigned)
-                            {
-                                asInteger = context.Call(new _U32_F64(SoftFallback.DoubleToUInt32), toConvert);
-                            }
-                            else
-                            {
-                                asInteger = context.Call(new _S32_F64(SoftFallback.DoubleToInt32), toConvert);
-                            }
-
+                            info = unsigned
+                                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.DoubleToUInt32))
+                                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.DoubleToInt32));
                         }
                         else
                         {
-                            if (unsigned)
-                            {
-                                asInteger = context.Call(new _U32_F32(SoftFallback.FloatToUInt32), toConvert);
-                            }
-                            else
-                            {
-                                asInteger = context.Call(new _S32_F32(SoftFallback.FloatToInt32), toConvert);
-                            }
+                            info = unsigned
+                                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.FloatToUInt32))
+                                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.FloatToInt32));
                         }
+
+                        asInteger = context.Call(info, toConvert);
                     }
                     else
                     {
@@ -205,7 +190,7 @@ namespace ARMeilleure.Instructions
 
                     InsertScalar(context, op.Vd, asInteger);
                 }
-            } 
+            }
             else
             {
                 bool unsigned = op.Opc == 0;
@@ -218,22 +203,17 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static Operand EmitRoundMathCall(ArmEmitterContext context, MidpointRounding roundMode, Operand n)
+        private static Operand EmitRoundMathCall(ArmEmitterContext context, MidpointRounding roundMode, Operand n)
         {
             IOpCode32Simd op = (IOpCode32Simd)context.CurrOp;
 
-            Delegate dlg;
+            string name = nameof(Math.Round);
 
-            if ((op.Size & 1) == 0)
-            {
-                dlg = new _F32_F32_MidpointRounding(MathF.Round);
-            }
-            else /* if ((op.Size & 1) == 1) */
-            {
-                dlg = new _F64_F64_MidpointRounding(Math.Round);
-            }
+            MethodInfo info = (op.Size & 1) == 0
+                ? typeof(MathF).GetMethod(name, new Type[] { typeof(float),  typeof(MidpointRounding) })
+                : typeof(Math). GetMethod(name, new Type[] { typeof(double), typeof(MidpointRounding) });
 
-            return context.Call(dlg, n, Const((int)roundMode));
+            return context.Call(info, n, Const((int)roundMode));
         }
 
         private static FPRoundingMode RMToRoundMode(int rm)
@@ -282,10 +262,10 @@ namespace ARMeilleure.Instructions
                         toConvert = EmitRoundMathCall(context, MidpointRounding.ToEven, toConvert);
                         break;
                     case 0b10: // Towards positive infinity
-                        toConvert = EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, toConvert);
+                        toConvert = EmitUnaryMathCall(context, nameof(Math.Ceiling), toConvert);
                         break;
                     case 0b11: // Towards negative infinity
-                        toConvert = EmitUnaryMathCall(context, MathF.Floor, Math.Floor, toConvert);
+                        toConvert = EmitUnaryMathCall(context, nameof(Math.Floor), toConvert);
                         break;
                 }
 
@@ -316,7 +296,7 @@ namespace ARMeilleure.Instructions
                     return context.AddIntrinsic(inst, m, Const(X86GetRoundControl(roundMode)));
                 });
             }
-            else 
+            else
             {
                 Operand toConvert = ExtractScalar(context, floatSize, op.Vm);
 
@@ -329,10 +309,10 @@ namespace ARMeilleure.Instructions
                         toConvert = EmitRoundMathCall(context, MidpointRounding.ToEven, toConvert);
                         break;
                     case 0b10: // Towards positive infinity
-                        toConvert = EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, toConvert);
+                        toConvert = EmitUnaryMathCall(context, nameof(Math.Ceiling), toConvert);
                         break;
                     case 0b11: // Towards negative infinity
-                        toConvert = EmitUnaryMathCall(context, MathF.Floor, Math.Floor, toConvert);
+                        toConvert = EmitUnaryMathCall(context, nameof(Math.Floor), toConvert);
                         break;
                 }
 
@@ -351,10 +331,10 @@ namespace ARMeilleure.Instructions
                     Intrinsic inst = (op.Size & 1) == 0 ? Intrinsic.X86Roundss : Intrinsic.X86Roundsd;
                     return context.AddIntrinsic(inst, m, Const(X86GetRoundControl(FPRoundingMode.TowardsZero)));
                 });
-            } 
+            }
             else
             {
-                EmitScalarUnaryOpF32(context, (op1) => EmitUnaryMathCall(context, MathF.Truncate, Math.Truncate, op1));
+                EmitScalarUnaryOpF32(context, (op1) => EmitUnaryMathCall(context, nameof(Math.Truncate), op1));
             }
         }
 
@@ -423,7 +403,7 @@ namespace ARMeilleure.Instructions
                 if (signed)
                 {
                     dRes = context.BitwiseExclusiveOr(nIntOrLong, nInt);
-                } 
+                }
                 else
                 {
                     dRes = context.BitwiseExclusiveOr(nIntOrLong2, nInt);
@@ -527,7 +507,7 @@ namespace ARMeilleure.Instructions
                     if (signed)
                     {
                         return context.AddIntrinsic(Intrinsic.X86Pxor, nInt, nRes);
-                    } 
+                    }
                     else
                     {
                         Operand dRes = context.AddIntrinsic(Intrinsic.X86Pxor, nInt2, nRes);

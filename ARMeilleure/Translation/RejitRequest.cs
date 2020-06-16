@@ -1,4 +1,4 @@
-﻿using ARMeilleure.State;
+using ARMeilleure.State;
 
 namespace ARMeilleure.Translation
 {

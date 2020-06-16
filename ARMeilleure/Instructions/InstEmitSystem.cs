@@ -3,6 +3,7 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
+using System.Reflection;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
@@ -27,44 +28,44 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
-            Delegate dlg;
+            MethodInfo info;
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0000_0000_001: dlg = new _U64(NativeInterface.GetCtrEl0);    break;
-                case 0b11_011_0000_0000_111: dlg = new _U64(NativeInterface.GetDczidEl0);  break;
-                case 0b11_011_0100_0010_000: EmitGetNzcv(context);                         return;
-                case 0b11_011_0100_0100_000: dlg = new _U64(NativeInterface.GetFpcr);      break;
-                case 0b11_011_0100_0100_001: dlg = new _U64(NativeInterface.GetFpsr);      break;
-                case 0b11_011_1101_0000_010: dlg = new _U64(NativeInterface.GetTpidrEl0);  break;
-                case 0b11_011_1101_0000_011: dlg = new _U64(NativeInterface.GetTpidr);     break;
-                case 0b11_011_1110_0000_000: dlg = new _U64(NativeInterface.GetCntfrqEl0); break;
-                case 0b11_011_1110_0000_001: dlg = new _U64(NativeInterface.GetCntpctEl0); break;
-                case 0b11_011_1110_0000_010: dlg = new _U64(NativeInterface.GetCntvctEl0); break;
+                case 0b11_011_0000_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCtrEl0));    break;
+                case 0b11_011_0000_0000_111: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetDczidEl0));  break;
+                case 0b11_011_0100_0010_000: EmitGetNzcv(context);                                                           return;
+                case 0b11_011_0100_0100_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcr));      break;
+                case 0b11_011_0100_0100_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpsr));      break;
+                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrEl0));  break;
+                case 0b11_011_1101_0000_011: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidr));     break;
+                case 0b11_011_1110_0000_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntfrqEl0)); break;
+                case 0b11_011_1110_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0)); break;
+                case 0b11_011_1110_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntvctEl0)); break;
 
                 default: throw new NotImplementedException($"Unknown MRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
 
-            SetIntOrZR(context, op.Rt, context.Call(dlg));
+            SetIntOrZR(context, op.Rt, context.Call(info));
         }
 
         public static void Msr(ArmEmitterContext context)
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
-            Delegate dlg;
+            MethodInfo info;
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0100_0010_000: EmitSetNzcv(context);                             return;
-                case 0b11_011_0100_0100_000: dlg = new _Void_U64(NativeInterface.SetFpcr);     break;
-                case 0b11_011_0100_0100_001: dlg = new _Void_U64(NativeInterface.SetFpsr);     break;
-                case 0b11_011_1101_0000_010: dlg = new _Void_U64(NativeInterface.SetTpidrEl0); break;
+                case 0b11_011_0100_0010_000: EmitSetNzcv(context);                                                          return;
+                case 0b11_011_0100_0100_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpcr));     break;
+                case 0b11_011_0100_0100_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsr));     break;
+                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl0)); break;
 
                 default: throw new NotImplementedException($"Unknown MSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
 
-            context.Call(dlg, GetIntOrZR(context, op.Rt));
+            context.Call(info, GetIntOrZR(context, op.Rt));
         }
 
         public static void Nop(ArmEmitterContext context)
@@ -90,7 +91,7 @@ namespace ARMeilleure.Instructions
                     {
                         Operand address = context.Add(t, Const(offset));
 
-                        context.Call(new _Void_U64_U64(NativeInterface.WriteUInt64), address, Const(0L));
+                        context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.WriteUInt64)), address, Const(0L));
                     }
 
                     break;

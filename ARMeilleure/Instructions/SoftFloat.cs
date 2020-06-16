@@ -903,6 +903,13 @@ namespace ARMeilleure.Instructions
                     else
                     {
                         result = value1;
+
+                        if ((fpcr & FPCR.Fz) != 0 && float.IsSubnormal(result))
+                        {
+                            context.Fpsr |= FPSR.Ufc;
+
+                            result = FPZero(result < 0f);
+                        }
                     }
                 }
                 else
@@ -987,6 +994,13 @@ namespace ARMeilleure.Instructions
                     else
                     {
                         result = value1;
+
+                        if ((fpcr & FPCR.Fz) != 0 && float.IsSubnormal(result))
+                        {
+                            context.Fpsr |= FPSR.Ufc;
+
+                            result = FPZero(result < 0f);
+                        }
                     }
                 }
                 else
@@ -2196,6 +2210,13 @@ namespace ARMeilleure.Instructions
                     else
                     {
                         result = value1;
+
+                        if ((fpcr & FPCR.Fz) != 0 && double.IsSubnormal(result))
+                        {
+                            context.Fpsr |= FPSR.Ufc;
+
+                            result = FPZero(result < 0d);
+                        }
                     }
                 }
                 else
@@ -2280,6 +2301,13 @@ namespace ARMeilleure.Instructions
                     else
                     {
                         result = value1;
+
+                        if ((fpcr & FPCR.Fz) != 0 && double.IsSubnormal(result))
+                        {
+                            context.Fpsr |= FPSR.Ufc;
+
+                            result = FPZero(result < 0d);
+                        }
                     }
                 }
                 else

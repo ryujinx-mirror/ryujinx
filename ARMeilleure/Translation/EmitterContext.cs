@@ -3,12 +3,14 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Reflection;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.Translation
 {
+    using PTC;
+
     class EmitterContext
     {
         private Dictionary<Operand, BasicBlock> _irLabels;
@@ -79,42 +81,52 @@ namespace ARMeilleure.Translation
             return Add(Instruction.ByteSwap, Local(op1.Type), op1);
         }
 
-        public Operand Call(Delegate func, params Operand[] callArgs)
+        public Operand Call(MethodInfo info, params Operand[] callArgs)
         {
-            // Add the delegate to the cache to ensure it will not be garbage collected.
-            func = DelegateCache.GetOrAdd(func);
+            if (Ptc.State == PtcState.Disabled)
+            {
+                IntPtr funcPtr = Delegates.GetDelegateFuncPtr(info);
 
-            IntPtr ptr = Marshal.GetFunctionPointerForDelegate<Delegate>(func);
+                OperandType returnType = GetOperandType(info.ReturnType);
 
-            Symbols.Add((ulong)ptr.ToInt64(), func.Method.Name);
+                Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
 
-            OperandType returnType = GetOperandType(func.Method.ReturnType);
+                return Call(Const(funcPtr.ToInt64()), returnType, callArgs);
+            }
+            else
+            {
+                int index = Delegates.GetDelegateIndex(info);
 
-            return Call(Const(ptr.ToInt64()), returnType, callArgs);
+                IntPtr funcPtr = Delegates.GetDelegateFuncPtrByIndex(index);
+
+                OperandType returnType = GetOperandType(info.ReturnType);
+
+                Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
+
+                return Call(Const(funcPtr.ToInt64(), true, index), returnType, callArgs);
+            }
         }
-
-        private static Dictionary<TypeCode, OperandType> _typeCodeToOperandTypeMap =
-                   new Dictionary<TypeCode, OperandType>()
-        {
-            { TypeCode.Boolean, OperandType.I32  },
-            { TypeCode.Byte,    OperandType.I32  },
-            { TypeCode.Char,    OperandType.I32  },
-            { TypeCode.Double,  OperandType.FP64 },
-            { TypeCode.Int16,   OperandType.I32  },
-            { TypeCode.Int32,   OperandType.I32  },
-            { TypeCode.Int64,   OperandType.I64  },
-            { TypeCode.SByte,   OperandType.I32  },
-            { TypeCode.Single,  OperandType.FP32 },
-            { TypeCode.UInt16,  OperandType.I32  },
-            { TypeCode.UInt32,  OperandType.I32  },
-            { TypeCode.UInt64,  OperandType.I64  }
-        };
 
         private static OperandType GetOperandType(Type type)
         {
-            if (_typeCodeToOperandTypeMap.TryGetValue(Type.GetTypeCode(type), out OperandType ot))
+            if (type == typeof(bool)   || type == typeof(byte)  ||
+                type == typeof(char)   || type == typeof(short) ||
+                type == typeof(int)    || type == typeof(sbyte) ||
+                type == typeof(ushort) || type == typeof(uint))
             {
-                return ot;
+                return OperandType.I32;
+            }
+            else if (type == typeof(long) || type == typeof(ulong))
+            {
+                return OperandType.I64;
+            }
+            else if (type == typeof(double))
+            {
+                return OperandType.FP64;
+            }
+            else if (type == typeof(float))
+            {
+                return OperandType.FP32;
             }
             else if (type == typeof(V128))
             {
@@ -124,8 +136,10 @@ namespace ARMeilleure.Translation
             {
                 return OperandType.None;
             }
-
-            throw new ArgumentException($"Invalid type \"{type.Name}\".");
+            else
+            {
+                throw new ArgumentException($"Invalid type \"{type.Name}\".");
+            }
         }
 
         public Operand Call(Operand address, OperandType returnType, params Operand[] callArgs)

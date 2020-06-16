@@ -3,7 +3,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-using System;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -21,7 +20,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U8(SoftFallback.Crc32b));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32b));
             }
         }
 
@@ -33,7 +32,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U16(SoftFallback.Crc32h));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32h));
             }
         }
 
@@ -45,7 +44,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U32(SoftFallback.Crc32w));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32w));
             }
         }
 
@@ -57,7 +56,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U64(SoftFallback.Crc32x));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32x));
             }
         }
 
@@ -69,7 +68,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U8(SoftFallback.Crc32cb));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32cb));
             }
         }
 
@@ -81,7 +80,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U16(SoftFallback.Crc32ch));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32ch));
             }
         }
 
@@ -93,7 +92,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U32(SoftFallback.Crc32cw));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32cw));
             }
         }
 
@@ -105,7 +104,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitCrc32Call(context, new _U32_U32_U64(SoftFallback.Crc32cx));
+                EmitCrc32Call(context, nameof(SoftFallback.Crc32cx));
             }
         }
 
@@ -170,14 +169,14 @@ namespace ARMeilleure.Instructions
             SetIntOrZR(context, op.Rd, context.VectorExtract(OperandType.I32, tmp, 2));
         }
 
-        private static void EmitCrc32Call(ArmEmitterContext context, Delegate dlg)
+        private static void EmitCrc32Call(ArmEmitterContext context, string name)
         {
             OpCodeAluBinary op = (OpCodeAluBinary)context.CurrOp;
 
             Operand n = GetIntOrZR(context, op.Rn);
             Operand m = GetIntOrZR(context, op.Rm);
 
-            Operand d = context.Call(dlg, n, m);
+            Operand d = context.Call(typeof(SoftFallback).GetMethod(name), n, m);
 
             SetIntOrZR(context, op.Rd, d);
         }

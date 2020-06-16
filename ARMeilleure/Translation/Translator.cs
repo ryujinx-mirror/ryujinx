@@ -13,21 +13,21 @@ using static ARMeilleure.IntermediateRepresentation.OperationHelper;
 
 namespace ARMeilleure.Translation
 {
+    using PTC;
+
     public class Translator
     {
         private const ulong CallFlag = InstEmitFlowHelper.CallFlag;
-
-        private const bool AlwaysTranslateFunctions = true; // If false, only translates a single block for lowCq.
 
         private readonly IMemoryManager _memory;
 
         private readonly ConcurrentDictionary<ulong, TranslatedFunction> _funcs;
 
-        private readonly JumpTable _jumpTable;
-
-        private readonly PriorityQueue<RejitRequest> _backgroundQueue;
+        private readonly ConcurrentStack<RejitRequest> _backgroundStack;
 
         private readonly AutoResetEvent _backgroundTranslatorEvent;
+
+        private readonly JumpTable _jumpTable;
 
         private volatile int _threadCount;
 
@@ -37,32 +37,45 @@ namespace ARMeilleure.Translation
 
             _funcs = new ConcurrentDictionary<ulong, TranslatedFunction>();
 
-            _jumpTable = new JumpTable(allocator);
-
-            _backgroundQueue = new PriorityQueue<RejitRequest>(2);
+            _backgroundStack = new ConcurrentStack<RejitRequest>();
 
             _backgroundTranslatorEvent = new AutoResetEvent(false);
 
+            _jumpTable = new JumpTable(allocator);
+
             JitCache.Initialize(allocator);
+
             DirectCallStubs.InitializeStubs();
+
+            if (Ptc.State == PtcState.Enabled)
+            {
+                Ptc.LoadTranslations(_funcs, memory.PageTablePointer, _jumpTable);
+            }
         }
 
-        private void TranslateQueuedSubs()
+        private void TranslateStackedSubs()
         {
             while (_threadCount != 0)
             {
-                if (_backgroundQueue.TryDequeue(out RejitRequest request))
+                if (_backgroundStack.TryPop(out RejitRequest request))
                 {
-                    TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
+                    TranslatedFunction func = Translate(_memory, _jumpTable, request.Address, request.Mode, highCq: true);
 
                     _funcs.AddOrUpdate(request.Address, func, (key, oldFunc) => func);
+
                     _jumpTable.RegisterFunction(request.Address, func);
+
+                    if (PtcProfiler.Enabled)
+                    {
+                        PtcProfiler.UpdateEntry(request.Address, request.Mode, highCq: true);
+                    }
                 }
                 else
                 {
                     _backgroundTranslatorEvent.WaitOne();
                 }
             }
+
             _backgroundTranslatorEvent.Set(); // Wake up any other background translator threads, to encourage them to exit.
         }
 
@@ -70,16 +83,27 @@ namespace ARMeilleure.Translation
         {
             if (Interlocked.Increment(ref _threadCount) == 1)
             {
+                if (Ptc.State == PtcState.Enabled)
+                {
+                    Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable);
+                }
+
+                PtcProfiler.Start();
+
+                Ptc.Disable();
+
                 // Simple heuristic, should be user configurable in future. (1 for 4 core/ht or less, 2 for 6 core+ht etc).
                 // All threads are normal priority except from the last, which just fills as much of the last core as the os lets it with a low priority.
                 // If we only have one rejit thread, it should be normal priority as highCq code is performance critical.
                 // TODO: Use physical cores rather than logical. This only really makes sense for processors with hyperthreading. Requires OS specific code.
                 int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
-                int threadCount = Math.Min(4, unboundedThreadCount);
+                int threadCount          = Math.Min(4, unboundedThreadCount);
+
                 for (int i = 0; i < threadCount; i++)
                 {
                     bool last = i != 0 && i == unboundedThreadCount - 1;
-                    Thread backgroundTranslatorThread = new Thread(TranslateQueuedSubs)
+
+                    Thread backgroundTranslatorThread = new Thread(TranslateStackedSubs)
                     {
                         Name = "CPU.BackgroundTranslatorThread." + i,
                         Priority = last ? ThreadPriority.Lowest : ThreadPriority.Normal
@@ -130,13 +154,19 @@ namespace ARMeilleure.Translation
 
             if (!_funcs.TryGetValue(address, out TranslatedFunction func))
             {
-                func = Translate(address, mode, highCq: false);
+                func = Translate(_memory, _jumpTable, address, mode, highCq: false);
 
                 _funcs.TryAdd(address, func);
+
+                if (PtcProfiler.Enabled)
+                {
+                    PtcProfiler.AddEntry(address, mode, highCq: false);
+                }
             }
-            else if (isCallTarget && func.ShouldRejit())
+
+            if (isCallTarget && func.ShouldRejit())
             {
-                _backgroundQueue.Enqueue(0, new RejitRequest(address, mode));
+                _backgroundStack.Push(new RejitRequest(address, mode));
 
                 _backgroundTranslatorEvent.Set();
             }
@@ -144,18 +174,16 @@ namespace ARMeilleure.Translation
             return func;
         }
 
-        private TranslatedFunction Translate(ulong address, ExecutionMode mode, bool highCq)
+        internal static TranslatedFunction Translate(IMemoryManager memory, JumpTable jumpTable, ulong address, ExecutionMode mode, bool highCq)
         {
-            ArmEmitterContext context = new ArmEmitterContext(_memory, _jumpTable, (long)address, highCq, Aarch32Mode.User);
+            ArmEmitterContext context = new ArmEmitterContext(memory, jumpTable, (long)address, highCq, Aarch32Mode.User);
 
             PrepareOperandPool(highCq);
             PrepareOperationPool(highCq);
 
             Logger.StartPass(PassName.Decoding);
 
-            Block[] blocks = AlwaysTranslateFunctions
-                ? Decoder.DecodeFunction  (_memory, address, mode, highCq)
-                : Decoder.DecodeBasicBlock(_memory, address, mode);
+            Block[] blocks = Decoder.DecodeFunction(memory, address, mode, highCq);
 
             Logger.EndPass(PassName.Decoding);
 
@@ -182,12 +210,26 @@ namespace ARMeilleure.Translation
 
             CompilerOptions options = highCq ? CompilerOptions.HighCq : CompilerOptions.None;
 
-            GuestFunction func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
+            GuestFunction func;
+
+            if (Ptc.State == PtcState.Disabled)
+            {
+                func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
+            }
+            else
+            {
+                using (PtcInfo ptcInfo = new PtcInfo())
+                {
+                    func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options, ptcInfo);
+
+                    Ptc.WriteInfoCodeReloc((long)address, highCq, ptcInfo);
+                }
+            }
 
             ResetOperandPool(highCq);
             ResetOperationPool(highCq);
 
-            return new TranslatedFunction(func, rejit: !highCq);
+            return new TranslatedFunction(func, highCq);
         }
 
         private static ControlFlowGraph EmitAndGetCFG(ArmEmitterContext context, Block[] blocks)
@@ -264,7 +306,7 @@ namespace ARMeilleure.Translation
 
             context.BranchIfTrue(lblNonZero, count);
 
-            Operand running = context.Call(new _Bool(NativeInterface.CheckSynchronization));
+            Operand running = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.CheckSynchronization)));
 
             context.BranchIfTrue(lblExit, running);
 

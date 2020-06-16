@@ -19,7 +19,7 @@ namespace ARMeilleure.Instructions
 
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_U32_V128(SoftFallback.HashChoose), d, ne, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashChoose)), d, ne, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -30,7 +30,7 @@ namespace ARMeilleure.Instructions
 
             Operand ne = context.VectorExtract(OperandType.I32, GetVec(op.Rn), 0);
 
-            Operand res = context.Call(new _U32_U32(SoftFallback.FixedRotate), ne);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.FixedRotate)), ne);
 
             context.Copy(GetVec(op.Rd), context.VectorCreateScalar(res));
         }
@@ -45,7 +45,7 @@ namespace ARMeilleure.Instructions
 
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_U32_V128(SoftFallback.HashMajority), d, ne, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashMajority)), d, ne, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -60,7 +60,7 @@ namespace ARMeilleure.Instructions
 
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_U32_V128(SoftFallback.HashParity), d, ne, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashParity)), d, ne, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -73,7 +73,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVec(op.Rn);
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_V128_V128(SoftFallback.Sha1SchedulePart1), d, n, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha1SchedulePart1)), d, n, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -85,7 +85,7 @@ namespace ARMeilleure.Instructions
             Operand d = GetVec(op.Rd);
             Operand n = GetVec(op.Rn);
 
-            Operand res = context.Call(new _V128_V128_V128(SoftFallback.Sha1SchedulePart2), d, n);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha1SchedulePart2)), d, n);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -100,7 +100,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVec(op.Rn);
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_V128_V128(SoftFallback.HashLower), d, n, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashLower)), d, n, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -113,7 +113,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVec(op.Rn);
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_V128_V128(SoftFallback.HashUpper), d, n, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashUpper)), d, n, m);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -125,7 +125,7 @@ namespace ARMeilleure.Instructions
             Operand d = GetVec(op.Rd);
             Operand n = GetVec(op.Rn);
 
-            Operand res = context.Call(new _V128_V128_V128(SoftFallback.Sha256SchedulePart1), d, n);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha256SchedulePart1)), d, n);
 
             context.Copy(GetVec(op.Rd), res);
         }
@@ -138,7 +138,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVec(op.Rn);
             Operand m = GetVec(op.Rm);
 
-            Operand res = context.Call(new _V128_V128_V128_V128(SoftFallback.Sha256SchedulePart2), d, n, m);
+            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha256SchedulePart2)), d, n, m);
 
             context.Copy(GetVec(op.Rd), res);
         }

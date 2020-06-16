@@ -66,6 +66,7 @@ namespace Ryujinx.HLE.HOS
 #pragma warning restore CS0649
         private bool _isDisposed;
 
+        public bool EnablePtc { get; set; }
 
         public IntegrityCheckLevel FsIntegrityCheckLevel { get; set; }
 

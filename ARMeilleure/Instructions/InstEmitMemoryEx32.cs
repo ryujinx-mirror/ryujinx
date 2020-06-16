@@ -13,7 +13,7 @@ namespace ARMeilleure.Instructions
     {
         public static void Clrex(ArmEmitterContext context)
         {
-            context.Call(new _Void(NativeInterface.ClearExclusive));
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ClearExclusive)));
         }
 
         public static void Dmb(ArmEmitterContext context) => EmitBarrier(context);

@@ -1,3 +1,4 @@
+using ARMeilleure.Translation.PTC;
 using Gtk;
 using LibHac.Common;
 using LibHac.Ns;
@@ -470,6 +471,9 @@ namespace Ryujinx.Ui
 
             _glWidget.Start();
 
+            Ptc.Close();
+            PtcProfiler.Stop();
+
             device.Dispose();
             _deviceExitStatus.Set();
 
@@ -597,6 +601,10 @@ namespace Ryujinx.Ui
             Profile.FinishProfiling();
             DiscordIntegrationModule.Exit();
             Logger.Shutdown();
+
+            Ptc.Dispose();
+            PtcProfiler.Dispose();
+
             Application.Quit();
         }
 

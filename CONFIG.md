@@ -44,7 +44,11 @@
 
 - `enable_multicore_scheduling` *(bool)*
 
-  Enable or Disable Multi-core scheduling of threads
+  Enable or disable multi-core scheduling of threads
+
+- `enable_ptc` *(bool)*
+
+  Enable or disable profiled translation cache persistency
 
 - `enable_fs_integrity_checks` *(bool)*
 

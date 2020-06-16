@@ -14,6 +14,7 @@ namespace Ryujinx.Common.Logging
         KernelScheduler,
         KernelSvc,
         Loader,
+        Ptc,
         Service,
         ServiceAcc,
         ServiceAm,

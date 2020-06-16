@@ -27,7 +27,7 @@ namespace ARMeilleure.Translation
             public unsafe fixed ushort UnwindCodes[MaxUnwindCodesArraySize];
         }
 
-        private enum UnwindOperation
+        private enum UnwindOp
         {
             PushNonvol    = 0,
             AllocLarge    = 1,
@@ -117,12 +117,12 @@ namespace ARMeilleure.Translation
 
                         if (stackOffset <= 0xFFFF0)
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.SaveXmm128, entry.PrologOffset, entry.RegIndex);
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128, entry.PrologOffset, entry.RegIndex);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset / 16);
                         }
                         else
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.SaveXmm128Far, entry.PrologOffset, entry.RegIndex);
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128Far, entry.PrologOffset, entry.RegIndex);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 0);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 16);
                         }
@@ -138,16 +138,16 @@ namespace ARMeilleure.Translation
 
                         if (allocSize <= 128)
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocSmall, entry.PrologOffset, (allocSize / 8) - 1);
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocSmall, entry.PrologOffset, (allocSize / 8) - 1);
                         }
                         else if (allocSize <= 0x7FFF8)
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocLarge, entry.PrologOffset, 0);
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 0);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize / 8);
                         }
                         else
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.AllocLarge, entry.PrologOffset, 1);
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 1);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 0);
                             _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 16);
                         }
@@ -157,7 +157,7 @@ namespace ARMeilleure.Translation
 
                     case UnwindPseudoOp.PushReg:
                     {
-                        _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOperation.PushNonvol, entry.PrologOffset, entry.RegIndex);
+                        _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.PushNonvol, entry.PrologOffset, entry.RegIndex);
 
                         break;
                     }
@@ -180,7 +180,7 @@ namespace ARMeilleure.Translation
             return _runtimeFunction;
         }
 
-        private static ushort PackUnwindOp(UnwindOperation op, int prologOffset, int opInfo)
+        private static ushort PackUnwindOp(UnwindOp op, int prologOffset, int opInfo)
         {
             return (ushort)(prologOffset | ((int)op << 8) | (opInfo << 12));
         }

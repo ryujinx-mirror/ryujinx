@@ -13,7 +13,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 7;
+        public const int CurrentVersion = 8;
 
         public int Version { get; set; }
 
@@ -111,6 +111,11 @@ namespace Ryujinx.Configuration
         /// Enables or disables multi-core scheduling of threads
         /// </summary>
         public bool EnableMulticoreScheduling { get; set; }
+
+        /// <summary>
+        /// Enables or disables profiled translation cache persistency
+        /// </summary>
+        public bool EnablePtc { get; set; }
 
         /// <summary>
         /// Enables integrity checks on Game content files

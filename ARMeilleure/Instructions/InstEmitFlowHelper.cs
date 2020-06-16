@@ -2,6 +2,7 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
+using ARMeilleure.Translation.PTC;
 using System;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
@@ -223,6 +224,7 @@ namespace ARMeilleure.Instructions
         public static void EmitTailContinue(ArmEmitterContext context, Operand address, bool allowRejit = false)
         {
             bool useTailContinue = true; // Left option here as it may be useful if we need to return to managed rather than tail call in future. (eg. for debug)
+
             if (useTailContinue)
             {
                 if (context.HighCq)
@@ -230,7 +232,7 @@ namespace ARMeilleure.Instructions
                     // If we're doing a tail continue in HighCq, reserve a space in the jump table to avoid calling back to the translator.
                     // This will always try to get a HighCq version of our continue target as well.
                     EmitJumpTableBranch(context, address, true);
-                } 
+                }
                 else
                 {
                     if (allowRejit)
@@ -238,11 +240,11 @@ namespace ARMeilleure.Instructions
                         address = context.BitwiseOr(address, Const(CallFlag));
                     }
 
-                    Operand fallbackAddr = context.Call(new _U64_U64(NativeInterface.GetFunctionAddress), address);
+                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
 
                     EmitNativeCall(context, fallbackAddr, true);
                 }
-            } 
+            }
             else
             {
                 context.Return(address);
@@ -260,7 +262,7 @@ namespace ARMeilleure.Instructions
         private static void EmitBranchFallback(ArmEmitterContext context, Operand address, bool isJump)
         {
             address = context.BitwiseOr(address, Const(address.Type, (long)CallFlag)); // Set call flag.
-            Operand fallbackAddr = context.Call(new _U64_U64(NativeInterface.GetFunctionAddress), address);
+            Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
             EmitNativeCall(context, fallbackAddr, isJump);
         }
 
@@ -290,12 +292,12 @@ namespace ARMeilleure.Instructions
             };
 
             // Currently this uses a size of 1, as higher values inflate code size for no real benefit.
-            for (int i = 0; i < JumpTable.DynamicTableElems; i++) 
+            for (int i = 0; i < JumpTable.DynamicTableElems; i++)
             {
                 if (i == JumpTable.DynamicTableElems - 1)
                 {
                     emitTableEntry(fallbackLabel); // If this is the last entry, avoid emitting the additional label and add.
-                } 
+                }
                 else
                 {
                     Operand nextLabel = Label();
@@ -339,7 +341,18 @@ namespace ARMeilleure.Instructions
                 int entry = context.JumpTable.ReserveDynamicEntry(isJump);
 
                 int jumpOffset = entry * JumpTable.JumpTableStride * JumpTable.DynamicTableElems;
-                Operand dynTablePtr = Const(context.JumpTable.DynamicPointer.ToInt64() + jumpOffset);
+
+                Operand dynTablePtr;
+
+                if (Ptc.State == PtcState.Disabled)
+                {
+                    dynTablePtr = Const(context.JumpTable.DynamicPointer.ToInt64() + jumpOffset);
+                }
+                else
+                {
+                    dynTablePtr = Const(context.JumpTable.DynamicPointer.ToInt64(), true, Ptc.DynamicPointerIndex);
+                    dynTablePtr = context.Add(dynTablePtr, Const((long)jumpOffset));
+                }
 
                 EmitDynamicTableCall(context, dynTablePtr, address, isJump);
             }
@@ -349,8 +362,17 @@ namespace ARMeilleure.Instructions
 
                 int jumpOffset = entry * JumpTable.JumpTableStride + 8; // Offset directly to the host address.
 
-                // TODO: Relocatable jump table ptr for AOT. Would prefer a solution to patch this constant into functions as they are loaded rather than calculate at runtime.
-                Operand tableEntryPtr = Const(context.JumpTable.JumpPointer.ToInt64() + jumpOffset);
+                Operand tableEntryPtr;
+
+                if (Ptc.State == PtcState.Disabled)
+                {
+                    tableEntryPtr = Const(context.JumpTable.JumpPointer.ToInt64() + jumpOffset);
+                }
+                else
+                {
+                    tableEntryPtr = Const(context.JumpTable.JumpPointer.ToInt64(), true, Ptc.JumpPointerIndex);
+                    tableEntryPtr = context.Add(tableEntryPtr, Const((long)jumpOffset));
+                }
 
                 Operand funcAddr = context.Load(OperandType.I64, tableEntryPtr);
 

@@ -19,6 +19,7 @@
     "docked_mode",
     "enable_vsync",
     "enable_multicore_scheduling",
+    "enable_ptc",
     "enable_fs_integrity_checks",
     "fs_global_access_log_mode",
     "controller_type",
@@ -478,6 +479,17 @@
         false
       ]
     },
+    "enable_ptc": {
+      "$id": "#/properties/enable_ptc",
+      "type": "boolean",
+      "title": "Enable Profiled Persistent Translation Cache",
+      "description": "Enables or disables profiled translation cache persistency",
+      "default": false,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "enable_fs_integrity_checks": {
       "$id": "#/properties/enable_fs_integrity_checks",
       "type": "boolean",
@@ -581,7 +593,7 @@
       "$id": "#/properties/enable_keyboard",
       "type": "boolean",
       "title": "(HID) Keyboard Enable",
-      "description": "Enable or disable direct keyboard access (HID) support (Provides games access to your keyboard as a text entry device).",
+      "description": "Enable or disable direct keyboard access (HID) support (Provides games access to your keyboard as a text entry device)",
       "default": true,
       "examples": [
         true,

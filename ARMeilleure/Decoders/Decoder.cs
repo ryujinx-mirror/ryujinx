@@ -12,7 +12,7 @@ namespace ARMeilleure.Decoders
         // We define a limit on the number of instructions that a function may have,
         // this prevents functions being potentially too large, which would
         // take too long to compile and use too much memory.
-        private const int MaxInstsPerFunction = 5000;
+        private const int MaxInstsPerFunction = 2500;
 
         // For lower code quality translation, we set a lower limit since we're blocking execution.
         private const int MaxInstsPerFunctionLowCq = 500;

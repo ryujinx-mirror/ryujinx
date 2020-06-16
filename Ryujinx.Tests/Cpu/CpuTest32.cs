@@ -1,11 +1,10 @@
 ﻿using ARMeilleure.State;
-
 using NUnit.Framework;
 using Ryujinx.Cpu;
 using Ryujinx.Memory;
 using Ryujinx.Tests.Unicorn;
-
 using System;
+
 using MemoryPermission = Ryujinx.Tests.Unicorn.MemoryPermission;
 
 namespace Ryujinx.Tests.Cpu
@@ -45,7 +44,7 @@ namespace Ryujinx.Tests.Cpu
         public void Setup()
         {
             _currAddress = 0x1000;
-            _size = 0x1000;
+            _size        = 0x1000;
 
             _entryPoint = _currAddress;
 
@@ -73,8 +72,9 @@ namespace Ryujinx.Tests.Cpu
             _memory.Dispose();
             _context.Dispose();
             _ram.Dispose();
-            _memory = null;
-            _context = null;
+
+            _memory     = null;
+            _context    = null;
             _cpuContext = null;
             _unicornEmu = null;
         }

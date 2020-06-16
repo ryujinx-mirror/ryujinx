@@ -1,6 +1,5 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.Translation;
-using System;
 
 using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
@@ -11,21 +10,21 @@ namespace ARMeilleure.Instructions
     {
         public static void Brk(ArmEmitterContext context)
         {
-            EmitExceptionCall(context, NativeInterface.Break);
+            EmitExceptionCall(context, nameof(NativeInterface.Break));
         }
 
         public static void Svc(ArmEmitterContext context)
         {
-            EmitExceptionCall(context, NativeInterface.SupervisorCall);
+            EmitExceptionCall(context, nameof(NativeInterface.SupervisorCall));
         }
 
-        private static void EmitExceptionCall(ArmEmitterContext context, _Void_U64_S32 func)
+        private static void EmitExceptionCall(ArmEmitterContext context, string name)
         {
             OpCodeException op = (OpCodeException)context.CurrOp;
 
             context.StoreToContext();
 
-            context.Call(func, Const(op.Address), Const(op.Id));
+            context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
 
             context.LoadFromContext();
 
@@ -39,11 +38,11 @@ namespace ARMeilleure.Instructions
         {
             OpCode op = context.CurrOp;
 
-            Delegate dlg = new _Void_U64_S32(NativeInterface.Undefined);
+            string name = nameof(NativeInterface.Undefined);
 
             context.StoreToContext();
 
-            context.Call(dlg, Const(op.Address), Const(op.RawOpCode));
+            context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.RawOpCode));
 
             context.LoadFromContext();
 

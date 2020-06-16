@@ -6,46 +6,41 @@ namespace ARMeilleure.Diagnostics
 {
     static class Logger
     {
-#pragma warning disable CS0169
         private static long _startTime;
 
         private static long[] _accumulatedTime;
-#pragma warning restore CS0169
 
         static Logger()
         {
             _accumulatedTime = new long[(int)PassName.Count];
         }
 
+        [Conditional("M_DEBUG")]
         public static void StartPass(PassName name)
         {
-#if M_DEBUG
             WriteOutput(name + " pass started...");
 
             _startTime = Stopwatch.GetTimestamp();
-#endif
         }
 
+        [Conditional("M_DEBUG")]
         public static void EndPass(PassName name, ControlFlowGraph cfg)
         {
-#if M_DEBUG
             EndPass(name);
 
             WriteOutput("IR after " + name + " pass:");
 
             WriteOutput(IRDumper.GetDump(cfg));
-#endif
         }
 
+        [Conditional("M_DEBUG")]
         public static void EndPass(PassName name)
         {
-#if M_DEBUG
             long elapsedTime = Stopwatch.GetTimestamp() - _startTime;
 
             _accumulatedTime[(int)name] += elapsedTime;
 
             WriteOutput($"{name} pass ended after {GetMilliseconds(_accumulatedTime[(int)name])} ms...");
-#endif
         }
 
         private static long GetMilliseconds(long ticks)

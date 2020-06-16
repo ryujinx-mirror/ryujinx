@@ -1,4 +1,5 @@
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.Translation.PTC;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -63,6 +64,9 @@ namespace ARMeilleure.CodeGen.X86
         private static InstructionInfo[] _instTable;
 
         private Stream _stream;
+
+        private PtcInfo _ptcInfo;
+        private bool    _ptcDisabled;
 
         static Assembler()
         {
@@ -273,9 +277,12 @@ namespace ARMeilleure.CodeGen.X86
             _instTable[(int)inst] = info;
         }
 
-        public Assembler(Stream stream)
+        public Assembler(Stream stream, PtcInfo ptcInfo = null)
         {
             _stream = stream;
+
+            _ptcInfo     = ptcInfo;
+            _ptcDisabled = ptcInfo == null;
         }
 
         public void Add(Operand dest, Operand source, OperandType type)
@@ -456,7 +463,7 @@ namespace ARMeilleure.CodeGen.X86
 
         public void Jcc(X86Condition condition, long offset)
         {
-            if (ConstFitsOnS8(offset))
+            if (_ptcDisabled && ConstFitsOnS8(offset))
             {
                 WriteByte((byte)(0x70 | (int)condition));
 
@@ -477,7 +484,7 @@ namespace ARMeilleure.CodeGen.X86
 
         public void Jmp(long offset)
         {
-            if (ConstFitsOnS8(offset))
+            if (_ptcDisabled && ConstFitsOnS8(offset))
             {
                 WriteByte(0xeb);
 
@@ -915,6 +922,8 @@ namespace ARMeilleure.CodeGen.X86
                     }
                     else if (dest != null && dest.Kind == OperandKind.Register && info.OpRImm64 != BadOp)
                     {
+                        int? index = source.PtcIndex;
+
                         int rexPrefix = GetRexPrefix(dest, source, type, rrm: false);
 
                         if (rexPrefix != 0)
@@ -923,6 +932,11 @@ namespace ARMeilleure.CodeGen.X86
                         }
 
                         WriteByte((byte)(info.OpRImm64 + (dest.GetRegister().Index & 0b111)));
+
+                        if (_ptcInfo != null && index != null)
+                        {
+                            _ptcInfo.WriteRelocEntry(new RelocEntry((int)_stream.Position, (int)index));
+                        }
 
                         WriteUInt64(imm);
                     }
@@ -1316,9 +1330,9 @@ namespace ARMeilleure.CodeGen.X86
             return ConstFitsOnS32(value);
         }
 
-        public static int GetJccLength(long offset)
+        public static int GetJccLength(long offset, bool ptcDisabled = true)
         {
-            if (ConstFitsOnS8(offset < 0 ? offset - 2 : offset))
+            if (ptcDisabled && ConstFitsOnS8(offset < 0 ? offset - 2 : offset))
             {
                 return 2;
             }
@@ -1332,9 +1346,9 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        public static int GetJmpLength(long offset)
+        public static int GetJmpLength(long offset, bool ptcDisabled = true)
         {
-            if (ConstFitsOnS8(offset < 0 ? offset - 2 : offset))
+            if (ptcDisabled && ConstFitsOnS8(offset < 0 ? offset - 2 : offset))
             {
                 return 2;
             }

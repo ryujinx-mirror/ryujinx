@@ -1,9 +1,9 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
-using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
+using System.Reflection;
 
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
@@ -244,11 +244,11 @@ namespace ARMeilleure.Instructions
             long roundConst,
             int shift)
         {
-            Delegate dlg = signed
-                ? (Delegate)new _S64_S64_S64_S32(SoftFallback.SignedShrImm64)
-                : (Delegate)new _U64_U64_S64_S32(SoftFallback.UnsignedShrImm64);
+            MethodInfo info = signed
+                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedShrImm64))
+                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedShrImm64));
 
-            return context.Call(dlg, value, Const(roundConst), Const(shift));
+            return context.Call(info, value, Const(roundConst), Const(shift));
         }
 
         private static Operand EmitSatQ(ArmEmitterContext context, Operand value, int eSize, bool signed)

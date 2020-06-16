@@ -3,11 +3,14 @@ using ARMeilleure.Memory;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace ARMeilleure.Translation
 {
+    using PTC;
+
     class JumpTable
     {
         // The jump table is a block of (guestAddress, hostAddress) function mappings.
@@ -15,10 +18,9 @@ namespace ARMeilleure.Translation
         // reserved specifically for each call.
         // The _dependants dictionary can be used to update the hostAddress for any functions that change.
 
-        public const int JumpTableStride = 16; // 8 byte guest address, 8 byte host address
+        public const int JumpTableStride = 16; // 8 byte guest address, 8 byte host address.
 
         private const int JumpTableSize = 1048576;
-
         private const int JumpTableByteSize = JumpTableSize * JumpTableStride;
 
         // The dynamic table is also a block of (guestAddress, hostAddress) function mappings.
@@ -32,74 +34,125 @@ namespace ARMeilleure.Translation
         // If it is 0, NativeInterface is called to find the rejited address of the call.
         // If none is found, the hostAddress entry stays at 0. Otherwise, the new address is placed in the entry.
 
-        // If the table size is exhausted and we didn't find our desired address, we fall back to requesting 
+        // If the table size is exhausted and we didn't find our desired address, we fall back to requesting
         // the function from the JIT.
-
-        private const int DynamicTableSize = 1048576;
 
         public const int DynamicTableElems = 1;
 
         public const int DynamicTableStride = DynamicTableElems * JumpTableStride;
 
-        private const int DynamicTableByteSize = DynamicTableSize * JumpTableStride * DynamicTableElems;
+        private const int DynamicTableSize = 1048576;
+        private const int DynamicTableByteSize = DynamicTableSize * DynamicTableStride;
 
-        private int _tableEnd = 0;
+        private readonly ReservedRegion _jumpRegion;
+        private readonly ReservedRegion _dynamicRegion;
+
+        private int _tableEnd    = 0;
         private int _dynTableEnd = 0;
 
-        private ConcurrentDictionary<ulong, TranslatedFunction> _targets;
-        private ConcurrentDictionary<ulong, LinkedList<int>> _dependants; // TODO: Attach to TranslatedFunction or a wrapper class.
-
-        private ReservedRegion _jumpRegion;
-        private ReservedRegion _dynamicRegion;
-        public IntPtr JumpPointer => _jumpRegion.Pointer;
+        public IntPtr JumpPointer    => _jumpRegion.Pointer;
         public IntPtr DynamicPointer => _dynamicRegion.Pointer;
+
+        public int TableEnd    => _tableEnd;
+        public int DynTableEnd => _dynTableEnd;
+
+        public ConcurrentDictionary<ulong, TranslatedFunction> Targets    { get; }
+        public ConcurrentDictionary<ulong, LinkedList<int>>    Dependants { get; } // TODO: Attach to TranslatedFunction or a wrapper class.
 
         public JumpTable(IJitMemoryAllocator allocator)
         {
-            _jumpRegion = new ReservedRegion(allocator, JumpTableByteSize);
+            _jumpRegion    = new ReservedRegion(allocator, JumpTableByteSize);
             _dynamicRegion = new ReservedRegion(allocator, DynamicTableByteSize);
 
-            _targets = new ConcurrentDictionary<ulong, TranslatedFunction>();
-            _dependants = new ConcurrentDictionary<ulong, LinkedList<int>>();
+            Targets    = new ConcurrentDictionary<ulong, TranslatedFunction>();
+            Dependants = new ConcurrentDictionary<ulong, LinkedList<int>>();
 
             Symbols.Add((ulong)_jumpRegion.Pointer.ToInt64(), JumpTableByteSize, JumpTableStride, "JMP_TABLE");
             Symbols.Add((ulong)_dynamicRegion.Pointer.ToInt64(), DynamicTableByteSize, DynamicTableStride, "DYN_TABLE");
         }
 
+        public void Initialize(PtcJumpTable ptcJumpTable, ConcurrentDictionary<ulong, TranslatedFunction> funcs)
+        {
+            _tableEnd    = ptcJumpTable.TableEnd;
+            _dynTableEnd = ptcJumpTable.DynTableEnd;
+
+            foreach (ulong guestAddress in ptcJumpTable.Targets)
+            {
+                if (funcs.TryGetValue(guestAddress, out TranslatedFunction func))
+                {
+                    Targets.TryAdd(guestAddress, func);
+                }
+                else
+                {
+                    throw new KeyNotFoundException($"({nameof(guestAddress)} = 0x{guestAddress:X16})");
+                }
+            }
+
+            foreach (var item in ptcJumpTable.Dependants)
+            {
+                Dependants.TryAdd(item.Key, new LinkedList<int>(item.Value));
+            }
+        }
+
         public void RegisterFunction(ulong address, TranslatedFunction func)
         {
             address &= ~3UL;
-            _targets.AddOrUpdate(address, func, (key, oldFunc) => func);
-            long funcPtr = func.GetPointer().ToInt64();
+            Targets.AddOrUpdate(address, func, (key, oldFunc) => func);
+            long funcPtr = func.FuncPtr.ToInt64();
 
             // Update all jump table entries that target this address.
-            if (_dependants.TryGetValue(address, out LinkedList<int> myDependants))
+            if (Dependants.TryGetValue(address, out LinkedList<int> myDependants))
             {
                 lock (myDependants)
                 {
-                    foreach (var entry in myDependants)
+                    foreach (int entry in myDependants)
                     {
-                        IntPtr addr = _jumpRegion.Pointer + entry * JumpTableStride;
+                        IntPtr addr = GetEntryAddressJumpTable(entry);
+
                         Marshal.WriteInt64(addr, 8, funcPtr);
                     }
                 }
             }
         }
 
+        public int ReserveTableEntry(long ownerAddress, long address, bool isJump)
+        {
+            int entry = Interlocked.Increment(ref _tableEnd);
+
+            ExpandIfNeededJumpTable(entry);
+
+            // Is the address we have already registered? If so, put the function address in the jump table.
+            // If not, it will point to the direct call stub.
+            long value = DirectCallStubs.DirectCallStub(isJump).ToInt64();
+            if (Targets.TryGetValue((ulong)address, out TranslatedFunction func))
+            {
+                value = func.FuncPtr.ToInt64();
+            }
+
+            // Make sure changes to the function at the target address update this jump table entry.
+            LinkedList<int> targetDependants = Dependants.GetOrAdd((ulong)address, (addr) => new LinkedList<int>());
+            lock (targetDependants)
+            {
+                targetDependants.AddLast(entry);
+            }
+
+            IntPtr addr = GetEntryAddressJumpTable(entry);
+
+            Marshal.WriteInt64(addr, 0, address);
+            Marshal.WriteInt64(addr, 8, value);
+
+            return entry;
+        }
+
         public int ReserveDynamicEntry(bool isJump)
         {
             int entry = Interlocked.Increment(ref _dynTableEnd);
-            if (entry >= DynamicTableSize)
-            {
-                throw new OutOfMemoryException("JIT Dynamic Jump Table exhausted.");
-            }
 
-            _dynamicRegion.ExpandIfNeeded((ulong)((entry + 1) * DynamicTableStride));
+            ExpandIfNeededDynamicTable(entry);
 
             // Initialize all host function pointers to the indirect call stub.
-
-            IntPtr addr = _dynamicRegion.Pointer + entry * DynamicTableStride;
-            long stubPtr = (long)DirectCallStubs.IndirectCallStub(isJump);
+            IntPtr addr = GetEntryAddressDynamicTable(entry);
+            long stubPtr = DirectCallStubs.IndirectCallStub(isJump).ToInt64();
 
             for (int i = 0; i < DynamicTableElems; i++)
             {
@@ -109,37 +162,46 @@ namespace ARMeilleure.Translation
             return entry;
         }
 
-        public int ReserveTableEntry(long ownerAddress, long address, bool isJump)
+        public void ExpandIfNeededJumpTable(int entries)
         {
-            int entry = Interlocked.Increment(ref _tableEnd);
-            if (entry >= JumpTableSize)
+            Debug.Assert(entries > 0);
+
+            if (entries < JumpTableSize)
+            {
+                _jumpRegion.ExpandIfNeeded((ulong)((entries + 1) * JumpTableStride));
+            }
+            else
             {
                 throw new OutOfMemoryException("JIT Direct Jump Table exhausted.");
             }
+        }
 
-            _jumpRegion.ExpandIfNeeded((ulong)((entry + 1) * JumpTableStride));
+        public void ExpandIfNeededDynamicTable(int entries)
+        {
+            Debug.Assert(entries > 0);
 
-            // Is the address we have already registered? If so, put the function address in the jump table.
-            // If not, it will point to the direct call stub.
-            long value = (long)DirectCallStubs.DirectCallStub(isJump);
-            if (_targets.TryGetValue((ulong)address, out TranslatedFunction func))
+            if (entries < DynamicTableSize)
             {
-                value = func.GetPointer().ToInt64();
+                _dynamicRegion.ExpandIfNeeded((ulong)((entries + 1) * DynamicTableStride));
             }
-
-            // Make sure changes to the function at the target address update this jump table entry.
-            LinkedList<int> targetDependants = _dependants.GetOrAdd((ulong)address, (addr) => new LinkedList<int>());
-            lock (targetDependants)
+            else
             {
-                targetDependants.AddLast(entry);
+                throw new OutOfMemoryException("JIT Dynamic Jump Table exhausted.");
             }
+        }
 
-            IntPtr addr = _jumpRegion.Pointer + entry * JumpTableStride;
+        public IntPtr GetEntryAddressJumpTable(int entry)
+        {
+            Debug.Assert(entry >= 1 && entry <= _tableEnd);
 
-            Marshal.WriteInt64(addr, 0, address);
-            Marshal.WriteInt64(addr, 8, value);
+            return _jumpRegion.Pointer + entry * JumpTableStride;
+        }
 
-            return entry;
+        public IntPtr GetEntryAddressDynamicTable(int entry)
+        {
+            Debug.Assert(entry >= 1 && entry <= _dynTableEnd);
+
+            return _dynamicRegion.Pointer + entry * DynamicTableStride;
         }
     }
 }

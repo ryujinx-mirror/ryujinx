@@ -14,7 +14,7 @@ namespace ARMeilleure.CodeGen.Optimizations
                 return;
             }
 
-            if (!AreAllSourcesConstant(operation))
+            if (!AreAllSourcesConstantAndCFEnabled(operation))
             {
                 return;
             }
@@ -212,11 +212,13 @@ namespace ARMeilleure.CodeGen.Optimizations
             }
         }
 
-        private static bool AreAllSourcesConstant(Operation operation)
+        private static bool AreAllSourcesConstantAndCFEnabled(Operation operation)
         {
             for (int index = 0; index < operation.SourcesCount; index++)
             {
-                if (operation.GetSource(index).Kind != OperandKind.Constant)
+                Operand srcOp = operation.GetSource(index);
+
+                if (srcOp.Kind != OperandKind.Constant || srcOp.DisableCF)
                 {
                     return false;
                 }

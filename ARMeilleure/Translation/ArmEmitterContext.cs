@@ -11,7 +11,7 @@ namespace ARMeilleure.Translation
 {
     class ArmEmitterContext : EmitterContext
     {
-        private Dictionary<ulong, Operand> _labels;
+        private readonly Dictionary<ulong, Operand> _labels;
 
         private OpCode _optOpLastCompare;
         private OpCode _optOpLastFlagSet;
