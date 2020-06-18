@@ -27,11 +27,6 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
 
             context.LoadFromContext();
-
-            if (context.CurrBlock.Next == null)
-            {
-                EmitTailContinue(context, Const(op.Address + 4));
-            }
         }
     }
 }

@@ -15,14 +15,7 @@ namespace ARMeilleure.Instructions
         {
             OpCodeBImmAl op = (OpCodeBImmAl)context.CurrOp;
 
-            if (context.CurrBlock.Branch != null)
-            {
-                context.Branch(context.GetLabel((ulong)op.Immediate));
-            }
-            else
-            {
-                EmitTailContinue(context, Const(op.Immediate), context.CurrBlock.TailCall);
-            }
+            context.Branch(context.GetLabel((ulong)op.Immediate));
         }
 
         public static void B_Cond(ArmEmitterContext context)
@@ -92,69 +85,22 @@ namespace ARMeilleure.Instructions
         {
             OpCodeBImm op = (OpCodeBImm)context.CurrOp;
 
-            if (context.CurrBlock.Branch != null)
-            {
-                EmitCondBranch(context, context.GetLabel((ulong)op.Immediate), cond);
-
-                if (context.CurrBlock.Next == null)
-                {
-                    EmitTailContinue(context, Const(op.Address + 4));
-                }
-            }
-            else
-            {
-                Operand lblTaken = Label();
-
-                EmitCondBranch(context, lblTaken, cond);
-
-                EmitTailContinue(context, Const(op.Address + 4));
-
-                context.MarkLabel(lblTaken);
-
-                EmitTailContinue(context, Const(op.Immediate));
-            }
+            EmitCondBranch(context, context.GetLabel((ulong)op.Immediate), cond);
         }
 
         private static void EmitBranch(ArmEmitterContext context, Operand value, bool onNotZero)
         {
             OpCodeBImm op = (OpCodeBImm)context.CurrOp;
 
-            if (context.CurrBlock.Branch != null)
+            Operand lblTarget = context.GetLabel((ulong)op.Immediate);
+
+            if (onNotZero)
             {
-                Operand lblTarget = context.GetLabel((ulong)op.Immediate);
-
-                if (onNotZero)
-                {
-                    context.BranchIfTrue(lblTarget, value);
-                }
-                else
-                {
-                    context.BranchIfFalse(lblTarget, value);
-                }
-
-                if (context.CurrBlock.Next == null)
-                {
-                    EmitTailContinue(context, Const(op.Address + 4));
-                }
+                context.BranchIfTrue(lblTarget, value);
             }
             else
             {
-                Operand lblTaken = Label();
-
-                if (onNotZero)
-                {
-                    context.BranchIfTrue(lblTaken, value);
-                }
-                else
-                {
-                    context.BranchIfFalse(lblTaken, value);
-                }
-
-                EmitTailContinue(context, Const(op.Address + 4));
-
-                context.MarkLabel(lblTaken);
-
-                EmitTailContinue(context, Const(op.Immediate));
+                context.BranchIfFalse(lblTarget, value);
             }
         }
     }

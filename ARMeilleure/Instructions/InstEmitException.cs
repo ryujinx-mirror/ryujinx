@@ -27,11 +27,6 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
 
             context.LoadFromContext();
-
-            if (context.CurrBlock.Next == null)
-            {
-                EmitTailContinue(context, Const(op.Address + 4));
-            }
         }
 
         public static void Und(ArmEmitterContext context)
@@ -45,11 +40,6 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.RawOpCode));
 
             context.LoadFromContext();
-
-            if (context.CurrBlock.Next == null)
-            {
-                EmitTailContinue(context, Const(op.Address + 4));
-            }
         }
     }
 }

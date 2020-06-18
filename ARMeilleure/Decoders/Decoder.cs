@@ -17,16 +17,7 @@ namespace ARMeilleure.Decoders
         // For lower code quality translation, we set a lower limit since we're blocking execution.
         private const int MaxInstsPerFunctionLowCq = 500;
 
-        public static Block[] DecodeBasicBlock(IMemoryManager memory, ulong address, ExecutionMode mode)
-        {
-            Block block = new Block(address);
-
-            FillBlock(memory, mode, block, ulong.MaxValue);
-
-            return new Block[] { block };
-        }
-
-        public static Block[] DecodeFunction(IMemoryManager memory, ulong address, ExecutionMode mode, bool highCq)
+        public static Block[] Decode(IMemoryManager memory, ulong address, ExecutionMode mode, bool highCq, bool singleBlock)
         {
             List<Block> blocks = new List<Block>();
 
@@ -42,12 +33,13 @@ namespace ARMeilleure.Decoders
             {
                 if (!visited.TryGetValue(blkAddress, out Block block))
                 {
-                    if (opsCount > instructionLimit || !memory.IsMapped(blkAddress))
-                    {
-                        return null;
-                    }
-
                     block = new Block(blkAddress);
+
+                    if ((singleBlock && visited.Count >= 1) || opsCount > instructionLimit || !memory.IsMapped(blkAddress))
+                    {
+                        block.Exit = true;
+                        block.EndAddress = blkAddress;
+                    }
 
                     workQueue.Enqueue(block);
 
@@ -71,6 +63,8 @@ namespace ARMeilleure.Decoders
                         throw new InvalidOperationException("Found duplicate block address on the list.");
                     }
 
+                    currBlock.Exit = false;
+
                     nBlock.Split(currBlock);
 
                     blocks.Insert(nBlkIndex + 1, currBlock);
@@ -78,47 +72,50 @@ namespace ARMeilleure.Decoders
                     continue;
                 }
 
-                // If we have a block after the current one, set the limit address.
-                ulong limitAddress = ulong.MaxValue;
-
-                if (nBlkIndex != blocks.Count)
+                if (!currBlock.Exit)
                 {
-                    Block nBlock = blocks[nBlkIndex];
+                    // If we have a block after the current one, set the limit address.
+                    ulong limitAddress = ulong.MaxValue;
 
-                    int nextIndex = nBlkIndex + 1;
-
-                    if (nBlock.Address < currBlock.Address && nextIndex < blocks.Count)
+                    if (nBlkIndex != blocks.Count)
                     {
-                        limitAddress = blocks[nextIndex].Address;
-                    }
-                    else if (nBlock.Address > currBlock.Address)
-                    {
-                        limitAddress = blocks[nBlkIndex].Address;
-                    }
-                }
+                        Block nBlock = blocks[nBlkIndex];
 
-                FillBlock(memory, mode, currBlock, limitAddress);
+                        int nextIndex = nBlkIndex + 1;
 
-                opsCount += currBlock.OpCodes.Count;
-
-                if (currBlock.OpCodes.Count != 0)
-                {
-                    // Set child blocks. "Branch" is the block the branch instruction
-                    // points to (when taken), "Next" is the block at the next address,
-                    // executed when the branch is not taken. For Unconditional Branches
-                    // (except BL/BLR that are sub calls) or end of executable, Next is null.
-                    OpCode lastOp = currBlock.GetLastOp();
-
-                    bool isCall = IsCall(lastOp);
-
-                    if (lastOp is IOpCodeBImm op && !isCall)
-                    {
-                        currBlock.Branch = GetBlock((ulong)op.Immediate);
+                        if (nBlock.Address < currBlock.Address && nextIndex < blocks.Count)
+                        {
+                            limitAddress = blocks[nextIndex].Address;
+                        }
+                        else if (nBlock.Address > currBlock.Address)
+                        {
+                            limitAddress = blocks[nBlkIndex].Address;
+                        }
                     }
 
-                    if (!IsUnconditionalBranch(lastOp) || isCall)
+                    FillBlock(memory, mode, currBlock, limitAddress);
+
+                    opsCount += currBlock.OpCodes.Count;
+
+                    if (currBlock.OpCodes.Count != 0)
                     {
-                        currBlock.Next = GetBlock(currBlock.EndAddress);
+                        // Set child blocks. "Branch" is the block the branch instruction
+                        // points to (when taken), "Next" is the block at the next address,
+                        // executed when the branch is not taken. For Unconditional Branches
+                        // (except BL/BLR that are sub calls) or end of executable, Next is null.
+                        OpCode lastOp = currBlock.GetLastOp();
+
+                        bool isCall = IsCall(lastOp);
+
+                        if (lastOp is IOpCodeBImm op && !isCall)
+                        {
+                            currBlock.Branch = GetBlock((ulong)op.Immediate);
+                        }
+
+                        if (!IsUnconditionalBranch(lastOp) || isCall)
+                        {
+                            currBlock.Next = GetBlock(currBlock.EndAddress);
+                        }
                     }
                 }
 
@@ -135,7 +132,15 @@ namespace ARMeilleure.Decoders
                 }
             }
 
-            TailCallRemover.RunPass(address, blocks);
+            if (blocks.Count == 0)
+            {
+                throw new InvalidOperationException($"Decoded 0 blocks. Entry point = 0x{address:X}.");
+            }
+
+            if (!singleBlock)
+            {
+                return TailCallRemover.RunPass(address, blocks);
+            }
 
             return blocks.ToArray();
         }

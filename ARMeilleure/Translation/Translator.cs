@@ -183,7 +183,7 @@ namespace ARMeilleure.Translation
 
             Logger.StartPass(PassName.Decoding);
 
-            Block[] blocks = Decoder.DecodeFunction(memory, address, mode, highCq);
+            Block[] blocks = Decoder.Decode(memory, address, mode, highCq, singleBlock: false);
 
             Logger.EndPass(PassName.Decoding);
 
@@ -242,49 +242,46 @@ namespace ARMeilleure.Translation
 
                 context.MarkLabel(context.GetLabel(block.Address));
 
-                for (int opcIndex = 0; opcIndex < block.OpCodes.Count; opcIndex++)
+                if (block.Exit)
                 {
-                    OpCode opCode = block.OpCodes[opcIndex];
-
-                    context.CurrOp = opCode;
-
-                    bool isLastOp = opcIndex == block.OpCodes.Count - 1;
-
-                    if (isLastOp && block.Branch != null && block.Branch.Address <= block.Address)
+                    InstEmitFlowHelper.EmitTailContinue(context, Const(block.Address), block.TailCall);
+                }
+                else
+                {
+                    for (int opcIndex = 0; opcIndex < block.OpCodes.Count; opcIndex++)
                     {
-                        EmitSynchronization(context);
-                    }
+                        OpCode opCode = block.OpCodes[opcIndex];
 
-                    Operand lblPredicateSkip = null;
+                        context.CurrOp = opCode;
 
-                    if (opCode is OpCode32 op && op.Cond < Condition.Al)
-                    {
-                        lblPredicateSkip = Label();
+                        bool isLastOp = opcIndex == block.OpCodes.Count - 1;
 
-                        InstEmitFlowHelper.EmitCondBranch(context, lblPredicateSkip, op.Cond.Invert());
-                    }
-
-                    if (opCode.Instruction.Emitter != null)
-                    {
-                        opCode.Instruction.Emitter(context);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Invalid instruction \"{opCode.Instruction.Name}\".");
-                    }
-
-                    if (lblPredicateSkip != null)
-                    {
-                        context.MarkLabel(lblPredicateSkip);
-
-                        // If this is the last op on the block, and there's no "next" block
-                        // after this one, then we have to return right now, with the address
-                        // of the next instruction to be executed (in the case that the condition
-                        // is false, and the branch was not taken, as all basic blocks should end
-                        // with some kind of branch).
-                        if (isLastOp && block.Next == null)
+                        if (isLastOp && block.Branch != null && !block.Branch.Exit && block.Branch.Address <= block.Address)
                         {
-                            InstEmitFlowHelper.EmitTailContinue(context, Const(opCode.Address + (ulong)opCode.OpCodeSizeInBytes));
+                            EmitSynchronization(context);
+                        }
+
+                        Operand lblPredicateSkip = null;
+
+                        if (opCode is OpCode32 op && op.Cond < Condition.Al)
+                        {
+                            lblPredicateSkip = Label();
+
+                            InstEmitFlowHelper.EmitCondBranch(context, lblPredicateSkip, op.Cond.Invert());
+                        }
+
+                        if (opCode.Instruction.Emitter != null)
+                        {
+                            opCode.Instruction.Emitter(context);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Invalid instruction \"{opCode.Instruction.Name}\".");
+                        }
+
+                        if (lblPredicateSkip != null)
+                        {
+                            context.MarkLabel(lblPredicateSkip);
                         }
                     }
                 }
