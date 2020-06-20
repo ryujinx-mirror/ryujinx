@@ -4,6 +4,8 @@ using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
+using LibHac.Spl;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Time;
 using Ryujinx.HLE.Utilities;
@@ -27,6 +29,22 @@ namespace Ryujinx.HLE.FileSystem.Content
         private Dictionary<string, string> _sharedFontFilenameDictionary;
 
         private SortedDictionary<(ulong titleId, NcaContentType type), string> _contentDictionary;
+
+        private struct AocItem
+        {
+            public readonly string ContainerPath;
+            public readonly string NcaPath;
+            public bool Enabled;
+
+            public AocItem(string containerPath, string ncaPath, bool enabled)
+            {
+                ContainerPath = containerPath;
+                NcaPath = ncaPath;
+                Enabled = enabled;
+            }
+        }
+
+        private SortedList<ulong, AocItem> _aocData { get; }
 
         private VirtualFileSystem _virtualFileSystem;
 
@@ -68,6 +86,8 @@ namespace Ryujinx.HLE.FileSystem.Content
             };
 
             _virtualFileSystem = virtualFileSystem;
+
+            _aocData = new SortedList<ulong, AocItem>();
         }
 
         public void LoadEntries(Switch device = null)
@@ -174,6 +194,89 @@ namespace Ryujinx.HLE.FileSystem.Content
                     device.System.Font.Initialize(this);
                 }
             }
+        }
+
+        // fs must contain AOC nca files in its root
+        public void AddAocData(IFileSystem fs, string containerPath, ulong aocBaseId)
+        {
+            _virtualFileSystem.ImportTickets(fs);
+
+            foreach (var ncaPath in fs.EnumerateEntries("*.cnmt.nca", SearchOptions.Default))
+            {
+                fs.OpenFile(out IFile ncaFile, ncaPath.FullPath.ToU8Span(), OpenMode.Read);
+                using (ncaFile)
+                {
+                    var nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+                    if (nca.Header.ContentType != NcaContentType.Meta)
+                    {
+                        Logger.PrintWarning(LogClass.Application, $"{ncaPath} is not a valid metadata file");
+
+                        continue;
+                    }
+
+                    using var pfs0 = nca.OpenFileSystem(0, Switch.GetIntegrityCheckLevel());
+
+                    pfs0.OpenFile(out IFile cnmtFile, pfs0.EnumerateEntries().Single().FullPath.ToU8Span(), OpenMode.Read);
+
+                    using (cnmtFile)
+                    {
+                        var cnmt = new Cnmt(cnmtFile.AsStream());
+
+                        if (cnmt.Type != ContentMetaType.AddOnContent || (cnmt.TitleId & 0xFFFFFFFFFFFFE000) != aocBaseId)
+                        {
+                            continue;
+                        }
+
+                        string ncaId = BitConverter.ToString(cnmt.ContentEntries[0].NcaId).Replace("-", "").ToLower();
+                        if (!_aocData.TryAdd(cnmt.TitleId, new AocItem(containerPath, $"{ncaId}.nca", true)))
+                        {
+                            Logger.PrintWarning(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {cnmt.TitleId:X16}");
+                        }
+                        else
+                        {
+                            Logger.PrintInfo(LogClass.Application, $"Found AddOnContent with TitleId {cnmt.TitleId:X16}");
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ClearAocData() => _aocData.Clear();
+
+        public int GetAocCount() => _aocData.Where(e => e.Value.Enabled).Count();
+
+        public IList<ulong> GetAocTitleIds() => _aocData.Where(e => e.Value.Enabled).Select(e => e.Key).ToList();
+
+        public bool GetAocDataStorage(ulong aocTitleId, out IStorage aocStorage)
+        {
+            aocStorage = null;
+
+            if (_aocData.TryGetValue(aocTitleId, out AocItem aoc) && aoc.Enabled)
+            {
+                var file = new FileStream(aoc.ContainerPath, FileMode.Open, FileAccess.Read);
+                PartitionFileSystem pfs;
+                IFile ncaFile;
+
+                switch (Path.GetExtension(aoc.ContainerPath))
+                {
+                    case ".xci":
+                        pfs = new Xci(_virtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
+                        pfs.OpenFile(out ncaFile, aoc.NcaPath.ToU8Span(), OpenMode.Read);
+                        break;
+                    case ".nsp":
+                        pfs = new PartitionFileSystem(file.AsStorage());
+                        pfs.OpenFile(out ncaFile, aoc.NcaPath.ToU8Span(), OpenMode.Read);
+                        break;
+                    default:
+                        return false; // Print error?
+                }
+
+                aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage()).OpenStorage(NcaSectionType.Data, Switch.GetIntegrityCheckLevel());
+                
+                return true;
+            }
+
+            return false;
         }
 
         public void ClearEntry(long titleId, NcaContentType contentType, StorageId storageId)
