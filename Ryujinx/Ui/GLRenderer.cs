@@ -395,7 +395,7 @@ namespace Ryujinx.Ui
 
             List<GamepadInput> gamepadInputs = new List<GamepadInput>();
 
-            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
+            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value.ToArray())
             {
                 ControllerKeys   currentButton = 0;
                 JoystickPosition leftJoystick  = new JoystickPosition();
