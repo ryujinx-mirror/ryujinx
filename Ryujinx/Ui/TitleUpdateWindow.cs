@@ -5,26 +5,27 @@ using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ns;
-using LibHac.Spl;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
-using GUI = Gtk.Builder.ObjectAttribute;
+using GUI        = Gtk.Builder.ObjectAttribute;
 using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
 
 namespace Ryujinx.Ui
 {
     public class TitleUpdateWindow : Window
     {
-        private readonly string            _titleId;
         private readonly VirtualFileSystem _virtualFileSystem;
+        private readonly string            _titleId;
+        private readonly string            _updateJsonPath;
 
-        private TitleUpdateMetadata _titleUpdateWindowData;
-        private Dictionary<RadioButton, string> _radioButtonToPathDictionary = new Dictionary<RadioButton, string>();
+        private TitleUpdateMetadata             _titleUpdateWindowData;
+        private Dictionary<RadioButton, string> _radioButtonToPathDictionary;
 
 #pragma warning disable CS0649, IDE0044
         [GUI] Label       _baseTitleInfoLabel;
@@ -38,14 +39,14 @@ namespace Ryujinx.Ui
         {
             builder.Autoconnect(this);
 
-            _titleId           = titleId;
-            _virtualFileSystem = virtualFileSystem;
+            _titleId                     = titleId;
+            _virtualFileSystem           = virtualFileSystem;
+            _updateJsonPath              = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json");
+            _radioButtonToPathDictionary = new Dictionary<RadioButton, string>();
 
             try
             {
-                string path = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json");
-
-                _titleUpdateWindowData = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(path);
+                _titleUpdateWindowData = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(_updateJsonPath);
             }
             catch
             {
@@ -56,7 +57,7 @@ namespace Ryujinx.Ui
                 };
             }
 
-            _baseTitleInfoLabel.Text = $"Updates Available for {titleName} [{titleId}]";
+            _baseTitleInfoLabel.Text = $"Updates Available for {titleName} [{titleId.ToUpper()}]";
 
             foreach (string path in _titleUpdateWindowData.Paths)
             {
@@ -194,9 +195,10 @@ namespace Ryujinx.Ui
                 }
             }
 
-            string path = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", _titleId, "updates.json");
-
-            File.WriteAllText(path, JsonHelper.Serialize(_titleUpdateWindowData, true));
+            using (FileStream dlcJsonStream = File.Create(_updateJsonPath, 4096, FileOptions.WriteThrough))
+            {
+                dlcJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_titleUpdateWindowData, true)));
+            }
 
             MainWindow.UpdateGameTable();
             Dispose();

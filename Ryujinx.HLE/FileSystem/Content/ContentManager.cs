@@ -4,7 +4,6 @@ using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
-using LibHac.Spl;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Time;
@@ -238,6 +237,18 @@ namespace Ryujinx.HLE.FileSystem.Content
                         }
                     }
                 }
+            }
+        }
+
+        public void AddAocItem(ulong titleId, string containerPath, string ncaPath, bool enabled)
+        {
+            if (!_aocData.TryAdd(titleId, new AocItem(containerPath, ncaPath, enabled)))
+            {
+                Logger.PrintWarning(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {titleId:X16}");
+            }
+            else
+            {
+                Logger.PrintInfo(LogClass.Application, $"Found AddOnContent with TitleId {titleId:X16}");
             }
         }
 
