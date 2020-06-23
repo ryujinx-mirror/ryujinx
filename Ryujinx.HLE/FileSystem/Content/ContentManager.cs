@@ -249,6 +249,12 @@ namespace Ryujinx.HLE.FileSystem.Content
             else
             {
                 Logger.PrintInfo(LogClass.Application, $"Found AddOnContent with TitleId {titleId:X16}");
+
+                using (FileStream fileStream = File.OpenRead(containerPath))
+                using (PartitionFileSystem pfs = new PartitionFileSystem(fileStream.AsStorage()))
+                {
+                    _virtualFileSystem.ImportTickets(pfs);
+                }
             }
         }
 
