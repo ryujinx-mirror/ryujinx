@@ -12,6 +12,31 @@ namespace Ryujinx.Tests.Cpu
     {
 #if SimdReg32
 
+#region "ValueSource (Opcodes)"
+        private static uint[] _Vp_Add_Max_Min_F_()
+        {
+            return new uint[]
+            {
+                0xf3000d00u, // VPADD.F32 D0, D0, D0
+                0xf3000f00u, // VPMAX.F32 D0, D0, D0
+                0xf3200f00u // VPMIN.F32 D0, D0, D0
+            };
+        }
+
+        // VPADD does not have an unsigned flag, so we check the opcode before setting it.
+        private static uint VpaddI8 = 0xf2000b10u; // VPADD.I8 D0, D0, D0
+
+        private static uint[] _Vp_Add_Max_Min_I_()
+        {
+            return new uint[]
+            {
+                VpaddI8,
+                0xf2000a00u, // VPMAX.S8 D0, D0, D0
+                0xf2000a10u // VPMIN.S8 D0, D0, D0
+            };
+        }
+#endregion
+
 #region "ValueSource (Types)"
         private static ulong[] _1B1H1S1D_()
         {
@@ -296,7 +321,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint opcode = 0xf2800a00u; // VMLSL.S8 Q0, D0, D0
 
-            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
 
@@ -329,7 +354,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint opcode = 0xf2800c00u; // VMULL.S8 Q0, D0, D0
 
-            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
 
@@ -381,7 +406,7 @@ namespace Ryujinx.Tests.Cpu
                 opcode |= 1 << 24;
             }
 
-            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
 
@@ -397,22 +422,57 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Explicit]
-        [Test, Pairwise, Description("VPADD.f32 V0, V0, V0")]
-        public void Vpadd_f32([Values(0u)] uint rd,
-                              [Range(0u, 7u)] uint rn,
-                              [Range(0u, 7u)] uint rm)
+        [Test, Pairwise]
+        public void Vp_Add_Max_Min_F([ValueSource("_Vp_Add_Max_Min_F_")] uint opcode,
+                                     [Values(0u)] uint rd,
+                                     [Range(0u, 7u)] uint rn,
+                                     [Range(0u, 7u)] uint rm,
+                                     [ValueSource("_2S_F_")] ulong z0,
+                                     [ValueSource("_2S_F_")] ulong z1,
+                                     [ValueSource("_2S_F_")] ulong a0,
+                                     [ValueSource("_2S_F_")] ulong a1,
+                                     [ValueSource("_2S_F_")] ulong b0,
+                                     [ValueSource("_2S_F_")] ulong b1)
         {
-            // not currently a slow path test - just a sanity check for pairwise
-            uint opcode = 0xf3000d00u; // VPADD.F32 D0, D0, D0
-
             opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
 
             var rnd = TestContext.CurrentContext.Random;
-            V128 v0 = new V128(rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue));
-            V128 v1 = new V128(rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue));
-            V128 v2 = new V128(rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue), rnd.NextFloat(int.MinValue, int.MaxValue));
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
+            V128 v2 = MakeVectorE0E1(b0, b1);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Vp_Add_Max_Min_I([ValueSource("_Vp_Add_Max_Min_I_")] uint opcode,
+                                     [Values(0u)] uint rd,
+                                     [Range(0u, 5u)] uint rn,
+                                     [Range(0u, 5u)] uint rm,
+                                     [Values(0u, 1u, 2u)] uint size,
+                                     [Random(RndCnt)] ulong z,
+                                     [Random(RndCnt)] ulong a,
+                                     [Random(RndCnt)] ulong b,
+                                     [Values] bool u)
+        {
+            if (u && opcode != VpaddI8)
+            {
+                opcode |= 1 << 24;
+            }
+
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+
+            opcode |= size << 20;
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 

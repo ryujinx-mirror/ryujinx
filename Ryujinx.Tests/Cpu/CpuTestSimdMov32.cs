@@ -39,8 +39,8 @@ namespace Ryujinx.Tests.Cpu
                 0b1110_1
             };
 
-
             uint opcode = 0xf2800010u; // VMOV.I32 D0, #0
+
             uint cmodeOp = variants[variant];
 
             if (q)
@@ -49,11 +49,11 @@ namespace Ryujinx.Tests.Cpu
             }
 
             opcode |= ((cmodeOp & 1) << 5) | ((cmodeOp & 0x1e) << 7);
-            opcode |= ((q ? 1u : 0u) << 6);
+            opcode |= (q ? 1u : 0u) << 6;
             opcode |= (imm & 0xf) | ((imm & 0x70) << 12) | ((imm & 0x80) << 16);
 
-            opcode |= ((vd & 0x10) << 18);
-            opcode |= ((vd & 0xf) << 12);
+            opcode |= (vd & 0x10) << 18;
+            opcode |= (vd & 0xf) << 12;
 
             SingleOpcode(opcode);
 
@@ -254,6 +254,82 @@ namespace Ryujinx.Tests.Cpu
             V128 v3 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, v3: v3);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VMVN.<size> <Vt>, <Vm>")]
+        public void Vmvn([Range(0u, 1u, 2u)] uint size,
+                         [Values(0u, 1u, 2u, 3u)] uint vd,
+                         [Values(0u, 2u, 4u, 8u)] uint vm,
+                         [Values] bool q)
+        {
+            uint opcode = 0xf3b00580u; // VMVN D0, D0
+
+            if (q)
+            {
+                opcode |= 1 << 6;
+                vm <<= 1;
+                vd <<= 1;
+            }
+
+            opcode |= (size & 0x3) << 18;
+            opcode |= (vm & 0x10) << 1;
+            opcode |= (vm & 0xf) << 0;
+
+            opcode |= (vd & 0x10) << 18;
+            opcode |= (vd & 0xf) << 12;
+
+            V128 v0 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v1 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v2 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v3 = new V128(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, v3: v3);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VMVN.I<size> <Dd/Qd>, #<imm>")]
+        public void Mvni_V([Range(0u, 7u)] uint variant,
+                           [Values(0u, 1u, 2u, 3u)] uint vd,
+                           [Values(0x0u)] [Random(1u, 0xffu, RndCntImm)] uint imm,
+                           [Values] bool q)
+        {
+            uint[] variants =
+            {
+                // I32
+                0b0000,
+                0b0010,
+                0b0100,
+                0b0110,
+
+                // I16
+                0b1000,
+                0b1010,
+
+                // I32
+                0b1100,
+                0b1101,
+            };
+
+            uint opcode = 0xf2800030u; // VMVN.I32 D0, #0
+
+            uint cmodeOp = variants[variant];
+
+            if (q)
+            {
+                vd <<= 1;
+            }
+
+            opcode |= (cmodeOp & 0xf) << 8;
+            opcode |= (q ? 1u : 0u) << 6;
+            opcode |= (imm & 0xf) | ((imm & 0x70) << 12) | ((imm & 0x80) << 16);
+
+            opcode |= (vd & 0x10) << 18;
+            opcode |= (vd & 0xf) << 12;
+
+            SingleOpcode(opcode);
 
             CompareAgainstUnicorn();
         }

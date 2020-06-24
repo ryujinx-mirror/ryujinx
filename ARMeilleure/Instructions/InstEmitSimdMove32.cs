@@ -34,7 +34,23 @@ namespace ARMeilleure.Instructions
 
         public static void Vmvn_I(ArmEmitterContext context)
         {
-            EmitVectorImmUnaryOp32(context, (op1) => context.BitwiseExclusiveOr(op1, op1));
+            if (Optimizations.UseSse2)
+            {
+                EmitVectorUnaryOpSimd32(context, (op1) =>
+                {
+                    Operand mask = X86GetAllElements(context, -1L);
+                    return context.AddIntrinsic(Intrinsic.X86Pandn, op1, mask);
+                });
+            }
+            else
+            {
+                EmitVectorUnaryOpZx32(context, (op1) => context.BitwiseNot(op1));
+            }
+        }
+
+        public static void Vmvn_II(ArmEmitterContext context)
+        {
+            EmitVectorImmUnaryOp32(context, (op1) => context.BitwiseNot(op1));
         }
 
         public static void Vmov_GS(ArmEmitterContext context)

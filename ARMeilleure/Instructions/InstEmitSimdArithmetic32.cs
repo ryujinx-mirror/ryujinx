@@ -817,7 +817,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorPairwiseOpF32(context, (op1, op2) => context.Add(op1, op2));
+                EmitVectorPairwiseOpF32(context, (op1, op2) => EmitSoftFloatCallDefaultFpscr(context, nameof(SoftFloat32.FPAddFpscr), op1, op2));
             }
         }
 
@@ -832,6 +832,66 @@ namespace ARMeilleure.Instructions
             else
             {
                 EmitVectorPairwiseOpI32(context, (op1, op2) => context.Add(op1, op2), !op.U);
+            }
+        }
+
+        public static void Vpmax_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                EmitSse2VectorPairwiseOpF32(context, Intrinsic.X86Maxps);
+            }
+            else
+            {
+                EmitVectorPairwiseOpF32(context, (op1, op2) => EmitSoftFloatCallDefaultFpscr(context, nameof(SoftFloat64.FPMaxFpscr), op1, op2));
+            }
+        }
+
+        public static void Vpmax_I(ArmEmitterContext context)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            if (Optimizations.UseSsse3)
+            {
+                EmitSsse3VectorPairwiseOp32(context, op.U ? X86PmaxuInstruction : X86PmaxsInstruction);
+            }
+            else
+            {
+                EmitVectorPairwiseOpI32(context, (op1, op2) => 
+                {
+                    Operand greater = op.U ? context.ICompareGreaterUI(op1, op2) : context.ICompareGreater(op1, op2);
+                    return context.ConditionalSelect(greater, op1, op2);
+                }, !op.U);
+            }
+        }
+
+        public static void Vpmin_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                EmitSse2VectorPairwiseOpF32(context, Intrinsic.X86Minps);
+            }
+            else
+            {
+                EmitVectorPairwiseOpF32(context, (op1, op2) => EmitSoftFloatCallDefaultFpscr(context, nameof(SoftFloat32.FPMinFpscr), op1, op2));
+            }
+        }
+
+        public static void Vpmin_I(ArmEmitterContext context)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            if (Optimizations.UseSsse3)
+            {
+                EmitSsse3VectorPairwiseOp32(context, op.U ? X86PminuInstruction : X86PminsInstruction);
+            }
+            else
+            {
+                EmitVectorPairwiseOpI32(context, (op1, op2) =>
+                {
+                    Operand greater = op.U ? context.ICompareLessUI(op1, op2) : context.ICompareLess(op1, op2);
+                    return context.ConditionalSelect(greater, op1, op2);
+                }, !op.U);
             }
         }
 
