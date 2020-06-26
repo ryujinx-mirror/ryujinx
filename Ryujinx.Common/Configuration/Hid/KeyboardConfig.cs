@@ -14,10 +14,5 @@ namespace Ryujinx.Common.Configuration.Hid
         /// Right JoyCon Keyboard Bindings
         /// </summary>
         public NpadKeyboardRight RightJoycon { get; set; }
-
-        /// <summary>
-        /// Hotkey Keyboard Bindings
-        /// </summary>
-        public KeyboardHotkeys Hotkeys { get; set; }
     }
 }

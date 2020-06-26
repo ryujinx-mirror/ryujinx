@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "max_anisotropy": -1,
   "graphics_shaders_dump_path": "",
   "logging_enable_debug": false,
@@ -35,10 +35,17 @@
     "file_size_column": true,
     "path_column": true
   },
+  "column_sort": {
+    "sort_column_id": 0,
+    "sort_ascending": false
+  },
   "game_dirs": [],
   "enable_custom_theme": false,
   "custom_theme_path": "",
   "enable_keyboard": false,
+  "hotkeys": {
+    "toggle_vsync": "Tab"
+  },
   "keyboard_config": [
     {
       "index": 0,
@@ -75,9 +82,6 @@
         "button_zr": "O",
         "button_sl": "Unbound",
         "button_sr": "Unbound"
-      },
-      "hotkeys": {
-        "toggle_vsync": "Tab"
       }
     }
   ],

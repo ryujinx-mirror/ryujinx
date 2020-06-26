@@ -17,7 +17,6 @@ namespace Ryujinx.Ui
         public string FileExtension { get; set; }
         public string FileSize      { get; set; }
         public string Path          { get; set; }
-        public string SaveDataPath  { get; set; }
         public BlitStruct<ApplicationControlProperty> ControlHolder { get; set; }
     }
 }

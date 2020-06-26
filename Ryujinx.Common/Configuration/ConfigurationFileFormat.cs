@@ -13,7 +13,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 8;
+        public const int CurrentVersion = 9;
 
         public int Version { get; set; }
 
@@ -138,6 +138,11 @@ namespace Ryujinx.Configuration
         public GuiColumns GuiColumns { get; set; }
 
         /// <summary>
+        /// Used to configure column sort settings in the GUI
+        /// </summary>
+        public ColumnSort ColumnSort { get; set; }
+
+        /// <summary>
         /// A list of directories containing games to be used to load games into the games list
         /// </summary>
         public List<string> GameDirs { get; set; }
@@ -156,6 +161,11 @@ namespace Ryujinx.Configuration
         /// Enable or disable keyboard support (Independent from controllers binding)
         /// </summary>
         public bool EnableKeyboard { get; set; }
+
+        /// <summary>
+        /// Hotkey Keyboard Bindings
+        /// </summary>
+        public KeyboardHotkeys Hotkeys { get; set; }
 
         /// <summary>
         /// Keyboard control bindings

@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK.Input;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Configuration;
 using Ryujinx.HLE.HOS.Services.Hid;
 
 namespace Ryujinx.Ui
@@ -91,20 +92,21 @@ namespace Ryujinx.Ui
             return (dx, dy);
         }
 
-        public HotkeyButtons GetHotkeyButtons()
+        public static HotkeyButtons GetHotkeyButtons(KeyboardState keyboard)
         {
-            KeyboardState keyboard = GetKeyboardState(_config.Index);
-
             HotkeyButtons buttons = 0;
 
-            if (keyboard[(Key)_config.Hotkeys.ToggleVsync]) buttons |= HotkeyButtons.ToggleVSync;
+            if (keyboard[(Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ToggleVsync])
+            {
+                buttons |= HotkeyButtons.ToggleVSync;
+            }
 
             return buttons;
         }
 
         class KeyMappingEntry
         {
-            public Key TargetKey;
+            public Key  TargetKey;
             public byte Target;
         }
 

@@ -131,7 +131,6 @@ namespace Ryujinx.Ui
                 string titleId         = "0000000000000000";
                 string developer       = "Unknown";
                 string version         = "0";
-                string saveDataPath    = null;
                 byte[] applicationIcon = null;
                 BlitStruct<ApplicationControlProperty> controlHolder = new BlitStruct<ApplicationControlProperty>(1);
 
@@ -389,20 +388,6 @@ namespace Ryujinx.Ui
 
                 ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId);
 
-                if (ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNum))
-                {
-                    SaveDataFilter filter = new SaveDataFilter();
-                    filter.SetUserId(new UserId(1, 0));
-                    filter.SetProgramId(new TitleId(titleIdNum));
-
-                    Result result = virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
-
-                    if (result.IsSuccess())
-                    {
-                        saveDataPath = Path.Combine(virtualFileSystem.GetNandPath(), "user", "save", saveDataInfo.SaveDataId.ToString("x16"));
-                    }
-                }
-
                 ApplicationData data = new ApplicationData
                 {
                     Favorite      = appMetadata.Favorite,
@@ -416,7 +401,6 @@ namespace Ryujinx.Ui
                     FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0, 1),
                     FileSize      = (fileSize < 1) ? (fileSize * 1024).ToString("0.##") + "MB" : fileSize.ToString("0.##") + "GB",
                     Path          = applicationPath,
-                    SaveDataPath  = saveDataPath,
                     ControlHolder = controlHolder
                 };
 

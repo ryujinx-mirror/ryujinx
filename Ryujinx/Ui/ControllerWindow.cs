@@ -419,10 +419,6 @@ namespace Ryujinx.Ui
                         ButtonZr    = rButtonZr,
                         ButtonSl    = rButtonSl,
                         ButtonSr    = rButtonSr
-                    },
-                    Hotkeys        = new KeyboardHotkeys
-                    {
-                        ToggleVsync = Key.Tab //TODO: Make this an option in the GUI
                     }
                 };
             }
@@ -754,10 +750,6 @@ namespace Ryujinx.Ui
                             ButtonZr    = Key.O,
                             ButtonSl    = Key.Unbound,
                             ButtonSr    = Key.Unbound
-                        },
-                        Hotkeys        = new KeyboardHotkeys
-                        {
-                            ToggleVsync = Key.Tab
                         }
                     };
                 }

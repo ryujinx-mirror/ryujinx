@@ -22,10 +22,9 @@
     "enable_ptc",
     "enable_fs_integrity_checks",
     "fs_global_access_log_mode",
-    "controller_type",
     "enable_keyboard",
-    "keyboard_controls",
-    "joystick_controls"
+    "keyboard_config",
+    "controller_config"
   ],
   "definitions": {
     "key": {
@@ -222,9 +221,498 @@
         "Hat2Left",
         "Hat2Right"
       ]
+    },
+    "keyboard_config": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "$id": "#/definitions/keyboard_config/properties/index",
+          "type": "integer",
+          "title": "Keyboard Index",
+          "description": "Keyboard Device Index",
+          "default": 0,
+          "minimum": 0,
+          "examples": [
+            0,
+            1,
+            2
+          ]
+        },
+        "controller_type": {
+          "$id": "#/properties/keyboard_config/properties/controller_type",
+          "type": "string",
+          "title": "Controller Type",
+          "default": "Handheld",
+          "enum": [
+            "Handheld",
+            "ProController",
+            "JoyconPair",
+            "JoyconLeft",
+            "JoyconRight"
+          ],
+          "examples": [
+            "Handheld",
+            "ProController",
+            "JoyconPair",
+            "JoyconLeft",
+            "JoyconRight"
+          ]
+        },
+        "player_index": {
+          "$id": "#/properties/keyboard_config/properties/player_index",
+          "type": "string",
+          "title": "Player Index",
+          "default": "Player1",
+          "enum": [
+            "Player1",
+            "Player2",
+            "Player3",
+            "Player4",
+            "Player5",
+            "Player6",
+            "Player7",
+            "Player8",
+            "Handheld"
+          ]
+        },
+        "left_joycon": {
+          "$id": "#/definitions/keyboard_config/properties/left_joycon",
+          "type": "object",
+          "title": "Left JoyCon Controls",
+          "required": [
+            "stick_up",
+            "stick_down",
+            "stick_left",
+            "stick_right",
+            "stick_button",
+            "dpad_up",
+            "dpad_down",
+            "dpad_left",
+            "dpad_right",
+            "button_minus",
+            "button_l",
+            "button_zl"
+          ],
+          "properties": {
+            "stick_up": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/stick_up",
+              "$ref": "#/definitions/key",
+              "title": "Stick Up",
+              "default": "w"
+            },
+            "stick_down": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/stick_down",
+              "$ref": "#/definitions/key",
+              "title": "Stick Down",
+              "default": "S"
+            },
+            "stick_left": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/stick_left",
+              "$ref": "#/definitions/key",
+              "title": "Stick Left",
+              "default": "A"
+            },
+            "stick_right": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/stick_right",
+              "$ref": "#/definitions/key",
+              "title": "Stick Right",
+              "default": "D"
+            },
+            "stick_button": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/stick_button",
+              "$ref": "#/definitions/key",
+              "title": "Stick Button",
+              "default": "F"
+            },
+            "dpad_up": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/dpad_up",
+              "$ref": "#/definitions/key",
+              "title": "Dpad Up",
+              "default": "Up"
+            },
+            "dpad_down": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/dpad_down",
+              "$ref": "#/definitions/key",
+              "title": "Dpad Down",
+              "default": "Down"
+            },
+            "dpad_left": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/dpad_left",
+              "$ref": "#/definitions/key",
+              "title": "Dpad Left",
+              "default": "Left"
+            },
+            "dpad_right": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/dpad_right",
+              "$ref": "#/definitions/key",
+              "title": "Dpad Right",
+              "default": "Right"
+            },
+            "button_minus": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/button_minus",
+              "$ref": "#/definitions/key",
+              "title": "Button Minus",
+              "default": "Minus"
+            },
+            "button_l": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/button_l",
+              "$ref": "#/definitions/key",
+              "title": "Button L",
+              "default": "E"
+            },
+            "button_zl": {
+              "$id": "#/definitions/keyboard_config/properties/left_joycon/properties/button_zl",
+              "$ref": "#/definitions/key",
+              "title": "Button ZL",
+              "default": "Q"
+            }
+          }
+        },
+        "right_joycon": {
+          "$id": "#/definitions/keyboard_config/properties/right_joycon",
+          "type": "object",
+          "title": "Right JoyCon Controls",
+          "required": [
+            "stick_up",
+            "stick_down",
+            "stick_left",
+            "stick_right",
+            "stick_button",
+            "button_a",
+            "button_b",
+            "button_x",
+            "button_y",
+            "button_plus",
+            "button_r",
+            "button_zr"
+          ],
+          "properties": {
+            "stick_up": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/stick_up",
+              "$ref": "#/definitions/key",
+              "title": "Stick Up",
+              "default": "I"
+            },
+            "stick_down": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/stick_down",
+              "$ref": "#/definitions/key",
+              "title": "Stick Down",
+              "default": "K"
+            },
+            "stick_left": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/stick_left",
+              "$ref": "#/definitions/key",
+              "title": "Stick Left",
+              "default": "J"
+            },
+            "stick_right": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/stick_right",
+              "$ref": "#/definitions/key",
+              "title": "Stick Right",
+              "default": "L"
+            },
+            "stick_button": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/stick_button",
+              "$ref": "#/definitions/key",
+              "title": "Stick Button",
+              "default": "H"
+            },
+            "button_a": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_a",
+              "$ref": "#/definitions/key",
+              "title": "Button A",
+              "default": "Z"
+            },
+            "button_b": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_b",
+              "$ref": "#/definitions/key",
+              "title": "Button B",
+              "default": "X"
+            },
+            "button_x": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_x",
+              "$ref": "#/definitions/key",
+              "title": "Button X",
+              "default": "C"
+            },
+            "button_y": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_y",
+              "$ref": "#/definitions/key",
+              "title": "Button Y",
+              "default": "V"
+            },
+            "button_plus": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_plus",
+              "$ref": "#/definitions/key",
+              "title": "Button Plus",
+              "default": "Plus"
+            },
+            "button_r": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_r",
+              "$ref": "#/definitions/key",
+              "title": "Button R",
+              "default": "U"
+            },
+            "button_zr": {
+              "$id": "#/definitions/keyboard_config/properties/right_joycon/properties/button_zr",
+              "$ref": "#/definitions/key",
+              "title": "Button Zr",
+              "default": "O"
+            }
+          }
+        }
+      }
+    },
+    "controller_config": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "$id": "#/definitions/controller_config/properties/index",
+          "type": "integer",
+          "title": "Controller Index",
+          "description": "Controller Device Index",
+          "default": 0,
+          "minimum": 0,
+          "examples": [
+            0,
+            1,
+            2
+          ]
+        },
+        "controller_type": {
+          "$id": "#/properties/controller_config/properties/controller_type",
+          "type": "string",
+          "title": "Controller Type",
+          "default": "Handheld",
+          "enum": [
+            "Handheld",
+            "ProController",
+            "JoyconPair",
+            "JoyconLeft",
+            "JoyconRight"
+          ],
+          "examples": [
+            "Handheld",
+            "ProController",
+            "JoyconPair",
+            "JoyconLeft",
+            "JoyconRight"
+          ]
+        },
+        "player_index": {
+          "$id": "#/properties/controller_config/properties/player_index",
+          "type": "string",
+          "title": "Player Index",
+          "default": "Player1",
+          "enum": [
+            "Player1",
+            "Player2",
+            "Player3",
+            "Player4",
+            "Player5",
+            "Player6",
+            "Player7",
+            "Player8",
+            "Handheld"
+          ]
+        },
+        "deadzone_left": {
+          "$id": "#/definitions/controller_config/properties/deadzone_left",
+          "type": "number",
+          "title": "Left Joystick Deadzone",
+          "description": "Controller Left Analog Stick Deadzone",
+          "default": 0.05,
+          "minimum": 0.00,
+          "maximum": 1.00,
+          "examples": [
+            0.05
+          ]
+        },
+        "deadzone_right": {
+          "$id": "#/definitions/controller_config/properties/deadzone_right",
+          "type": "number",
+          "title": "Right Joystick Deadzone",
+          "description": "Controller Right Analog Stick Deadzone",
+          "default": 0.05,
+          "minimum": 0.00,
+          "maximum": 1.00,
+          "examples": [
+            0.05
+          ]
+        },
+        "trigger_threshold": {
+          "$id": "#/definitions/controller_config/properties/trigger_threshold",
+          "type": "number",
+          "title": "Controller Trigger Threshold",
+          "description": "The value of how pressed down each trigger has to be in order to register a button press",
+          "default": 0.5,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "examples": [
+            0.5
+          ]
+        },
+        "left_joycon": {
+          "$id": "#/definitions/controller_config/properties/left_joycon",
+          "type": "object",
+          "title": "Left JoyCon Controls",
+          "required": [
+            "stick",
+            "stick_button",
+            "dpad_up",
+            "dpad_down",
+            "dpad_left",
+            "dpad_right",
+            "button_minus",
+            "button_l",
+            "button_zl"
+          ],
+          "properties": {
+            "stick": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/stick",
+              "$ref": "#/definitions/input",
+              "title": "Stick",
+              "default": "Axis0"
+            },
+            "stick_button": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/stick_button",
+              "$ref": "#/definitions/input",
+              "title": "Stick Button",
+              "default": "Button13"
+            },
+            "dpad_up": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/dpad_up",
+              "$ref": "#/definitions/input",
+              "title": "Dpad Up",
+              "default": "Hat0Up"
+            },
+            "dpad_down": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/dpad_down",
+              "$ref": "#/definitions/input",
+              "title": "Dpad Down",
+              "default": "Hat0Down"
+            },
+            "dpad_left": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/dpad_left",
+              "$ref": "#/definitions/input",
+              "title": "Dpad Left",
+              "default": "Hat0Left"
+            },
+            "dpad_right": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/dpad_right",
+              "$ref": "#/definitions/input",
+              "title": "Dpad Right",
+              "default": "Hat0Right"
+            },
+            "button_minus": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/button_minus",
+              "$ref": "#/definitions/input",
+              "title": "Button Minus",
+              "default": "Button10"
+            },
+            "button_l": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/button_l",
+              "$ref": "#/definitions/input",
+              "title": "Button L",
+              "default": "Button6"
+            },
+            "button_zl": {
+              "$id": "#/definitions/controller_config/properties/left_joycon/properties/button_zl",
+              "$ref": "#/definitions/input",
+              "title": "Button ZL",
+              "default": "Button8"
+            }
+          }
+        },
+        "right_joycon": {
+          "$id": "#/definitions/controller_config/properties/right_joycon",
+          "type": "object",
+          "title": "Right JoyCon Controls",
+          "required": [
+            "stick",
+            "stick_button",
+            "button_a",
+            "button_b",
+            "button_x",
+            "button_y",
+            "button_plus",
+            "button_r",
+            "button_zr"
+          ],
+          "properties": {
+            "stick": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/stick",
+              "$ref": "#/definitions/input",
+              "title": "Stick",
+              "default": "Axis2"
+            },
+            "stick_button": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/stick_button",
+              "$ref": "#/definitions/input",
+              "title": "Stick Button",
+              "default": "Button14"
+            },
+            "button_a": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_a",
+              "$ref": "#/definitions/input",
+              "title": "Button A",
+              "default": "Button0"
+            },
+            "button_b": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_b",
+              "$ref": "#/definitions/input",
+              "title": "Button B",
+              "default": "Button1"
+            },
+            "button_x": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_x",
+              "$ref": "#/definitions/input",
+              "title": "Button X",
+              "default": "Button3"
+            },
+            "button_y": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_y",
+              "$ref": "#/definitions/input",
+              "title": "Button Y",
+              "default": "Button4"
+            },
+            "button_plus": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_plus",
+              "$ref": "#/definitions/input",
+              "title": "Button Plus",
+              "default": "Button11"
+            },
+            "button_r": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_r",
+              "$ref": "#/definitions/input",
+              "title": "Button R",
+              "default": "Button7"
+            },
+            "button_zr": {
+              "$id": "#/definitions/controller_config/properties/right_joycon/properties/button_zr",
+              "$ref": "#/definitions/input",
+              "title": "Button ZR",
+              "default": "Button9"
+            }
+          }
+        }
+      }
     }
   },
   "properties": {
+    "max_anisotropy": {
+      "$id": "#/properties/max_anisotropy",
+      "type": "integer",
+      "title": "Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.",
+      "description": "Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.",
+      "default": -1,
+      "examples": [
+        -1,
+        4,
+        8,
+        16
+      ]
+    },
     "graphics_shaders_dump_path": {
       "$id": "#/properties/graphics_shaders_dump_path",
       "type": "string",
@@ -526,30 +1014,100 @@
         false
       ]
     },
+    "gui_columns": {
+      "$id": "#/properties/gui_columns",
+      "type": "object",
+      "title": "Used to toggle columns in the GUI",
+      "description": "Used to toggle columns in the GUI",
+      "properties": {
+        "fav_column": {
+          "$id": "#/properties/gui_columns/properties/fav_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "icon_column": {
+          "$id": "#/properties/gui_columns/properties/icon_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "app_column": {
+          "$id": "#/properties/gui_columns/properties/app_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "dev_column": {
+          "$id": "#/properties/gui_columns/properties/dev_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "version_column": {
+          "$id": "#/properties/gui_columns/properties/version_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "time_played_column": {
+          "$id": "#/properties/gui_columns/properties/time_played_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "last_played_column": {
+          "$id": "#/properties/gui_columns/properties/last_played_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "file_ext_column": {
+          "$id": "#/properties/gui_columns/properties/file_ext_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "file_size_column": {
+          "$id": "#/properties/gui_columns/properties/file_size_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        },
+        "path_column": {
+          "$id": "#/properties/gui_columns/properties/path_column",
+          "type": "boolean",
+          "title": "",
+          "default": true
+        }
+      }
+    },
+    "column_sort": {
+      "$id": "#/properties/column_sort",
+      "type": "object",
+      "title": "Used to configure column sort settings in the GUI",
+      "description": "Used to configure column sort settings in the GUI",
+      "properties": {
+        "sort_column_id": {
+          "$id": "#/properties/column_sort/properties/sort_column_id",
+          "type": "integer",
+          "title": "",
+          "default": 0
+        },
+        "sort_ascending": {
+          "$id": "#/properties/column_sort/properties/sort_ascending",
+          "type": "boolean",
+          "title": "",
+          "default": false
+        }
+      }
+    },
     "game_dirs": {
       "$id": "#/properties/game_dirs",
       "type": "array",
       "title": "List of Game Directories",
       "description": "A list of directories containing games to be used to load games into the games list",
       "default": []
-    },
-    "gui_columns": {
-      "$id": "#/properties/gui_columns",
-      "type": "array",
-      "title": "Used to toggle columns in the GUI",
-      "description": "Used to toggle columns in the GUI",
-      "default": {
-        "fav_column": true,
-        "icon_column": true,
-        "app_column": true,
-        "dev_column": true,
-        "version_column": true,
-        "time_played_column": true,
-        "last_played_column": true,
-        "file_ext_column": true,
-        "file_size_column": true,
-        "path_column": true
-      }
     },
     "enable_custom_theme": {
       "$id": "#/properties/enable_custom_theme",
@@ -569,26 +1127,6 @@
       "description": "Path to custom GUI theme",
       "default": ""
     },
-    "controller_type": {
-      "$id": "#/properties/controller_type",
-      "type": "string",
-      "title": "Controller Type",
-      "default": "Handheld",
-      "enum": [
-        "Handheld",
-        "ProController",
-        "NpadPair",
-        "NpadLeft",
-        "NpadRight"
-      ],
-      "examples": [
-        "Handheld",
-        "ProController",
-        "NpadPair",
-        "NpadLeft",
-        "NpadRight"
-      ]
-    },
     "enable_keyboard": {
       "$id": "#/properties/enable_keyboard",
       "type": "boolean",
@@ -600,421 +1138,77 @@
         false
       ]
     },
-    "keyboard_controls": {
-      "$id": "#/properties/keyboard_controls",
+    "hotkeys": {
+      "$id": "#/properties/hotkeys",
       "type": "object",
-      "title": "Keyboard Controls",
+      "title": "Hotkey Controls",
       "required": [
-        "left_joycon",
-        "right_joycon"
+        "toggle_vsync"
       ],
       "properties": {
-        "left_joycon": {
-          "$id": "#/properties/keyboard_controls/properties/left_joycon",
-          "type": "object",
-          "title": "Left JoyCon Controls",
-          "required": [
-            "stick_up",
-            "stick_down",
-            "stick_left",
-            "stick_right",
-            "stick_button",
-            "dpad_up",
-            "dpad_down",
-            "dpad_left",
-            "dpad_right",
-            "button_minus",
-            "button_l",
-            "button_zl"
-          ],
-          "properties": {
-            "stick_up": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/stick_up",
-              "$ref": "#/definitions/key",
-              "title": "Stick Up",
-              "default": "w"
-            },
-            "stick_down": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/stick_down",
-              "$ref": "#/definitions/key",
-              "title": "Stick Down",
-              "default": "S"
-            },
-            "stick_left": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/stick_left",
-              "$ref": "#/definitions/key",
-              "title": "Stick Left",
-              "default": "A"
-            },
-            "stick_right": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/stick_right",
-              "$ref": "#/definitions/key",
-              "title": "Stick Right",
-              "default": "D"
-            },
-            "stick_button": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/stick_button",
-              "$ref": "#/definitions/key",
-              "title": "Stick Button",
-              "default": "F"
-            },
-            "dpad_up": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/dpad_up",
-              "$ref": "#/definitions/key",
-              "title": "Dpad Up",
-              "default": "Up"
-            },
-            "dpad_down": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/dpad_down",
-              "$ref": "#/definitions/key",
-              "title": "Dpad Down",
-              "default": "Down"
-            },
-            "dpad_left": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/dpad_left",
-              "$ref": "#/definitions/key",
-              "title": "Dpad Left",
-              "default": "Left"
-            },
-            "dpad_right": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/dpad_right",
-              "$ref": "#/definitions/key",
-              "title": "Dpad Right",
-              "default": "Right"
-            },
-            "button_minus": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/button_minus",
-              "$ref": "#/definitions/key",
-              "title": "Button Minus",
-              "default": "Minus"
-            },
-            "button_l": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/button_l",
-              "$ref": "#/definitions/key",
-              "title": "Button L",
-              "default": "E"
-            },
-            "button_zl": {
-              "$id": "#/properties/keyboard_controls/properties/left_joycon/properties/button_zl",
-              "$ref": "#/definitions/key",
-              "title": "Button ZL",
-              "default": "Q"
-            }
-          }
-        },
-        "right_joycon": {
-          "$id": "#/properties/keyboard_controls/properties/right_joycon",
-          "type": "object",
-          "title": "Right JoyCon Controls",
-          "required": [
-            "stick_up",
-            "stick_down",
-            "stick_left",
-            "stick_right",
-            "stick_button",
-            "button_a",
-            "button_b",
-            "button_x",
-            "button_y",
-            "button_plus",
-            "button_r",
-            "button_zr"
-          ],
-          "properties": {
-            "stick_up": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/stick_up",
-              "$ref": "#/definitions/key",
-              "title": "Stick Up",
-              "default": "I"
-            },
-            "stick_down": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/stick_down",
-              "$ref": "#/definitions/key",
-              "title": "Stick Down",
-              "default": "K"
-            },
-            "stick_left": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/stick_left",
-              "$ref": "#/definitions/key",
-              "title": "Stick Left",
-              "default": "J"
-            },
-            "stick_right": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/stick_right",
-              "$ref": "#/definitions/key",
-              "title": "Stick Right",
-              "default": "L"
-            },
-            "stick_button": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/stick_button",
-              "$ref": "#/definitions/key",
-              "title": "Stick Button",
-              "default": "H"
-            },
-            "button_a": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_a",
-              "$ref": "#/definitions/key",
-              "title": "Button A",
-              "default": "Z"
-            },
-            "button_b": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_b",
-              "$ref": "#/definitions/key",
-              "title": "Button B",
-              "default": "X"
-            },
-            "button_x": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_x",
-              "$ref": "#/definitions/key",
-              "title": "Button X",
-              "default": "C"
-            },
-            "button_y": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_y",
-              "$ref": "#/definitions/key",
-              "title": "Button Y",
-              "default": "V"
-            },
-            "button_plus": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_plus",
-              "$ref": "#/definitions/key",
-              "title": "Button Plus",
-              "default": "Plus"
-            },
-            "button_r": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_r",
-              "$ref": "#/definitions/key",
-              "title": "Button R",
-              "default": "U"
-            },
-            "button_zr": {
-              "$id": "#/properties/keyboard_controls/properties/right_joycon/properties/button_zr",
-              "$ref": "#/definitions/key",
-              "title": "Button Zr",
-              "default": "O"
-            }
-          }
-        },
-        "hotkeys": {
-          "$id": "#/properties/keyboard_controls/properties/hotkeys",
-          "type": "object",
-          "title": "Hotkey Controls",
-          "required": [
-            "toggle_vsync"
-          ],
-          "properties": {
-            "toggle_vsync": {
-              "$id": "#/properties/keyboard_controls/properties/hotkeys/properties/toggle_vsync",
-              "$ref": "#/definitions/key",
-              "title": "Toggle VSync",
-              "default": "Tab"
-            }
-          }
+        "toggle_vsync": {
+          "$id": "#/properties/hotkeys/properties/toggle_vsync",
+          "$ref": "#/definitions/key",
+          "title": "Toggle VSync",
+          "default": "Tab"
         }
       }
     },
-    "joystick_controls": {
-      "$id": "#/properties/joystick_controls",
-      "type": "object",
-      "title": "Joystick Controls",
-      "required": [
-        "left_joycon",
-        "right_joycon"
-      ],
-      "properties": {
-        "enable": {
-          "$id": "#/properties/joystick_controls/properties/enable",
-          "type": "boolean",
-          "title": "Joystick Enable",
-          "description": "Enables or disables controller support",
-          "default": true,
-          "examples": [
-            true,
-            false
-          ]
-        },
-        "index": {
-          "$id": "#/properties/joystick_controls/properties/index",
-          "type": "integer",
-          "title": "Joystick Index",
-          "description": "Controller Device Index",
-          "default": 0,
-          "minimum": 0,
-          "examples": [
-            0,
-            1,
-            2
-          ]
-        },
-        "deadzone": {
-          "$id": "#/properties/joystick_controls/properties/deadzone",
-          "type": "number",
-          "title": "Joystick Deadzone",
-          "description": "Controller Analog Stick Deadzone",
-          "default": 0.05,
-          "minimum": 0.00,
-          "maximum": 1.00,
-          "examples": [
-            0.05
-          ]
-        },
-        "trigger_threshold": {
-          "$id": "#/properties/joystick_controls/properties/trigger_threshold",
-          "type": "number",
-          "title": "Controller Trigger Threshold",
-          "description": "The value of how pressed down each trigger has to be in order to register a button press",
-          "default": 0.5,
-          "minimum": 0.0,
-          "maximum": 1.0,
-          "examples": [
-            0.5
-          ]
-        },
-        "left_joycon": {
-          "$id": "#/properties/joystick_controls/properties/left_joycon",
-          "type": "object",
-          "title": "Left JoyCon Controls",
-          "required": [
-            "stick",
-            "stick_button",
-            "dpad_up",
-            "dpad_down",
-            "dpad_left",
-            "dpad_right",
-            "button_minus",
-            "button_l",
-            "button_zl"
-          ],
-          "properties": {
-            "stick": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/stick",
-              "$ref": "#/definitions/input",
-              "title": "Stick",
-              "default": "Axis0"
-            },
-            "stick_button": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/stick_button",
-              "$ref": "#/definitions/input",
-              "title": "Stick Button",
-              "default": "Button13"
-            },
-            "dpad_up": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_up",
-              "$ref": "#/definitions/input",
-              "title": "Dpad Up",
-              "default": "Hat0Up"
-            },
-            "dpad_down": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_down",
-              "$ref": "#/definitions/input",
-              "title": "Dpad Down",
-              "default": "Hat0Down"
-            },
-            "dpad_left": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_left",
-              "$ref": "#/definitions/input",
-              "title": "Dpad Left",
-              "default": "Hat0Left"
-            },
-            "dpad_right": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_right",
-              "$ref": "#/definitions/input",
-              "title": "Dpad Right",
-              "default": "Hat0Right"
-            },
-            "button_minus": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_minus",
-              "$ref": "#/definitions/input",
-              "title": "Button Minus",
-              "default": "Button10"
-            },
-            "button_l": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_l",
-              "$ref": "#/definitions/input",
-              "title": "Button L",
-              "default": "Button6"
-            },
-            "button_zl": {
-              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_zl",
-              "$ref": "#/definitions/input",
-              "title": "Button ZL",
-              "default": "Button8"
-            }
-          }
-        },
-        "right_joycon": {
-          "$id": "#/properties/joystick_controls/properties/right_joycon",
-          "type": "object",
-          "title": "Right JoyCon Controls",
-          "required": [
-            "stick",
-            "stick_button",
-            "button_a",
-            "button_b",
-            "button_x",
-            "button_y",
-            "button_plus",
-            "button_r",
-            "button_zr"
-          ],
-          "properties": {
-            "stick": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/stick",
-              "$ref": "#/definitions/input",
-              "title": "Stick",
-              "default": "Axis2"
-            },
-            "stick_button": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/stick_button",
-              "$ref": "#/definitions/input",
-              "title": "Stick Button",
-              "default": "Button14"
-            },
-            "button_a": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_a",
-              "$ref": "#/definitions/input",
-              "title": "Button A",
-              "default": "Button0"
-            },
-            "button_b": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_b",
-              "$ref": "#/definitions/input",
-              "title": "Button B",
-              "default": "Button1"
-            },
-            "button_x": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_x",
-              "$ref": "#/definitions/input",
-              "title": "Button X",
-              "default": "Button3"
-            },
-            "button_y": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_y",
-              "$ref": "#/definitions/input",
-              "title": "Button Y",
-              "default": "Button4"
-            },
-            "button_plus": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_plus",
-              "$ref": "#/definitions/input",
-              "title": "Button Plus",
-              "default": "Button11"
-            },
-            "button_r": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_r",
-              "$ref": "#/definitions/input",
-              "title": "Button R",
-              "default": "Button7"
-            },
-            "button_zr": {
-              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_zr",
-              "$ref": "#/definitions/input",
-              "title": "Button ZR",
-              "default": "Button9"
-            }
+    "keyboard_config": {
+      "$id": "#/properties/keyboard_config",
+      "type": "array",
+      "title": "Keyboard Config",
+      "items": {
+        "$ref": "#/definitions/keyboard_config"
+      },
+      "default": [
+        {
+          "index": 0,
+          "controller_type": "JoyconPair",
+          "player_index": "Player1",
+          "left_joycon": {
+            "stick_up": "W",
+            "stick_down": "S",
+            "stick_left": "A",
+            "stick_right": "D",
+            "stick_button": "F",
+            "dpad_up": "Up",
+            "dpad_down": "Down",
+            "dpad_left": "Left",
+            "dpad_right": "Right",
+            "button_minus": "Minus",
+            "button_l": "E",
+            "button_zl": "Q",
+            "button_sl": "Unbound",
+            "button_sr": "Unbound"
+          },
+          "right_joycon": {
+            "stick_up": "I",
+            "stick_down": "K",
+            "stick_left": "J",
+            "stick_right": "L",
+            "stick_button": "H",
+            "button_a": "Z",
+            "button_b": "X",
+            "button_x": "C",
+            "button_y": "V",
+            "button_plus": "Plus",
+            "button_r": "U",
+            "button_zr": "O",
+            "button_sl": "Unbound",
+            "button_sr": "Unbound"
           }
         }
-      }
+      ] 
+    },
+    "controller_config": {
+      "$id": "#/properties/controller_config",
+      "type": "array",
+      "title": "Controller Config",
+      "items": {
+        "$ref": "#/definitions/controller_config"
+      },
+      "default": []
     }
   }
 }
