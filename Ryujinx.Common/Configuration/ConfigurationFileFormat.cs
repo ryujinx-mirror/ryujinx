@@ -13,7 +13,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 9;
+        public const int CurrentVersion = 10;
 
         public int Version { get; set; }
 
@@ -126,6 +126,11 @@ namespace Ryujinx.Configuration
         /// Enables FS access log output to the console. Possible modes are 0-3
         /// </summary>
         public int FsGlobalAccessLogMode { get; set; }
+
+        /// <summary>
+        /// The selected audio backend
+        /// </summary>
+        public AudioBackend AudioBackend { get; set; }
 
         /// <summary>
         /// Enable or disable ignoring missing services

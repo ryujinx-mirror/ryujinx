@@ -647,24 +647,32 @@ namespace Ryujinx.Ui
             return new Renderer();
         }
 
-        /// <summary>
-        /// Picks an <see cref="IAalOutput"/> audio output renderer supported on this machine
-        /// </summary>
-        /// <returns>An <see cref="IAalOutput"/> supported by this machine</returns>
         private static IAalOutput InitializeAudioEngine()
         {
-            if (OpenALAudioOut.IsSupported)
+            if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.SoundIo)
             {
-                return new OpenALAudioOut();
+                if (SoundIoAudioOut.IsSupported)
+                {
+                    return new SoundIoAudioOut();
+                }
+                else
+                {
+                    Logger.PrintWarning(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
+                }
             }
-            else if (SoundIoAudioOut.IsSupported)
+            else if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.OpenAl)
             {
-                return new SoundIoAudioOut();
+                if (OpenALAudioOut.IsSupported)
+                {
+                    return new OpenALAudioOut();
+                }
+                else
+                {
+                    Logger.PrintWarning(LogClass.Audio, "OpenAL is not supported, falling back to dummy audio out.");
+                }
             }
-            else
-            {
-                return new DummyAudioOut();
-            }
+
+            return new DummyAudioOut();
         }
 
         //Events

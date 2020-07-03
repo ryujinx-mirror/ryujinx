@@ -1003,6 +1003,18 @@
         3
       ]
     },
+    "audio_backend": {
+      "$id": "#/properties/audio_backend",
+      "type": "string",
+      "title": "The selected audio backend",
+      "description": "The selected audio backend",
+      "default": "OpenAl",
+      "enum": [
+        "Dummy",
+        "SoundIo",
+        "OpenAl"
+      ]
+    },
     "ignore_missing_services": {
       "$id": "#/properties/ignore_missing_services",
       "type": "boolean",

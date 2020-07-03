@@ -7,13 +7,41 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="_systemTimeDaySpinAdjustment">
+    <property name="lower">1</property>
+    <property name="upper">31</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="_systemTimeHourSpinAdjustment">
+    <property name="upper">23</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="_systemTimeMinuteSpinAdjustment">
+    <property name="upper">59</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="_systemTimeMonthSpinAdjustment">
+    <property name="lower">1</property>
+    <property name="upper">12</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="_systemTimeYearSpinAdjustment">
+    <property name="lower">2000</property>
+    <property name="upper">2060</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="_settingsWin">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Ryujinx - Settings</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="default_width">650</property>
-    <property name="default_height">520</property>
+    <property name="default_height">550</property>
     <child>
       <placeholder/>
     </child>
@@ -1441,6 +1469,46 @@
                                 <property name="position">1</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkBox" id="AudioBackendBox">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">Change System Region</property>
+                                    <property name="halign">end</property>
+                                    <property name="label" translatable="yes">Audio Backend: </property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="padding">5</property>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBoxText" id="_audioBackendSelect">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">Change Audio Backend</property>
+                                    <property name="margin_left">5</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">3</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="padding">5</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -2120,33 +2188,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkAdjustment" id="_systemTimeDaySpinAdjustment">
-    <property name="lower">1</property>
-    <property name="upper">31</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">5</property>
-  </object>
-  <object class="GtkAdjustment" id="_systemTimeHourSpinAdjustment">
-    <property name="upper">23</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">5</property>
-  </object>
-  <object class="GtkAdjustment" id="_systemTimeMinuteSpinAdjustment">
-    <property name="upper">59</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">5</property>
-  </object>
-  <object class="GtkAdjustment" id="_systemTimeMonthSpinAdjustment">
-    <property name="lower">1</property>
-    <property name="upper">12</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">5</property>
-  </object>
-  <object class="GtkAdjustment" id="_systemTimeYearSpinAdjustment">
-    <property name="lower">2000</property>
-    <property name="upper">2060</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
   </object>
 </interface>
