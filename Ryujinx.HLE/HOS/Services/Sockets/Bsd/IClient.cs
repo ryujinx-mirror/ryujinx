@@ -1148,6 +1148,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 {
                     result = socket.Handle.Receive(receivedBuffer);
                     errno  = SetResultErrno(socket.Handle, result);
+                    context.Memory.Write((ulong)receivePosition, receivedBuffer);
                 }
                 catch (SocketException exception)
                 {
