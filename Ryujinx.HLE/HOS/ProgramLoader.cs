@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS
 
             int codePagesCount = codeSize / KMemoryManager.PageSize;
 
-            ulong codeBaseAddress = (kip.Header.Flags & 0x10) != 0 ? 0x8000000UL : 0x200000UL;
+            ulong codeBaseAddress = kip.Is64BitAddressSpace ? 0x8000000UL : 0x200000UL;
 
             ulong codeAddress = codeBaseAddress + (ulong)kip.TextOffset;
 
@@ -45,27 +45,27 @@ namespace Ryujinx.HLE.HOS
                 mmuFlags |= 0x20;
             }
 
-            if ((kip.Header.Flags & 0x10) != 0)
+            if (kip.Is64BitAddressSpace)
             {
                 mmuFlags |= (int)AddressSpaceType.Addr39Bits << 1;
             }
 
-            if ((kip.Header.Flags & 0x08) != 0)
+            if (kip.Is64Bit)
             {
                 mmuFlags |= 1;
             }
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo(
-                kip.Header.Name,
-                kip.Header.ProcessCategory,
-                kip.Header.TitleId,
+                kip.Name,
+                kip.Version,
+                kip.ProgramId,
                 codeAddress,
                 codePagesCount,
                 mmuFlags,
                 0,
                 0);
 
-            MemoryRegion memoryRegion = (kip.Header.Flags & 0x20) != 0
+            MemoryRegion memoryRegion = kip.UsesSecureMemory
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
@@ -105,9 +105,9 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            process.DefaultCpuCore = kip.Header.DefaultCore;
+            process.DefaultCpuCore = kip.IdealCoreId;
 
-            result = process.Start(kip.Header.MainThreadPriority, (ulong)kip.Header.Sections[1].Attribute);
+            result = process.Start(kip.Priority, (ulong)kip.StackSize);
 
             if (result != KernelResult.Success)
             {

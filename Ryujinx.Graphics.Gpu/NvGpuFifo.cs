@@ -82,9 +82,6 @@ namespace Ryujinx.Graphics.Gpu
             }
         }
 
-        private int _currMacroPosition;
-        private int _currMacroBindIndex;
-
         private ShadowRamControl _shadowCtrl;
 
         private CachedMacro[] _macros;

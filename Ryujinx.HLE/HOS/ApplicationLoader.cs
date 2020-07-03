@@ -415,13 +415,13 @@ namespace Ryujinx.HLE.HOS
 
             bool isNro = Path.GetExtension(filePath).ToLower() == ".nro";
 
-            IExecutable nro;
+            IExecutable executable;
 
             if (isNro)
             {
                 FileStream input = new FileStream(filePath, FileMode.Open);
                 NroExecutable obj = new NroExecutable(input);
-                nro = obj;
+                executable = obj;
 
                 // homebrew NRO can actually have some data after the actual NRO
                 if (input.Length > obj.FileSize)
@@ -493,7 +493,7 @@ namespace Ryujinx.HLE.HOS
             }
             else
             {
-                nro = new NsoExecutable(new LocalStorage(filePath, FileAccess.Read));
+                executable = new NsoExecutable(new LocalStorage(filePath, FileAccess.Read));
             }
 
             _contentManager.LoadEntries(_device);
@@ -502,7 +502,7 @@ namespace Ryujinx.HLE.HOS
             TitleId = metaData.Aci0.TitleId;
             TitleIs64Bit = metaData.Is64Bit;
 
-            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: nro);
+            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: executable);
         }
 
         private Npdm GetDefaultNpdm()
