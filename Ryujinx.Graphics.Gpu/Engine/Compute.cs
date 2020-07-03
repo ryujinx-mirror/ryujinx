@@ -163,7 +163,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 qmd.CtaRasterHeight,
                 qmd.CtaRasterDepth);
 
-            UpdateShaderState(state);
+            _forceShaderUpdate = true;
         }
     }
 }

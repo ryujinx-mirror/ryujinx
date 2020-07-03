@@ -38,6 +38,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private bool _isAnyVbInstanced;
         private bool _vsUsesInstanceId;
 
+        private bool _forceShaderUpdate;
+
         /// <summary>
         /// Creates a new instance of the GPU methods class.
         /// </summary>
@@ -121,8 +123,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             // Shaders must be the first one to be updated if modified, because
             // some of the other state depends on information from the currently
             // bound shaders.
-            if (state.QueryModified(MethodOffset.ShaderBaseAddress, MethodOffset.ShaderState))
+            if (state.QueryModified(MethodOffset.ShaderBaseAddress, MethodOffset.ShaderState) || _forceShaderUpdate)
             {
+                _forceShaderUpdate = false;
+
                 UpdateShaderState(state);
             }
 
