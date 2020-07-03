@@ -23,6 +23,7 @@ namespace Ryujinx.Graphics.Texture
             int  stride,
             bool isLinear,
             int  gobBlocksInY,
+            int  gobBlocksInZ,
             int  bytesPerPixel)
         {
             _width         = width;
@@ -40,11 +41,20 @@ namespace Ryujinx.Graphics.Texture
                 _layoutConverter = new BlockLinearLayout(
                     wAligned,
                     height,
-                    1,
                     gobBlocksInY,
-                    1,
+                    gobBlocksInZ,
                     bytesPerPixel);
             }
+        }
+
+        public OffsetCalculator(
+            int width,
+            int height,
+            int stride,
+            bool isLinear,
+            int gobBlocksInY,
+            int bytesPerPixel) : this(width, height, stride, isLinear, gobBlocksInY, 1, bytesPerPixel)
+        {
         }
 
         public void SetY(int y)

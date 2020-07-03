@@ -44,6 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     cbp.SrcStride,
                     srcLinear,
                     src.MemoryLayout.UnpackGobBlocksInY(),
+                    src.MemoryLayout.UnpackGobBlocksInZ(),
                     srcBpp);
 
                 var dstCalculator = new OffsetCalculator(
@@ -52,6 +53,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     cbp.DstStride,
                     dstLinear,
                     dst.MemoryLayout.UnpackGobBlocksInY(),
+                    dst.MemoryLayout.UnpackGobBlocksInZ(),
                     dstBpp);
 
                 ulong srcBaseAddress = _context.MemoryManager.Translate(cbp.SrcAddress.Pack());
@@ -70,7 +72,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     srcSpan.CopyTo(dstSpan); // No layout conversion has to be performed, just copy the data entirely.
                 }
-                else 
+                else
                 {
                     unsafe bool Convert<T>(Span<byte> dstSpan, ReadOnlySpan<byte> srcSpan) where T : unmanaged
                     {

@@ -41,7 +41,6 @@ namespace Ryujinx.Graphics.Texture
         public BlockLinearLayout(
             int width,
             int height,
-            int depth,
             int gobBlocksInY,
             int gobBlocksInZ,
             int bpp)

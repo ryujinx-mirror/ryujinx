@@ -84,7 +84,6 @@ namespace Ryujinx.Graphics.Texture
                 BlockLinearLayout layoutConverter = new BlockLinearLayout(
                     wAligned,
                     h,
-                    d,
                     mipGobBlocksInY,
                     mipGobBlocksInZ,
                     bytesPerPixel);
@@ -256,7 +255,6 @@ namespace Ryujinx.Graphics.Texture
                 BlockLinearLayout layoutConverter = new BlockLinearLayout(
                     wAligned,
                     h,
-                    d,
                     mipGobBlocksInY,
                     mipGobBlocksInZ,
                     bytesPerPixel);
