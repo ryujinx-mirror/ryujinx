@@ -38,6 +38,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             Logger.PrintStub(LogClass.ServiceNifm);
 
+            return GetResultImpl();
+        }
+
+        private ResultCode GetResultImpl()
+        {
             return ResultCode.Success;
         }
 
@@ -83,6 +88,33 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         public ResultCode SetConnectionConfirmationOption(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
+
+            return ResultCode.Success;
+        }
+
+        [Command(21)]
+        // GetAppletInfo(u32) -> (u32, u32, u32, buffer<bytes, 6>)
+        public ResultCode GetAppletInfo(ServiceCtx context)
+        {
+            uint themeColor = context.RequestData.ReadUInt32();
+
+            Logger.PrintStub(LogClass.ServiceNifm);
+
+            ResultCode result = GetResultImpl();
+
+            if (result == ResultCode.Success || (ResultCode)((int)result & 0x3fffff) == ResultCode.Unknown112)
+            {
+                return ResultCode.Unknown180;
+            }
+
+            // Returns appletId, libraryAppletMode, outSize and a buffer. 
+            // Returned applet ids- (0x19, 0xf, 0xe)
+            // libraryAppletMode seems to be 0 for all applets supported.
+
+            // TODO: check order
+            context.ResponseData.Write(0xe); // Use error applet as default for now
+            context.ResponseData.Write(0); // libraryAppletMode
+            context.ResponseData.Write(0); // outSize
 
             return ResultCode.Success;
         }
