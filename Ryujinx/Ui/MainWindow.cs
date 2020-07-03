@@ -179,6 +179,14 @@ namespace Ryujinx.Ui
             UpdateColumns();
             UpdateGameTable();
 
+            ConfigurationState.Instance.Ui.GameDirs.Event += (sender, args) =>
+            {
+                if (args.OldValue != args.NewValue)
+                {
+                    UpdateGameTable();
+                }
+            };
+
             Task.Run(RefreshFirmwareLabel);
 
             _statusBar.Hide();
@@ -313,7 +321,7 @@ namespace Ryujinx.Ui
 
         internal static void UpdateGameTable()
         {
-            if (_updatingGameTable)
+            if (_updatingGameTable || _gameLoaded)
             {
                 return;
             }

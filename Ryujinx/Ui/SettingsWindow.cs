@@ -438,7 +438,6 @@ namespace Ryujinx.Ui
 
             MainWindow.SaveConfig();
             MainWindow.ApplyTheme();
-            MainWindow.UpdateGameTable();
             Dispose();
         }
 
