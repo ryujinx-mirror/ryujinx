@@ -13,16 +13,13 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 
         public readonly uint Id;
 
-        // TODO: get rid of this lock
-        private object _listLock = new object();
-
         /// <summary>
         /// The value of the syncpoint.
         /// </summary>
         public uint Value => (uint)_storedValue;
 
         // TODO: switch to something handling concurrency?
-        private List<SyncpointWaiterHandle> _waiters;
+        private readonly List<SyncpointWaiterHandle> _waiters;
 
         public Syncpoint(uint id)
         {
@@ -39,7 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
         /// <returns>The created SyncpointWaiterHandle object or null if already past threshold</returns>
         public SyncpointWaiterHandle RegisterCallback(uint threshold, Action callback)
         {
-            lock (_listLock)
+            lock (_waiters)
             {
                 if (Value >= threshold)
                 {
@@ -64,7 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 
         public void UnregisterCallback(SyncpointWaiterHandle waiterInformation)
         {
-            lock (_listLock)
+            lock (_waiters)
             {
                 _waiters.Remove(waiterInformation);
             }
@@ -78,7 +75,10 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
         {
             uint currentValue = (uint)Interlocked.Increment(ref _storedValue);
 
-            lock (_listLock)
+            SyncpointWaiterHandle expired = null;
+            List<SyncpointWaiterHandle> expiredList = null;
+
+            lock (_waiters)
             {
                 _waiters.RemoveAll(item =>
                 {
@@ -86,11 +86,40 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 
                     if (isPastThreshold)
                     {
-                        item.Callback();
+                        if (expired == null)
+                        {
+                            expired = item;
+                        }
+                        else
+                        {
+                            if (expiredList == null)
+                            {
+                                expiredList = new List<SyncpointWaiterHandle>();
+                            }
+
+                            expiredList.Add(item);
+                        }
                     }
 
                     return isPastThreshold;
                 });
+            }
+
+            // Call the callbacks as a separate step.
+            // As we don't know what the callback will be doing,
+            // and it could block execution for a indefinite amount of time,
+            // we can't call it inside the lock.
+            if (expired != null)
+            {
+                expired.Callback();
+
+                if (expiredList != null)
+                {
+                    for (int i = 0; i < expiredList.Count; i++)
+                    {
+                        expiredList[i].Callback();
+                    }
+                }
             }
 
             return currentValue;
