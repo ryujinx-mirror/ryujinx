@@ -74,7 +74,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (_isLinear && _params.LineCount == 1)
             {
-                ulong address = _context.MemoryManager.Translate( _params.DstAddress.Pack());
+                ulong address = _context.MemoryManager.Translate(_params.DstAddress.Pack());
 
                 _context.PhysicalMemory.Write(address, data);
             }

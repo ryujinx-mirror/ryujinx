@@ -104,6 +104,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Sets a new index buffer that overrides the one set on the call to <see cref="CommitGraphicsBindings"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer to be used as index buffer</param>
+        /// <param name="type">Type of each index buffer element</param>
+        public void SetIndexBuffer(BufferRange buffer, IndexType type)
+        {
+            _context.Renderer.Pipeline.SetIndexBuffer(buffer, type);
+
+            _indexBufferDirty = true;
+        }
+
+        /// <summary>
         /// Sets the memory range with vertex buffer data, to be used for subsequent draw calls.
         /// </summary>
         /// <param name="index">Index of the vertex buffer (up to 16)</param>

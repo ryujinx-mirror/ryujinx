@@ -1,5 +1,9 @@
-using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Common;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
+using Ryujinx.Graphics.Gpu.State;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
@@ -21,6 +25,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private int _instancedDrawStateCount;
 
         private int _instanceIndex;
+
+        private BufferHandle _inlineIndexBuffer = BufferHandle.Null;
+        private int _inlineIndexBufferSize;
+        private int _inlineIndexCount;
 
         /// <summary>
         /// Primitive type of the current draw.
@@ -87,10 +95,25 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             int firstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
-            if (_drawIndexed)
+            if (_inlineIndexCount != 0)
             {
-                _drawIndexed = false;
+                int firstVertex = state.Get<int>(MethodOffset.FirstVertex);
 
+                BufferRange br = new BufferRange(_inlineIndexBuffer, 0, _inlineIndexCount * 4);
+
+                _context.Methods.BufferManager.SetIndexBuffer(br, IndexType.UInt);
+
+                _context.Renderer.Pipeline.DrawIndexed(
+                    _inlineIndexCount,
+                    1,
+                    _firstIndex,
+                    firstVertex,
+                    firstInstance);
+
+                _inlineIndexCount = 0;
+            }
+            else if (_drawIndexed)
+            {
                 int firstVertex = state.Get<int>(MethodOffset.FirstVertex);
 
                 _context.Renderer.Pipeline.DrawIndexed(
@@ -110,6 +133,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     drawState.First,
                     firstInstance);
             }
+
+            _drawIndexed = false;
 
             if (renderEnable == ConditionalRenderEnabled.Host)
             {
@@ -152,6 +177,103 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void SetIndexBufferCount(GpuState state, int argument)
         {
             _drawIndexed = true;
+        }
+
+        /// <summary>
+        /// Pushes four 8-bit index buffer elements.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void VbElementU8(GpuState state, int argument)
+        {
+            byte i0 = (byte)argument;
+            byte i1 = (byte)(argument >> 8);
+            byte i2 = (byte)(argument >> 16);
+            byte i3 = (byte)(argument >> 24);
+
+            Span<uint> data = stackalloc uint[4];
+
+            data[0] = i0;
+            data[1] = i1;
+            data[2] = i2;
+            data[3] = i3;
+
+            int offset = _inlineIndexCount * 4;
+
+            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+
+            _inlineIndexCount += 4;
+        }
+
+        /// <summary>
+        /// Pushes two 16-bit index buffer elements.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void VbElementU16(GpuState state, int argument)
+        {
+            ushort i0 = (ushort)argument;
+            ushort i1 = (ushort)(argument >> 16);
+
+            Span<uint> data = stackalloc uint[2];
+
+            data[0] = i0;
+            data[1] = i1;
+
+            int offset = _inlineIndexCount * 4;
+
+            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+
+            _inlineIndexCount += 2;
+        }
+
+        /// <summary>
+        /// Pushes one 32-bit index buffer element.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void VbElementU32(GpuState state, int argument)
+        {
+            uint i0 = (uint)argument;
+
+            Span<uint> data = stackalloc uint[1];
+
+            data[0] = i0;
+
+            int offset = _inlineIndexCount++ * 4;
+
+            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+        }
+
+        /// <summary>
+        /// Gets the handle of a buffer large enough to hold the data that will be written to <paramref name="offset"/>.
+        /// </summary>
+        /// <param name="offset">Offset where the data will be written</param>
+        /// <returns>Buffer handle</returns>
+        private BufferHandle GetInlineIndexBuffer(int offset)
+        {
+            // Calculate a reasonable size for the buffer that can fit all the data,
+            // and that also won't require frequent resizes if we need to push more data.
+            int size = BitUtils.AlignUp(offset + 0x10, 0x200);
+
+            if (_inlineIndexBuffer == BufferHandle.Null)
+            {
+                _inlineIndexBuffer = _context.Renderer.CreateBuffer(size);
+                _inlineIndexBufferSize = size;
+            }
+            else if (_inlineIndexBufferSize < size)
+            {
+                BufferHandle oldBuffer = _inlineIndexBuffer;
+                int oldSize = _inlineIndexBufferSize;
+
+                _inlineIndexBuffer = _context.Renderer.CreateBuffer(size);
+                _inlineIndexBufferSize = size;
+
+                _context.Renderer.Pipeline.CopyBuffer(oldBuffer, _inlineIndexBuffer, 0, 0, oldSize);
+                _context.Renderer.DeleteBuffer(oldBuffer);
+            }
+
+            return _inlineIndexBuffer;
         }
 
         /// <summary>

@@ -78,6 +78,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.InvalidateTextures,  InvalidateTextures);
             state.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
 
+            state.RegisterCallback(MethodOffset.VbElementU8,  VbElementU8);
+            state.RegisterCallback(MethodOffset.VbElementU16, VbElementU16);
+            state.RegisterCallback(MethodOffset.VbElementU32, VbElementU32);
+
             state.RegisterCallback(MethodOffset.ResetCounter, ResetCounter);
 
             state.RegisterCallback(MethodOffset.DrawEnd,   DrawEnd);
@@ -726,7 +730,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 ulong size;
 
-                if (_drawIndexed || stride == 0 || instanced)
+                if (_inlineIndexCount != 0 || _drawIndexed || stride == 0 || instanced)
                 {
                     // This size may be (much) larger than the real vertex buffer size.
                     // Avoid calculating it this way, unless we don't have any other option.
