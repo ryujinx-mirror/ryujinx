@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
                 BindlessToIndexed.RunPass(blocks[blkIndex]);
-                BindlessElimination.RunPass(blocks[blkIndex]);
+                BindlessElimination.RunPass(blocks[blkIndex], config);
 
                 // Try to eliminate any operations that are now unused.
                 LinkedListNode<INode> node = blocks[blkIndex].Operations.First;

@@ -5,7 +5,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     class BindlessElimination
     {
-        public static void RunPass(BasicBlock block)
+        private const int NvnTextureBufferSlot = 2;
+
+        public static void RunPass(BasicBlock block, ShaderConfig config)
         {
             // We can turn a bindless into regular access by recognizing the pattern
             // produced by the compiler for separate texture and sampler.
@@ -24,26 +26,39 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (!(texOp.GetSource(0).AsgOp is Operation handleCombineOp))
+                if (texOp.Inst == Instruction.TextureSample)
                 {
-                    continue;
-                }
+                    if (!(texOp.GetSource(0).AsgOp is Operation handleCombineOp))
+                    {
+                        continue;
+                    }
 
-                if (handleCombineOp.Inst != Instruction.BitwiseOr)
+                    if (handleCombineOp.Inst != Instruction.BitwiseOr)
+                    {
+                        continue;
+                    }
+
+                    Operand src0 = handleCombineOp.GetSource(0);
+                    Operand src1 = handleCombineOp.GetSource(1);
+
+                    if (src0.Type != OperandType.ConstantBuffer || src0.GetCbufSlot() != NvnTextureBufferSlot ||
+                        src1.Type != OperandType.ConstantBuffer || src1.GetCbufSlot() != NvnTextureBufferSlot)
+                    {
+                        continue;
+                    }
+
+                    texOp.SetHandle(src0.GetCbufOffset() | (src1.GetCbufOffset() << 16));
+                }
+                else if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
                 {
-                    continue;
+                    Operand src0 = texOp.GetSource(0);
+
+                    if (src0.Type == OperandType.ConstantBuffer && src0.GetCbufSlot() == NvnTextureBufferSlot)
+                    {
+                        texOp.SetHandle(src0.GetCbufOffset());
+                        texOp.Format = config.GetTextureFormat(texOp.Handle);
+                    }
                 }
-
-                Operand src0 = handleCombineOp.GetSource(0);
-                Operand src1 = handleCombineOp.GetSource(1);
-
-                if (src0.Type != OperandType.ConstantBuffer || src0.GetCbufSlot() != 2 ||
-                    src1.Type != OperandType.ConstantBuffer || src1.GetCbufSlot() != 2)
-                {
-                    continue;
-                }
-
-                texOp.SetHandle(src0.GetCbufOffset() | (src1.GetCbufOffset() << 16));
             }
         }
     }

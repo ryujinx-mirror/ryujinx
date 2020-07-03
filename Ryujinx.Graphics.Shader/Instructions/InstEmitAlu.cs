@@ -384,6 +384,27 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(Register(op.Predicate0), p1Res);
         }
 
+        public static void Lea(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool negateA = op.RawOpCode.Extract(45);
+
+            int shift = op.RawOpCode.Extract(39, 5);
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+
+            srcA = context.ShiftLeft(srcA, Const(shift));
+            srcA = context.INegate(srcA, negateA);
+
+            Operand res = context.IAdd(srcA, srcB);
+
+            context.Copy(GetDest(context), res);
+
+            // TODO: CC, X
+        }
+
         public static void Lop(EmitterContext context)
         {
             IOpCodeLop op = (IOpCodeLop)context.CurrOp;

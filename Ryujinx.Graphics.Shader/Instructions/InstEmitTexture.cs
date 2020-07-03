@@ -99,7 +99,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     if (!op.IsBindless)
                     {
-                        operation.Format = GetTextureFormat(context, handle);
+                        operation.Format = context.Config.GetTextureFormat(handle);
                     }
 
                     context.Add(operation);
@@ -228,7 +228,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (!op.IsBindless)
                 {
-                    format = GetTextureFormat(context, op.Immediate);
+                    format = context.Config.GetTextureFormat(op.Immediate);
                 }
             }
             else
@@ -1221,27 +1221,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 IntegerSize.UB128 => 4,
                 _                 => 2
             };
-        }
-
-        private static TextureFormat GetTextureFormat(EmitterContext context, int handle)
-        {
-            // When the formatted load extension is supported, we don't need to
-            // specify a format, we can just declare it without a format and the GPU will handle it.
-            if (context.Config.GpuAccessor.QuerySupportsImageLoadFormatted())
-            {
-                return TextureFormat.Unknown;
-            }
-
-            var format = context.Config.GpuAccessor.QueryTextureFormat(handle);
-
-            if (format == TextureFormat.Unknown)
-            {
-                context.Config.GpuAccessor.Log($"Unknown format for texture {handle}.");
-
-                format = TextureFormat.R8G8B8A8Unorm;
-            }
-
-            return format;
         }
 
         private static TextureFormat GetTextureFormat(IntegerSize size)

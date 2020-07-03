@@ -68,5 +68,26 @@ namespace Ryujinx.Graphics.Shader.Translation
             // The depth register is always two registers after the last color output.
             return count + 1;
         }
+
+        public TextureFormat GetTextureFormat(int handle)
+        {
+            // When the formatted load extension is supported, we don't need to
+            // specify a format, we can just declare it without a format and the GPU will handle it.
+            if (GpuAccessor.QuerySupportsImageLoadFormatted())
+            {
+                return TextureFormat.Unknown;
+            }
+
+            var format = GpuAccessor.QueryTextureFormat(handle);
+
+            if (format == TextureFormat.Unknown)
+            {
+                GpuAccessor.Log($"Unknown format for texture {handle}.");
+
+                format = TextureFormat.R8G8B8A8Unorm;
+            }
+
+            return format;
+        }
     }
 }
