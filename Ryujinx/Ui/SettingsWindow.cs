@@ -289,11 +289,34 @@ namespace Ryujinx.Ui
             }
             else
             {
-                FileChooserDialog fileChooser = new FileChooserDialog("Choose the game directory to add to the list", this, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept);
+                FileChooserDialog fileChooser = new FileChooserDialog("Choose the game directory to add to the list", this, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept)
+                {
+                    SelectMultiple = true
+                };
 
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
-                    _gameDirsBoxStore.AppendValues(fileChooser.Filename);
+                    foreach (string directory in fileChooser.Filenames)
+                    {
+                        bool directoryAdded = false;
+                        
+                        if (_gameDirsBoxStore.GetIterFirst(out TreeIter treeIter))
+                        {
+                            do
+                            {
+                                if (directory.Equals((string)_gameDirsBoxStore.GetValue(treeIter, 0)))
+                                {
+                                    directoryAdded = true;
+                                    break;
+                                }
+                            } while(_gameDirsBoxStore.IterNext(ref treeIter));
+                        }
+
+                        if (!directoryAdded)
+                        {
+                            _gameDirsBoxStore.AppendValues(directory);
+                        }
+                    }
                 }
 
                 fileChooser.Dispose();
