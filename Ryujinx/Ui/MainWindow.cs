@@ -676,7 +676,21 @@ namespace Ryujinx.Ui
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.Audio, "OpenAL is not supported, falling back to dummy audio out.");
+                    Logger.PrintWarning(LogClass.Audio, "OpenAL is not supported, trying to fall back to SoundIO.");
+
+                    if (SoundIoAudioOut.IsSupported)
+                    {
+                        Logger.PrintWarning(LogClass.Audio, "Found SoundIO, changing configuration.");
+
+                        ConfigurationState.Instance.System.AudioBackend.Value = AudioBackend.SoundIo;
+                        SaveConfig();
+
+                        return new SoundIoAudioOut();
+                    }
+                    else
+                    {
+                        Logger.PrintWarning(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
+                    }
                 }
             }
 
