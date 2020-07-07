@@ -32,6 +32,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 Operand src = Attribute(op.AttributeOffset + index * 4);
 
+                context.FlagAttributeRead(src.Value);
+
                 context.Copy(Register(rd), context.LoadAttribute(src, primVertex));
             }
         }
@@ -95,6 +97,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
         public static void Ipa(EmitterContext context)
         {
             OpCodeIpa op = (OpCodeIpa)context.CurrOp;
+
+            context.FlagAttributeRead(op.AttributeOffset);
 
             Operand res = Attribute(op.AttributeOffset);
 

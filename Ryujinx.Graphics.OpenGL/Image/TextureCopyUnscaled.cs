@@ -15,15 +15,16 @@ namespace Ryujinx.Graphics.OpenGL.Image
             int srcLayer,
             int dstLayer,
             int srcLevel,
-            int dstLevel)
+            int dstLevel,
+            float scaleFactor = 1f)
         {
-            int srcWidth  = srcInfo.Width;
-            int srcHeight = srcInfo.Height;
+            int srcWidth  = (int)Math.Ceiling(srcInfo.Width * scaleFactor);
+            int srcHeight = (int)Math.Ceiling(srcInfo.Height * scaleFactor);
             int srcDepth  = srcInfo.GetDepthOrLayers();
             int srcLevels = srcInfo.Levels;
 
-            int dstWidth  = dstInfo.Width;
-            int dstHeight = dstInfo.Height;
+            int dstWidth  = (int)Math.Ceiling(dstInfo.Width * scaleFactor);
+            int dstHeight = (int)Math.Ceiling(dstInfo.Height * scaleFactor);
             int dstDepth  = dstInfo.GetDepthOrLayers();
             int dstLevels = dstInfo.Levels;
 

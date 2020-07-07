@@ -390,9 +390,7 @@ namespace Ryujinx.Ui
 
                 HLE.Switch device = InitializeSwitchInstance();
 
-                // TODO: Move this somewhere else + reloadable?
-                Graphics.Gpu.GraphicsConfig.MaxAnisotropy   = ConfigurationState.Instance.Graphics.MaxAnisotropy;
-                Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
+                UpdateGraphicsConfig();
 
                 Logger.PrintInfo(LogClass.Application, $"Using Firmware Version: {_contentManager.GetCurrentFirmwareVersion()?.VersionString}");
 
@@ -603,6 +601,15 @@ namespace Ryujinx.Ui
                     appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
                 });
             }
+        }
+
+        public static void UpdateGraphicsConfig()
+        {
+            int resScale = ConfigurationState.Instance.Graphics.ResScale;
+            float resScaleCustom = ConfigurationState.Instance.Graphics.ResScaleCustom;
+            Graphics.Gpu.GraphicsConfig.ResScale = (resScale == -1) ? resScaleCustom : resScale;
+            Graphics.Gpu.GraphicsConfig.MaxAnisotropy = ConfigurationState.Instance.Graphics.MaxAnisotropy;
+            Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
         }
 
         public static void SaveConfig()

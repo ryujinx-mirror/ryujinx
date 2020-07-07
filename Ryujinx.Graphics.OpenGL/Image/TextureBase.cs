@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
+using System;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
@@ -9,15 +10,19 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         protected TextureCreateInfo Info { get; }
 
-        public int Width => Info.Width;
-        public int Height => Info.Height;
+        public int Width { get; }
+        public int Height { get; }
+        public float ScaleFactor { get; }
 
         public Target Target => Info.Target;
         public Format Format => Info.Format;
 
-        public TextureBase(TextureCreateInfo info)
+        public TextureBase(TextureCreateInfo info, float scaleFactor = 1f)
         {
             Info = info;
+            Width = (int)Math.Ceiling(Info.Width * scaleFactor);
+            Height = (int)Math.Ceiling(Info.Height * scaleFactor);
+            ScaleFactor = scaleFactor;
 
             Handle = GL.GenTexture();
         }

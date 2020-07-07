@@ -21,6 +21,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         public int Handle { get; private set; }
 
+        public int FragmentRenderScaleUniform { get; }
+        public int ComputeRenderScaleUniform { get; }
+
         public bool IsLinked { get; private set; }
 
         private int[] _ubBindingPoints;
@@ -162,6 +165,9 @@ namespace Ryujinx.Graphics.OpenGL
                     imageUnit++;
                 }
             }
+
+            FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
+            ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
         }
 
         public void Bind()

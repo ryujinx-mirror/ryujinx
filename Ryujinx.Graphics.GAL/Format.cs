@@ -162,11 +162,21 @@ namespace Ryujinx.Graphics.GAL
 
     public static class FormatExtensions
     {
+        /// <summary>
+        /// Checks if the texture format is an ASTC format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an ASTC format, false otherwise</returns>
         public static bool IsAstc(this Format format)
         {
             return format.IsAstcUnorm() || format.IsAstcSrgb();
         }
 
+        /// <summary>
+        /// Checks if the texture format is an ASTC Unorm format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an ASTC Unorm format, false otherwise</returns>
         public static bool IsAstcUnorm(this Format format)
         {
             switch (format)
@@ -191,6 +201,11 @@ namespace Ryujinx.Graphics.GAL
             return false;
         }
 
+        /// <summary>
+        /// Checks if the texture format is an ASTC SRGB format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an ASTC SRGB format, false otherwise</returns>
         public static bool IsAstcSrgb(this Format format)
         {
             switch (format)
@@ -209,6 +224,132 @@ namespace Ryujinx.Graphics.GAL
                 case Format.Astc10x10Srgb:
                 case Format.Astc12x10Srgb:
                 case Format.Astc12x12Srgb:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is a depth, stencil or depth-stencil format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the format is a depth, stencil or depth-stencil format, false otherwise</returns>
+        public static bool IsDepthOrStencil(this Format format)
+        {
+            switch (format)
+            {
+                case Format.D16Unorm:
+                case Format.D24UnormS8Uint:
+                case Format.D24X8Unorm:
+                case Format.D32Float:
+                case Format.D32FloatS8Uint:
+                case Format.S8Uint:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is an unsigned integer color format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an unsigned integer color format, false otherwise</returns>
+        public static bool IsUint(this Format format)
+        {
+            switch (format)
+            {
+                case Format.R8Uint:
+                case Format.R16Uint:
+                case Format.R32Uint:
+                case Format.R8G8Uint:
+                case Format.R16G16Uint:
+                case Format.R32G32Uint:
+                case Format.R8G8B8Uint:
+                case Format.R16G16B16Uint:
+                case Format.R32G32B32Uint:
+                case Format.R8G8B8A8Uint:
+                case Format.R16G16B16A16Uint:
+                case Format.R32G32B32A32Uint:
+                case Format.R10G10B10A2Uint:
+                case Format.R8G8B8X8Uint:
+                case Format.R16G16B16X16Uint:
+                case Format.R32G32B32X32Uint:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is a signed integer color format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is a signed integer color format, false otherwise</returns>
+        public static bool IsSint(this Format format)
+        {
+            switch (format)
+            {
+                case Format.R8Sint:
+                case Format.R16Sint:
+                case Format.R32Sint:
+                case Format.R8G8Sint:
+                case Format.R16G16Sint:
+                case Format.R32G32Sint:
+                case Format.R8G8B8Sint:
+                case Format.R16G16B16Sint:
+                case Format.R32G32B32Sint:
+                case Format.R8G8B8A8Sint:
+                case Format.R16G16B16A16Sint:
+                case Format.R32G32B32A32Sint:
+                case Format.R10G10B10A2Sint:
+                case Format.R8G8B8X8Sint:
+                case Format.R16G16B16X16Sint:
+                case Format.R32G32B32X32Sint:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is an integer color format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an integer color format, false otherwise</returns>
+        public static bool IsInteger(this Format format)
+        {
+            return format.IsUint() || format.IsSint();
+        }
+
+        /// <summary>
+        /// Checks if the texture format only has one component.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format only has one component, false otherwise</returns>
+        public static bool HasOneComponent(this Format format)
+        {
+            switch (format)
+            {
+                case Format.R8Unorm:
+                case Format.R8Snorm:
+                case Format.R8Uint:
+                case Format.R8Sint:
+                case Format.R16Float:
+                case Format.R16Unorm:
+                case Format.R16Snorm:
+                case Format.R16Uint:
+                case Format.R16Sint:
+                case Format.R32Float:
+                case Format.R32Uint:
+                case Format.R32Sint:
+                case Format.R8Uscaled:
+                case Format.R8Sscaled:
+                case Format.R16Uscaled:
+                case Format.R16Sscaled:
+                case Format.R32Uscaled:
+                case Format.R32Sscaled:
                     return true;
             }
 

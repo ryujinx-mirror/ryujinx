@@ -174,6 +174,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
+            bool changed = false;
+
             for (int index = 0; index < _textureBindings[stageIndex].Length; index++)
             {
                 TextureBindingInfo binding = _textureBindings[stageIndex][index];
@@ -216,6 +218,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 Texture texture = pool.Get(textureId);
 
+                if ((binding.Flags & TextureUsageFlags.ResScaleUnsupported) != 0)
+                {
+                    texture?.BlacklistScale();
+                }
+
                 ITexture hostTexture = texture?.GetTargetTexture(binding.Target);
 
                 if (_textureState[stageIndex][index].Texture != hostTexture || _rebind)
@@ -223,6 +230,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _textureState[stageIndex][index].Texture = hostTexture;
 
                     _context.Renderer.Pipeline.SetTexture(index, stage, hostTexture);
+
+                    changed = true;
                 }
 
                 if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
@@ -243,6 +252,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     _context.Renderer.Pipeline.SetSampler(index, stage, hostSampler);
                 }
+            }
+
+            if (changed)
+            {
+                _context.Renderer.Pipeline.UpdateRenderScale(stage, _textureBindings[stageIndex].Length);
             }
         }
 
@@ -268,6 +282,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                 int textureId = UnpackTextureId(packedId);
 
                 Texture texture = pool.Get(textureId);
+
+                if ((binding.Flags & TextureUsageFlags.ResScaleUnsupported) != 0)
+                {
+                    texture?.BlacklistScale();
+                }
 
                 ITexture hostTexture = texture?.GetTargetTexture(binding.Target);
 

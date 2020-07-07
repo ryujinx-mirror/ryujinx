@@ -283,11 +283,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Tld(EmitterContext context)
         {
+            context.UsedFeatures |= FeatureFlags.IntegerSampling;
+
             EmitTextureSample(context, TextureFlags.IntCoords);
         }
 
         public static void TldB(EmitterContext context)
         {
+            context.UsedFeatures |= FeatureFlags.IntegerSampling;
+
             EmitTextureSample(context, TextureFlags.IntCoords | TextureFlags.Bindless);
         }
 
@@ -427,6 +431,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     return;
                 }
+
+                context.UsedFeatures |= FeatureFlags.IntegerSampling;
 
                 flags = ConvertTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 

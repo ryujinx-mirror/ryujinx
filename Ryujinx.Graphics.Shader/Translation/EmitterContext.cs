@@ -11,6 +11,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public Block  CurrBlock { get; set; }
         public OpCode CurrOp    { get; set; }
 
+        public FeatureFlags UsedFeatures { get; set; }
+
         public ShaderConfig Config { get; }
 
         private List<Operation> _operations;
@@ -38,6 +40,20 @@ namespace Ryujinx.Graphics.Shader.Translation
         public void Add(Operation operation)
         {
             _operations.Add(operation);
+        }
+
+        public void FlagAttributeRead(int attribute)
+        {
+            if (Config.Stage == ShaderStage.Fragment)
+            {
+                switch (attribute)
+                {
+                    case AttributeConsts.PositionX:
+                    case AttributeConsts.PositionY:
+                        UsedFeatures |= FeatureFlags.FragCoordXY;
+                        break;
+                }
+            }
         }
 
         public void MarkLabel(Operand label)

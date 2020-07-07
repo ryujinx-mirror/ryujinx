@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.GAL
         IProgram CreateProgram(IShader[] shaders);
 
         ISampler CreateSampler(SamplerCreateInfo info);
-        ITexture CreateTexture(TextureCreateInfo info);
+        ITexture CreateTexture(TextureCreateInfo info, float scale);
 
         void DeleteBuffer(BufferHandle buffer);
 

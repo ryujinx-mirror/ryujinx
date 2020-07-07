@@ -4,6 +4,10 @@ namespace Ryujinx.Graphics.GAL
 {
     public interface ITexture : IDisposable
     {
+        int Width { get; }
+        int Height { get; }
+        float ScaleFactor { get; }
+
         void CopyTo(ITexture destination, int firstLayer, int firstLevel);
         void CopyTo(ITexture destination, Extents2D srcRegion, Extents2D dstRegion, bool linearFilter);
 

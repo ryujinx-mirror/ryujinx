@@ -8,6 +8,8 @@
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleUp.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleXor.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\SwizzleAdd.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\TexelFetchScale_fp.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\TexelFetchScale_cp.glsl" />
   </ItemGroup>
 
   <ItemGroup>

@@ -65,11 +65,12 @@ namespace Ryujinx.Graphics.OpenGL
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             int srcX0, srcX1, srcY0, srcY1;
+            float scale = view.ScaleFactor;
 
             if (crop.Left == 0 && crop.Right == 0)
             {
                 srcX0 = 0;
-                srcX1 = view.Width;
+                srcX1 = (int)(view.Width / scale);
             }
             else
             {
@@ -80,12 +81,20 @@ namespace Ryujinx.Graphics.OpenGL
             if (crop.Top == 0 && crop.Bottom == 0)
             {
                 srcY0 = 0;
-                srcY1 = view.Height;
+                srcY1 = (int)(view.Height / scale);
             }
             else
             {
                 srcY0 = crop.Top;
                 srcY1 = crop.Bottom;
+            }
+
+            if (scale != 1f)
+            {
+                srcX0 = (int)(srcX0 * scale);
+                srcY0 = (int)(srcY0 * scale);
+                srcX1 = (int)Math.Ceiling(srcX1 * scale);
+                srcY1 = (int)Math.Ceiling(srcY1 * scale);
             }
 
             float ratioX = MathF.Min(1f, (_height * (float)NativeWidth)  / ((float)NativeHeight * _width));

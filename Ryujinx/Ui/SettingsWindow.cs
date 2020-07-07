@@ -63,6 +63,8 @@ namespace Ryujinx.Ui
         [GUI] Entry        _addGameDirBox;
         [GUI] Entry        _graphicsShadersDumpPath;
         [GUI] ComboBoxText _anisotropy;
+        [GUI] ComboBoxText _resScaleCombo;
+        [GUI] Entry        _resScaleText;
         [GUI] ToggleButton _configureController1;
         [GUI] ToggleButton _configureController2;
         [GUI] ToggleButton _configureController3;
@@ -94,6 +96,8 @@ namespace Ryujinx.Ui
             _configureController7.Pressed += (sender, args) => ConfigureController_Pressed(sender, args, PlayerIndex.Player7);
             _configureController8.Pressed += (sender, args) => ConfigureController_Pressed(sender, args, PlayerIndex.Player8);
             _configureControllerH.Pressed += (sender, args) => ConfigureController_Pressed(sender, args, PlayerIndex.Handheld);
+
+            _resScaleCombo.Changed += (sender, args) => _resScaleText.Visible = _resScaleCombo.ActiveId == "-1";
 
             //Setup Currents
             if (ConfigurationState.Instance.Logger.EnableFileLog)
@@ -204,9 +208,12 @@ namespace Ryujinx.Ui
             _systemRegionSelect.SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
             _audioBackendSelect.SetActiveId(ConfigurationState.Instance.System.AudioBackend.Value.ToString());
             _systemTimeZoneSelect.SetActiveId(timeZoneContentManager.SanityCheckDeviceLocationName());
+            _resScaleCombo.SetActiveId(ConfigurationState.Instance.Graphics.ResScale.Value.ToString());
             _anisotropy.SetActiveId(ConfigurationState.Instance.Graphics.MaxAnisotropy.Value.ToString());
 
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
+            _resScaleText.Buffer.Text            = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
+            _resScaleText.Visible                = _resScaleCombo.ActiveId == "-1";
             _graphicsShadersDumpPath.Buffer.Text = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             _fsLogSpinAdjustment.Value           = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
             _systemTimeOffset                    = ConfigurationState.Instance.System.SystemTimeOffset;
@@ -408,6 +415,12 @@ namespace Ryujinx.Ui
                 _gameDirsBoxStore.IterNext(ref treeIter);
             }
 
+            float resScaleCustom;
+            if (!float.TryParse(_resScaleText.Buffer.Text, out resScaleCustom) || resScaleCustom <= 0.0f)
+            {
+                resScaleCustom = 1.0f;
+            }
+
             ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
@@ -435,8 +448,11 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Ui.GameDirs.Value                      = gameDirs;
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value     = (int)_fsLogSpinAdjustment.Value;
             ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId);
+            ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
+            ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
 
             MainWindow.SaveConfig();
+            MainWindow.UpdateGraphicsConfig();
             MainWindow.ApplyTheme();
             Dispose();
         }

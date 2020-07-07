@@ -328,6 +328,11 @@ namespace Ryujinx.Ui
                 }
 
                 string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? "Docked" : "Handheld";
+                float scale = Graphics.Gpu.GraphicsConfig.ResScale;
+                if (scale != 1)
+                {
+                    dockedMode += $" ({scale}x)";
+                }
 
                 if (_ticks >= _ticksPerFrame)
                 {

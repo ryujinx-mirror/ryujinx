@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader
         public int CbufSlot   { get; }
         public int CbufOffset { get; }
 
+        public TextureUsageFlags Flags { get; set; }
+
         public TextureDescriptor(string name, SamplerType type, int handleIndex)
         {
             Name        = name;
@@ -23,6 +25,8 @@ namespace Ryujinx.Graphics.Shader
 
             CbufSlot   = 0;
             CbufOffset = 0;
+
+            Flags = TextureUsageFlags.None;
         }
 
         public TextureDescriptor(string name, SamplerType type, int cbufSlot, int cbufOffset)
@@ -35,6 +39,8 @@ namespace Ryujinx.Graphics.Shader
 
             CbufSlot   = cbufSlot;
             CbufOffset = cbufOffset;
+
+            Flags = TextureUsageFlags.None;
         }
     }
 }

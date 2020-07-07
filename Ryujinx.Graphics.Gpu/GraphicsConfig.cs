@@ -6,6 +6,11 @@ namespace Ryujinx.Graphics.Gpu
     public static class GraphicsConfig
     {
         /// <summary>
+        /// Resolution scale.
+        /// </summary>
+        public static float ResScale = 1f;
+
+        /// <summary>
         /// Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.
         /// </summary>
         public static float MaxAnisotropy;

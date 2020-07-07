@@ -272,6 +272,16 @@ namespace Ryujinx.Configuration
             public ReactiveObject<float> MaxAnisotropy { get; private set; }
 
             /// <summary>
+            /// Resolution Scale. An integer scale applied to applicable render targets. Values 1-4, or -1 to use a custom floating point scale instead.
+            /// </summary>
+            public ReactiveObject<int> ResScale { get; private set; }
+
+            /// <summary>
+            /// Custom Resolution Scale. A custom floating point scale applied to applicable render targets. Only active when Resolution Scale is -1.
+            /// </summary>
+            public ReactiveObject<float> ResScaleCustom { get; private set; }
+
+            /// <summary>
             /// Dumps shaders in this local directory
             /// </summary>
             public ReactiveObject<string> ShadersDumpPath { get; private set; }
@@ -283,6 +293,8 @@ namespace Ryujinx.Configuration
 
             public GraphicsSection()
             {
+                ResScale        = new ReactiveObject<int>();
+                ResScaleCustom  = new ReactiveObject<float>();
                 MaxAnisotropy   = new ReactiveObject<float>();
                 ShadersDumpPath = new ReactiveObject<string>();
                 EnableVsync     = new ReactiveObject<bool>();
@@ -354,6 +366,8 @@ namespace Ryujinx.Configuration
             ConfigurationFileFormat configurationFile = new ConfigurationFileFormat
             {
                 Version                   = ConfigurationFileFormat.CurrentVersion,
+                ResScale                  = Graphics.ResScale,
+                ResScaleCustom            = Graphics.ResScaleCustom,
                 MaxAnisotropy             = Graphics.MaxAnisotropy,
                 GraphicsShadersDumpPath   = Graphics.ShadersDumpPath,
                 LoggingEnableDebug        = Logger.EnableDebug,
@@ -410,6 +424,8 @@ namespace Ryujinx.Configuration
 
         public void LoadDefault()
         {
+            Graphics.ResScale.Value                = 1;
+            Graphics.ResScaleCustom.Value          = 1.0f;
             Graphics.MaxAnisotropy.Value           = -1;
             Graphics.ShadersDumpPath.Value         = "";
             Logger.EnableDebug.Value               = false;
@@ -652,10 +668,22 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 11)
+            {
+                Common.Logging.Logger.PrintWarning(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 11.");
+
+                configurationFileFormat.ResScale = 1;
+                configurationFileFormat.ResScaleCustom = 1.0f;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
 
+            Graphics.ResScale.Value                = configurationFileFormat.ResScale;
+            Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
             Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;
             Graphics.ShadersDumpPath.Value         = configurationFileFormat.GraphicsShadersDumpPath;
             Logger.EnableDebug.Value               = configurationFileFormat.LoggingEnableDebug;

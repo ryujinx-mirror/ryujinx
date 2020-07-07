@@ -700,6 +700,27 @@
     }
   },
   "properties": {
+    "res_scale": {
+      "$id": "#/properties/res_scale",
+      "type": "integer",
+      "title": "Resolution Scale",
+      "description": "An integer scale applied to applicable render targets. Values 1-4, or -1 to use a custom floating point scale instead.",
+      "default": -1,
+      "examples": [
+        -1,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "res_scale_custom": {
+      "$id": "#/properties/res_scale_custom",
+      "type": "number",
+      "title": "Custom Resolution Scale",
+      "description": "A custom floating point scale applied to applicable render targets. Only active when Resolution Scale is -1.",
+      "default": 1.0,
+    },
     "max_anisotropy": {
       "$id": "#/properties/max_anisotropy",
       "type": "integer",
@@ -1211,7 +1232,7 @@
             "button_sr": "Unbound"
           }
         }
-      ] 
+      ]
     },
     "controller_config": {
       "$id": "#/properties/controller_config",

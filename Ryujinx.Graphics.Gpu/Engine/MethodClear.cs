@@ -26,7 +26,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateScissorState(state);
             }
 
-            UpdateRenderTargetState(state, useControl: false);
+            int index = (argument >> 6) & 0xf;
+
+            UpdateRenderTargetState(state, useControl: false, singleUse: index);
 
             TextureManager.CommitGraphicsBindings();
 
@@ -34,8 +36,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             bool clearStencil = (argument & 2) != 0;
 
             uint componentMask = (uint)((argument >> 2) & 0xf);
-
-            int index = (argument >> 6) & 0xf;
 
             if (componentMask != 0)
             {

@@ -313,7 +313,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <param name="useControl">Use draw buffers information from render target control register</param>
-        private void UpdateRenderTargetState(GpuState state, bool useControl)
+        /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param> 
+        private void UpdateRenderTargetState(GpuState state, bool useControl, int singleUse = -1)
         {
             var rtControl = state.Get<RtControl>(MethodOffset.RtControl);
 
@@ -324,6 +325,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             int samplesInX = msaaMode.SamplesInX();
             int samplesInY = msaaMode.SamplesInY();
 
+            bool changedScale = false;
+
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
                 int rtIndex = useControl ? rtControl.UnpackPermutationIndex(index) : index;
@@ -332,14 +335,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (index >= count || !IsRtEnabled(colorState))
                 {
-                    TextureManager.SetRenderTargetColor(index, null);
+                    changedScale |= TextureManager.SetRenderTargetColor(index, null);
 
                     continue;
                 }
 
                 Texture color = TextureManager.FindOrCreateTexture(colorState, samplesInX, samplesInY);
 
-                TextureManager.SetRenderTargetColor(index, color);
+                changedScale |= TextureManager.SetRenderTargetColor(index, color);
 
                 if (color != null)
                 {
@@ -359,7 +362,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 depthStencil = TextureManager.FindOrCreateTexture(dsState, dsSize, samplesInX, samplesInY);
             }
 
-            TextureManager.SetRenderTargetDepthStencil(depthStencil);
+            changedScale |= TextureManager.SetRenderTargetDepthStencil(depthStencil);
+
+            if (changedScale)
+            {
+                TextureManager.UpdateRenderTargetScale(singleUse);
+                _context.Renderer.Pipeline.SetRenderTargetScale(TextureManager.RenderTargetScale);
+
+                UpdateViewportTransform(state);
+                UpdateScissorState(state);
+            }
 
             if (depthStencil != null)
             {
@@ -394,7 +406,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (enable)
                 {
-                    _context.Renderer.Pipeline.SetScissor(index, scissor.X1, scissor.Y1, scissor.X2 - scissor.X1, scissor.Y2 - scissor.Y1);
+                    int x = scissor.X1;
+                    int y = scissor.Y1;
+                    int width = scissor.X2 - x;
+                    int height = scissor.Y2 - y;
+
+                    float scale = TextureManager.RenderTargetScale;
+                    if (scale != 1f)
+                    {
+                        x = (int)(x * scale);
+                        y = (int)(y * scale);
+                        width = (int)Math.Ceiling(width * scale);
+                        height = (int)Math.Ceiling(height * scale);
+                    }
+
+                    _context.Renderer.Pipeline.SetScissor(index, x, y, width, height);
                 }
             }
         }
@@ -459,6 +485,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 float width  = MathF.Abs(transform.ScaleX) * 2;
                 float height = MathF.Abs(transform.ScaleY) * 2;
+
+                float scale = TextureManager.RenderTargetScale;
+                if (scale != 1f)
+                {
+                    x *= scale;
+                    y *= scale;
+                    width *= scale;
+                    height *= scale;
+                }
 
                 RectangleF region = new RectangleF(x, y, width, height);
 
@@ -909,11 +944,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     if (descriptor.IsBindless)
                     {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.CbufSlot, descriptor.CbufOffset);
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.CbufSlot, descriptor.CbufOffset, descriptor.Flags);
                     }
                     else
                     {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex, descriptor.Flags);
                     }
                 }
 
@@ -927,7 +962,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     Target target = GetTarget(descriptor.Type);
 
-                    imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+                    imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex, descriptor.Flags);
                 }
 
                 TextureManager.SetGraphicsImages(stage, imageBindings);

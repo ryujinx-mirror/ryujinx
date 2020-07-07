@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.State;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
@@ -32,11 +33,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTexture.Format = RtFormat.D32Float;
             }
 
-            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture);
+            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, srcTexture.ScaleMode == Image.TextureScaleMode.Scaled);
 
             if (dstTexture == null)
             {
                 return;
+            }
+
+            if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
+            {
+                srcTexture.PropagateScale(dstTexture);
             }
 
             var control = state.Get<CopyTextureControl>(MethodOffset.CopyTextureControl);
@@ -55,17 +61,19 @@ namespace Ryujinx.Graphics.Gpu.Engine
             int dstX2 = region.DstX + region.DstWidth;
             int dstY2 = region.DstY + region.DstHeight;
 
+            float scale = srcTexture.ScaleFactor; // src and dest scales are identical now.
+
             Extents2D srcRegion = new Extents2D(
-                srcX1 / srcTexture.Info.SamplesInX,
-                srcY1 / srcTexture.Info.SamplesInY,
-                srcX2 / srcTexture.Info.SamplesInX,
-                srcY2 / srcTexture.Info.SamplesInY);
+                (int)Math.Ceiling(scale * (srcX1 / srcTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(scale * (srcY1 / srcTexture.Info.SamplesInY)),
+                (int)Math.Ceiling(scale * (srcX2 / srcTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(scale * (srcY2 / srcTexture.Info.SamplesInY)));
 
             Extents2D dstRegion = new Extents2D(
-                dstX1 / dstTexture.Info.SamplesInX,
-                dstY1 / dstTexture.Info.SamplesInY,
-                dstX2 / dstTexture.Info.SamplesInX,
-                dstY2 / dstTexture.Info.SamplesInY);
+                (int)Math.Ceiling(scale * (dstX1 / dstTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(scale * (dstY1 / dstTexture.Info.SamplesInY)),
+                (int)Math.Ceiling(scale * (dstX2 / dstTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(scale * (dstY2 / dstTexture.Info.SamplesInY)));
 
             bool linearFilter = control.UnpackLinearFilter();
 
@@ -79,17 +87,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
             // the second handles the region outside of the bounds).
             // We must also extend the source texture by one line to ensure we can wrap on the last line.
             // This is required by the (guest) OpenGL driver.
-            if (srcRegion.X2 > srcTexture.Info.Width)
+            if (srcX2 / srcTexture.Info.SamplesInX > srcTexture.Info.Width)
             {
                 srcCopyTexture.Height++;
 
-                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture);
+                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcTexture.ScaleMode == Image.TextureScaleMode.Scaled);
+                if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
+                {
+                    srcTexture.PropagateScale(dstTexture);
+                }
 
                 srcRegion = new Extents2D(
-                    srcRegion.X1 - srcTexture.Info.Width,
-                    srcRegion.Y1 + 1,
-                    srcRegion.X2 - srcTexture.Info.Width,
-                    srcRegion.Y2 + 1);
+                    (int)Math.Ceiling(scale * ((srcX1 / srcTexture.Info.SamplesInX) - srcTexture.Info.Width)),
+                    (int)Math.Ceiling(scale * ((srcY1 / srcTexture.Info.SamplesInY) + 1)),
+                    (int)Math.Ceiling(scale * ((srcX2 / srcTexture.Info.SamplesInX) - srcTexture.Info.Width)),
+                    (int)Math.Ceiling(scale * ((srcY2 / srcTexture.Info.SamplesInY) + 1)));
 
                 srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
             }

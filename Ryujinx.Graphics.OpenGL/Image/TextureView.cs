@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             TextureStorage    parent,
             TextureCreateInfo info,
             int               firstLayer,
-            int               firstLevel) : base(info)
+            int               firstLevel) : base(info, parent.ScaleFactor)
         {
             _renderer = renderer;
             _parent   = parent;
@@ -101,7 +101,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 // So we emulate that here with a texture copy (see the first CopyTo overload).
                 // However right now it only does a single copy right after the view is created,
                 // so it doesn't work for all cases.
-                TextureView emulatedView = (TextureView)_renderer.CreateTexture(info);
+                TextureView emulatedView = (TextureView)_renderer.CreateTexture(info, ScaleFactor);
 
                 emulatedView._emulatedViewParent = this;
 
@@ -122,10 +122,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
             {
                 if (_incompatibleFormatView == null)
                 {
-                    _incompatibleFormatView = (TextureView)_renderer.CreateTexture(Info);
+                    _incompatibleFormatView = (TextureView)_renderer.CreateTexture(Info, ScaleFactor);
                 }
 
-                TextureCopyUnscaled.Copy(_parent.Info, _incompatibleFormatView.Info, _parent.Handle, _incompatibleFormatView.Handle, FirstLayer, 0, FirstLevel, 0);
+                TextureCopyUnscaled.Copy(_parent.Info, _incompatibleFormatView.Info, _parent.Handle, _incompatibleFormatView.Handle, FirstLayer, 0, FirstLevel, 0, ScaleFactor);
 
                 return _incompatibleFormatView.Handle;
             }
@@ -137,7 +137,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             if (_incompatibleFormatView != null)
             {
-                TextureCopyUnscaled.Copy(_incompatibleFormatView.Info, _parent.Info, _incompatibleFormatView.Handle, _parent.Handle, 0, FirstLayer, 0, FirstLevel);
+                TextureCopyUnscaled.Copy(_incompatibleFormatView.Info, _parent.Info, _incompatibleFormatView.Handle, _parent.Handle, 0, FirstLayer, 0, FirstLevel, ScaleFactor);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             TextureView destinationView = (TextureView)destination;
 
-            TextureCopyUnscaled.Copy(Info, destinationView.Info, Handle, destinationView.Handle, 0, firstLayer, 0, firstLevel);
+            TextureCopyUnscaled.Copy(Info, destinationView.Info, Handle, destinationView.Handle, 0, firstLayer, 0, firstLevel, ScaleFactor);
 
             if (destinationView._emulatedViewParent != null)
             {
@@ -157,7 +157,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     0,
                     destinationView.FirstLayer,
                     0,
-                    destinationView.FirstLevel);
+                    destinationView.FirstLevel,
+                    ScaleFactor);
             }
         }
 

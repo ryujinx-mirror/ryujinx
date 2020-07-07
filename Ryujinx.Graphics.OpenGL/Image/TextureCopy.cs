@@ -33,6 +33,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             ClearBufferMask mask = GetMask(src.Format);
 
+            if ((mask & (ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit)) != 0 || src.Format.IsInteger())
+            {
+                linearFilter = false;
+            }
+
             BlitFramebufferFilter filter = linearFilter
                 ? BlitFramebufferFilter.Linear
                 : BlitFramebufferFilter.Nearest;
@@ -54,6 +59,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 dstRegion.Y2,
                 mask,
                 filter);
+
+            Attach(FramebufferTarget.ReadFramebuffer, src.Format, 0);
+            Attach(FramebufferTarget.DrawFramebuffer, dst.Format, 0);
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
