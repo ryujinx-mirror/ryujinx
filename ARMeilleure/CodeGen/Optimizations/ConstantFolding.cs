@@ -218,7 +218,7 @@ namespace ARMeilleure.CodeGen.Optimizations
             {
                 Operand srcOp = operation.GetSource(index);
 
-                if (srcOp.Kind != OperandKind.Constant || srcOp.DisableCF)
+                if (srcOp.Kind != OperandKind.Constant || srcOp.Relocatable)
                 {
                     return false;
                 }

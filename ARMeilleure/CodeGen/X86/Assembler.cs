@@ -914,7 +914,7 @@ namespace ARMeilleure.CodeGen.X86
 
                         WriteByte((byte)imm);
                     }
-                    else if (IsImm32(imm, type) && info.OpRMImm32 != BadOp)
+                    else if (!source.Relocatable && IsImm32(imm, type) && info.OpRMImm32 != BadOp)
                     {
                         WriteOpCode(dest, null, null, type, info.Flags, info.OpRMImm32);
 

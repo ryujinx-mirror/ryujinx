@@ -31,7 +31,7 @@ namespace ARMeilleure.CodeGen.X86
                         Operand src1 = operation.GetSource(0);
                         Operand src2 = operation.GetSource(1);
 
-                        if (src1.Kind == OperandKind.Constant && CodeGenCommon.IsLongConst(src1))
+                        if (src1.Kind == OperandKind.Constant && (src1.Relocatable || CodeGenCommon.IsLongConst(src1)))
                         {
                             Operand temp = Local(src1.Type);
 
@@ -42,7 +42,7 @@ namespace ARMeilleure.CodeGen.X86
                             operation.SetSource(0, temp);
                         }
 
-                        if (src2.Kind == OperandKind.Constant && CodeGenCommon.IsLongConst(src2))
+                        if (src2.Kind == OperandKind.Constant && (src2.Relocatable || CodeGenCommon.IsLongConst(src2)))
                         {
                             Operand temp = Local(src2.Type);
 
