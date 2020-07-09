@@ -1,10 +1,13 @@
+using System;
+
 namespace Ryujinx.HLE.Loaders.Executables
 {
     interface IExecutable
     {
-        byte[] Text { get; }
-        byte[] Ro   { get; }
-        byte[] Data { get; }
+        byte[] Program { get; }        
+        Span<byte> Text { get; }
+        Span<byte> Ro   { get; }
+        Span<byte> Data { get; }
 
         int TextOffset { get; }
         int RoOffset   { get; }

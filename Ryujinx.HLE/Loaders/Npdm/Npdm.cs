@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public byte   MainThreadPriority  { get; private set; }
         public byte   DefaultCpuId        { get; private set; }
         public int    PersonalMmHeapSize  { get; private set; }
-        public int    ProcessCategory     { get; private set; }
+        public int    Version             { get; private set; }
         public int    MainThreadStackSize { get; private set; }
         public string TitleName           { get;         set; }
         public byte[] ProductCode         { get; private set; }
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             PersonalMmHeapSize = reader.ReadInt32();
 
-            ProcessCategory = reader.ReadInt32();
+            Version = reader.ReadInt32();
 
             MainThreadStackSize = reader.ReadInt32();
 

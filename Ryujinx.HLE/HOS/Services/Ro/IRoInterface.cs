@@ -1,4 +1,5 @@
-﻿using Ryujinx.Common;
+﻿using LibHac.FsSystem;
+using Ryujinx.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -163,33 +164,36 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             stream.Position = 0;
 
-            NroExecutable executable = new NroExecutable(stream, nroAddress, bssAddress);
+            NroExecutable nro = new NroExecutable(stream.AsStorage(), nroAddress, bssAddress);
 
-            // check if everything is page align.
-            if ((executable.Text.Length & 0xFFF) != 0 || (executable.Ro.Length & 0xFFF) != 0 ||
-                (executable.Data.Length & 0xFFF) != 0 || (executable.BssSize & 0xFFF)   != 0)
+            // Check if everything is page align.
+            if ((nro.Text.Length & 0xFFF) != 0 || (nro.Ro.Length & 0xFFF) != 0 ||
+                (nro.Data.Length & 0xFFF) != 0 || (nro.BssSize & 0xFFF)   != 0)
             {
                 return ResultCode.InvalidNro;
             }
 
-            // check if everything is contiguous.
-            if (executable.RoOffset   != executable.TextOffset + executable.Text.Length ||
-                executable.DataOffset != executable.RoOffset   + executable.Ro.Length   ||
-                nroFileSize           != executable.DataOffset + executable.Data.Length)
+            // Check if everything is contiguous.
+            if (nro.RoOffset   != nro.TextOffset + nro.Text.Length ||
+                nro.DataOffset != nro.RoOffset   + nro.Ro.Length   ||
+                nroFileSize           != nro.DataOffset + nro.Data.Length)
             {
                 return ResultCode.InvalidNro;
             }
 
-            // finally check the bss size match.
-            if ((ulong)executable.BssSize != bssSize)
+            // Check the bss size match.
+            if ((ulong)nro.BssSize != bssSize)
             {
                 return ResultCode.InvalidNro;
             }
 
-            int totalSize = executable.Text.Length + executable.Ro.Length + executable.Data.Length + executable.BssSize;
+            int totalSize = nro.Text.Length + nro.Ro.Length + nro.Data.Length + nro.BssSize;
+
+            // Apply patches
+            context.Device.FileSystem.ModLoader.ApplyNroPatches(nro);
 
             res = new NroInfo(
-                executable,
+                nro,
                 nroHash,
                 nroAddress,
                 nroSize,

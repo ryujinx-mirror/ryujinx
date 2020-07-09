@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private ulong _imageSize;
         private ulong _mainThreadStackSize;
         private ulong _memoryUsageCapacity;
-        private int   _category;
+        private int   _version;
 
         public KHandleTable HandleTable { get; private set; }
 
@@ -377,7 +377,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _creationTimestamp = PerformanceCounter.ElapsedMilliseconds;
 
             MmuFlags    = creationInfo.MmuFlags;
-            _category   = creationInfo.Category;
+            _version   = creationInfo.Version;
             TitleId     = creationInfo.TitleId;
             _entrypoint = creationInfo.CodeAddress;
             _imageSize  = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;

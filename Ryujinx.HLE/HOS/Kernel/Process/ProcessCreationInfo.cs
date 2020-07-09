@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         public string Name { get; private set; }
 
-        public int   Category { get; private set; }
+        public int   Version { get; private set; }
         public ulong TitleId  { get; private set; }
 
         public ulong CodeAddress    { get; private set; }
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             int    personalMmHeapPagesCount)
         {
             Name                     = name;
-            Category                 = category;
+            Version                  = category;
             TitleId                  = titleId;
             CodeAddress              = codeAddress;
             CodePagesCount           = codePagesCount;

@@ -184,11 +184,11 @@ namespace Ryujinx.HLE.HOS
             InitLibHacHorizon();
         }
 
-        public void LoadKip(string kipFile)
+        public void LoadKip(string kipPath)
         {
-            using IStorage fs = new LocalStorage(kipFile, FileAccess.Read);
+            using IStorage kipFile = new LocalStorage(kipPath, FileAccess.Read);
 
-            ProgramLoader.LoadKip(KernelContext, new KipExecutable(fs));
+            ProgramLoader.LoadKip(KernelContext, new KipExecutable(kipFile));
         }
 
         private void InitLibHacHorizon()

@@ -1,23 +1,32 @@
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.Loader;
+using System;
 
 namespace Ryujinx.HLE.Loaders.Executables
 {
     class NsoExecutable : IExecutable
     {
-        public byte[] Text { get; }
-        public byte[] Ro { get; }
-        public byte[] Data { get; }
+        public byte[] Program { get; }
+        public Span<byte> Text => Program.AsSpan().Slice(TextOffset, TextSize);
+        public Span<byte> Ro   => Program.AsSpan().Slice(RoOffset,   RoSize);
+        public Span<byte> Data => Program.AsSpan().Slice(DataOffset, DataSize);
 
         public int TextOffset { get; }
         public int RoOffset { get; }
         public int DataOffset { get; }
         public int BssOffset => DataOffset + Data.Length;
 
+        public int TextSize { get; }
+        public int RoSize { get; }
+        public int DataSize { get; }
         public int BssSize { get; }
 
-        public NsoExecutable(IStorage inStorage)
+        public string Name;
+        public Buffer32 BuildId;
+
+        public NsoExecutable(IStorage inStorage, string name = null)
         {
             NsoReader reader = new NsoReader();
 
@@ -28,20 +37,26 @@ namespace Ryujinx.HLE.Loaders.Executables
             DataOffset = (int)reader.Header.Segments[2].MemoryOffset;
             BssSize = (int)reader.Header.BssSize;
 
-            Text = DecompressSection(reader, NsoReader.SegmentType.Text);
-            Ro = DecompressSection(reader, NsoReader.SegmentType.Ro);
-            Data = DecompressSection(reader, NsoReader.SegmentType.Data);
+            reader.GetSegmentSize(NsoReader.SegmentType.Data, out uint uncompressedSize).ThrowIfFailure();
+            Program = new byte[DataOffset + uncompressedSize];
+
+            TextSize = DecompressSection(reader, NsoReader.SegmentType.Text, TextOffset, Program);
+            RoSize   = DecompressSection(reader, NsoReader.SegmentType.Ro,   RoOffset,   Program);
+            DataSize = DecompressSection(reader, NsoReader.SegmentType.Data, DataOffset, Program);
+
+            Name = name;
+            BuildId = reader.Header.ModuleId;
         }
 
-        private static byte[] DecompressSection(NsoReader reader, NsoReader.SegmentType segmentType)
+        private static int DecompressSection(NsoReader reader, NsoReader.SegmentType segmentType, int offset, byte[] Program)
         {
             reader.GetSegmentSize(segmentType, out uint uncompressedSize).ThrowIfFailure();
 
-            byte[] result = new byte[uncompressedSize];
+            var span = Program.AsSpan().Slice(offset, (int)uncompressedSize);
 
-            reader.ReadSegment(segmentType, result).ThrowIfFailure();
+            reader.ReadSegment(segmentType, span).ThrowIfFailure();
 
-            return result;
+            return (int)uncompressedSize;
         }
     }
 }

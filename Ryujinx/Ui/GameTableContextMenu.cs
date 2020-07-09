@@ -45,29 +45,34 @@ namespace Ryujinx.Ui
             MenuItem openSaveUserDir = new MenuItem("Open User Save Directory")
             {
                 Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0,
-                TooltipText = "Open the folder where the User save for the application is loaded"
+                TooltipText = "Open the directory which contains Application's User Saves."
             };
 
             MenuItem openSaveDeviceDir = new MenuItem("Open Device Save Directory")
             {
                 Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0,
-                TooltipText = "Open the folder where the Device save for the application is loaded"
+                TooltipText = "Open the directory which contains Application's Device Saves."
             };
 
             MenuItem openSaveBcatDir = new MenuItem("Open BCAT Save Directory")
             {
                 Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0,
-                TooltipText = "Open the folder where the BCAT save for the application is loaded"
+                TooltipText = "Open the directory which contains Application's BCAT Saves."
             };
 
             MenuItem manageTitleUpdates = new MenuItem("Manage Title Updates")
             {
-                TooltipText = "Open the title update management window"
+                TooltipText = "Open the Title Update management window"
             };
 
             MenuItem manageDlc = new MenuItem("Manage DLC")
             {
                 TooltipText = "Open the DLC management window"
+            };
+
+            MenuItem openTitleModDir = new MenuItem("Open Mods Directory")
+            {
+                TooltipText = "Open the directory which contains Application's Mods."
             };
 
             string ext    = System.IO.Path.GetExtension(_gameTableStore.GetValue(_rowIter, 9).ToString()).ToLower();
@@ -78,19 +83,19 @@ namespace Ryujinx.Ui
             MenuItem extractRomFs = new MenuItem("RomFS")
             {
                 Sensitive   = hasNca,
-                TooltipText = "Extract the RomFs section present in the main NCA"
+                TooltipText = "Extract the RomFS section from Application's current config (including updates)."
             };
 
             MenuItem extractExeFs = new MenuItem("ExeFS")
             {
                 Sensitive   = hasNca,
-                TooltipText = "Extract the ExeFs section present in the main NCA"
+                TooltipText = "Extract the ExeFS section from Application's current config (including updates)."
             };
 
             MenuItem extractLogo = new MenuItem("Logo")
             {
                 Sensitive   = hasNca,
-                TooltipText = "Extract the Logo section present in the main NCA"
+                TooltipText = "Extract the Logo section from Application's current config (including updates)."
             };
 
             Menu extractSubMenu = new Menu();
@@ -103,14 +108,14 @@ namespace Ryujinx.Ui
 
             MenuItem managePtcMenu = new MenuItem("Cache Management");
 
-            MenuItem purgePtcCache = new MenuItem("Purge the PPTC cache")
+            MenuItem purgePtcCache = new MenuItem("Purge PPTC cache")
             {
-                TooltipText = "Delete the PPTC cache of the game"
+                TooltipText = "Delete the Application's PPTC cache."
             };
             
-            MenuItem openPtcDir = new MenuItem("Open the PPTC directory")
+            MenuItem openPtcDir = new MenuItem("Open PPTC directory")
             {
-                TooltipText = "Open the PPTC directory in the file explorer"
+                TooltipText = "Open the directory which contains Application's PPTC cache."
             };
             
             Menu managePtcSubMenu = new Menu();
@@ -125,6 +130,7 @@ namespace Ryujinx.Ui
             openSaveBcatDir.Activated    += OpenSaveBcatDir_Clicked;
             manageTitleUpdates.Activated += ManageTitleUpdates_Clicked;
             manageDlc.Activated          += ManageDlc_Clicked;
+            openTitleModDir.Activated    += OpenTitleModDir_Clicked;
             extractRomFs.Activated       += ExtractRomFs_Clicked;
             extractExeFs.Activated       += ExtractExeFs_Clicked;
             extractLogo.Activated        += ExtractLogo_Clicked;
@@ -137,6 +143,7 @@ namespace Ryujinx.Ui
             this.Add(new SeparatorMenuItem());
             this.Add(manageTitleUpdates);
             this.Add(manageDlc);
+            this.Add(openTitleModDir);
             this.Add(new SeparatorMenuItem());
             this.Add(managePtcMenu);
             this.Add(extractMenu);
@@ -600,6 +607,21 @@ namespace Ryujinx.Ui
 
             DlcWindow dlcWindow = new DlcWindow(titleId, titleName, _virtualFileSystem);
             dlcWindow.Show();
+        }
+
+        private void OpenTitleModDir_Clicked(object sender, EventArgs args)
+        {
+            string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+
+            var modsBasePath = _virtualFileSystem.GetBaseModsPath();
+            var titleModsPath = _virtualFileSystem.ModLoader.GetTitleDir(modsBasePath, titleId);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = titleModsPath,
+                UseShellExecute = true,
+                Verb = "open"
+            });
         }
 
         private void ExtractRomFs_Clicked(object sender, EventArgs args)

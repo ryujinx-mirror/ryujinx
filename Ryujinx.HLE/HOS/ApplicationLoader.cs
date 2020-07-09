@@ -43,7 +43,8 @@ namespace Ryujinx.HLE.HOS
 
         public bool EnablePtc => _device.System.EnablePtc;
 
-        public IntegrityCheckLevel FsIntegrityCheckLevel => _device.System.FsIntegrityCheckLevel;
+        // Binaries from exefs are loaded into mem in this order. Do not change.
+        private static readonly string[] ExeFsPrefixes = { "rtld", "main", "subsdk*", "sdk" };
 
         public ApplicationLoader(Switch device, VirtualFileSystem fileSystem, ContentManager contentManager)
         {
@@ -52,6 +53,9 @@ namespace Ryujinx.HLE.HOS
             _fileSystem = fileSystem;
 
             ControlData = new BlitStruct<ApplicationControlProperty>(1);
+
+            // Clear Mods cache
+            _fileSystem.ModLoader.Clear();
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -63,12 +67,14 @@ namespace Ryujinx.HLE.HOS
 
             LocalFileSystem codeFs = new LocalFileSystem(exeFsDir);
 
-            LoadExeFs(codeFs, out _);
+            Npdm metaData = ReadNpdm(codeFs);
 
             if (TitleId != 0)
             {
                 EnsureSaveData(new TitleId(TitleId));
             }
+
+            LoadExeFs(codeFs, metaData);
         }
 
         private (Nca main, Nca patch, Nca control) GetGameData(PartitionFileSystem pfs)
@@ -191,7 +197,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             // This is not a normal NSP, it's actually a ExeFS as a NSP
-            LoadExeFs(nsp, out _);
+            LoadExeFs(nsp);
         }
 
         public void LoadNca(string ncaFile)
@@ -272,24 +278,24 @@ namespace Ryujinx.HLE.HOS
             {
                 if (mainNca.CanOpenSection(NcaSectionType.Data))
                 {
-                    dataStorage = mainNca.OpenStorage(NcaSectionType.Data, FsIntegrityCheckLevel);
+                    dataStorage = mainNca.OpenStorage(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
                 }
 
                 if (mainNca.CanOpenSection(NcaSectionType.Code))
                 {
-                    codeFs = mainNca.OpenFileSystem(NcaSectionType.Code, FsIntegrityCheckLevel);
+                    codeFs = mainNca.OpenFileSystem(NcaSectionType.Code, _device.System.FsIntegrityCheckLevel);
                 }
             }
             else
             {
                 if (patchNca.CanOpenSection(NcaSectionType.Data))
                 {
-                    dataStorage = mainNca.OpenStorageWithPatch(patchNca, NcaSectionType.Data, FsIntegrityCheckLevel);
+                    dataStorage = mainNca.OpenStorageWithPatch(patchNca, NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
                 }
 
                 if (patchNca.CanOpenSection(NcaSectionType.Code))
                 {
-                    codeFs = mainNca.OpenFileSystemWithPatch(patchNca, NcaSectionType.Code, FsIntegrityCheckLevel);
+                    codeFs = mainNca.OpenFileSystemWithPatch(patchNca, NcaSectionType.Code, _device.System.FsIntegrityCheckLevel);
                 }
             }
 
@@ -300,14 +306,9 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            if (dataStorage == null)
-            {
-                Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
-            }
-            else
-            {
-                _fileSystem.SetRomFs(dataStorage.AsStream(FileAccess.Read));
-            }
+            Npdm metaData = ReadNpdm(codeFs);
+
+            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.GetBaseModsPath());
 
             if (controlNca != null)
             {
@@ -318,19 +319,52 @@ namespace Ryujinx.HLE.HOS
                 ControlData.ByteSpan.Clear();
             }
 
-            LoadExeFs(codeFs, out _);
+            if (dataStorage == null)
+            {
+                Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
+            }
+            else
+            {
+                IStorage newStorage = _fileSystem.ModLoader.ApplyRomFsMods(TitleId, dataStorage);
+                _fileSystem.SetRomFs(newStorage.AsStream(FileAccess.Read));
+            }
 
             if (TitleId != 0)
             {
                 EnsureSaveData(new TitleId(TitleId));
             }
 
+            LoadExeFs(codeFs, metaData);
+
             Logger.PrintInfo(LogClass.Loader, $"Application Loaded: {TitleName} v{DisplayVersion} [{TitleIdText}] [{(TitleIs64Bit ? "64-bit" : "32-bit")}]");
         }
 
-        public void ReadControlData(Nca controlNca)
+        // Sets TitleId, so be sure to call before using it
+        private Npdm ReadNpdm(IFileSystem fs)
         {
-            IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, FsIntegrityCheckLevel);
+            Result result = fs.OpenFile(out IFile npdmFile, "/main.npdm".ToU8Span(), OpenMode.Read);
+            Npdm metaData;
+
+            if (ResultFs.PathNotFound.Includes(result))
+            {
+                Logger.PrintWarning(LogClass.Loader, "NPDM file not found, using default values!");
+
+                metaData = GetDefaultNpdm();
+            }
+            else
+            {
+                metaData = new Npdm(npdmFile.AsStream());
+            }
+
+            TitleId = metaData.Aci0.TitleId;
+            TitleIs64Bit = metaData.Is64Bit;
+
+            return metaData;
+        }
+
+        private void ReadControlData(Nca controlNca)
+        {
+            IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
             Result result = controlFs.OpenFile(out IFile controlFile, "/control.nacp".ToU8Span(), OpenMode.Read);
 
@@ -358,26 +392,20 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        private void LoadExeFs(IFileSystem codeFs, out Npdm metaData)
+        private void LoadExeFs(IFileSystem codeFs, Npdm metaData = null)
         {
-            Result result = codeFs.OpenFile(out IFile npdmFile, "/main.npdm".ToU8Span(), OpenMode.Read);
-
-            if (ResultFs.PathNotFound.Includes(result))
+            if (_fileSystem.ModLoader.ReplaceExefsPartition(TitleId, ref codeFs))
             {
-                Logger.PrintWarning(LogClass.Loader, "NPDM file not found, using default values!");
-
-                metaData = GetDefaultNpdm();
-            }
-            else
-            {
-                metaData = new Npdm(npdmFile.AsStream());
+                metaData = null; //TODO: Check if we should retain old npdm
             }
 
-            List<IExecutable> nsos = new List<IExecutable>();
+            metaData ??= ReadNpdm(codeFs);
 
-            void LoadNso(string filename)
+            List<NsoExecutable> nsos = new List<NsoExecutable>();
+
+            foreach (string exePrefix in ExeFsPrefixes) // Load binaries with standard prefixes
             {
-                foreach (DirectoryEntryEx file in codeFs.EnumerateEntries("/", $"{filename}*"))
+                foreach (DirectoryEntryEx file in codeFs.EnumerateEntries("/", exePrefix))
                 {
                     if (Path.GetExtension(file.Name) != string.Empty)
                     {
@@ -388,25 +416,29 @@ namespace Ryujinx.HLE.HOS
 
                     codeFs.OpenFile(out IFile nsoFile, file.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                    NsoExecutable nso = new NsoExecutable(nsoFile.AsStorage());
+                    NsoExecutable nso = new NsoExecutable(nsoFile.AsStorage(), file.Name);
 
                     nsos.Add(nso);
                 }
             }
 
-            TitleId = metaData.Aci0.TitleId;
-            TitleIs64Bit = metaData.Is64Bit;
+            // ExeFs file replacements
+            bool modified = _fileSystem.ModLoader.ApplyExefsMods(TitleId, nsos);
 
-            LoadNso("rtld");
-            LoadNso("main");
-            LoadNso("subsdk");
-            LoadNso("sdk");
+            var programs = nsos.ToArray();
+
+            modified |= _fileSystem.ModLoader.ApplyNsoPatches(TitleId, programs);
 
             _contentManager.LoadEntries(_device);
 
-            Ptc.Initialize(TitleIdText, DisplayVersion, EnablePtc);
+            if (EnablePtc && modified)
+            {
+                Logger.PrintWarning(LogClass.Ptc, $"Detected exefs modifications. PPTC disabled.");
+            }
 
-            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: nsos.ToArray());
+            Ptc.Initialize(TitleIdText, DisplayVersion, EnablePtc && !modified);
+
+            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: programs);
         }
 
         public void LoadProgram(string filePath)
@@ -420,7 +452,7 @@ namespace Ryujinx.HLE.HOS
             if (isNro)
             {
                 FileStream input = new FileStream(filePath, FileMode.Open);
-                NroExecutable obj = new NroExecutable(input);
+                NroExecutable obj = new NroExecutable(input.AsStorage());
                 executable = obj;
 
                 // homebrew NRO can actually have some data after the actual NRO
@@ -493,7 +525,7 @@ namespace Ryujinx.HLE.HOS
             }
             else
             {
-                executable = new NsoExecutable(new LocalStorage(filePath, FileAccess.Read));
+                executable = new NsoExecutable(new LocalStorage(filePath, FileAccess.Read), Path.GetFileNameWithoutExtension(filePath));
             }
 
             _contentManager.LoadEntries(_device);

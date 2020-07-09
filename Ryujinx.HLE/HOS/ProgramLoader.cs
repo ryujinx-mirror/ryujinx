@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo(
                 metaData.TitleName,
-                metaData.ProcessCategory,
+                metaData.Version,
                 metaData.Aci0.TitleId,
                 codeStart,
                 codePagesCount,
