@@ -443,5 +443,48 @@ namespace Ryujinx.Graphics.OpenGL
 
             return NvViewportSwizzle.ViewportSwizzlePositiveXNv;
         }
+
+        public static All Convert(this LogicalOp op)
+        {
+            switch (op)
+            {
+                case LogicalOp.Clear:
+                    return All.Clear;
+                case LogicalOp.And:
+                    return All.And;
+                case LogicalOp.AndReverse:
+                    return All.AndReverse;
+                case LogicalOp.Copy:
+                    return All.Copy;
+                case LogicalOp.AndInverted:
+                    return All.AndInverted;
+                case LogicalOp.Noop:
+                    return All.Noop;
+                case LogicalOp.Xor:
+                    return All.Xor;
+                case LogicalOp.Or:
+                    return All.Or;
+                case LogicalOp.Nor:
+                    return All.Nor;
+                case LogicalOp.Equiv:
+                    return All.Equiv;
+                case LogicalOp.Invert:
+                    return All.Invert;
+                case LogicalOp.OrReverse:
+                    return All.OrReverse;
+                case LogicalOp.CopyInverted:
+                    return All.CopyInverted;
+                case LogicalOp.OrInverted:
+                    return All.OrInverted;
+                case LogicalOp.Nand:
+                    return All.Nand;
+                case LogicalOp.Set:
+                    return All.Set;
+            }
+
+            Logger.PrintDebug(LogClass.Gpu, $"Invalid {nameof(LogicalOp)} enum value: {op}.");
+
+            return All.Never;
+        }
     }
 }

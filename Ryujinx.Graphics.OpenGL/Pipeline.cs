@@ -547,6 +547,20 @@ namespace Ryujinx.Graphics.OpenGL
             GL.Enable(IndexedEnableCap.Blend, index);
         }
 
+        public void SetLogicOpState(bool enable, LogicalOp op)
+        {
+            if (enable)
+            {
+                GL.Enable(EnableCap.ColorLogicOp);
+
+                GL.LogicOp((LogicOp)op.Convert());
+            }
+            else
+            {
+                GL.Disable(EnableCap.ColorLogicOp);
+            }
+        }
+
         public void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp)
         {
             if ((enables & PolygonModeMask.Point) != 0)

@@ -92,6 +92,7 @@ namespace Ryujinx.Graphics.Gpu.State
         FaceState                       = 0x646,
         ViewportTransformEnable         = 0x64b,
         ViewVolumeClipControl           = 0x64f,
+        LogicOpState                    = 0x671,
         Clear                           = 0x674,
         RtColorMask                     = 0x680,
         ReportState                     = 0x6c0,
