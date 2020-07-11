@@ -882,6 +882,10 @@ namespace ARMeilleure.CodeGen.X86
 
                 source = null;
             }
+            else if (source.Kind == OperandKind.Constant)
+            {
+                source = source.With((uint)source.Value & (dest.Type == OperandType.I32 ? 0x1f : 0x3f));
+            }
 
             WriteInstruction(dest, source, type, inst);
         }
