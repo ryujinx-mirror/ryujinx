@@ -78,6 +78,13 @@ namespace ARMeilleure.CodeGen.Optimizations
                     }
                     break;
 
+                case Instruction.ConvertI64ToI32:
+                    if (type == OperandType.I32)
+                    {
+                        EvaluateUnaryI64(operation, (x) => (int)x);
+                    }
+                    break;
+
                 case Instruction.Copy:
                     if (type == OperandType.I32)
                     {
