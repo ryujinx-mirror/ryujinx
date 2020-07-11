@@ -206,6 +206,39 @@ namespace ARMeilleure.CodeGen.Optimizations
                     }
                     break;
 
+                case Instruction.ZeroExtend16:
+                    if (type == OperandType.I32)
+                    {
+                        EvaluateUnaryI32(operation, (x) => (ushort)x);
+                    }
+                    else if (type == OperandType.I64)
+                    {
+                        EvaluateUnaryI64(operation, (x) => (ushort)x);
+                    }
+                    break;
+
+                case Instruction.ZeroExtend32:
+                    if (type == OperandType.I32)
+                    {
+                        EvaluateUnaryI32(operation, (x) => x);
+                    }
+                    else if (type == OperandType.I64)
+                    {
+                        EvaluateUnaryI64(operation, (x) => (uint)x);
+                    }
+                    break;
+
+                case Instruction.ZeroExtend8:
+                    if (type == OperandType.I32)
+                    {
+                        EvaluateUnaryI32(operation, (x) => (byte)x);
+                    }
+                    else if (type == OperandType.I64)
+                    {
+                        EvaluateUnaryI64(operation, (x) => (byte)x);
+                    }
+                    break;
+
                 case Instruction.Subtract:
                     if (type == OperandType.I32)
                     {
