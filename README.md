@@ -112,3 +112,9 @@ If you need help with setting up Ryujinx, you can ask questions in the #support 
 If you have contributions, need support, have suggestions, or just want to get in touch with the team, join our [Discord server](https://discord.gg/N2FmfVc)!
 
 If you'd like to donate, please take a look at our [Patreon](https://www.patreon.com/ryujinx).
+
+## License
+
+This software is licensed under the terms of the MIT license.
+This project makes use of code authored by the libvpx project, licensed under BSD and the ffmpeg project, licensed under LGPLv3.
+See [LICENSE.txt](LICENSE.txt) and [THIRDPARTY.md](Ryujinx/THIRDPARTY.md) for more details.

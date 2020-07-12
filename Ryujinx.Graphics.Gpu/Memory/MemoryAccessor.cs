@@ -59,42 +59,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Reads a 32-bits signed integer from GPU mapped memory.
-        /// </summary>
-        /// <param name="gpuVa">GPU virtual address where the value is located</param>
-        /// <returns>The value at the specified memory location</returns>
-        public int ReadInt32(ulong gpuVa)
-        {
-            ulong processVa = _context.MemoryManager.Translate(gpuVa);
-
-            return _context.PhysicalMemory.Read<int>(processVa);
-        }
-
-        /// <summary>
-        /// Reads a 64-bits unsigned integer from GPU mapped memory.
-        /// </summary>
-        /// <param name="gpuVa">GPU virtual address where the value is located</param>
-        /// <returns>The value at the specified memory location</returns>
-        public ulong ReadUInt64(ulong gpuVa)
-        {
-            ulong processVa = _context.MemoryManager.Translate(gpuVa);
-
-            return _context.PhysicalMemory.Read<ulong>(processVa);
-        }
-
-        /// <summary>
-        /// Reads a 8-bits unsigned integer from GPU mapped memory.
-        /// </summary>
-        /// <param name="gpuVa">GPU virtual address where the value is located</param>
-        /// <param name="value">The value to be written</param>
-        public void WriteByte(ulong gpuVa, byte value)
-        {
-            ulong processVa = _context.MemoryManager.Translate(gpuVa);
-
-            _context.PhysicalMemory.Write(processVa, MemoryMarshal.CreateSpan(ref value, 1));
-        }
-
-        /// <summary>
         /// Writes a 32-bits signed integer to GPU mapped memory.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to write the value into</param>

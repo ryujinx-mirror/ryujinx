@@ -1,6 +1,5 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Synchronization;
-using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 using System.Threading;
 
@@ -170,6 +169,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private uint IncrementSyncpointMax(uint id)
         {
             return (uint)Interlocked.Increment(ref _counterMax[id]);
+        }
+
+        public uint IncrementSyncpointMax(uint id, uint incrs)
+        {
+            return (uint)Interlocked.Add(ref _counterMax[id], (int)incrs);
         }
 
         public bool IsSyncpointExpired(uint id, uint threshold)

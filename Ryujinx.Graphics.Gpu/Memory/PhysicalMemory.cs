@@ -1,3 +1,4 @@
+using Ryujinx.Cpu;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -32,6 +33,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public ReadOnlySpan<byte> GetSpan(ulong address, int size)
         {
             return _cpuMemory.GetSpan(address, size);
+        }
+
+        /// <summary>
+        /// Gets a writable region from the application process.
+        /// </summary>
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size in bytes to be range</param>
+        /// <returns>A writable region with the data at the specified memory location</returns>
+        public WritableRegion GetWritableRegion(ulong address, int size)
+        {
+            return _cpuMemory.GetWritableRegion(address, size);
         }
 
         /// <summary>

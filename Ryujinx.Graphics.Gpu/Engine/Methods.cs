@@ -466,7 +466,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             bool   flipY  = yControl.HasFlag(YControl.NegateY);
             Origin origin = yControl.HasFlag(YControl.TriangleRastFlip) ? Origin.LowerLeft : Origin.UpperLeft;
-            
+
             _context.Renderer.Pipeline.SetOrigin(origin);
 
             // The triangle rast flip flag only affects rasterization, the viewport is not flipped.

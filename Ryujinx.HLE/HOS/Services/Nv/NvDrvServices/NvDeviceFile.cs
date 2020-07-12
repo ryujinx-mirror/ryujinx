@@ -14,6 +14,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
         public readonly ServiceCtx Context;
         public readonly KProcess   Owner;
 
+        public string Path;
+
         public NvDeviceFile(ServiceCtx context)
         {
             Context = context;

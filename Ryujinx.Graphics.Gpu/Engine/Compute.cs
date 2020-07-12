@@ -67,7 +67,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             TextureManager.SetComputeTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
 
-            ShaderProgramInfo info = cs.Shaders[0].Program.Info;            
+            ShaderProgramInfo info = cs.Shaders[0].Program.Info;
 
             for (int index = 0; index < info.CBuffers.Count; index++)
             {

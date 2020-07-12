@@ -60,6 +60,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                     NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context });
 
+                    deviceFile.Path = path;
+
                     return _deviceFileIdRegistry.Add(deviceFile);
                 }
                 else

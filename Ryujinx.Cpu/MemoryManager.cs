@@ -194,6 +194,38 @@ namespace Ryujinx.Cpu
         }
 
         /// <summary>
+        /// Gets a region of memory that can be written to.
+        /// </summary>
+        /// <remarks>
+        /// If the requested region is not contiguous in physical memory,
+        /// this will perform an allocation, and flush the data (writing it
+        /// back to guest memory) on disposal.
+        /// </remarks>
+        /// <param name="va">Virtual address of the data</param>
+        /// <param name="size">Size of the data</param>
+        /// <returns>A writable region of memory containing the data</returns>
+        public WritableRegion GetWritableRegion(ulong va, int size)
+        {
+            if (size == 0)
+            {
+                return new WritableRegion(null, va, Memory<byte>.Empty);
+            }
+
+            if (IsContiguous(va, size))
+            {
+                return new WritableRegion(null, va, _backingMemory.GetMemory(GetPhysicalAddressInternal(va), size));
+            }
+            else
+            {
+                Memory<byte> memory = new byte[size];
+
+                GetSpan(va, size).CopyTo(memory.Span);
+
+                return new WritableRegion(this, va, memory);
+            }
+        }
+
+        /// <summary>
         /// Gets a reference for the given type at the specified virtual memory address.
         /// </summary>
         /// <remarks>

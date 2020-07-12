@@ -77,7 +77,7 @@ namespace Ryujinx.Graphics.Gpu
         {
             Renderer = renderer;
 
-            MemoryManager = new MemoryManager();
+            MemoryManager = new MemoryManager(this);
 
             MemoryAccessor = new MemoryAccessor(this);
 

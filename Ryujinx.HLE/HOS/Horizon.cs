@@ -293,8 +293,6 @@ namespace Ryujinx.HLE.HOS
                 KernelContext.ThreadCounter.Wait();
 
                 KernelContext.Dispose();
-
-                Device.Unload();
             }
         }
     }

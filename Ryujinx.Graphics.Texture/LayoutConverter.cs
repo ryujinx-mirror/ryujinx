@@ -9,6 +9,90 @@ namespace Ryujinx.Graphics.Texture
     {
         private const int HostStrideAlignment = 4;
 
+        public static void ConvertBlockLinearToLinear(
+            Span<byte> dst,
+            int width,
+            int height,
+            int stride,
+            int bytesPerPixel,
+            int gobBlocksInY,
+            ReadOnlySpan<byte> data)
+        {
+            int gobHeight = gobBlocksInY * GobHeight;
+
+            int strideTrunc = BitUtils.AlignDown(width * bytesPerPixel, 16);
+            int strideTrunc64 = BitUtils.AlignDown(width * bytesPerPixel, 64);
+
+            int xStart = strideTrunc / bytesPerPixel;
+
+            int outStrideGap = stride - width * bytesPerPixel;
+
+            int alignment = GobStride / bytesPerPixel;
+
+            int wAligned = BitUtils.AlignUp(width, alignment);
+
+            BlockLinearLayout layoutConverter = new BlockLinearLayout(wAligned, height, gobBlocksInY, 1, bytesPerPixel);
+
+            unsafe bool Convert<T>(Span<byte> output, ReadOnlySpan<byte> data) where T : unmanaged
+            {
+                fixed (byte* outputPtr = output, dataPtr = data)
+                {
+                    byte* outPtr = outputPtr;
+
+                    for (int y = 0; y < height; y++)
+                    {
+                        layoutConverter.SetY(y);
+
+                        for (int x = 0; x < strideTrunc64; x += 64, outPtr += 64)
+                        {
+                            byte* offset = dataPtr + layoutConverter.GetOffsetWithLineOffset64(x);
+                            byte* offset2 = offset + 0x20;
+                            byte* offset3 = offset + 0x100;
+                            byte* offset4 = offset + 0x120;
+
+                            Vector128<byte> value = *(Vector128<byte>*)offset;
+                            Vector128<byte> value2 = *(Vector128<byte>*)offset2;
+                            Vector128<byte> value3 = *(Vector128<byte>*)offset3;
+                            Vector128<byte> value4 = *(Vector128<byte>*)offset4;
+
+                            *(Vector128<byte>*)outPtr = value;
+                            *(Vector128<byte>*)(outPtr + 16) = value2;
+                            *(Vector128<byte>*)(outPtr + 32) = value3;
+                            *(Vector128<byte>*)(outPtr + 48) = value4;
+                        }
+
+                        for (int x = strideTrunc64; x < strideTrunc; x += 16, outPtr += 16)
+                        {
+                            byte* offset = dataPtr + layoutConverter.GetOffsetWithLineOffset16(x);
+
+                            *(Vector128<byte>*)outPtr = *(Vector128<byte>*)offset;
+                        }
+
+                        for (int x = xStart; x < width; x++, outPtr += bytesPerPixel)
+                        {
+                            byte* offset = dataPtr + layoutConverter.GetOffset(x);
+
+                            *(T*)outPtr = *(T*)offset;
+                        }
+
+                        outPtr += outStrideGap;
+                    }
+                }
+                return true;
+            }
+
+            bool _ = bytesPerPixel switch
+            {
+                1 => Convert<byte>(dst, data),
+                2 => Convert<ushort>(dst, data),
+                4 => Convert<uint>(dst, data),
+                8 => Convert<ulong>(dst, data),
+                12 => Convert<Bpp12Pixel>(dst, data),
+                16 => Convert<Vector128<byte>>(dst, data),
+                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+            };
+        }
+
         public static Span<byte> ConvertBlockLinearToLinear(
             int width,
             int height,
@@ -188,6 +272,90 @@ namespace Ryujinx.Graphics.Texture
             }
 
             return output;
+        }
+
+        public static void ConvertLinearToBlockLinear(
+            Span<byte> dst,
+            int width,
+            int height,
+            int stride,
+            int bytesPerPixel,
+            int gobBlocksInY,
+            ReadOnlySpan<byte> data)
+        {
+            int gobHeight = gobBlocksInY * GobHeight;
+
+            int strideTrunc = BitUtils.AlignDown(width * bytesPerPixel, 16);
+            int strideTrunc64 = BitUtils.AlignDown(width * bytesPerPixel, 64);
+
+            int xStart = strideTrunc / bytesPerPixel;
+
+            int inStrideGap = stride - width * bytesPerPixel;
+
+            int alignment = GobStride / bytesPerPixel;
+
+            int wAligned = BitUtils.AlignUp(width, alignment);
+
+            BlockLinearLayout layoutConverter = new BlockLinearLayout(wAligned, height, gobBlocksInY, 1, bytesPerPixel);
+
+            unsafe bool Convert<T>(Span<byte> output, ReadOnlySpan<byte> data) where T : unmanaged
+            {
+                fixed (byte* outputPtr = output, dataPtr = data)
+                {
+                    byte* inPtr = dataPtr;
+
+                    for (int y = 0; y < height; y++)
+                    {
+                        layoutConverter.SetY(y);
+
+                        for (int x = 0; x < strideTrunc64; x += 64, inPtr += 64)
+                        {
+                            byte* offset = outputPtr + layoutConverter.GetOffsetWithLineOffset64(x);
+                            byte* offset2 = offset + 0x20;
+                            byte* offset3 = offset + 0x100;
+                            byte* offset4 = offset + 0x120;
+
+                            Vector128<byte> value = *(Vector128<byte>*)inPtr;
+                            Vector128<byte> value2 = *(Vector128<byte>*)(inPtr + 16);
+                            Vector128<byte> value3 = *(Vector128<byte>*)(inPtr + 32);
+                            Vector128<byte> value4 = *(Vector128<byte>*)(inPtr + 48);
+
+                            *(Vector128<byte>*)offset = value;
+                            *(Vector128<byte>*)offset2 = value2;
+                            *(Vector128<byte>*)offset3 = value3;
+                            *(Vector128<byte>*)offset4 = value4;
+                        }
+
+                        for (int x = strideTrunc64; x < strideTrunc; x += 16, inPtr += 16)
+                        {
+                            byte* offset = outputPtr + layoutConverter.GetOffsetWithLineOffset16(x);
+
+                            *(Vector128<byte>*)offset = *(Vector128<byte>*)inPtr;
+                        }
+
+                        for (int x = xStart; x < width; x++, inPtr += bytesPerPixel)
+                        {
+                            byte* offset = outputPtr + layoutConverter.GetOffset(x);
+
+                            *(T*)offset = *(T*)inPtr;
+                        }
+
+                        inPtr += inStrideGap;
+                    }
+                }
+                return true;
+            }
+
+            bool _ = bytesPerPixel switch
+            {
+                1 => Convert<byte>(dst, data),
+                2 => Convert<ushort>(dst, data),
+                4 => Convert<uint>(dst, data),
+                8 => Convert<ulong>(dst, data),
+                12 => Convert<Bpp12Pixel>(dst, data),
+                16 => Convert<Vector128<byte>>(dst, data),
+                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+            };
         }
 
         public static Span<byte> ConvertLinearToBlockLinear(

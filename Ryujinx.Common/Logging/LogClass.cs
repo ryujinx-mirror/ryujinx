@@ -9,12 +9,14 @@ namespace Ryujinx.Common.Logging
         Emulation,
         Gpu,
         Hid,
+        Host1x,
         Kernel,
         KernelIpc,
         KernelScheduler,
         KernelSvc,
         Loader,
         ModLoader,
+        Nvdec,
         Ptc,
         Service,
         ServiceAcc,
@@ -50,6 +52,7 @@ namespace Ryujinx.Common.Logging
         ServiceSss,
         ServiceTime,
         ServiceVi,
-        SurfaceFlinger
+        SurfaceFlinger,
+        Vic
     }
 }

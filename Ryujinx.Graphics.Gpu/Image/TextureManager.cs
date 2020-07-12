@@ -643,6 +643,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                         overlap.ChangeSize(info.Width, info.Height, info.DepthOrLayers);
                     }
 
+                    overlap.SynchronizeMemory();
+
                     return overlap;
                 }
             }
