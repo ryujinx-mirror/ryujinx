@@ -81,7 +81,7 @@ namespace ARMeilleure.CodeGen.Optimizations
                 case Instruction.ConvertI64ToI32:
                     if (type == OperandType.I32)
                     {
-                        EvaluateUnaryI64(operation, (x) => (int)x);
+                        EvaluateUnaryI32(operation, (x) => x);
                     }
                     break;
 
