@@ -667,7 +667,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if the textures are strictly equal or similar, false otherwise</returns>
         public bool IsPerfectMatch(TextureInfo info, TextureSearchFlags flags)
         {
-            if (!FormatMatches(info, (flags & TextureSearchFlags.Strict) != 0))
+            if (!FormatMatches(info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0))
             {
                 return false;
             }
@@ -682,7 +682,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            if ((flags & TextureSearchFlags.Sampler) != 0)
+            if ((flags & TextureSearchFlags.ForSampler) != 0 || (flags & TextureSearchFlags.Strict) != 0)
             {
                 if (!SamplerParamsMatches(info))
                 {
@@ -690,7 +690,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if ((flags & TextureSearchFlags.IgnoreMs) != 0)
+            if ((flags & TextureSearchFlags.ForCopy) != 0)
             {
                 bool msTargetCompatible = Info.Target == Target.Texture2DMultisample && info.Target == Target.Texture2D;
 
@@ -711,15 +711,37 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Checks if the texture format matches with the specified texture information.
         /// </summary>
         /// <param name="info">Texture information to compare with</param>
-        /// <param name="strict">True to perform a strict comparison (formats must be exactly equal)</param>
+        /// <param name="forSampler">Indicates that the texture will be used for shader sampling</param>
+        /// <param name="forCopy">Indicates that the texture will be used as copy source or target</param>
         /// <returns>True if the format matches, with the given comparison rules</returns>
-        private bool FormatMatches(TextureInfo info, bool strict)
+        private bool FormatMatches(TextureInfo info, bool forSampler, bool forCopy)
         {
             // D32F and R32F texture have the same representation internally,
             // however the R32F format is used to sample from depth textures.
-            if (Info.FormatInfo.Format == Format.D32Float && info.FormatInfo.Format == Format.R32Float && !strict)
+            if (Info.FormatInfo.Format == Format.D32Float && info.FormatInfo.Format == Format.R32Float && (forSampler || forCopy))
             {
                 return true;
+            }
+
+            if (forCopy)
+            {
+                // The 2D engine does not support depth-stencil formats, so it will instead
+                // use equivalent color formats. We must also consider them as compatible.
+                if (Info.FormatInfo.Format == Format.S8Uint && info.FormatInfo.Format == Format.R8Unorm)
+                {
+                    return true;
+                }
+
+                if (Info.FormatInfo.Format == Format.D16Unorm && info.FormatInfo.Format == Format.R16Unorm)
+                {
+                    return true;
+                }
+
+                if ((Info.FormatInfo.Format == Format.D24UnormS8Uint ||
+                     Info.FormatInfo.Format == Format.D24X8Unorm) && info.FormatInfo.Format == Format.B8G8R8A8Unorm)
+                {
+                    return true;
+                }
             }
 
             return Info.FormatInfo.Format == info.FormatInfo.Format;

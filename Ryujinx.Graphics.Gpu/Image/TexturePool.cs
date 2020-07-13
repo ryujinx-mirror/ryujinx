@@ -59,7 +59,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return null;
                 }
 
-                texture = Context.Methods.TextureManager.FindOrCreateTexture(info, TextureSearchFlags.Sampler);
+                texture = Context.Methods.TextureManager.FindOrCreateTexture(info, TextureSearchFlags.ForSampler);
 
                 texture.IncrementReferenceCount();
 

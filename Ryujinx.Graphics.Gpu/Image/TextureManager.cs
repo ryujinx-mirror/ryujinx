@@ -189,7 +189,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This will update scale to match the configured scale, scale textures that are eligible but not scaled,
         /// and propagate blacklisted status from one texture to the ones bound with it.
         /// </summary>
-        /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param> 
+        /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param>
         public void UpdateRenderTargetScale(int singleUse)
         {
             // Make sure all scales for render targets are at the highest they should be. Blacklisted targets should propagate their scale to the other targets.
@@ -454,7 +454,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 Target.Texture2D,
                 formatInfo);
 
-            TextureSearchFlags flags = TextureSearchFlags.IgnoreMs;
+            TextureSearchFlags flags = TextureSearchFlags.ForCopy;
 
             if (preferScaling)
             {
@@ -608,7 +608,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(TextureInfo info, TextureSearchFlags flags = TextureSearchFlags.None)
         {
-            bool isSamplerTexture = (flags & TextureSearchFlags.Sampler) != 0;
+            bool isSamplerTexture = (flags & TextureSearchFlags.ForSampler) != 0;
 
             bool isScalable = IsUpscaleCompatible(info);
 
@@ -737,7 +737,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                         if (texture.ScaleFactor != overlap.ScaleFactor)
                         {
-                            // A bit tricky, our new texture may need to contain an existing texture that is upscaled, but isn't itself. 
+                            // A bit tricky, our new texture may need to contain an existing texture that is upscaled, but isn't itself.
                             // In that case, we prefer the higher scale only if our format is render-target-like, otherwise we scale the view down before copy.
 
                             texture.PropagateScale(overlap);
