@@ -333,6 +333,21 @@ namespace ARMeilleure.CodeGen.X86
                         break;
                     }
 
+                    case IntrinsicType.Crc32:
+                    {
+                        Operand dest = operation.Destination;
+                        Operand src1 = operation.GetSource(0);
+                        Operand src2 = operation.GetSource(1);
+
+                        EnsureSameReg(dest, src1);
+
+                        Debug.Assert(dest.Type.IsInteger() && src1.Type.IsInteger() && src2.Type.IsInteger());
+
+                        context.Assembler.WriteInstruction(info.Inst, dest, src2, dest.Type);
+
+                        break;
+                    }
+
                     case IntrinsicType.BinaryImm:
                     {
                         Operand dest = operation.Destination;

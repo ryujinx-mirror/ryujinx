@@ -28,10 +28,10 @@ namespace ARMeilleure.CodeGen.X86
             Vex      = 1 << 4,
 
             PrefixBit  = 16,
-            PrefixMask = 3 << PrefixBit,
+            PrefixMask = 7 << PrefixBit,
             Prefix66   = 1 << PrefixBit,
             PrefixF3   = 2 << PrefixBit,
-            PrefixF2   = 3 << PrefixBit
+            PrefixF2   = 4 << PrefixBit
         }
 
         private struct InstructionInfo
@@ -104,6 +104,9 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Comisd,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2f, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Comiss,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2f, InstructionFlags.Vex));
             Add(X86Instruction.Cpuid,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fa2, InstructionFlags.RegOnly));
+            Add(X86Instruction.Crc32,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38f1, InstructionFlags.PrefixF2));
+            Add(X86Instruction.Crc32_16,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38f1, InstructionFlags.PrefixF2 | InstructionFlags.Prefix66));
+            Add(X86Instruction.Crc32_8,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38f0, InstructionFlags.PrefixF2 | InstructionFlags.Reg8Src));
             Add(X86Instruction.Cvtdq2pd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fe6, InstructionFlags.Vex | InstructionFlags.PrefixF3));
             Add(X86Instruction.Cvtdq2ps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5b, InstructionFlags.Vex));
             Add(X86Instruction.Cvtpd2dq,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fe6, InstructionFlags.Vex | InstructionFlags.PrefixF2));
@@ -1172,7 +1175,15 @@ namespace ARMeilleure.CodeGen.X86
 
             if ((flags & InstructionFlags.Vex) != 0 && HardwareCapabilities.SupportsVexEncoding)
             {
-                int vexByte2 = (int)(flags & InstructionFlags.PrefixMask) >> (int)InstructionFlags.PrefixBit;
+                // In a vex encoding, only one prefix can be active at a time. The active prefix is encoded in the second byte using two bits.
+
+                int vexByte2 = (flags & InstructionFlags.PrefixMask) switch
+                {
+                    InstructionFlags.Prefix66 => 1,
+                    InstructionFlags.PrefixF3 => 2,
+                    InstructionFlags.PrefixF2 => 3,
+                    _ => 0
+                };
 
                 if (src1 != null)
                 {
@@ -1220,11 +1231,19 @@ namespace ARMeilleure.CodeGen.X86
             }
             else
             {
-                switch (flags & InstructionFlags.PrefixMask)
+                if (flags.HasFlag(InstructionFlags.Prefix66))
                 {
-                    case InstructionFlags.Prefix66: WriteByte(0x66); break;
-                    case InstructionFlags.PrefixF2: WriteByte(0xf2); break;
-                    case InstructionFlags.PrefixF3: WriteByte(0xf3); break;
+                    WriteByte(0x66);
+                }
+
+                if (flags.HasFlag(InstructionFlags.PrefixF2))
+                {
+                    WriteByte(0xf2);
+                }
+
+                if (flags.HasFlag(InstructionFlags.PrefixF3))
+                {
+                    WriteByte(0xf3);
                 }
 
                 if (rexPrefix != 0)

@@ -167,41 +167,42 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        protected void ExecuteOpcodes()
+        protected void ExecuteOpcodes(bool runUnicorn = true)
         {
             _cpuContext.Execute(_context, _entryPoint);
 
-            if (_unicornAvailable)
+            if (_unicornAvailable && runUnicorn)
             {
                 _unicornEmu.RunForCount((_currAddress - _entryPoint - 4) / 4);
             }
         }
 
         protected ExecutionContext SingleOpcode(uint  opcode,
-                                                ulong x0       = 0,
-                                                ulong x1       = 0,
-                                                ulong x2       = 0,
-                                                ulong x3       = 0,
-                                                ulong x31      = 0,
-                                                V128  v0       = default,
-                                                V128  v1       = default,
-                                                V128  v2       = default,
-                                                V128  v3       = default,
-                                                V128  v4       = default,
-                                                V128  v5       = default,
-                                                V128  v30      = default,
-                                                V128  v31      = default,
-                                                bool  overflow = false,
-                                                bool  carry    = false,
-                                                bool  zero     = false,
-                                                bool  negative = false,
-                                                int   fpcr     = 0,
-                                                int   fpsr     = 0)
+                                                ulong x0         = 0,
+                                                ulong x1         = 0,
+                                                ulong x2         = 0,
+                                                ulong x3         = 0,
+                                                ulong x31        = 0,
+                                                V128  v0         = default,
+                                                V128  v1         = default,
+                                                V128  v2         = default,
+                                                V128  v3         = default,
+                                                V128  v4         = default,
+                                                V128  v5         = default,
+                                                V128  v30        = default,
+                                                V128  v31        = default,
+                                                bool  overflow   = false,
+                                                bool  carry      = false,
+                                                bool  zero       = false,
+                                                bool  negative   = false,
+                                                int   fpcr       = 0,
+                                                int   fpsr       = 0,
+                                                bool  runUnicorn = true)
         {
             Opcode(opcode);
             Opcode(0xD65F03C0); // RET
             SetContext(x0, x1, x2, x3, x31, v0, v1, v2, v3, v4, v5, v30, v31, overflow, carry, zero, negative, fpcr, fpsr);
-            ExecuteOpcodes();
+            ExecuteOpcodes(runUnicorn);
 
             return GetContext();
         }

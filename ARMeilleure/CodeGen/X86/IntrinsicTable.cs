@@ -38,6 +38,9 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Comisseq,   new IntrinsicInfo(X86Instruction.Comiss,     IntrinsicType.Comis_));
             Add(Intrinsic.X86Comissge,   new IntrinsicInfo(X86Instruction.Comiss,     IntrinsicType.Comis_));
             Add(Intrinsic.X86Comisslt,   new IntrinsicInfo(X86Instruction.Comiss,     IntrinsicType.Comis_));
+            Add(Intrinsic.X86Crc32,      new IntrinsicInfo(X86Instruction.Crc32,      IntrinsicType.Crc32));
+            Add(Intrinsic.X86Crc32_16,   new IntrinsicInfo(X86Instruction.Crc32_16,   IntrinsicType.Crc32));
+            Add(Intrinsic.X86Crc32_8,    new IntrinsicInfo(X86Instruction.Crc32_8,    IntrinsicType.Crc32));
             Add(Intrinsic.X86Cvtdq2pd,   new IntrinsicInfo(X86Instruction.Cvtdq2pd,   IntrinsicType.Unary));
             Add(Intrinsic.X86Cvtdq2ps,   new IntrinsicInfo(X86Instruction.Cvtdq2ps,   IntrinsicType.Unary));
             Add(Intrinsic.X86Cvtpd2dq,   new IntrinsicInfo(X86Instruction.Cvtpd2dq,   IntrinsicType.Unary));

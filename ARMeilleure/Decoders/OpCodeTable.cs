@@ -659,6 +659,12 @@ namespace ARMeilleure.Decoders
             SetA32("<<<<00110101xxxx0000xxxxxxxxxxxx", InstName.Cmp,     InstEmit32.Cmp,     typeof(OpCode32AluImm));
             SetA32("<<<<00010101xxxx0000xxxxxxx0xxxx", InstName.Cmp,     InstEmit32.Cmp,     typeof(OpCode32AluRsImm));
             SetA32("<<<<00010101xxxx0000xxxx0xx1xxxx", InstName.Cmp,     InstEmit32.Cmp,     typeof(OpCode32AluRsReg));
+            SetA32("<<<<00010000xxxxxxxx00000100xxxx", InstName.Crc32b,  InstEmit32.Crc32b,  typeof(OpCode32AluReg));
+            SetA32("<<<<00010000xxxxxxxx00100100xxxx", InstName.Crc32cb, InstEmit32.Crc32cb, typeof(OpCode32AluReg));
+            SetA32("<<<<00010010xxxxxxxx00100100xxxx", InstName.Crc32ch, InstEmit32.Crc32ch, typeof(OpCode32AluReg));
+            SetA32("<<<<00010100xxxxxxxx00100100xxxx", InstName.Crc32cw, InstEmit32.Crc32cw, typeof(OpCode32AluReg));
+            SetA32("<<<<00010010xxxxxxxx00000100xxxx", InstName.Crc32h,  InstEmit32.Crc32h,  typeof(OpCode32AluReg));
+            SetA32("<<<<00010100xxxxxxxx00000100xxxx", InstName.Crc32w,  InstEmit32.Crc32w,  typeof(OpCode32AluReg));
             SetA32("1111010101111111111100000101xxxx", InstName.Dmb,     InstEmit32.Dmb,     typeof(OpCode32));
             SetA32("1111010101111111111100000100xxxx", InstName.Dsb,     InstEmit32.Dsb,     typeof(OpCode32));
             SetA32("<<<<0010001xxxxxxxxxxxxxxxxxxxxx", InstName.Eor,     InstEmit32.Eor,     typeof(OpCode32AluImm));

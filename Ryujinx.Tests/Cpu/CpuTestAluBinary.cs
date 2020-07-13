@@ -1,5 +1,6 @@
 #define AluBinary
 
+using ARMeilleure.State;
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
@@ -8,7 +9,77 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestAluBinary : CpuTest
     {
 #if AluBinary
+        public struct CrcTest
+        {
+            public uint Crc;
+            public ulong Value;
+            public bool C;
+
+            public uint[] Results; // One result for each CRC variant (8, 16, 32)
+
+            public CrcTest(uint crc, ulong value, bool c, params uint[] results)
+            {
+                Crc = crc;
+                Value = value;
+                C = c;
+                Results = results;
+            }
+        }
+
+#region "ValueSource (CRC32)"
+        private static CrcTest[] _CRC32_Test_Values_()
+        {
+            // Created with http://www.sunshine2k.de/coding/javascript/crc/crc_js.html, with:
+            //  - non-reflected polynomials
+            //  - input reflected, result reflected
+            //  - bytes in order of increasing significance
+            //  - xor 0
+            // Only includes non-C variant, as the other can be tested with unicorn.
+
+            return new CrcTest[]
+            {
+                new CrcTest(0x00000000u, 0x00_00_00_00_00_00_00_00u, false, 0x00000000, 0x00000000, 0x00000000, 0x00000000),
+                new CrcTest(0x00000000u, 0x7f_ff_ff_ff_ff_ff_ff_ffu, false, 0x2d02ef8d, 0xbe2612ff, 0xdebb20e3, 0xa9de8355),
+                new CrcTest(0x00000000u, 0x80_00_00_00_00_00_00_00u, false, 0x00000000, 0x00000000, 0x00000000, 0xedb88320),
+                new CrcTest(0x00000000u, 0xff_ff_ff_ff_ff_ff_ff_ffu, false, 0x2d02ef8d, 0xbe2612ff, 0xdebb20e3, 0x44660075),
+                new CrcTest(0x00000000u, 0xa0_02_f1_ca_52_78_8c_1cu, false, 0x14015c4f, 0x02799256, 0x9063c9e5, 0x8816610a),
+
+                new CrcTest(0xffffffffu, 0x00_00_00_00_00_00_00_00u, false, 0x2dfd1072, 0xbe26ed00, 0xdebb20e3, 0x9add2096),
+                new CrcTest(0xffffffffu, 0x7f_ff_ff_ff_ff_ff_ff_ffu, false, 0x00ffffff, 0x0000ffff, 0x00000000, 0x3303a3c3),
+                new CrcTest(0xffffffffu, 0x80_00_00_00_00_00_00_00u, false, 0x2dfd1072, 0xbe26ed00, 0xdebb20e3, 0x7765a3b6),
+                new CrcTest(0xffffffffu, 0xff_ff_ff_ff_ff_ff_ff_ffu, false, 0x00ffffff, 0x0000ffff, 0x00000000, 0xdebb20e3),
+                new CrcTest(0xffffffffu, 0xa0_02_f1_ca_52_78_8c_1cu, false, 0x39fc4c3d, 0xbc5f7f56, 0x4ed8e906, 0x12cb419c)
+            };
+        }
+#endregion
+
         private const int RndCnt = 2;
+
+        [Test, Combinatorial]
+        public void Crc32_b_h_w_x([Values(0u)] uint rd,
+                                  [Values(1u)] uint rn,
+                                  [Values(2u)] uint rm,
+                                  [Range(0u, 3u)] uint size,
+                                  [ValueSource("_CRC32_Test_Values_")] CrcTest test)
+        {
+            uint opcode = 0x1AC04000; // CRC32B W0, W0, W0
+
+            opcode |= size << 10;
+            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            if (size == 3)
+            {
+                opcode |= 0x80000000;
+            }
+
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, x1: test.Crc, x2: test.Value, x31: w31, runUnicorn: false);
+
+            ExecutionContext context = GetContext();
+            ulong result = context.GetX((int)rd);
+            Assert.That(result == test.Results[size]);
+        }
 
         [Test, Pairwise, Description("CRC32X <Wd>, <Wn>, <Xm>"), Ignore("Unicorn fails.")]
         public void Crc32x([Values(0u, 31u)] uint rd,
