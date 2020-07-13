@@ -332,14 +332,18 @@ namespace ARMeilleure.Decoders
             SetA64("0>0011100<1xxxxx111101xxxxxxxxxx", InstName.Fmax_V,          InstEmit.Fmax_V,          typeof(OpCodeSimdReg));
             SetA64("000111100x1xxxxx011010xxxxxxxxxx", InstName.Fmaxnm_S,        InstEmit.Fmaxnm_S,        typeof(OpCodeSimdReg));
             SetA64("0>0011100<1xxxxx110001xxxxxxxxxx", InstName.Fmaxnm_V,        InstEmit.Fmaxnm_V,        typeof(OpCodeSimdReg));
+            SetA64("0>1011100<1xxxxx110001xxxxxxxxxx", InstName.Fmaxnmp_V,       InstEmit.Fmaxnmp_V,       typeof(OpCodeSimdReg));
             SetA64("0110111000110000110010xxxxxxxxxx", InstName.Fmaxnmv_V,       InstEmit.Fmaxnmv_V,       typeof(OpCodeSimd));
             SetA64("0>1011100<1xxxxx111101xxxxxxxxxx", InstName.Fmaxp_V,         InstEmit.Fmaxp_V,         typeof(OpCodeSimdReg));
+            SetA64("0110111000110000111110xxxxxxxxxx", InstName.Fmaxv_V,         InstEmit.Fmaxv_V,         typeof(OpCodeSimd));
             SetA64("000111100x1xxxxx010110xxxxxxxxxx", InstName.Fmin_S,          InstEmit.Fmin_S,          typeof(OpCodeSimdReg));
             SetA64("0>0011101<1xxxxx111101xxxxxxxxxx", InstName.Fmin_V,          InstEmit.Fmin_V,          typeof(OpCodeSimdReg));
             SetA64("000111100x1xxxxx011110xxxxxxxxxx", InstName.Fminnm_S,        InstEmit.Fminnm_S,        typeof(OpCodeSimdReg));
             SetA64("0>0011101<1xxxxx110001xxxxxxxxxx", InstName.Fminnm_V,        InstEmit.Fminnm_V,        typeof(OpCodeSimdReg));
+            SetA64("0>1011101<1xxxxx110001xxxxxxxxxx", InstName.Fminnmp_V,       InstEmit.Fminnmp_V,       typeof(OpCodeSimdReg));
             SetA64("0110111010110000110010xxxxxxxxxx", InstName.Fminnmv_V,       InstEmit.Fminnmv_V,       typeof(OpCodeSimd));
             SetA64("0>1011101<1xxxxx111101xxxxxxxxxx", InstName.Fminp_V,         InstEmit.Fminp_V,         typeof(OpCodeSimdReg));
+            SetA64("0110111010110000111110xxxxxxxxxx", InstName.Fminv_V,         InstEmit.Fminv_V,         typeof(OpCodeSimd));
             SetA64("010111111xxxxxxx0001x0xxxxxxxxxx", InstName.Fmla_Se,         InstEmit.Fmla_Se,         typeof(OpCodeSimdRegElemF));
             SetA64("0>0011100<1xxxxx110011xxxxxxxxxx", InstName.Fmla_V,          InstEmit.Fmla_V,          typeof(OpCodeSimdReg));
             SetA64("0>0011111<xxxxxx0001x0xxxxxxxxxx", InstName.Fmla_Ve,         InstEmit.Fmla_Ve,         typeof(OpCodeSimdRegElemF));
@@ -529,6 +533,7 @@ namespace ARMeilleure.Decoders
             SetA64("0101111101xxxxxx001101xxxxxxxxxx", InstName.Srsra_S,         InstEmit.Srsra_S,         typeof(OpCodeSimdShImm));
             SetA64("0x00111100>>>xxx001101xxxxxxxxxx", InstName.Srsra_V,         InstEmit.Srsra_V,         typeof(OpCodeSimdShImm));
             SetA64("0100111101xxxxxx001101xxxxxxxxxx", InstName.Srsra_V,         InstEmit.Srsra_V,         typeof(OpCodeSimdShImm));
+            SetA64("01011110111xxxxx010001xxxxxxxxxx", InstName.Sshl_S,          InstEmit.Sshl_S,          typeof(OpCodeSimdReg));
             SetA64("0>001110<<1xxxxx010001xxxxxxxxxx", InstName.Sshl_V,          InstEmit.Sshl_V,          typeof(OpCodeSimdReg));
             SetA64("0x00111100>>>xxx101001xxxxxxxxxx", InstName.Sshll_V,         InstEmit.Sshll_V,         typeof(OpCodeSimdShImm));
             SetA64("0101111101xxxxxx000001xxxxxxxxxx", InstName.Sshr_S,          InstEmit.Sshr_S,          typeof(OpCodeSimdShImm));
@@ -611,6 +616,7 @@ namespace ARMeilleure.Decoders
             SetA64("0111111101xxxxxx001101xxxxxxxxxx", InstName.Ursra_S,         InstEmit.Ursra_S,         typeof(OpCodeSimdShImm));
             SetA64("0x10111100>>>xxx001101xxxxxxxxxx", InstName.Ursra_V,         InstEmit.Ursra_V,         typeof(OpCodeSimdShImm));
             SetA64("0110111101xxxxxx001101xxxxxxxxxx", InstName.Ursra_V,         InstEmit.Ursra_V,         typeof(OpCodeSimdShImm));
+            SetA64("01111110111xxxxx010001xxxxxxxxxx", InstName.Ushl_S,          InstEmit.Ushl_S,          typeof(OpCodeSimdReg));
             SetA64("0>101110<<1xxxxx010001xxxxxxxxxx", InstName.Ushl_V,          InstEmit.Ushl_V,          typeof(OpCodeSimdReg));
             SetA64("0x10111100>>>xxx101001xxxxxxxxxx", InstName.Ushll_V,         InstEmit.Ushll_V,         typeof(OpCodeSimdShImm));
             SetA64("0111111101xxxxxx000001xxxxxxxxxx", InstName.Ushr_S,          InstEmit.Ushr_S,          typeof(OpCodeSimdShImm));

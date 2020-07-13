@@ -391,25 +391,14 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Sshl_S(ArmEmitterContext context)
+        {
+            EmitSshlOrUshl(context, signed: true, scalar: true);
+        }
+
         public static void Sshl_V(ArmEmitterContext context)
         {
-            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
-
-            Operand res = context.VectorZero();
-
-            int elems = op.GetBytesCount() >> op.Size;
-
-            for (int index = 0; index < elems; index++)
-            {
-                Operand ne = EmitVectorExtractSx(context, op.Rn, index, op.Size);
-                Operand me = EmitVectorExtractSx(context, op.Rm, index, op.Size);
-
-                Operand e = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedShlReg)), ne, me, Const(0), Const(op.Size));
-
-                res = EmitVectorInsert(context, res, e, index, op.Size);
-            }
-
-            context.Copy(GetVec(op.Rd), res);
+            EmitSshlOrUshl(context, signed: true, scalar: false);
         }
 
         public static void Sshll_V(ArmEmitterContext context)
@@ -686,25 +675,14 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Ushl_S(ArmEmitterContext context)
+        {
+            EmitSshlOrUshl(context, signed: false, scalar: true);
+        }
+
         public static void Ushl_V(ArmEmitterContext context)
         {
-            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
-
-            Operand res = context.VectorZero();
-
-            int elems = op.GetBytesCount() >> op.Size;
-
-            for (int index = 0; index < elems; index++)
-            {
-                Operand ne = EmitVectorExtractZx(context, op.Rn, index, op.Size);
-                Operand me = EmitVectorExtractSx(context, op.Rm, index << op.Size, 0);
-
-                Operand e = EmitUnsignedShlRegOp(context, ne, context.ConvertI64ToI32(me), op.Size);
-
-                res = EmitVectorInsert(context, res, e, index, op.Size);
-            }
-
-            context.Copy(GetVec(op.Rd), res);
+            EmitSshlOrUshl(context, signed: false, scalar: false);
         }
 
         public static void Ushll_V(ArmEmitterContext context)
@@ -894,7 +872,7 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
-        private static Operand EmitUnsignedShlRegOp(ArmEmitterContext context, Operand op, Operand shiftLsB, int size)
+        private static Operand EmitShlRegOp(ArmEmitterContext context, Operand op, Operand shiftLsB, int size, bool signed)
         {
             Debug.Assert(op.Type       == OperandType.I64);
             Debug.Assert(shiftLsB.Type == OperandType.I32);
@@ -902,18 +880,33 @@ namespace ARMeilleure.Instructions
 
             Operand negShiftLsB = context.Negate(shiftLsB);
 
+            Operand isInRange = context.BitwiseAnd(
+                context.ICompareLess(shiftLsB,    Const(8 << size)),
+                context.ICompareLess(negShiftLsB, Const(8 << size)));
+
             Operand isPositive = context.ICompareGreaterOrEqual(shiftLsB, Const(0));
 
-            Operand shl = context.ShiftLeft   (op, shiftLsB);
-            Operand shr = context.ShiftRightUI(op, negShiftLsB);
+            Operand shl = context.ShiftLeft(op, shiftLsB);
 
-            Operand res = context.ConditionalSelect(isPositive, shl, shr);
+            Operand sarOrShr = signed
+                ? context.ShiftRightSI(op, negShiftLsB)
+                : context.ShiftRightUI(op, negShiftLsB);
 
-            Operand isOutOfRange = context.BitwiseOr(
-                context.ICompareGreaterOrEqual(shiftLsB,    Const(8 << size)),
-                context.ICompareGreaterOrEqual(negShiftLsB, Const(8 << size)));
+            Operand res = context.ConditionalSelect(isPositive, shl, sarOrShr);
 
-            return context.ConditionalSelect(isOutOfRange, Const(0UL), res);
+            if (signed)
+            {
+                Operand isPositive2 = context.ICompareGreaterOrEqual(op, Const(0L));
+
+                Operand res2 = context.ConditionalSelect(isPositive2, Const(0L), Const(-1L));
+                        res2 = context.ConditionalSelect(isPositive,  Const(0L), res2);
+
+                return context.ConditionalSelect(isInRange, res, res2);
+            }
+            else
+            {
+                return context.ConditionalSelect(isInRange, res, Const(0UL));
+            }
         }
 
         private static void EmitVectorShrImmNarrowOpZx(ArmEmitterContext context, bool round)
@@ -1173,6 +1166,27 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(op.Rd), res);
             }
+        }
+
+        private static void EmitSshlOrUshl(ArmEmitterContext context, bool signed, bool scalar)
+        {
+            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+
+            Operand res = context.VectorZero();
+
+            int elems = !scalar ? op.GetBytesCount() >> op.Size : 1;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand ne = EmitVectorExtract  (context, op.Rn, index, op.Size, signed);
+                Operand me = EmitVectorExtractSx(context, op.Rm, index << op.Size, 0);
+
+                Operand e = EmitShlRegOp(context, ne, context.ConvertI64ToI32(me), op.Size, signed);
+
+                res = EmitVectorInsert(context, res, e, index, op.Size);
+            }
+
+            context.Copy(GetVec(op.Rd), res);
         }
     }
 }

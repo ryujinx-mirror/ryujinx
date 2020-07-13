@@ -373,12 +373,14 @@ namespace Ryujinx.Tests.Cpu
         {
             return new uint[]
             {
-                0x0E20F400u, // FMAX   V0.2S, V0.2S, V0.2S
-                0x0E20C400u, // FMAXNM V0.2S, V0.2S, V0.2S
-                0x2E20F400u, // FMAXP  V0.2S, V0.2S, V0.2S
-                0x0EA0F400u, // FMIN   V0.2S, V0.2S, V0.2S
-                0x0EA0C400u, // FMINNM V0.2S, V0.2S, V0.2S
-                0x2EA0F400u  // FMINP  V0.2S, V0.2S, V0.2S
+                0x0E20F400u, // FMAX    V0.2S, V0.2S, V0.2S
+                0x0E20C400u, // FMAXNM  V0.2S, V0.2S, V0.2S
+                0x2E20C400u, // FMAXNMP V0.2S, V0.2S, V0.2S
+                0x2E20F400u, // FMAXP   V0.2S, V0.2S, V0.2S
+                0x0EA0F400u, // FMIN    V0.2S, V0.2S, V0.2S
+                0x0EA0C400u, // FMINNM  V0.2S, V0.2S, V0.2S
+                0x2EA0C400u, // FMINNMP V0.2S, V0.2S, V0.2S
+                0x2EA0F400u  // FMINP   V0.2S, V0.2S, V0.2S
             };
         }
 
@@ -386,12 +388,14 @@ namespace Ryujinx.Tests.Cpu
         {
             return new uint[]
             {
-                0x4E60F400u, // FMAX   V0.2D, V0.2D, V0.2D
-                0x4E60C400u, // FMAXNM V0.2D, V0.2D, V0.2D
-                0x6E60F400u, // FMAXP  V0.2D, V0.2D, V0.2D
-                0x4EE0F400u, // FMIN   V0.2D, V0.2D, V0.2D
-                0x4EE0C400u, // FMINNM V0.2D, V0.2D, V0.2D
-                0x6EE0F400u  // FMINP  V0.2D, V0.2D, V0.2D
+                0x4E60F400u, // FMAX    V0.2D, V0.2D, V0.2D
+                0x4E60C400u, // FMAXNM  V0.2D, V0.2D, V0.2D
+                0x6E60C400u, // FMAXNMP V0.2D, V0.2D, V0.2D
+                0x6E60F400u, // FMAXP   V0.2D, V0.2D, V0.2D
+                0x4EE0F400u, // FMIN    V0.2D, V0.2D, V0.2D
+                0x4EE0C400u, // FMINNM  V0.2D, V0.2D, V0.2D
+                0x6EE0C400u, // FMINNMP V0.2D, V0.2D, V0.2D
+                0x6EE0F400u  // FMINP   V0.2D, V0.2D, V0.2D
             };
         }
 
@@ -528,6 +532,15 @@ namespace Ryujinx.Tests.Cpu
                 0x6E208000u, // UMLAL2 V0.8H, V0.16B, V0.16B
                 0x6E20A000u, // UMLSL2 V0.8H, V0.16B, V0.16B
                 0x6E20C000u  // UMULL2 V0.8H, V0.16B, V0.16B
+            };
+        }
+
+        private static uint[] _ShlReg_S_D_()
+        {
+            return new uint[]
+            {
+                0x5EE04400u, // SSHL D0, D0, D0
+                0x7EE04400u  // USHL D0, D0, D0
             };
         }
 
@@ -2818,6 +2831,26 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlReg_S_D([ValueSource("_ShlReg_S_D_")] uint opcodes,
+                               [Values(0u)]     uint rd,
+                               [Values(1u, 0u)] uint rn,
+                               [Values(2u, 0u)] uint rm,
+                               [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                               [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                               [ValueSource("_1D_")] [Random(0ul, 255ul, RndCnt)] ulong b)
+        {
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0(b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise]

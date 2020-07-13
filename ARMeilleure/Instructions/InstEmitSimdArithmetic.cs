@@ -382,7 +382,14 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.FastFP && Optimizations.UseSse2)
             {
-                EmitSse2VectorPairwiseOpF(context, Intrinsic.X86Addps, Intrinsic.X86Addpd);
+                EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+
+                    Intrinsic addInst = (op.Size & 1) == 0 ? Intrinsic.X86Addps : Intrinsic.X86Addpd;
+
+                    return context.AddIntrinsic(addInst, op1, op2);
+                });
             }
             else
             {
@@ -468,9 +475,12 @@ namespace ARMeilleure.Instructions
 
         public static void Fmax_S(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitScalarBinaryOpF(context, Intrinsic.X86Maxss, Intrinsic.X86Maxsd);
+                EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                }, scalar: true);
             }
             else
             {
@@ -483,9 +493,12 @@ namespace ARMeilleure.Instructions
 
         public static void Fmax_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitVectorBinaryOpF(context, Intrinsic.X86Maxps, Intrinsic.X86Maxpd);
+                EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                }, scalar: false);
             }
             else
             {
@@ -526,19 +539,53 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fmaxnmp_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: true, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMaxNum), op1, op2);
+                });
+            }
+        }
+
         public static void Fmaxnmv_V(ArmEmitterContext context)
         {
-            EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMaxNum)), op1, op2);
-            });
+                EmitSse2VectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: true, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMaxNum)), op1, op2);
+                });
+            }
         }
 
         public static void Fmaxp_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitSse2VectorPairwiseOpF(context, Intrinsic.X86Maxps, Intrinsic.X86Maxpd);
+                EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    }, scalar: false, op1, op2);
+                });
             }
             else
             {
@@ -549,11 +596,35 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fmaxv_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2VectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    }, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMax)), op1, op2);
+                });
+            }
+        }
+
         public static void Fmin_S(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitScalarBinaryOpF(context, Intrinsic.X86Minss, Intrinsic.X86Minsd);
+                EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                }, scalar: true);
             }
             else
             {
@@ -566,9 +637,12 @@ namespace ARMeilleure.Instructions
 
         public static void Fmin_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitVectorBinaryOpF(context, Intrinsic.X86Minps, Intrinsic.X86Minpd);
+                EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                }, scalar: false);
             }
             else
             {
@@ -609,25 +683,80 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fminnmp_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: false, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMinNum), op1, op2);
+                });
+            }
+        }
+
         public static void Fminnmv_V(ArmEmitterContext context)
         {
-            EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMinNum)), op1, op2);
-            });
+                EmitSse2VectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: false, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMinNum)), op1, op2);
+                });
+            }
         }
 
         public static void Fminp_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                EmitSse2VectorPairwiseOpF(context, Intrinsic.X86Minps, Intrinsic.X86Minpd);
+                EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    }, scalar: false, op1, op2);
+                });
             }
             else
             {
                 EmitVectorPairwiseOpF(context, (op1, op2) =>
                 {
                     return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMin), op1, op2);
+                });
+            }
+        }
+
+        public static void Fminv_V(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2VectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    }, scalar: false, op1, op2);
+                });
+            }
+            else
+            {
+                EmitVectorAcrossVectorOpF(context, (op1, op2) =>
+                {
+                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMin)), op1, op2);
                 });
             }
         }
@@ -3111,7 +3240,12 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
-        public static Operand EmitSse2VectorIsQNaNOpF(ArmEmitterContext context, Operand opF)
+        public static void EmitSse2VectorIsNaNOpF(
+            ArmEmitterContext context,
+            Operand opF,
+            out Operand qNaNMask,
+            out Operand sNaNMask,
+            bool? isQNaN = null)
         {
             IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
 
@@ -3126,7 +3260,8 @@ namespace ARMeilleure.Instructions
                 Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
                         mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, mask2, qMask, Const((int)CmpCondition.Equal));
 
-                return context.AddIntrinsic(Intrinsic.X86Andps, mask1, mask2);
+                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andps,  mask2, mask1) : null;
+                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnps, mask2, mask1) : null;
             }
             else /* if ((op.Size & 1) == 1) */
             {
@@ -3139,67 +3274,202 @@ namespace ARMeilleure.Instructions
                 Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
                         mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, mask2, qMask, Const((int)CmpCondition.Equal));
 
-                return context.AddIntrinsic(Intrinsic.X86Andpd, mask1, mask2);
+                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andpd,  mask2, mask1) : null;
+                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnpd, mask2, mask1) : null;
             }
         }
 
-        private static void EmitSse41MaxMinNumOpF(ArmEmitterContext context, bool isMaxNum, bool scalar)
+        public static Operand EmitSse41ProcessNaNsOpF(
+            ArmEmitterContext context,
+            Func2I emit,
+            bool scalar,
+            Operand n = null,
+            Operand m = null)
         {
-            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
+            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
 
-            Operand d = GetVec(op.Rd);
-            Operand n = GetVec(op.Rn);
-            Operand m = GetVec(op.Rm);
+            EmitSse2VectorIsNaNOpF(context, nCopy, out Operand nQNaNMask, out Operand nSNaNMask);
+            EmitSse2VectorIsNaNOpF(context, mCopy, out _, out Operand mSNaNMask, isQNaN: false);
 
-            Operand nNum = context.Copy(n);
-            Operand mNum = context.Copy(m);
-
-            Operand nQNaNMask = EmitSse2VectorIsQNaNOpF(context, nNum);
-            Operand mQNaNMask = EmitSse2VectorIsQNaNOpF(context, mNum);
-
-            int sizeF = op.Size & 1;
+            int sizeF = ((IOpCodeSimd)context.CurrOp).Size & 1;
 
             if (sizeF == 0)
             {
-                Operand negInfMask = X86GetAllElements(context, isMaxNum ? float.NegativeInfinity : float.PositiveInfinity);
+                const int QBit = 22;
 
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnps, mQNaNMask, nQNaNMask);
-                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnps, nQNaNMask, mQNaNMask);
+                Operand qMask = scalar ? X86GetScalar(context, 1 << QBit) : X86GetAllElements(context, 1 << QBit);
 
-                nNum = context.AddIntrinsic(Intrinsic.X86Blendvps, nNum, negInfMask, nMask);
-                mNum = context.AddIntrinsic(Intrinsic.X86Blendvps, mNum, negInfMask, mMask);
+                Operand resNaNMask = context.AddIntrinsic(Intrinsic.X86Pandn, mSNaNMask,  nQNaNMask);
+                        resNaNMask = context.AddIntrinsic(Intrinsic.X86Por,   resNaNMask, nSNaNMask);
 
-                Operand res = context.AddIntrinsic(isMaxNum ? Intrinsic.X86Maxps : Intrinsic.X86Minps, nNum, mNum);
+                Operand resNaN = context.AddIntrinsic(Intrinsic.X86Blendvps, mCopy, nCopy, resNaNMask);
+                        resNaN = context.AddIntrinsic(Intrinsic.X86Por, resNaN, qMask);
+
+                Operand resMask = context.AddIntrinsic(Intrinsic.X86Cmpps, nCopy, mCopy, Const((int)CmpCondition.OrderedQ));
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Blendvps, resNaN, emit(nCopy, mCopy), resMask);
+
+                if (n != null || m != null)
+                {
+                    return res;
+                }
 
                 if (scalar)
                 {
                     res = context.VectorZeroUpper96(res);
                 }
-                else if (op.RegisterSize == RegisterSize.Simd64)
+                else if (((OpCodeSimdReg)context.CurrOp).RegisterSize == RegisterSize.Simd64)
                 {
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(d, res);
+                context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
+
+                return null;
             }
             else /* if (sizeF == 1) */
             {
-                Operand negInfMask = X86GetAllElements(context, isMaxNum ? double.NegativeInfinity : double.PositiveInfinity);
+                const int QBit = 51;
 
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnpd, mQNaNMask, nQNaNMask);
-                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnpd, nQNaNMask, mQNaNMask);
+                Operand qMask = scalar ? X86GetScalar(context, 1L << QBit) : X86GetAllElements(context, 1L << QBit);
 
-                nNum = context.AddIntrinsic(Intrinsic.X86Blendvpd, nNum, negInfMask, nMask);
-                mNum = context.AddIntrinsic(Intrinsic.X86Blendvpd, mNum, negInfMask, mMask);
+                Operand resNaNMask = context.AddIntrinsic(Intrinsic.X86Pandn, mSNaNMask,  nQNaNMask);
+                        resNaNMask = context.AddIntrinsic(Intrinsic.X86Por,   resNaNMask, nSNaNMask);
 
-                Operand res = context.AddIntrinsic(isMaxNum ? Intrinsic.X86Maxpd : Intrinsic.X86Minpd, nNum, mNum);
+                Operand resNaN = context.AddIntrinsic(Intrinsic.X86Blendvpd, mCopy, nCopy, resNaNMask);
+                        resNaN = context.AddIntrinsic(Intrinsic.X86Por, resNaN, qMask);
+
+                Operand resMask = context.AddIntrinsic(Intrinsic.X86Cmppd, nCopy, mCopy, Const((int)CmpCondition.OrderedQ));
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Blendvpd, resNaN, emit(nCopy, mCopy), resMask);
+
+                if (n != null || m != null)
+                {
+                    return res;
+                }
 
                 if (scalar)
                 {
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(d, res);
+                context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
+
+                return null;
+            }
+        }
+
+        private static Operand EmitSse2VectorMaxMinOpF(ArmEmitterContext context, Operand n, Operand m, bool isMax)
+        {
+            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+
+            if ((op.Size & 1) == 0)
+            {
+                Operand mask = X86GetAllElements(context, -0f);
+
+                Operand res = context.AddIntrinsic(isMax ? Intrinsic.X86Maxps : Intrinsic.X86Minps, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Andnps, mask, res);
+
+                Operand resSign = context.AddIntrinsic(isMax ? Intrinsic.X86Pand : Intrinsic.X86Por, n, m);
+                        resSign = context.AddIntrinsic(Intrinsic.X86Andps, mask, resSign);
+
+                return context.AddIntrinsic(Intrinsic.X86Por, res, resSign);
+            }
+            else /* if ((op.Size & 1) == 1) */
+            {
+                Operand mask = X86GetAllElements(context, -0d);
+
+                Operand res = context.AddIntrinsic(isMax ? Intrinsic.X86Maxpd : Intrinsic.X86Minpd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Andnpd, mask, res);
+
+                Operand resSign = context.AddIntrinsic(isMax ? Intrinsic.X86Pand : Intrinsic.X86Por, n, m);
+                        resSign = context.AddIntrinsic(Intrinsic.X86Andpd, mask, resSign);
+
+                return context.AddIntrinsic(Intrinsic.X86Por, res, resSign);
+            }
+        }
+
+        private static Operand EmitSse41MaxMinNumOpF(
+            ArmEmitterContext context,
+            bool isMaxNum,
+            bool scalar,
+            Operand n = null,
+            Operand m = null)
+        {
+            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
+            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
+
+            EmitSse2VectorIsNaNOpF(context, nCopy, out Operand nQNaNMask, out _, isQNaN: true);
+            EmitSse2VectorIsNaNOpF(context, mCopy, out Operand mQNaNMask, out _, isQNaN: true);
+
+            int sizeF = ((IOpCodeSimd)context.CurrOp).Size & 1;
+
+            if (sizeF == 0)
+            {
+                Operand negInfMask = scalar
+                    ? X86GetScalar     (context, isMaxNum ? float.NegativeInfinity : float.PositiveInfinity)
+                    : X86GetAllElements(context, isMaxNum ? float.NegativeInfinity : float.PositiveInfinity);
+
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnps, mQNaNMask, nQNaNMask);
+                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnps, nQNaNMask, mQNaNMask);
+
+                nCopy = context.AddIntrinsic(Intrinsic.X86Blendvps, nCopy, negInfMask, nMask);
+                mCopy = context.AddIntrinsic(Intrinsic.X86Blendvps, mCopy, negInfMask, mMask);
+
+                Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                }, scalar: scalar, nCopy, mCopy);
+
+                if (n != null || m != null)
+                {
+                    return res;
+                }
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper96(res);
+                }
+                else if (((OpCodeSimdReg)context.CurrOp).RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
+
+                return null;
+            }
+            else /* if (sizeF == 1) */
+            {
+                Operand negInfMask = scalar
+                    ? X86GetScalar     (context, isMaxNum ? double.NegativeInfinity : double.PositiveInfinity)
+                    : X86GetAllElements(context, isMaxNum ? double.NegativeInfinity : double.PositiveInfinity);
+
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnpd, mQNaNMask, nQNaNMask);
+                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnpd, nQNaNMask, mQNaNMask);
+
+                nCopy = context.AddIntrinsic(Intrinsic.X86Blendvpd, nCopy, negInfMask, nMask);
+                mCopy = context.AddIntrinsic(Intrinsic.X86Blendvpd, mCopy, negInfMask, mMask);
+
+                Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                {
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                }, scalar: scalar, nCopy, mCopy);
+
+                if (n != null || m != null)
+                {
+                    return res;
+                }
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
+
+                return null;
             }
         }
 

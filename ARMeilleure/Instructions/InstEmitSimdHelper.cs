@@ -1095,6 +1095,29 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), d);
         }
 
+        public static void EmitSse2VectorAcrossVectorOpF(ArmEmitterContext context, Func2I emit)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            Debug.Assert((op.Size & 1) == 0 && op.RegisterSize == RegisterSize.Simd128);
+
+            const int sm0 = 0 << 6 | 0 << 4 | 0 << 2 | 0 << 0;
+            const int sm1 = 1 << 6 | 1 << 4 | 1 << 2 | 1 << 0;
+            const int sm2 = 2 << 6 | 2 << 4 | 2 << 2 | 2 << 0;
+            const int sm3 = 3 << 6 | 3 << 4 | 3 << 2 | 3 << 0;
+
+            Operand nCopy = context.Copy(GetVec(op.Rn));
+
+            Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm0));
+            Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm1));
+            Operand part2 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm2));
+            Operand part3 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm3));
+
+            Operand res = emit(emit(part0, part1), emit(part2, part3));
+
+            context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
+        }
+
         public static void EmitVectorPairwiseOpF(ArmEmitterContext context, Func2I emit)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
@@ -1124,12 +1147,12 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
-        public static void EmitSse2VectorPairwiseOpF(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
+        public static void EmitSse2VectorPairwiseOpF(ArmEmitterContext context, Func2I emit)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
-            Operand n = GetVec(op.Rn);
-            Operand m = GetVec(op.Rm);
+            Operand nCopy = context.Copy(GetVec(op.Rn));
+            Operand mCopy = context.Copy(GetVec(op.Rm));
 
             int sizeF = op.Size & 1;
 
@@ -1137,32 +1160,32 @@ namespace ARMeilleure.Instructions
             {
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
-                    Operand unpck = context.AddIntrinsic(Intrinsic.X86Unpcklps, n, m);
+                    Operand unpck = context.AddIntrinsic(Intrinsic.X86Unpcklps, nCopy, mCopy);
 
                     Operand zero = context.VectorZero();
 
                     Operand part0 = context.AddIntrinsic(Intrinsic.X86Movlhps, unpck, zero);
                     Operand part1 = context.AddIntrinsic(Intrinsic.X86Movhlps, zero, unpck);
 
-                    context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst32, part0, part1));
+                    context.Copy(GetVec(op.Rd), emit(part0, part1));
                 }
                 else /* if (op.RegisterSize == RegisterSize.Simd128) */
                 {
                     const int sm0 = 2 << 6 | 0 << 4 | 2 << 2 | 0 << 0;
                     const int sm1 = 3 << 6 | 1 << 4 | 3 << 2 | 1 << 0;
 
-                    Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, n, m, Const(sm0));
-                    Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, n, m, Const(sm1));
+                    Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(sm0));
+                    Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(sm1));
 
-                    context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst32, part0, part1));
+                    context.Copy(GetVec(op.Rd), emit(part0, part1));
                 }
             }
             else /* if (sizeF == 1) */
             {
-                Operand part0 = context.AddIntrinsic(Intrinsic.X86Unpcklpd, n, m);
-                Operand part1 = context.AddIntrinsic(Intrinsic.X86Unpckhpd, n, m);
+                Operand part0 = context.AddIntrinsic(Intrinsic.X86Unpcklpd, nCopy, mCopy);
+                Operand part1 = context.AddIntrinsic(Intrinsic.X86Unpckhpd, nCopy, mCopy);
 
-                context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst64, part0, part1));
+                context.Copy(GetVec(op.Rd), emit(part0, part1));
             }
         }
 

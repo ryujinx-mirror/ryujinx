@@ -4,14 +4,66 @@ using ARMeilleure.State;
 
 using NUnit.Framework;
 
+using System;
+using System.Collections.Generic;
+
 namespace Ryujinx.Tests.Cpu
 {
     [Category("Misc")]
     public sealed class CpuTestMisc : CpuTest
     {
 #if Misc
+
+#region "ValueSource (Types)"
+        private static IEnumerable<ulong> _1S_F_()
+        {
+            yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
+            yield return 0x0000000080800000ul; // -Min Normal
+            yield return 0x00000000807FFFFFul; // -Max Subnormal
+            yield return 0x0000000080000001ul; // -Min Subnormal (-float.Epsilon)
+            yield return 0x000000007F7FFFFFul; // +Max Normal    (float.MaxValue)
+            yield return 0x0000000000800000ul; // +Min Normal
+            yield return 0x00000000007FFFFFul; // +Max Subnormal
+            yield return 0x0000000000000001ul; // +Min Subnormal (float.Epsilon)
+
+            if (!NoZeros)
+            {
+                yield return 0x0000000080000000ul; // -Zero
+                yield return 0x0000000000000000ul; // +Zero
+            }
+
+            if (!NoInfs)
+            {
+                yield return 0x00000000FF800000ul; // -Infinity
+                yield return 0x000000007F800000ul; // +Infinity
+            }
+
+            if (!NoNaNs)
+            {
+                yield return 0x00000000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
+                yield return 0x00000000FFBFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x000000007FC00000ul; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
+                yield return 0x000000007FBFFFFFul; // +SNaN (all ones  payload)
+            }
+
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
+            {
+                ulong grbg = TestContext.CurrentContext.Random.NextUInt();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
+
+                yield return (grbg << 32) | rnd1;
+                yield return (grbg << 32) | rnd2;
+            }
+        }
+#endregion
+
         private const int RndCnt    = 2;
         private const int RndCntImm = 2;
+
+        private static readonly bool NoZeros = false;
+        private static readonly bool NoInfs  = false;
+        private static readonly bool NoNaNs  = false;
 
 #region "AluImm & Csel"
         [Test, Pairwise]
@@ -356,6 +408,77 @@ namespace Ryujinx.Tests.Cpu
             ExecutionContext context = SingleOpcode(opcode, x0: a);
 
             Assert.That(context.GetX(0), Is.EqualTo(a));
+        }
+
+        [Explicit]
+        [Test, Pairwise]
+        public void Misc4([ValueSource("_1S_F_")] ulong a,
+                          [ValueSource("_1S_F_")] ulong b,
+                          [ValueSource("_1S_F_")] ulong c,
+                          [Values(0ul, 1ul, 2ul, 3ul)] ulong displacement)
+        {
+            if (!BitConverter.IsLittleEndian)
+            {
+                Assert.Ignore();
+            }
+
+            for (ulong gapOffset = 0; gapOffset < displacement; gapOffset++)
+            {
+                SetWorkingMemory(gapOffset, TestContext.CurrentContext.Random.NextByte());
+            }
+
+            SetWorkingMemory(0x0 + displacement, BitConverter.GetBytes((uint)b));
+
+            SetWorkingMemory(0x4 + displacement, BitConverter.GetBytes((uint)c));
+
+            SetWorkingMemory(0x8 + displacement, TestContext.CurrentContext.Random.NextByte());
+            SetWorkingMemory(0x9 + displacement, TestContext.CurrentContext.Random.NextByte());
+            SetWorkingMemory(0xA + displacement, TestContext.CurrentContext.Random.NextByte());
+            SetWorkingMemory(0xB + displacement, TestContext.CurrentContext.Random.NextByte());
+
+            SetContext(
+                x0: DataBaseAddress + displacement,
+                v0: MakeVectorE0E1(a, TestContext.CurrentContext.Random.NextULong()),
+                v1: MakeVectorE0E1(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong()),
+                v2: MakeVectorE0E1(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong()),
+                overflow: TestContext.CurrentContext.Random.NextBool(),
+                carry:    TestContext.CurrentContext.Random.NextBool(),
+                zero:     TestContext.CurrentContext.Random.NextBool(),
+                negative: TestContext.CurrentContext.Random.NextBool());
+
+            Opcode(0xBD400001); // LDR   S1, [X0,#0]
+            Opcode(0xBD400402); // LDR   S2, [X0,#4]
+            Opcode(0x1E215801); // FMIN  S1, S0, S1
+            Opcode(0x1E222000); // FCMP  S0, S2
+            Opcode(0x1E214C40); // FCSEL S0, S2, S1, MI
+            Opcode(0xBD000800); // STR   S0, [X0,#8]
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
+        }
+
+        [Explicit]
+        [Test]
+        public void Misc5([ValueSource("_1S_F_")] ulong a)
+        {
+            SetContext(
+                v0: MakeVectorE0E1(a, TestContext.CurrentContext.Random.NextULong()),
+                v1: MakeVectorE0E1(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong()),
+                overflow: TestContext.CurrentContext.Random.NextBool(),
+                carry:    TestContext.CurrentContext.Random.NextBool(),
+                zero:     TestContext.CurrentContext.Random.NextBool(),
+                negative: TestContext.CurrentContext.Random.NextBool());
+
+            Opcode(0x1E202008); // FCMP  S0, #0.0
+            Opcode(0x1E2E1001); // FMOV  S1, #1.0
+            Opcode(0x1E215800); // FMIN  S0, S0, S1
+            Opcode(0x1E2703E1); // FMOV  S1, WZR
+            Opcode(0x1E204C20); // FCSEL S0, S1, S0, MI
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
         }
 #endif
     }

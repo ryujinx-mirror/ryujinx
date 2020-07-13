@@ -918,7 +918,9 @@ namespace Ryujinx.Tests.Cpu
             return new uint[]
             {
                 0x6E30C800u, // FMAXNMV S0, V0.4S
-                0x6EB0C800u  // FMINNMV S0, V0.4S
+                0x6E30F800u, // FMAXV   S0, V0.4S
+                0x6EB0C800u, // FMINNMV S0, V0.4S
+                0x6EB0F800u  // FMINV   S0, V0.4S
             };
         }
 

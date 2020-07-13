@@ -1200,8 +1200,8 @@ namespace ARMeilleure.Instructions
                 Operand nNum = context.Copy(n);
                 Operand mNum = context.Copy(m);
 
-                Operand nQNaNMask = InstEmit.EmitSse2VectorIsQNaNOpF(context, nNum);
-                Operand mQNaNMask = InstEmit.EmitSse2VectorIsQNaNOpF(context, mNum);
+                InstEmit.EmitSse2VectorIsNaNOpF(context, nNum, out Operand nQNaNMask, out _, isQNaN: true);
+                InstEmit.EmitSse2VectorIsNaNOpF(context, mNum, out Operand mQNaNMask, out _, isQNaN: true);
 
                 int sizeF = op.Size & 1;
 

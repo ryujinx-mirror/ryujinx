@@ -19,8 +19,8 @@ namespace ARMeilleure.Translation.PTC
     public static class Ptc
     {
         private const string HeaderMagic = "PTChd";
-
-        private const int InternalVersion = 9; //! To be incremented manually for each change to the ARMeilleure project.
+      
+        private const int InternalVersion = 10; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string BaseDir = "Ryujinx";
 
