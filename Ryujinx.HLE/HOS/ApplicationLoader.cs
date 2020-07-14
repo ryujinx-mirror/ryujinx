@@ -69,6 +69,8 @@ namespace Ryujinx.HLE.HOS
 
             Npdm metaData = ReadNpdm(codeFs);
 
+            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.GetBaseModsPath());
+
             if (TitleId != 0)
             {
                 EnsureSaveData(new TitleId(TitleId));

@@ -451,8 +451,12 @@ namespace Ryujinx.HLE.HOS
 
         internal bool ApplyNsoPatches(ulong titleId, params IExecutable[] programs)
         {
-            AppMods.TryGetValue(titleId, out ModCache mods);
-            var nsoMods = Patches.NsoPatches.Concat(mods.ExefsDirs);
+            IEnumerable<Mod<DirectoryInfo>> nsoMods = Patches.NsoPatches;
+
+            if (AppMods.TryGetValue(titleId, out ModCache mods))
+            {
+                nsoMods = nsoMods.Concat(mods.ExefsDirs);
+            }
 
             // NSO patches are created with offset 0 according to Atmosphere's patcher module
             // But `Program` doesn't contain the header which is 0x100 bytes. So, we adjust for that here
