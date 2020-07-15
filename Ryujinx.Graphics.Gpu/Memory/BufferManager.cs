@@ -535,7 +535,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 }
             }
 
-            if (_transformFeedbackBuffersDirty)
+            if (_transformFeedbackBuffersDirty || _rebind)
             {
                 _transformFeedbackBuffersDirty = false;
 
