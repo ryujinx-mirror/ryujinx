@@ -28,10 +28,13 @@ namespace Ryujinx.Graphics.Gpu.State
         SyncpointAction                 = 0xb2,
         CopyBuffer                      = 0xc0,
         RasterizeEnable                 = 0xdf,
+        TfBufferState                   = 0xe0,
         CopyBufferParams                = 0x100,
+        TfState                         = 0x1c0,
         CopyBufferSwizzle               = 0x1c2,
         CopyBufferDstTexture            = 0x1c3,
         CopyBufferSrcTexture            = 0x1ca,
+        TfEnable                        = 0x1d1,
         RtColorState                    = 0x200,
         CopyTextureControl              = 0x223,
         CopyRegion                      = 0x22c,
@@ -116,6 +119,7 @@ namespace Ryujinx.Graphics.Gpu.State
         UniformBufferBindTessEvaluation = 0x914,
         UniformBufferBindGeometry       = 0x91c,
         UniformBufferBindFragment       = 0x924,
-        TextureBufferIndex              = 0x982
+        TextureBufferIndex              = 0x982,
+        TfVaryingLocations              = 0xa00
     }
 }

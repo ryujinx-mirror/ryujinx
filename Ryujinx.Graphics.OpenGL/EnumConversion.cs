@@ -331,6 +331,31 @@ namespace Ryujinx.Graphics.OpenGL
             return PrimitiveType.Points;
         }
 
+        public static TransformFeedbackPrimitiveType ConvertToTfType(this PrimitiveTopology topology)
+        {
+            switch (topology)
+            {
+                case PrimitiveTopology.Points:
+                    return TransformFeedbackPrimitiveType.Points;
+                case PrimitiveTopology.Lines:
+                case PrimitiveTopology.LineLoop:
+                case PrimitiveTopology.LineStrip:
+                case PrimitiveTopology.LinesAdjacency:
+                case PrimitiveTopology.LineStripAdjacency:
+                    return TransformFeedbackPrimitiveType.Lines;
+                case PrimitiveTopology.Triangles:
+                case PrimitiveTopology.TriangleStrip:
+                case PrimitiveTopology.TriangleFan:
+                case PrimitiveTopology.TrianglesAdjacency:
+                case PrimitiveTopology.TriangleStripAdjacency:
+                    return TransformFeedbackPrimitiveType.Triangles;
+            }
+
+            Logger.PrintDebug(LogClass.Gpu, $"Invalid {nameof(PrimitiveTopology)} enum value: {topology}.");
+
+            return TransformFeedbackPrimitiveType.Points;
+        }
+
         public static OpenTK.Graphics.OpenGL.StencilOp Convert(this GAL.StencilOp op)
         {
             switch (op)

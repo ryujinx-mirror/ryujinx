@@ -24,8 +24,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private Buffer[] _bufferOverlaps;
 
         private IndexBuffer _indexBuffer;
-
         private VertexBuffer[] _vertexBuffers;
+        private BufferBounds[] _transformFeedbackBuffers;
 
         private class BuffersPerStage
         {
@@ -56,6 +56,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private bool _indexBufferDirty;
         private bool _vertexBuffersDirty;
         private uint _vertexBuffersEnableMask;
+        private bool _transformFeedbackBuffersDirty;
 
         private bool _rebind;
 
@@ -72,6 +73,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _bufferOverlaps = new Buffer[OverlapsBufferInitialCapacity];
 
             _vertexBuffers = new VertexBuffer[Constants.TotalVertexBuffers];
+
+            _transformFeedbackBuffers = new BufferBounds[Constants.TotalTransformFeedbackBuffers];
 
             _cpStorageBuffers = new BuffersPerStage(Constants.TotalCpStorageBuffers);
             _cpUniformBuffers = new BuffersPerStage(Constants.TotalCpUniformBuffers);
@@ -142,6 +145,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _vertexBuffersEnableMask &= ~(1u << index);
             }
+        }
+
+        public void SetTransformFeedbackBuffer(int index, ulong gpuVa, ulong size)
+        {
+            ulong address = TranslateAndCreateBuffer(gpuVa, size);
+
+            _transformFeedbackBuffers[index].Address = address;
+            _transformFeedbackBuffers[index].Size    = size;
+
+            _transformFeedbackBuffersDirty = true;
         }
 
         /// <summary>
@@ -519,6 +532,41 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
 
                     SynchronizeBufferRange(vb.Address, vb.Size);
+                }
+            }
+
+            if (_transformFeedbackBuffersDirty)
+            {
+                _transformFeedbackBuffersDirty = false;
+
+                for (int index = 0; index < Constants.TotalTransformFeedbackBuffers; index++)
+                {
+                    BufferBounds tfb = _transformFeedbackBuffers[index];
+
+                    if (tfb.Address == 0)
+                    {
+                        _context.Renderer.Pipeline.SetTransformFeedbackBuffer(index, new BufferRange(BufferHandle.Null, 0, 0));
+
+                        continue;
+                    }
+
+                    BufferRange buffer = GetBufferRange(tfb.Address, tfb.Size);
+
+                    _context.Renderer.Pipeline.SetTransformFeedbackBuffer(index, buffer);
+                }
+            }
+            else
+            {
+                for (int index = 0; index < Constants.TotalTransformFeedbackBuffers; index++)
+                {
+                    BufferBounds tfb = _transformFeedbackBuffers[index];
+
+                    if (tfb.Address == 0)
+                    {
+                        continue;
+                    }
+
+                    SynchronizeBufferRange(tfb.Address, tfb.Size);
                 }
             }
 

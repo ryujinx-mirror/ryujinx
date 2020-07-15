@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             shader.HostShader = _context.Renderer.CompileShader(shader.Program);
 
-            IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader });
+            IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
 
             ShaderBundle cpShader = new ShaderBundle(hostProgram, shader);
 
@@ -150,6 +150,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     continue;
                 }
 
+                var tfd = GetTransformFeedbackDescriptors(state);
+
                 IShader hostShader = _context.Renderer.CompileShader(program);
 
                 shaders[stage].HostShader = hostShader;
@@ -157,7 +159,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 hostShaders.Add(hostShader);
             }
 
-            IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray());
+            IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), GetTransformFeedbackDescriptors(state));
 
             ShaderBundle gpShaders = new ShaderBundle(hostProgram, shaders);
 
@@ -171,6 +173,36 @@ namespace Ryujinx.Graphics.Gpu.Shader
             list.Add(gpShaders);
 
             return gpShaders;
+        }
+
+        /// <summary>
+        /// Gets transform feedback state from the current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <returns>Four transform feedback descriptors for the enabled TFBs, or null if TFB is disabled</returns>
+        private TransformFeedbackDescriptor[] GetTransformFeedbackDescriptors(GpuState state)
+        {
+            bool tfEnable = state.Get<Boolean32>(MethodOffset.TfEnable);
+
+            if (!tfEnable)
+            {
+                return null;
+            }
+
+            TransformFeedbackDescriptor[] descs = new TransformFeedbackDescriptor[Constants.TotalTransformFeedbackBuffers];
+
+            for (int i = 0; i < Constants.TotalTransformFeedbackBuffers; i++)
+            {
+                var tf = state.Get<TfState>(MethodOffset.TfState, i);
+
+                int length = (int)Math.Min((uint)tf.VaryingsCount, 0x80);
+
+                var varyingLocations = state.GetSpan(MethodOffset.TfVaryingLocations + i * 0x80, length).ToArray();
+
+                descs[i] = new TransformFeedbackDescriptor(tf.BufferIndex, tf.Stride, varyingLocations);
+            }
+
+            return descs;
         }
 
         /// <summary>

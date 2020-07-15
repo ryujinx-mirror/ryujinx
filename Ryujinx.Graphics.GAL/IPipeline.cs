@@ -7,6 +7,8 @@ namespace Ryujinx.Graphics.GAL
     {
         void Barrier();
 
+        void BeginTransformFeedback(PrimitiveTopology topology);
+
         void ClearRenderTargetColor(int index, uint componentMask, ColorF color);
 
         void ClearRenderTargetDepthStencil(
@@ -26,6 +28,8 @@ namespace Ryujinx.Graphics.GAL
             int firstIndex,
             int firstVertex,
             int firstInstance);
+
+        void EndTransformFeedback();
 
         void SetBlendState(int index, BlendDescriptor blend);
 
@@ -73,6 +77,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetTexture(int index, ShaderStage stage, ITexture texture);
 
+        void SetTransformFeedbackBuffer(int index, BufferRange buffer);
         void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
 
         void SetUserClipDistance(int index, bool enableClip);

@@ -36,6 +36,11 @@ namespace Ryujinx.Graphics.Gpu
         public const int TotalGpStorageBuffers = 16;
 
         /// <summary>
+        /// Maximum number of transform feedback buffers.
+        /// </summary>
+        public const int TotalTransformFeedbackBuffers = 4;
+
+        /// <summary>
         /// Maximum number of render target color buffers.
         /// </summary>
         public const int TotalRenderTargets = 8;

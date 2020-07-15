@@ -45,6 +45,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         private bool _scissor0Enable = false;
 
+        private bool _tfEnabled;
+
         ColorF _blendConstant = new ColorF(0, 0, 0, 0);
 
         internal Pipeline()
@@ -74,6 +76,12 @@ namespace Ryujinx.Graphics.OpenGL
         public void Barrier()
         {
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+        }
+
+        public void BeginTransformFeedback(PrimitiveTopology topology)
+        {
+            GL.BeginTransformFeedback(topology.ConvertToTfType());
+            _tfEnabled = true;
         }
 
         public void ClearRenderTargetColor(int index, uint componentMask, ColorF color)
@@ -512,6 +520,12 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public void EndTransformFeedback()
+        {
+            GL.EndTransformFeedback();
+            _tfEnabled = false;
+        }
+
         public void SetBlendState(int index, BlendDescriptor blend)
         {
             if (!blend.Enable)
@@ -713,7 +727,17 @@ namespace Ryujinx.Graphics.OpenGL
         public void SetProgram(IProgram program)
         {
             _program = (Program)program;
-            _program.Bind();
+
+            if (_tfEnabled)
+            {
+                GL.PauseTransformFeedback();
+                _program.Bind();
+                GL.ResumeTransformFeedback();
+            }
+            else
+            {
+                _program.Bind();
+            }
 
             SetRenderTargetScale(_fpRenderScale[0]);
         }
@@ -901,6 +925,22 @@ namespace Ryujinx.Graphics.OpenGL
                         _cpRenderScale[index] = texture.ScaleFactor;
                         break;
                 }
+            }
+        }
+
+        public void SetTransformFeedbackBuffer(int index, BufferRange buffer)
+        {
+            const BufferRangeTarget target = BufferRangeTarget.TransformFeedbackBuffer;
+
+            if (_tfEnabled)
+            {
+                GL.PauseTransformFeedback();
+                GL.BindBufferRange(target, index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
+                GL.ResumeTransformFeedback();
+            }
+            else
+            {
+                GL.BindBufferRange(target, index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
             }
         }
 
@@ -1132,7 +1172,7 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     // If the event has been flushed, then just use the values on the CPU.
                     // The query object may already be repurposed for another draw (eg. begin + end).
-                    return false; 
+                    return false;
                 }
 
                 if (compare == 0 && evt.Type == QueryTarget.SamplesPassed && evt.ClearCounter)
@@ -1145,7 +1185,7 @@ namespace Ryujinx.Graphics.OpenGL
             // The GPU will flush the queries to CPU and evaluate the condition there instead.
 
             GL.Flush(); // The thread will be stalled manually flushing the counter, so flush GL commands now.
-            return false; 
+            return false;
         }
 
         public bool TryHostConditionalRendering(ICounterEvent value, ICounterEvent compare, bool isEqual)

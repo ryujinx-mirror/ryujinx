@@ -56,7 +56,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                         continue;
                     }
 
-                    context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0);");
+                    context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0;");
+                    context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0;");
+                    context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0;");
+                    context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 0;");
                 }
             }
 

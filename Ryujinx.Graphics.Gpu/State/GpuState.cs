@@ -346,7 +346,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <param name="offset">Register offset</param>
         /// <param name="index">Index for indexed data</param>
         /// <returns>The data at the specified location</returns>
-        public T Get<T>(MethodOffset offset, int index) where T : struct
+        public T Get<T>(MethodOffset offset, int index) where T : unmanaged
         {
             Register register = _registers[(int)offset];
 
@@ -364,9 +364,20 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <typeparam name="T">Type of the data</typeparam>
         /// <param name="offset">Register offset</param>
         /// <returns>The data at the specified location</returns>
-        public T Get<T>(MethodOffset offset) where T : struct
+        public T Get<T>(MethodOffset offset) where T : unmanaged
         {
             return MemoryMarshal.Cast<int, T>(_memory.AsSpan().Slice((int)offset))[0];
+        }
+
+        /// <summary>
+        /// Gets a span of the data at a given register offset.
+        /// </summary>
+        /// <param name="offset">Register offset</param>
+        /// <param name="length">Length of the data in bytes</param>
+        /// <returns>The data at the specified location</returns>
+        public Span<byte> GetSpan(MethodOffset offset, int length)
+        {
+            return MemoryMarshal.Cast<int, byte>(_memory.AsSpan().Slice((int)offset)).Slice(0, length);
         }
 
         /// <summary>
@@ -376,7 +387,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <param name="offset">Register offset</param>
         /// <param name="index">Index for indexed data</param>
         /// <param name="data">The data to set</param>
-        public void Set<T>(MethodOffset offset, int index, T data) where T : struct
+        public void Set<T>(MethodOffset offset, int index, T data) where T : unmanaged
         {
             Register register = _registers[(int)offset];
 
@@ -394,7 +405,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <typeparam name="T">Type of the data</typeparam>
         /// <param name="offset">Register offset</param>
         /// <param name="data">The data to set</param>
-        public void Set<T>(MethodOffset offset, T data) where T : struct
+        public void Set<T>(MethodOffset offset, T data) where T : unmanaged
         {
             ReadOnlySpan<int> intSpan = MemoryMarshal.Cast<T, int>(MemoryMarshal.CreateReadOnlySpan(ref data, 1));
             intSpan.CopyTo(_memory.AsSpan().Slice((int)offset, intSpan.Length));

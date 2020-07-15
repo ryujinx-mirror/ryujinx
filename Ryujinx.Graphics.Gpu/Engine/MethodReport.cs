@@ -61,8 +61,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="type">Counter to be written to memory</param>
         private void ReportCounter(GpuState state, ReportCounterType type)
         {
-            CounterData counterData = new CounterData();
-
             var rs = state.Get<SemaphoreState>(MethodOffset.ReportState);
 
             ulong gpuVa = rs.Address.Pack();
@@ -80,16 +78,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             EventHandler<ulong> resultHandler = (object evt, ulong result) =>
             {
+                CounterData counterData = new CounterData();
+
                 counterData.Counter = result;
                 counterData.Timestamp = ticks;
 
-                Span<CounterData> counterDataSpan = MemoryMarshal.CreateSpan(ref counterData, 1);
-
-                Span<byte> data = MemoryMarshal.Cast<CounterData, byte>(counterDataSpan);
-
                 if (counter?.Invalid != true)
                 {
-                    _context.MemoryAccessor.Write(gpuVa, data);
+                    _context.MemoryAccessor.Write(gpuVa, counterData);
                 }
             };
 

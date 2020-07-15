@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.GAL
 
         BufferHandle CreateBuffer(int size);
 
-        IProgram CreateProgram(IShader[] shaders);
+        IProgram CreateProgram(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors);
 
         ISampler CreateSampler(SamplerCreateInfo info);
         ITexture CreateTexture(TextureCreateInfo info, float scale);
