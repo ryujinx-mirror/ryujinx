@@ -4,6 +4,7 @@ using ARMeilleure.Memory;
 using ARMeilleure.State;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ARMeilleure.Decoders
 {
@@ -132,17 +133,22 @@ namespace ARMeilleure.Decoders
                 }
             }
 
-            if (blocks.Count == 0)
+            if (blocks.Count == 1 && blocks[0].OpCodes.Count == 0)
             {
-                throw new InvalidOperationException($"Decoded 0 blocks. Entry point = 0x{address:X}.");
+                Debug.Assert(blocks[0].Exit);
+                Debug.Assert(blocks[0].Address == blocks[0].EndAddress);
+
+                throw new InvalidOperationException($"Decoded a single empty exit block. Entry point = 0x{address:X}.");
             }
 
             if (!singleBlock)
             {
                 return TailCallRemover.RunPass(address, blocks);
             }
-
-            return blocks.ToArray();
+            else
+            {
+                return blocks.ToArray();
+            }
         }
 
         public static bool BinarySearch(List<Block> blocks, ulong address, out int index)
