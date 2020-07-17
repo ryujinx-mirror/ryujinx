@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 {
     class KResourceLimit : KAutoObject
     {
-        private const int Time10SecondsMs = 10000;
+        private const int DefaultTimeoutMs = 10000; // 10s
 
         private readonly long[] _current;
         private readonly long[] _limit;
-        private readonly long[] _available;
+        private readonly long[] _current2;
 
-        private readonly object _lockObj;
+        private readonly object _lock;
 
         private readonly LinkedList<KThread> _waitingThreads;
 
@@ -20,11 +20,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public KResourceLimit(KernelContext context) : base(context)
         {
-            _current   = new long[(int)LimitableResource.Count];
-            _limit     = new long[(int)LimitableResource.Count];
-            _available = new long[(int)LimitableResource.Count];
+            _current  = new long[(int)LimitableResource.Count];
+            _limit    = new long[(int)LimitableResource.Count];
+            _current2 = new long[(int)LimitableResource.Count];
 
-            _lockObj = new object();
+            _lock = new object();
 
             _waitingThreads = new LinkedList<KThread>();
         }
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public bool Reserve(LimitableResource resource, long amount)
         {
-            return Reserve(resource, amount, KTimeManager.ConvertMillisecondsToNanoseconds(Time10SecondsMs));
+            return Reserve(resource, amount, KTimeManager.ConvertMillisecondsToNanoseconds(DefaultTimeoutMs));
         }
 
         public bool Reserve(LimitableResource resource, long amount, long timeout)
@@ -49,15 +49,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             int index = GetIndex(resource);
 
-            lock (_lockObj)
+            lock (_lock)
             {
+                if (_current2[index] >= _limit[index])
+                {
+                    return false;
+                }
+
                 long newCurrent = _current[index] + amount;
 
-                while (newCurrent > _limit[index] && _available[index] + amount <= _limit[index])
+                while (newCurrent > _limit[index] && _current2[index] + amount <= _limit[index])
                 {
                     _waitingThreadsCount++;
 
-                    KConditionVariable.Wait(KernelContext, _waitingThreads, _lockObj, timeout);
+                    KConditionVariable.Wait(KernelContext, _waitingThreads, _lock, timeout);
 
                     _waitingThreadsCount--;
 
@@ -72,6 +77,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 if (newCurrent <= _limit[index])
                 {
                     _current[index] = newCurrent;
+                    _current2[index] += amount;
 
                     success = true;
                 }
@@ -90,14 +96,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             Release(resource, amount, amount);
         }
 
-        public void Release(LimitableResource resource, long usedAmount, long availableAmount)
+        public void Release(LimitableResource resource, long amount, long amount2)
         {
             int index = GetIndex(resource);
 
-            lock (_lockObj)
+            lock (_lock)
             {
-                _current  [index] -= usedAmount;
-                _available[index] -= availableAmount;
+                _current[index] -= amount;
+                _current2[index] -= amount2;
 
                 if (_waitingThreadsCount > 0)
                 {
@@ -110,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             int index = GetIndex(resource);
 
-            lock (_lockObj)
+            lock (_lock)
             {
                 return _limit[index] - _current[index];
             }
@@ -120,7 +126,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             int index = GetIndex(resource);
 
-            lock (_lockObj)
+            lock (_lock)
             {
                 if (_current[index] <= limit)
                 {

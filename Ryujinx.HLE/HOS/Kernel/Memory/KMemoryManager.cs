@@ -729,22 +729,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
 
-            ulong currentHeapSize = GetHeapSize();
-
-            if (currentHeapSize <= size)
+            lock (_blocks)
             {
-                // Expand.
-                ulong diffSize = size - currentHeapSize;
+                ulong currentHeapSize = GetHeapSize();
 
-                lock (_blocks)
+                if (currentHeapSize <= size)
                 {
-                    if (currentProcess.ResourceLimit != null && diffSize != 0 &&
-                       !currentProcess.ResourceLimit.Reserve(LimitableResource.Memory, diffSize))
+                    // Expand.
+                    ulong sizeDelta = size - currentHeapSize;
+
+                    if (currentProcess.ResourceLimit != null && sizeDelta != 0 &&
+                        !currentProcess.ResourceLimit.Reserve(LimitableResource.Memory, sizeDelta))
                     {
                         return KernelResult.ResLimitExceeded;
                     }
 
-                    ulong pagesCount = diffSize / PageSize;
+                    ulong pagesCount = sizeDelta / PageSize;
 
                     KMemoryRegionManager region = GetMemoryRegionManager();
 
@@ -757,9 +757,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                             region.FreePages(pageList);
                         }
 
-                        if (currentProcess.ResourceLimit != null && diffSize != 0)
+                        if (currentProcess.ResourceLimit != null && sizeDelta != 0)
                         {
-                            currentProcess.ResourceLimit.Release(LimitableResource.Memory, diffSize);
+                            currentProcess.ResourceLimit.Release(LimitableResource.Memory, sizeDelta);
                         }
                     }
 
@@ -777,7 +777,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return KernelResult.OutOfResource;
                     }
 
-                    if (!IsUnmapped(_currentHeapAddr, diffSize))
+                    if (!IsUnmapped(_currentHeapAddr, sizeDelta))
                     {
                         CleanUpForError();
 
@@ -800,15 +800,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     InsertBlock(_currentHeapAddr, pagesCount, MemoryState.Heap, MemoryPermission.ReadAndWrite);
                 }
-            }
-            else
-            {
-                // Shrink.
-                ulong freeAddr = HeapRegionStart + size;
-                ulong diffSize = currentHeapSize - size;
-
-                lock (_blocks)
+                else
                 {
+                    // Shrink.
+                    ulong freeAddr = HeapRegionStart + size;
+                    ulong sizeDelta = currentHeapSize - size;
+
                     if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
                     {
                         return KernelResult.OutOfResource;
@@ -816,7 +813,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     if (!CheckRange(
                         freeAddr,
-                        diffSize,
+                        sizeDelta,
                         MemoryState.Mask,
                         MemoryState.Heap,
                         MemoryPermission.Mask,
@@ -831,7 +828,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return KernelResult.InvalidMemState;
                     }
 
-                    ulong pagesCount = diffSize / PageSize;
+                    ulong pagesCount = sizeDelta / PageSize;
 
                     KernelResult result = MmuUnmap(freeAddr, pagesCount);
 
@@ -840,13 +837,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return result;
                     }
 
-                    currentProcess.ResourceLimit?.Release(LimitableResource.Memory, BitUtils.AlignDown(diffSize, PageSize));
+                    currentProcess.ResourceLimit?.Release(LimitableResource.Memory, sizeDelta);
 
                     InsertBlock(freeAddr, pagesCount, MemoryState.Unmapped);
                 }
-            }
 
-            _currentHeapAddr = HeapRegionStart + size;
+                _currentHeapAddr = HeapRegionStart + size;
+            }
 
             address = HeapRegionStart;
 
