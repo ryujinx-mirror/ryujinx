@@ -545,6 +545,7 @@ namespace ARMeilleure.Instructions
         // FP & SIMD (AArch32)
         Vabs,
         Vadd,
+        Vaddw,
         Vand,
         Vbif,
         Vbit,
@@ -611,6 +612,7 @@ namespace ARMeilleure.Instructions
         Vrsqrte,
         Vrsqrts,
         Vsub,
+        Vsubw,
         Vtbl,
         Vtrn,
         Vuzp,

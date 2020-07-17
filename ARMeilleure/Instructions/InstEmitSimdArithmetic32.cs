@@ -107,6 +107,13 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vaddw_I(ArmEmitterContext context)
+        {
+            OpCode32SimdRegWide op = (OpCode32SimdRegWide)context.CurrOp;
+
+            EmitVectorBinaryWideOpI32(context, (op1, op2) => context.Add(op1, op2), !op.U);
+        }
+
         public static void Vdup(ArmEmitterContext context)
         {
             OpCode32SimdDupGP op = (OpCode32SimdDupGP)context.CurrOp;
@@ -1189,6 +1196,13 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorBinaryOpZx32(context, (op1, op2) => context.Subtract(op1, op2));
             }
+        }
+
+        public static void Vsubw_I(ArmEmitterContext context)
+        {
+            OpCode32SimdRegWide op = (OpCode32SimdRegWide)context.CurrOp;
+
+            EmitVectorBinaryWideOpI32(context, (op1, op2) => context.Subtract(op1, op2), !op.U);
         }
 
         private static void EmitSse41MaxMinNumOpF32(ArmEmitterContext context, bool isMaxNum, bool scalar)
