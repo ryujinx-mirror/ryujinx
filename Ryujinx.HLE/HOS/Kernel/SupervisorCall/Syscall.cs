@@ -8,6 +8,7 @@ using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -2139,30 +2140,84 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             handleIndex = 0;
 
-            if ((uint)handlesCount > 0x40)
+            if ((uint)handlesCount > KThread.MaxWaitSyncObjects)
             {
                 return KernelResult.MaximumExceeded;
             }
 
-            List<KSynchronizationObject> syncObjs = new List<KSynchronizationObject>();
+            KThread currentThread = _context.Scheduler.GetCurrentThread();
 
-            KProcess process = _context.Scheduler.GetCurrentProcess();
+            var syncObjs = new Span<KSynchronizationObject>(currentThread.WaitSyncObjects).Slice(0, handlesCount);
+
+            if (handlesCount != 0)
+            {
+                KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+
+                if (currentProcess.MemoryManager.AddrSpaceStart > handlesPtr)
+                {
+                    return KernelResult.UserCopyFailed;
+                }
+
+                long handlesSize = handlesCount * 4;
+
+                if (handlesPtr + (ulong)handlesSize <= handlesPtr)
+                {
+                    return KernelResult.UserCopyFailed;
+                }
+
+                if (handlesPtr + (ulong)handlesSize - 1 > currentProcess.MemoryManager.AddrSpaceEnd - 1)
+                {
+                    return KernelResult.UserCopyFailed;
+                }
+
+                Span<int> handles = new Span<int>(currentThread.WaitSyncHandles).Slice(0, handlesCount);
+
+                if (!KernelTransfer.UserToKernelInt32Array(_context, handlesPtr, handles))
+                {
+                    return KernelResult.UserCopyFailed;
+                }
+
+                int processedHandles = 0;
+
+                for (; processedHandles < handlesCount; processedHandles++)
+                {
+                    KSynchronizationObject syncObj = currentProcess.HandleTable.GetObject<KSynchronizationObject>(handles[processedHandles]);
+
+                    if (syncObj == null)
+                    {
+                        break;
+                    }
+
+                    syncObjs[processedHandles] = syncObj;
+
+                    syncObj.IncrementReferenceCount();
+                }
+
+                if (processedHandles != handlesCount)
+                {
+                    // One or more handles are invalid.
+                    for (int index = 0; index < processedHandles; index++)
+                    {
+                        currentThread.WaitSyncObjects[index].DecrementReferenceCount();
+                    }
+
+                    return KernelResult.InvalidHandle;
+                }
+            }
+
+            KernelResult result = _context.Synchronization.WaitFor(syncObjs, timeout, out handleIndex);
+
+            if (result == KernelResult.PortRemoteClosed)
+            {
+                result = KernelResult.Success;
+            }
 
             for (int index = 0; index < handlesCount; index++)
             {
-                int handle = process.CpuMemory.Read<int>(handlesPtr + (ulong)index * 4);
-
-                KSynchronizationObject syncObj = process.HandleTable.GetObject<KSynchronizationObject>(handle);
-
-                if (syncObj == null)
-                {
-                    break;
-                }
-
-                syncObjs.Add(syncObj);
+                currentThread.WaitSyncObjects[index].DecrementReferenceCount();
             }
 
-            return _context.Synchronization.WaitFor(syncObjs.ToArray(), timeout, out handleIndex);
+            return result;
         }
 
         public KernelResult CancelSynchronization(int handle)

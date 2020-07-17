@@ -1,5 +1,6 @@
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
 {
@@ -22,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             return false;
         }
 
-        public static bool UserToKernelInt32Array(KernelContext context, ulong address, int[] values)
+        public static bool UserToKernelInt32Array(KernelContext context, ulong address, Span<int> values)
         {
             KProcess currentProcess = context.Scheduler.GetCurrentProcess();
 

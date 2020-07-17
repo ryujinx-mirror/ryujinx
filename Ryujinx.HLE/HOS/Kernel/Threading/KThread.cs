@@ -12,6 +12,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     class KThread : KSynchronizationObject, IKFutureSchedulerObject
     {
+        public const int MaxWaitSyncObjects = 64;
+
         private int _hostThreadRunning;
 
         public Thread HostThread { get; private set; }
@@ -38,6 +40,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public ulong TlsAddress => _tlsAddress;
         public ulong TlsDramAddress { get; private set; }
+
+        public KSynchronizationObject[] WaitSyncObjects { get; }
+        public int[] WaitSyncHandles { get; }
 
         public long LastScheduledTime { get; set; }
 
@@ -95,6 +100,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             _scheduler      = KernelContext.Scheduler;
             _schedulingData = KernelContext.Scheduler.SchedulingData;
+
+            WaitSyncObjects = new KSynchronizationObject[MaxWaitSyncObjects];
+            WaitSyncHandles = new int[MaxWaitSyncObjects];
 
             SiblingsPerCore = new LinkedListNode<KThread>[KScheduler.CpuCoresCount];
 
