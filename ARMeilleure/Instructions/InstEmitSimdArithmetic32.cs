@@ -33,7 +33,7 @@ namespace ARMeilleure.Instructions
 
         public static void Vabs_V(ArmEmitterContext context)
         {
-            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+            OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
 
             if (op.F)
             {
@@ -385,22 +385,22 @@ namespace ARMeilleure.Instructions
 
         public static void Vneg_V(ArmEmitterContext context)
         {
-            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+            OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
 
             if (op.F)
             {
-                if (Optimizations.UseSse2)
+                if (Optimizations.FastFP && Optimizations.UseSse2)
                 {
                     EmitVectorUnaryOpSimd32(context, (m) =>
                     {
                         if ((op.Size & 1) == 0)
                         {
-                            Operand mask = X86GetScalar(context, -0f);
+                            Operand mask = X86GetAllElements(context, -0f);
                             return context.AddIntrinsic(Intrinsic.X86Xorps, mask, m);
                         }
                         else
                         {
-                            Operand mask = X86GetScalar(context, -0d);
+                            Operand mask = X86GetAllElements(context, -0d);
                             return context.AddIntrinsic(Intrinsic.X86Xorpd, mask, m);
                         }
                     });
