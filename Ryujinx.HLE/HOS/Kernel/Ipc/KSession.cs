@@ -11,10 +11,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private bool _hasBeenInitialized;
 
-        public KSession(KernelContext context) : base(context)
+        public KSession(KernelContext context, KClientPort parentPort = null) : base(context)
         {
             ServerSession = new KServerSession(context, this);
-            ClientSession = new KClientSession(context, this);
+            ClientSession = new KClientSession(context, this, parentPort);
 
             _hasBeenInitialized = true;
         }
@@ -54,10 +54,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             if (_hasBeenInitialized)
             {
+                ClientSession.DisconnectFromPort();
+
                 KProcess creatorProcess = ClientSession.CreatorProcess;
 
                 creatorProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
-
                 creatorProcess.DecrementReferenceCount();
             }
         }

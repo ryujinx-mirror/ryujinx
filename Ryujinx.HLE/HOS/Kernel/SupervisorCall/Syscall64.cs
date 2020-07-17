@@ -22,12 +22,21 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult SendSyncRequest64([R(0)] int handle)
         {
-            return _syscall.SendSyncRequest(handle);
+            return _syscall.SendSyncRequestHLE(handle);
         }
 
-        public KernelResult SendSyncRequestWithUserBuffer64([R(0)] ulong messagePtr, [R(1)] ulong size, [R(2)] int handle)
+        public KernelResult SendSyncRequestWithUserBuffer64([R(0)] ulong messagePtr, [R(1)] ulong messageSize, [R(2)] int handle)
         {
-            return _syscall.SendSyncRequestWithUserBuffer(messagePtr, size, handle);
+            return _syscall.SendSyncRequestWithUserBufferHLE(messagePtr, messageSize, handle);
+        }
+
+        public KernelResult SendAsyncRequestWithUserBuffer64(
+            [R(1)] ulong messagePtr,
+            [R(2)] ulong messageSize,
+            [R(3)] int handle,
+            [R(1)] out int doneEventHandle)
+        {
+            return _syscall.SendAsyncRequestWithUserBuffer(messagePtr, messageSize, handle, out doneEventHandle);
         }
 
         public KernelResult CreateSession64(
@@ -52,6 +61,25 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(1)] out int handleIndex)
         {
             return _syscall.ReplyAndReceive(handlesPtr, handlesCount, replyTargetHandle, timeout, out handleIndex);
+        }
+
+        public KernelResult ReplyAndReceiveWithUserBuffer64(
+            [R(1)] ulong messagePtr,
+            [R(2)] ulong messageSize,
+            [R(3)] ulong handlesPtr,
+            [R(4)] int handlesCount,
+            [R(5)] int replyTargetHandle,
+            [R(6)] long timeout,
+            [R(1)] out int handleIndex)
+        {
+            return _syscall.ReplyAndReceiveWithUserBuffer(
+                handlesPtr,
+                messagePtr,
+                messageSize,
+                handlesCount,
+                replyTargetHandle,
+                timeout,
+                out handleIndex);
         }
 
         public KernelResult CreatePort64(

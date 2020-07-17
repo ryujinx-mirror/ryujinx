@@ -1,20 +1,18 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Services;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
     class KClientPort : KSynchronizationObject
     {
         private int _sessionsCount;
-        private int _currentCapacity;
         private readonly int _maxSessions;
 
         private readonly KPort _parent;
 
         public bool IsLight => _parent.IsLight;
-
-        private readonly object _countIncLock;
 
         // TODO: Remove that, we need it for now to allow HLE
         // SM implementation to work with the new IPC system.
@@ -24,8 +22,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             _maxSessions = maxSessions;
             _parent      = parent;
-
-            _countIncLock = new object();
         }
 
         public KernelResult Connect(out KClientSession clientSession)
@@ -40,26 +36,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return KernelResult.ResLimitExceeded;
             }
 
-            lock (_countIncLock)
+            if (!IncrementSessionsCount())
             {
-                if (_sessionsCount < _maxSessions)
-                {
-                    _sessionsCount++;
-                }
-                else
-                {
-                    currentProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
+                currentProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
 
-                    return KernelResult.SessionCountExceeded;
-                }
-
-                if (_currentCapacity < _sessionsCount)
-                {
-                    _currentCapacity = _sessionsCount;
-                }
+                return KernelResult.SessionCountExceeded;
             }
 
-            KSession session = new KSession(KernelContext);
+            KSession session = new KSession(KernelContext, this);
 
             if (Service != null)
             {
@@ -93,18 +77,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return KernelResult.ResLimitExceeded;
             }
 
-            lock (_countIncLock)
+            if (!IncrementSessionsCount())
             {
-                if (_sessionsCount < _maxSessions)
-                {
-                    _sessionsCount++;
-                }
-                else
-                {
-                    currentProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
+                currentProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
 
-                    return KernelResult.SessionCountExceeded;
-                }
+                return KernelResult.SessionCountExceeded;
             }
 
             KLightSession session = new KLightSession(KernelContext);
@@ -122,6 +99,43 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             clientSession = session.ClientSession;
 
             return result;
+        }
+
+        private bool IncrementSessionsCount()
+        {
+            while (true)
+            {
+                int currentCount = _sessionsCount;
+
+                if (currentCount < _maxSessions)
+                {
+                    if (Interlocked.CompareExchange(ref _sessionsCount, currentCount + 1, currentCount) == currentCount)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public void Disconnect()
+        {
+            KernelContext.CriticalSection.Enter();
+
+            SignalIfMaximumReached(Interlocked.Decrement(ref _sessionsCount));
+
+            KernelContext.CriticalSection.Leave();
+        }
+
+        private void SignalIfMaximumReached(int value)
+        {
+            if (value == _maxSessions)
+            {
+                Signal();
+            }
         }
 
         public new static KernelResult RemoveName(KernelContext context, string name)

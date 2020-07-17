@@ -17,13 +17,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         public ulong CustomCmdBuffSize { get; }
 
         public KSessionRequest(
-            KThread clientThread,
-            ulong   customCmdBuffAddr,
-            ulong   customCmdBuffSize)
+            KThread        clientThread,
+            ulong          customCmdBuffAddr,
+            ulong          customCmdBuffSize,
+            KWritableEvent asyncEvent = null)
         {
             ClientThread      = clientThread;
             CustomCmdBuffAddr = customCmdBuffAddr;
             CustomCmdBuffSize = customCmdBuffSize;
+            AsyncEvent        = asyncEvent;
 
             BufferDescriptorTable = new KBufferDescriptorTable();
         }

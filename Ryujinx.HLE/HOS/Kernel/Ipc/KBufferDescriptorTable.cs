@@ -115,19 +115,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                 ulong clientEndAddrTruncated = BitUtils.AlignDown(clientEndAddr, KMemoryManager.PageSize);
                 ulong clientEndAddrRounded   = BitUtils.AlignUp  (clientEndAddr, KMemoryManager.PageSize);
-                ulong serverEndAddrTruncated = BitUtils.AlignDown(clientEndAddr, KMemoryManager.PageSize);
+                ulong serverEndAddrTruncated = BitUtils.AlignDown(serverEndAddr, KMemoryManager.PageSize);
 
-                if (clientEndAddrTruncated < clientAddrRounded)
+                if (clientEndAddrTruncated < clientEndAddrRounded &&
+                    (clientAddrTruncated == clientAddrRounded || clientAddrTruncated < clientEndAddrTruncated))
                 {
-                    KernelResult result = memoryManager.CopyDataToCurrentProcess(
+                    KernelResult result = memoryManager.CopyDataFromCurrentProcess(
                         clientEndAddrTruncated,
                         clientEndAddr - clientEndAddrTruncated,
-                        serverEndAddrTruncated,
                         stateMask,
                         stateMask,
                         MemoryPermission.ReadAndWrite,
                         attributeMask,
-                        MemoryAttribute.None);
+                        MemoryAttribute.None,
+                        serverEndAddrTruncated);
 
                     if (result != KernelResult.Success)
                     {

@@ -544,7 +544,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private KernelResult FreeTlsPage(KTlsPageInfo pageInfo)
         {
-            if (!MemoryManager.ConvertVaToPa(pageInfo.PageAddr, out ulong tlsPagePa))
+            if (!MemoryManager.TryConvertVaToPa(pageInfo.PageAddr, out ulong tlsPagePa))
             {
                 throw new InvalidOperationException("Unexpected failure translating virtual address to physical.");
             }

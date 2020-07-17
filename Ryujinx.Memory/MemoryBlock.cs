@@ -127,12 +127,12 @@ namespace Ryujinx.Memory
         /// <summary>
         /// Copies data from one memory location to another.
         /// </summary>
-        /// <param name="srcOffset">Source offset to read the data from</param>
         /// <param name="dstOffset">Destination offset to write the data into</param>
+        /// <param name="srcOffset">Source offset to read the data from</param>
         /// <param name="size">Size of the copy in bytes</param>
         /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
         /// <exception cref="ArgumentOutOfRangeException">Throw when <paramref name="srcOffset"/>, <paramref name="dstOffset"/> or <paramref name="size"/> is out of range</exception>
-        public void Copy(ulong srcOffset, ulong dstOffset, ulong size)
+        public void Copy(ulong dstOffset, ulong srcOffset, ulong size)
         {
             const int MaxChunkSize = 1 << 30;
 

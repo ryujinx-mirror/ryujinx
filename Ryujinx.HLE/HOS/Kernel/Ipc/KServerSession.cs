@@ -633,7 +633,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 CloseAllHandles(clientMsg, serverHeader, clientProcess);
 
-                CancelRequest(request, clientResult);
+                FinishRequest(request, clientResult);
             }
 
             if (clientHeader.ReceiveListType < 2 &&
@@ -770,6 +770,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                 PointerBufferDesc descriptor = new PointerBufferDesc(pointerDesc);
 
+                ulong recvListBufferAddress = 0;
+
                 if (descriptor.BufferSize != 0)
                 {
                     clientResult = GetReceiveListAddress(
@@ -778,8 +780,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         clientHeader.ReceiveListType,
                         serverHeader.MessageSizeInWords,
                         receiveList,
-                        ref       recvListDstOffset,
-                        out ulong recvListBufferAddress);
+                        ref recvListDstOffset,
+                        out recvListBufferAddress);
 
                     if (clientResult != KernelResult.Success)
                     {
@@ -805,6 +807,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         return serverResult;
                     }
                 }
+
+                ulong dstDescAddress = clientMsg.DramAddress + offset * 4;
+
+                ulong clientPointerDesc =
+                    (recvListBufferAddress << 32) |
+                    ((recvListBufferAddress >> 20) & 0xf000) |
+                    ((recvListBufferAddress >> 30) & 0xffc0);
+
+                clientPointerDesc |= pointerDesc & 0xffff000f;
+
+                KernelContext.Memory.Write(dstDescAddress + 0, clientPointerDesc);
 
                 offset += 2;
             }
@@ -860,16 +873,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
 
             // Unmap buffers from server.
-            clientResult = request.BufferDescriptorTable.UnmapServerBuffers(serverProcess.MemoryManager);
-
-            if (clientResult != KernelResult.Success)
-            {
-                CleanUpForError();
-
-                return serverResult;
-            }
-
-            WakeClientThread(request, clientResult);
+            FinishRequest(request, clientResult);
 
             return serverResult;
         }
@@ -1109,7 +1113,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             foreach (KSessionRequest request in IterateWithRemovalOfAllRequests())
             {
-                CancelRequest(request, KernelResult.PortRemoteClosed);
+                FinishRequest(request, KernelResult.PortRemoteClosed);
             }
         }
 
@@ -1180,7 +1184,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return hasRequest;
         }
 
-        private void CancelRequest(KSessionRequest request, KernelResult result)
+        private void FinishRequest(KSessionRequest request, KernelResult result)
         {
             KProcess clientProcess = request.ClientThread.Owner;
             KProcess serverProcess = request.ServerProcess;
@@ -1221,14 +1225,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             KProcess clientProcess = request.ClientThread.Owner;
 
-            ulong address = clientProcess.MemoryManager.GetDramAddressFromVa(request.CustomCmdBuffAddr);
+            if (result != KernelResult.Success)
+            {
+                ulong address = clientProcess.MemoryManager.GetDramAddressFromVa(request.CustomCmdBuffAddr);
 
-            KernelContext.Memory.Write<ulong>(address, 0);
-            KernelContext.Memory.Write(address + 8, (int)result);
+                KernelContext.Memory.Write<ulong>(address, 0);
+                KernelContext.Memory.Write(address + 8, (int)result);
+            }
 
-            clientProcess.MemoryManager.UnborrowIpcBuffer(
-                request.CustomCmdBuffAddr,
-                request.CustomCmdBuffSize);
+            clientProcess.MemoryManager.UnborrowIpcBuffer(request.CustomCmdBuffAddr, request.CustomCmdBuffSize);
 
             request.AsyncEvent.Signal();
         }
