@@ -1376,9 +1376,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
             else
             {
-                Logger.PrintInfo(LogClass.KernelSvc, "Debugger triggered.");
-
-                currentThread.PrintGuestStackTrace();
+                Logger.PrintDebug(LogClass.KernelSvc, "Debugger triggered.");
             }
         }
 
