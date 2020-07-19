@@ -28,7 +28,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 0xf3000d00u, // VPADD.F32 D0, D0, D0
                 0xf3000f00u, // VPMAX.F32 D0, D0, D0
-                0xf3200f00u // VPMIN.F32 D0, D0, D0
+                0xf3200f00u  // VPMIN.F32 D0, D0, D0
             };
         }
 
@@ -41,7 +41,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 VpaddI8,
                 0xf2000a00u, // VPMAX.S8 D0, D0, D0
-                0xf2000a10u // VPMIN.S8 D0, D0, D0
+                0xf2000a10u  // VPMIN.S8 D0, D0, D0
             };
         }
 #endregion
@@ -189,7 +189,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Explicit]
         [Test, Pairwise, Description("VADD.f32 V0, V0, V0")]
-        public void Vadd_f32([Values(0u)]    uint rd,
+        public void Vadd_f32([Values(0u)] uint rd,
                              [Values(0u, 1u)] uint rn,
                              [Values(0u, 2u)] uint rm,
                              [ValueSource("_2S_F_")] ulong z0,

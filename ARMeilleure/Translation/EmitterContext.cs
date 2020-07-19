@@ -441,6 +441,11 @@ namespace ARMeilleure.Translation
             return Add(Instruction.VectorInsert8, Local(OperandType.V128), vector, value, Const(index));
         }
 
+        public Operand VectorOne()
+        {
+            return Add(Instruction.VectorOne, Local(OperandType.V128));
+        }
+
         public Operand VectorZero()
         {
             return Add(Instruction.VectorZero, Local(OperandType.V128));
