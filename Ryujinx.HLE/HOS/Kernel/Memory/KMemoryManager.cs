@@ -1129,82 +1129,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
-        public KernelResult ReserveTransferMemory(ulong address, ulong size, MemoryPermission permission)
-        {
-            lock (_blocks)
-            {
-                if (CheckRange(
-                    address,
-                    size,
-                    MemoryState.TransferMemoryAllowed | MemoryState.IsPoolAllocated,
-                    MemoryState.TransferMemoryAllowed | MemoryState.IsPoolAllocated,
-                    MemoryPermission.Mask,
-                    MemoryPermission.ReadAndWrite,
-                    MemoryAttribute.Mask,
-                    MemoryAttribute.None,
-                    MemoryAttribute.IpcAndDeviceMapped,
-                    out MemoryState state,
-                    out _,
-                    out MemoryAttribute attribute))
-                {
-                    // TODO: Missing checks.
-
-                    if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
-                    {
-                        return KernelResult.OutOfResource;
-                    }
-
-                    ulong pagesCount = size / PageSize;
-
-                    attribute |= MemoryAttribute.Borrowed;
-
-                    InsertBlock(address, pagesCount, state, permission, attribute);
-
-                    return KernelResult.Success;
-                }
-                else
-                {
-                    return KernelResult.InvalidMemState;
-                }
-            }
-        }
-
-        public KernelResult ResetTransferMemory(ulong address, ulong size)
-        {
-            lock (_blocks)
-            {
-                if (CheckRange(
-                    address,
-                    size,
-                    MemoryState.TransferMemoryAllowed | MemoryState.IsPoolAllocated,
-                    MemoryState.TransferMemoryAllowed | MemoryState.IsPoolAllocated,
-                    MemoryPermission.None,
-                    MemoryPermission.None,
-                    MemoryAttribute.Mask,
-                    MemoryAttribute.Borrowed,
-                    MemoryAttribute.IpcAndDeviceMapped,
-                    out MemoryState state,
-                    out _,
-                    out _))
-                {
-                    if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
-                    {
-                        return KernelResult.OutOfResource;
-                    }
-
-                    ulong pagesCount = size / PageSize;
-
-                    InsertBlock(address, pagesCount, state, MemoryPermission.ReadAndWrite);
-
-                    return KernelResult.Success;
-                }
-                else
-                {
-                    return KernelResult.InvalidMemState;
-                }
-            }
-        }
-
         public KernelResult SetProcessMemoryPermission(ulong address, ulong size, MemoryPermission permission)
         {
             lock (_blocks)
@@ -2195,6 +2119,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 MemoryAttribute.Borrowed);
         }
 
+        public KernelResult BorrowTransferMemory(KPageList pageList, ulong address, ulong size, MemoryPermission permission)
+        {
+            return SetAttributesAndChangePermission(
+                address,
+                size,
+                MemoryState.TransferMemoryAllowed,
+                MemoryState.TransferMemoryAllowed,
+                MemoryPermission.Mask,
+                MemoryPermission.ReadAndWrite,
+                MemoryAttribute.Mask,
+                MemoryAttribute.None,
+                permission,
+                MemoryAttribute.Borrowed,
+                pageList);
+        }
+
         private KernelResult SetAttributesAndChangePermission(
             ulong            address,
             ulong            size,
@@ -2233,14 +2173,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     if (pageList != null)
                     {
-                        KPageList currPageList = new KPageList();
-
-                        AddVaRangeToPageList(currPageList, address, pagesCount);
-
-                        if (!currPageList.IsEqual(pageList))
-                        {
-                            return KernelResult.InvalidMemRange;
-                        }
+                        AddVaRangeToPageList(pageList, address, pagesCount);
                     }
 
                     if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
@@ -2295,6 +2228,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 MemoryAttribute.Borrowed,
                 MemoryPermission.ReadAndWrite,
                 MemoryAttribute.Borrowed);
+        }
+
+        public KernelResult UnborrowTransferMemory(ulong address, ulong size, KPageList pageList)
+        {
+            return ClearAttributesAndChangePermission(
+                address,
+                size,
+                MemoryState.TransferMemoryAllowed,
+                MemoryState.TransferMemoryAllowed,
+                MemoryPermission.None,
+                MemoryPermission.None,
+                MemoryAttribute.Mask,
+                MemoryAttribute.Borrowed,
+                MemoryPermission.ReadAndWrite,
+                MemoryAttribute.Borrowed,
+                pageList);
         }
 
         private KernelResult ClearAttributesAndChangePermission(

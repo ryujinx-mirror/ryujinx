@@ -1,16 +1,63 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Process;
+using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KTransferMemory : KAutoObject
     {
-        public ulong Address { get; private set; }
-        public ulong Size    { get; private set; }
+        private KProcess _creator;
 
-        public KTransferMemory(KernelContext context, ulong address, ulong size) : base(context)
+        private readonly KPageList _pageList;
+
+        public ulong Address { get; private set; }
+        public ulong Size => _pageList.GetPagesCount() * KMemoryManager.PageSize;
+
+        public MemoryPermission Permission { get; private set; }
+
+        private bool _hasBeenInitialized;
+        private bool _isMapped;
+
+        public KTransferMemory(KernelContext context) : base(context)
         {
+            _pageList = new KPageList();
+        }
+
+        public KernelResult Initialize(ulong address, ulong size, MemoryPermission permission)
+        {
+            KProcess creator = KernelContext.Scheduler.GetCurrentProcess();
+
+            _creator = creator;
+
+            KernelResult result = creator.MemoryManager.BorrowTransferMemory(_pageList, address, size, permission);
+
+            if (result != KernelResult.Success)
+            {
+                return result;
+            }
+
+            creator.IncrementReferenceCount();
+
+            Permission = permission;
             Address = address;
-            Size    = size;
+            _hasBeenInitialized = true;
+            _isMapped = false;
+
+            return result;
+        }
+
+        protected override void Destroy()
+        {
+            if (_hasBeenInitialized)
+            {
+                if (!_isMapped && _creator.MemoryManager.UnborrowTransferMemory(Address, Size, _pageList) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Unexpected failure restoring transfer memory attributes.");
+                }
+
+                _creator.ResourceLimit?.Release(LimitableResource.TransferMemory, 1);
+                _creator.DecrementReferenceCount();
+            }
         }
     }
 }

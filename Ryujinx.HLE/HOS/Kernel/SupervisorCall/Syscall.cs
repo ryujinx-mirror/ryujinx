@@ -991,16 +991,41 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             KProcess process = _context.Scheduler.GetCurrentProcess();
 
-            KernelResult result = process.MemoryManager.ReserveTransferMemory(address, size, permission);
+            KResourceLimit resourceLimit = process.ResourceLimit;
+
+            if (resourceLimit != null && !resourceLimit.Reserve(LimitableResource.TransferMemory, 1))
+            {
+                return KernelResult.ResLimitExceeded;
+            }
+
+            void CleanUpForError()
+            {
+                resourceLimit?.Release(LimitableResource.TransferMemory, 1);
+            }
+
+            if (!process.MemoryManager.InsideAddrSpace(address, size))
+            {
+                CleanUpForError();
+
+                return KernelResult.InvalidMemState;
+            }
+
+            KTransferMemory transferMemory = new KTransferMemory(_context);
+
+            KernelResult result = transferMemory.Initialize(address, size, permission);
 
             if (result != KernelResult.Success)
             {
+                CleanUpForError();
+
                 return result;
             }
 
-            KTransferMemory transferMemory = new KTransferMemory(_context, address, size);
+            result = process.HandleTable.GenerateHandle(transferMemory, out handle);
 
-            return process.HandleTable.GenerateHandle(transferMemory, out handle);
+            transferMemory.DecrementReferenceCount();
+
+            return result;
         }
 
         public KernelResult MapPhysicalMemory(ulong address, ulong size)
@@ -1271,29 +1296,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult CloseHandle(int handle)
         {
-            KProcess process = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
 
-            KAutoObject obj = process.HandleTable.GetObject<KAutoObject>(handle);
-
-            process.HandleTable.CloseHandle(handle);
-
-            if (obj == null)
-            {
-                return KernelResult.InvalidHandle;
-            }
-
-            if (obj is KSession session)
-            {
-                session.Dispose();
-            }
-            else if (obj is KTransferMemory transferMemory)
-            {
-                process.MemoryManager.ResetTransferMemory(
-                    transferMemory.Address,
-                    transferMemory.Size);
-            }
-
-            return KernelResult.Success;
+            return currentProcess.HandleTable.CloseHandle(handle) ? KernelResult.Success : KernelResult.InvalidHandle;
         }
 
         public KernelResult ResetSignal(int handle)
