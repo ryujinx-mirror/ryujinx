@@ -177,6 +177,9 @@ namespace Ryujinx.HLE.HOS.Services
                     throw new InvalidOperationException("Out of handles!");
                 }
 
+                session.ServerSession.DecrementReferenceCount();
+                session.ClientSession.DecrementReferenceCount();
+
                 context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
             }
         }
