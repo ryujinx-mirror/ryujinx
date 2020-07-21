@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             Logger.PrintStub(LogClass.ServiceBcat);
 
