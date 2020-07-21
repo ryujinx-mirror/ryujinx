@@ -700,9 +700,35 @@ namespace Ryujinx.Graphics.OpenGL
             SetOrigin(clipOrigin);
         }
 
-        public void SetPointSize(float size)
+        public void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin)
         {
-            GL.PointSize(size);
+            // GL_POINT_SPRITE was deprecated in core profile 3.2+ and causes GL_INVALID_ENUM when set.
+            // As we don't know if the current context is core or compat, it's safer to keep this code.
+            if (enablePointSprite)
+            {
+                GL.Enable(EnableCap.PointSprite);
+            }
+            else
+            {
+                GL.Disable(EnableCap.PointSprite);
+            }
+
+            if (isProgramPointSize)
+            {
+                GL.Enable(EnableCap.ProgramPointSize);
+            }
+            else
+            {
+                GL.Disable(EnableCap.ProgramPointSize);
+            }
+
+            GL.PointParameter(origin == Origin.LowerLeft 
+                ? PointSpriteCoordOriginParameter.LowerLeft 
+                : PointSpriteCoordOriginParameter.UpperLeft);
+
+            // Games seem to set point size to 0 which generates a GL_INVALID_VALUE
+            // From the spec, GL_INVALID_VALUE is generated if size is less than or equal to 0. 
+            GL.PointSize(Math.Max(float.Epsilon, size));
         }
 
         public void SetPrimitiveRestart(bool enable, int index)

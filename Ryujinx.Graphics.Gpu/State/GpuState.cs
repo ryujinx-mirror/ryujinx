@@ -173,6 +173,11 @@ namespace Ryujinx.Graphics.Gpu.State
             {
                 Set(MethodOffset.BlendState, index, BlendState.Default);
             }
+
+            // Default Point Parameters
+            memory[(int)MethodOffset.PointSpriteEnable] = 1;
+            memory[(int)MethodOffset.PointSize] = 0x3F800000; // 1.0f
+            memory[(int)MethodOffset.PointCoordReplace] = 0x8; // Enable
         }
 
         /// <summary>
