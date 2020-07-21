@@ -7,6 +7,11 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkEntryCompletion" id="_systemTimeZoneCompletion">
+    <property name="inline-completion">True</property>
+    <property name="inline-selection">True</property>
+    <property name="minimum-key-length">0</property>
+  </object>
   <object class="GtkAdjustment" id="_systemTimeDaySpinAdjustment">
     <property name="lower">1</property>
     <property name="upper">31</property>
@@ -1224,11 +1229,12 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkComboBoxText" id="_systemTimeZoneSelect">
+                                      <object class="GtkEntry" id="_systemTimeZoneEntry">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
+                                        <property name="can_focus">True</property>
                                         <property name="tooltip_text" translatable="yes">Change System TimeZone</property>
                                         <property name="margin_left">5</property>
+                                        <property name="completion">_systemTimeZoneCompletion</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
