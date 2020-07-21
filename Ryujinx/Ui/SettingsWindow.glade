@@ -1494,6 +1494,10 @@
                                     <property name="can_focus">False</property>
                                     <property name="tooltip_text" translatable="yes">Change Audio Backend</property>
                                     <property name="margin_left">5</property>
+                                    <property name="active_id">Dummy</property>
+                                    <items>
+                                      <item id="Dummy" translatable="yes">Dummy</item>
+                                    </items>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
