@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // NotifyRunning() -> b8
         public ResultCode NotifyRunning(ServiceCtx context)
         {
-            context.ResponseData.Write(1);
+            context.ResponseData.Write(true);
 
             return ResultCode.Success;
         }
@@ -191,6 +191,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             int state = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceAm, new { state });
+
+            return ResultCode.Success;
+        }
+
+        [Command(90)] // 4.0.0+
+        // EnableApplicationCrashReport(u8)
+        public ResultCode EnableApplicationCrashReport(ServiceCtx context)
+        {
+            bool applicationCrashReportEnabled = context.RequestData.ReadBoolean();
+
+            Logger.PrintStub(LogClass.ServiceAm, new { applicationCrashReportEnabled });
 
             return ResultCode.Success;
         }
@@ -317,6 +328,22 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         {
             // TODO: Call pdm:qry cmd 16 when IPC call between services will be implemented.
             return (ResultCode)QueryPlayStatisticsManager.GetPlayStatistics(context, true);
+        }
+
+        [Command(123)] // 5.0.0+
+        // GetPreviousProgramIndex() -> s32 program_index
+        public ResultCode GetPreviousProgramIndex(ServiceCtx context)
+        {
+            // TODO: The output PreviousProgramIndex is -1 when there was no previous title.
+            //       When multi-process will be supported, return the last program index.
+
+            int previousProgramIndex = -1;
+
+            context.ResponseData.Write(previousProgramIndex);
+
+            Logger.PrintStub(LogClass.ServiceAm, new { previousProgramIndex });
+
+            return ResultCode.Success;
         }
 
         [Command(130)] // 8.0.0+
