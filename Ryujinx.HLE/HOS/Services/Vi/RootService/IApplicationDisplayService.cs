@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -190,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         public ResultCode SetLayerScalingMode(ServiceCtx context)
         {
             int  scalingMode = context.RequestData.ReadInt32();
-            long unknown     = context.RequestData.ReadInt64();
+            long layerId     = context.RequestData.ReadInt64();
 
             return ResultCode.Success;
         }
@@ -233,6 +234,53 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             }
 
             return null;
+        }
+
+        [Command(2460)]
+        // GetIndirectLayerImageRequiredMemoryInfo(u64 width, u64 height) -> (u64 size, u64 alignment)
+        public ResultCode GetIndirectLayerImageRequiredMemoryInfo(ServiceCtx context)
+        {
+            /*
+            // Doesn't occur in our case.
+            if (sizePtr == null || address_alignmentPtr == null)
+            {
+                return ResultCode.InvalidArguments;
+            }
+            */
+
+            int width  = (int)context.RequestData.ReadUInt64();
+            int height = (int)context.RequestData.ReadUInt64();
+
+            if (height < 0 || width < 0)
+            {
+                return ResultCode.InvalidLayerSize;
+            }
+            else
+            {
+                /*
+                // Doesn't occur in our case.
+                if (!service_initialized)
+                {
+                    return ResultCode.InvalidArguments;
+                }
+                */
+
+                const ulong defaultAlignment = 0x1000;
+                const ulong defaultSize      = 0x20000;
+
+                // NOTE: The official service setup a A8B8G8R8 texture with a linear layout and then query its size. 
+                //       As we don't need this texture on the emulator, we can just simplify this logic and directly 
+                //       do a linear layout size calculation. (stride * height * bytePerPixel)
+                int   pitch              = BitUtils.AlignUp(BitUtils.DivRoundUp(width * 32, 8), 64);
+                int   memorySize         = pitch * BitUtils.AlignUp(height, 64);
+                ulong requiredMemorySize = (ulong)BitUtils.AlignUp(memorySize, (int)defaultAlignment);
+                ulong size               = (requiredMemorySize + defaultSize - 1) / defaultSize * defaultSize;
+
+                context.ResponseData.Write(size);
+                context.ResponseData.Write(defaultAlignment);
+            }
+
+            return ResultCode.Success;
         }
 
         [Command(5202)]
