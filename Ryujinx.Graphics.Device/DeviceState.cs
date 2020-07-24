@@ -90,13 +90,11 @@ namespace Ryujinx.Graphics.Device
             {
                 int alignedOffset = Align(offset);
 
+                GetRef<int>(alignedOffset) = data;
+
                 if (_writeCallbacks.TryGetValue(alignedOffset, out Action<int> write))
                 {
                     write(data);
-                }
-                else
-                {
-                    GetRef<int>(alignedOffset) = data;
                 }
             }
         }

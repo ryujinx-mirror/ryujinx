@@ -107,20 +107,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         }
 
         /// <summary>
-        /// Register callback for Fifo method calls that triggers an action on the GPFIFO.
-        /// </summary>
-        /// <param name="state">GPU state where the triggers will be registered</param>
-        public void RegisterCallbacksForFifo(GpuState state)
-        {
-            state.RegisterCallback(MethodOffset.Semaphore,              Semaphore);
-            state.RegisterCallback(MethodOffset.FenceAction,            FenceAction);
-            state.RegisterCallback(MethodOffset.WaitForIdle,            WaitForIdle);
-            state.RegisterCallback(MethodOffset.SendMacroCodeData,      SendMacroCodeData);
-            state.RegisterCallback(MethodOffset.BindMacro,              BindMacro);
-            state.RegisterCallback(MethodOffset.SetMmeShadowRamControl, SetMmeShadowRamControl);
-        }
-
-        /// <summary>
         /// Updates host state based on the current guest GPU state.
         /// </summary>
         /// <param name="state">Guest GPU state</param>

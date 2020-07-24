@@ -148,12 +148,12 @@ namespace Ryujinx.HLE
 
         public bool WaitFifo()
         {
-            return Gpu.DmaPusher.WaitForCommands();
+            return Gpu.GPFifo.WaitForCommands();
         }
 
         public void ProcessFrame()
         {
-            Gpu.DmaPusher.DispatchCalls();
+            Gpu.GPFifo.DispatchCalls();
         }
 
         public void PresentFrame(Action swapBuffersCallback)

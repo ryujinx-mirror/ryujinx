@@ -414,10 +414,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
             if (header.Flags.HasFlag(SubmitGpfifoFlags.FenceWait) && !_device.System.HostSyncpoint.IsSyncpointExpired(header.Fence.Id, header.Fence.Value))
             {
-                _device.Gpu.DmaPusher.PushHostCommandBuffer(CreateWaitCommandBuffer(header.Fence));
+                _device.Gpu.GPFifo.PushHostCommandBuffer(CreateWaitCommandBuffer(header.Fence));
             }
 
-            _device.Gpu.DmaPusher.PushEntries(entries);
+            _device.Gpu.GPFifo.PushEntries(entries);
 
             header.Fence.Id = _channelSyncpoint.Id;
 
@@ -439,12 +439,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
             if (header.Flags.HasFlag(SubmitGpfifoFlags.FenceIncrement))
             {
-                _device.Gpu.DmaPusher.PushHostCommandBuffer(CreateIncrementCommandBuffer(ref header.Fence, header.Flags));
+                _device.Gpu.GPFifo.PushHostCommandBuffer(CreateIncrementCommandBuffer(ref header.Fence, header.Flags));
             }
 
             header.Flags = SubmitGpfifoFlags.None;
 
-            _device.Gpu.DmaPusher.SignalNewEntries();
+            _device.Gpu.GPFifo.SignalNewEntries();
 
             return NvInternalResult.Success;
         }
