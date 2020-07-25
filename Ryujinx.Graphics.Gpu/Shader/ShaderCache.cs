@@ -262,13 +262,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return true;
             }
 
-            ReadOnlySpan<byte> memoryCode = _context.MemoryAccessor.GetSpan(gpuVa, shader.Code.Length);
+            ReadOnlySpan<byte> memoryCode = _context.MemoryManager.GetSpan(gpuVa, shader.Code.Length);
 
             bool equals = memoryCode.SequenceEqual(shader.Code);
 
             if (equals && shader.Code2 != null)
             {
-                memoryCode = _context.MemoryAccessor.GetSpan(gpuVaA, shader.Code2.Length);
+                memoryCode = _context.MemoryManager.GetSpan(gpuVaA, shader.Code2.Length);
 
                 equals = memoryCode.SequenceEqual(shader.Code2);
             }
@@ -307,7 +307,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             program = Translator.Translate(gpuVa, gpuAccessor, DefaultFlags | TranslationFlags.Compute);
 
-            byte[] code = _context.MemoryAccessor.ReadBytes(gpuVa, program.Size);
+            byte[] code = _context.MemoryManager.GetSpan(gpuVa, program.Size).ToArray();
 
             _dumper.Dump(code, compute: true, out string fullPath, out string codePath);
 
@@ -344,8 +344,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 ShaderProgram program = Translator.Translate(gpuVaA, gpuVa, gpuAccessor, DefaultFlags);
 
-                byte[] codeA = _context.MemoryAccessor.ReadBytes(gpuVaA, program.SizeA);
-                byte[] codeB = _context.MemoryAccessor.ReadBytes(gpuVa,  program.Size);
+                byte[] codeA = _context.MemoryManager.GetSpan(gpuVaA, program.SizeA).ToArray();
+                byte[] codeB = _context.MemoryManager.GetSpan(gpuVa,  program.Size).ToArray();
 
                 _dumper.Dump(codeA, compute: false, out string fullPathA, out string codePathA);
                 _dumper.Dump(codeB, compute: false, out string fullPathB, out string codePathB);
@@ -364,7 +364,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 ShaderProgram program = Translator.Translate(gpuVa, gpuAccessor, DefaultFlags);
 
-                byte[] code = _context.MemoryAccessor.ReadBytes(gpuVa, program.Size);
+                byte[] code = _context.MemoryManager.GetSpan(gpuVa, program.Size).ToArray();
 
                 _dumper.Dump(code, compute: false, out string fullPath, out string codePath);
 

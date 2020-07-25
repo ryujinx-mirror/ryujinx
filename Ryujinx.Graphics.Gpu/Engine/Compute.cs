@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             uint qmdAddress = (uint)state.Get<int>(MethodOffset.DispatchParamsAddress);
 
-            var qmd = _context.MemoryAccessor.Read<ComputeQmd>((ulong)qmdAddress << 8);
+            var qmd = _context.MemoryManager.Read<ComputeQmd>((ulong)qmdAddress << 8);
 
             GpuVa shaderBaseAddress = state.Get<GpuVa>(MethodOffset.ShaderBaseAddress);
 

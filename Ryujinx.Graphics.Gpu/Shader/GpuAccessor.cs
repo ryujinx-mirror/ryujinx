@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Data at the memory location</returns>
         public T MemoryRead<T>(ulong address) where T : unmanaged
         {
-            return _context.MemoryAccessor.Read<T>(address);
+            return _context.MemoryManager.Read<T>(address);
         }
 
         /// <summary>

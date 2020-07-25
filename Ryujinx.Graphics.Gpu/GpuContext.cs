@@ -28,11 +28,6 @@ namespace Ryujinx.Graphics.Gpu
         public MemoryManager MemoryManager { get; }
 
         /// <summary>
-        /// GPU memory accessor.
-        /// </summary>
-        public MemoryAccessor MemoryAccessor { get; }
-
-        /// <summary>
         /// GPU engine methods processing.
         /// </summary>
         internal Methods Methods { get; }
@@ -74,8 +69,6 @@ namespace Ryujinx.Graphics.Gpu
             Renderer = renderer;
 
             MemoryManager = new MemoryManager(this);
-
-            MemoryAccessor = new MemoryAccessor(this);
 
             Methods = new Methods(this);
 

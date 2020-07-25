@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             var rs = state.Get<SemaphoreState>(MethodOffset.ReportState);
 
-            _context.MemoryAccessor.Write(rs.Address.Pack(), rs.Payload);
+            _context.MemoryManager.Write(rs.Address.Pack(), rs.Payload);
 
             _context.AdvanceSequence();
         }
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (counter?.Invalid != true)
                 {
-                    _context.MemoryAccessor.Write(gpuVa, counterData);
+                    _context.MemoryManager.Write(gpuVa, counterData);
                 }
             };
 

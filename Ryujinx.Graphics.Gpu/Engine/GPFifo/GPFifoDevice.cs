@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             {
                 if (Words == null)
                 {
-                    Words = MemoryMarshal.Cast<byte, int>(context.MemoryAccessor.GetSpan(EntryAddress, (int)EntryCount * 4)).ToArray();
+                    Words = MemoryMarshal.Cast<byte, int>(context.MemoryManager.GetSpan(EntryAddress, (int)EntryCount * 4)).ToArray();
                 }
             }
         }

@@ -62,7 +62,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets a read-only span of data from GPU mapped memory.
-        /// This reads as much data as possible, up to the specified maximum size.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the data is located</param>
         /// <param name="size">Size of the data</param>
@@ -85,6 +84,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
             ulong processVa = Translate(gpuVa);
 
             return _context.PhysicalMemory.GetWritableRegion(processVa, size);
+        }
+
+        /// <summary>
+        /// Writes data to GPU mapped memory.
+        /// </summary>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="gpuVa">GPU virtual address to write the value into</param>
+        /// <param name="value">The value to be written</param>
+        public void Write<T>(ulong gpuVa, T value) where T : unmanaged
+        {
+            ulong processVa = Translate(gpuVa);
+
+            _context.PhysicalMemory.Write(processVa, MemoryMarshal.Cast<T, byte>(MemoryMarshal.CreateSpan(ref value, 1)));
         }
 
         /// <summary>

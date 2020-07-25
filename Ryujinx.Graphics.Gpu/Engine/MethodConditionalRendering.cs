@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             else
             {
                 evt.Flush();
-                return (_context.MemoryAccessor.Read<ulong>(gpuVa) != 0) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
+                return (_context.MemoryManager.Read<ulong>(gpuVa) != 0) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
             }
         }
 
@@ -87,11 +87,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (evt != null && evt2 == null)
             {
-                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt, _context.MemoryAccessor.Read<ulong>(gpuVa + 16), isEqual);
+                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt, _context.MemoryManager.Read<ulong>(gpuVa + 16), isEqual);
             }
             else if (evt == null && evt2 != null)
             {
-                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt2, _context.MemoryAccessor.Read<ulong>(gpuVa), isEqual);
+                useHost = _context.Renderer.Pipeline.TryHostConditionalRendering(evt2, _context.MemoryManager.Read<ulong>(gpuVa), isEqual);
             }
             else
             {
@@ -107,8 +107,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 evt?.Flush();
                 evt2?.Flush();
 
-                ulong x = _context.MemoryAccessor.Read<ulong>(gpuVa);
-                ulong y = _context.MemoryAccessor.Read<ulong>(gpuVa + 16);
+                ulong x = _context.MemoryManager.Read<ulong>(gpuVa);
+                ulong y = _context.MemoryManager.Read<ulong>(gpuVa + 16);
 
                 return (isEqual ? x == y : x != y) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
             }

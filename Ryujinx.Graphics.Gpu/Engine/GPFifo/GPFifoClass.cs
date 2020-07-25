@@ -80,13 +80,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             // TODO: Acquire operations (Wait), interrupts for invalid combinations.
             if (operation == SemaphoredOperation.Release)
             {
-                _context.MemoryAccessor.Write(address, value);
+                _context.MemoryManager.Write(address, value);
             }
             else if (operation == SemaphoredOperation.Reduction)
             {
                 bool signed = _state.State.SemaphoredFormat == SemaphoredFormat.Signed;
 
-                int mem = _context.MemoryAccessor.Read<int>(address);
+                int mem = _context.MemoryManager.Read<int>(address);
 
                 switch (_state.State.SemaphoredReduction)
                 {
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                         break;
                 }
 
-                _context.MemoryAccessor.Write(address, value);
+                _context.MemoryManager.Write(address, value);
             }
         }
 

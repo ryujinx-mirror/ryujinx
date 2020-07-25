@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             var uniformBuffer = state.Get<UniformBufferState>(MethodOffset.UniformBufferState);
 
-            _context.MemoryAccessor.Write(uniformBuffer.Address.Pack() + (uint)uniformBuffer.Offset, argument);
+            _context.MemoryManager.Write(uniformBuffer.Address.Pack() + (uint)uniformBuffer.Offset, argument);
 
             state.SetUniformBufferOffset(uniformBuffer.Offset + 4);
 
@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             var uniformBuffer = state.Get<UniformBufferState>(MethodOffset.UniformBufferState);
 
-            _context.MemoryAccessor.Write(uniformBuffer.Address.Pack() + (uint)uniformBuffer.Offset, MemoryMarshal.Cast<int, byte>(data));
+            _context.MemoryManager.Write(uniformBuffer.Address.Pack() + (uint)uniformBuffer.Offset, MemoryMarshal.Cast<int, byte>(data));
 
             state.SetUniformBufferOffset(uniformBuffer.Offset + data.Length * 4);
 
