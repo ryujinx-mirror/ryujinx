@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // CreateEcPurchasedEventManager() -> object<nn::ec::IPurchaseEventManager>
         public ResultCode CreateEcPurchasedEventManager(ServiceCtx context)
         {
-            MakeObject(context, new IPurchaseEventManager());
+            MakeObject(context, new IPurchaseEventManager(context.Device.System));
 
             Logger.PrintStub(LogClass.ServiceNs);
 
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             // Very similar to CreateEcPurchasedEventManager but with some extra code
 
-            MakeObject(context, new IPurchaseEventManager());
+            MakeObject(context, new IPurchaseEventManager(context.Device.System));
 
             Logger.PrintStub(LogClass.ServiceNs);
 
