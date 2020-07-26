@@ -25,6 +25,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public int Handle { get; private set; }
 
+        public int FragmentIsBgraUniform { get; }
         public int FragmentRenderScaleUniform { get; }
         public int ComputeRenderScaleUniform { get; }
 
@@ -218,6 +219,7 @@ namespace Ryujinx.Graphics.OpenGL
                 }
             }
 
+            FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
             FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
             ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
         }

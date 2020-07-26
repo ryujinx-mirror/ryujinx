@@ -35,6 +35,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int FragmentOutputColorBase = 0x1000010;
         public const int FragmentOutputColorEnd  = FragmentOutputColorBase + 8 * 16;
 
+        public const int FragmentOutputIsBgraBase = 0x1000100;
+        public const int FragmentOutputIsBgraEnd  = FragmentOutputIsBgraBase + 8 * 4;
+
         public const int ThreadIdX = 0x2000000;
         public const int ThreadIdY = 0x2000004;
         public const int ThreadIdZ = 0x2000008;

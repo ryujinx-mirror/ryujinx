@@ -139,6 +139,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.Stage == ShaderStage.Fragment || context.Config.Stage == ShaderStage.Compute)
             {
+                if (context.Config.Stage == ShaderStage.Fragment)
+                {
+                    context.AppendLine($"uniform bool {DefaultNames.IsBgraName}[8];");
+                    context.AppendLine();
+                }
+
                 if (DeclareRenderScale(context))
                 {
                     context.AppendLine();

@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
     {
         public int Handle { get; protected set; }
 
-        protected TextureCreateInfo Info { get; }
+        public TextureCreateInfo Info { get; }
 
         public int Width { get; }
         public int Height { get; }

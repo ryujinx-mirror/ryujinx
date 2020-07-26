@@ -247,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         }
 
         private void PostFrameBuffer(Layer layer, BufferItem item)
-        { 
+        {
             int frameBufferWidth  = item.GraphicBuffer.Object.Width;
             int frameBufferHeight = item.GraphicBuffer.Object.Height;
 
