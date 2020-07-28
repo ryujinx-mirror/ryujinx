@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string indexExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
 
-            return OperandManager.GetAttributeName(attr, context.Config.Stage, isOutAttr: false, indexExpr);
+            return OperandManager.GetAttributeName(attr, context.Config, isOutAttr: false, indexExpr);
         }
 
         public static string LoadConstant(CodeGenContext context, AstOperation operation)

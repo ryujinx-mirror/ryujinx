@@ -92,18 +92,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return name;
         }
 
-        public string GetExpression(AstOperand operand, ShaderStage stage)
+        public string GetExpression(AstOperand operand, ShaderConfig config)
         {
             switch (operand.Type)
             {
                 case OperandType.Attribute:
-                    return GetAttributeName(operand, stage);
+                    return GetAttributeName(operand, config);
 
                 case OperandType.Constant:
                     return NumberFormatter.FormatInt(operand.Value);
 
                 case OperandType.ConstantBuffer:
-                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, stage);
+                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, config.Stage);
 
                 case OperandType.LocalVariable:
                     return _locals[operand];
@@ -148,12 +148,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return GetVec4Indexed(ubName + index0, offsetExpr + " & 3");
         }
 
-        public static string GetOutAttributeName(AstOperand attr, ShaderStage stage)
+        public static string GetOutAttributeName(AstOperand attr, ShaderConfig config)
         {
-            return GetAttributeName(attr, stage, isOutAttr: true);
+            return GetAttributeName(attr, config, isOutAttr: true);
         }
 
-        public static string GetAttributeName(AstOperand attr, ShaderStage stage, bool isOutAttr = false, string indexExpr = "0")
+        public static string GetAttributeName(AstOperand attr, ShaderConfig config, bool isOutAttr = false, string indexExpr = "0")
         {
             int value = attr.Value;
 
@@ -167,14 +167,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     ? DefaultNames.OAttributePrefix
                     : DefaultNames.IAttributePrefix;
 
-                string name = $"{prefix}{(value >> 4)}_{swzMask}";
-
-                if (stage == ShaderStage.Geometry && !isOutAttr)
+                if ((config.Flags & TranslationFlags.Feedback) != 0)
                 {
-                    name += $"[{indexExpr}]";
-                }
+                    string name = $"{prefix}{(value >> 4)}_{swzMask}";
 
-                return name;
+                    if (config.Stage == ShaderStage.Geometry && !isOutAttr)
+                    {
+                        name += $"[{indexExpr}]";
+                    }
+
+                    return name;
+                }
+                else
+                {
+                    string name = $"{prefix}{(value >> 4)}";
+
+                    if (config.Stage == ShaderStage.Geometry && !isOutAttr)
+                    {
+                        name += $"[{indexExpr}]";
+                    }
+
+                    return name + '.' + swzMask;
+                }
             }
             else
             {
@@ -187,7 +201,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 else if (_builtInAttributes.TryGetValue(value & ~3, out BuiltInAttribute builtInAttr))
                 {
                     // TODO: There must be a better way to handle this...
-                    if (stage == ShaderStage.Fragment)
+                    if (config.Stage == ShaderStage.Fragment)
                     {
                         switch (value & ~3)
                         {
@@ -200,7 +214,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     string name = builtInAttr.Name;
 
-                    if (stage == ShaderStage.Geometry && !isOutAttr)
+                    if (config.Stage == ShaderStage.Geometry && !isOutAttr)
                     {
                         name = $"gl_in[{indexExpr}].{name}";
                     }

@@ -430,11 +430,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     };
                 }
 
-                for (int c = 0; c < 4; c++)
-                {
-                    char swzMask = "xyzw"[c];
+                string name = $"{DefaultNames.IAttributePrefix}{attr}";
 
-                    context.AppendLine($"layout (location = {attr}, component = {c}) {iq}in float {DefaultNames.IAttributePrefix}{attr}_{swzMask}{suffix};");
+                if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+                {
+                    for (int c = 0; c < 4; c++)
+                    {
+                        char swzMask = "xyzw"[c];
+
+                        context.AppendLine($"layout (location = {attr}, component = {c}) {iq}in float {name}_{swzMask}{suffix};");
+                    }
+                }
+                else
+                {
+                    context.AppendLine($"layout (location = {attr}) {iq}in vec4 {name}{suffix};");
                 }
             }
         }
@@ -463,22 +472,31 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             for (int attr = 0; attr < MaxAttributes; attr++)
             {
-                for (int c = 0; c < 4; c++)
-                {
-                    char swzMask = "xyzw"[c];
-
-                    context.AppendLine($"layout (location = {attr}, component = {c}) out float {DefaultNames.OAttributePrefix}{attr}_{swzMask};");
-                }
+                DeclareOutputAttribute(context, attr);
             }
 
             foreach (int attr in info.OAttributes.OrderBy(x => x).Where(x => x >= MaxAttributes))
+            {
+                DeclareOutputAttribute(context, attr);
+            }
+        }
+
+        private static void DeclareOutputAttribute(CodeGenContext context, int attr)
+        {
+            string name = $"{DefaultNames.OAttributePrefix}{attr}";
+
+            if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
             {
                 for (int c = 0; c < 4; c++)
                 {
                     char swzMask = "xyzw"[c];
 
-                    context.AppendLine($"layout (location = {attr}, component = {c}) out float {DefaultNames.OAttributePrefix}{attr}_{swzMask};");
+                    context.AppendLine($"layout (location = {attr}, component = {c}) out float {name}_{swzMask};");
                 }
+            }
+            else
+            {
+                context.AppendLine($"layout (location = {attr}) out vec4 {name};");
             }
         }
 
