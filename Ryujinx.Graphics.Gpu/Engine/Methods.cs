@@ -164,6 +164,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateDepthClampState(state);
             }
 
+            if (state.QueryModified(MethodOffset.AlphaTestEnable,
+                                    MethodOffset.AlphaTestRef,
+                                    MethodOffset.AlphaTestFunc))
+            {
+                UpdateAlphaTestState(state);
+            }
+
             if (state.QueryModified(MethodOffset.DepthTestEnable,
                                     MethodOffset.DepthWriteEnable,
                                     MethodOffset.DepthTestFunc))
@@ -372,7 +379,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             if (dsEnable)
             {
                 var dsState = state.Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
-                var dsSize  = state.Get<Size3D>             (MethodOffset.RtDepthStencilSize);
+                var dsSize  = state.Get<Size3D>(MethodOffset.RtDepthStencilSize);
 
                 depthStencil = TextureManager.FindOrCreateTexture(dsState, dsSize, samplesInX, samplesInY);
             }
@@ -448,6 +455,18 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             ViewVolumeClipControl clip = state.Get<ViewVolumeClipControl>(MethodOffset.ViewVolumeClipControl);
             _context.Renderer.Pipeline.SetDepthClamp((clip & ViewVolumeClipControl.DepthClampDisabled) == 0);
+        }
+
+        /// <summary>
+        /// Updates host alpha test state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        private void UpdateAlphaTestState(GpuState state)
+        {
+            _context.Renderer.Pipeline.SetAlphaTest(
+                state.Get<Boolean32>(MethodOffset.AlphaTestEnable),
+                state.Get<float>(MethodOffset.AlphaTestRef),
+                state.Get<CompareOp>(MethodOffset.AlphaTestFunc));
         }
 
         /// <summary>
@@ -577,8 +596,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="state">Current GPU state</param>
         private void UpdateStencilTestState(GpuState state)
         {
-            var backMasks = state.Get<StencilBackMasks>    (MethodOffset.StencilBackMasks);
-            var test      = state.Get<StencilTestState>    (MethodOffset.StencilTestState);
+            var backMasks = state.Get<StencilBackMasks>(MethodOffset.StencilBackMasks);
+            var test      = state.Get<StencilTestState>(MethodOffset.StencilTestState);
             var backTest  = state.Get<StencilBackTestState>(MethodOffset.StencilBackTestState);
 
             CompareOp backFunc;

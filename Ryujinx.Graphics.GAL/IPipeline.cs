@@ -31,6 +31,8 @@ namespace Ryujinx.Graphics.GAL
 
         void EndTransformFeedback();
 
+        void SetAlphaTest(bool enable, float reference, CompareOp op);
+
         void SetBlendState(int index, BlendDescriptor blend);
 
         void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp);
@@ -61,9 +63,7 @@ namespace Ryujinx.Graphics.GAL
         void SetRasterizerDiscard(bool discard);
 
         void SetRenderTargetScale(float scale);
-
         void SetRenderTargetColorMasks(ReadOnlySpan<uint> componentMask);
-
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
         void SetSampler(int index, ShaderStage stage, ISampler sampler);
