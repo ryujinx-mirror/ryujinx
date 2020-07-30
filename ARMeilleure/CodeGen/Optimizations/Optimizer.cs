@@ -138,7 +138,9 @@ namespace ARMeilleure.CodeGen.Optimizations
         {
             return (node is Operation operation) && (operation.Instruction == Instruction.Call
                 || operation.Instruction == Instruction.Tailcall
-                || operation.Instruction == Instruction.CompareAndSwap);
+                || operation.Instruction == Instruction.CompareAndSwap
+                || operation.Instruction == Instruction.CompareAndSwap16
+                || operation.Instruction == Instruction.CompareAndSwap8);
         }
 
         private static bool IsPropagableCopy(Operation operation)

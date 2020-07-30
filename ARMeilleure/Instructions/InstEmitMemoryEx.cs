@@ -23,7 +23,7 @@ namespace ARMeilleure.Instructions
 
         public static void Clrex(ArmEmitterContext context)
         {
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ClearExclusive)));
+            EmitClearExclusive(context);
         }
 
         public static void Dmb(ArmEmitterContext context) => EmitBarrier(context);
@@ -139,8 +139,6 @@ namespace ARMeilleure.Instructions
 
             Operand t = GetIntOrZR(context, op.Rt);
 
-            Operand s = null;
-
             if (pair)
             {
                 Debug.Assert(op.Size == 2 || op.Size == 3, "Invalid size for pairwise store.");
@@ -159,18 +157,11 @@ namespace ARMeilleure.Instructions
                     value = context.VectorInsert(value,                t2, 1);
                 }
 
-                s = EmitStoreExclusive(context, address, value, exclusive, op.Size + 1);
+                EmitStoreExclusive(context, address, value, exclusive, op.Size + 1, op.Rs, a32: false);
             }
             else
             {
-                s = EmitStoreExclusive(context, address, t, exclusive, op.Size);
-            }
-
-            if (s != null)
-            {
-                // This is only needed for exclusive stores. The function returns 0
-                // when the store is successful, and 1 otherwise.
-                SetIntOrZR(context, op.Rs, s);
+                EmitStoreExclusive(context, address, t, exclusive, op.Size, op.Rs, a32: false);
             }
         }
 

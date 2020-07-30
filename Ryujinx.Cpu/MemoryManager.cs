@@ -276,14 +276,6 @@ namespace Ryujinx.Cpu
 
         private void ThrowMemoryNotContiguous() => throw new MemoryNotContiguousException();
 
-        // TODO: Remove that once we have proper 8-bits and 16-bits CAS.
-        public ref T GetRefNoChecks<T>(ulong va) where T : unmanaged
-        {
-            MarkRegionAsModified(va, (ulong)Unsafe.SizeOf<T>());
-
-            return ref _backingMemory.GetRef<T>(GetPhysicalAddressInternal(va));
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsContiguousAndMapped(ulong va, int size) => IsContiguous(va, size) && IsMapped(va);
 
@@ -497,7 +489,12 @@ namespace Ryujinx.Cpu
             return PteToPa(_pageTable.Read<ulong>((va / PageSize) * PteSize) & ~(0xffffUL << 48)) + (va & PageMask);
         }
 
-        private void MarkRegionAsModified(ulong va, ulong size)
+        /// <summary>
+        /// Marks a region of memory as modified by the CPU.
+        /// </summary>
+        /// <param name="va">Virtual address of the region</param>
+        /// <param name="size">Size of the region</param>
+        public void MarkRegionAsModified(ulong va, ulong size)
         {
             ulong endVa = (va + size + PageMask) & ~(ulong)PageMask;
 
@@ -532,9 +529,9 @@ namespace Ryujinx.Cpu
             return (ulong)((long)pte - _backingMemory.Pointer.ToInt64());
         }
 
-        public void Dispose()
-        {
-            _pageTable.Dispose();
-        }
+        /// <summary>
+        /// Disposes of resources used by the memory manager.
+        /// </summary>
+        public void Dispose() => _pageTable.Dispose();
     }
 }

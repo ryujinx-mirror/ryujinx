@@ -13,6 +13,8 @@ namespace ARMeilleure.IntermediateRepresentation
         ByteSwap,
         Call,
         CompareAndSwap,
+        CompareAndSwap16,
+        CompareAndSwap8,
         CompareEqual,
         CompareGreater,
         CompareGreaterOrEqual,

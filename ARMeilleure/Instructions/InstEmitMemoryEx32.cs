@@ -13,7 +13,7 @@ namespace ARMeilleure.Instructions
     {
         public static void Clrex(ArmEmitterContext context)
         {
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ClearExclusive)));
+            EmitClearExclusive(context);
         }
 
         public static void Dmb(ArmEmitterContext context) => EmitBarrier(context);
@@ -198,34 +198,21 @@ namespace ARMeilleure.Instructions
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 
                     Operand leResult = context.BitwiseOr(lo, context.ShiftLeft(hi, Const(32)));
-                    Operand leS = EmitStoreExclusive(context, address, leResult, exclusive, size);
-                    if (exclusive)
-                    {
-                        SetIntA32(context, op.Rd, leS);
-                    }
+                    EmitStoreExclusive(context, address, leResult, exclusive, size, op.Rd, a32: true);
 
                     context.Branch(lblEnd);
 
                     context.MarkLabel(lblBigEndian);
 
                     Operand beResult = context.BitwiseOr(hi, context.ShiftLeft(lo, Const(32)));
-                    Operand beS = EmitStoreExclusive(context, address, beResult, exclusive, size);
-                    if (exclusive)
-                    {
-                        SetIntA32(context, op.Rd, beS);
-                    }
+                    EmitStoreExclusive(context, address, beResult, exclusive, size, op.Rd, a32: true);
 
                     context.MarkLabel(lblEnd);
                 }
                 else
                 {
-                    Operand s = EmitStoreExclusive(context, address, context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rt)), exclusive, size);
-                    // This is only needed for exclusive stores. The function returns 0
-                    // when the store is successful, and 1 otherwise.
-                    if (exclusive)
-                    {
-                        SetIntA32(context, op.Rd, s);
-                    }
+                    Operand value = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rt));
+                    EmitStoreExclusive(context, address, value, exclusive, size, op.Rd, a32: true);
                 }
             }
         }

@@ -178,6 +178,16 @@ namespace ARMeilleure.Translation
             return Add(Instruction.CompareAndSwap, Local(desired.Type), address, expected, desired);
         }
 
+        public Operand CompareAndSwap16(Operand address, Operand expected, Operand desired)
+        {
+            return Add(Instruction.CompareAndSwap16, Local(OperandType.I32), address, expected, desired);
+        }
+
+        public Operand CompareAndSwap8(Operand address, Operand expected, Operand desired)
+        {
+            return Add(Instruction.CompareAndSwap8, Local(OperandType.I32), address, expected, desired);
+        }
+
         public Operand ConditionalSelect(Operand op1, Operand op2, Operand op3)
         {
             return Add(Instruction.ConditionalSelect, Local(op2.Type), op1, op2, op3);

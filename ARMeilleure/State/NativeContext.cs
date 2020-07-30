@@ -15,6 +15,9 @@ namespace ARMeilleure.State
             public fixed uint FpFlags[RegisterConsts.FpFlagsCount];
             public int Counter;
             public ulong CallAddress;
+            public ulong ExclusiveAddress;
+            public ulong ExclusiveValueLow;
+            public ulong ExclusiveValueHigh;
         }
 
         private static NativeCtxStorage _dummyStorage = new NativeCtxStorage();
@@ -26,6 +29,8 @@ namespace ARMeilleure.State
         public NativeContext(IJitMemoryAllocator allocator)
         {
             _block = allocator.Allocate((ulong)Unsafe.SizeOf<NativeCtxStorage>());
+
+            GetStorage().ExclusiveAddress = ulong.MaxValue;
         }
 
         public unsafe ulong GetX(int index)
@@ -160,6 +165,16 @@ namespace ARMeilleure.State
         public static int GetCallAddressOffset()
         {
             return StorageOffset(ref _dummyStorage, ref _dummyStorage.CallAddress);
+        }
+
+        public static int GetExclusiveAddressOffset()
+        {
+            return StorageOffset(ref _dummyStorage, ref _dummyStorage.ExclusiveAddress);
+        }
+
+        public static int GetExclusiveValueOffset()
+        {
+            return StorageOffset(ref _dummyStorage, ref _dummyStorage.ExclusiveValueLow);
         }
 
         private static int StorageOffset<T>(ref NativeCtxStorage storage, ref T target)

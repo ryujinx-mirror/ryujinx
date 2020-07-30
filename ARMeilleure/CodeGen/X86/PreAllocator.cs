@@ -101,7 +101,7 @@ namespace ARMeilleure.CodeGen.X86
                             if (callConv == CallConvName.Windows)
                             {
                                 HandleTailcallWindowsAbi(block.Operations, stackAlloc, node, operation);
-                            } 
+                            }
                             else
                             {
                                 HandleTailcallSystemVAbi(block.Operations, stackAlloc, node, operation);
@@ -207,6 +207,8 @@ namespace ARMeilleure.CodeGen.X86
             switch (operation.Instruction)
             {
                 case Instruction.CompareAndSwap:
+                case Instruction.CompareAndSwap16:
+                case Instruction.CompareAndSwap8:
                 {
                     OperandType type = operation.GetSource(1).Type;
 
@@ -887,7 +889,7 @@ namespace ARMeilleure.CodeGen.X86
                     HandleConstantRegCopy(nodes, nodes.AddBefore(node, copyOp), copyOp);
 
                     sources.Add(argReg);
-                } 
+                }
                 else
                 {
                     throw new NotImplementedException("Spilling is not currently supported for tail calls. (too many arguments)");

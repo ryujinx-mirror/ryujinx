@@ -30,6 +30,7 @@ namespace ARMeilleure.CodeGen.X86
         Cmpss,
         Cmpxchg,
         Cmpxchg16b,
+        Cmpxchg8,
         Comisd,
         Comiss,
         Cpuid,
