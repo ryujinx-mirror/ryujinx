@@ -326,7 +326,7 @@ namespace ARMeilleure.Instructions
             }
             while (bit < context.Memory.AddressSpaceBits);
 
-            context.BranchIfTrue(lblSlowPath, context.ICompareLess(pte, Const(0L)));
+            context.BranchIfTrue(lblSlowPath, context.ICompareLessOrEqual(pte, Const(0L)));
 
             Operand pageOffset = context.BitwiseAnd(address, Const(address.Type, PageMask));
 

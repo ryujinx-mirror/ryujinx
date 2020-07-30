@@ -199,6 +199,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KThread GetCurrentThread()
         {
+            return GetCurrentThreadOrNull() ?? GetDummyThread();
+        }
+
+        public KThread GetCurrentThreadOrNull()
+        {
             lock (CoreContexts)
             {
                 for (int core = 0; core < CpuCoresCount; core++)
@@ -210,9 +215,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            return GetDummyThread();
-
-            throw new InvalidOperationException("Current thread is not scheduled!");
+            return null;
         }
 
         private KThread _dummyThread;

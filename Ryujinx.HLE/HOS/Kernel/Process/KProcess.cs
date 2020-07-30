@@ -1,5 +1,6 @@
 using ARMeilleure.State;
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -1071,18 +1072,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return result;
         }
 
-        public void StopAllThreads()
-        {
-            lock (_threadingLock)
-            {
-                foreach (KThread thread in _threads)
-                {
-                    KernelContext.Scheduler.ExitThread(thread);
-                    KernelContext.Scheduler.CoreManager.Set(thread.HostThread);
-                }
-            }
-        }
-
         private void InitializeMemoryManager(AddressSpaceType addrSpaceType, MemoryRegion memRegion)
         {
             int addrSpaceBits = addrSpaceType switch
@@ -1094,7 +1083,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 _ => throw new ArgumentException(nameof(addrSpaceType))
             };
 
-            CpuMemory = new MemoryManager(KernelContext.Memory, 1UL << addrSpaceBits);
+            CpuMemory = new MemoryManager(KernelContext.Memory, 1UL << addrSpaceBits, InvalidAccessHandler);
             CpuContext = new CpuContext(CpuMemory);
 
             // TODO: This should eventually be removed.
@@ -1104,13 +1093,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             MemoryManager = new KMemoryManager(KernelContext, CpuMemory);
         }
 
-        public void PrintCurrentThreadStackTrace()
+        private bool InvalidAccessHandler(ulong va)
         {
-            KernelContext.Scheduler.GetCurrentThread().PrintGuestStackTrace();
+            KernelContext.Scheduler.GetCurrentThreadOrNull()?.PrintGuestStackTrace();
+
+            Logger.PrintError(LogClass.Cpu, $"Invalid memory access at virtual address 0x{va:X16}.");
+
+            return false;
         }
 
         private void UndefinedInstructionHandler(object sender, InstUndefinedEventArgs e)
         {
+            KernelContext.Scheduler.GetCurrentThreadOrNull()?.PrintGuestStackTrace();
+
             throw new UndefinedInstructionException(e.Address, e.OpCode);
         }
 
