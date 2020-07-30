@@ -11,8 +11,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         public Block  CurrBlock { get; set; }
         public OpCode CurrOp    { get; set; }
 
-        public FeatureFlags UsedFeatures { get; set; }
-
         public ShaderConfig Config { get; }
 
         private List<Operation> _operations;
@@ -50,7 +48,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     case AttributeConsts.PositionX:
                     case AttributeConsts.PositionY:
-                        UsedFeatures |= FeatureFlags.FragCoordXY;
+                        Config.SetUsedFeature(FeatureFlags.FragCoordXY);
                         break;
                 }
             }
