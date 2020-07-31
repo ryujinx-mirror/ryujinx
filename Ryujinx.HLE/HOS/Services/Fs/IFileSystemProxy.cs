@@ -6,6 +6,7 @@ using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
 using System.IO;
 
@@ -353,6 +354,16 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             }
 
             return (ResultCode)result.Value;
+        }
+
+        [Command(71)]
+        public ResultCode ReadSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
+        {
+            Logger.PrintStub(LogClass.ServiceFs);
+
+            MemoryHelper.FillWithZeros(context.Memory, context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
+
+            return ResultCode.Success;
         }
 
         [Command(200)]
