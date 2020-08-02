@@ -1,7 +1,9 @@
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -9,15 +11,43 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private static DebugProc _debugCallback;
 
-        public static void Initialize()
+        private static int _counter;
+
+        public static void Initialize(GraphicsDebugLevel logLevel)
         {
+            // Disable everything
+            GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DontCare, DebugSeverityControl.DontCare, 0, (int[])null, false);
+
+            if (logLevel == GraphicsDebugLevel.None)
+            {
+                GL.Disable(EnableCap.DebugOutputSynchronous);
+                GL.DebugMessageCallback(null, IntPtr.Zero);
+
+                return;
+            }
+
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
-            GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DontCare, DebugSeverityControl.DontCare, 0, (int[])null, true);
+            if (logLevel == GraphicsDebugLevel.Error)
+            {
+                GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypeError, DebugSeverityControl.DontCare, 0, (int[])null, true);
+            }
+            else if (logLevel == GraphicsDebugLevel.Performance)
+            {
+                GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypeError, DebugSeverityControl.DontCare, 0, (int[])null, true);
+                GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypePerformance, DebugSeverityControl.DontCare, 0, (int[])null, true);
+            }
+            else
+            {
+                GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DontCare, DebugSeverityControl.DontCare, 0, (int[])null, true);
+            }
 
+            _counter = 0;
             _debugCallback = GLDebugHandler;
 
             GL.DebugMessageCallback(_debugCallback, IntPtr.Zero);
+
+            Logger.PrintWarning(LogClass.Gpu, "OpenGL Debugging is enabled. Performance will be negatively impacted.");
         }
 
         private static void GLDebugHandler(
@@ -29,20 +59,43 @@ namespace Ryujinx.Graphics.OpenGL
             IntPtr message,
             IntPtr userParam)
         {
-            string fullMessage = $"{type} {severity} {source} {Marshal.PtrToStringAnsi(message)}";
+            string msg = Marshal.PtrToStringUTF8(message).Replace('\n', ' ');
 
             switch (type)
             {
-                case DebugType.DebugTypeError:
-                    Logger.PrintError(LogClass.Gpu, fullMessage);
-                    break;
-                case DebugType.DebugTypePerformance:
-                    Logger.PrintWarning(LogClass.Gpu, fullMessage);
-                    break;
+                case DebugType.DebugTypeError      : Logger.PrintError(LogClass.Gpu, $"{severity}: {msg}\nCallStack={Environment.StackTrace}", "GLERROR"); break;
+                case DebugType.DebugTypePerformance: Logger.PrintWarning(LogClass.Gpu, $"{severity}: {msg}", "GLPERF"); break;
+                case DebugType.DebugTypePushGroup  : Logger.PrintInfo(LogClass.Gpu, $"{{ ({id}) {severity}: {msg}", "GLINFO"); break;
+                case DebugType.DebugTypePopGroup   : Logger.PrintInfo(LogClass.Gpu, $"}} ({id}) {severity}: {msg}", "GLINFO"); break;
                 default:
-                    Logger.PrintDebug(LogClass.Gpu, fullMessage);
+                    if (source == DebugSource.DebugSourceApplication)
+                    {
+                        Logger.PrintInfo(LogClass.Gpu, $"{type} {severity}: {msg}", "GLINFO");
+                    }
+                    else
+                    {
+                        Logger.PrintDebug(LogClass.Gpu, $"{type} {severity}: {msg}", "GLDEBUG");
+                    }
                     break;
             }
+        }
+
+        // Useful debug helpers
+        public static void PushGroup(string dbgMsg)
+        {
+            int counter = Interlocked.Increment(ref _counter);
+
+            GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, counter, dbgMsg.Length, dbgMsg);
+        }
+
+        public static void PopGroup()
+        {
+            GL.PopDebugGroup();
+        }
+
+        public static void Print(string dbgMsg, DebugType type = DebugType.DebugTypeMarker, DebugSeverity severity = DebugSeverity.DebugSeverityNotification, int id = 999999)
+        {
+            GL.DebugMessageInsert(DebugSourceExternal.DebugSourceApplication, type, id, severity, dbgMsg.Length, dbgMsg);
         }
     }
 }

@@ -5,6 +5,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using Ryujinx.Configuration;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
@@ -47,10 +48,14 @@ namespace Ryujinx.Ui
 
         private HotkeyButtons _prevHotkeyButtons;
 
-        public GlRenderer(Switch device)
+        private GraphicsDebugLevel _glLogLevel;
+
+        public GlRenderer(Switch device, GraphicsDebugLevel glLogLevel)
             : base (GetGraphicsMode(),
             3, 3,
-            GraphicsContextFlags.ForwardCompatible)
+            glLogLevel == GraphicsDebugLevel.None 
+            ? GraphicsContextFlags.ForwardCompatible 
+            : GraphicsContextFlags.ForwardCompatible | GraphicsContextFlags.Debug)
         {
             WaitEvent = new ManualResetEvent(false);
 
@@ -73,6 +78,8 @@ namespace Ryujinx.Ui
                           | EventMask.KeyReleaseMask));
 
             this.Shown += Renderer_Shown;
+
+            _glLogLevel = glLogLevel;
         }
 
         private static GraphicsMode GetGraphicsMode()
@@ -304,7 +311,7 @@ namespace Ryujinx.Ui
             // First take exclusivity on the OpenGL context.
             GraphicsContext.MakeCurrent(WindowInfo);
 
-            _renderer.Initialize();
+            _renderer.Initialize(_glLogLevel);
 
             // Make sure the first frame is not transparent.
             GL.ClearColor(OpenTK.Color.Black);

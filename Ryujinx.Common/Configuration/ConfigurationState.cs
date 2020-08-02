@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration.Hid;
@@ -141,17 +142,23 @@ namespace Ryujinx.Configuration
             /// </summary>
             public ReactiveObject<bool> EnableFileLog { get; private set; }
 
+            /// <summary>
+            /// Controls which OpenGL log messages are recorded in the log
+            /// </summary>
+            public ReactiveObject<GraphicsDebugLevel> GraphicsDebugLevel { get; private set; }
+
             public LoggerSection()
             {
-                EnableDebug       = new ReactiveObject<bool>();
-                EnableStub        = new ReactiveObject<bool>();
-                EnableInfo        = new ReactiveObject<bool>();
-                EnableWarn        = new ReactiveObject<bool>();
-                EnableError       = new ReactiveObject<bool>();
-                EnableGuest       = new ReactiveObject<bool>();
-                EnableFsAccessLog = new ReactiveObject<bool>();
-                FilteredClasses   = new ReactiveObject<LogClass[]>();
-                EnableFileLog     = new ReactiveObject<bool>();
+                EnableDebug        = new ReactiveObject<bool>();
+                EnableStub         = new ReactiveObject<bool>();
+                EnableInfo         = new ReactiveObject<bool>();
+                EnableWarn         = new ReactiveObject<bool>();
+                EnableError        = new ReactiveObject<bool>();
+                EnableGuest        = new ReactiveObject<bool>();
+                EnableFsAccessLog  = new ReactiveObject<bool>();
+                FilteredClasses    = new ReactiveObject<LogClass[]>();
+                EnableFileLog      = new ReactiveObject<bool>();
+                GraphicsDebugLevel = new ReactiveObject<GraphicsDebugLevel>();
             }
         }
 
@@ -378,6 +385,7 @@ namespace Ryujinx.Configuration
                 LoggingEnableGuest        = Logger.EnableGuest,
                 LoggingEnableFsAccessLog  = Logger.EnableFsAccessLog,
                 LoggingFilteredClasses    = Logger.FilteredClasses,
+                LoggingGraphicsDebugLevel = Logger.GraphicsDebugLevel,
                 EnableFileLog             = Logger.EnableFileLog,
                 SystemLanguage            = System.Language,
                 SystemRegion              = System.Region,
@@ -436,6 +444,7 @@ namespace Ryujinx.Configuration
             Logger.EnableGuest.Value               = true;
             Logger.EnableFsAccessLog.Value         = false;
             Logger.FilteredClasses.Value           = new LogClass[] { };
+            Logger.GraphicsDebugLevel.Value        = GraphicsDebugLevel.None;
             Logger.EnableFileLog.Value             = true;
             System.Language.Value                  = Language.AmericanEnglish;
             System.Region.Value                    = Region.USA;
@@ -678,6 +687,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 12)
+            {
+                Common.Logging.Logger.PrintWarning(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 12.");
+
+                configurationFileFormat.LoggingGraphicsDebugLevel = GraphicsDebugLevel.None;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -694,6 +712,7 @@ namespace Ryujinx.Configuration
             Logger.EnableGuest.Value               = configurationFileFormat.LoggingEnableGuest;
             Logger.EnableFsAccessLog.Value         = configurationFileFormat.LoggingEnableFsAccessLog;
             Logger.FilteredClasses.Value           = configurationFileFormat.LoggingFilteredClasses;
+            Logger.GraphicsDebugLevel.Value        = configurationFileFormat.LoggingGraphicsDebugLevel;
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             System.Language.Value                  = configurationFileFormat.SystemLanguage;
             System.Region.Value                    = configurationFileFormat.SystemRegion;

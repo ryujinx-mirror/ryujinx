@@ -2008,24 +2008,6 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="_debugLogToggle">
-                                    <property name="label" translatable="yes">Enable Debug Logs</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="receives_default">False</property>
-                                    <property name="tooltip_text" translatable="yes">Enables printing debug log messages</property>
-                                    <property name="halign">start</property>
-                                    <property name="margin_top">5</property>
-                                    <property name="margin_bottom">5</property>
-                                    <property name="draw_indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkCheckButton" id="_stubLogToggle">
                                     <property name="label" translatable="yes">Enable Stub Logs</property>
                                     <property name="visible">True</property>
@@ -2186,6 +2168,102 @@
                             <property name="fill">True</property>
                             <property name="padding">5</property>
                             <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="CatDevLogging">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_left">5</property>
+                            <property name="margin_right">5</property>
+                            <property name="margin_top">10</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="margin_bottom">5</property>
+                                <property name="tooltip_text" translatable="yes">Use with care</property>
+                                <property name="label" translatable="yes">Developer Options</property>
+                                <attributes>
+                                  <attribute name="weight" value="bold"/>
+                                </attributes>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">20</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="DevLoggingOptions">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="valign">start</property>
+                                <property name="margin_left">10</property>
+                                <property name="margin_right">10</property>
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkCheckButton" id="_debugLogToggle">
+                                    <property name="label" translatable="yes">Enable Debug Logs</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="tooltip_text" translatable="yes">Enables printing debug log messages</property>
+                                    <property name="halign">start</property>
+                                    <property name="margin_top">5</property>
+                                    <property name="margin_bottom">5</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">21</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkBox">
+                                  <property name="visible">True</property>
+                                  <property name="can_focus">False</property>
+                                  <property name="margin_top">5</property>
+                                  <child>
+                                    <object class="GtkLabel">
+                                      <property name="visible">True</property>
+                                      <property name="can_focus">False</property>
+                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled. Not persistent across restarts.</property>
+                                      <property name="label" translatable="yes">OpenGL Log Level</property>
+                                    </object>
+                                    <packing>
+                                      <property name="expand">False</property>
+                                      <property name="fill">True</property>
+                                      <property name="padding">5</property>
+                                      <property name="position">22</property>
+                                    </packing>
+                                  </child>
+                                  <child>
+                                    <object class="GtkComboBoxText" id="_graphicsDebugLevel">
+                                      <property name="visible">True</property>
+                                      <property name="can_focus">False</property>
+                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled. Not persistent across restarts.</property>
+                                      <property name="margin_left">5</property>
+                                    </object>
+                                    <packing>
+                                      <property name="expand">False</property>
+                                      <property name="fill">True</property>
+                                      <property name="position">22</property>
+                                    </packing>
+                                  </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="padding">5</property>
+                            <property name="position">22</property>
                           </packing>
                         </child>
                       </object>

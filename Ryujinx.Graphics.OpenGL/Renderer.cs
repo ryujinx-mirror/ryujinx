@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
@@ -96,8 +97,10 @@ namespace Ryujinx.Graphics.OpenGL
             return _counters.QueueReport(type, resultHandler);
         }
 
-        public void Initialize()
+        public void Initialize(GraphicsDebugLevel glLogLevel)
         {
+            Debugger.Initialize(glLogLevel);
+
             PrintGpuInformation();
 
             _counters.Initialize();

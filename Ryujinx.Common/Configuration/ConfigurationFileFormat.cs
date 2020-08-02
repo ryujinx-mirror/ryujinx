@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
@@ -13,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 11;
+        public const int CurrentVersion = 12;
 
         public int Version { get; set; }
 
@@ -76,6 +77,11 @@ namespace Ryujinx.Configuration
         /// Controls which log messages are written to the log targets
         /// </summary>
         public LogClass[] LoggingFilteredClasses { get; set; }
+
+        /// <summary>
+        /// Change Graphics API debug log level
+        /// </summary>
+        public GraphicsDebugLevel LoggingGraphicsDebugLevel { get; set; }
 
         /// <summary>
         /// Enables or disables logging to a file on disk

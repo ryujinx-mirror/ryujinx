@@ -1,6 +1,7 @@
 using Gtk;
 using Ryujinx.Audio;
 using Ryujinx.Configuration;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Configuration.System;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
@@ -35,6 +36,7 @@ namespace Ryujinx.Ui
         [GUI] CheckButton     _guestLogToggle;
         [GUI] CheckButton     _fsAccessLogToggle;
         [GUI] Adjustment      _fsLogSpinAdjustment;
+        [GUI] ComboBoxText    _graphicsDebugLevel;
         [GUI] CheckButton     _dockedModeToggle;
         [GUI] CheckButton     _discordToggle;
         [GUI] CheckButton     _vSyncToggle;
@@ -148,6 +150,13 @@ namespace Ryujinx.Ui
             {
                 _fsAccessLogToggle.Click();
             }
+
+            foreach (GraphicsDebugLevel level in Enum.GetValues(typeof(GraphicsDebugLevel)))
+            {
+                _graphicsDebugLevel.Append(level.ToString(), level.ToString());
+            }
+
+            _graphicsDebugLevel.SetActiveId(ConfigurationState.Instance.Logger.GraphicsDebugLevel.Value.ToString());
 
             if (ConfigurationState.Instance.System.EnableDockedMode)
             {
@@ -496,6 +505,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Logger.EnableGuest.Value               = _guestLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableFsAccessLog.Value         = _fsAccessLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableFileLog.Value             = _fileLogToggle.Active;
+            ConfigurationState.Instance.Logger.GraphicsDebugLevel.Value        = Enum.Parse<GraphicsDebugLevel>(_graphicsDebugLevel.ActiveId);
             ConfigurationState.Instance.System.EnableDockedMode.Value          = _dockedModeToggle.Active;
             ConfigurationState.Instance.EnableDiscordIntegration.Value         = _discordToggle.Active;
             ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;

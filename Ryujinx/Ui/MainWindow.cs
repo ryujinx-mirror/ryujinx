@@ -501,7 +501,7 @@ namespace Ryujinx.Ui
                 }
             ).ToArray());
 
-            _glWidget = new GlRenderer(_emulationContext);
+            _glWidget = new GlRenderer(_emulationContext, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
 
             Application.Invoke(delegate
             {
