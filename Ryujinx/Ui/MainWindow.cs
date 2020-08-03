@@ -5,6 +5,7 @@ using LibHac.Ns;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
+using Ryujinx.Configuration.System;
 using Ryujinx.Debugger.Profiler;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
@@ -31,6 +32,7 @@ namespace Ryujinx.Ui
         private static HLE.Switch _emulationContext;
 
         private static GlRenderer _glWidget;
+        private static GtkHostUiHandler _uiHandler;
 
         private static AutoResetEvent _deviceExitStatus = new AutoResetEvent(false);
 
@@ -191,6 +193,8 @@ namespace Ryujinx.Ui
             Task.Run(RefreshFirmwareLabel);
 
             _statusBar.Hide();
+
+            _uiHandler = new GtkHostUiHandler(this);
         }
 
         private void MainWindow_WindowStateEvent(object o, WindowStateEventArgs args)
@@ -318,7 +322,10 @@ namespace Ryujinx.Ui
         {
             _virtualFileSystem.Reload();
 
-            HLE.Switch instance = new HLE.Switch(_virtualFileSystem, _contentManager, InitializeRenderer(), InitializeAudioEngine());
+            HLE.Switch instance = new HLE.Switch(_virtualFileSystem, _contentManager, InitializeRenderer(), InitializeAudioEngine())
+            {
+                UiHandler = _uiHandler
+            };
 
             instance.Initialize();
 

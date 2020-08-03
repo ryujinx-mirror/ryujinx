@@ -37,6 +37,8 @@ namespace Ryujinx.HLE
 
         public Hid Hid { get; private set; }
 
+        public IHostUiHandler UiHandler { get; set; }
+
         public bool EnableDeviceVsync { get; set; } = true;
 
         public Switch(VirtualFileSystem fileSystem, ContentManager contentManager, IRenderer renderer, IAalOutput audioOut)
