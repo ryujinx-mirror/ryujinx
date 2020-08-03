@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             //       Then it seems to use the buffer content and compare it with a stored linked instrusive list.
             //       Since we don't support purchase from eShop, we can stub it.
 
-            Logger.PrintStub(LogClass.ServiceNs);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
             return ResultCode.Success;
         }

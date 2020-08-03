@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
             context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
-            Logger.PrintStub(LogClass.ServiceApm);
+            Logger.Stub?.PrintStub(LogClass.ServiceApm);
 
             return ResultCode.Success;
         }

@@ -146,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                 creationInfo.OwnerId = new TitleId(context.Process.TitleId);
             }
 
-            Logger.PrintInfo(LogClass.ServiceFs, $"Creating save with title ID {attribute.TitleId.Value:x16}");
+            Logger.Info?.Print(LogClass.ServiceFs, $"Creating save with title ID {attribute.TitleId.Value:x16}");
 
             Result result = _baseFileSystemProxy.CreateSaveDataFileSystem(ref attribute, ref creationInfo, ref metaCreateInfo);
 
@@ -359,7 +359,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(71)]
         public ResultCode ReadSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceFs);
+            Logger.Stub?.PrintStub(LogClass.ServiceFs);
 
             MemoryHelper.FillWithZeros(context.Memory, context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
 
@@ -387,7 +387,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             // This is because AOC can be distributed over multiple containers in the emulator.
             if (context.Device.System.ContentManager.GetAocDataStorage((ulong)titleId, out LibHac.Fs.IStorage aocStorage))
             {
-                Logger.PrintInfo(LogClass.Loader, $"Opened AddOnContent Data TitleID={titleId:X16}");
+                Logger.Info?.Print(LogClass.Loader, $"Opened AddOnContent Data TitleID={titleId:X16}");
 
                 MakeObject(context, new FileSystemProxy.IStorage(aocStorage));
                 
@@ -517,7 +517,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             string message = ReadUtf8StringSend(context);
 
             // FS ends each line with a newline. Remove it because Ryujinx logging adds its own newline
-            Logger.PrintAccessLog(LogClass.ServiceFs, message.TrimEnd('\n'));
+            Logger.AccessLog?.PrintMsg(LogClass.ServiceFs, message.TrimEnd('\n'));
 
             return ResultCode.Success;
         }

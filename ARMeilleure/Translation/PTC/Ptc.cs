@@ -98,9 +98,6 @@ namespace ARMeilleure.Translation.PTC
             CachePathBackup = string.Empty;
 
             Disable();
-
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
         }
 
         public static void Initialize(string titleIdText, string displayVersion, bool enabled)
@@ -126,7 +123,7 @@ namespace ARMeilleure.Translation.PTC
                 return;
             }
 
-            Logger.PrintInfo(LogClass.Ptc, $"Initializing Profiled Persistent Translation Cache (enabled: {enabled}).");
+            Logger.Info?.Print(LogClass.Ptc, $"Initializing Profiled Persistent Translation Cache (enabled: {enabled}).");
 
             TitleIdText = titleIdText;
             DisplayVersion = !String.IsNullOrEmpty(displayVersion) ? displayVersion : DisplayVersionDefault;
@@ -624,11 +621,11 @@ namespace ARMeilleure.Translation.PTC
 
             do
             {
-                Logger.PrintInfo(LogClass.Ptc, $"{funcsCount + _translateCount} of {ProfiledFuncsCount} functions to translate - {_rejitCount} functions rejited");
+                Logger.Info?.Print(LogClass.Ptc, $"{funcsCount + _translateCount} of {ProfiledFuncsCount} functions to translate - {_rejitCount} functions rejited");
             }
             while (!_loggerEvent.WaitOne(refreshRate * 1000));
 
-            Logger.PrintInfo(LogClass.Ptc, $"{funcsCount + _translateCount} of {ProfiledFuncsCount} functions to translate - {_rejitCount} functions rejited");
+            Logger.Info?.Print(LogClass.Ptc, $"{funcsCount + _translateCount} of {ProfiledFuncsCount} functions to translate - {_rejitCount} functions rejited");
         }
 
         internal static void WriteInfoCodeReloc(long address, bool highCq, PtcInfo ptcInfo)
@@ -732,9 +729,6 @@ namespace ARMeilleure.Translation.PTC
             {
                 _disposed = true;
 
-                AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
-                AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_ProcessExit;
-
                 Wait();
                 _waitEvent.Dispose();
 
@@ -745,24 +739,6 @@ namespace ARMeilleure.Translation.PTC
                 _relocsStream.Dispose();
                 _unwindInfosStream.Dispose();
             }
-        }
-
-        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            Close();
-            PtcProfiler.Stop();
-
-            if (e.IsTerminating)
-            {
-                Dispose();
-                PtcProfiler.Dispose();
-            }
-        }
-
-        private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
-        {
-            Dispose();
-            PtcProfiler.Dispose();
         }
     }
 }

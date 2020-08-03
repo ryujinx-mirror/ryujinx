@@ -364,7 +364,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         {
             if (!Fifo.TryDequeue(out int value))
             {
-                Logger.PrintWarning(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
+                Logger.Warning?.Print(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
 
                 return 0;
             }

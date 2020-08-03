@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
                 if ((position - basePosition) + buffer.Length > size)
                 {
-                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                    Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
 
                     break;
                 }
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             string deviceName = Encoding.ASCII.GetString(deviceNameBuffer);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
             return ResultCode.Success;
@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         {
             context.ResponseData.Write(2);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
                 if ((position - basePosition) + buffer.Length > size)
                 {
-                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                    Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
 
                     break;
                 }
@@ -167,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             string deviceName = Encoding.UTF8.GetString(deviceNameBuffer);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         {
             context.ResponseData.Write(1f);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
             return ResultCode.Success;
@@ -216,7 +216,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
@@ -232,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }

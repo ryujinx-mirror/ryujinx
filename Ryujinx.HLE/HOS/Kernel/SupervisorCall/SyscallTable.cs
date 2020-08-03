@@ -441,11 +441,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             if (argValues != null)
             {
-                Logger.PrintDebug(LogClass.KernelSvc, string.Format(formatOrSvcName, argValues));
+                Logger.Debug?.Print(LogClass.KernelSvc, string.Format(formatOrSvcName, argValues));
             }
             else
             {
-                Logger.PrintDebug(LogClass.KernelSvc, formatOrSvcName);
+                Logger.Debug?.Print(LogClass.KernelSvc, formatOrSvcName);
             }
         }
 
@@ -456,11 +456,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 result != KernelResult.Cancelled &&
                 result != KernelResult.InvalidState)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"{svcName} returned error {result}.");
+                Logger.Warning?.Print(LogClass.KernelSvc, $"{svcName} returned error {result}.");
             }
             else
             {
-                Logger.PrintDebug(LogClass.KernelSvc, $"{svcName} returned result {result}.");
+                Logger.Debug?.Print(LogClass.KernelSvc, $"{svcName} returned result {result}.");
             }
         }
     }

@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             lock (Lock)
             {
-                Logger.PrintInfo(LogClass.SurfaceFlinger, $"Creating layer {layerId}");
+                Logger.Info?.Print(LogClass.SurfaceFlinger, $"Creating layer {layerId}");
 
                 BufferQueue.CreateBufferQueue(_device, process, out BufferQueueProducer producer, out BufferQueueConsumer consumer);
 

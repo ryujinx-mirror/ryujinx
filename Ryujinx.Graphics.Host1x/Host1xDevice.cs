@@ -104,7 +104,7 @@ namespace Ryujinx.Graphics.Host1x
                     DeviceWrite(_offset, data);
                     break;
                 default:
-                    Logger.PrintError(LogClass.Host1x, $"Unsupported opcode \"{opCode}\".");
+                    Logger.Error?.Print(LogClass.Host1x, $"Unsupported opcode \"{opCode}\".");
                     break;
             }
         }

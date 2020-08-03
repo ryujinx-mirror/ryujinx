@@ -249,7 +249,7 @@ namespace Ryujinx.Ui
             }
             else
             {
-                Logger.PrintWarning(LogClass.Application, $"The \"custom_theme_path\" section in \"Config.json\" contains an invalid path: \"{ConfigurationState.Instance.Ui.CustomThemePath}\".");
+                Logger.Warning?.Print(LogClass.Application, $"The \"custom_theme_path\" section in \"Config.json\" contains an invalid path: \"{ConfigurationState.Instance.Ui.CustomThemePath}\".");
             }
         }
 
@@ -405,7 +405,7 @@ namespace Ryujinx.Ui
 
                 UpdateGraphicsConfig();
 
-                Logger.PrintInfo(LogClass.Application, $"Using Firmware Version: {_contentManager.GetCurrentFirmwareVersion()?.VersionString}");
+                Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {_contentManager.GetCurrentFirmwareVersion()?.VersionString}");
 
                 if (Directory.Exists(path))
                 {
@@ -418,12 +418,12 @@ namespace Ryujinx.Ui
 
                     if (romFsFiles.Length > 0)
                     {
-                        Logger.PrintInfo(LogClass.Application, "Loading as cart with RomFS.");
+                        Logger.Info?.Print(LogClass.Application, "Loading as cart with RomFS.");
                         device.LoadCart(path, romFsFiles[0]);
                     }
                     else
                     {
-                        Logger.PrintInfo(LogClass.Application, "Loading as cart WITHOUT RomFS.");
+                        Logger.Info?.Print(LogClass.Application, "Loading as cart WITHOUT RomFS.");
                         device.LoadCart(path);
                     }
                 }
@@ -432,34 +432,34 @@ namespace Ryujinx.Ui
                     switch (System.IO.Path.GetExtension(path).ToLowerInvariant())
                     {
                         case ".xci":
-                            Logger.PrintInfo(LogClass.Application, "Loading as XCI.");
+                            Logger.Info?.Print(LogClass.Application, "Loading as XCI.");
                             device.LoadXci(path);
                             break;
                         case ".nca":
-                            Logger.PrintInfo(LogClass.Application, "Loading as NCA.");
+                            Logger.Info?.Print(LogClass.Application, "Loading as NCA.");
                             device.LoadNca(path);
                             break;
                         case ".nsp":
                         case ".pfs0":
-                            Logger.PrintInfo(LogClass.Application, "Loading as NSP.");
+                            Logger.Info?.Print(LogClass.Application, "Loading as NSP.");
                             device.LoadNsp(path);
                             break;
                         default:
-                            Logger.PrintInfo(LogClass.Application, "Loading as homebrew.");
+                            Logger.Info?.Print(LogClass.Application, "Loading as homebrew.");
                             try
                             {
                                 device.LoadProgram(path);
                             }
                             catch (ArgumentOutOfRangeException)
                             {
-                                Logger.PrintError(LogClass.Application, "The file which you have specified is unsupported by Ryujinx.");
+                                Logger.Error?.Print(LogClass.Application, "The file which you have specified is unsupported by Ryujinx.");
                             }
                             break;
                     }
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
+                    Logger.Warning?.Print(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
                     device.Dispose();
 
                     return;
@@ -668,10 +668,11 @@ namespace Ryujinx.Ui
 
             Profile.FinishProfiling();
             DiscordIntegrationModule.Exit();
-            Logger.Shutdown();
 
             Ptc.Dispose();
             PtcProfiler.Dispose();
+
+            Logger.Shutdown();
 
             Application.Quit();
         }
@@ -691,7 +692,7 @@ namespace Ryujinx.Ui
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
+                    Logger.Warning?.Print(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
                 }
             }
             else if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.OpenAl)
@@ -702,11 +703,11 @@ namespace Ryujinx.Ui
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.Audio, "OpenAL is not supported, trying to fall back to SoundIO.");
+                    Logger.Warning?.Print(LogClass.Audio, "OpenAL is not supported, trying to fall back to SoundIO.");
 
                     if (SoundIoAudioOut.IsSupported)
                     {
-                        Logger.PrintWarning(LogClass.Audio, "Found SoundIO, changing configuration.");
+                        Logger.Warning?.Print(LogClass.Audio, "Found SoundIO, changing configuration.");
 
                         ConfigurationState.Instance.System.AudioBackend.Value = AudioBackend.SoundIo;
                         SaveConfig();
@@ -715,7 +716,7 @@ namespace Ryujinx.Ui
                     }
                     else
                     {
-                        Logger.PrintWarning(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
+                        Logger.Warning?.Print(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
                     }
                 }
             }
@@ -956,7 +957,7 @@ namespace Ryujinx.Ui
 
                         dialog.SecondaryText = $"A valid system firmware was not found in {filename}.";
 
-                        Logger.PrintError(LogClass.Application, $"A valid system firmware was not found in {filename}.");
+                        Logger.Error?.Print(LogClass.Application, $"A valid system firmware was not found in {filename}.");
 
                         dialog.Run();
                         dialog.Hide();
@@ -993,7 +994,7 @@ namespace Ryujinx.Ui
 
                     if (response == (int)ResponseType.Yes)
                     {
-                        Logger.PrintInfo(LogClass.Application, $"Installing firmware {firmwareVersion.VersionString}");
+                        Logger.Info?.Print(LogClass.Application, $"Installing firmware {firmwareVersion.VersionString}");
                         
                         Thread thread = new Thread(() =>
                         {
@@ -1017,7 +1018,7 @@ namespace Ryujinx.Ui
 
                                     dialog.SecondaryText = $"System version {firmwareVersion.VersionString} successfully installed.";
 
-                                    Logger.PrintInfo(LogClass.Application, $"System version {firmwareVersion.VersionString} successfully installed.");
+                                    Logger.Info?.Print(LogClass.Application, $"System version {firmwareVersion.VersionString} successfully installed.");
 
                                     dialog.Run();
                                     dialog.Dispose();
@@ -1038,7 +1039,7 @@ namespace Ryujinx.Ui
                                     dialog.SecondaryText = $"An error occured while installing system version {firmwareVersion.VersionString}." +
                                      " Please check logs for more info.";
 
-                                    Logger.PrintError(LogClass.Application, ex.Message);
+                                    Logger.Error?.Print(LogClass.Application, ex.Message);
 
                                     dialog.Run();
                                     dialog.Dispose();
@@ -1073,7 +1074,7 @@ namespace Ryujinx.Ui
 
                     dialog.SecondaryText = "An error occured while parsing firmware. Please check the logs for more info.";
 
-                    Logger.PrintError(LogClass.Application, ex.Message);
+                    Logger.Error?.Print(LogClass.Application, ex.Message);
 
                     dialog.Run();
                     dialog.Dispose();

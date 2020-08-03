@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             if (bufferSize != 0x4000)
             {
                 // TODO: find error code here
-                Logger.PrintError(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{bufferSize:x} (expected 0x4000)");
+                Logger.Error?.Print(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{bufferSize:x} (expected 0x4000)");
 
                 throw new InvalidOperationException();
             }

@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             _normalSession.DataAvailable      += OnNormalOutData;
             _interactiveSession.DataAvailable += OnInteractiveOutData;
             
-            Logger.PrintInfo(LogClass.ServiceAm, $"Applet '{appletId}' created.");
+            Logger.Info?.Print(LogClass.ServiceAm, $"Applet '{appletId}' created.");
         }
 
         private void OnAppletStateChanged(object sender, EventArgs e)
@@ -194,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
             context.ResponseData.Write(indirectLayerConsumerHandle);
 
-            Logger.PrintStub(LogClass.ServiceAm, new { indirectLayerConsumerHandle });
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { indirectLayerConsumerHandle });
 
             return ResultCode.Success;
         }

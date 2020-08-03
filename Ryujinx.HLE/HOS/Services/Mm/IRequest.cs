@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int                     fgmId            = context.RequestData.ReadInt32();
             bool                    isAutoClearEvent = context.RequestData.ReadInt32() != 0;
 
-            Logger.PrintStub(LogClass.ServiceMm, new { operationType, fgmId, isAutoClearEvent });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType, fgmId, isAutoClearEvent });
 
             Register(operationType, fgmId, isAutoClearEvent);
 
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             MultiMediaOperationType operationType = (MultiMediaOperationType)context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { operationType });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType });
 
             lock (_sessionListLock)
             {
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             uint                    value         = context.RequestData.ReadUInt32();
             int                     timeout       = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { operationType, value, timeout });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType, value, timeout });
 
             lock (_sessionListLock)
             {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             MultiMediaOperationType operationType = (MultiMediaOperationType)context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { operationType });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType });
 
             lock (_sessionListLock)
             {
@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int                     fgmId            = context.RequestData.ReadInt32();
             bool                    isAutoClearEvent = context.RequestData.ReadInt32() != 0;
 
-            Logger.PrintStub(LogClass.ServiceMm, new { operationType, fgmId, isAutoClearEvent });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType, fgmId, isAutoClearEvent });
 
             uint id = Register(operationType, fgmId, isAutoClearEvent);
 
@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             uint id = context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { id });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { id });
 
             lock (_sessionListLock)
             {
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             uint value   = context.RequestData.ReadUInt32();
             int  timeout = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { id, value, timeout });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { id, value, timeout });
 
             lock (_sessionListLock)
             {
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             uint id = context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, new { id });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { id });
 
             lock (_sessionListLock)
             {

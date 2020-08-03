@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         {
             context.ResponseData.Write((int)_playState);
 
-            Logger.PrintStub(LogClass.ServiceAudio, new { State = Enum.GetName(typeof(PlayState), _playState) });
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio, new { State = Enum.GetName(typeof(PlayState), _playState) });
 
             return ResultCode.Success;
         }
@@ -287,7 +287,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         // Start()
         public ResultCode StartAudioRenderer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Playing;
 
@@ -298,7 +298,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         // Stop()
         public ResultCode StopAudioRenderer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAudio);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Stopped;
 

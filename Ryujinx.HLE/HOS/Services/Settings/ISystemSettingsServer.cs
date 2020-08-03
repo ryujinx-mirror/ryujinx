@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 {
                     if (stringValue.Length + 1 > replySize)
                     {
-                        Logger.PrintError(LogClass.ServiceSet, $"{askedSetting} String value size is too big!");
+                        Logger.Error?.Print(LogClass.ServiceSet, $"{askedSetting} String value size is too big!");
                     }
                     else
                     {
@@ -209,11 +209,11 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 context.Memory.Write((ulong)replyPos, settingBuffer);
 
-                Logger.PrintDebug(LogClass.ServiceSet, $"{askedSetting} set value: {nxSetting} as {nxSetting.GetType()}");
+                Logger.Debug?.Print(LogClass.ServiceSet, $"{askedSetting} set value: {nxSetting} as {nxSetting.GetType()}");
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceSet, $"{askedSetting} not found!");
+                Logger.Error?.Print(LogClass.ServiceSet, $"{askedSetting} not found!");
             }
 
             return ResultCode.Success;

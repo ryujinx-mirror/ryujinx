@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
             if (keyboardConfig.Length < Marshal.SizeOf<SoftwareKeyboardConfig>())
             {
-                Logger.PrintError(LogClass.ServiceAm, $"SoftwareKeyboardConfig size mismatch. Expected {Marshal.SizeOf<SoftwareKeyboardConfig>():x}. Got {keyboardConfig.Length:x}");
+                Logger.Error?.Print(LogClass.ServiceAm, $"SoftwareKeyboardConfig size mismatch. Expected {Marshal.SizeOf<SoftwareKeyboardConfig>():x}. Got {keyboardConfig.Length:x}");
             }
             else
             {
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
             if (!_normalSession.TryPop(out _transferMemory))
             {
-                Logger.PrintError(LogClass.ServiceAm, "SwKbd Transfer Memory is null");
+                Logger.Error?.Print(LogClass.ServiceAm, "SwKbd Transfer Memory is null");
             }
 
             if (_keyboardConfig.UseUtf8)
@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Applets
             // Call the configured GUI handler to get user's input
             if (_device.UiHandler == null)
             {
-                Logger.PrintWarning(LogClass.Application, $"GUI Handler is not set. Falling back to default");
+                Logger.Warning?.Print(LogClass.Application, $"GUI Handler is not set. Falling back to default");
                 _okPressed = true;
             }
             else

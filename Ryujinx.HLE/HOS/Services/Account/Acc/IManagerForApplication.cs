@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // CheckAvailability()
         public ResultCode CheckAvailability(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc);
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
 
             return ResultCode.Success;
         }
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetAccountId() -> nn::account::NetworkServiceAccountId
         public ResultCode GetAccountId(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
 
             context.ResponseData.Write(NetworkServiceAccountId);
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, buffer<nn::account::nas::NasUserBaseForApplication, 0x1a>, buffer<bytes, 6>)
         public ResultCode GetNintendoAccountUserResourceCacheForApplication(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
 
             context.ResponseData.Write(NetworkServiceAccountId);
 

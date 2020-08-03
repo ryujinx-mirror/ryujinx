@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.Loaders.Mods
             _patches = ParseIps(reader);
             if (_patches != null)
             {
-                Logger.PrintInfo(LogClass.ModLoader, "IPS patch loaded successfully");
+                Logger.Info?.Print(LogClass.ModLoader, "IPS patch loaded successfully");
             }
         }
 

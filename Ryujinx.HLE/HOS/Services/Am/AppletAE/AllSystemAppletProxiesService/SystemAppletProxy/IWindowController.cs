@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetAppletResourceUserId() -> nn::applet::AppletResourceUserId
         public ResultCode GetAppletResourceUserId(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             context.ResponseData.Write(0L);
 
@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // AcquireForegroundRights()
         public ResultCode AcquireForegroundRights(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }

@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                 }
             }
 
-            Logger.PrintError(LogClass.ServiceNv, "Cannot allocate a new syncpoint!");
+            Logger.Error?.Print(LogClass.ServiceNv, "Cannot allocate a new syncpoint!");
 
             return 0;
         }

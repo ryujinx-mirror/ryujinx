@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
             context.Memory.Read((ulong)inputPosition, inputBuffer);
 
-            Logger.PrintInfo(LogClass.ServicePrepo, ReadReportBuffer(inputBuffer, gameRoom, userId));
+            Logger.Info?.Print(LogClass.ServicePrepo, ReadReportBuffer(inputBuffer, gameRoom, userId));
 
             return ResultCode.Success;
         }

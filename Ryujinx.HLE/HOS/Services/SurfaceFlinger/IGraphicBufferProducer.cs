@@ -269,7 +269,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (status != Status.Success)
             {
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Error returned by transaction {(TransactionCode)code}: {status}");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Error returned by transaction {(TransactionCode)code}: {status}");
             }
         }
 

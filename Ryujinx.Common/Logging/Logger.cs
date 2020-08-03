@@ -8,26 +8,93 @@ namespace Ryujinx.Common.Logging
 {
     public static class Logger
     {
-        private static Stopwatch m_Time;
+        private static readonly Stopwatch m_Time;
 
-        private static readonly bool[] m_EnabledLevels;
         private static readonly bool[] m_EnabledClasses;
 
         private static readonly List<ILogTarget> m_LogTargets;
 
         public static event EventHandler<LogEventArgs> Updated;
 
+        public struct Log
+        {
+            internal readonly LogLevel Level;
+
+            internal Log(LogLevel level)
+            {
+                Level = level;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintMsg(LogClass logClass, string message)
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, "", message)));
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Print(LogClass logClass, string message, [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, message)));
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Print(LogClass logClass, string message, object data, [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, message), data));
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintStub(LogClass logClass, string message = "", [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, "Stubbed. " + message)));
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintStub(LogClass logClass, object data, [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, "Stubbed."), data));
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintStub(LogClass logClass, string message, object data, [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, "Stubbed. " + message), data));
+                }
+            }            
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static string FormatMessage(LogClass Class, string Caller, string Message) => $"{Class} {Caller}: {Message}";
+        }
+
+        public static Log? Debug     { get; private set; }
+        public static Log? Info      { get; private set; }
+        public static Log? Warning   { get; private set; }
+        public static Log? Error     { get; private set; }
+        public static Log? Guest     { get; private set; }
+        public static Log? AccessLog { get; private set; }
+        public static Log? Stub      { get; private set; }
+        public static Log  Notice    { get; } // Always enabled
+
         static Logger()
         {
-            m_EnabledLevels  = new bool[Enum.GetNames(typeof(LogLevel)).Length];
             m_EnabledClasses = new bool[Enum.GetNames(typeof(LogClass)).Length];
-
-            m_EnabledLevels[(int)LogLevel.Stub]      = true;
-            m_EnabledLevels[(int)LogLevel.Info]      = true;
-            m_EnabledLevels[(int)LogLevel.Warning]   = true;
-            m_EnabledLevels[(int)LogLevel.Error]     = true;
-            m_EnabledLevels[(int)LogLevel.Guest]     = true;
-            m_EnabledLevels[(int)LogLevel.AccessLog] = true;
 
             for (int index = 0; index < m_EnabledClasses.Length; index++)
             {
@@ -43,6 +110,8 @@ namespace Ryujinx.Common.Logging
                 new ConsoleLogTarget("console"),
                 1000,
                 AsyncLogTargetOverflowAction.Discard));
+
+            Notice = new Log(LogLevel.Notice);
         }
 
         public static void RestartTime()
@@ -88,7 +157,7 @@ namespace Ryujinx.Common.Logging
         {
             Updated = null;
 
-            foreach(var target in m_LogTargets)
+            foreach (var target in m_LogTargets)
             {
                 target.Dispose();
             }
@@ -96,80 +165,39 @@ namespace Ryujinx.Common.Logging
             m_LogTargets.Clear();
         }
 
+        public static IReadOnlyCollection<LogLevel> GetEnabledLevels()
+        {
+            var logs = new Log?[] { Debug, Info, Warning, Error, Guest, AccessLog, Stub };
+            List<LogLevel> levels = new List<LogLevel>(logs.Length);
+            foreach (var log in logs)
+            {
+                if (log.HasValue)
+                {
+                    levels.Add(log.Value.Level);
+                }
+            }
+
+            return levels;
+        }
+
         public static void SetEnable(LogLevel logLevel, bool enabled)
         {
-            m_EnabledLevels[(int)logLevel] = enabled;
+            switch (logLevel)
+            {
+                case LogLevel.Debug     : Debug     = enabled ? new Log(LogLevel.Debug)    : new Log?(); break;
+                case LogLevel.Info      : Info      = enabled ? new Log(LogLevel.Info)     : new Log?(); break;
+                case LogLevel.Warning   : Warning   = enabled ? new Log(LogLevel.Warning)  : new Log?(); break;
+                case LogLevel.Error     : Error     = enabled ? new Log(LogLevel.Error)    : new Log?(); break;
+                case LogLevel.Guest     : Guest     = enabled ? new Log(LogLevel.Guest)    : new Log?(); break;
+                case LogLevel.AccessLog : AccessLog = enabled ? new Log(LogLevel.AccessLog): new Log?(); break;
+                case LogLevel.Stub      : Stub      = enabled ? new Log(LogLevel.Stub)     : new Log?(); break;
+                default: throw new ArgumentException("Unknown Log Level");
+            }
         }
 
         public static void SetEnable(LogClass logClass, bool enabled)
         {
             m_EnabledClasses[(int)logClass] = enabled;
-        }
-
-        public static void PrintDebug(LogClass logClass, string message, [CallerMemberName] string caller = "")
-        {
-            Print(LogLevel.Debug, logClass, GetFormattedMessage(logClass, message, caller));
-        }
-
-        public static void PrintInfo(LogClass logClass, string message, [CallerMemberName] string Caller = "")
-        {
-            Print(LogLevel.Info, logClass, GetFormattedMessage(logClass, message, Caller));
-        }
-
-        public static void PrintWarning(LogClass logClass, string message, [CallerMemberName] string Caller = "")
-        {
-            Print(LogLevel.Warning, logClass, GetFormattedMessage(logClass, message, Caller));
-        }
-
-        public static void PrintError(LogClass logClass, string message, [CallerMemberName] string Caller = "")
-        {
-            Print(LogLevel.Error, logClass, GetFormattedMessage(logClass, message, Caller));
-        }
-
-        public static void PrintStub(LogClass logClass, string message = "", [CallerMemberName] string caller = "")
-        {
-            Print(LogLevel.Stub, logClass, GetFormattedMessage(logClass, "Stubbed. " + message, caller));
-        }
-
-        public static void PrintStub<T>(LogClass logClass, T obj, [CallerMemberName] string caller = "")
-        {
-            Print(LogLevel.Stub, logClass, GetFormattedMessage(logClass, "Stubbed.", caller), obj);
-        }
-
-        public static void PrintStub<T>(LogClass logClass, string message, T obj, [CallerMemberName] string caller = "")
-        {
-            Print(LogLevel.Stub, logClass, GetFormattedMessage(logClass, "Stubbed. " + message, caller), obj);
-        }
-
-        public static void PrintGuest(LogClass logClass, string message, [CallerMemberName] string caller = "")
-        {
-            Print(LogLevel.Guest, logClass, GetFormattedMessage(logClass, message, caller));
-        }
-
-        public static void PrintAccessLog(LogClass logClass, string message)
-        {
-            Print(LogLevel.AccessLog, logClass, message);
-        }
-
-        private static void Print(LogLevel logLevel, LogClass logClass, string message)
-        {
-            if (m_EnabledLevels[(int)logLevel] && m_EnabledClasses[(int)logClass])
-            {
-                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.Name, message));
-            }
-        }
-
-        private static void Print(LogLevel logLevel, LogClass logClass, string message, object data)
-        {
-            if (m_EnabledLevels[(int)logLevel] && m_EnabledClasses[(int)logClass])
-            {
-                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.Name, message, data));
-            }
-        }
-
-        private static string GetFormattedMessage(LogClass Class, string Message, string Caller)
-        {
-            return $"{Class} {Caller}: {Message}";
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             if (transferMem == null)
             {
-                Logger.PrintWarning(LogClass.ServiceAm, $"Invalid TransferMemory Handle: {handle:X}");
+                Logger.Warning?.Print(LogClass.ServiceAm, $"Invalid TransferMemory Handle: {handle:X}");
 
                 return ResultCode.Success; // TODO: Find correct error code
             }

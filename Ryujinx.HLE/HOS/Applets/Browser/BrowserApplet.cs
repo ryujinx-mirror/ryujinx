@@ -34,17 +34,17 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
 
             _commonArguments = IApplet.ReadStruct<CommonArguments>(_normalSession.Pop());
 
-            Logger.PrintStub(LogClass.ServiceAm, $"WebApplet version: 0x{_commonArguments.AppletVersion:x8}");
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, $"WebApplet version: 0x{_commonArguments.AppletVersion:x8}");
 
             ReadOnlySpan<byte> webArguments = _normalSession.Pop();
 
             (_shimKind, _arguments) = BrowserArgument.ParseArguments(webArguments);
 
-            Logger.PrintStub(LogClass.ServiceAm, $"Web Arguments: {_arguments.Count}");
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, $"Web Arguments: {_arguments.Count}");
 
             foreach (BrowserArgument argument in _arguments)
             {
-                Logger.PrintStub(LogClass.ServiceAm, $"{argument.Type}: {argument.GetValue()}");
+                Logger.Stub?.PrintStub(LogClass.ServiceAm, $"{argument.Type}: {argument.GetValue()}");
             }
 
             if ((_commonArguments.AppletVersion >= 0x80000 && _shimKind == ShimKind.Web) || (_commonArguments.AppletVersion >= 0x30000 && _shimKind == ShimKind.Share))

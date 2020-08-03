@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim
         {
             MakeObject(context, new IShopServiceAccessServer());
 
-            Logger.PrintStub(LogClass.ServiceNim);
+            Logger.Stub?.PrintStub(LogClass.ServiceNim);
 
             return ResultCode.Success;
         }

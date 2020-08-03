@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
+                    Logger.Warning?.Print(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
                 }
             }
 
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             {
                 arguments = null;
 
-                Logger.PrintWarning(LogClass.ServiceNv, "Ioctl size inconsistency found!");
+                Logger.Warning?.Print(LogClass.ServiceNv, "Ioctl size inconsistency found!");
 
                 return NvResult.InvalidSize;
             }
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 {
                     arguments = null;
 
-                    Logger.PrintWarning(LogClass.ServiceNv, "Ioctl size inconsistency found!");
+                    Logger.Warning?.Print(LogClass.ServiceNv, "Ioctl size inconsistency found!");
 
                     return NvResult.InvalidSize;
                 }
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (deviceFile == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid file descriptor {fd}");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid file descriptor {fd}");
 
                 return NvResult.NotImplemented;
             }
@@ -162,7 +162,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         {
             if (_owner == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, "INvDrvServices is not initialized!");
+                Logger.Warning?.Print(LogClass.ServiceNv, "INvDrvServices is not initialized!");
 
                 return NvResult.NotInitialized;
             }
@@ -411,7 +411,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 context.ResponseData.WriteStruct(nvStatus);
                 context.ResponseData.Write((uint)NvResult.Success);
 
-                Logger.PrintStub(LogClass.ServiceNv);
+                Logger.Stub?.PrintStub(LogClass.ServiceNv);
             }
             else
             {
@@ -443,7 +443,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // DumpGraphicsMemoryInfo()
         public ResultCode DumpGraphicsMemoryInfo(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNv);
+            Logger.Stub?.PrintStub(LogClass.ServiceNv);
 
             return ResultCode.Success;
         }
@@ -558,7 +558,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // FinishInitialize(unknown<8>)
         public ResultCode FinishInitialize(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNv);
+            Logger.Stub?.PrintStub(LogClass.ServiceNv);
 
             return ResultCode.Success;
         }

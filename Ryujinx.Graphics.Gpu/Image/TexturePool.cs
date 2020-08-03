@@ -151,7 +151,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 if ((long)address > 0L && (int)format > 0)
                 {
-                    Logger.PrintError(LogClass.Gpu, $"Invalid texture format 0x{format:X} (sRGB: {srgb}).");
+                    Logger.Error?.Print(LogClass.Gpu, $"Invalid texture format 0x{format:X} (sRGB: {srgb}).");
                 }
 
                 formatInfo = FormatInfo.Default;

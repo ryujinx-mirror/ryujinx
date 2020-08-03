@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // Get() -> (nn::account::profile::ProfileBase, buffer<nn::account::profile::UserData, 0x1a>)
         public ResultCode Get(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc);
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
 
             long position = context.Request.ReceiveBuff[0].Position;
 

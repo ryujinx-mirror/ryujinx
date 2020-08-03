@@ -1131,12 +1131,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public void PrintGuestStackTrace()
         {
-            StringBuilder trace = new StringBuilder();
-
-            trace.AppendLine("Guest stack trace:");
-            trace.AppendLine(GetGuestStackTrace());
-
-            Logger.PrintInfo(LogClass.Cpu, trace.ToString());
+            Logger.Info?.Print(LogClass.Cpu, $"Guest stack trace:\n{GetGuestStackTrace()}\n");
         }
 
         public void Execute()

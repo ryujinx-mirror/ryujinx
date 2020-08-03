@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 return locationName;
             }
 
-            Logger.PrintWarning(LogClass.ServiceTime, $"Invalid device TimeZone {locationName}, switching back to UTC");
+            Logger.Warning?.Print(LogClass.ServiceTime, $"Invalid device TimeZone {locationName}, switching back to UTC");
 
             ConfigurationState.Instance.System.TimeZone.Value = "UTC";
 
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             {
                 LocationNameCache = new string[] { "UTC" };
 
-                Logger.PrintError(LogClass.ServiceTime, TimeZoneSystemTitleMissingErrorMessage);
+                Logger.Error?.Print(LogClass.ServiceTime, TimeZoneSystemTitleMissingErrorMessage);
             }
         }
 
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                     if (romfs.OpenFile(out IFile tzif, $"/zoneinfo/{locName}".ToU8Span(), OpenMode.Read).IsFailure())
                     {
-                        Logger.PrintError(LogClass.ServiceTime, $"Error opening /zoneinfo/{locName}");
+                        Logger.Error?.Print(LogClass.ServiceTime, $"Error opening /zoneinfo/{locName}");
                         continue;
                     }
 
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                         }
                         else
                         {
-                            Logger.PrintError(LogClass.ServiceTime, $"Couldn't find UTC offset for zone {locName}");
+                            Logger.Error?.Print(LogClass.ServiceTime, $"Couldn't find UTC offset for zone {locName}");
                             continue;
                         }
 

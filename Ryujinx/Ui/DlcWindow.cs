@@ -105,13 +105,13 @@ namespace Ryujinx.Ui
             }
             catch (InvalidDataException exception)
             {
-                Logger.PrintError(LogClass.Application, $"{exception.Message}. Errored File: {containerPath}");
+                Logger.Error?.Print(LogClass.Application, $"{exception.Message}. Errored File: {containerPath}");
 
                 GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add DLC Failed!", "The NCA header content type check has failed. This is usually because the header key is incorrect or missing.");
             }
             catch (MissingKeyException exception)
             {
-                Logger.PrintError(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {containerPath}");
+                Logger.Error?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {containerPath}");
 
                 GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add DLC Failed!", $"Your key set is missing a key with the name: {exception.Name}");
             }

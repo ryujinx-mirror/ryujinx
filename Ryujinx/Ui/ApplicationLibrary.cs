@@ -55,7 +55,7 @@ namespace Ryujinx.Ui
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    Logger.PrintWarning(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
+                    Logger.Warning?.Print(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
                 }
 
                 if (content.Length > 0)
@@ -70,7 +70,7 @@ namespace Ryujinx.Ui
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    Logger.PrintWarning(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
+                    Logger.Warning?.Print(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
                 }
 
                 if (content.Length > 0)
@@ -103,7 +103,7 @@ namespace Ryujinx.Ui
                 
                 if (!Directory.Exists(appDir))
                 {
-                    Logger.PrintWarning(LogClass.Application, $"The \"game_dirs\" section in \"Config.json\" contains an invalid directory: \"{appDir}\"");
+                    Logger.Warning?.Print(LogClass.Application, $"The \"game_dirs\" section in \"Config.json\" contains an invalid directory: \"{appDir}\"");
 
                     continue;
                 }
@@ -265,18 +265,18 @@ namespace Ryujinx.Ui
                             {
                                 applicationIcon = Path.GetExtension(applicationPath).ToLower() == ".xci" ? _xciIcon : _nspIcon;
 
-                                Logger.PrintWarning(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}");
+                                Logger.Warning?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}");
                             }
                             catch (InvalidDataException)
                             {
                                 applicationIcon = Path.GetExtension(applicationPath).ToLower() == ".xci" ? _xciIcon : _nspIcon;
 
-                                Logger.PrintWarning(LogClass.Application, $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {applicationPath}");
+                                Logger.Warning?.Print(LogClass.Application, $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {applicationPath}");
                             }
                             catch (Exception exception)
                             {
-                                Logger.PrintWarning(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
-                                Logger.PrintDebug(LogClass.Application, exception.ToString());
+                                Logger.Warning?.Print(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
+                                Logger.Debug?.Print(LogClass.Application, exception.ToString());
 
                                 numApplicationsFound--;
                                 _loadingError = true;
@@ -330,7 +330,7 @@ namespace Ryujinx.Ui
                             }
                             catch
                             {
-                                Logger.PrintWarning(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
+                                Logger.Warning?.Print(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
 
                                 numApplicationsFound--;
 
@@ -353,11 +353,11 @@ namespace Ryujinx.Ui
                             }
                             catch (InvalidDataException)
                             {
-                                Logger.PrintWarning(LogClass.Application, $"The NCA header content type check has failed. This is usually because the header key is incorrect or missing. Errored File: {applicationPath}");
+                                Logger.Warning?.Print(LogClass.Application, $"The NCA header content type check has failed. This is usually because the header key is incorrect or missing. Errored File: {applicationPath}");
                             }
                             catch
                             {
-                                Logger.PrintWarning(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
+                                Logger.Warning?.Print(LogClass.Application, $"The file encountered was not of a valid type. Errored File: {applicationPath}");
 
                                 numApplicationsFound--;
                                 _loadingError = true;
@@ -378,7 +378,7 @@ namespace Ryujinx.Ui
                 }
                 catch (IOException exception)
                 {
-                    Logger.PrintWarning(LogClass.Application, exception.Message);
+                    Logger.Warning?.Print(LogClass.Application, exception.Message);
 
                     numApplicationsFound--;
                     _loadingError = true;
@@ -508,7 +508,7 @@ namespace Ryujinx.Ui
             }
             catch (JsonException)
             {
-                Logger.PrintWarning(LogClass.Application, $"Failed to parse metadata json for {titleId}. Loading defaults.");
+                Logger.Warning?.Print(LogClass.Application, $"Failed to parse metadata json for {titleId}. Loading defaults.");
 
                 appMetadata = new ApplicationMetadata
                 {
@@ -665,14 +665,14 @@ namespace Ryujinx.Ui
                         }
                         catch (InvalidDataException)
                         {
-                            Logger.PrintWarning(LogClass.Application,
+                            Logger.Warning?.Print(LogClass.Application,
                                 $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {updatePath}");
 
                             break;
                         }
                         catch (MissingKeyException exception)
                         {
-                            Logger.PrintWarning(LogClass.Application,
+                            Logger.Warning?.Print(LogClass.Application,
                                 $"Your key set is missing a key with the name: {exception.Name}. Errored File: {updatePath}");
 
                             break;

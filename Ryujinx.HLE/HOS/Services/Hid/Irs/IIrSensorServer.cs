@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
+            Logger.Stub?.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
 
             return ResultCode.Success;
         }
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
+            Logger.Stub?.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
 
             return ResultCode.Success;
         }
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             long appletResourceUserId = context.RequestData.ReadInt64();
             long packedFunctionLevel  = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId, packedFunctionLevel });
+            Logger.Stub?.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId, packedFunctionLevel });
 
             return ResultCode.Success;
         }

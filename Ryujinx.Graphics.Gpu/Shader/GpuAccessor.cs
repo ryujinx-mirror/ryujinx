@@ -70,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="message">Message to print</param>
         public void Log(string message)
         {
-            Logger.PrintWarning(LogClass.Gpu, $"Shader translator: {message}");
+            Logger.Warning?.Print(LogClass.Gpu, $"Shader translator: {message}");
         }
 
         /// <summary>

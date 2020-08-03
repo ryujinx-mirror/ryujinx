@@ -51,7 +51,7 @@ namespace Ryujinx.Ui
                 catch (Exception e)
                 {
                     error = true;
-                    Logger.PrintError(LogClass.Application, $"Error displaying Software Keyboard: {e}");
+                    Logger.Error?.Print(LogClass.Application, $"Error displaying Software Keyboard: {e}");
                 }
                 finally
                 {

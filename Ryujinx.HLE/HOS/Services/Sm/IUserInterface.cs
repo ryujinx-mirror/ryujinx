@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 {
                     if (ServiceConfiguration.IgnoreMissingServices)
                     {
-                        Logger.PrintWarning(LogClass.Service, $"Missing service {name} ignored");
+                        Logger.Warning?.Print(LogClass.Service, $"Missing service {name} ignored");
 
                         session.ClientSession.Service = new DummyService(name);
                     }
@@ -136,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 return ResultCode.InvalidName;
             }
 
-            Logger.PrintInfo(LogClass.ServiceSm, $"Register \"{name}\".");
+            Logger.Info?.Print(LogClass.ServiceSm, $"Register \"{name}\".");
 
             KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, 0);
 

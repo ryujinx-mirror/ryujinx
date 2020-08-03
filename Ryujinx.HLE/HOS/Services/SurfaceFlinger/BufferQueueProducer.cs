@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 }
                 else if (preallocatedBufferCount < bufferCount)
                 {
-                    Logger.PrintError(LogClass.SurfaceFlinger, "Not enough buffers. Try with more pre-allocated buffers");
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, "Not enough buffers. Try with more pre-allocated buffers");
 
                     return Status.Success;
                 }
@@ -163,7 +163,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 {
                     fence = AndroidFence.NoFence;
 
-                    Logger.PrintError(LogClass.SurfaceFlinger, "No available buffer slots");
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, "No available buffer slots");
 
                     return Status.Busy;
                 }
@@ -193,11 +193,10 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     }
                     else
                     {
-                        string formattedError = $"Preallocated buffer mismatch - slot {slot}\n" +
-                                                $"available: Width = {graphicBuffer.Width} Height = {graphicBuffer.Height} Format = {graphicBuffer.Format} Usage = {graphicBuffer.Usage:x} " +
-                                                $"requested: Width = {width} Height = {height} Format = {format} Usage = {usage:x}";
-
-                        Logger.PrintError(LogClass.SurfaceFlinger, formattedError);
+                        Logger.Error?.Print(LogClass.SurfaceFlinger, 
+                                            $"Preallocated buffer mismatch - slot {slot}\n" +
+                                            $"available: Width = {graphicBuffer.Width} Height = {graphicBuffer.Height} Format = {graphicBuffer.Format} Usage = {graphicBuffer.Usage:x} " +
+                                            $"requested: Width = {width} Height = {height} Format = {format} Usage = {usage:x}");
 
                         slot  = BufferSlotArray.InvalidBufferSlot;
                         fence = AndroidFence.NoFence;
@@ -243,7 +242,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 if (!Core.Slots[slot].RequestBufferCalled)
                 {
-                    Logger.PrintError(LogClass.SurfaceFlinger, $"Slot {slot} was detached without requesting a buffer");
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Slot {slot} was detached without requesting a buffer");
 
                     return Status.BadValue;
                 }
@@ -314,7 +313,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 if (slot == BufferSlotArray.InvalidBufferSlot)
                 {
-                    Logger.PrintError(LogClass.SurfaceFlinger, "No available buffer slots");
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, "No available buffer slots");
 
                     return Status.Busy;
                 }
@@ -373,7 +372,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 if (!Core.Slots[slot].RequestBufferCalled)
                 {
-                    Logger.PrintError(LogClass.SurfaceFlinger, $"Slot {slot} was queued without requesting a buffer");
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Slot {slot} was queued without requesting a buffer");
 
                     return Status.BadValue;
                 }
@@ -797,7 +796,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     if (newUndequeuedCount < minUndequeuedCount)
                     {
-                        Logger.PrintError(LogClass.SurfaceFlinger, $"Min undequeued buffer count ({minUndequeuedCount}) exceeded (dequeued = {dequeuedCount} undequeued = {newUndequeuedCount})");
+                        Logger.Error?.Print(LogClass.SurfaceFlinger, $"Min undequeued buffer count ({minUndequeuedCount}) exceeded (dequeued = {dequeuedCount} undequeued = {newUndequeuedCount})");
 
                         return Status.InvalidOperation;
                     }

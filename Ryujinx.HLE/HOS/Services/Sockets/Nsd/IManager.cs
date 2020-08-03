@@ -221,7 +221,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             // TODO: Call nn::nsd::detail::fs::ReadSaveDataWithOffset() at offset 0 to write the 
             //       whole savedata inside the buffer.
 
-            Logger.PrintStub(LogClass.ServiceNsd);
+            Logger.Stub?.PrintStub(LogClass.ServiceNsd);
 
             return ResultCode.Success;
         }

@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             context.ResponseData.Write(1);
 
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             return ResultCode.Success;
         }
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             return GetResultImpl();
         }
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // Cancel()
         public ResultCode Cancel(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             return ResultCode.Success;
         }
@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // Submit()
         public ResultCode Submit(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             return ResultCode.Success;
         }
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // SetConnectionConfirmationOption(i8)
         public ResultCode SetConnectionConfirmationOption(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             return ResultCode.Success;
         }
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             uint themeColor = context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceNifm);
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 
             ResultCode result = GetResultImpl();
 

@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
 
                 return false;
             }
@@ -201,7 +201,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization failed setting resource limit values.");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization failed setting resource limit values.");
 
                 return false;
             }
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS
 
             if (memoryRegion > MemoryRegion.NvServices)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
 
                 return false;
             }
@@ -225,20 +225,20 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
 
             for (int index = 0; index < executables.Length; index++)
             {
-                Logger.PrintInfo(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
+                Logger.Info?.Print(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
 
                 result = LoadIntoMemory(process, executables[index], nsoBase[index]);
 
                 if (result != KernelResult.Success)
                 {
-                    Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
+                    Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                     return false;
                 }
@@ -250,7 +250,7 @@ namespace Ryujinx.HLE.HOS
 
             if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{result}\".");
+                Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
 
                 return false;
             }

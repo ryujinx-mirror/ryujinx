@@ -9,9 +9,6 @@ namespace Ryujinx.Configuration
     {
         public static void Initialize()
         {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
-
             ConfigurationState.Instance.Logger.EnableDebug.Event       += ReloadEnableDebug;
             ConfigurationState.Instance.Logger.EnableStub.Event        += ReloadEnableStub;
             ConfigurationState.Instance.Logger.EnableInfo.Event        += ReloadEnableInfo;
@@ -86,23 +83,6 @@ namespace Ryujinx.Configuration
             else
             {
                 Logger.RemoveTarget("file");
-            }
-        }
-
-        private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
-        {
-            Logger.Shutdown();
-        }
-
-        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            var exception = e.ExceptionObject as Exception;
-
-            Logger.PrintError(LogClass.Emulation, $"Unhandled exception caught: {exception}");
-
-            if (e.IsTerminating)
-            {
-                Logger.Shutdown();
             }
         }
     }

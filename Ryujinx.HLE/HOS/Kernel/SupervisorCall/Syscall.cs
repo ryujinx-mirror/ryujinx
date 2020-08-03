@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
             else
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid session handle 0x{handle:x8}!");
+                Logger.Warning?.Print(LogClass.KernelSvc, $"Invalid session handle 0x{handle:x8}!");
 
                 return KernelResult.InvalidHandle;
             }
@@ -1381,7 +1381,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
             else
             {
-                Logger.PrintDebug(LogClass.KernelSvc, "Debugger triggered.");
+                Logger.Debug?.Print(LogClass.KernelSvc, "Debugger triggered.");
             }
         }
 
@@ -1391,7 +1391,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             string str = MemoryHelper.ReadAsciiString(process.CpuMemory, (long)strPtr, (long)size);
 
-            Logger.PrintWarning(LogClass.KernelSvc, str);
+            Logger.Warning?.Print(LogClass.KernelSvc, str);
         }
 
         public KernelResult GetInfo(uint id, int handle, long subId, out long value)

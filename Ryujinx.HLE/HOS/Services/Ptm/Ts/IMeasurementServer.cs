@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Ts
         {
             Location location = (Location)context.RequestData.ReadByte();
 
-            Logger.PrintStub(LogClass.ServicePtm, new { location });
+            Logger.Stub?.PrintStub(LogClass.ServicePtm, new { location });
 
             context.ResponseData.Write(DefaultTemperature);
 

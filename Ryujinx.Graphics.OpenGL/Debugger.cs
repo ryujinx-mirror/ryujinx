@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.DebugMessageCallback(_debugCallback, IntPtr.Zero);
 
-            Logger.PrintWarning(LogClass.Gpu, "OpenGL Debugging is enabled. Performance will be negatively impacted.");
+            Logger.Warning?.Print(LogClass.Gpu, "OpenGL Debugging is enabled. Performance will be negatively impacted.");
         }
 
         private static void GLDebugHandler(
@@ -63,18 +63,18 @@ namespace Ryujinx.Graphics.OpenGL
 
             switch (type)
             {
-                case DebugType.DebugTypeError      : Logger.PrintError(LogClass.Gpu, $"{severity}: {msg}\nCallStack={Environment.StackTrace}", "GLERROR"); break;
-                case DebugType.DebugTypePerformance: Logger.PrintWarning(LogClass.Gpu, $"{severity}: {msg}", "GLPERF"); break;
-                case DebugType.DebugTypePushGroup  : Logger.PrintInfo(LogClass.Gpu, $"{{ ({id}) {severity}: {msg}", "GLINFO"); break;
-                case DebugType.DebugTypePopGroup   : Logger.PrintInfo(LogClass.Gpu, $"}} ({id}) {severity}: {msg}", "GLINFO"); break;
+                case DebugType.DebugTypeError      : Logger.Error?.Print(LogClass.Gpu, $"{severity}: {msg}\nCallStack={Environment.StackTrace}", "GLERROR"); break;
+                case DebugType.DebugTypePerformance: Logger.Warning?.Print(LogClass.Gpu, $"{severity}: {msg}", "GLPERF"); break;
+                case DebugType.DebugTypePushGroup  : Logger.Info?.Print(LogClass.Gpu, $"{{ ({id}) {severity}: {msg}", "GLINFO"); break;
+                case DebugType.DebugTypePopGroup   : Logger.Info?.Print(LogClass.Gpu, $"}} ({id}) {severity}: {msg}", "GLINFO"); break;
                 default:
                     if (source == DebugSource.DebugSourceApplication)
                     {
-                        Logger.PrintInfo(LogClass.Gpu, $"{type} {severity}: {msg}", "GLINFO");
+                        Logger.Info?.Print(LogClass.Gpu, $"{type} {severity}: {msg}", "GLINFO");
                     }
                     else
                     {
-                        Logger.PrintDebug(LogClass.Gpu, $"{type} {severity}: {msg}", "GLDEBUG");
+                        Logger.Debug?.Print(LogClass.Gpu, $"{type} {severity}: {msg}", "GLDEBUG");
                     }
                     break;
             }

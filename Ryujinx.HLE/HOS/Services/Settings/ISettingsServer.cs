@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         {
             context.ResponseData.Write(false);
 
-            Logger.PrintStub(LogClass.ServiceSet);
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
             return ResultCode.Success;
         }
@@ -121,7 +121,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         {
             if (context.Request.ReceiveBuff[0].Size != 0x1000)
             {
-                Logger.PrintWarning(LogClass.ServiceSet, "Bad size");
+                Logger.Warning?.Print(LogClass.ServiceSet, "Bad size");
             }
 
             byte[] keyCodeMap;

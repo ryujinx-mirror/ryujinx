@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     return CounterCompare(condState.Address.Pack(), false);
             }
 
-            Logger.PrintWarning(LogClass.Gpu, $"Invalid conditional render condition \"{condState.Condition}\".");
+            Logger.Warning?.Print(LogClass.Gpu, $"Invalid conditional render condition \"{condState.Condition}\".");
 
             return ConditionalRenderEnabled.True;
         }

@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Vic.Image
                     WriteNv12(rm, input, ref config, ref offsets);
                     break;
                 default:
-                    Logger.PrintError(LogClass.Vic, $"Unsupported pixel format \"{config.OutPixelFormat}\".");
+                    Logger.Error?.Print(LogClass.Vic, $"Unsupported pixel format \"{config.OutPixelFormat}\".");
                     break;
             }
         }

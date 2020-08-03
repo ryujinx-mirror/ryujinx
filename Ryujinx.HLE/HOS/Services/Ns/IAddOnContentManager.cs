@@ -28,14 +28,14 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             byte runtimeAddOnContentInstall = context.Device.Application.ControlData.Value.RuntimeAddOnContentInstall;
             if (runtimeAddOnContentInstall != 0)
             {
-                Logger.PrintWarning(LogClass.ServiceNs, $"RuntimeAddOnContentInstall is true. Some DLC may be missing");
+                Logger.Warning?.Print(LogClass.ServiceNs, $"RuntimeAddOnContentInstall is true. Some DLC may be missing");
             }
 
             uint aocCount = CountAddOnContentImpl(context);
 
             context.ResponseData.Write(aocCount);
 
-            Logger.PrintStub(LogClass.ServiceNs, new { aocCount, runtimeAddOnContentInstall });
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, new { aocCount, runtimeAddOnContentInstall });
 
             return ResultCode.Success;
         }
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
                 context.Memory.Write(bufAddr + (ulong)i * 4, (int)(aocTitleIds[i + (int)startIndex] - aocBaseId));
             }
 
-            Logger.PrintStub(LogClass.ServiceNs, new { bufferSize, startIndex, aocCount });
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, new { bufferSize, startIndex, aocCount });
 
             return ResultCode.Success;
         }
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             context.ResponseData.Write(aocBaseId);
 
-            Logger.PrintStub(LogClass.ServiceNs, $"aocBaseId={aocBaseId:X16}");
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"aocBaseId={aocBaseId:X16}");
 
             // ResultCode will be error code of GetApplicationLaunchProperty if it fails
             return ResultCode.Success;
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             // Ideally, this should probably initialize the AocData values for the specified index
 
-            Logger.PrintStub(LogClass.ServiceNs, new { aocIndex });
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, new { aocIndex });
 
             return ResultCode.Success;
         }
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceNs);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
             return ResultCode.Success;
         }
@@ -156,7 +156,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             // which gives 0x874 (2000+164). 164 being Module ID of `EC (Shop)`
             context.ResponseData.Write(2164L);
 
-            Logger.PrintStub(LogClass.ServiceNs);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
             return ResultCode.Success;
         }
@@ -167,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             MakeObject(context, new IPurchaseEventManager(context.Device.System));
 
-            Logger.PrintStub(LogClass.ServiceNs);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
             return ResultCode.Success;
         }
@@ -180,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             MakeObject(context, new IPurchaseEventManager(context.Device.System));
 
-            Logger.PrintStub(LogClass.ServiceNs);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
             return ResultCode.Success;
         }

@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
                 if ((config.ConfiguredType & _supportedStyleSets) == 0)
                 {
-                    Logger.PrintWarning(LogClass.Hid, $"ControllerType {config.ConfiguredType} (connected to {(PlayerIndex)i}) not supported by game. Removing...");
+                    Logger.Warning?.Print(LogClass.Hid, $"ControllerType {config.ConfiguredType} (connected to {(PlayerIndex)i}) not supported by game. Removing...");
 
                     config.State = FilterState.Configured;
                     _device.Hid.SharedMemory.Npads[i] = new ShMemNpad(); // Zero it
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     ControllerType controllerType = npadsTypeList[i];
                     if ((controllerType & _supportedStyleSets) != 0)
                     {
-                        Logger.PrintWarning(LogClass.Hid, $"No matching controllers found. Reassigning input as ControllerType {controllerType}...");
+                        Logger.Warning?.Print(LogClass.Hid, $"No matching controllers found. Reassigning input as ControllerType {controllerType}...");
 
                         InitController(controllerType == ControllerType.Handheld ? PlayerIndex.Handheld : PlayerIndex.Player1, controllerType);
 
@@ -132,7 +132,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     }
                 }
 
-                Logger.PrintError(LogClass.Hid, "Couldn't find any appropriate controller.");
+                Logger.Error?.Print(LogClass.Hid, "Couldn't find any appropriate controller.");
             }
         }
 
@@ -226,7 +226,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             _styleSetUpdateEvents[(int)player].ReadableEvent.Signal();
 
-            Logger.PrintInfo(LogClass.Hid, $"Connected ControllerType {type} to PlayerIndex {player}");
+            Logger.Info?.Print(LogClass.Hid, $"Connected ControllerType {type} to PlayerIndex {player}");
         }
 
         private static NpadLayoutsIndex ControllerTypeToLayout(ControllerType controllerType)

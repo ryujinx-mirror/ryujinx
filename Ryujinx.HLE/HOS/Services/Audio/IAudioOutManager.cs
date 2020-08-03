@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
             context.ResponseData.Write(nameCount);
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             if (deviceName != DefaultAudioOutput)
             {
-                Logger.PrintWarning(LogClass.Audio, "Invalid device name!");
+                Logger.Warning?.Print(LogClass.Audio, "Invalid device name!");
 
                 return ResultCode.DeviceNotFound;
             }
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {receiveSize} too small!");
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {receiveSize} too small!");
             }
 
             int sampleRate = context.RequestData.ReadInt32();
@@ -126,7 +126,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             if (sampleRate != DefaultSampleRate)
             {
-                Logger.PrintWarning(LogClass.Audio, "Invalid sample rate!");
+                Logger.Warning?.Print(LogClass.Audio, "Invalid sample rate!");
 
                 return ResultCode.UnsupportedSampleRate;
             }

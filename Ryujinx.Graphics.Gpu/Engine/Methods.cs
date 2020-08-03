@@ -692,7 +692,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (!FormatTable.TryGetAttribFormat(vertexAttrib.UnpackFormat(), out Format format))
                 {
-                    Logger.PrintDebug(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
+                    Logger.Debug?.Print(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
 
                     format = Format.R32G32B32A32Float;
                 }
@@ -1114,7 +1114,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     return Target.CubemapArray;
             }
 
-            Logger.PrintWarning(LogClass.Gpu, $"Invalid sampler type \"{type}\".");
+            Logger.Warning?.Print(LogClass.Gpu, $"Invalid sampler type \"{type}\".");
 
             return Target.Texture2D;
         }

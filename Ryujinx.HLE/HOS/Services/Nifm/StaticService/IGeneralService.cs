@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             // Doesn't occur in our case.
             // return ResultCode.ObjectIsNull;
 
-            Logger.PrintStub(LogClass.ServiceNifm, new { version });
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm, new { version });
 
             return ResultCode.Success;
         }
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             context.ResponseData.WriteStruct(new IpV4Address(unicastAddress.Address));
 
-            Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
+            Logger.Info?.Print(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
 
             return ResultCode.Success;
         }
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                 return ResultCode.NoInternetConnection;
             }
 
-            Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
+            Logger.Info?.Print(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
 
             context.ResponseData.WriteStruct(new IpAddressSetting(interfaceProperties, unicastAddress));
             context.ResponseData.WriteStruct(new DnsSetting(interfaceProperties));

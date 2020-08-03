@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Nvdec
                     Vp9Decoder.Decode(this, _rm, ref _state.State);
                     break;
                 default:
-                    Logger.PrintError(LogClass.Nvdec, $"Unsupported codec \"{codecId}\".");
+                    Logger.Error?.Print(LogClass.Nvdec, $"Unsupported codec \"{codecId}\".");
                     break;
             }
         }

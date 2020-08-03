@@ -290,7 +290,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             if (Slots[slot].BufferState != BufferState.Acquired)
             {
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Slot {slot} is not owned by the consumer (state = {Slots[slot].BufferState})");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Slot {slot} is not owned by the consumer (state = {Slots[slot].BufferState})");
 
                 return false;
             }
@@ -302,7 +302,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             if (Slots[slot].BufferState != BufferState.Dequeued)
             {
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Slot {slot} is not owned by the producer (state = {Slots[slot].BufferState})");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Slot {slot} is not owned by the producer (state = {Slots[slot].BufferState})");
 
                 return false;
             }

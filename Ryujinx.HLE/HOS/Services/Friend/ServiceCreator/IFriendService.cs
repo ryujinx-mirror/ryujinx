@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceFriend, new
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new
             {
                 UserId = userId.ToString(),
                 offset,
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceFriend, new {
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new {
                 UserId = userId.ToString(),
                 offset,
                 filter.PresenceStatus,
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // There are no friends blocked, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceFriend, new { offset, UserId = userId.ToString() });
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { offset, UserId = userId.ToString() });
 
             return ResultCode.Success;
         }
@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 profile.OnlinePlayState = AccountState.Open;
             }
 
-            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
 
             return ResultCode.Success;
         }
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 profile.OnlinePlayState = AccountState.Closed;
             }
 
-            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
 
             return ResultCode.Success;
         }
@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             {
                 UserPresence[] userPresenceInputArray = bufferReader.ReadStructArray<UserPresence>(elementCount);
 
-                Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), userPresenceInputArray });
+                Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), userPresenceInputArray });
             }
 
             return ResultCode.Success;

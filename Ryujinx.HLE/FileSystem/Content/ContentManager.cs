@@ -208,7 +208,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     var nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
                     if (nca.Header.ContentType != NcaContentType.Meta)
                     {
-                        Logger.PrintWarning(LogClass.Application, $"{ncaPath} is not a valid metadata file");
+                        Logger.Warning?.Print(LogClass.Application, $"{ncaPath} is not a valid metadata file");
 
                         continue;
                     }
@@ -229,11 +229,11 @@ namespace Ryujinx.HLE.FileSystem.Content
                         string ncaId = BitConverter.ToString(cnmt.ContentEntries[0].NcaId).Replace("-", "").ToLower();
                         if (!_aocData.TryAdd(cnmt.TitleId, new AocItem(containerPath, $"{ncaId}.nca", true)))
                         {
-                            Logger.PrintWarning(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {cnmt.TitleId:X16}");
+                            Logger.Warning?.Print(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {cnmt.TitleId:X16}");
                         }
                         else
                         {
-                            Logger.PrintInfo(LogClass.Application, $"Found AddOnContent with TitleId {cnmt.TitleId:X16}");
+                            Logger.Info?.Print(LogClass.Application, $"Found AddOnContent with TitleId {cnmt.TitleId:X16}");
                         }
                     }
                 }
@@ -244,11 +244,11 @@ namespace Ryujinx.HLE.FileSystem.Content
         {
             if (!_aocData.TryAdd(titleId, new AocItem(containerPath, ncaPath, enabled)))
             {
-                Logger.PrintWarning(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {titleId:X16}");
+                Logger.Warning?.Print(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {titleId:X16}");
             }
             else
             {
-                Logger.PrintInfo(LogClass.Application, $"Found AddOnContent with TitleId {titleId:X16}");
+                Logger.Info?.Print(LogClass.Application, $"Found AddOnContent with TitleId {titleId:X16}");
 
                 using (FileStream fileStream = File.OpenRead(containerPath))
                 using (PartitionFileSystem pfs = new PartitionFileSystem(fileStream.AsStorage()))

@@ -147,7 +147,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             long bufferSize     = context.Request.SendBuff[0].Size;
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return ResultCode.NotAllocated;
         }
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             uint unknown0 = context.RequestData.ReadUInt32();
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return ResultCode.NotAllocated;
         }
@@ -361,7 +361,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return ResultCode.Success;
         }
@@ -373,7 +373,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             uint  unknown0 = context.RequestData.ReadUInt32();
             ulong unknown1 = context.RequestData.ReadUInt64();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0, unknown1 });
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown0, unknown1 });
 
             return ResultCode.Success;
         }
@@ -384,7 +384,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
         {
             uint unknown0 = context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return ResultCode.Success;
         }

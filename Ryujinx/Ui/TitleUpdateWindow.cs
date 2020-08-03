@@ -120,7 +120,7 @@ namespace Ryujinx.Ui
                         }
                         catch (InvalidDataException exception)
                         {
-                            Logger.PrintError(LogClass.Application, $"{exception.Message}. Errored File: {path}");
+                            Logger.Error?.Print(LogClass.Application, $"{exception.Message}. Errored File: {path}");
 
                             if (showErrorDialog)
                             {
@@ -131,7 +131,7 @@ namespace Ryujinx.Ui
                         }
                         catch (MissingKeyException exception)
                         {
-                            Logger.PrintError(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {path}");
+                            Logger.Error?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {path}");
 
                             if (showErrorDialog)
                             {

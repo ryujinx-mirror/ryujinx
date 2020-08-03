@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (binder == null)
             {
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
 
                 return ResultCode.Success;
             }
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             {
                 readableEvent = null;
 
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
 
                 return;
             }
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (binder == null)
             {
-                Logger.PrintError(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
+                Logger.Error?.Print(LogClass.SurfaceFlinger, $"Invalid binder id {binderId}");
 
                 return ResultCode.Success;
             }

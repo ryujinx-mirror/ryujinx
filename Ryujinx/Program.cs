@@ -33,7 +33,10 @@ namespace Ryujinx
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
             Environment.SetEnvironmentVariable("Path", $"{Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin")};{systemPath}");
 
-            GLib.ExceptionManager.UnhandledException += Glib_UnhandledException;
+            // Hook unhandled exception and process exit events
+            GLib.ExceptionManager.UnhandledException += (GLib.UnhandledExceptionArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            AppDomain.CurrentDomain.ProcessExit += (object sender, EventArgs e) => ProgramExit();
 
             // Initialize the configuration
             ConfigurationState.Initialize();
@@ -77,11 +80,7 @@ namespace Ryujinx
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(globalConfigurationPath);
             }
 
-            Logger.PrintInfo(LogClass.Application, $"Ryujinx Version: {Version}");
-
-            Logger.PrintInfo(LogClass.Application, $"Operating System: {SystemInfo.Instance.OsDescription}");
-            Logger.PrintInfo(LogClass.Application, $"CPU: {SystemInfo.Instance.CpuName}");
-            Logger.PrintInfo(LogClass.Application, $"Total RAM: {SystemInfo.Instance.RamSizeInMB}");
+            PrintSystemInfo();
 
             Profile.Initialize();
 
@@ -105,22 +104,41 @@ namespace Ryujinx
             Application.Run();
         }
 
-        private static void Glib_UnhandledException(GLib.UnhandledExceptionArgs e)
+        private static void PrintSystemInfo()
         {
-            Exception exception = e.ExceptionObject as Exception;
+            Logger.Notice.Print(LogClass.Application, $"Ryujinx Version: {Version}");
 
-            Logger.PrintError(LogClass.Application, $"Unhandled exception caught: {exception}");
+            Logger.Notice.Print(LogClass.Application, $"Operating System: {SystemInfo.Instance.OsDescription}");
+            Logger.Notice.Print(LogClass.Application, $"CPU: {SystemInfo.Instance.CpuName}");
+            Logger.Notice.Print(LogClass.Application, $"Total RAM: {SystemInfo.Instance.RamSizeInMB}");
 
+            var enabledLogs = Logger.GetEnabledLevels();
+            Logger.Notice.Print(LogClass.Application, $"Logs Enabled: {(enabledLogs.Count == 0 ? "<None>" : string.Join(", ", enabledLogs))}");
+        }
+
+        private static void ProcessUnhandledException(Exception e, bool isTerminating)
+        {
             Ptc.Close();
             PtcProfiler.Stop();
 
-            if (e.IsTerminating)
-            {
-                Logger.Shutdown();
+            string message = $"Unhandled exception caught: {e}";
 
-                Ptc.Dispose();
-                PtcProfiler.Dispose();
+            Logger.Error?.PrintMsg(LogClass.Application, message);
+
+            if (Logger.Error == null) Logger.Notice.PrintMsg(LogClass.Application, message);
+
+            if (isTerminating)
+            {
+                ProgramExit();
             }
+        }
+
+        private static void ProgramExit()
+        {
+            Ptc.Dispose();
+            PtcProfiler.Dispose();
+
+            Logger.Shutdown();
         }
     }
 }

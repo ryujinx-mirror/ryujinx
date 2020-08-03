@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
         {
             if (arguments.Size == 0)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid size 0x{arguments.Size:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid size 0x{arguments.Size:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             arguments.Handle = CreateHandleFromMap(new NvMapHandle(size));
 
-            Logger.PrintInfo(LogClass.ServiceNv, $"Created map {arguments.Handle} with size 0x{size:x8}!");
+            Logger.Info?.Print(LogClass.ServiceNv, $"Created map {arguments.Handle} with size 0x{size:x8}!");
 
             return NvInternalResult.Success;
         }
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             if (map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -106,14 +106,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             if (map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
 
             if ((arguments.Align & (arguments.Align - 1)) != 0)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid alignment 0x{arguments.Align:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid alignment 0x{arguments.Align:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             if (map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -187,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             if (map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -214,7 +214,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             if (map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid handle 0x{arguments.Handle:x8}!");
 
                 return NvInternalResult.InvalidInput;
             }
@@ -272,7 +272,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
             {
                 DeleteMapWithHandle(process, handle);
 
-                Logger.PrintInfo(LogClass.ServiceNv, $"Deleted map {handle}!");
+                Logger.Info?.Print(LogClass.ServiceNv, $"Deleted map {handle}!");
 
                 return true;
             }

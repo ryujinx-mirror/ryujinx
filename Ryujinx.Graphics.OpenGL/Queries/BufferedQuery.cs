@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
                 if (iterations >= MaxQueryRetries)
                 {
-                    Logger.PrintError(LogClass.Gpu, $"Error: Query result timed out. Took more than {MaxQueryRetries} tries.");
+                    Logger.Error?.Print(LogClass.Gpu, $"Error: Query result timed out. Took more than {MaxQueryRetries} tries.");
                 }
             }
 

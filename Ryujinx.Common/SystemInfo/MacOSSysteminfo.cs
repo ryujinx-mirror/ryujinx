@@ -75,7 +75,7 @@ namespace Ryujinx.Common.SystemInfo
             }
             else
             {
-                Logger.PrintError(LogClass.Application, $"Cannot get memory size, sysctlbyname error: {res}");
+                Logger.Error?.Print(LogClass.Application, $"Cannot get memory size, sysctlbyname error: {res}");
 
                 RamSize = 0;
             }
@@ -88,7 +88,7 @@ namespace Ryujinx.Common.SystemInfo
             }
             else
             {
-                Logger.PrintError(LogClass.Application, $"Cannot get CPU name, sysctlbyname error: {res}");
+                Logger.Error?.Print(LogClass.Application, $"Cannot get CPU name, sysctlbyname error: {res}");
 
                 CpuName = "Unknown";
             }

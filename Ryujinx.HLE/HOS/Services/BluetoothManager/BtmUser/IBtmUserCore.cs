@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
                 if (result != KernelResult.Success)
                 {
                     // NOTE: We use a Logging instead of an exception because the call return a boolean if succeed or not.
-                    Logger.PrintError(LogClass.ServiceBsd, "Out of handles!");
+                    Logger.Error?.Print(LogClass.ServiceBsd, "Out of handles!");
                 }
             }
 
@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
                 if (result != KernelResult.Success)
                 {
                     // NOTE: We use a Logging instead of an exception because the call return a boolean if succeed or not.
-                    Logger.PrintError(LogClass.ServiceBsd, "Out of handles!");
+                    Logger.Error?.Print(LogClass.ServiceBsd, "Out of handles!");
                 }
             }
 
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
                 if (result != KernelResult.Success)
                 {
                     // NOTE: We use a Logging instead of an exception because the call return a boolean if succeed or not.
-                    Logger.PrintError(LogClass.ServiceBsd, "Out of handles!");
+                    Logger.Error?.Print(LogClass.ServiceBsd, "Out of handles!");
                 }
             }
 
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
                 if (result != KernelResult.Success)
                 {
                     // NOTE: We use a Logging instead of an exception because the call return a boolean if succeed or not.
-                    Logger.PrintError(LogClass.ServiceBsd, "Out of handles!");
+                    Logger.Error?.Print(LogClass.ServiceBsd, "Out of handles!");
                 }
             }
 

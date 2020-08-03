@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Vic.Image
                 case PixelFormat.Y8___V8U8_N420: return ReadNv12(rm, ref config, ref offsets);
             }
 
-            Logger.PrintError(LogClass.Vic, $"Unsupported pixel format \"{config.SlotPixelFormat}\".");
+            Logger.Error?.Print(LogClass.Vic, $"Unsupported pixel format \"{config.SlotPixelFormat}\".");
 
             int lw = config.SlotLumaWidth + 1;
             int lh = config.SlotLumaHeight + 1;

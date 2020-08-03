@@ -37,7 +37,7 @@ namespace Ryujinx.Common.SystemInfo
 
             if (wmiNotAvailable)
             {
-                Logger.PrintError(LogClass.Application, "WMI isn't available, system informations will use default values.");
+                Logger.Error?.Print(LogClass.Application, "WMI isn't available, system informations will use default values.");
 
                 CpuName = "Unknown";
             }
