@@ -33,6 +33,11 @@ namespace Ryujinx.Graphics.Gpu.State
         private readonly Register[] _registers;
 
         /// <summary>
+        /// Gets or sets the shadow ram control used for this sub-channel.
+        /// </summary>
+        public ShadowRamControl ShadowRamControl { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the GPU state.
         /// </summary>
         public GpuState()
@@ -72,14 +77,15 @@ namespace Ryujinx.Graphics.Gpu.State
         /// Calls a GPU method, using this state.
         /// </summary>
         /// <param name="meth">The GPU method to be called</param>
-        /// <param name="shadowCtrl">Shadow RAM control register value</param>
-        public void CallMethod(MethodParams meth, ShadowRamControl shadowCtrl)
+        public void CallMethod(MethodParams meth)
         {
             int value = meth.Argument;
 
             // Methods < 0x80 shouldn't be affected by shadow RAM at all.
             if (meth.Method >= 0x80)
             {
+                ShadowRamControl shadowCtrl = ShadowRamControl;
+
                 // TODO: Figure out what TrackWithFilter does, compared to Track.
                 if (shadowCtrl == ShadowRamControl.Track ||
                     shadowCtrl == ShadowRamControl.TrackWithFilter)

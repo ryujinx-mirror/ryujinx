@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
     class GPFifoClass : IDeviceState
     {
         private readonly GpuContext _context;
+        private readonly GPFifoProcessor _parent;
         private readonly DeviceState<GPFifoClassState> _state;
 
         private const int MacrosCount = 0x80;
@@ -25,17 +26,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private readonly int[] _macroCode;
 
         /// <summary>
-        /// MME Shadow RAM Control.
-        /// </summary>
-        public ShadowRamControl ShadowCtrl { get; private set; }
-
-        /// <summary>
         /// Creates a new instance of the GPU General Purpose FIFO class.
         /// </summary>
         /// <param name="context">GPU context</param>
-        public GPFifoClass(GpuContext context)
+        /// <param name="parent">Parent GPU General Purpose FIFO processor</param>
+        public GPFifoClass(GpuContext context, GPFifoProcessor parent)
         {
             _context = context;
+            _parent = parent;
             _state = new DeviceState<GPFifoClassState>(new Dictionary<string, RwCallback>
             {
                 { nameof(GPFifoClassState.Semaphored), new RwCallback(Semaphored, null) },
@@ -155,7 +153,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         }
 
         /// <summary>
-        /// Send macro code/data to the MME
+        /// Sends macro code/data to the MME.
         /// </summary>
         /// <param name="argument">Method call argument</param>
         public void LoadMmeInstructionRam(int argument)
@@ -164,7 +162,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         }
 
         /// <summary>
-        /// Bind a macro index to a position for the MME
+        /// Binds a macro index to a position for the MME
         /// </summary>
         /// <param name="argument">Method call argument</param>
         public void LoadMmeStartAddressRam(int argument)
@@ -173,12 +171,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         }
 
         /// <summary>
-        /// Change the shadow RAM setting
+        /// Changes the shadow RAM control.
         /// </summary>
         /// <param name="argument">Method call argument</param>
         public void SetMmeShadowRamControl(int argument)
         {
-            ShadowCtrl = (ShadowRamControl)argument;
+            _parent.SetShadowRamControl((ShadowRamControl)argument);
         }
 
         /// <summary>
@@ -208,7 +206,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="state">Current GPU state</param>
         public void CallMme(int index, GpuState state)
         {
-            _macros[index].Execute(_macroCode, ShadowCtrl, state);
+            _macros[index].Execute(_macroCode, state);
         }
     }
 }

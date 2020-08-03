@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Graphics.Gpu.State;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine.MME
 {
@@ -15,7 +16,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         private bool _executionPending;
         private int _argument;
 
-        private readonly MacroInterpreter _interpreter;
+        private readonly IMacroEE _executionEngine;
 
         /// <summary>
         /// Creates a new instance of the GPU cached macro program.
@@ -28,7 +29,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
             _executionPending = false;
             _argument = 0;
 
-            _interpreter = new MacroInterpreter();
+            if (GraphicsConfig.EnableMacroJit)
+            {
+                _executionEngine = new MacroJit();
+            }
+            else
+            {
+                _executionEngine = new MacroInterpreter();
+            }
         }
 
         /// <summary>
@@ -45,15 +53,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Starts executing the macro program code.
         /// </summary>
-        /// <param name="mme">Program code</param>
+        /// <param name="code">Program code</param>
         /// <param name="state">Current GPU state</param>
-        public void Execute(int[] mme, ShadowRamControl shadowCtrl, GpuState state)
+        public void Execute(ReadOnlySpan<int> code, GpuState state)
         {
             if (_executionPending)
             {
                 _executionPending = false;
 
-                _interpreter?.Execute(mme, Position, _argument, shadowCtrl, state);
+                _executionEngine?.Execute(code.Slice(Position), state, _argument);
             }
         }
 
@@ -63,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="argument">Argument to be pushed</param>
         public void PushArgument(int argument)
         {
-            _interpreter?.Fifo.Enqueue(argument);
+            _executionEngine?.Fifo.Enqueue(argument);
         }
     }
 }

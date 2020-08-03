@@ -39,8 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         {
             _context = context;
 
-            _fifoClass = new GPFifoClass(context);
-
+            _fifoClass = new GPFifoClass(context, this);
             _subChannels = new GpuState[8];
 
             for (int index = 0; index < _subChannels.Length; index++)
@@ -152,7 +151,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             }
             else if (meth.Method < 0xe00)
             {
-                _subChannels[meth.SubChannel].CallMethod(meth, _fifoClass.ShadowCtrl);
+                _subChannels[meth.SubChannel].CallMethod(meth);
             }
             else
             {
@@ -173,6 +172,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                     _context.Methods.PerformDeferredDraws();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sets the shadow ram control value of all sub-channels.
+        /// </summary>
+        /// <param name="control">New shadow ram control value</param>
+        public void SetShadowRamControl(ShadowRamControl control)
+        {
+            for (int i = 0; i < _subChannels.Length; i++)
+            {
+                _subChannels[i].ShadowRamControl = control;
             }
         }
     }

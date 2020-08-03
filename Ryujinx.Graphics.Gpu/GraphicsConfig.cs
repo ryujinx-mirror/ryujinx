@@ -27,5 +27,10 @@ namespace Ryujinx.Graphics.Gpu
         /// This can avoid lower resolution on some games when GPU performance is poor.
         /// </summary>
         public static bool FastGpuTime = true;
+
+        /// <summary>
+        /// Enables or disables the Just-in-Time compiler for GPU Macro code.
+        /// </summary>
+        public static bool EnableMacroJit = true;
     }
 }
