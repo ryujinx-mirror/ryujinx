@@ -33,24 +33,14 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.BitwiseNot,              GenerateBitwiseNot);
             Add(Instruction.BitwiseOr,               GenerateBitwiseOr);
             Add(Instruction.Branch,                  GenerateBranch);
-            Add(Instruction.BranchIfFalse,           GenerateBranchIfFalse);
-            Add(Instruction.BranchIfTrue,            GenerateBranchIfTrue);
+            Add(Instruction.BranchIf,                GenerateBranchIf);
             Add(Instruction.ByteSwap,                GenerateByteSwap);
             Add(Instruction.Call,                    GenerateCall);
             Add(Instruction.Clobber,                 GenerateClobber);
+            Add(Instruction.Compare,                 GenerateCompare);
             Add(Instruction.CompareAndSwap,          GenerateCompareAndSwap);
             Add(Instruction.CompareAndSwap16,        GenerateCompareAndSwap16);
             Add(Instruction.CompareAndSwap8,         GenerateCompareAndSwap8);
-            Add(Instruction.CompareEqual,            GenerateCompareEqual);
-            Add(Instruction.CompareGreater,          GenerateCompareGreater);
-            Add(Instruction.CompareGreaterOrEqual,   GenerateCompareGreaterOrEqual);
-            Add(Instruction.CompareGreaterOrEqualUI, GenerateCompareGreaterOrEqualUI);
-            Add(Instruction.CompareGreaterUI,        GenerateCompareGreaterUI);
-            Add(Instruction.CompareLess,             GenerateCompareLess);
-            Add(Instruction.CompareLessOrEqual,      GenerateCompareLessOrEqual);
-            Add(Instruction.CompareLessOrEqualUI,    GenerateCompareLessOrEqualUI);
-            Add(Instruction.CompareLessUI,           GenerateCompareLessUI);
-            Add(Instruction.CompareNotEqual,         GenerateCompareNotEqual);
             Add(Instruction.ConditionalSelect,       GenerateConditionalSelect);
             Add(Instruction.ConvertI64ToI32,         GenerateConvertI64ToI32);
             Add(Instruction.ConvertToFP,             GenerateConvertToFP);
@@ -474,6 +464,8 @@ namespace ARMeilleure.CodeGen.X86
 
             Debug.Assert(dest.Type.IsInteger());
 
+            // Note: GenerateCompareCommon makes the assumption that BitwiseAnd will emit only a single `and`
+            // instruction.
             context.Assembler.And(dest, src2, dest.Type);
         }
 
@@ -525,22 +517,17 @@ namespace ARMeilleure.CodeGen.X86
             context.JumpTo(context.CurrBlock.Branch);
         }
 
-        private static void GenerateBranchIfFalse(CodeGenContext context, Operation operation)
+        private static void GenerateBranchIf(CodeGenContext context, Operation operation)
         {
-            Operand source = operation.GetSource(0);
+            Operand comp = operation.GetSource(2);
 
-            context.Assembler.Test(source, source, source.Type);
+            Debug.Assert(comp.Kind == OperandKind.Constant);
 
-            context.JumpTo(X86Condition.Equal, context.CurrBlock.Branch);
-        }
+            var cond = ((Comparison)comp.AsInt32()).ToX86Condition();
 
-        private static void GenerateBranchIfTrue(CodeGenContext context, Operation operation)
-        {
-            Operand source = operation.GetSource(0);
+            GenerateCompareCommon(context, operation);
 
-            context.Assembler.Test(source, source, source.Type);
-
-            context.JumpTo(X86Condition.NotEqual, context.CurrBlock.Branch);
+            context.JumpTo(cond, context.CurrBlock.Branch);
         }
 
         private static void GenerateByteSwap(CodeGenContext context, Operation operation)
@@ -564,6 +551,60 @@ namespace ARMeilleure.CodeGen.X86
         {
             // This is only used to indicate that a register is clobbered to the
             // register allocator, we don't need to produce any code.
+        }
+
+        private static void GenerateCompare(CodeGenContext context, Operation operation)
+        {
+            Operand dest = operation.Destination;
+            Operand comp = operation.GetSource(2);
+
+            Debug.Assert(dest.Type == OperandType.I32);
+            Debug.Assert(comp.Kind == OperandKind.Constant);
+
+            var cond = ((Comparison)comp.AsInt32()).ToX86Condition();
+
+            GenerateCompareCommon(context, operation);
+
+            context.Assembler.Setcc(dest, cond);
+            context.Assembler.Movzx8(dest, dest, OperandType.I32);
+        }
+
+        private static void GenerateCompareCommon(CodeGenContext context, Operation operation)
+        {
+            Operand src1 = operation.GetSource(0);
+            Operand src2 = operation.GetSource(1);
+
+            EnsureSameType(src1, src2);
+
+            Debug.Assert(src1.Type.IsInteger());
+
+            if (src2.Kind == OperandKind.Constant && src2.Value == 0)
+            {
+                if (MatchOperation(operation.ListPrevious, Instruction.BitwiseAnd, src1.Type, src1.GetRegister()))
+                {
+                    // Since the `test` and `and` instruction set the status flags in the same way, we can omit the
+                    // `test r,r` instruction when it is immediately preceded by an `and r,*` instruction.
+                    //
+                    // For example:
+                    //
+                    //  and eax, 0x3
+                    //  test eax, eax
+                    //  jz .L0
+                    //
+                    // =>
+                    //
+                    //  and eax, 0x3
+                    //  jz .L0
+                }
+                else
+                {
+                    context.Assembler.Test(src1, src1, src1.Type);
+                }
+            }
+            else
+            {
+                context.Assembler.Cmp(src1, src2, src1.Type);
+            }
         }
 
         private static void GenerateCompareAndSwap(CodeGenContext context, Operation operation)
@@ -613,71 +654,6 @@ namespace ARMeilleure.CodeGen.X86
             MemoryOperand memOp = MemoryOp(src3.Type, src1);
 
             context.Assembler.Cmpxchg8(memOp, src3);
-        }
-
-        private static void GenerateCompareEqual(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.Equal);
-        }
-
-        private static void GenerateCompareGreater(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.Greater);
-        }
-
-        private static void GenerateCompareGreaterOrEqual(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.GreaterOrEqual);
-        }
-
-        private static void GenerateCompareGreaterOrEqualUI(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.AboveOrEqual);
-        }
-
-        private static void GenerateCompareGreaterUI(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.Above);
-        }
-
-        private static void GenerateCompareLess(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.Less);
-        }
-
-        private static void GenerateCompareLessOrEqual(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.LessOrEqual);
-        }
-
-        private static void GenerateCompareLessOrEqualUI(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.BelowOrEqual);
-        }
-
-        private static void GenerateCompareLessUI(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.Below);
-        }
-
-        private static void GenerateCompareNotEqual(CodeGenContext context, Operation operation)
-        {
-            GenerateCompare(context, operation, X86Condition.NotEqual);
-        }
-
-        private static void GenerateCompare(CodeGenContext context, Operation operation, X86Condition condition)
-        {
-            Operand dest = operation.Destination;
-            Operand src1 = operation.GetSource(0);
-            Operand src2 = operation.GetSource(1);
-
-            EnsureSameType(src1, src2);
-
-            Debug.Assert(dest.Type == OperandType.I32);
-
-            context.Assembler.Cmp(src1, src2, src1.Type);
-            context.Assembler.Setcc(dest, condition);
-            context.Assembler.Movzx8(dest, dest, OperandType.I32);
         }
 
         private static void GenerateConditionalSelect(CodeGenContext context, Operation operation)
@@ -1559,6 +1535,25 @@ namespace ARMeilleure.CodeGen.X86
         {
             context.Assembler.Movq(dest, source);
             context.Assembler.Pshufd(dest, dest, 0xfc);
+        }
+
+        private static bool MatchOperation(Node node, Instruction inst, OperandType destType, Register destReg)
+        {
+            if (!(node is Operation operation) || node.DestinationsCount == 0)
+            {
+                return false;
+            }
+
+            if (operation.Instruction != inst)
+            {
+                return false;
+            }
+
+            Operand dest = operation.Destination;
+
+            return dest.Kind == OperandKind.Register &&
+                   dest.Type == destType &&
+                   dest.GetRegister() == destReg;
         }
 
         [Conditional("DEBUG")]

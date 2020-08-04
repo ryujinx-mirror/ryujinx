@@ -403,7 +403,7 @@ namespace ARMeilleure.Instructions
 
             if (lblSlowPath != null)
             {
-                context.BranchIfTrue(lblSlowPath, context.ICompareLessOrEqual(pte, Const(0L)));
+                context.BranchIf(lblSlowPath, pte, Const(0L), Comparison.LessOrEqual);
             }
             else
             {
@@ -414,7 +414,7 @@ namespace ARMeilleure.Instructions
                     Operand lblNotWatched = Label();
 
                     // Is the page currently being monitored for modifications? If so we need to call MarkRegionAsModified.
-                    context.BranchIfTrue(lblNotWatched, context.ICompareGreaterOrEqual(pte, Const(0L)));
+                    context.BranchIf(lblNotWatched, pte, Const(0L), Comparison.GreaterOrEqual);
 
                     // Mark the region as modified. Size here doesn't matter as address is assumed to be size aligned here.
                     context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.MarkRegionAsModified)), address, Const(1UL));

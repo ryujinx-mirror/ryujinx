@@ -198,6 +198,8 @@ namespace ARMeilleure.Diagnostics
                     break;
 
                 case Operation operation:
+                    bool comparison = false;
+
                     _builder.Append(operation.Instruction);
 
                     if (operation.Instruction == Instruction.Extended)
@@ -206,16 +208,31 @@ namespace ARMeilleure.Diagnostics
 
                         _builder.Append('.').Append(intrinOp.Intrinsic);
                     }
+                    else if (operation.Instruction == Instruction.BranchIf ||
+                             operation.Instruction == Instruction.Compare)
+                    {
+                        comparison = true;
+                    }
 
                     _builder.Append(' ');
 
                     for (int index = 0; index < operation.SourcesCount; index++)
                     {
-                        DumpOperand(operation.GetSource(index));
+                        Operand source = operation.GetSource(index);
 
                         if (index < operation.SourcesCount - 1)
                         {
+                            DumpOperand(source);
+
                             _builder.Append(", ");
+                        }
+                        else if (comparison)
+                        {
+                            _builder.Append((Comparison)source.AsInt32());
+                        }
+                        else
+                        {
+                            DumpOperand(source);
                         }
                     }
                     break;

@@ -1,3 +1,6 @@
+using ARMeilleure.IntermediateRepresentation;
+using System;
+
 namespace ARMeilleure.CodeGen.X86
 {
     enum X86Condition
@@ -18,5 +21,27 @@ namespace ARMeilleure.CodeGen.X86
         GreaterOrEqual = 0xd,
         LessOrEqual    = 0xe,
         Greater        = 0xf
+    }
+
+    static class ComparisonX86Extensions
+    {
+        public static X86Condition ToX86Condition(this Comparison comp)
+        {
+            return comp switch
+            {
+                Comparison.Equal            => X86Condition.Equal,
+                Comparison.NotEqual         => X86Condition.NotEqual,
+                Comparison.Greater          => X86Condition.Greater,
+                Comparison.LessOrEqual      => X86Condition.LessOrEqual,
+                Comparison.GreaterUI        => X86Condition.Above,
+                Comparison.LessOrEqualUI    => X86Condition.BelowOrEqual,
+                Comparison.GreaterOrEqual   => X86Condition.GreaterOrEqual,
+                Comparison.Less             => X86Condition.Less,
+                Comparison.GreaterOrEqualUI => X86Condition.AboveOrEqual,
+                Comparison.LessUI           => X86Condition.Below,
+
+                _ => throw new ArgumentException(null, nameof(comp))
+            };
+        }
     }
 }

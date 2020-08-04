@@ -92,7 +92,7 @@ namespace ARMeilleure.Instructions
                 Operand exAddr = context.Load(address.Type, exAddrPtr);
 
                 // STEP 1: Check if we have exclusive access to this memory region. If not, fail and skip store.
-                Operand maskedAddress = context.BitwiseAnd(address, Const(GetExclusiveAddressMask()));
+                Operand maskedAddress = context.BitwiseAnd(address, Const(address.Type, GetExclusiveAddressMask()));
 
                 Operand exFailed = context.ICompareNotEqual(exAddr, maskedAddress);
 

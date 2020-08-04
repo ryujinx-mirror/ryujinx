@@ -62,18 +62,21 @@ namespace ARMeilleure.Translation
             BranchToLabel(label);
         }
 
-        public void BranchIfFalse(Operand label, Operand op1)
+        public void BranchIf(Operand label, Operand op1, Operand op2, Comparison comp)
         {
-            Add(Instruction.BranchIfFalse, null, op1);
+            Add(Instruction.BranchIf, null, op1, op2, Const((int)comp));
 
             BranchToLabel(label);
         }
 
+        public void BranchIfFalse(Operand label, Operand op1)
+        {
+            BranchIf(label, op1, Const(op1.Type, 0), Comparison.Equal);
+        }
+
         public void BranchIfTrue(Operand label, Operand op1)
         {
-            Add(Instruction.BranchIfTrue, null, op1);
-
-            BranchToLabel(label);
+            BranchIf(label, op1, Const(op1.Type, 0), Comparison.NotEqual);
         }
 
         public Operand ByteSwap(Operand op1)
@@ -243,54 +246,59 @@ namespace ARMeilleure.Translation
             return Add(Instruction.DivideUI, Local(op1.Type), op1, op2);
         }
 
+        public Operand ICompare(Operand op1, Operand op2, Comparison comp)
+        {
+            return Add(Instruction.Compare, Local(OperandType.I32), op1, op2, Const((int)comp));
+        }
+
         public Operand ICompareEqual(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareEqual, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.Equal);
         }
 
         public Operand ICompareGreater(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareGreater, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.Greater);
         }
 
         public Operand ICompareGreaterOrEqual(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareGreaterOrEqual, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.GreaterOrEqual);
         }
 
         public Operand ICompareGreaterOrEqualUI(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareGreaterOrEqualUI, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.GreaterOrEqualUI);
         }
 
         public Operand ICompareGreaterUI(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareGreaterUI, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.GreaterUI);
         }
 
         public Operand ICompareLess(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareLess, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.Less);
         }
 
         public Operand ICompareLessOrEqual(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareLessOrEqual, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.LessOrEqual);
         }
 
         public Operand ICompareLessOrEqualUI(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareLessOrEqualUI, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.LessOrEqualUI);
         }
 
         public Operand ICompareLessUI(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareLessUI, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.LessUI);
         }
 
         public Operand ICompareNotEqual(Operand op1, Operand op2)
         {
-            return Add(Instruction.CompareNotEqual, Local(OperandType.I32), op1, op2);
+            return ICompare(op1, op2, Comparison.NotEqual);
         }
 
         public Operand Load(OperandType type, Operand address)

@@ -2,6 +2,8 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System.Diagnostics;
 
+using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+
 namespace ARMeilleure.CodeGen.Optimizations
 {
     static class Optimizer
@@ -42,13 +44,25 @@ namespace ARMeilleure.CodeGen.Optimizations
 
                         Simplification.RunPass(operation);
 
-                        if (DestIsLocalVar(operation) && IsPropagableCopy(operation))
-                        {
-                            PropagateCopy(operation);
+                        if (DestIsLocalVar(operation))
+                        {   
+                            if (IsPropagableCompare(operation))
+                            {
+                                modified |= PropagateCompare(operation);
 
-                            RemoveNode(block, node);
+                                if (modified && IsUnused(operation))
+                                {
+                                    RemoveNode(block, node);
+                                }
+                            }
+                            else if (IsPropagableCopy(operation))
+                            {
+                                PropagateCopy(operation);
 
-                            modified = true;
+                                RemoveNode(block, node);
+
+                                modified = true;
+                            }
                         }
 
                         node = nextNode;
@@ -86,6 +100,91 @@ namespace ARMeilleure.CodeGen.Optimizations
                 }
             }
             while (modified);
+        }
+
+        private static bool PropagateCompare(Operation compOp)
+        {
+            // Try to propagate Compare operations into their BranchIf uses, when these BranchIf uses are in the form
+            // of:
+            //
+            // - BranchIf %x, 0x0, Equal        ;; i.e BranchIfFalse %x
+            // - BranchIf %x, 0x0, NotEqual     ;; i.e BranchIfTrue %x
+            //
+            // The commutative property of Equal and NotEqual is taken into consideration as well.
+            //
+            // For example:
+            //
+            //  %x = Compare %a, %b, comp
+            //  BranchIf %x, 0x0, NotEqual
+            //
+            // =>
+            //
+            //  BranchIf %a, %b, comp
+
+            static bool IsZeroBranch(Operation operation, out Comparison compType)
+            {
+                compType = Comparison.Equal;
+
+                if (operation.Instruction != Instruction.BranchIf)
+                {
+                    return false;
+                }
+
+                Operand src1 = operation.GetSource(0);
+                Operand src2 = operation.GetSource(1);
+                Operand comp = operation.GetSource(2);
+
+                compType = (Comparison)comp.AsInt32();
+
+                return (src1.Kind == OperandKind.Constant && src1.Value == 0) ||
+                       (src2.Kind == OperandKind.Constant && src2.Value == 0);
+            }
+
+            bool modified = false;
+
+            Operand dest = compOp.Destination;
+            Operand src1 = compOp.GetSource(0);
+            Operand src2 = compOp.GetSource(1);
+            Operand comp = compOp.GetSource(2);
+
+            Comparison compType = (Comparison)comp.AsInt32();
+
+            Node[] uses = dest.Uses.ToArray();
+
+            foreach (Node use in uses)
+            {
+                if (!(use is Operation operation))
+                {
+                    continue;
+                }
+
+                // If operation is a BranchIf and has a constant value 0 in its RHS or LHS source operands.
+                if (IsZeroBranch(operation, out Comparison otherCompType))
+                {
+                    Comparison propCompType;
+
+                    if (otherCompType == Comparison.NotEqual)
+                    {
+                        propCompType = compType;
+                    }
+                    else if (otherCompType == Comparison.Equal)
+                    {
+                        propCompType = compType.Invert();
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    operation.SetSource(0, src1);
+                    operation.SetSource(1, src2);
+                    operation.SetSource(2, Const((int)propCompType));
+
+                    modified = true;
+                }
+            }
+
+            return modified;
         }
 
         private static void PropagateCopy(Operation copyOp)
@@ -141,6 +240,11 @@ namespace ARMeilleure.CodeGen.Optimizations
                 || operation.Instruction == Instruction.CompareAndSwap
                 || operation.Instruction == Instruction.CompareAndSwap16
                 || operation.Instruction == Instruction.CompareAndSwap8);
+        }
+
+        private static bool IsPropagableCompare(Operation operation)
+        {
+            return operation.Instruction == Instruction.Compare;
         }
 
         private static bool IsPropagableCopy(Operation operation)

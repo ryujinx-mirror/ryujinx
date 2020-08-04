@@ -163,17 +163,18 @@ namespace ARMeilleure.Instructions
 
                 context.LoadFromContext();
 
-                // Note: The return value of a translated function is always an Int64 with the
-                // address execution has returned to. We expect this address to be immediately after the
-                // current instruction, if it isn't we keep returning until we reach the dispatcher.
+                // Note: The return value of a translated function is always an Int64 with the address execution has
+                // returned to. We expect this address to be immediately after the current instruction, if it isn't we
+                // keep returning until we reach the dispatcher.
                 Operand nextAddr = Const((long)op.Address + op.OpCodeSizeInBytes);
 
                 // Try to continue within this block.
-                // If the return address isn't to our next instruction, we need to return so the JIT can figure out what to do.
+                // If the return address isn't to our next instruction, we need to return so the JIT can figure out
+                // what to do.
                 Operand lblContinue = context.GetLabel(nextAddr.Value);
 
                 // We need to clear out the call flag for the return address before comparing it.
-                context.BranchIfTrue(lblContinue, context.ICompareEqual(context.BitwiseAnd(returnAddress, Const(~CallFlag)), nextAddr));
+                context.BranchIf(lblContinue, context.BitwiseAnd(returnAddress, Const(~CallFlag)), nextAddr, Comparison.Equal);
 
                 context.Return(returnAddress);
             }
