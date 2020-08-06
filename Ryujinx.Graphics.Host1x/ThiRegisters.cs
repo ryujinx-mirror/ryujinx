@@ -4,6 +4,7 @@ namespace Ryujinx.Graphics.Host1x
 {
     struct ThiRegisters
     {
+#pragma warning disable CS0649
         public uint IncrSyncpt;
         public uint Reserved4;
         public uint IncrSyncptErr;
@@ -18,5 +19,6 @@ namespace Ryujinx.Graphics.Host1x
         public Array12<uint> Reserved48;
         public uint IntStatus;
         public uint IntMask;
+#pragma warning restore CS0649
     }
 }

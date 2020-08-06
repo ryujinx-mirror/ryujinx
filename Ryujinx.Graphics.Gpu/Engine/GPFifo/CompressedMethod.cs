@@ -25,7 +25,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
     struct CompressedMethod
     {
+#pragma warning disable CS0649
         public uint Method;
+#pragma warning restore CS0649
         public int MethodAddressOld => (int)((Method >> 2) & 0x7FF);
         public int MethodAddress => (int)((Method >> 0) & 0xFFF);
         public int SubdeviceMask => (int)((Method >> 4) & 0xFFF);

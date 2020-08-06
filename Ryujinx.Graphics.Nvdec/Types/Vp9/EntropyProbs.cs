@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp9
 {
     struct EntropyProbs
     {
+#pragma warning disable CS0649
         public Array10<Array10<Array8<byte>>> KfYModeProbE0ToE7;
         public Array10<Array10<byte>> KfYModeProbE8;
         public Array3<byte> Padding384;
@@ -41,6 +42,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp9
         public Array5<byte> CompRefProb;
         public Array17<byte> Padding58F;
         public Array4<Array2<Array2<Array6<Array6<Array4<byte>>>>>> CoefProbs;
+#pragma warning restore CS0649
 
         public void Convert(ref Vp9EntropyProbs fc)
         {

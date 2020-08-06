@@ -2,8 +2,10 @@
 {
     struct ClearRectStruct
     {
+#pragma warning disable CS0649
         private long _word0;
         private long _word1;
+#pragma warning restore CS0649
 
         public int ClearRect0Left => _word0.Extract(0, 14);
         public int ClearRect0Right => _word0.Extract(16, 14);

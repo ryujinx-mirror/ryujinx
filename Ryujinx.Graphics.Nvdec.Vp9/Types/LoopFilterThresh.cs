@@ -6,8 +6,10 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
     // passed it can be loaded into vector registers.
     internal struct LoopFilterThresh
     {
+#pragma warning disable CS0649
         public Array16<byte> Mblim;
         public Array16<byte> Lim;
         public Array16<byte> HevThr;
+#pragma warning restore CS0649
     }
 }

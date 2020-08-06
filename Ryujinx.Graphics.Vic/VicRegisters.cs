@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Vic
 
     struct VicRegisters
     {
+#pragma warning disable CS0649
         public Array64<uint> Reserved0;
         public uint Nop;
         public Array15<uint> Reserved104;
@@ -43,5 +44,6 @@ namespace Ryujinx.Graphics.Vic
         public Array8<uint> SetSlotContextId;
         public Array8<uint> SetCompTagBufferOffset;
         public Array8<uint> SetHistoryBufferOffset;
+#pragma warning restore CS0649
     }
 }

@@ -106,6 +106,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
     struct GPFifoClassState
     {
+#pragma warning disable CS0649
         public uint SetObject;
         public int SetObjectNvclass => (int)((SetObject >> 0) & 0xFFFF);
         public int SetObjectEngine => (int)((SetObject >> 16) & 0x1F);
@@ -182,5 +183,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public uint LoadMmeStartAddressRamPointer;
         public uint LoadMmeStartAddressRam;
         public uint SetMmeShadowRamControl;
+#pragma warning restore CS0649
     }
 }

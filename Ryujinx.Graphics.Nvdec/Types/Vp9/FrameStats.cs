@@ -2,6 +2,7 @@
 {
     struct FrameStats
     {
+#pragma warning disable CS0649
         public uint Unknown0;
         public uint Unknown4;
         public uint Pass2CycleCount;
@@ -16,5 +17,6 @@
         public uint ErrorCtbPos;
         public uint ErrorSlicePos;
         public uint Unknown34;
+#pragma warning restore CS0649
     }
 }

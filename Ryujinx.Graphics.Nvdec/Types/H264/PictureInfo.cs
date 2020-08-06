@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
 {
     struct PictureInfo
     {
+#pragma warning disable CS0169, CS0649
         Array18<uint> Unknown0;
         public uint BitstreamSize;
         public uint NumSlices;
@@ -47,6 +48,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
         public Array16<byte> MvcextViewRefMasksL1;
         public uint Flags2;
         public Array10<uint> Unknown2D4;
+#pragma warning restore CS0169, CS0649
 
         public bool MbAdaptiveFrameFieldFlag => (Flags & (1 << 0)) != 0;
         public bool Direct8x8InferenceFlag => (Flags & (1 << 1)) != 0;

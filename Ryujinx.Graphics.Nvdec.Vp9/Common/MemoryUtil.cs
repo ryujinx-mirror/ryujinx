@@ -1,6 +1,4 @@
-﻿using Ryujinx.Common.Memory;
-using System;
-using System.Runtime.CompilerServices;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9.Common

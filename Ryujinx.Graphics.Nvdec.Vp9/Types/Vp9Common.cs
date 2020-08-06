@@ -89,7 +89,6 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
 
         public ArrayPtr<sbyte> AboveSegContext;
         public ArrayPtr<sbyte> AboveContext;
-        public int AboveContextAllocCols;
 
         public bool FrameIsIntraOnly()
         {

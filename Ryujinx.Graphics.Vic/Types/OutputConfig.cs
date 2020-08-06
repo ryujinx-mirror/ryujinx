@@ -2,8 +2,10 @@
 {
     struct OutputConfig
     {
+#pragma warning disable CS0649
         private long _word0;
         private long _word1;
+#pragma warning restore CS0649
 
         public int AlphaFillMode => _word0.Extract(0, 3);
         public int AlphaFillSlot => _word0.Extract(3, 3);
