@@ -4,7 +4,7 @@ namespace Ryujinx.Common.Configuration
     {
         None,
         Error,
-        Performance,
+        Slowdowns,
         All
     }
 }

@@ -2185,7 +2185,7 @@
                                 <property name="halign">start</property>
                                 <property name="margin_bottom">5</property>
                                 <property name="tooltip_text" translatable="yes">Use with care</property>
-                                <property name="label" translatable="yes">Developer Options</property>
+                                <property name="label" translatable="yes">Developer Options (WARNING: Will reduce performance)</property>
                                 <attributes>
                                   <attribute name="weight" value="bold"/>
                                 </attributes>
@@ -2231,7 +2231,7 @@
                                     <object class="GtkLabel">
                                       <property name="visible">True</property>
                                       <property name="can_focus">False</property>
-                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled. Not persistent across restarts.</property>
+                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled.</property>
                                       <property name="label" translatable="yes">OpenGL Log Level</property>
                                     </object>
                                     <packing>
@@ -2245,7 +2245,7 @@
                                     <object class="GtkComboBoxText" id="_graphicsDebugLevel">
                                       <property name="visible">True</property>
                                       <property name="can_focus">False</property>
-                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled. Not persistent across restarts.</property>
+                                      <property name="tooltip_text" translatable="yes">Requires appropriate log levels enabled.</property>
                                       <property name="margin_left">5</property>
                                     </object>
                                     <packing>

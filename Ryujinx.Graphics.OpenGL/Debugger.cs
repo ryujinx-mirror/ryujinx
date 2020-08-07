@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypeError, DebugSeverityControl.DontCare, 0, (int[])null, true);
             }
-            else if (logLevel == GraphicsDebugLevel.Performance)
+            else if (logLevel == GraphicsDebugLevel.Slowdowns)
             {
                 GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypeError, DebugSeverityControl.DontCare, 0, (int[])null, true);
                 GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DebugTypePerformance, DebugSeverityControl.DontCare, 0, (int[])null, true);
