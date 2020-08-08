@@ -242,7 +242,7 @@ namespace ARMeilleure.Instructions
         private static void EmitNativeCallWithGuestAddress(ArmEmitterContext context, Operand funcAddr, Operand guestAddress, bool isJump)
         {
             Operand nativeContextPtr = context.LoadArgument(OperandType.I64, 0);
-            context.Store(context.Add(nativeContextPtr, Const(NativeContext.GetCallAddressOffset())), guestAddress);
+            context.Store(context.Add(nativeContextPtr, Const((long)NativeContext.GetCallAddressOffset())), guestAddress);
 
             EmitNativeCall(context, nativeContextPtr, funcAddr, isJump);
         }

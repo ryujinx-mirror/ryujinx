@@ -173,7 +173,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vshl_Imm([Values(0u)] uint rd,
                              [Values(2u, 0u)] uint rm,
                              [Values(0u, 1u, 2u, 3u)] uint size,
-                             [Random(RndCnt), Values(0u)] uint shiftImm,
+                             [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
                              [Random(RndCnt)] ulong z,
                              [Random(RndCnt)] ulong a,
                              [Random(RndCnt)] ulong b,
@@ -207,7 +207,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vshrn_Imm([Values(0u, 1u)] uint rd,
                               [Values(2u, 0u)] uint rm,
                               [Values(0u, 1u, 2u)] uint size,
-                              [Random(RndCnt), Values(0u)] uint shiftImm,
+                              [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
                               [Random(RndCnt)] ulong z,
                               [Random(RndCnt)] ulong a,
                               [Random(RndCnt)] ulong b)
@@ -234,7 +234,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vqrshrn_Imm([Values(0u, 1u)] uint rd,
                                 [Values(2u, 0u)] uint rm,
                                 [Values(0u, 1u, 2u)] uint size,
-                                [Random(RndCnt), Values(0u)] uint shiftImm,
+                                [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
                                 [Random(RndCnt)] ulong z,
                                 [Random(RndCnt)] ulong a,
                                 [Random(RndCnt)] ulong b,
@@ -258,16 +258,18 @@ namespace Ryujinx.Tests.Cpu
             V128 v1 = MakeVectorE0E1(a, z);
             V128 v2 = MakeVectorE0E1(b, z);
 
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            int fpscr = (int)TestContext.CurrentContext.Random.NextUInt() & (int)Fpsr.Qc;
 
-            CompareAgainstUnicorn();
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, fpscr: fpscr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("VQRSHRUN.<type><size> <Vd>, <Vm>, #<imm>")]
         public void Vqrshrun_Imm([Values(0u, 1u)] uint rd,
                                  [Values(2u, 0u)] uint rm,
                                  [Values(0u, 1u, 2u)] uint size,
-                                 [Random(RndCnt), Values(0u)] uint shiftImm,
+                                 [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
                                  [Random(RndCnt)] ulong z,
                                  [Random(RndCnt)] ulong a,
                                  [Random(RndCnt)] ulong b)
@@ -285,9 +287,11 @@ namespace Ryujinx.Tests.Cpu
             V128 v1 = MakeVectorE0E1(a, z);
             V128 v2 = MakeVectorE0E1(b, z);
 
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            int fpscr = (int)TestContext.CurrentContext.Random.NextUInt() & (int)Fpsr.Qc;
 
-            CompareAgainstUnicorn();
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, fpscr: fpscr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 #endif
     }

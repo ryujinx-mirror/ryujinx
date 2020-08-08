@@ -121,11 +121,10 @@ namespace Ryujinx.Tests.Cpu
                                   int   fpcr     = 0,
                                   int   fpsr     = 0)
         {
-            _context.SetX(0, x0);
-            _context.SetX(1, x1);
-            _context.SetX(2, x2);
-            _context.SetX(3, x3);
-
+            _context.SetX(0,  x0);
+            _context.SetX(1,  x1);
+            _context.SetX(2,  x2);
+            _context.SetX(3,  x3);
             _context.SetX(31, x31);
 
             _context.SetV(0,  v0);
@@ -151,8 +150,7 @@ namespace Ryujinx.Tests.Cpu
                 _unicornEmu.X[1] = x1;
                 _unicornEmu.X[2] = x2;
                 _unicornEmu.X[3] = x3;
-
-                _unicornEmu.SP = x31;
+                _unicornEmu.SP   = x31;
 
                 _unicornEmu.Q[0]  = V128ToSimdValue(v0);
                 _unicornEmu.Q[1]  = V128ToSimdValue(v1);
@@ -207,7 +205,7 @@ namespace Ryujinx.Tests.Cpu
         {
             if (Ignore_FpcrFz_FpcrDn)
             {
-                fpcr &= ~((int)FPCR.Fz | (int)FPCR.Dn);
+                fpcr &= ~((1 << (int)Fpcr.Fz) | (1 << (int)Fpcr.Dn));
             }
 
             Opcode(opcode);
@@ -360,7 +358,6 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(_context.GetX(28), Is.EqualTo(_unicornEmu.X[28]));
             Assert.That(_context.GetX(29), Is.EqualTo(_unicornEmu.X[29]));
             Assert.That(_context.GetX(30), Is.EqualTo(_unicornEmu.X[30]));
-
             Assert.That(_context.GetX(31), Is.EqualTo(_unicornEmu.SP), "X31");
 
             if (fpTolerances == FpTolerances.None)
@@ -403,9 +400,6 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(V128ToSimdValue(_context.GetV(30)), Is.EqualTo(_unicornEmu.Q[30]), "V30");
             Assert.That(V128ToSimdValue(_context.GetV(31)), Is.EqualTo(_unicornEmu.Q[31]), "V31");
 
-            Assert.That((int)_context.Fpcr,                 Is.EqualTo(_unicornEmu.Fpcr),                 "Fpcr");
-            Assert.That((int)_context.Fpsr & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpsr & (int)fpsrMask), "Fpsr");
-
             Assert.Multiple(() =>
             {
                 Assert.That(_context.GetPstateFlag(PState.VFlag), Is.EqualTo(_unicornEmu.OverflowFlag), "VFlag");
@@ -413,6 +407,9 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(_context.GetPstateFlag(PState.ZFlag), Is.EqualTo(_unicornEmu.ZeroFlag),     "ZFlag");
                 Assert.That(_context.GetPstateFlag(PState.NFlag), Is.EqualTo(_unicornEmu.NegativeFlag), "NFlag");
             });
+
+            Assert.That((int)_context.Fpcr,                 Is.EqualTo(_unicornEmu.Fpcr),                 "Fpcr");
+            Assert.That((int)_context.Fpsr & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpsr & (int)fpsrMask), "Fpsr");
 
             if (_usingMemory)
             {

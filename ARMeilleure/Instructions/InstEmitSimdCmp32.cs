@@ -307,7 +307,10 @@ namespace ARMeilleure.Instructions
                     Operand zf = context.AddIntrinsicInt(Intrinsic.X86Comisseq, n, m);
                     Operand nf = context.AddIntrinsicInt(Intrinsic.X86Comisslt, n, m);
 
-                    EmitSetFPSCRFlags(context, nf, zf, cf, Const(0));
+                    SetFpFlag(context, FPState.VFlag, Const(0));
+                    SetFpFlag(context, FPState.CFlag, cf);
+                    SetFpFlag(context, FPState.ZFlag, zf);
+                    SetFpFlag(context, FPState.NFlag, nf);
                 }
                 else
                 {
@@ -321,14 +324,20 @@ namespace ARMeilleure.Instructions
                     Operand zf = context.AddIntrinsicInt(Intrinsic.X86Comisdeq, n, m);
                     Operand nf = context.AddIntrinsicInt(Intrinsic.X86Comisdlt, n, m);
 
-                    EmitSetFPSCRFlags(context, nf, zf, cf, Const(0));
+                    SetFpFlag(context, FPState.VFlag, Const(0));
+                    SetFpFlag(context, FPState.CFlag, cf);
+                    SetFpFlag(context, FPState.ZFlag, zf);
+                    SetFpFlag(context, FPState.NFlag, nf);
                 }
 
                 context.Branch(lblEnd);
 
                 context.MarkLabel(lblNaN);
 
-                EmitSetFPSCRFlags(context, Const(3));
+                SetFpFlag(context, FPState.VFlag, Const(1));
+                SetFpFlag(context, FPState.CFlag, Const(1));
+                SetFpFlag(context, FPState.ZFlag, Const(0));
+                SetFpFlag(context, FPState.NFlag, Const(0));
 
                 context.MarkLabel(lblEnd);
             }
@@ -354,11 +363,11 @@ namespace ARMeilleure.Instructions
 
                 Operand nzcv = context.Call(info, ne, me, Const(signalNaNs));
 
-                EmitSetFPSCRFlags(context, nzcv);
+                EmitSetFpscrNzcv(context, nzcv);
             }
         }
 
-        private static void EmitSetFPSCRFlags(ArmEmitterContext context, Operand nzcv)
+        private static void EmitSetFpscrNzcv(ArmEmitterContext context, Operand nzcv)
         {
             Operand Extract(Operand value, int bit)
             {
@@ -376,14 +385,6 @@ namespace ARMeilleure.Instructions
             SetFpFlag(context, FPState.CFlag, Extract(nzcv, 1));
             SetFpFlag(context, FPState.ZFlag, Extract(nzcv, 2));
             SetFpFlag(context, FPState.NFlag, Extract(nzcv, 3));
-        }
-
-        private static void EmitSetFPSCRFlags(ArmEmitterContext context, Operand n, Operand z, Operand c, Operand v)
-        {
-            SetFpFlag(context, FPState.VFlag, v);
-            SetFpFlag(context, FPState.CFlag, c);
-            SetFpFlag(context, FPState.ZFlag, z);
-            SetFpFlag(context, FPState.NFlag, n);
         }
 
         private static void EmitSse2OrAvxCmpOpF32(ArmEmitterContext context, CmpCondition cond, bool zero)

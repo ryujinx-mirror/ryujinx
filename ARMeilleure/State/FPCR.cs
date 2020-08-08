@@ -5,12 +5,12 @@ namespace ARMeilleure.State
     [Flags]
     public enum FPCR : uint
     {
-        Ufe = 1 << 11,
-        Fz  = 1 << 24,
-        Dn  = 1 << 25,
-        Ahp = 1 << 26,
+        Ufe = 1u << 11,
+        Fz  = 1u << 24,
+        Dn  = 1u << 25,
+        Ahp = 1u << 26,
 
-        A32Mask = 0x07ffff00
+        A32Mask = 0x07FF9F00u
     }
 
     public static class FPCRExtensions

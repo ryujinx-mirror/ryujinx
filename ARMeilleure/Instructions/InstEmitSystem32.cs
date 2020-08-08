@@ -186,14 +186,12 @@ namespace ARMeilleure.Instructions
                 return;
             }
 
-            MethodInfo info;
-
             switch (op.Sreg)
             {
                 case 0b0000: // FPSID
                     throw new NotImplementedException("Supervisor Only");
                 case 0b0001: // FPSCR
-                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpscr)); break;
+                    EmitGetFpscr(context); return;
                 case 0b0101: // MVFR2
                     throw new NotImplementedException("MVFR2");
                 case 0b0110: // MVFR1
@@ -205,22 +203,18 @@ namespace ARMeilleure.Instructions
                 default:
                     throw new NotImplementedException($"Unknown VMRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
-
-            SetIntA32(context, op.Rt, context.Call(info));
         }
 
         public static void Vmsr(ArmEmitterContext context)
         {
             OpCode32SimdSpecial op = (OpCode32SimdSpecial)context.CurrOp;
 
-            MethodInfo info;
-
             switch (op.Sreg)
             {
                 case 0b0000: // FPSID
                     throw new NotImplementedException("Supervisor Only");
                 case 0b0001: // FPSCR
-                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpscr)); break;
+                    EmitSetFpscr(context); return;
                 case 0b0101: // MVFR2
                     throw new NotImplementedException("MVFR2");
                 case 0b0110: // MVFR1
@@ -232,8 +226,6 @@ namespace ARMeilleure.Instructions
                 default:
                     throw new NotImplementedException($"Unknown VMSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
-
-            context.Call(info, GetIntA32(context, op.Rt));
         }
 
         private static void EmitSetNzcv(ArmEmitterContext context, Operand t)
@@ -254,6 +246,48 @@ namespace ARMeilleure.Instructions
             SetFlag(context, PState.CFlag, c);
             SetFlag(context, PState.ZFlag, z);
             SetFlag(context, PState.NFlag, n);
+        }
+
+        private static void EmitGetFpscr(ArmEmitterContext context)
+        {
+            OpCode32SimdSpecial op = (OpCode32SimdSpecial)context.CurrOp;
+
+            Operand vSh = context.ShiftLeft(GetFpFlag(FPState.VFlag), Const((int)FPState.VFlag));
+            Operand cSh = context.ShiftLeft(GetFpFlag(FPState.CFlag), Const((int)FPState.CFlag));
+            Operand zSh = context.ShiftLeft(GetFpFlag(FPState.ZFlag), Const((int)FPState.ZFlag));
+            Operand nSh = context.ShiftLeft(GetFpFlag(FPState.NFlag), Const((int)FPState.NFlag));
+
+            Operand nzcvSh = context.BitwiseOr(context.BitwiseOr(nSh, zSh), context.BitwiseOr(cSh, vSh));
+
+            Operand fpscr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpscr)));
+
+            SetIntA32(context, op.Rt, context.BitwiseOr(nzcvSh, fpscr));
+        }
+
+        private static void EmitSetFpscr(ArmEmitterContext context)
+        {
+            OpCode32SimdSpecial op = (OpCode32SimdSpecial)context.CurrOp;
+
+            Operand t = GetIntA32(context, op.Rt);
+
+            Operand v = context.ShiftRightUI(t, Const((int)FPState.VFlag));
+            v = context.BitwiseAnd(v, Const(1));
+
+            Operand c = context.ShiftRightUI(t, Const((int)FPState.CFlag));
+            c = context.BitwiseAnd(c, Const(1));
+
+            Operand z = context.ShiftRightUI(t, Const((int)FPState.ZFlag));
+            z = context.BitwiseAnd(z, Const(1));
+
+            Operand n = context.ShiftRightUI(t, Const((int)FPState.NFlag));
+            n = context.BitwiseAnd(n, Const(1));
+
+            SetFpFlag(context, FPState.VFlag, v);
+            SetFpFlag(context, FPState.CFlag, c);
+            SetFpFlag(context, FPState.ZFlag, z);
+            SetFpFlag(context, FPState.NFlag, n);
+
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpscr)), t);
         }
     }
 }

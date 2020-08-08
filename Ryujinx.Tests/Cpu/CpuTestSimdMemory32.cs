@@ -44,7 +44,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xf4a00000u; // VLD1.8 {D0[0]}, [R0], R0
 
@@ -74,7 +74,7 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xf4a00c00u; // VLD1.8 {D0[0]}, [R0], R0
 
@@ -100,7 +100,7 @@ namespace Ryujinx.Tests.Cpu
                               [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xf4200000u; // VLD4.8 {D0, D1, D2, D3}, [R0], R0
 
@@ -124,7 +124,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             (V128 vec1, V128 vec2, V128 vec3, V128 vec4) = GenerateTestVectors();
 
@@ -155,7 +155,7 @@ namespace Ryujinx.Tests.Cpu
                               [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             (V128 vec1, V128 vec2, V128 vec3, V128 vec4) = GenerateTestVectors();
             
@@ -179,7 +179,7 @@ namespace Ryujinx.Tests.Cpu
                          [Values] bool single)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xec100a00u; // VST4.8 {D0, D1, D2, D3}, [R0], R0
 
@@ -226,7 +226,7 @@ namespace Ryujinx.Tests.Cpu
                          [Values] bool sub)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xed900a00u; // VLDR.32 S0, [R0, #0]
             opcode |= ((size & 3) << 8) | ((rn & 15) << 16);
@@ -261,7 +261,7 @@ namespace Ryujinx.Tests.Cpu
                 [Values] bool sub)
         {
             var data = GenerateVectorSequence(0x1000);
-            SetWorkingMemory(data);
+            SetWorkingMemory(0, data);
 
             uint opcode = 0xed800a00u; // VSTR.32 S0, [R0, #0]
             opcode |= ((size & 3) << 8) | ((rn & 15) << 16);

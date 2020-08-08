@@ -5,9 +5,11 @@ namespace ARMeilleure.State
     [Flags]
     public enum FPSR : uint
     {
-        Ufc = 1 << 3,
-        Qc  = 1 << 27,
+        Ufc = 1u << 3,
+        Qc  = 1u << 27,
 
-        A32Mask = 0xf800000f
+        Nzcv = (1u << 31) | (1u << 30) | (1u << 29) | (1u << 28),
+
+        A32Mask = 0xF800009Fu
     }
 }

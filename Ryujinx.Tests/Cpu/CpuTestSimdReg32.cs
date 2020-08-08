@@ -286,16 +286,11 @@ namespace Ryujinx.Tests.Cpu
             V128 v1 = MakeVectorE0(a);
             V128 v2 = MakeVectorE0(b);
 
-            bool v = TestContext.CurrentContext.Random.NextBool();
-            bool c = TestContext.CurrentContext.Random.NextBool();
-            bool z = TestContext.CurrentContext.Random.NextBool();
-            bool n = TestContext.CurrentContext.Random.NextBool();
-
             int fpscr = (int)(TestContext.CurrentContext.Random.NextUInt(0xf) << 28);
 
-            SingleOpcode(opcode, v1: v1, v2: v2, overflow: v, carry: c, zero: z, negative: n, fpscr: fpscr, copyFpFlags: true);
+            SingleOpcode(opcode, v1: v1, v2: v2, fpscr: fpscr);
 
-            CompareAgainstUnicorn();
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Nzcv);
         }
 
         [Test, Pairwise, Description("VMLSL.<type><size> <Vd>, <Vn>, <Vm>")]

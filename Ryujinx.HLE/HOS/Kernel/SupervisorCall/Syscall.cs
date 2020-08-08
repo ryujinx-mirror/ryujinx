@@ -9,7 +9,6 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
@@ -2131,10 +2130,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private static int GetPsr(ARMeilleure.State.ExecutionContext context)
         {
-            return (context.GetPstateFlag(ARMeilleure.State.PState.NFlag) ? (1 << 31) : 0) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.ZFlag) ? (1 << 30) : 0) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.CFlag) ? (1 << 29) : 0) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.VFlag) ? (1 << 28) : 0);
+            return (context.GetPstateFlag(ARMeilleure.State.PState.NFlag) ? (1 << (int)ARMeilleure.State.PState.NFlag) : 0) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.ZFlag) ? (1 << (int)ARMeilleure.State.PState.ZFlag) : 0) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.CFlag) ? (1 << (int)ARMeilleure.State.PState.CFlag) : 0) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.VFlag) ? (1 << (int)ARMeilleure.State.PState.VFlag) : 0);
         }
 
         // Thread synchronization

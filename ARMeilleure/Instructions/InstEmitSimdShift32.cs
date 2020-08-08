@@ -289,7 +289,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIfFalse(lblNoSat, context.BitwiseOr(gt, lt));
 
-            // TODO: Set QC (to 1) on FPSCR here.
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
 
             context.MarkLabel(lblNoSat);
 

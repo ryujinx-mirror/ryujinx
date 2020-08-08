@@ -87,14 +87,8 @@ namespace ARMeilleure.Instructions
         {
             var context = GetContext();
 
-            uint result = (uint)(context.Fpsr & FPSR.A32Mask) | (uint)(context.Fpcr & FPCR.A32Mask);
-
-            result |= context.GetFPstateFlag(FPState.NFlag) ? (1u << 31) : 0;
-            result |= context.GetFPstateFlag(FPState.ZFlag) ? (1u << 30) : 0;
-            result |= context.GetFPstateFlag(FPState.CFlag) ? (1u << 29) : 0;
-            result |= context.GetFPstateFlag(FPState.VFlag) ? (1u << 28) : 0;
-
-            return result;
+            return (uint)(context.Fpsr & FPSR.A32Mask & ~FPSR.Nzcv) |
+                   (uint)(context.Fpcr & FPCR.A32Mask);
         }
 
         public static ulong GetTpidrEl0()
@@ -142,17 +136,17 @@ namespace ARMeilleure.Instructions
             GetContext().Fpsr = (FPSR)value;
         }
 
-        public static void SetFpscr(uint value)
+        public static void SetFpsrQc()
+        {
+            GetContext().Fpsr |= FPSR.Qc;
+        }
+
+        public static void SetFpscr(uint fpscr)
         {
             var context = GetContext();
 
-            context.SetFPstateFlag(FPState.NFlag, (value & (1u << 31)) != 0);
-            context.SetFPstateFlag(FPState.ZFlag, (value & (1u << 30)) != 0);
-            context.SetFPstateFlag(FPState.CFlag, (value & (1u << 29)) != 0);
-            context.SetFPstateFlag(FPState.VFlag, (value & (1u << 28)) != 0);
-
-            context.Fpsr = FPSR.A32Mask & (FPSR)value;
-            context.Fpcr = FPCR.A32Mask & (FPCR)value;
+            context.Fpsr = FPSR.A32Mask & (FPSR)fpscr;
+            context.Fpcr = FPCR.A32Mask & (FPCR)fpscr;
         }
 
         public static void SetTpidrEl0(ulong value)
