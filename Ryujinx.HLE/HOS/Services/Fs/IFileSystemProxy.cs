@@ -321,6 +321,26 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
+        [Command(62)]
+        public ResultCode OpenSaveDataInfoReaderOnlyCacheStorage(ServiceCtx context)
+        {
+            SaveDataFilter filter = new SaveDataFilter();
+            filter.SetSaveDataType(SaveDataType.Cache);
+            filter.SetProgramId(new TitleId(context.Process.TitleId));
+
+            // FS would query the User and SdCache space IDs to find where the existing cache is (if any). 
+            // We always have the SD card inserted, so we can always use SdCache for now.
+            Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderBySaveDataSpaceId(
+                    out LibHac.FsService.ISaveDataInfoReader infoReader, SaveDataSpaceId.SdCache);
+
+            if (result.IsSuccess())
+            {
+                MakeObject(context, new ISaveDataInfoReader(infoReader));
+            }
+
+            return (ResultCode)result.Value;
+        }
+
         [Command(67)]
         public ResultCode FindSaveDataWithFilter(ServiceCtx context)
         {
@@ -390,7 +410,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                 Logger.Info?.Print(LogClass.Loader, $"Opened AddOnContent Data TitleID={titleId:X16}");
 
                 MakeObject(context, new FileSystemProxy.IStorage(aocStorage));
-                
+
                 return ResultCode.Success;
             }
 
