@@ -1476,15 +1476,19 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkBox" id="AudioBackendBox">
+                              <object class="GtkBox" id="_audioBackendBox">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="tooltip_text" translatable="yes">Change System Region</property>
                                     <property name="halign">end</property>
+                                    <property name="margin_right">5</property>
                                     <property name="label" translatable="yes">Audio Backend: </property>
                                   </object>
                                   <packing>
@@ -1492,23 +1496,6 @@
                                     <property name="fill">True</property>
                                     <property name="padding">5</property>
                                     <property name="position">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkComboBoxText" id="_audioBackendSelect">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="tooltip_text" translatable="yes">Change Audio Backend</property>
-                                    <property name="margin_left">5</property>
-                                    <property name="active_id">Dummy</property>
-                                    <items>
-                                      <item id="Dummy" translatable="yes">Dummy</item>
-                                    </items>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">3</property>
                                   </packing>
                                 </child>
                               </object>

@@ -19,11 +19,12 @@ namespace Ryujinx.Ui
 {
     public class SettingsWindow : Window
     {
-        private static ListStore         _gameDirsBoxStore;
-        private static VirtualFileSystem _virtualFileSystem;
+        private readonly VirtualFileSystem      _virtualFileSystem;
+        private readonly ListStore              _gameDirsBoxStore;
+        private readonly ListStore              _audioBackendStore;
+        private readonly TimeZoneContentManager _timeZoneContentManager;
+        private readonly HashSet<string>        _validTzRegions;
 
-        private TimeZoneContentManager _timeZoneContentManager;
-        private HashSet<string> _validTzRegions;
         private long _systemTimeOffset;
 
 #pragma warning disable CS0649, IDE0044
@@ -49,7 +50,8 @@ namespace Ryujinx.Ui
         [GUI] ComboBoxText    _systemRegionSelect;
         [GUI] Entry           _systemTimeZoneEntry;
         [GUI] EntryCompletion _systemTimeZoneCompletion;
-        [GUI] ComboBoxText    _audioBackendSelect;
+        [GUI] Box             _audioBackendBox;
+        [GUI] ComboBox        _audioBackendSelect;
         [GUI] SpinButton      _systemTimeYearSpin;
         [GUI] SpinButton      _systemTimeMonthSpin;
         [GUI] SpinButton      _systemTimeDaySpin;
@@ -203,30 +205,6 @@ namespace Ryujinx.Ui
                 _custThemeToggle.Click();
             }
 
-            Task.Run(() =>
-            {
-                if (SoundIoAudioOut.IsSupported)
-                {
-                    Application.Invoke(delegate
-                    {
-                        _audioBackendSelect.Append(AudioBackend.SoundIo.ToString(), "SoundIO");
-                    });
-                }
-
-                if (OpenALAudioOut.IsSupported)
-                {
-                    Application.Invoke(delegate
-                    {
-                        _audioBackendSelect.Append(AudioBackend.OpenAl.ToString(), "OpenAL");
-                    });
-                } 
-
-                Application.Invoke(delegate
-                {
-                    _audioBackendSelect.SetActiveId(ConfigurationState.Instance.System.AudioBackend.Value.ToString());
-                });
-            });
-
             // Custom EntryCompletion Columns. If added to glade, need to override more signals
             ListStore tzList = new ListStore(typeof(string), typeof(string), typeof(string));
             _systemTimeZoneCompletion.Model = tzList;
@@ -290,6 +268,55 @@ namespace Ryujinx.Ui
 
             //Setup system time spinners
             UpdateSystemTimeSpinners();
+
+            _audioBackendStore = new ListStore(typeof(string), typeof(AudioBackend));
+
+            TreeIter openAlIter  = _audioBackendStore.AppendValues("OpenAL", AudioBackend.OpenAl);
+            TreeIter soundIoIter = _audioBackendStore.AppendValues("SoundIO", AudioBackend.SoundIo);
+            TreeIter dummyIter   = _audioBackendStore.AppendValues("Dummy", AudioBackend.Dummy);
+
+            _audioBackendSelect = ComboBox.NewWithModelAndEntry(_audioBackendStore);
+            _audioBackendSelect.EntryTextColumn = 0;
+            _audioBackendSelect.Entry.IsEditable = false;
+
+            switch (ConfigurationState.Instance.System.AudioBackend.Value)
+            {
+                case AudioBackend.OpenAl:
+                    _audioBackendSelect.SetActiveIter(openAlIter);
+                    break;
+                case AudioBackend.SoundIo:
+                    _audioBackendSelect.SetActiveIter(soundIoIter);
+                    break;
+                case AudioBackend.Dummy:
+                    _audioBackendSelect.SetActiveIter(dummyIter);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            _audioBackendBox.Add(_audioBackendSelect);
+            _audioBackendSelect.Show();
+
+            bool openAlIsSupported  = false;
+            bool soundIoIsSupported = false;
+
+            Task.Run(() =>
+            {
+                openAlIsSupported  = OpenALAudioOut.IsSupported;
+                soundIoIsSupported = SoundIoAudioOut.IsSupported;
+            });
+
+            // This function runs whenever the dropdown is opened
+            _audioBackendSelect.SetCellDataFunc(_audioBackendSelect.Cells[0], (layout, cell, model, iter) =>
+            {
+                cell.Sensitive = ((AudioBackend)_audioBackendStore.GetValue(iter, 1)) switch
+                {
+                    AudioBackend.OpenAl  => openAlIsSupported,
+                    AudioBackend.SoundIo => soundIoIsSupported,
+                    AudioBackend.Dummy   => true,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            });
         }
 
         private void UpdateSystemTimeSpinners()
@@ -486,8 +513,7 @@ namespace Ryujinx.Ui
                 _gameDirsBoxStore.IterNext(ref treeIter);
             }
 
-            float resScaleCustom;
-            if (!float.TryParse(_resScaleText.Buffer.Text, out resScaleCustom) || resScaleCustom <= 0.0f)
+            if (!float.TryParse(_resScaleText.Buffer.Text, out float resScaleCustom) || resScaleCustom <= 0.0f)
             {
                 resScaleCustom = 1.0f;
             }
@@ -517,7 +543,6 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
             ConfigurationState.Instance.System.Language.Value                  = Enum.Parse<Language>(_systemLanguageSelect.ActiveId);
             ConfigurationState.Instance.System.Region.Value                    = Enum.Parse<Configuration.System.Region>(_systemRegionSelect.ActiveId);
-            ConfigurationState.Instance.System.AudioBackend.Value              = Enum.Parse<AudioBackend>(_audioBackendSelect.ActiveId);
             ConfigurationState.Instance.System.SystemTimeOffset.Value          = _systemTimeOffset;
             ConfigurationState.Instance.Ui.CustomThemePath.Value               = _custThemePath.Buffer.Text;
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value         = _graphicsShadersDumpPath.Buffer.Text;
@@ -526,6 +551,11 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId);
             ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
             ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
+
+            if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
+            {
+                ConfigurationState.Instance.System.AudioBackend.Value = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
+            }
 
             MainWindow.SaveConfig();
             MainWindow.UpdateGraphicsConfig();
