@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Common;
+﻿using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Bluetooth.BluetoothDriver;
 using Ryujinx.HLE.HOS.Services.Settings;
@@ -20,6 +21,8 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
         public ResultCode InitializeBluetoothLe(ServiceCtx context)
         {
             NxSettings.Settings.TryGetValue("bluetooth_debug!skip_boot", out object debugMode);
+
+            int initializeEventHandle;
 
             if ((bool)debugMode)
             {
@@ -52,6 +55,8 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                         throw new InvalidOperationException("Out of handles!");
                     }
                 }
+
+                initializeEventHandle = BluetoothEventManager.InitializeBleDebugEventHandle;
             }
             else
             {
@@ -86,7 +91,11 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                         throw new InvalidOperationException("Out of handles!");
                     }
                 }
+
+                initializeEventHandle = BluetoothEventManager.InitializeBleEventHandle;
             }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(initializeEventHandle);
 
             return ResultCode.Success;
         }
