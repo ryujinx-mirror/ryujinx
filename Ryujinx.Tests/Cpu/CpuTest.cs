@@ -205,7 +205,9 @@ namespace Ryujinx.Tests.Cpu
         {
             if (Ignore_FpcrFz_FpcrDn)
             {
+#pragma warning disable CS0162
                 fpcr &= ~((1 << (int)Fpcr.Fz) | (1 << (int)Fpcr.Dn));
+#pragma warning restore CS0162
             }
 
             Opcode(opcode);
@@ -319,7 +321,9 @@ namespace Ryujinx.Tests.Cpu
 
             if (IgnoreAllExcept_FpsrQc)
             {
+#pragma warning disable CS0162
                 fpsrMask &= Fpsr.Qc;
+#pragma warning restore CS0162
             }
 
             if (fpSkips != FpSkips.None)

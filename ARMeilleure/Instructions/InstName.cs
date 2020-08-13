@@ -563,6 +563,8 @@ namespace ARMeilleure.Instructions
         Vdup,
         Veor,
         Vext,
+        Vfma,
+        Vfms,
         Vld1,
         Vld2,
         Vld3,

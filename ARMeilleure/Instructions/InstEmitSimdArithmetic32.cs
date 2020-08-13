@@ -231,6 +231,38 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vfma_S(ArmEmitterContext context) // Fused.
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                // TODO: Use FMA instruction set.
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Addss, Intrinsic.X86Addsd);
+            }
+            else
+            {
+                EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), op1, op2, op3);
+                });
+            }
+        }
+
+        public static void Vfms_S(ArmEmitterContext context) // Fused.
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                // TODO: Use FMA instruction set.
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Subss, Intrinsic.X86Subsd);
+            }
+            else
+            {
+                EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulSub), op1, op2, op3);
+                });
+            }
+        }
+
         public static void Vmov_S(ArmEmitterContext context)
         {
             if (Optimizations.FastFP && Optimizations.UseSse2)
@@ -586,7 +618,8 @@ namespace ARMeilleure.Instructions
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), op1, op2, op3);
+                    Operand res = EmitSoftFloatCall(context, nameof(SoftFloat32.FPMul), op2, op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd), op1, res);
                 });
             }
         }
@@ -657,7 +690,8 @@ namespace ARMeilleure.Instructions
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulSub), op1, op2, op3);
+                    Operand res = EmitSoftFloatCall(context, nameof(SoftFloat32.FPMul), op2, op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPSub), op1, res);
                 });
             }
         }

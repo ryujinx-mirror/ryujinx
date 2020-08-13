@@ -470,6 +470,11 @@ namespace Ryujinx.Tests.Cpu
 
         protected static V128 MakeVectorE0E1(ulong e0, ulong e1) => new V128(e0, e1);
 
+        protected static V128 MakeVectorE0E1E2E3(uint e0, uint e1, uint e2, uint e3)
+        {
+            return new V128(e0, e1, e2, e3);
+        }
+
         protected static ulong GetVectorE0(V128 vector) => vector.Extract<ulong>(0);
         protected static ulong GetVectorE1(V128 vector) => vector.Extract<ulong>(1);
 

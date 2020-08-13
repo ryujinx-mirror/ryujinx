@@ -139,6 +139,7 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        // VCVT (floating-point to integer, floating-point) | VCVT (integer to floating-point, floating-point).
         public static void Vcvt_FI(ArmEmitterContext context)
         {
             OpCode32SimdCvtFI op = (OpCode32SimdCvtFI)context.CurrOp;
@@ -236,13 +237,14 @@ namespace ARMeilleure.Instructions
             return roundMode;
         }
 
-        public static void Vcvt_R(ArmEmitterContext context)
+        // VCVTA/M/N/P (floating-point).
+        public static void Vcvt_RM(ArmEmitterContext context)
         {
-            OpCode32SimdCvtFI op = (OpCode32SimdCvtFI)context.CurrOp;
+            OpCode32SimdCvtFI op = (OpCode32SimdCvtFI)context.CurrOp; // toInteger == true (opCode<18> == 1 => Opc2<2> == 1).
 
             OperandType floatSize = op.RegisterSize == RegisterSize.Int64 ? OperandType.FP64 : OperandType.FP32;
 
-            bool unsigned = (op.Opc & 1) == 0;
+            bool unsigned = op.Opc == 0;
             int rm = op.Opc2 & 3;
 
             if (Optimizations.UseSse41 && rm != 0b00)
@@ -277,9 +279,10 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        // VRINTA/M/N/P (floating-point).
         public static void Vrint_RM(ArmEmitterContext context)
         {
-            OpCode32SimdCvtFI op = (OpCode32SimdCvtFI)context.CurrOp;
+            OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;
 
             OperandType floatSize = op.RegisterSize == RegisterSize.Int64 ? OperandType.FP64 : OperandType.FP32;
 
@@ -320,9 +323,10 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        // VRINTZ (floating-point).
         public static void Vrint_Z(ArmEmitterContext context)
         {
-            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+            OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;
 
             if (Optimizations.UseSse2)
             {
@@ -355,7 +359,7 @@ namespace ARMeilleure.Instructions
         private static void EmitSse41ConvertInt32(ArmEmitterContext context, FPRoundingMode roundMode, bool signed)
         {
             // A port of the similar round function in InstEmitSimdCvt.
-            OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;
+            OpCode32SimdCvtFI op = (OpCode32SimdCvtFI)context.CurrOp;
 
             bool doubleSize = (op.Size & 1) != 0;
             int shift = doubleSize ? 1 : 2;

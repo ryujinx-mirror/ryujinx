@@ -2,12 +2,20 @@
 {
     class OpCode32SimdCvtFI : OpCode32SimdS
     {
-        public int Opc2 { get; private set; }
-
         public OpCode32SimdCvtFI(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Opc2 = (opCode >> 16) & 0x7;
             Opc = (opCode >> 7) & 0x1;
+
+            bool toInteger = (Opc2 & 0b100) != 0;
+
+            if (toInteger)
+            {
+                Vd = ((opCode >> 22) & 0x1) | ((opCode >> 11) & 0x1e);
+            }
+            else
+            {
+                Vm = ((opCode >> 5) & 0x1) | ((opCode << 1) & 0x1e);
+            }
         }
     }
 }

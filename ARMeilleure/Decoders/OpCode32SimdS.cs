@@ -2,14 +2,17 @@
 {
     class OpCode32SimdS : OpCode32, IOpCode32Simd
     {
-        public int Vd { get; private set; }
-        public int Vm { get; private set; }
-        public int Opc { get; protected set; }
+        public int Vd { get; protected set; }
+        public int Vm { get; protected set; }
+        public int Opc { get; protected set; } // "with_zero" (Opc<1>) [Vcmp, Vcmpe].
+        public int Opc2 { get; private set; } // opc2 or RM (opc2<1:0>) [Vcvt, Vrint].
         public int Size { get; protected set; }
 
         public OpCode32SimdS(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Opc = (opCode >> 15) & 0x3;
+            Opc2 = (opCode >> 16) & 0x7;
+
             Size = (opCode >> 8) & 0x3;
 
             bool single = Size != 3;

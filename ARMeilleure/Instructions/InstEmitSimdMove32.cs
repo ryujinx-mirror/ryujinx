@@ -559,7 +559,7 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void EmitVectorShuffleOpSimd32(ArmEmitterContext context, Func<Operand, Operand, (Operand, Operand)> shuffleFunc)
+        private static void EmitVectorShuffleOpSimd32(ArmEmitterContext context, Func<Operand, Operand, (Operand, Operand)> shuffleFunc)
         {
             OpCode32Simd op = (OpCode32Simd)context.CurrOp;
 
