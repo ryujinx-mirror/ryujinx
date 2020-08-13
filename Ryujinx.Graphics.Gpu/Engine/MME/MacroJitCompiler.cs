@@ -358,11 +358,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
                     _ilGen.Emit(OpCodes.Conv_U8);
                     EmitLoadGprB(opCode);
                     _ilGen.Emit(OpCodes.Conv_U8);
+                    _ilGen.Emit(OpCodes.Ldc_I4_1);
                     _ilGen.Emit(OpCodes.Ldloc_S, _carry);
-                    _ilGen.Emit(OpCodes.Conv_U8);
-                    _ilGen.Emit(OpCodes.Neg);
                     _ilGen.Emit(OpCodes.Sub);
-                    _ilGen.Emit(OpCodes.Add);
+                    _ilGen.Emit(OpCodes.Conv_U8);
+                    _ilGen.Emit(OpCodes.Sub);
+                    _ilGen.Emit(OpCodes.Sub);
                     _ilGen.Emit(OpCodes.Dup);
                     _ilGen.Emit(OpCodes.Ldc_I8, 0x100000000L);
                     _ilGen.Emit(OpCodes.Clt_Un);
