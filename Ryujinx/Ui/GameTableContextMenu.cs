@@ -14,6 +14,7 @@ using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -664,30 +665,39 @@ namespace Ryujinx.Ui
         
         private void PurgePtcCache_Clicked(object sender, EventArgs args)
         {
-            string titleId       = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
-            string cacheFileName = _gameTableStore.GetValue(_rowIter, 4) + ".cache";
+            string[] tableEntry = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n");
+            string titleId = tableEntry[1].ToLower();
             
-            string mainPath   = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "0", cacheFileName);
-            string backupPath = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "1", cacheFileName);
+            DirectoryInfo mainDir   = new DirectoryInfo(System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "0"));
+            DirectoryInfo backupDir = new DirectoryInfo(System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "1"));
             
             MessageDialog warningDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null)
             {
                 Title          = "Ryujinx - Warning",
-                Text           = "You are about to delete the PPTC cache. Are you sure you want to proceed?",
+                Text           = $"You are about to delete the PPTC cache for '{tableEntry[0]}'. Are you sure you want to proceed?",
                 WindowPosition = WindowPosition.Center
             };
-            
-            if (warningDialog.Run() == (int)ResponseType.Yes)
+
+            List<FileInfo> cacheFiles = new List<FileInfo>();
+
+            if (mainDir.Exists)   { cacheFiles.AddRange(mainDir.EnumerateFiles("*.cache")); }
+            if (backupDir.Exists) { cacheFiles.AddRange(backupDir.EnumerateFiles("*.cache")); }
+
+            if (cacheFiles.Count > 0 && warningDialog.Run() == (int)ResponseType.Yes)
             {
-                if (File.Exists(mainPath))
+                foreach (FileInfo file in cacheFiles)
                 {
-                    File.Delete(mainPath);
-                }
-                if (File.Exists(backupPath))
-                {
-                    File.Delete(backupPath);
+                    try 
+                    { 
+                        file.Delete(); 
+                    }
+                    catch(Exception e)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Error purging PPTC cache {file.Name}: {e}");
+                    }
                 }
             }
+
             warningDialog.Dispose();
         }
     }
