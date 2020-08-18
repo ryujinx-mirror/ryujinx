@@ -65,14 +65,20 @@ namespace Ryujinx.Audio
             _trackPool   = new SoundIoAudioTrackPool(_audioContext, _audioDevice, MaximumTracks);
         }
 
+        public bool SupportsChannelCount(int channels)
+        {
+            return _audioDevice.SupportsChannelCount(channels);
+        }
+
         /// <summary>
         /// Creates a new audio track with the specified parameters
         /// </summary>
         /// <param name="sampleRate">The requested sample rate</param>
-        /// <param name="channels">The requested channels</param>
+        /// <param name="hardwareChannels">The requested hardware channels</param>
+        /// <param name="virtualChannels">The requested virtual channels</param>
         /// <param name="callback">A <see cref="ReleaseCallback" /> that represents the delegate to invoke when a buffer has been released by the audio track</param>
         /// <returns>The created track's Track ID</returns>
-        public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
+        public int OpenHardwareTrack(int sampleRate, int hardwareChannels, int virtualChannels, ReleaseCallback callback)
         {
             if (!_trackPool.TryGet(out SoundIoAudioTrack track))
             {
@@ -80,7 +86,7 @@ namespace Ryujinx.Audio
             }
 
             // Open the output. We currently only support 16-bit signed LE
-            track.Open(sampleRate, channels, callback, SoundIOFormat.S16LE);
+            track.Open(sampleRate, hardwareChannels, virtualChannels, callback, SoundIOFormat.S16LE);
 
             return track.TrackID;
         }

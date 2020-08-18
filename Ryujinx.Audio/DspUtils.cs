@@ -1,4 +1,4 @@
-namespace Ryujinx.Audio.Adpcm
+namespace Ryujinx.Audio
 {
     public static class DspUtils
     {

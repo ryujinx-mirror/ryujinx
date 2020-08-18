@@ -104,15 +104,24 @@ namespace Ryujinx.Audio
             _context.Dispose();
         }
 
+        public bool SupportsChannelCount(int channels)
+        {
+            // NOTE: OpenAL doesn't give us a way to know if the 5.1 setup is supported by hardware or actually emulated.
+            // TODO: find a way to determine hardware support.
+            return channels == 1 || channels == 2;
+        }
+
         /// <summary>
         /// Creates a new audio track with the specified parameters
         /// </summary>
         /// <param name="sampleRate">The requested sample rate</param>
-        /// <param name="channels">The requested channels</param>
+        /// <param name="hardwareChannels">The requested hardware channels</param>
+        /// <param name="virtualChannels">The requested virtual channels</param>
         /// <param name="callback">A <see cref="ReleaseCallback" /> that represents the delegate to invoke when a buffer has been released by the audio track</param>
-        public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
+        /// <returns>The created track's Track ID</returns>
+        public int OpenHardwareTrack(int sampleRate, int hardwareChannels, int virtualChannels, ReleaseCallback callback)
         {
-            OpenALAudioTrack track = new OpenALAudioTrack(sampleRate, GetALFormat(channels), callback);
+            OpenALAudioTrack track = new OpenALAudioTrack(sampleRate, GetALFormat(hardwareChannels), hardwareChannels, virtualChannels, callback);
 
             for (int id = 0; id < MaxTracks; id++)
             {
@@ -204,9 +213,37 @@ namespace Ryujinx.Audio
                 {
                     int bufferId = track.AppendBuffer(bufferTag);
 
-                    int size = buffer.Length * Marshal.SizeOf<T>();
+                    // Do we need to downmix?
+                    if (track.HardwareChannels != track.VirtualChannels)
+                    {
+                        short[] downmixedBuffer;
 
-                    AL.BufferData(bufferId, track.Format, buffer, size, track.SampleRate);
+                        ReadOnlySpan<short> bufferPCM16 = MemoryMarshal.Cast<T, short>(buffer);
+
+                        if (track.VirtualChannels == 6)
+                        {
+                            downmixedBuffer = Downmixing.DownMixSurroundToStereo(bufferPCM16);
+
+                            if (track.HardwareChannels == 1)
+                            {
+                                downmixedBuffer = Downmixing.DownMixStereoToMono(downmixedBuffer);
+                            }
+                        }
+                        else if (track.VirtualChannels == 2)
+                        {
+                            downmixedBuffer = Downmixing.DownMixStereoToMono(bufferPCM16);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException($"Downmixing from {track.VirtualChannels} to {track.HardwareChannels} not implemented!");
+                        }
+
+                        AL.BufferData(bufferId, track.Format, downmixedBuffer, downmixedBuffer.Length * sizeof(ushort), track.SampleRate);
+                    }
+                    else
+                    {
+                        AL.BufferData(bufferId, track.Format, buffer, buffer.Length * sizeof(ushort), track.SampleRate);
+                    }
 
                     AL.SourceQueueBuffer(track.SourceId, bufferId);
 

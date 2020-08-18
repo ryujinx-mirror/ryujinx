@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Audio.SoundIo
 {
@@ -53,6 +54,9 @@ namespace Ryujinx.Audio.SoundIo
         /// </summary>
         public ConcurrentQueue<long> ReleasedBuffers { get; private set; }
 
+        private int _hardwareChannels;
+        private int _virtualChannels;
+
         /// <summary>
         /// Constructs a new instance of a <see cref="SoundIoAudioTrack"/>
         /// </summary>
@@ -75,12 +79,14 @@ namespace Ryujinx.Audio.SoundIo
         /// Opens the audio track with the specified parameters
         /// </summary>
         /// <param name="sampleRate">The requested sample rate of the track</param>
-        /// <param name="channelCount">The requested channel count of the track</param>
+        /// <param name="hardwareChannels">The requested hardware channels</param>
+        /// <param name="virtualChannels">The requested virtual channels</param>
         /// <param name="callback">A <see cref="ReleaseCallback" /> that represents the delegate to invoke when a buffer has been released by the audio track</param>
         /// <param name="format">The requested sample format of the track</param>
         public void Open(
             int sampleRate,
-            int channelCount,
+            int hardwareChannels,
+            int virtualChannels,
             ReleaseCallback callback,
             SoundIOFormat format = SoundIOFormat.S16LE)
         {
@@ -100,10 +106,18 @@ namespace Ryujinx.Audio.SoundIo
                 throw new InvalidOperationException($"This sound device does not support SoundIOFormat.{Enum.GetName(typeof(SoundIOFormat), format)}");
             }
 
+            if (!AudioDevice.SupportsChannelCount(hardwareChannels))
+            {
+                throw new InvalidOperationException($"This sound device does not support channel count {hardwareChannels}");
+            }
+
+            _hardwareChannels = hardwareChannels;
+            _virtualChannels = virtualChannels;
+
             AudioStream = AudioDevice.CreateOutStream();
 
             AudioStream.Name       = $"SwitchAudioTrack_{TrackID}";
-            AudioStream.Layout     = SoundIOChannelLayout.GetDefault(channelCount);
+            AudioStream.Layout     = SoundIOChannelLayout.GetDefault(hardwareChannels);
             AudioStream.Format     = format;
             AudioStream.SampleRate = sampleRate;
 
@@ -490,24 +504,62 @@ namespace Ryujinx.Audio.SoundIo
         /// <typeparam name="T">The audio sample type</typeparam>
         /// <param name="bufferTag">The unqiue tag of the buffer being appended</param>
         /// <param name="buffer">The buffer to append</param>
-        public void AppendBuffer<T>(long bufferTag, T[] buffer)
+        public void AppendBuffer<T>(long bufferTag, T[] buffer) where T: struct
         {
             if (AudioStream == null)
             {
                 return;
             }
 
-            // Calculate the size of the audio samples
-            int size = Unsafe.SizeOf<T>();
+            int sampleSize = Unsafe.SizeOf<T>();
+            int targetSize = sampleSize * buffer.Length;
 
-            // Calculate the amount of bytes to copy from the buffer
-            int bytesToCopy = size * buffer.Length;
+            // Do we need to downmix?
+            if (_hardwareChannels != _virtualChannels)
+            {
+                if (sampleSize != sizeof(short))
+                {
+                    throw new NotImplementedException("Downmixing formats other than PCM16 is not supported!");
+                }
 
-            // Copy the memory to our ring buffer
-            m_Buffer.Write(buffer, 0, bytesToCopy);
+                short[] downmixedBuffer;
 
-            // Keep track of "buffered" buffers
-            m_ReservedBuffers.Enqueue(new SoundIoBuffer(bufferTag, bytesToCopy));
+                ReadOnlySpan<short> bufferPCM16 = MemoryMarshal.Cast<T, short>(buffer);
+
+                if (_virtualChannels == 6)
+                {
+                    downmixedBuffer = Downmixing.DownMixSurroundToStereo(bufferPCM16);
+
+                    if (_hardwareChannels == 1)
+                    {
+                        downmixedBuffer = Downmixing.DownMixStereoToMono(downmixedBuffer);
+                    }
+                }
+                else if (_virtualChannels == 2)
+                {
+                    downmixedBuffer = Downmixing.DownMixStereoToMono(bufferPCM16);
+                }
+                else
+                {
+                    throw new NotImplementedException($"Downmixing from {_virtualChannels} to {_hardwareChannels} not implemented!");
+                }
+
+                targetSize = sampleSize * downmixedBuffer.Length;
+
+                // Copy the memory to our ring buffer
+                m_Buffer.Write(downmixedBuffer, 0, targetSize);
+
+                // Keep track of "buffered" buffers
+                m_ReservedBuffers.Enqueue(new SoundIoBuffer(bufferTag, targetSize));
+            }
+            else
+            {
+                // Copy the memory to our ring buffer
+                m_Buffer.Write(buffer, 0, targetSize);
+
+                // Keep track of "buffered" buffers
+                m_ReservedBuffers.Enqueue(new SoundIoBuffer(bufferTag, targetSize));
+            }
         }
 
         /// <summary>

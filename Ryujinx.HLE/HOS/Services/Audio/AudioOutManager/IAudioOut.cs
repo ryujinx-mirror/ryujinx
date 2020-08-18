@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
 {
@@ -106,9 +107,10 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
                 context.Memory,
                 position);
 
-            byte[] buffer = new byte[data.SampleBufferSize];
+            // NOTE: Assume PCM16 all the time, change if new format are found.
+            short[] buffer = new short[data.SampleBufferSize / sizeof(short)];
 
-            context.Memory.Read((ulong)data.SampleBufferPtr, buffer);
+            context.Memory.Read((ulong)data.SampleBufferPtr, MemoryMarshal.Cast<short, byte>(buffer));
 
             _audioOut.AppendBuffer(_track, tag, buffer);
 

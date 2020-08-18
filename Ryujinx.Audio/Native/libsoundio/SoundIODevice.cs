@@ -197,6 +197,11 @@ namespace SoundIOSharp
 			return Natives.soundio_device_supports_sample_rate (handle, sampleRate);
 		}
 
+		public bool SupportsChannelCount(int channelCount)
+		{
+			return Natives.soundio_device_supports_layout(handle, SoundIOChannelLayout.GetDefault(channelCount).Handle);
+		}
+
 		public int GetNearestSampleRate (int sampleRate)
 		{
 			return Natives.soundio_device_nearest_sample_rate (handle, sampleRate);

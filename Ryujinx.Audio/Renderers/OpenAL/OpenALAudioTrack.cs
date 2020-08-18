@@ -12,6 +12,9 @@ namespace Ryujinx.Audio
         public ALFormat      Format     { get; private set; }
         public PlaybackState State      { get; set; }
 
+        public int HardwareChannels { get; }
+        public int VirtualChannels { get; }
+
         private ReleaseCallback _callback;
 
         private ConcurrentDictionary<long, int> _buffers;
@@ -21,12 +24,15 @@ namespace Ryujinx.Audio
 
         private bool _disposed;
 
-        public OpenALAudioTrack(int sampleRate, ALFormat format, ReleaseCallback callback)
+        public OpenALAudioTrack(int sampleRate, ALFormat format, int hardwareChannels, int virtualChannels, ReleaseCallback callback)
         {
             SampleRate = sampleRate;
             Format     = format;
             State      = PlaybackState.Stopped;
             SourceId   = AL.GenSource();
+
+            HardwareChannels = hardwareChannels;
+            VirtualChannels = virtualChannels;
 
             _callback = callback;
 

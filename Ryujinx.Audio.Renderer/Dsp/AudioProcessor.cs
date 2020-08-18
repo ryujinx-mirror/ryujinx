@@ -54,6 +54,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
         private long _playbackEnds;
         private ManualResetEvent _event;
 
+        public AudioProcessor()
+        {
+            _event = new ManualResetEvent(false);
+        }
+
         public void SetOutputDevices(HardwareDevice[] outputDevices)
         {
             _outputDevices = outputDevices;
@@ -63,7 +68,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
         {
             _mailbox = new Mailbox<MailboxMessage>();
             _sessionCommandList = new RendererSession[RendererConstants.AudioRendererSessionCountMax];
-            _event = new ManualResetEvent(false);
+            _event.Reset();
             _lastTime = PerformanceCounter.ElapsedNanoseconds;
 
             StartThread();
