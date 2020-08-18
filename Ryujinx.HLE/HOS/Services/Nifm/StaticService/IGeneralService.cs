@@ -3,12 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Nifm.StaticService.GeneralService;
 using Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types;
 using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 {

@@ -12,10 +12,12 @@ namespace Ryujinx.HLE.HOS.Services.Account
         NullInputBuffer                      = (30  << ErrorCodeShift) | ModuleId,
         InvalidInputBufferSize               = (31  << ErrorCodeShift) | ModuleId,
         InvalidInputBuffer                   = (32  << ErrorCodeShift) | ModuleId,
-        ApplicationLaunchPropertyAlreadyInit = (41  << ErrorCodeShift) | ModuleId,
+        AsyncExecutionNotInitialized         = (40  << ErrorCodeShift) | ModuleId,
+        Unknown41                            = (41  << ErrorCodeShift) | ModuleId,
         InternetRequestDenied                = (59  << ErrorCodeShift) | ModuleId,
         UserNotFound                         = (100 << ErrorCodeShift) | ModuleId,
         NullObject                           = (302 << ErrorCodeShift) | ModuleId,
-        UnknownError1                        = (341 << ErrorCodeShift) | ModuleId
+        Unknown341                           = (341 << ErrorCodeShift) | ModuleId,
+        InvalidIdTokenCacheBufferSize        = (451 << ErrorCodeShift) | ModuleId
     }
 }

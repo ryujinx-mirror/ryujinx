@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         {
             if (_applicationLaunchProperty != null)
             {
-                return ResultCode.ApplicationLaunchPropertyAlreadyInit;
+                return ResultCode.Unknown41;
             }
 
             // The u64 argument seems to be unused by account.
@@ -282,7 +282,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             /*
             if (_applicationLaunchProperty != null)
             {
-                return ResultCode.ApplicationLaunchPropertyAlreadyInit;
+                return ResultCode.Unknown41;
             }
             */
 
