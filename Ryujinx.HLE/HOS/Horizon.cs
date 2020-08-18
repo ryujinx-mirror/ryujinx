@@ -2,6 +2,10 @@ using LibHac;
 using LibHac.Bcat;
 using LibHac.Fs;
 using LibHac.FsSystem;
+using Ryujinx.Audio.Renderer;
+using Ryujinx.Audio.Renderer.Device;
+using Ryujinx.Audio.Renderer.Integration;
+using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Common;
 using Ryujinx.Configuration;
 using Ryujinx.HLE.FileSystem.Content;
@@ -12,6 +16,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Arp;
+using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
@@ -43,6 +48,8 @@ namespace Ryujinx.HLE.HOS
         internal Switch Device { get; private set; }
 
         internal SurfaceFlinger SurfaceFlinger { get; private set; }
+        internal AudioRendererManager AudioRendererManager { get; private set; }
+        internal VirtualDeviceSessionRegistry AudioDeviceSessionRegistry { get; private set; }
 
         public SystemStateMgr State { get; private set; }
 
@@ -182,6 +189,34 @@ namespace Ryujinx.HLE.HOS
             ConfigurationState.Instance.System.EnableDockedMode.Event += OnDockedModeChange;
 
             InitLibHacHorizon();
+            InitializeAudioRenderer();
+        }
+
+        private void InitializeAudioRenderer()
+        {
+            AudioRendererManager = new AudioRendererManager();
+            AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry();
+
+            IWritableEvent[] writableEvents = new IWritableEvent[RendererConstants.AudioRendererSessionCountMax];
+
+            for (int i = 0; i < writableEvents.Length; i++)
+            {
+                KEvent systemEvent = new KEvent(KernelContext);
+
+                writableEvents[i] = new AudioKernelEvent(systemEvent);
+            }
+
+            HardwareDevice[] devices = new HardwareDevice[RendererConstants.AudioRendererSessionCountMax];
+
+            // TODO: don't hardcode those values.
+            // TODO: keep the device somewhere and dispose it when exiting.
+            // TODO: This is kind of wrong, we should have an high level API for that and mix all buffers between them.
+            for (int i = 0; i < devices.Length; i++)
+            {
+                devices[i] = new AalHardwareDevice(i, Device.AudioOut, 2, RendererConstants.TargetSampleRate);
+            }
+
+            AudioRendererManager.Initialize(writableEvents, devices);
         }
 
         public void LoadKip(string kipPath)
@@ -291,6 +326,8 @@ namespace Ryujinx.HLE.HOS
                 // have exited.
                 KernelContext.ThreadCounter.Signal();
                 KernelContext.ThreadCounter.Wait();
+
+                AudioRendererManager.Dispose();
 
                 KernelContext.Dispose();
             }

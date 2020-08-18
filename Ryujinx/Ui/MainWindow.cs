@@ -4,6 +4,7 @@ using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.System;
 using Ryujinx.Configuration;
 using Ryujinx.Configuration.System;
 using Ryujinx.Debugger.Profiler;
@@ -29,6 +30,7 @@ namespace Ryujinx.Ui
         private static VirtualFileSystem _virtualFileSystem;
         private static ContentManager    _contentManager;
 
+        private static WindowsMultimediaTimerResolution _windowsMultimediaTimerResolution;
         private static HLE.Switch _emulationContext;
 
         private static GlRenderer _glWidget;
@@ -500,6 +502,11 @@ namespace Ryujinx.Ui
 
         private void CreateGameWindow(HLE.Switch device)
         {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                _windowsMultimediaTimerResolution = new WindowsMultimediaTimerResolution(1);
+            }
+
             device.Hid.Npads.AddControllers(ConfigurationState.Instance.Hid.InputConfig.Value.Select(inputConfig => 
                 new HLE.HOS.Services.Hid.ControllerConfig
                 {
@@ -552,6 +559,8 @@ namespace Ryujinx.Ui
                 }
 
                 _glWidget.Dispose();
+                _windowsMultimediaTimerResolution?.Dispose();
+                _windowsMultimediaTimerResolution = null;
 
                 _viewBox.Add(_gameTableWindow);
 

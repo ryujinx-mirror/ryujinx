@@ -4,6 +4,7 @@ namespace Ryujinx.Common.Logging
     {
         Application,
         Audio,
+        AudioRenderer,
         Cpu,
         Font,
         Emulation,

@@ -104,6 +104,10 @@
     <None Update="THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <ContentWithTargetPath Include="..\Ryujinx.Audio.Renderer\LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>LICENSE-Ryujinx.Audio.Renderer.txt</TargetPath>
+    </ContentWithTargetPath>
   </ItemGroup>
 
 </Project>
