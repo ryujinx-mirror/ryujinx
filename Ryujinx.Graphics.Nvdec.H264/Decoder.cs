@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.Nvdec.H264
 {
-    public class Decoder : IH264Decoder
+    public sealed class Decoder : IH264Decoder
     {
         public bool IsHardwareAccelerated => false;
 

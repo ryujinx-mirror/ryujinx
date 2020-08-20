@@ -1149,7 +1149,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     ref TileWorkerData tileData = ref cm.TileWorkerData[tileCols * tileRow + tileCol];
                     tileData.Xd = cm.Mb;
                     tileData.Xd.Corrupted = false;
-                    tileData.Xd.Counts = cm.FrameParallelDecodingMode ? Ptr<Vp9BackwardUpdates>.Null : cm.Counts;
+                    tileData.Xd.Counts = cm.Counts;
                     tileData.Dqcoeff = new Array32<Array32<int>>();
                     tileData.Xd.Tile.Init(ref cm, tileRow, tileCol);
                     SetupTokenDecoder(buf.Data, buf.Size, ref cm.Error, ref tileData.BitReader);

@@ -7,7 +7,7 @@ using Vp9MvRef = Ryujinx.Graphics.Video.Vp9MvRef;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9
 {
-    public class Decoder : IVp9Decoder
+    public sealed class Decoder : IVp9Decoder
     {
         public bool IsHardwareAccelerated => false;
 
@@ -37,6 +37,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
             cm.Width = output.Width;
             cm.Height = output.Height;
+            cm.SubsamplingX = 1;
+            cm.SubsamplingY = 1;
 
             cm.UsePrevFrameMvs = pictureInfo.UsePrevInFindMvRefs;
 
@@ -48,6 +50,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             cm.UvDcDeltaQ = pictureInfo.UvDcDeltaQ;
 
             cm.Mb.Lossless = pictureInfo.Lossless;
+            cm.Mb.Bd = 8;
 
             cm.TxMode = (TxMode)pictureInfo.TransformMode;
 
