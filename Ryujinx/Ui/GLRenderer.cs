@@ -405,9 +405,9 @@ namespace Ryujinx.Ui
                 });
             }
 
-            List<GamepadInput> gamepadInputs = new List<GamepadInput>();
+            List<GamepadInput> gamepadInputs = new List<GamepadInput>(NpadDevices.MaxControllers);
 
-            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value.ToArray())
+            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
             {
                 ControllerKeys   currentButton = 0;
                 JoystickPosition leftJoystick  = new JoystickPosition();
@@ -497,18 +497,21 @@ namespace Ryujinx.Ui
                 });
             }
 
-            _device.Hid.Npads.SetGamepadsInput(gamepadInputs.ToArray());
+            _device.Hid.Npads.Update(gamepadInputs);
 
-            // Hotkeys
-            HotkeyButtons currentHotkeyButtons = KeyboardController.GetHotkeyButtons(OpenTK.Input.Keyboard.GetState());
-
-            if (currentHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync) &&
-                !_prevHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync))
+            if(IsFocused)
             {
-                _device.EnableDeviceVsync = !_device.EnableDeviceVsync;
-            }
+                // Hotkeys
+                HotkeyButtons currentHotkeyButtons = KeyboardController.GetHotkeyButtons(OpenTK.Input.Keyboard.GetState());
 
-            _prevHotkeyButtons = currentHotkeyButtons;
+                if (currentHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync) &&
+                    !_prevHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync))
+                {
+                    _device.EnableDeviceVsync = !_device.EnableDeviceVsync;
+                }
+
+                _prevHotkeyButtons = currentHotkeyButtons;
+            }
 
             //Touchscreen
             bool hasTouch = false;

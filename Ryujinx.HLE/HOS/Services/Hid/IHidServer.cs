@@ -594,9 +594,18 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             NpadIdType[] supportedPlayerIds = new NpadIdType[arraySize];
 
+            context.Device.Hid.Npads.ClearSupportedPlayers();
+
             for (int i = 0; i < arraySize; ++i)
             {
-                supportedPlayerIds[i] = context.Memory.Read<NpadIdType>((ulong)(context.Request.PtrBuff[0].Position + i * 4));
+                NpadIdType id = context.Memory.Read<NpadIdType>((ulong)(context.Request.PtrBuff[0].Position + i * 4));
+
+                if (id >= 0)
+                {
+                    context.Device.Hid.Npads.SetSupportedPlayer(HidUtils.GetIndexFromNpadIdType(id));
+                }
+
+                supportedPlayerIds[i] = id;
             }
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, $"{arraySize} " + string.Join(",", supportedPlayerIds));
@@ -665,9 +674,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetPlayerLedPattern(uint NpadId) -> ulong LedPattern
         public ResultCode GetPlayerLedPattern(ServiceCtx context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            NpadIdType npadId = (NpadIdType)context.RequestData.ReadInt32();
 
-            long ledPattern = 0;
+            long ledPattern = HidUtils.GetLedPatternFromNpadId(npadId);
 
             context.ResponseData.Write(ledPattern);
 

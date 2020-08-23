@@ -249,6 +249,9 @@ namespace Ryujinx.HLE.HOS
                 AppletState.EnqueueMessage(MessageInfo.OperationModeChanged);
                 AppletState.EnqueueMessage(MessageInfo.PerformanceModeChanged);
                 SignalDisplayResolutionChange();
+
+                // Reconfigure controllers
+                Device.Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
             }
         }
 

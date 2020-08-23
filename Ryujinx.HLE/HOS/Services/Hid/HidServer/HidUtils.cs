@@ -35,5 +35,19 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
             PlayerIndex.Unknown  => NpadIdType.Unknown,
             _                    => throw new ArgumentOutOfRangeException(nameof(index))
         };
+
+        public static long GetLedPatternFromNpadId(NpadIdType npadIdType)
+        => npadIdType switch
+        {
+            NpadIdType.Player1  => 0b0001,
+            NpadIdType.Player2  => 0b0011,
+            NpadIdType.Player3  => 0b0111,
+            NpadIdType.Player4  => 0b1111,
+            NpadIdType.Player5  => 0b1001,
+            NpadIdType.Player6  => 0b0101,
+            NpadIdType.Player7  => 0b1101,
+            NpadIdType.Player8  => 0b0110,
+            _                   => 0b0000
+        };
     }
 }

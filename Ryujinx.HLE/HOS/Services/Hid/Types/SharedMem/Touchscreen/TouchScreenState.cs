@@ -1,3 +1,5 @@
+using Ryujinx.Common.Memory;
+
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
     struct TouchScreenState

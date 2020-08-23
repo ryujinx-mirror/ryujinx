@@ -114,6 +114,10 @@ namespace Ryujinx.HLE
             System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
 
             ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
+
+            // Configure controllers
+            Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
+            ConfigurationState.Instance.Hid.InputConfig.Event += Hid.RefreshInputConfigEvent;
         }
 
         public static IntegrityCheckLevel GetIntegrityCheckLevel()
@@ -177,6 +181,8 @@ namespace Ryujinx.HLE
         {
             if (disposing)
             {
+                ConfigurationState.Instance.Hid.InputConfig.Event -= Hid.RefreshInputConfigEvent;
+
                 System.Dispose();
                 Host1x.Dispose();
                 AudioOut.Dispose();

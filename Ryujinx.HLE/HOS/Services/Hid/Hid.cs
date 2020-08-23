@@ -1,5 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.Exceptions;
+using Ryujinx.Common.Configuration.Hid;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
@@ -63,6 +65,24 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Mouse       = new MouseDevice(_device, false);
             Keyboard    = new KeyboardDevice(_device, false);
             Npads       = new NpadDevices(_device, true);
+        }
+
+        internal void RefreshInputConfig(List<InputConfig> inputConfig)
+        {
+            ControllerConfig[] npadConfig = new ControllerConfig[inputConfig.Count];
+
+            for (int i = 0; i < npadConfig.Length; ++i)
+            {
+                npadConfig[i].Player = (PlayerIndex)inputConfig[i].PlayerIndex;
+                npadConfig[i].Type = (ControllerType)inputConfig[i].ControllerType;
+            }
+
+            _device.Hid.Npads.Configure(npadConfig);
+        }
+
+        internal void RefreshInputConfigEvent(object _, ReactiveEventArgs<List<InputConfig>> args)
+        {
+            RefreshInputConfig(args.NewValue);
         }
 
         public ControllerKeys UpdateStickButtons(JoystickPosition leftStick, JoystickPosition rightStick)

@@ -5,6 +5,7 @@ using Ryujinx.Common.Utilities;
 using Ryujinx.Configuration;
 using Ryujinx.HLE.FileSystem;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
@@ -90,6 +91,23 @@ namespace Ryujinx.Ui
             _playerIndex       = controllerId;
             _virtualFileSystem = virtualFileSystem;
             _inputConfig       = ConfigurationState.Instance.Hid.InputConfig.Value.Find(inputConfig => inputConfig.PlayerIndex == _playerIndex);
+
+            Title = $"Ryujinx - Controller Settings - {_playerIndex}";
+
+            if (_playerIndex == PlayerIndex.Handheld)
+            {
+                _controllerType.Append(ControllerType.Handheld.ToString(), "Handheld");
+                _controllerType.Sensitive = false;
+            }
+            else
+            {
+                _controllerType.Append(ControllerType.ProController.ToString(), "Pro Controller");
+                _controllerType.Append(ControllerType.JoyconPair.ToString(), "Joycon Pair");
+                _controllerType.Append(ControllerType.JoyconLeft.ToString(), "Joycon Left");
+                _controllerType.Append(ControllerType.JoyconRight.ToString(), "Joycon Right");
+            }
+
+            _controllerType.Active = 0; // Set initial value to first in list.
 
             //Bind Events
             _lStickX.Clicked        += Button_Pressed;
@@ -278,7 +296,12 @@ namespace Ryujinx.Ui
             switch (config)
             {
                 case KeyboardConfig keyboardConfig:
-                    _controllerType.SetActiveId(keyboardConfig.ControllerType.ToString());
+                    if (!_controllerType.SetActiveId(keyboardConfig.ControllerType.ToString()))
+                    {
+                        _controllerType.SetActiveId(_playerIndex == PlayerIndex.Handheld 
+                            ? ControllerType.Handheld.ToString() 
+                            : ControllerType.ProController.ToString());
+                    }
 
                     _lStickUp.Label     = keyboardConfig.LeftJoycon.StickUp.ToString();
                     _lStickDown.Label   = keyboardConfig.LeftJoycon.StickDown.ToString();
@@ -310,7 +333,12 @@ namespace Ryujinx.Ui
                     _rSr.Label          = keyboardConfig.RightJoycon.ButtonSr.ToString();
                     break;
                 case ControllerConfig controllerConfig:
-                    _controllerType.SetActiveId(controllerConfig.ControllerType.ToString());
+                    if (!_controllerType.SetActiveId(controllerConfig.ControllerType.ToString()))
+                    {
+                        _controllerType.SetActiveId(_playerIndex == PlayerIndex.Handheld 
+                            ? ControllerType.Handheld.ToString() 
+                            : ControllerType.ProController.ToString());
+                    }
 
                     _lStickX.Label                    = controllerConfig.LeftJoycon.StickX.ToString();
                     _invertLStickX.Active             = controllerConfig.LeftJoycon.InvertStickX;
@@ -894,23 +922,30 @@ namespace Ryujinx.Ui
         {
             InputConfig inputConfig = GetValues();
 
+            var newConfig = new List<InputConfig>();
+            newConfig.AddRange(ConfigurationState.Instance.Hid.InputConfig.Value);
+
             if (_inputConfig == null && inputConfig != null)
             {
-                ConfigurationState.Instance.Hid.InputConfig.Value.Add(inputConfig);
+                newConfig.Add(inputConfig);
             }
             else
             {
                 if (_inputDevice.ActiveId == "disabled")
                 {
-                    ConfigurationState.Instance.Hid.InputConfig.Value.Remove(_inputConfig);
+                    newConfig.Remove(_inputConfig);
                 }
                 else if (inputConfig != null)
                 {
-                    int index = ConfigurationState.Instance.Hid.InputConfig.Value.IndexOf(_inputConfig);        
+                    int index = newConfig.IndexOf(_inputConfig);
 
-                    ConfigurationState.Instance.Hid.InputConfig.Value[index] = inputConfig;
+                    newConfig[index] = inputConfig;
                 }
             }
+
+            // Atomically replace and signal input change.
+            // NOTE: Do not modify InputConfig.Value directly as other code depends on the on-change event.
+            ConfigurationState.Instance.Hid.InputConfig.Value = newConfig;
 
             MainWindow.SaveConfig();
 

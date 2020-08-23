@@ -507,14 +507,6 @@ namespace Ryujinx.Ui
                 _windowsMultimediaTimerResolution = new WindowsMultimediaTimerResolution(1);
             }
 
-            device.Hid.Npads.AddControllers(ConfigurationState.Instance.Hid.InputConfig.Value.Select(inputConfig => 
-                new HLE.HOS.Services.Hid.ControllerConfig
-                {
-                    Player = (PlayerIndex)inputConfig.PlayerIndex, 
-                    Type   = (ControllerType)inputConfig.ControllerType
-                }
-            ).ToArray());
-
             _glWidget = new GlRenderer(_emulationContext, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
 
             Application.Invoke(delegate

@@ -1,5 +1,4 @@
-using System;
-using System.Runtime.InteropServices;
+using Ryujinx.Common.Memory;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {

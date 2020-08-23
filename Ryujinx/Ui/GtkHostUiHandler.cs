@@ -16,6 +16,62 @@ namespace Ryujinx.Ui
             _parent = parent;
         }
 
+        public bool DisplayMessageDialog(ControllerAppletUiArgs args)
+        {
+            string playerCount = args.PlayerCountMin == args.PlayerCountMax
+                ? $"exactly {args.PlayerCountMin}"
+                : $"{args.PlayerCountMin}-{args.PlayerCountMax}";
+
+            string message =
+                $"Application requests <b>{playerCount}</b> player(s) with:\n\n"
+                + $"<tt><b>TYPES:</b> {args.SupportedStyles}</tt>\n\n"
+                + $"<tt><b>PLAYERS:</b> {string.Join(", ", args.SupportedPlayers)}</tt>\n\n"
+                + (args.IsDocked ? "Docked mode set. <tt>Handheld</tt> is also invalid.\n\n" : "")
+                + "<i>Please reconfigure Input now and then press OK.</i>";
+
+            return DisplayMessageDialog("Controller Applet", message);
+        }
+
+        public bool DisplayMessageDialog(string title, string message)
+        {
+            ManualResetEvent dialogCloseEvent = new ManualResetEvent(false);
+            bool okPressed = false;
+
+            Application.Invoke(delegate
+            {
+                MessageDialog msgDialog = null;
+                try
+                {
+                    msgDialog = new MessageDialog(_parent, DialogFlags.DestroyWithParent, MessageType.Info, ButtonsType.Ok, null)
+                    {
+                        Title = title,
+                        Text = message,
+                        UseMarkup = true
+                    };
+
+                    msgDialog.SetDefaultSize(400, 0);
+
+                    msgDialog.Response += (object o, ResponseArgs args) =>
+                    {
+                        if (args.ResponseId == ResponseType.Ok) okPressed = true;
+                        dialogCloseEvent.Set();
+                        msgDialog?.Dispose();
+                    };
+
+                    msgDialog.Show();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error?.Print(LogClass.Application, $"Error displaying Message Dialog: {e}");
+                    dialogCloseEvent.Set();
+                }
+            });
+
+            dialogCloseEvent.WaitOne();
+
+            return okPressed;
+        }
+
         public bool DisplayInputDialog(SoftwareKeyboardUiArgs args, out string userText)
         {
             ManualResetEvent dialogCloseEvent = new ManualResetEvent(false);

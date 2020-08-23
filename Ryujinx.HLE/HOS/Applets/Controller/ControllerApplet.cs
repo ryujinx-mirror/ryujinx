@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Applets
             byte[] controllerSupportArgPrivate = _normalSession.Pop();
             ControllerSupportArgPrivate privateArg = IApplet.ReadStruct<ControllerSupportArgPrivate>(controllerSupportArgPrivate);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerApplet ArgPriv {privateArg.PrivateSize} {privateArg.ArgSize} {privateArg.Mode}" +
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerApplet ArgPriv {privateArg.PrivateSize} {privateArg.ArgSize} {privateArg.Mode} " +
                         $"HoldType:{(NpadJoyHoldType)privateArg.NpadJoyHoldType} StyleSets:{(ControllerType)privateArg.NpadStyleSet}");
 
             if (privateArg.Mode != ControllerSupportMode.ShowControllerSupport)
@@ -47,33 +47,57 @@ namespace Ryujinx.HLE.HOS.Applets
 
             ControllerSupportArgHeader argHeader;
 
-            if (privateArg.ArgSize == Marshal.SizeOf<ControllerSupportArg>())
+            if (privateArg.ArgSize == Marshal.SizeOf<ControllerSupportArgV7>())
             {
-                ControllerSupportArg arg = IApplet.ReadStruct<ControllerSupportArg>(controllerSupportArg);
+                ControllerSupportArgV7 arg = IApplet.ReadStruct<ControllerSupportArgV7>(controllerSupportArg);
                 argHeader = arg.Header;
+
+                Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerSupportArg Version 7 EnableExplainText={arg.EnableExplainText != 0}");
+                // Read enable text here?
+            }
+            else if (privateArg.ArgSize == Marshal.SizeOf<ControllerSupportArgVPre7>())
+            {
+                ControllerSupportArgVPre7 arg = IApplet.ReadStruct<ControllerSupportArgVPre7>(controllerSupportArg);
+                argHeader = arg.Header;
+
+                Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerSupportArg Version Pre-7 EnableExplainText={arg.EnableExplainText != 0}");
                 // Read enable text here?
             }
             else
             {
-                Logger.Stub?.PrintStub(LogClass.ServiceHid, $"Unknown revision of ControllerSupportArg.");
+                Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerSupportArg Version Unknown");
 
                 argHeader = IApplet.ReadStruct<ControllerSupportArgHeader>(controllerSupportArg); // Read just the header
             }
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerApplet Arg {argHeader.PlayerCountMin} {argHeader.PlayerCountMax} {argHeader.EnableTakeOverConnection} {argHeader.EnableSingleMode}");
+            int playerMin = argHeader.PlayerCountMin;
+            int playerMax = argHeader.PlayerCountMax;
 
-            // Currently, the only purpose of this applet is to help 
-            // choose the primary input controller for the game
-            // TODO: Ideally should hook back to HID.Controller. When applet is called, can choose appropriate controller and attach to appropriate id.
-            if (argHeader.PlayerCountMin > 1)
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerApplet Arg {playerMin} {playerMax} {argHeader.EnableTakeOverConnection} {argHeader.EnableSingleMode}");
+
+            int configuredCount = 0;
+            PlayerIndex primaryIndex = PlayerIndex.Unknown;
+            while (!_system.Device.Hid.Npads.Validate(playerMin, playerMax, (ControllerType)privateArg.NpadStyleSet, out configuredCount, out primaryIndex))
             {
-                Logger.Warning?.Print(LogClass.ServiceHid, "More than one controller was requested.");
+                ControllerAppletUiArgs uiArgs = new ControllerAppletUiArgs
+                {
+                    PlayerCountMin = playerMin,
+                    PlayerCountMax = playerMax,
+                    SupportedStyles = (ControllerType)privateArg.NpadStyleSet,
+                    SupportedPlayers = _system.Device.Hid.Npads.GetSupportedPlayers(),
+                    IsDocked = _system.State.DockedMode
+                };
+
+                if (!_system.Device.UiHandler.DisplayMessageDialog(uiArgs))
+                {
+                    break;
+                }
             }
 
             ControllerSupportResultInfo result = new ControllerSupportResultInfo
             {
-                PlayerCount = 1,
-                SelectedId = (uint)GetNpadIdTypeFromIndex(_system.Device.Hid.Npads.PrimaryController)
+                PlayerCount = (sbyte)configuredCount,
+                SelectedId = (uint)GetNpadIdTypeFromIndex(primaryIndex)
             };
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, $"ControllerApplet ReturnResult {result.PlayerCount} {result.SelectedId}");

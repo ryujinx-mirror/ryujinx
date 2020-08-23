@@ -1,6 +1,9 @@
+using System.Runtime.InteropServices;
+
 namespace Ryujinx.HLE.HOS.Applets
 {
 #pragma warning disable CS0649
+    [StructLayout(LayoutKind.Sequential, Pack=1)]
     struct ControllerSupportArgHeader
     {
         public sbyte PlayerCountMin;

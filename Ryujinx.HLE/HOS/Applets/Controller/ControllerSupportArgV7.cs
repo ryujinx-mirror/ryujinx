@@ -1,8 +1,11 @@
+using System.Runtime.InteropServices;
+
 namespace Ryujinx.HLE.HOS.Applets
 {
 #pragma warning disable CS0649
     // (8.0.0+ version)
-    unsafe struct ControllerSupportArg
+    [StructLayout(LayoutKind.Sequential, Pack=1)]
+    unsafe struct ControllerSupportArgV7
     {
         public ControllerSupportArgHeader Header;
         public fixed uint IdentificationColor[8];
