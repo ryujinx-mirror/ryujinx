@@ -62,8 +62,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         {
             ReadOnlySpan<float> frontLeft = context.GetBuffer(InputBufferIndices[0]);
             ReadOnlySpan<float> frontRight = context.GetBuffer(InputBufferIndices[1]);
-            ReadOnlySpan<float> lowFrequency = context.GetBuffer(InputBufferIndices[2]);
-            ReadOnlySpan<float> frontCenter = context.GetBuffer(InputBufferIndices[3]);
+            ReadOnlySpan<float> frontCenter = context.GetBuffer(InputBufferIndices[2]);
+            ReadOnlySpan<float> lowFrequency = context.GetBuffer(InputBufferIndices[3]);
             ReadOnlySpan<float> backLeft = context.GetBuffer(InputBufferIndices[4]);
             ReadOnlySpan<float> backRight = context.GetBuffer(InputBufferIndices[5]);
 
