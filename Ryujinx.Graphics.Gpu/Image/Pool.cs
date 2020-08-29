@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
 
@@ -49,7 +50,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             Address = address;
             Size    = size;
 
-            _modifiedRanges = new (ulong, ulong)[size / PhysicalMemory.PageSize];
+            ulong endAddress = BitUtils.AlignUp(Address + Size, PhysicalMemory.PageSize);
+
+            ulong pagesCount = (endAddress - BitUtils.AlignDown(Address, PhysicalMemory.PageSize)) / PhysicalMemory.PageSize;
+
+            _modifiedRanges = new (ulong, ulong)[pagesCount];
         }
 
         /// <summary>
