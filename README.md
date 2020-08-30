@@ -16,15 +16,25 @@
 </p>
 
 <h5 align="center">
-    As of June 2020, Ryujinx goes past menus and in-game on over 1,000 commercial titles. Of those, roughly half are considered playable. See the compatiblity list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
+    As of August 2020, Ryujinx goes past menus and in-game on over 1,500 commercial titles. Of those, more than half are considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
 </h5>
 
 ## Usage
 
 To run this emulator, we recommend that your PC have at least 8GB of RAM; less than this amount can result in unpredictable behavior and may cause crashes or unacceptable performance.
-If you use a pre-built version, you can use the graphical interface to run your games and homebrew: simply add the directory containing your homebrew or games in the Options > Settings > General tab > Game Directories menu item.
 
-If you build it yourself you will need to:
+See our [Setup & Configuration Guide](https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide) on how to set up the emulator.
+
+## Latest build
+
+These builds are compiled automatically for each commit on the master branch. While we strive to ensure optimal stability and performance prior to pushing an update, our automated builds **may be unstable or completely broken.**
+
+The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
+
+## Building
+
+If you wish to build the emulator yourself  you will need to:
+
 **Step one:** Install the [.NET Core 3.1 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).
 
 **Step two (choose one):**  
@@ -39,39 +49,15 @@ Download the ZIP Tarball. Then extract it to a directory of your choice.
 **Step three:**
 
 Build the App using a Command prompt in the project directory. You can quickly access it by holding shift in explorer (in the Ryujinx directory) then right clicking, and typing the following command:  
-Run `dotnet build -c Release -r win10-x64` inside the Ryujinx project folder to build Ryujinx binaries.
+Run `dotnet build -c Release -r win-x64` inside the Ryujinx project folder to build Ryujinx binaries.
 
-Every file related to Ryujinx is stored in the `Ryujinx` folder. This folder is located in the user folder, which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
-
-## Latest build
-
-These builds are compiled automatically for each commit on the master branch. While we strive to ensure optimal stability and performance prior to pushing an update, our automated builds **may be unstable or completely broken.**
-
-The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
-
-## Requirements
-
- - **Switch Keys**
-
-   Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md).
-
- - **Firmware**
- 
-    You need an official Switch firmware by either dumping directly from your Switch, or dumping your game cartridge to an XCI file; you may install firmware in Ryujinx directly from an XCI file as long as it has not been trimmed. Install the firmware, after you've installed your keys, from the Tools > Install Firmware menu item.
-
- - **Executables**
-
-   Ryujinx is able to run both official games and homebrew.
-
-   Homebrew is available on many websites, such as the [Switch Appstore](https://www.switchbru.com/appstore/).
-
-   A hacked Nintendo Switch is needed to dump games, which you can learn how to do [here](https://nh-server.github.io/switch-guide/). Once you have hacked your Nintendo Switch, you will need to dump your own games with [NxDumpTool](https://github.com/DarkMatterCore/nxdumptool/releases) to get an XCI or NSP dump.
+Ryujinx system files are stored in the `Ryujinx` folder. This folder is located in the user folder, which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
 
 ## Features
 
  - **Audio**
 
-   Audio is partially supported. We use C# wrappers for [OpenAL](https://openal.org/downloads/OpenAL11CoreSDK.zip) (installation needed), the main audio backend, and [libsoundio](http://libsound.io/) as the fallback. Our current Opus implementation is incomplete.
+   Audio output is entirely supported, audio input (microphone) isn't supported. We use C# wrappers for [OpenAL](https://openal.org/downloads/oalinst.zip) (installation needed), and [libsoundio](http://libsound.io/) as the fallback.
 
 - **CPU**
 
@@ -97,8 +83,6 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
    The emulator has settings for enabling or disabling some logging, remapping controllers, and more. You can configure all of them through the graphical interface or manually through the config file, `Config.json`, found in the user folder which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
 
-   For more information [you can go here](CONFIG.md) *(Outdated)*.
-
 ## Compatibility
 
 You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues).
@@ -107,9 +91,9 @@ Don't hesitate to open a new issue if a game isn't already on there.
 
 ## Help
 
-If you have homebrew or a particular game marked playable or in-game in our compatibility list that doesn't work within the emulator, you can contact us through our Discord. We'll take note of whatever is causing the app/game to not work, put it on the watch list and fix it at a later date.
+If you are having problems launching homebrew or a particular game marked status-playable or status-ingame in our compatibility list, you can contact us through our [Discord server](https://discord.gg/N2FmfVc). We'll take note of whatever is causing the app/game to not work, put it on the watch list and fix it at a later date.
 
-If you need help with setting up Ryujinx, you can ask questions in the #support channel of our Discord server.
+If you need help with setting up Ryujinx, you can ask questions in the #support channel of our [Discord server](https://discord.gg/N2FmfVc).
 
 ## Contact
 
