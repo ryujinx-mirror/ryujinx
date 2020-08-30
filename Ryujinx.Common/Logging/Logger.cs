@@ -112,6 +112,11 @@ namespace Ryujinx.Common.Logging
                 AsyncLogTargetOverflowAction.Discard));
 
             Notice = new Log(LogLevel.Notice);
+            
+            // Enable important log levels before configuration is loaded
+            Error = new Log(LogLevel.Error);
+            Warning = new Log(LogLevel.Warning);
+            Info = new Log(LogLevel.Info);
         }
 
         public static void RestartTime()

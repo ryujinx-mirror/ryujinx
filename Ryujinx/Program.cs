@@ -1,5 +1,6 @@
 using ARMeilleure.Translation.PTC;
 using Gtk;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Configuration;
@@ -20,6 +21,29 @@ namespace Ryujinx
 
         static void Main(string[] args)
         {
+            // Parse Arguments
+            string launchPath = null;
+            string baseDirPath = null;
+            for (int i = 0; i < args.Length; ++i)
+            {
+                string arg = args[i];
+
+                if (arg == "-r" || arg == "--root-data-dir")
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
+                        continue;
+                    }
+
+                    baseDirPath = args[++i];
+                }
+                else if (launchPath == null)
+                {
+                    launchPath = arg;
+                }
+            }
+
             Toolkit.Init(new ToolkitOptions
             {
                 Backend = PlatformBackend.PreferNative,
@@ -38,6 +62,9 @@ namespace Ryujinx
             AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
             AppDomain.CurrentDomain.ProcessExit += (object sender, EventArgs e) => ProgramExit();
 
+            // Setup base data directory
+            AppDataManager.Initialize(baseDirPath);
+
             // Initialize the configuration
             ConfigurationState.Initialize();
 
@@ -47,9 +74,8 @@ namespace Ryujinx
             // Initialize Discord integration
             DiscordIntegrationModule.Initialize();
 
-            string localConfigurationPath  = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
-            string globalBasePath          = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx");
-            string globalConfigurationPath = Path.Combine(globalBasePath, "Config.json");
+            string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
             if (File.Exists(localConfigurationPath))
@@ -60,24 +86,21 @@ namespace Ryujinx
 
                 ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
             }
-            else if (File.Exists(globalConfigurationPath))
+            else if (File.Exists(appDataConfigurationPath))
             {
-                ConfigurationPath = globalConfigurationPath;
+                ConfigurationPath = appDataConfigurationPath;
 
-                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(globalConfigurationPath);
+                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(appDataConfigurationPath);
 
                 ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
             }
             else
             {
                 // No configuration, we load the default values and save it on disk
-                ConfigurationPath = globalConfigurationPath;
-
-                // Make sure to create the Ryujinx directory if needed.
-                Directory.CreateDirectory(globalBasePath);
+                ConfigurationPath = appDataConfigurationPath;
 
                 ConfigurationState.Instance.LoadDefault();
-                ConfigurationState.Instance.ToFileFormat().SaveConfig(globalConfigurationPath);
+                ConfigurationState.Instance.ToFileFormat().SaveConfig(appDataConfigurationPath);
             }
 
             PrintSystemInfo();
@@ -86,9 +109,9 @@ namespace Ryujinx
 
             Application.Init();
 
-            string globalProdKeysPath = Path.Combine(globalBasePath, "system", "prod.keys");
-            string userProfilePath    = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch", "prod.keys");
-            if (!File.Exists(globalProdKeysPath) && !File.Exists(userProfilePath) && !Migration.IsMigrationNeeded())
+            bool hasGlobalProdKeys = File.Exists(Path.Combine(AppDataManager.KeysDirPath, "prod.keys"));
+            bool hasAltProdKeys    = !AppDataManager.IsCustomBasePath && File.Exists(Path.Combine(AppDataManager.KeysDirPathAlt, "prod.keys"));
+            if (!hasGlobalProdKeys && !hasAltProdKeys && !Migration.IsMigrationNeeded())
             {
                 GtkDialog.CreateWarningDialog("Key file was not found", "Please refer to `KEYS.md` for more info");
             }
@@ -96,9 +119,9 @@ namespace Ryujinx
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
 
-            if (args.Length == 1)
+            if (launchPath != null)
             {
-                mainWindow.LoadApplication(args[0]);
+                mainWindow.LoadApplication(launchPath);
             }
 
             Application.Run();
@@ -114,6 +137,11 @@ namespace Ryujinx
 
             var enabledLogs = Logger.GetEnabledLevels();
             Logger.Notice.Print(LogClass.Application, $"Logs Enabled: {(enabledLogs.Count == 0 ? "<None>" : string.Join(", ", enabledLogs))}");
+
+            if (AppDataManager.IsCustomBasePath)
+            {
+                Logger.Notice.Print(LogClass.Application, $"Custom Data Directory: {AppDataManager.BaseDirPath}");
+            }
         }
 
         private static void ProcessUnhandledException(Exception e, bool isTerminating)

@@ -1,5 +1,6 @@
 using Gtk;
 using OpenTK.Input;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Configuration;
@@ -602,7 +603,7 @@ namespace Ryujinx.Ui
 
         private string GetProfileBasePath()
         {
-            string path = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "profiles");
+            string path = AppDataManager.ProfilesDirPath;
 
             if (_inputDevice.ActiveId.StartsWith("keyboard"))
             {

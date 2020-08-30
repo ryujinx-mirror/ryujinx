@@ -3,6 +3,7 @@ using Gtk;
 using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Audio;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
 using Ryujinx.Configuration;
@@ -873,7 +874,7 @@ namespace Ryujinx.Ui
         {
             Process.Start(new ProcessStartInfo()
             {
-                FileName        = _virtualFileSystem.GetBasePath(),
+                FileName        = AppDataManager.BaseDirPath,
                 UseShellExecute = true,
                 Verb            = "open"
             });
@@ -1113,7 +1114,7 @@ namespace Ryujinx.Ui
 
         private void Update_Pressed(object sender, EventArgs args)
         {
-            string ryuUpdater = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "RyuUpdater.exe");
+            string ryuUpdater = System.IO.Path.Combine(AppDataManager.BaseDirPath, "RyuUpdater.exe");
 
             try
             {

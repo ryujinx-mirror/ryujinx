@@ -480,7 +480,7 @@ namespace Ryujinx.Ui
 
         internal static ApplicationMetadata LoadAndSaveMetaData(string titleId, Action<ApplicationMetadata> modifyFunction = null)
         {
-            string metadataFolder = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "gui");
+            string metadataFolder = Path.Combine(AppDataManager.GamesDirPath, titleId, "gui");
             string metadataFile   = Path.Combine(metadataFolder, "metadata.json");
 
             ApplicationMetadata appMetadata;
@@ -618,7 +618,7 @@ namespace Ryujinx.Ui
 
         private static bool IsUpdateApplied(string titleId, out string version)
         {
-            string jsonPath = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "updates.json");
+            string jsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId, "updates.json");
 
             if (File.Exists(jsonPath))
             {

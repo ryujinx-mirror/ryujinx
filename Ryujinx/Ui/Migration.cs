@@ -1,5 +1,6 @@
 ﻿using Gtk;
 using LibHac;
+using Ryujinx.Common.Configuration;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.IO;
@@ -175,6 +176,8 @@ namespace Ryujinx.Ui
 
         public static bool IsMigrationNeeded()
         {
+            if (AppDataManager.IsCustomBasePath) return false;
+
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
             string oldBasePath = Path.Combine(appDataPath, "RyuFs");

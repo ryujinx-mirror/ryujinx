@@ -339,7 +339,7 @@ namespace Ryujinx.Ui
                             return;
                         }
 
-                        string titleUpdateMetadataPath = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", mainNca.Header.TitleId.ToString("x16"), "updates.json");
+                        string titleUpdateMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "updates.json");
 
                         if (File.Exists(titleUpdateMetadataPath))
                         {
@@ -614,7 +614,7 @@ namespace Ryujinx.Ui
         {
             string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
 
-            var modsBasePath = _virtualFileSystem.GetBaseModsPath();
+            var modsBasePath = _virtualFileSystem.ModLoader.GetModsBasePath();
             var titleModsPath = _virtualFileSystem.ModLoader.GetTitleDir(modsBasePath, titleId);
 
             Process.Start(new ProcessStartInfo
@@ -643,7 +643,7 @@ namespace Ryujinx.Ui
         private void OpenPtcDir_Clicked(object sender, EventArgs args)
         {
             string titleId = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
-            string ptcDir  = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu");
+            string ptcDir  = System.IO.Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "cpu");
             
             string mainPath   = System.IO.Path.Combine(ptcDir, "0");
             string backupPath = System.IO.Path.Combine(ptcDir, "1");
@@ -668,8 +668,8 @@ namespace Ryujinx.Ui
             string[] tableEntry = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n");
             string titleId = tableEntry[1].ToLower();
             
-            DirectoryInfo mainDir   = new DirectoryInfo(System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "0"));
-            DirectoryInfo backupDir = new DirectoryInfo(System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "cache", "cpu", "1"));
+            DirectoryInfo mainDir   = new DirectoryInfo(System.IO.Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "cpu", "0"));
+            DirectoryInfo backupDir = new DirectoryInfo(System.IO.Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "cpu", "1"));
             
             MessageDialog warningDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null)
             {

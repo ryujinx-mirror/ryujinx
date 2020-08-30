@@ -750,7 +750,7 @@ namespace Ryujinx.Configuration
             {
                 ToFileFormat().SaveConfig(configurationFilePath);
 
-                Common.Logging.Logger.Warning?.Print(LogClass.Application, "Configuration file has been updated!");
+                Common.Logging.Logger.Notice.Print(LogClass.Application, $"Configuration file updated to version {ConfigurationFileFormat.CurrentVersion}");
             }
         }
 

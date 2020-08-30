@@ -1,6 +1,7 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Unwinding;
 using ARMeilleure.Memory;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
 using System.Buffers.Binary;
@@ -21,8 +22,6 @@ namespace ARMeilleure.Translation.PTC
         private const string HeaderMagic = "PTChd";
 
         private const int InternalVersion = 1471; //! To be incremented manually for each change to the ARMeilleure project.
-
-        private const string BaseDir = "Ryujinx";
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -48,8 +47,6 @@ namespace ARMeilleure.Translation.PTC
         private static readonly ManualResetEvent _waitEvent;
 
         private static readonly AutoResetEvent _loggerEvent;
-
-        private static readonly string _basePath;
 
         private static readonly object _lock;
 
@@ -82,8 +79,6 @@ namespace ARMeilleure.Translation.PTC
             _waitEvent = new ManualResetEvent(true);
 
             _loggerEvent = new AutoResetEvent(false);
-
-            _basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BaseDir);
 
             _lock = new object();
 
@@ -130,8 +125,8 @@ namespace ARMeilleure.Translation.PTC
 
             if (enabled)
             {
-                string workPathActual = Path.Combine(_basePath, "games", TitleIdText, "cache", "cpu", ActualDir);
-                string workPathBackup = Path.Combine(_basePath, "games", TitleIdText, "cache", "cpu", BackupDir);
+                string workPathActual = Path.Combine(AppDataManager.GamesDirPath, TitleIdText, "cache", "cpu", ActualDir);
+                string workPathBackup = Path.Combine(AppDataManager.GamesDirPath, TitleIdText, "cache", "cpu", BackupDir);
 
                 if (!Directory.Exists(workPathActual))
                 {

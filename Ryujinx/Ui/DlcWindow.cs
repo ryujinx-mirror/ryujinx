@@ -38,7 +38,7 @@ namespace Ryujinx.Ui
 
             _titleId                 = titleId;
             _virtualFileSystem       = virtualFileSystem;
-            _dlcJsonPath             = System.IO.Path.Combine(virtualFileSystem.GetBasePath(), "games", _titleId, "dlc.json");
+            _dlcJsonPath             = System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleId, "dlc.json");
             _baseTitleInfoLabel.Text = $"DLC Available for {titleName} [{titleId.ToUpper()}]";
 
             try

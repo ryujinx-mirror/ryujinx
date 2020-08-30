@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS
 
             Npdm metaData = ReadNpdm(codeFs);
 
-            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.GetBaseModsPath());
+            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.ModLoader.GetModsBasePath());
 
             if (TitleId != 0)
             {
@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS
             IFileSystem codeFs = null;
 
             // Load Update
-            string titleUpdateMetadataPath = Path.Combine(_fileSystem.GetBasePath(), "games", mainNca.Header.TitleId.ToString("x16"), "updates.json");
+            string titleUpdateMetadataPath = Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "updates.json");
 
             if (File.Exists(titleUpdateMetadataPath))
             {
@@ -261,7 +261,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             // Load Aoc
-            string titleAocMetadataPath = Path.Combine(_fileSystem.GetBasePath(), "games", mainNca.Header.TitleId.ToString("x16"), "dlc.json");
+            string titleAocMetadataPath = Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "dlc.json");
 
             if (File.Exists(titleAocMetadataPath))
             {
@@ -310,7 +310,7 @@ namespace Ryujinx.HLE.HOS
 
             Npdm metaData = ReadNpdm(codeFs);
 
-            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.GetBaseModsPath());
+            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.ModLoader.GetModsBasePath());
 
             if (controlNca != null)
             {
