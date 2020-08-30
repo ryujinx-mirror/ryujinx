@@ -4,7 +4,6 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Configuration;
-using Ryujinx.Debugger.Profiler;
 using Ryujinx.Ui;
 using OpenTK;
 using System;
@@ -104,8 +103,6 @@ namespace Ryujinx
             }
 
             PrintSystemInfo();
-
-            Profile.Initialize();
 
             Application.Init();
 

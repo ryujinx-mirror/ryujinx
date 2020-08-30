@@ -6,18 +6,8 @@
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <Version>1.0.0-dirty</Version>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Release|AnyCPU'">
-    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
-    <Optimize>true</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Debug|AnyCPU'">
-    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
-    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <!-- Due to .net core 3.1 embedded resource loading -->
@@ -90,7 +80,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
-    <ProjectReference Include="..\Ryujinx.Debugger\Ryujinx.Debugger.csproj" />
     <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />

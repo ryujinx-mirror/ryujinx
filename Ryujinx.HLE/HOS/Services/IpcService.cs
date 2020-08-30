@@ -6,7 +6,6 @@ using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Ryujinx.Debugger.Profiler;
 using System.Reflection;
 using System.Linq;
 
@@ -111,16 +110,7 @@ namespace Ryujinx.HLE.HOS.Services
                 {
                     Logger.Debug?.Print(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Name}");
 
-                    ProfileConfig profile = Profiles.ServiceCall;
-
-                    profile.SessionGroup = service.GetType().Name;
-                    profile.SessionItem  = processRequest.Name;
-
-                    Profile.Begin(profile);
-
                     result = (ResultCode)processRequest.Invoke(service, new object[] { context });
-
-                    Profile.End(profile);
                 }
                 else
                 {

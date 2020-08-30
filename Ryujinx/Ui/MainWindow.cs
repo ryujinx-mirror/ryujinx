@@ -7,17 +7,13 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
 using Ryujinx.Configuration;
-using Ryujinx.Configuration.System;
-using Ryujinx.Debugger.Profiler;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
-using Ryujinx.HLE.HOS.Services.Hid;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,12 +41,6 @@ namespace Ryujinx.Ui
         private static bool _gameLoaded;
         private static bool _ending;
 
-#pragma warning disable CS0169
-        private static bool _debuggerOpened;
-
-        private static Debugger.Debugger _debugger;
-#pragma warning restore CS0169
-
 #pragma warning disable CS0169, CS0649, IDE0044
 
         [GUI] MenuBar        _menuBar;
@@ -62,7 +52,6 @@ namespace Ryujinx.Ui
         [GUI] MenuItem       _firmwareInstallDirectory;
         [GUI] MenuItem       _firmwareInstallFile;
         [GUI] Label          _hostStatus;
-        [GUI] MenuItem       _openDebugger;
         [GUI] CheckMenuItem  _iconToggle;
         [GUI] CheckMenuItem  _developerToggle;
         [GUI] CheckMenuItem  _appToggle;
@@ -150,13 +139,6 @@ namespace Ryujinx.Ui
             if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _fileSizeToggle.Active   = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _pathToggle.Active       = true;
 
-#if USE_DEBUGGING
-            _debugger = new Debugger.Debugger();
-            _openDebugger.Activated += _openDebugger_Opened;
-#else
-            _openDebugger.Hide();
-#endif
-
             _gameTable.Model = _tableStore = new ListStore(
                 typeof(bool),
                 typeof(Gdk.Pixbuf),
@@ -204,36 +186,6 @@ namespace Ryujinx.Ui
         {
             _fullScreen.Label = args.Event.NewWindowState.HasFlag(Gdk.WindowState.Fullscreen) ? "Exit Fullscreen" : "Enter Fullscreen";
         }
-
-#if USE_DEBUGGING
-        private void _openDebugger_Opened(object sender, EventArgs e)
-        {
-            if (_debuggerOpened)
-            {
-                return;
-            }
-
-            Window debugWindow = new Window("Debugger");
-            
-            debugWindow.SetSizeRequest(1280, 640);
-            debugWindow.Child = _debugger.Widget;
-            debugWindow.DeleteEvent += DebugWindow_DeleteEvent;
-            debugWindow.ShowAll();
-
-            _debugger.Enable();
-
-            _debuggerOpened = true;
-        }
-
-        private void DebugWindow_DeleteEvent(object o, DeleteEventArgs args)
-        {
-            _debuggerOpened = false;
-
-            _debugger.Disable();
-
-            (_debugger.Widget.Parent as Window)?.Remove(_debugger.Widget);
-        }
-#endif
 
         internal static void ApplyTheme()
         {
@@ -640,11 +592,6 @@ namespace Ryujinx.Ui
 
         private void End(HLE.Switch device)
         {
-
-#if USE_DEBUGGING
-            _debugger.Dispose();
-#endif
-
             if (_ending)
             {
                 return;
@@ -668,7 +615,6 @@ namespace Ryujinx.Ui
 
             Dispose();
 
-            Profile.FinishProfiling();
             DiscordIntegrationModule.Exit();
 
             Ptc.Dispose();

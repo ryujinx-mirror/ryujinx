@@ -4,27 +4,15 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-    <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
-    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <!-- Due to Concentus. -->
@@ -47,7 +35,6 @@
     <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
     <ProjectReference Include="..\Ryujinx.Cpu\Ryujinx.Cpu.csproj" />
-    <ProjectReference Include="..\Ryujinx.Debugger\Ryujinx.Debugger.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Host1x\Ryujinx.Graphics.Host1x.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Nvdec\Ryujinx.Graphics.Nvdec.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Vic\Ryujinx.Graphics.Vic.csproj" />
