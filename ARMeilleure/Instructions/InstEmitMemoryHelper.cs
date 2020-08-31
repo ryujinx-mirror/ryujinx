@@ -124,21 +124,12 @@ namespace ARMeilleure.Instructions
 
         private static void EmitReadInt(ArmEmitterContext context, Operand address, int rt, int size)
         {
-            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
-
-            Operand lblFastPath = Label();
             Operand lblSlowPath = Label();
             Operand lblEnd      = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
 
-            context.MarkLabel(lblSlowPath);
-
-            EmitReadIntFallback(context, address, rt, size);
-
-            context.Branch(lblEnd);
-
-            context.MarkLabel(lblFastPath);
+            context.BranchIfTrue(lblSlowPath, isUnalignedAddr);
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: false);
 
@@ -153,6 +144,12 @@ namespace ARMeilleure.Instructions
             }
 
             SetInt(context, rt, value);
+
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblSlowPath);
+
+            EmitReadIntFallback(context, address, rt, size);
 
             context.MarkLabel(lblEnd);
         }
@@ -195,21 +192,12 @@ namespace ARMeilleure.Instructions
             int elem,
             int size)
         {
-            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
-
-            Operand lblFastPath = Label();
             Operand lblSlowPath = Label();
             Operand lblEnd      = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
 
-            context.MarkLabel(lblSlowPath);
-
-            EmitReadVectorFallback(context, address, vector, rt, elem, size);
-
-            context.Branch(lblEnd);
-
-            context.MarkLabel(lblFastPath);
+            context.BranchIfTrue(lblSlowPath, isUnalignedAddr);
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: false);
 
@@ -226,6 +214,12 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVec(rt), value);
 
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblSlowPath);
+
+            EmitReadVectorFallback(context, address, vector, rt, elem, size);
+
             context.MarkLabel(lblEnd);
         }
 
@@ -236,21 +230,12 @@ namespace ARMeilleure.Instructions
 
         private static void EmitWriteInt(ArmEmitterContext context, Operand address, int rt, int size)
         {
-            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
-
-            Operand lblFastPath = Label();
             Operand lblSlowPath = Label();
             Operand lblEnd      = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
 
-            context.MarkLabel(lblSlowPath);
-
-            EmitWriteIntFallback(context, address, rt, size);
-
-            context.Branch(lblEnd);
-
-            context.MarkLabel(lblFastPath);
+            context.BranchIfTrue(lblSlowPath, isUnalignedAddr);
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: true);
 
@@ -268,6 +253,12 @@ namespace ARMeilleure.Instructions
                 case 2: context.Store  (physAddr, value); break;
                 case 3: context.Store  (physAddr, value); break;
             }
+
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblSlowPath);
+
+            EmitWriteIntFallback(context, address, rt, size);
 
             context.MarkLabel(lblEnd);
         }
@@ -318,21 +309,12 @@ namespace ARMeilleure.Instructions
             int elem,
             int size)
         {
-            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
-
-            Operand lblFastPath = Label();
             Operand lblSlowPath = Label();
             Operand lblEnd      = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            Operand isUnalignedAddr = EmitAddressCheck(context, address, size);
 
-            context.MarkLabel(lblSlowPath);
-
-            EmitWriteVectorFallback(context, address, rt, elem, size);
-
-            context.Branch(lblEnd);
-
-            context.MarkLabel(lblFastPath);
+            context.BranchIfTrue(lblSlowPath, isUnalignedAddr);
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: true);
 
@@ -340,12 +322,18 @@ namespace ARMeilleure.Instructions
 
             switch (size)
             {
-                case 0: context.Store8 (physAddr, context.VectorExtract8(value, elem));                  break;
-                case 1: context.Store16(physAddr, context.VectorExtract16(value, elem));                 break;
-                case 2: context.Store  (physAddr, context.VectorExtract(OperandType.FP32, value, elem)); break;
-                case 3: context.Store  (physAddr, context.VectorExtract(OperandType.FP64, value, elem)); break;
-                case 4: context.Store  (physAddr, value);                                                break;
+                case 0: context.Store8 (physAddr, context.VectorExtract8(value, elem));                 break;
+                case 1: context.Store16(physAddr, context.VectorExtract16(value, elem));                break;
+                case 2: context.Store  (physAddr, context.VectorExtract(OperandType.I32, value, elem)); break;
+                case 3: context.Store  (physAddr, context.VectorExtract(OperandType.I64, value, elem)); break;
+                case 4: context.Store  (physAddr, value);                                               break;
             }
+
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblSlowPath);
+
+            EmitWriteVectorFallback(context, address, rt, elem, size);
 
             context.MarkLabel(lblEnd);
         }
