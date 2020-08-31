@@ -494,15 +494,19 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+                EmitCvtf(context, signed: true, scalar: true);
+            }
+        }
 
-                int sizeF = op.Size & 1;
-
-                Operand res = EmitVectorLongExtract(context, op.Rn, 0, sizeF + 2);
-
-                res = EmitFPConvert(context, res, op.Size, signed: true);
-
-                context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+        public static void Scvtf_S_Fixed(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitSse2ScvtfOp(context, scalar: true);
+            }
+            else
+            {
+                EmitCvtf(context, signed: true, scalar: true);
             }
         }
 
@@ -514,7 +518,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorCvtf(context, signed: true);
+                EmitCvtf(context, signed: true, scalar: false);
             }
         }
 
@@ -526,7 +530,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorCvtf(context, signed: true);
+                EmitCvtf(context, signed: true, scalar: false);
             }
         }
 
@@ -562,15 +566,19 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+                EmitCvtf(context, signed: false, scalar: true);
+            }
+        }
 
-                int sizeF = op.Size & 1;
-
-                Operand ne = EmitVectorLongExtract(context, op.Rn, 0, sizeF + 2);
-
-                Operand res = EmitFPConvert(context, ne, sizeF, signed: false);
-
-                context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+        public static void Ucvtf_S_Fixed(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitSse2UcvtfOp(context, scalar: true);
+            }
+            else
+            {
+                EmitCvtf(context, signed: false, scalar: true);
             }
         }
 
@@ -582,7 +590,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorCvtf(context, signed: false);
+                EmitCvtf(context, signed: false, scalar: false);
             }
         }
 
@@ -594,7 +602,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorCvtf(context, signed: false);
+                EmitCvtf(context, signed: false, scalar: false);
             }
         }
 
@@ -742,7 +750,7 @@ namespace ARMeilleure.Instructions
             SetIntOrZR(context, op.Rd, res);
         }
 
-        private static void EmitVectorCvtf(ArmEmitterContext context, bool signed)
+        private static void EmitCvtf(ArmEmitterContext context, bool signed, bool scalar)
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
@@ -753,7 +761,7 @@ namespace ARMeilleure.Instructions
 
             int fBits = GetFBits(context);
 
-            int elems = op.GetBytesCount() >> sizeI;
+            int elems = !scalar ? op.GetBytesCount() >> sizeI : 1;
 
             for (int index = 0; index < elems; index++)
             {
