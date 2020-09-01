@@ -674,7 +674,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool productShiftLeft = false;
             bool merge            = false;
 
-            if (!(op is OpCodeAluRegCbuf))
+            if (op is OpCodeAluCbuf)
+            {
+                productShiftLeft = context.CurrOp.RawOpCode.Extract(55);
+                merge            = context.CurrOp.RawOpCode.Extract(56);
+            }
+            else if (!(op is OpCodeAluRegCbuf))
             {
                 productShiftLeft = context.CurrOp.RawOpCode.Extract(36);
                 merge            = context.CurrOp.RawOpCode.Extract(37);
