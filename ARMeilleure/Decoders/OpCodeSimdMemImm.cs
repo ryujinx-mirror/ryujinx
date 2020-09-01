@@ -6,7 +6,16 @@ namespace ARMeilleure.Decoders
         {
             Size |= (opCode >> 21) & 4;
 
-            if (!WBack && !Unscaled && Size >= 4)
+            if (Size > 4)
+            {
+                Instruction = InstDescriptor.Undefined;
+
+                return;
+            }
+
+            // Base class already shifts the immediate, we only
+            // need to shift it if size (scale) is 4, since this value is only set here.
+            if (!WBack && !Unscaled && Size == 4)
             {
                 Immediate <<= 4;
             }

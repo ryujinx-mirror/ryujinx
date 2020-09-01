@@ -6,6 +6,13 @@ namespace ARMeilleure.Decoders
         {
             Size |= (opCode >> 21) & 4;
 
+            if (Size > 4)
+            {
+                Instruction = InstDescriptor.Undefined;
+
+                return;
+            }
+
             Extend64 = false;
         }
     }
