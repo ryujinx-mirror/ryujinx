@@ -5,9 +5,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 {
     class IMultiCommitManager : IpcService // 6.0.0+
     {
-        private LibHac.FsService.IMultiCommitManager _baseCommitManager;
+        private LibHac.FsSrv.IMultiCommitManager _baseCommitManager;
 
-        public IMultiCommitManager(LibHac.FsService.IMultiCommitManager baseCommitManager)
+        public IMultiCommitManager(LibHac.FsSrv.IMultiCommitManager baseCommitManager)
         {
             _baseCommitManager = baseCommitManager;
         }

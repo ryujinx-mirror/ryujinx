@@ -1,21 +1,21 @@
 using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
-
+using LibHac.Fs.Fsa;
 using static Ryujinx.HLE.Utilities.StringUtils;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     class IFileSystem : IpcService
     {
-        private LibHac.Fs.IFileSystem _fileSystem;
+        private LibHac.Fs.Fsa.IFileSystem _fileSystem;
 
-        public IFileSystem(LibHac.Fs.IFileSystem provider)
+        public IFileSystem(LibHac.Fs.Fsa.IFileSystem provider)
         {
             _fileSystem = provider;
         }
 
-        public LibHac.Fs.IFileSystem GetBaseFileSystem()
+        public LibHac.Fs.Fsa.IFileSystem GetBaseFileSystem()
         {
             return _fileSystem;
         }
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             U8Span name = ReadUtf8Span(context);
 
-            Result result = _fileSystem.OpenFile(out LibHac.Fs.IFile file, name, mode);
+            Result result = _fileSystem.OpenFile(out LibHac.Fs.Fsa.IFile file, name, mode);
 
             if (result.IsSuccess())
             {
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             U8Span name = ReadUtf8Span(context);
 
-            Result result = _fileSystem.OpenDirectory(out LibHac.Fs.IDirectory dir, name, mode);
+            Result result = _fileSystem.OpenDirectory(out LibHac.Fs.Fsa.IDirectory dir, name, mode);
 
             if (result.IsSuccess())
             {

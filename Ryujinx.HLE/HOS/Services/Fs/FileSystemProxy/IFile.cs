@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     class IFile : IpcService, IDisposable
     {
-        private LibHac.Fs.IFile _baseFile;
+        private LibHac.Fs.Fsa.IFile _baseFile;
 
-        public IFile(LibHac.Fs.IFile baseFile)
+        public IFile(LibHac.Fs.Fsa.IFile baseFile)
         {
             _baseFile = baseFile;
         }
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             long position = context.Request.ReceiveBuff[0].Position;
 
-            ReadOption readOption = (ReadOption)context.RequestData.ReadInt32();
+            ReadOption readOption = new ReadOption(context.RequestData.ReadInt32());
             context.RequestData.BaseStream.Position += 4;
 
             long offset = context.RequestData.ReadInt64();
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             long position = context.Request.SendBuff[0].Position;
 
-            WriteOption writeOption = (WriteOption)context.RequestData.ReadInt32();
+            WriteOption writeOption = new WriteOption(context.RequestData.ReadInt32());
             context.RequestData.BaseStream.Position += 4;
 
             long offset = context.RequestData.ReadInt64();

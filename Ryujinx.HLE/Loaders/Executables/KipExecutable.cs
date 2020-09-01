@@ -1,5 +1,5 @@
 using LibHac.Fs;
-using LibHac.Loader;
+using LibHac.Kernel;
 using System;
 
 namespace Ryujinx.HLE.Loaders.Executables
@@ -31,6 +31,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         public byte IdealCoreId { get; }
         public int Version { get; }
         public string Name { get; }
+
         public KipExecutable(IStorage inStorage)
         {
             KipReader reader = new KipReader();
@@ -70,11 +71,11 @@ namespace Ryujinx.HLE.Loaders.Executables
             DataSize = DecompressSection(reader, KipReader.SegmentType.Data, DataOffset, Program);
         }
 
-        private static int DecompressSection(KipReader reader, KipReader.SegmentType segmentType, int offset, byte[] Program)
+        private static int DecompressSection(KipReader reader, KipReader.SegmentType segmentType, int offset, byte[] program)
         {
             reader.GetSegmentSize(segmentType, out int uncompressedSize).ThrowIfFailure();
 
-            var span = Program.AsSpan().Slice(offset, uncompressedSize);
+            var span = program.AsSpan().Slice(offset, uncompressedSize);
 
             reader.ReadSegment(segmentType, span).ThrowIfFailure();
 

@@ -11,6 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using ApplicationId = LibHac.Ncm.ApplicationId;
+
 namespace Ryujinx.Ui
 {
     internal class SaveImporter
@@ -57,7 +59,7 @@ namespace Ryujinx.Ui
         {
             SaveDataAttribute key = save.Attribute;
 
-            Result result = fs.CreateSaveData(key.TitleId, key.UserId, key.TitleId, 0, 0, 0);
+            Result result = fs.CreateSaveData(new ApplicationId(key.ProgramId.Value), key.UserId, key.ProgramId.Value, 0, 0, 0);
             if (result.IsFailure()) return result;
 
             bool isOldMounted = false;
@@ -70,7 +72,7 @@ namespace Ryujinx.Ui
 
                 isOldMounted = true;
 
-                result = fs.MountSaveData("NewSave".ToU8Span(), key.TitleId, key.UserId);
+                result = fs.MountSaveData("NewSave".ToU8Span(), new ApplicationId(key.ProgramId.Value), key.UserId);
                 if (result.IsFailure()) return result;
 
                 isNewMounted = true;
@@ -132,7 +134,7 @@ namespace Ryujinx.Ui
                         {
                             Type = SaveDataType.Account,
                             UserId = userId,
-                            TitleId = new TitleId(titleId)
+                            ProgramId = new ProgramId(titleId)
                         };
 
                         SaveToImport save = new SaveToImport(dataPath, attribute);

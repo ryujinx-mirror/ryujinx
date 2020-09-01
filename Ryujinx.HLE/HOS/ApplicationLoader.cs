@@ -3,9 +3,9 @@ using LibHac;
 using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
+using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
-using LibHac.Ncm;
 using LibHac.Ns;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
+using ApplicationId = LibHac.Ncm.ApplicationId;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -73,7 +74,7 @@ namespace Ryujinx.HLE.HOS
 
             if (TitleId != 0)
             {
-                EnsureSaveData(new TitleId(TitleId));
+                EnsureSaveData(new ApplicationId(TitleId));
             }
 
             LoadExeFs(codeFs, metaData);
@@ -333,7 +334,7 @@ namespace Ryujinx.HLE.HOS
 
             if (TitleId != 0)
             {
-                EnsureSaveData(new TitleId(TitleId));
+                EnsureSaveData(new ApplicationId(TitleId));
             }
 
             LoadExeFs(codeFs, metaData);
@@ -549,7 +550,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        private Result EnsureSaveData(TitleId titleId)
+        private Result EnsureSaveData(ApplicationId applicationId)
         {
             Logger.Info?.Print(LogClass.Application, "Ensuring required savedata exists.");
 
@@ -557,7 +558,7 @@ namespace Ryujinx.HLE.HOS
 
             ref ApplicationControlProperty control = ref ControlData.Value;
 
-            if (Util.IsEmpty(ControlData.ByteSpan))
+            if (LibHac.Utilities.IsEmpty(ControlData.ByteSpan))
             {
                 // If the current application doesn't have a loaded control property, create a dummy one
                 // and set the savedata sizes so a user savedata will be created.
@@ -573,7 +574,7 @@ namespace Ryujinx.HLE.HOS
 
             FileSystemClient fs = _fileSystem.FsClient;
 
-            Result rc = fs.EnsureApplicationCacheStorage(out _, titleId, ref control);
+            Result rc = fs.EnsureApplicationCacheStorage(out _, applicationId, ref control);
 
             if (rc.IsFailure())
             {
@@ -582,7 +583,7 @@ namespace Ryujinx.HLE.HOS
                 return rc;
             }
 
-            rc = EnsureApplicationSaveData(fs, out _, titleId, ref control, ref user);
+            rc = EnsureApplicationSaveData(fs, out _, applicationId, ref control, ref user);
 
             if (rc.IsFailure())
             {

@@ -2,7 +2,6 @@ using LibHac;
 using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.Ncm;
 using LibHac.Ns;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
@@ -18,6 +17,7 @@ using System.Numerics;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
 using AccountUid = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
+using ApplicationId = LibHac.Ncm.ApplicationId;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy
 {
@@ -29,9 +29,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
         public IApplicationFunctions(Horizon system)
         {
-            _gpuErrorDetectedSystemEvent         = new KEvent(system.KernelContext);
+            _gpuErrorDetectedSystemEvent = new KEvent(system.KernelContext);
             _friendInvitationStorageChannelEvent = new KEvent(system.KernelContext);
-            _notificationStorageChannelEvent     = new KEvent(system.KernelContext);
+            _notificationStorageChannelEvent = new KEvent(system.KernelContext);
         }
 
         [Command(1)]
@@ -48,28 +48,28 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // EnsureSaveData(nn::account::Uid) -> u64
         public ResultCode EnsureSaveData(ServiceCtx context)
         {
-            Uid     userId  = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
-            TitleId titleId = new TitleId(context.Process.TitleId);
+            Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
+            ApplicationId applicationId = new ApplicationId(context.Process.TitleId);
 
             BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
 
             ref ApplicationControlProperty control = ref controlHolder.Value;
 
-            if (Util.IsEmpty(controlHolder.ByteSpan))
+            if (LibHac.Utilities.IsEmpty(controlHolder.ByteSpan))
             {
                 // If the current application doesn't have a loaded control property, create a dummy one
                 // and set the savedata sizes so a user savedata will be created.
                 control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
 
                 // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
-                control.UserAccountSaveDataSize        = 0x4000;
+                control.UserAccountSaveDataSize = 0x4000;
                 control.UserAccountSaveDataJournalSize = 0x4000;
 
                 Logger.Warning?.Print(LogClass.ServiceAm,
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
-            Result result = EnsureApplicationSaveData(context.Device.FileSystem.FsClient, out long requiredSize, titleId,
+            Result result = EnsureApplicationSaveData(context.Device.FileSystem.FsClient, out long requiredSize, applicationId,
                 ref control, ref userId);
 
             context.ResponseData.Write(requiredSize);
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // TODO: When above calls are implemented, switch to using ns:am
 
             long desiredLanguageCode = context.Device.System.State.DesiredLanguageCode;
-            
+
             int supportedLanguages = (int)context.Device.Application.ControlData.Value.SupportedLanguages;
             int firstSupported = BitOperations.TrailingZeroCount(supportedLanguages);
 
@@ -210,10 +210,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // InitializeApplicationCopyrightFrameBuffer(s32 width, s32 height, handle<copy, transfer_memory> transfer_memory, u64 transfer_memory_size)
         public ResultCode InitializeApplicationCopyrightFrameBuffer(ServiceCtx context)
         {
-            int   width                 = context.RequestData.ReadInt32();
-            int   height                = context.RequestData.ReadInt32();
-            ulong transferMemorySize    = context.RequestData.ReadUInt64();
-            int   transferMemoryHandle  = context.Request.HandleDesc.ToCopy[0];
+            int width = context.RequestData.ReadInt32();
+            int height = context.RequestData.ReadInt32();
+            ulong transferMemorySize = context.RequestData.ReadUInt64();
+            int transferMemoryHandle = context.Request.HandleDesc.ToCopy[0];
             ulong transferMemoryAddress = context.Process.HandleTable.GetObject<KTransferMemory>(transferMemoryHandle).Address;
 
             ResultCode resultCode = ResultCode.InvalidParameters;
@@ -258,12 +258,12 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetApplicationCopyrightImage(buffer<bytes, 0x45> frame_buffer, s32 x, s32 y, s32 width, s32 height, s32 window_origin_mode)
         public ResultCode SetApplicationCopyrightImage(ServiceCtx context)
         {
-            long frameBufferPos   = context.Request.SendBuff[0].Position;
-            long frameBufferSize  = context.Request.SendBuff[0].Size;
-            int  x                = context.RequestData.ReadInt32();
-            int  y                = context.RequestData.ReadInt32();
-            int  width            = context.RequestData.ReadInt32();
-            int  height           = context.RequestData.ReadInt32();
+            long frameBufferPos = context.Request.SendBuff[0].Position;
+            long frameBufferSize = context.Request.SendBuff[0].Size;
+            int x = context.RequestData.ReadInt32();
+            int y = context.RequestData.ReadInt32();
+            int width = context.RequestData.ReadInt32();
+            int height = context.RequestData.ReadInt32();
             uint windowOriginMode = context.RequestData.ReadUInt32();
 
             ResultCode resultCode = ResultCode.InvalidParameters;
@@ -272,7 +272,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             {
                 ResultCode result = SetApplicationCopyrightImageImpl(x, y, width, height, frameBufferPos, frameBufferSize, windowOriginMode);
 
-                if (resultCode != ResultCode.Success)
+                if (result != ResultCode.Success)
                 {
                     resultCode = result;
                 }

@@ -1,4 +1,4 @@
-﻿using LibHac.Fs;
+﻿using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using Ryujinx.HLE.HOS;
 using System.IO;

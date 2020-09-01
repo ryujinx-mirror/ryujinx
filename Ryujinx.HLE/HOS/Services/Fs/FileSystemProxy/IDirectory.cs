@@ -7,9 +7,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     class IDirectory : IpcService
     {
-        private LibHac.Fs.IDirectory _baseDirectory;
+        private LibHac.Fs.Fsa.IDirectory _baseDirectory;
 
-        public IDirectory(LibHac.Fs.IDirectory directory)
+        public IDirectory(LibHac.Fs.Fsa.IDirectory directory)
         {
             _baseDirectory = directory;
         }

@@ -1,7 +1,8 @@
 using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.FsService;
+using LibHac.Fs.Fsa;
+using LibHac.FsSrv;
 using LibHac.FsSystem;
 using LibHac.Spl;
 using Ryujinx.Common.Configuration;

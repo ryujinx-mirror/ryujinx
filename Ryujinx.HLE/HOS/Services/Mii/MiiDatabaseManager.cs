@@ -2,7 +2,6 @@
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
-using LibHac.Ncm;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using System.Runtime.CompilerServices;
 
@@ -137,7 +136,8 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                     {
                         // TODO: We're currently always specifying the owner ID because FS doesn't have a way of
                         // knowing which process called it
-                        result = _filesystemClient.CreateSystemSaveData(targetSaveDataId, new TitleId(targetTitleId), 0x10000, 0x10000, SaveDataFlags.KeepAfterResettingSystemSaveDataWithoutUserSaveData);
+                        result = _filesystemClient.CreateSystemSaveData(targetSaveDataId, targetTitleId, 0x10000,
+                            0x10000, SaveDataFlags.KeepAfterResettingSystemSaveDataWithoutUserSaveData);
                         if (result.IsFailure()) return result;
 
                         result = _filesystemClient.MountSystemSaveData(mountName, SaveDataSpaceId.System, targetSaveDataId);

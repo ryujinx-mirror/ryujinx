@@ -1,12 +1,13 @@
-﻿using LibHac;
+﻿using System;
+using LibHac;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
-    class ISaveDataInfoReader : IpcService
+    class ISaveDataInfoReader : IpcService, IDisposable
     {
-        private LibHac.FsService.ISaveDataInfoReader _baseReader;
+        private ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> _baseReader;
 
-        public ISaveDataInfoReader(LibHac.FsService.ISaveDataInfoReader baseReader)
+        public ISaveDataInfoReader(ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> baseReader)
         {
             _baseReader = baseReader;
         }
@@ -20,12 +21,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 
             byte[] infoBuffer = new byte[bufferLen];
 
-            Result result = _baseReader.ReadSaveDataInfo(out long readCount, infoBuffer);
+            Result result = _baseReader.Target.Read(out long readCount, infoBuffer);
 
             context.Memory.Write((ulong)bufferPosition, infoBuffer);
             context.ResponseData.Write(readCount);
 
             return (ResultCode)result.Value;
+        }
+
+        public void Dispose()
+        {
+            _baseReader.Dispose();
         }
     }
 }

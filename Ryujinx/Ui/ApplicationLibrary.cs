@@ -1,12 +1,10 @@
 using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.Fs.Shim;
+using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
-using LibHac.Ncm;
 using LibHac.Ns;
-using LibHac.Spl;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Configuration.System;
@@ -14,13 +12,11 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Npdm;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-using RightsId = LibHac.Fs.RightsId;
 using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
 
 namespace Ryujinx.Ui
@@ -211,9 +207,6 @@ namespace Ryujinx.Ui
                                     GetControlFsAndTitleId(pfs, out IFileSystem controlFs, out titleId);
 
                                     ReadControlData(controlFs, controlHolder.ByteSpan);
-
-                                    // Creates NACP class from the NACP file
-                                    controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                     // Get the title name, title ID, developer name and version number from the NACP
                                     version = IsUpdateApplied(titleId, out string updateVersion) ? updateVersion : controlHolder.Value.DisplayVersion.ToString();

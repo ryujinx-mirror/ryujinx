@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
                     return ResultCode.PartitionNotFound;
                 }
 
-                LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+                LibHac.Fs.Fsa.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
 
                 openedFileSystem = new IFileSystem(fileSystem);
             }
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                     string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
 
-                    Result result = nsp.OpenFile(out LibHac.Fs.IFile ncaFile, filename.ToU8Span(), OpenMode.Read);
+                    Result result = nsp.OpenFile(out LibHac.Fs.Fsa.IFile ncaFile, filename.ToU8Span(), OpenMode.Read);
                     if (result.IsFailure())
                     {
                         return (ResultCode)result.Value;
@@ -99,11 +99,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return ResultCode.PathDoesNotExist;
         }
 
-        public static void ImportTitleKeysFromNsp(LibHac.Fs.IFileSystem nsp, Keyset keySet)
+        public static void ImportTitleKeysFromNsp(LibHac.Fs.Fsa.IFileSystem nsp, Keyset keySet)
         {
             foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
             {
-                Result result = nsp.OpenFile(out LibHac.Fs.IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+                Result result = nsp.OpenFile(out LibHac.Fs.Fsa.IFile ticketFile, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
                 if (result.IsSuccess())
                 {

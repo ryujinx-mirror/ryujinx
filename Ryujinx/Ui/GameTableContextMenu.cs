@@ -3,6 +3,7 @@ using LibHac;
 using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
+using LibHac.Fs.Fsa;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
@@ -45,19 +46,19 @@ namespace Ryujinx.Ui
 
             MenuItem openSaveUserDir = new MenuItem("Open User Save Directory")
             {
-                Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0,
+                Sensitive   = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0,
                 TooltipText = "Open the directory which contains Application's User Saves."
             };
 
             MenuItem openSaveDeviceDir = new MenuItem("Open Device Save Directory")
             {
-                Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0,
+                Sensitive   = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0,
                 TooltipText = "Open the directory which contains Application's Device Saves."
             };
 
             MenuItem openSaveBcatDir = new MenuItem("Open BCAT Save Directory")
             {
-                Sensitive   = !Util.IsEmpty(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0,
+                Sensitive   = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0,
                 TooltipText = "Open the directory which contains Application's BCAT Saves."
             };
 
@@ -175,7 +176,7 @@ namespace Ryujinx.Ui
 
                 ref ApplicationControlProperty control = ref controlHolder.Value;
 
-                if (LibHac.Util.IsEmpty(controlHolder.ByteSpan))
+                if (LibHac.Utilities.IsEmpty(controlHolder.ByteSpan))
                 {
                     // If the current application doesn't have a loaded control property, create a dummy one
                     // and set the savedata sizes so a user savedata will be created.
@@ -191,7 +192,7 @@ namespace Ryujinx.Ui
 
                 Uid user = new Uid(1, 0);
 
-                result = EnsureApplicationSaveData(_virtualFileSystem.FsClient, out _, new TitleId(titleId), ref control, ref user);
+                result = EnsureApplicationSaveData(_virtualFileSystem.FsClient, out _, new LibHac.Ncm.ApplicationId(titleId), ref control, ref user);
 
                 if (result.IsFailure())
                 {
@@ -539,7 +540,7 @@ namespace Ryujinx.Ui
 
         private void OpenSaveDir(string titleName, ulong titleId, SaveDataFilter filter)
         {
-            filter.SetProgramId(new TitleId(titleId));
+            filter.SetProgramId(new ProgramId(titleId));
 
             if (!TryFindSaveData(titleName, titleId, _controlData, filter, out ulong saveDataId))
             {

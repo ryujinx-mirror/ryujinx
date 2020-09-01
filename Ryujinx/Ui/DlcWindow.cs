@@ -1,9 +1,10 @@
 using Gtk;
 using LibHac;
 using LibHac.Common;
-using LibHac.FsSystem.NcaUtils;
 using LibHac.Fs;
+using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
