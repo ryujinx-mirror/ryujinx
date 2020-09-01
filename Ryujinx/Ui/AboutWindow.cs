@@ -37,51 +37,35 @@ namespace Ryujinx.Ui
             _versionText.Text = Program.Version;
         }
 
-        private static void OpenUrl(string url)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}"));
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Process.Start("xdg-open", url);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Process.Start("open", url);
-            }
-        }
-
         //Events
         private void RyujinxButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://ryujinx.org");
+            UrlHelper.OpenUrl("https://ryujinx.org");
         }
 
         private void PatreonButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://www.patreon.com/ryujinx");
+            UrlHelper.OpenUrl("https://www.patreon.com/ryujinx");
         }
 
         private void GitHubButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://github.com/Ryujinx/Ryujinx");
+            UrlHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx");
         }
 
         private void DiscordButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://discordapp.com/invite/N2FmfVc");
+            UrlHelper.OpenUrl("https://discordapp.com/invite/N2FmfVc");
         }
 
         private void TwitterButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://twitter.com/RyujinxEmu");
+            UrlHelper.OpenUrl("https://twitter.com/RyujinxEmu");
         }
 
         private void ContributorsButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
+            UrlHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
         }
 
         private void CloseToggle_Activated(object sender, EventArgs args)

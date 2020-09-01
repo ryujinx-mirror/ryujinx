@@ -1,11 +1,12 @@
 using ARMeilleure.Translation.PTC;
 using Gtk;
+using OpenTK;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Configuration;
 using Ryujinx.Ui;
-using OpenTK;
+using Ryujinx.Ui.Diagnostic;
 using System;
 using System.IO;
 using System.Reflection;
@@ -110,7 +111,7 @@ namespace Ryujinx
             bool hasAltProdKeys    = !AppDataManager.IsCustomBasePath && File.Exists(Path.Combine(AppDataManager.KeysDirPathAlt, "prod.keys"));
             if (!hasGlobalProdKeys && !hasAltProdKeys && !Migration.IsMigrationNeeded())
             {
-                GtkDialog.CreateWarningDialog("Key file was not found", "Please refer to `KEYS.md` for more info");
+                UserErrorDialog.CreateUserErrorDialog(UserError.NoKeys);
             }
 
             MainWindow mainWindow = new MainWindow();

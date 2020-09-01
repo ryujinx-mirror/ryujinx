@@ -11,6 +11,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
+using Ryujinx.Ui.Diagnostic;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -360,7 +361,70 @@ namespace Ryujinx.Ui
 
                 UpdateGraphicsConfig();
 
-                Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {_contentManager.GetCurrentFirmwareVersion()?.VersionString}");
+                SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
+
+                bool isDirectory = Directory.Exists(path);
+
+                if (!SetupValidator.CanStartApplication(_contentManager, path, out UserError userError))
+                {
+                    if (SetupValidator.CanFixStartApplication(_contentManager, path, userError, out firmwareVersion))
+                    {
+                        if (userError == UserError.NoFirmware)
+                        {
+                            MessageDialog shouldInstallFirmwareDialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Info, ButtonsType.YesNo, null)
+                            {
+                                Title = "Ryujinx - Info",
+                                Text = "No Firmware Installed",
+                                SecondaryText = $"Would you like to install the firmware embedded in this game? (Firmware {firmwareVersion.VersionString})"
+                            };
+
+                            if (shouldInstallFirmwareDialog.Run() != (int)ResponseType.Yes)
+                            {
+                                shouldInstallFirmwareDialog.Dispose();
+
+                                UserErrorDialog.CreateUserErrorDialog(userError);
+
+                                device.Dispose();
+
+                                return;
+                            }
+                            else
+                            {
+                                shouldInstallFirmwareDialog.Dispose();
+                            }
+                        }
+
+                        if (!SetupValidator.TryFixStartApplication(_contentManager, path, userError, out _))
+                        {
+                            UserErrorDialog.CreateUserErrorDialog(userError);
+
+                            device.Dispose();
+
+                            return;
+                        }
+
+                        // Tell the user that we installed a firmware for them.
+                        if (userError == UserError.NoFirmware)
+                        {
+                            firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
+
+                            RefreshFirmwareLabel();
+
+                            GtkDialog.CreateInfoDialog("Ryujinx - Info", $"Firmware {firmwareVersion.VersionString} was installed",
+                                                       $"No installed firmware was found but Ryujinx was able to install firmware {firmwareVersion.VersionString} from the provided game.\nThe emulator will now start.");
+                        }
+                    }
+                    else
+                    {
+                        UserErrorDialog.CreateUserErrorDialog(userError);
+
+                        device.Dispose();
+
+                        return;
+                    }
+                }
+
+                Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {firmwareVersion?.VersionString}");
 
                 if (Directory.Exists(path))
                 {
