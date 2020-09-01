@@ -676,7 +676,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            if (!TextureCompatibility.SizeMatches(Info, info))
+            if (!TextureCompatibility.SizeMatches(Info, info, (flags & TextureSearchFlags.Strict) == 0))
             {
                 return false;
             }

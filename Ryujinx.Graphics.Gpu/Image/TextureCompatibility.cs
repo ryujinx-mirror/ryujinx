@@ -203,7 +203,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="rhs">Texture information to compare with</param>
         /// <param name="alignSizes">True to align the sizes according to the texture layout for comparison</param>
         /// <returns>True if the sizes matches, false otherwise</returns>
-        private static bool SizeMatches(TextureInfo lhs, TextureInfo rhs, bool alignSizes)
+        public static bool SizeMatches(TextureInfo lhs, TextureInfo rhs, bool alignSizes)
         {
             if (lhs.GetLayers() != rhs.GetLayers())
             {
