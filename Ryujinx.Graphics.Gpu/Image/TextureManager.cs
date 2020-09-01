@@ -634,7 +634,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         // deletion.
                         _cache.Lift(overlap);
                     }
-                    else if (!overlap.SizeMatches(info))
+                    else if (!TextureCompatibility.SizeMatches(overlap.Info, info))
                     {
                         // If this is used for sampling, the size must match,
                         // otherwise the shader would sample garbage data.
@@ -707,7 +707,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // The size only matters (and is only really reliable) when the
                     // texture is used on a sampler, because otherwise the size will be
                     // aligned.
-                    if (!overlap.SizeMatches(info, firstLevel) && isSamplerTexture)
+                    if (!TextureCompatibility.SizeMatches(overlap.Info, info, firstLevel) && isSamplerTexture)
                     {
                         texture.ChangeSize(info.Width, info.Height, info.DepthOrLayers);
                     }

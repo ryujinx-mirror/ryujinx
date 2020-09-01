@@ -659,32 +659,31 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Performs a comparison of this texture information, with the specified texture information.
-        /// This performs a strict comparison, used to check if two textures are equal.
+        /// This performs a strict comparison, used to check if this texture is equal to the one supplied.
         /// </summary>
-        /// <param name="info">Texture information to compare with</param>
+        /// <param name="info">Texture information to compare against</param>
         /// <param name="flags">Comparison flags</param>
         /// <returns>True if the textures are strictly equal or similar, false otherwise</returns>
         public bool IsPerfectMatch(TextureInfo info, TextureSearchFlags flags)
         {
-            if (!FormatMatches(info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0))
+            if (!TextureCompatibility.FormatMatches(Info, info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0))
             {
                 return false;
             }
 
-            if (!LayoutMatches(info))
+            if (!TextureCompatibility.LayoutMatches(Info, info))
             {
                 return false;
             }
 
-            if (!SizeMatches(info, (flags & TextureSearchFlags.Strict) == 0))
+            if (!TextureCompatibility.SizeMatches(Info, info))
             {
                 return false;
             }
 
             if ((flags & TextureSearchFlags.ForSampler) != 0 || (flags & TextureSearchFlags.Strict) != 0)
             {
-                if (!SamplerParamsMatches(info))
+                if (!TextureCompatibility.SamplerParamsMatches(Info, info))
                 {
                     return false;
                 }
@@ -694,164 +693,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 bool msTargetCompatible = Info.Target == Target.Texture2DMultisample && info.Target == Target.Texture2D;
 
-                if (!msTargetCompatible && !TargetAndSamplesCompatible(info))
+                if (!msTargetCompatible && !TextureCompatibility.TargetAndSamplesCompatible(Info, info))
                 {
                     return false;
                 }
             }
-            else if (!TargetAndSamplesCompatible(info))
+            else if (!TextureCompatibility.TargetAndSamplesCompatible(Info, info))
             {
                 return false;
             }
 
             return Info.Address == info.Address && Info.Levels == info.Levels;
-        }
-
-        /// <summary>
-        /// Checks if the texture format matches with the specified texture information.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <param name="forSampler">Indicates that the texture will be used for shader sampling</param>
-        /// <param name="forCopy">Indicates that the texture will be used as copy source or target</param>
-        /// <returns>True if the format matches, with the given comparison rules</returns>
-        private bool FormatMatches(TextureInfo info, bool forSampler, bool forCopy)
-        {
-            // D32F and R32F texture have the same representation internally,
-            // however the R32F format is used to sample from depth textures.
-            if (Info.FormatInfo.Format == Format.D32Float && info.FormatInfo.Format == Format.R32Float && (forSampler || forCopy))
-            {
-                return true;
-            }
-
-            if (forCopy)
-            {
-                // The 2D engine does not support depth-stencil formats, so it will instead
-                // use equivalent color formats. We must also consider them as compatible.
-                if (Info.FormatInfo.Format == Format.S8Uint && info.FormatInfo.Format == Format.R8Unorm)
-                {
-                    return true;
-                }
-
-                if (Info.FormatInfo.Format == Format.D16Unorm && info.FormatInfo.Format == Format.R16Unorm)
-                {
-                    return true;
-                }
-
-                if ((Info.FormatInfo.Format == Format.D24UnormS8Uint ||
-                     Info.FormatInfo.Format == Format.D24X8Unorm) && info.FormatInfo.Format == Format.B8G8R8A8Unorm)
-                {
-                    return true;
-                }
-            }
-
-            return Info.FormatInfo.Format == info.FormatInfo.Format;
-        }
-
-        /// <summary>
-        /// Checks if the texture layout specified matches with this texture layout.
-        /// The layout information is composed of the Stride for linear textures, or GOB block size
-        /// for block linear textures.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <returns>True if the layout matches, false otherwise</returns>
-        private bool LayoutMatches(TextureInfo info)
-        {
-            if (Info.IsLinear != info.IsLinear)
-            {
-                return false;
-            }
-
-            // For linear textures, gob block sizes are ignored.
-            // For block linear textures, the stride is ignored.
-            if (info.IsLinear)
-            {
-                return Info.Stride == info.Stride;
-            }
-            else
-            {
-                return Info.GobBlocksInY == info.GobBlocksInY &&
-                       Info.GobBlocksInZ == info.GobBlocksInZ;
-            }
-        }
-
-        /// <summary>
-        /// Checks if the texture sizes of the supplied texture information matches this texture.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <returns>True if the size matches, false otherwise</returns>
-        public bool SizeMatches(TextureInfo info)
-        {
-            return SizeMatches(info, alignSizes: false);
-        }
-
-        /// <summary>
-        /// Checks if the texture sizes of the supplied texture information matches the given level of
-        /// this texture.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <param name="level">Mipmap level of this texture to compare with</param>
-        /// <returns>True if the size matches with the level, false otherwise</returns>
-        public bool SizeMatches(TextureInfo info, int level)
-        {
-            return Math.Max(1, Info.Width      >> level) == info.Width  &&
-                   Math.Max(1, Info.Height     >> level) == info.Height &&
-                   Math.Max(1, Info.GetDepth() >> level) == info.GetDepth();
-        }
-
-        /// <summary>
-        /// Checks if the texture sizes of the supplied texture information matches this texture.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <param name="alignSizes">True to align the sizes according to the texture layout for comparison</param>
-        /// <returns>True if the sizes matches, false otherwise</returns>
-        private bool SizeMatches(TextureInfo info, bool alignSizes)
-        {
-            if (Info.GetLayers() != info.GetLayers())
-            {
-                return false;
-            }
-
-            if (alignSizes)
-            {
-                Size size0 = GetAlignedSize(Info);
-                Size size1 = GetAlignedSize(info);
-
-                return size0.Width  == size1.Width  &&
-                       size0.Height == size1.Height &&
-                       size0.Depth  == size1.Depth;
-            }
-            else
-            {
-                return Info.Width      == info.Width  &&
-                       Info.Height     == info.Height &&
-                       Info.GetDepth() == info.GetDepth();
-            }
-        }
-
-        /// <summary>
-        /// Checks if the texture shader sampling parameters matches.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <returns>True if the texture shader sampling parameters matches, false otherwise</returns>
-        private bool SamplerParamsMatches(TextureInfo info)
-        {
-            return Info.DepthStencilMode == info.DepthStencilMode &&
-                   Info.SwizzleR         == info.SwizzleR         &&
-                   Info.SwizzleG         == info.SwizzleG         &&
-                   Info.SwizzleB         == info.SwizzleB         &&
-                   Info.SwizzleA         == info.SwizzleA;
-        }
-
-        /// <summary>
-        /// Check if the texture target and samples count (for multisampled textures) matches.
-        /// </summary>
-        /// <param name="info">Texture information to compare with</param>
-        /// <returns>True if the texture target and samples count matches, false otherwise</returns>
-        private bool TargetAndSamplesCompatible(TextureInfo info)
-        {
-            return Info.Target     == info.Target     &&
-                   Info.SamplesInX == info.SamplesInX &&
-                   Info.SamplesInY == info.SamplesInY;
         }
 
         /// <summary>
@@ -903,189 +755,28 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            if (!ViewLayoutCompatible(info, firstLevel))
+            if (!TextureCompatibility.ViewLayoutCompatible(Info, info, firstLevel))
             {
                 return false;
             }
 
-            if (!ViewFormatCompatible(info))
+            if (!TextureCompatibility.ViewFormatCompatible(Info, info))
             {
                 return false;
             }
 
-            if (!ViewSizeMatches(info, firstLevel, isCopy))
+            if (!TextureCompatibility.ViewSizeMatches(Info, info, firstLevel, isCopy))
             {
                 return false;
             }
 
-            if (!ViewTargetCompatible(info, isCopy))
+            if (!TextureCompatibility.ViewTargetCompatible(Info, info, isCopy))
             {
                 return false;
             }
 
             return Info.SamplesInX == info.SamplesInX &&
                    Info.SamplesInY == info.SamplesInY;
-        }
-
-        /// <summary>
-        /// Check if it's possible to create a view with the specified layout.
-        /// The layout information is composed of the Stride for linear textures, or GOB block size
-        /// for block linear textures.
-        /// </summary>
-        /// <param name="info">Texture information of the texture view</param>
-        /// <param name="level">Start level of the texture view, in relation with this texture</param>
-        /// <returns>True if the layout is compatible, false otherwise</returns>
-        private bool ViewLayoutCompatible(TextureInfo info, int level)
-        {
-            if (Info.IsLinear != info.IsLinear)
-            {
-                return false;
-            }
-
-            // For linear textures, gob block sizes are ignored.
-            // For block linear textures, the stride is ignored.
-            if (info.IsLinear)
-            {
-                int width = Math.Max(1, Info.Width >> level);
-
-                int stride = width * Info.FormatInfo.BytesPerPixel;
-
-                stride = BitUtils.AlignUp(stride, 32);
-
-                return stride == info.Stride;
-            }
-            else
-            {
-                int height = Math.Max(1, Info.Height     >> level);
-                int depth  = Math.Max(1, Info.GetDepth() >> level);
-
-                (int gobBlocksInY, int gobBlocksInZ) = SizeCalculator.GetMipGobBlockSizes(
-                    height,
-                    depth,
-                    Info.FormatInfo.BlockHeight,
-                    Info.GobBlocksInY,
-                    Info.GobBlocksInZ);
-
-                return gobBlocksInY == info.GobBlocksInY &&
-                       gobBlocksInZ == info.GobBlocksInZ;
-            }
-        }
-
-        /// <summary>
-        /// Checks if the view format is compatible with this texture format.
-        /// In general, the formats are considered compatible if the bytes per pixel values are equal,
-        /// but there are more complex rules for some formats, like compressed or depth-stencil formats.
-        /// This follows the host API copy compatibility rules.
-        /// </summary>
-        /// <param name="info">Texture information of the texture view</param>
-        /// <returns>True if the formats are compatible, false otherwise</returns>
-        private bool ViewFormatCompatible(TextureInfo info)
-        {
-            return TextureCompatibility.FormatCompatible(Info.FormatInfo, info.FormatInfo);
-        }
-
-        /// <summary>
-        /// Checks if the size of a given texture view is compatible with this texture.
-        /// </summary>
-        /// <param name="info">Texture information of the texture view</param>
-        /// <param name="level">Mipmap level of the texture view in relation to this texture</param>
-        /// <param name="isCopy">True to check for copy compatibility rather than view compatibility</param>
-        /// <returns>True if the sizes are compatible, false otherwise</returns>
-        private bool ViewSizeMatches(TextureInfo info, int level, bool isCopy)
-        {
-            Size size = GetAlignedSize(Info, level);
-
-            Size otherSize = GetAlignedSize(info);
-
-            // For copies, we can copy a subset of the 3D texture slices,
-            // so the depth may be different in this case.
-            if (!isCopy && info.Target == Target.Texture3D && size.Depth != otherSize.Depth)
-            {
-                return false;
-            }
-
-            return size.Width  == otherSize.Width &&
-                   size.Height == otherSize.Height;
-        }
-
-        /// <summary>
-        /// Check if the target of the specified texture view information is compatible with this
-        /// texture.
-        /// This follows the host API target compatibility rules.
-        /// </summary>
-        /// <param name="info">Texture information of the texture view</param>
-        /// <param name="isCopy">True to check for copy rather than view compatibility</param>
-        /// <returns>True if the targets are compatible, false otherwise</returns>
-        private bool ViewTargetCompatible(TextureInfo info, bool isCopy)
-        {
-            switch (Info.Target)
-            {
-                case Target.Texture1D:
-                case Target.Texture1DArray:
-                    return info.Target == Target.Texture1D ||
-                           info.Target == Target.Texture1DArray;
-
-                case Target.Texture2D:
-                    return info.Target == Target.Texture2D ||
-                           info.Target == Target.Texture2DArray;
-
-                case Target.Texture2DArray:
-                case Target.Cubemap:
-                case Target.CubemapArray:
-                    return info.Target == Target.Texture2D      ||
-                           info.Target == Target.Texture2DArray ||
-                           info.Target == Target.Cubemap        ||
-                           info.Target == Target.CubemapArray;
-
-                case Target.Texture2DMultisample:
-                case Target.Texture2DMultisampleArray:
-                    return info.Target == Target.Texture2DMultisample ||
-                           info.Target == Target.Texture2DMultisampleArray;
-
-                case Target.Texture3D:
-                    return info.Target == Target.Texture3D ||
-                          (info.Target == Target.Texture2D && isCopy);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the aligned sizes of the specified texture information.
-        /// The alignment depends on the texture layout and format bytes per pixel.
-        /// </summary>
-        /// <param name="info">Texture information to calculate the aligned size from</param>
-        /// <param name="level">Mipmap level for texture views</param>
-        /// <returns>The aligned texture size</returns>
-        private static Size GetAlignedSize(TextureInfo info, int level = 0)
-        {
-            int width  = Math.Max(1, info.Width  >> level);
-            int height = Math.Max(1, info.Height >> level);
-
-            if (info.IsLinear)
-            {
-                return SizeCalculator.GetLinearAlignedSize(
-                    width,
-                    height,
-                    info.FormatInfo.BlockWidth,
-                    info.FormatInfo.BlockHeight,
-                    info.FormatInfo.BytesPerPixel);
-            }
-            else
-            {
-                int depth = Math.Max(1, info.GetDepth() >> level);
-
-                return SizeCalculator.GetBlockLinearAlignedSize(
-                    width,
-                    height,
-                    depth,
-                    info.FormatInfo.BlockWidth,
-                    info.FormatInfo.BlockHeight,
-                    info.FormatInfo.BytesPerPixel,
-                    info.GobBlocksInY,
-                    info.GobBlocksInZ,
-                    info.GobBlocksInTileX);
-            }
         }
 
         /// <summary>
