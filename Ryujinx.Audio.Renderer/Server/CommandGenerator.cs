@@ -107,6 +107,8 @@ namespace Ryujinx.Audio.Renderer.Server
 
             if (!voiceState.WasPlaying)
             {
+                Debug.Assert(voiceState.SampleFormat != SampleFormat.Adpcm || channelIndex == 0);
+
                 if (_rendererContext.BehaviourContext.IsWaveBufferVersion2Supported())
                 {
                     _commandBuffer.GenerateDataSourceVersion2(ref voiceState,

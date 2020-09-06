@@ -63,7 +63,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             SrcQuality = serverState.SrcQuality;
             CommandType = GetCommandTypeBySampleFormat(SampleFormat);
 
-            OutputBufferIndex = outputBufferIndex;
+            OutputBufferIndex = (ushort)(channelIndex + outputBufferIndex);
             SampleRate = serverState.SampleRate;
             Pitch = serverState.Pitch;
 
