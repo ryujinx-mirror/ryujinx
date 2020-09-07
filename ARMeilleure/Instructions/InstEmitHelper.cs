@@ -56,7 +56,10 @@ namespace ARMeilleure.Instructions
         {
             if (regIndex == RegisterAlias.Aarch32Pc)
             {
-                context.StoreToContext();
+                if (!IsA32Return(context))
+                {
+                    context.StoreToContext();
+                }
 
                 EmitBxWritePc(context, value);
             }

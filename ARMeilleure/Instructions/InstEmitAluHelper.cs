@@ -118,8 +118,12 @@ namespace ARMeilleure.Instructions
 
             if (IsThumb(context.CurrOp))
             {
-                context.StoreToContext();
                 bool isReturn = IsA32Return(context);
+
+                if (!isReturn)
+                {
+                    context.StoreToContext();
+                }
 
                 Operand addr = context.BitwiseOr(value, Const(1));
 
