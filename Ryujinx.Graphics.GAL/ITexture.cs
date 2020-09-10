@@ -2,7 +2,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public interface ITexture : IDisposable
+    public interface ITexture
     {
         int Width { get; }
         int Height { get; }
@@ -17,5 +17,6 @@ namespace Ryujinx.Graphics.GAL
 
         void SetData(ReadOnlySpan<byte> data);
         void SetStorage(BufferRange buffer);
+        void Release();
     }
 }

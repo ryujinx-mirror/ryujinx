@@ -68,6 +68,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Writes data to the application process, without any tracking.
+        /// </summary>
+        /// <param name="address">Address to write into</param>
+        /// <param name="data">Data to be written</param>
+        public void WriteUntracked(ulong address, ReadOnlySpan<byte> data)
+        {
+            _cpuMemory.WriteUntracked(address, data);
+        }
+
+        /// <summary>
         /// Checks if a specified virtual memory region has been modified by the CPU since the last call.
         /// </summary>
         /// <param name="address">CPU virtual address of the region</param>

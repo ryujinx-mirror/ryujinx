@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private int _viewsCount;
 
+        internal ITexture DefaultView { get; private set; }
+
         public TextureStorage(Renderer renderer, TextureCreateInfo info, float scaleFactor)
         {
             _renderer = renderer;
@@ -147,7 +149,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public ITexture CreateDefaultView()
         {
-            return CreateView(Info, 0, 0);
+            DefaultView = CreateView(Info, 0, 0);
+
+            return DefaultView;
         }
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)
@@ -167,12 +171,37 @@ namespace Ryujinx.Graphics.OpenGL.Image
             // If we don't have any views, then the storage is now useless, delete it.
             if (--_viewsCount == 0)
             {
-                Dispose();
+                if (DefaultView == null)
+                {
+                    Dispose();
+                }
+                else
+                {
+                    // If the default view still exists, we can put it into the resource pool.
+                    Release();
+                }
             }
+        }
+
+        /// <summary>
+        /// Release the TextureStorage to the resource pool without disposing its handle.
+        /// </summary>
+        public void Release()
+        {
+            _viewsCount = 1; // When we are used again, we will have the default view.
+
+            _renderer.ResourcePool.AddTexture((TextureView)DefaultView);
+        }
+
+        public void DeleteDefault()
+        {
+            DefaultView = null;
         }
 
         public void Dispose()
         {
+            DefaultView = null;
+
             if (Handle != 0)
             {
                 GL.DeleteTexture(Handle);

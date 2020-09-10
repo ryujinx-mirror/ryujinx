@@ -67,5 +67,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 Handle = 0;
             }
         }
+
+        public void Release()
+        {
+            Dispose();
+        }
     }
 }

@@ -14,6 +14,20 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class TextureManager : IDisposable
     {
+        private struct OverlapInfo
+        {
+            public TextureViewCompatibility Compatibility { get; }
+            public int FirstLayer { get; }
+            public int FirstLevel { get; }
+
+            public OverlapInfo(TextureViewCompatibility compatibility, int firstLayer, int firstLevel)
+            {
+                Compatibility = compatibility;
+                FirstLayer = firstLayer;
+                FirstLevel = firstLevel;
+            }
+        }
+
         private const int OverlapsBufferInitialCapacity = 10;
         private const int OverlapsBufferMaxCapacity     = 10000;
 
@@ -33,6 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private readonly RangeList<Texture> _textures;
 
         private Texture[] _textureOverlaps;
+        private OverlapInfo[] _overlapInfo;
 
         private readonly AutoDeleteCache _cache;
 
@@ -64,6 +79,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             _textures = new RangeList<Texture>();
 
             _textureOverlaps = new Texture[OverlapsBufferInitialCapacity];
+            _overlapInfo = new OverlapInfo[OverlapsBufferInitialCapacity];
 
             _cache = new AutoDeleteCache();
 
@@ -408,6 +424,27 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Handles removal of textures written to a memory region being unmapped.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e">Event arguments</param>
+        public void MemoryUnmappedHandler(object sender, UnmapEventArgs e)
+        {
+            Texture[] overlaps = new Texture[10];
+            int overlapCount;
+
+            lock (_textures)
+            {
+                overlapCount = _textures.FindOverlaps(_context.MemoryManager.Translate(e.Address), e.Size, ref overlaps);
+            }
+
+            for (int i = 0; i < overlapCount; i++)
+            {
+                overlaps[i].Unmapped();
+            }
+        }
+
+        /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="copyTexture">Copy texture to find or create</param>
@@ -618,8 +655,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                 scaleMode = (flags & TextureSearchFlags.WithUpscale) != 0 ? TextureScaleMode.Scaled : TextureScaleMode.Eligible;
             }
 
-            // Try to find a perfect texture match, with the same address and parameters.
-            int sameAddressOverlapsCount = _textures.FindOverlaps(info.Address, ref _textureOverlaps);
+            int sameAddressOverlapsCount;
+
+            lock (_textures)
+            {
+                // Try to find a perfect texture match, with the same address and parameters.
+                sameAddressOverlapsCount = _textures.FindOverlaps(info.Address, ref _textureOverlaps);
+            }
 
             for (int index = 0; index < sameAddressOverlapsCount; index++)
             {
@@ -681,8 +723,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             // Find view compatible matches.
             ulong size = (ulong)sizeInfo.TotalSize;
+            int overlapsCount;
 
-            int overlapsCount = _textures.FindOverlaps(info.Address, size, ref _textureOverlaps);
+            lock (_textures)
+            {
+                overlapsCount = _textures.FindOverlaps(info.Address, size, ref _textureOverlaps);
+            }
 
             Texture texture = null;
 
@@ -690,7 +736,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Texture overlap = _textureOverlaps[index];
 
-                if (overlap.IsViewCompatible(info, size, out int firstLayer, out int firstLevel))
+                if (overlap.IsViewCompatible(info, size, out int firstLayer, out int firstLevel) == TextureViewCompatibility.Full)
                 {
                     if (!isSamplerTexture)
                     {
@@ -701,7 +747,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     if (IsTextureModified(overlap))
                     {
-                        CacheTextureModified(texture);
+                        texture.SignalModified();
                     }
 
                     // The size only matters (and is only really reliable) when the
@@ -721,65 +767,114 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 texture = new Texture(_context, info, sizeInfo, scaleMode);
 
-                // We need to synchronize before copying the old view data to the texture,
-                // otherwise the copied data would be overwritten by a future synchronization.
-                texture.SynchronizeMemory();
+                // Step 1: Find textures that are view compatible with the new texture.
+                // Any textures that are incompatible will contain garbage data, so they should be removed where possible.
+
+                int viewCompatible = 0;
+                bool setData = isSamplerTexture || overlapsCount == 0;
 
                 for (int index = 0; index < overlapsCount; index++)
                 {
                     Texture overlap = _textureOverlaps[index];
+                    bool overlapInCache = overlap.CacheNode != null;
 
-                    if (texture.IsViewCompatible(overlap.Info, overlap.Size, out int firstLayer, out int firstLevel))
+                    TextureViewCompatibility compatibility = texture.IsViewCompatible(overlap.Info, overlap.Size, out int firstLayer, out int firstLevel);
+
+                    if (compatibility != TextureViewCompatibility.Incompatible)
                     {
-                        TextureInfo overlapInfo = AdjustSizes(texture, overlap.Info, firstLevel);
-
-                        TextureCreateInfo createInfo = GetCreateInfo(overlapInfo, _context.Capabilities);
-
-                        if (texture.ScaleFactor != overlap.ScaleFactor)
+                        if (_overlapInfo.Length != _textureOverlaps.Length)
                         {
-                            // A bit tricky, our new texture may need to contain an existing texture that is upscaled, but isn't itself.
-                            // In that case, we prefer the higher scale only if our format is render-target-like, otherwise we scale the view down before copy.
-
-                            texture.PropagateScale(overlap);
+                            Array.Resize(ref _overlapInfo, _textureOverlaps.Length);
                         }
 
-                        ITexture newView = texture.HostTexture.CreateView(createInfo, firstLayer, firstLevel);
-
-                        overlap.HostTexture.CopyTo(newView, 0, 0);
-
-                        // Inherit modification from overlapping texture, do that before replacing
-                        // the view since the replacement operation removes it from the list.
-                        if (IsTextureModified(overlap))
-                        {
-                            CacheTextureModified(texture);
-                        }
-
-                        overlap.ReplaceView(texture, overlapInfo, newView, firstLayer, firstLevel);
+                        _overlapInfo[viewCompatible] = new OverlapInfo(compatibility, firstLayer, firstLevel);
+                        _textureOverlaps[viewCompatible++] = overlap;
                     }
+                    else if (overlapInCache || !setData)
+                    {
+                        if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
+                        {
+                            // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
+                            continue;
+                        }
+
+                        // The overlap texture is going to contain garbage data after we draw, or is generally incompatible.
+                        // If the texture cannot be entirely contained in the new address space, and one of its view children is compatible with us,
+                        // it must be flushed before removal, so that the data is not lost.
+
+                        // If the texture was modified since its last use, then that data is probably meant to go into this texture.
+                        // If the data has been modified by the CPU, then it also shouldn't be flushed.
+                        bool modified = overlap.ConsumeModified();
+
+                        bool flush = overlapInCache && !modified && (overlap.Address < texture.Address || overlap.EndAddress > texture.EndAddress) && overlap.HasViewCompatibleChild(texture);
+
+                        setData |= modified || flush;
+
+                        if (overlapInCache)
+                        {
+                            _cache.Remove(overlap, flush);
+                        }
+                    }
+                }
+
+                // We need to synchronize before copying the old view data to the texture,
+                // otherwise the copied data would be overwritten by a future synchronization.
+                texture.InitializeData(false, setData);
+
+                for (int index = 0; index < viewCompatible; index++)
+                {
+                    Texture overlap = _textureOverlaps[index];
+                    OverlapInfo oInfo = _overlapInfo[index];
+
+                    if (oInfo.Compatibility != TextureViewCompatibility.Full)
+                    {
+                        continue; // Copy only compatibilty.
+                    }
+
+                    TextureInfo overlapInfo = AdjustSizes(texture, overlap.Info, oInfo.FirstLevel);
+
+                    TextureCreateInfo createInfo = GetCreateInfo(overlapInfo, _context.Capabilities);
+
+                    if (texture.ScaleFactor != overlap.ScaleFactor)
+                    {
+                        // A bit tricky, our new texture may need to contain an existing texture that is upscaled, but isn't itself.
+                        // In that case, we prefer the higher scale only if our format is render-target-like, otherwise we scale the view down before copy.
+
+                        texture.PropagateScale(overlap);
+                    }
+
+                    ITexture newView = texture.HostTexture.CreateView(createInfo, oInfo.FirstLayer, oInfo.FirstLevel);
+
+                    overlap.HostTexture.CopyTo(newView, 0, 0);
+
+                    // Inherit modification from overlapping texture, do that before replacing
+                    // the view since the replacement operation removes it from the list.
+                    if (IsTextureModified(overlap))
+                    {
+                        texture.SignalModified();
+                    }
+
+                    overlap.ReplaceView(texture, overlapInfo, newView, oInfo.FirstLayer, oInfo.FirstLevel);
                 }
 
                 // If the texture is a 3D texture, we need to additionally copy any slice
                 // of the 3D texture to the newly created 3D texture.
                 if (info.Target == Target.Texture3D)
                 {
-                    for (int index = 0; index < overlapsCount; index++)
+                    for (int index = 0; index < viewCompatible; index++)
                     {
                         Texture overlap = _textureOverlaps[index];
+                        OverlapInfo oInfo = _overlapInfo[index];
 
-                        if (texture.IsViewCompatible(
-                            overlap.Info,
-                            overlap.Size,
-                            isCopy: true,
-                            out int firstLayer,
-                            out int firstLevel))
+                        if (oInfo.Compatibility != TextureViewCompatibility.Incompatible)
                         {
                             overlap.BlacklistScale();
 
-                            overlap.HostTexture.CopyTo(texture.HostTexture, firstLayer, firstLevel);
+                            overlap.HostTexture.CopyTo(texture.HostTexture, oInfo.FirstLayer, oInfo.FirstLevel);
 
                             if (IsTextureModified(overlap))
                             {
-                                CacheTextureModified(texture);
+                                texture.SignalModified();
                             }
                         }
                     }
@@ -795,7 +890,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 texture.Disposed += CacheTextureDisposed;
             }
 
-            _textures.Add(texture);
+            lock (_textures)
+            {
+                _textures.Add(texture);
+            }
 
             ShrinkOverlapsBufferIfNeeded();
 
@@ -818,6 +916,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="texture">The texture that was modified.</param>
         private void CacheTextureModified(Texture texture)
         {
+            texture.IsModified = true;
             _modified.Add(texture);
 
             if (texture.Info.IsLinear)
@@ -992,7 +1091,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             foreach (Texture texture in _modifiedLinear)
             {
-                texture.Flush();
+                if (texture.IsModified)
+                {
+                    texture.Flush();
+                }
             }
 
             _modifiedLinear.Clear();
@@ -1007,7 +1109,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             foreach (Texture texture in _modified)
             {
-                if (texture.OverlapsWith(address, size))
+                if (texture.OverlapsWith(address, size) && texture.IsModified)
                 {
                     texture.Flush();
                 }
@@ -1024,7 +1126,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="texture">The texture to be removed</param>
         public void RemoveTextureFromCache(Texture texture)
         {
-            _textures.Remove(texture);
+            lock (_textures)
+            {
+                _textures.Remove(texture);
+            }
         }
 
         /// <summary>
@@ -1033,10 +1138,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void Dispose()
         {
-            foreach (Texture texture in _textures)
+            lock (_textures)
             {
-                _modified.Remove(texture);
-                texture.Dispose();
+                foreach (Texture texture in _textures)
+                {
+                    _modified.Remove(texture);
+                    texture.Dispose();
+                }
             }
         }
     }

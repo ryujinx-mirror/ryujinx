@@ -29,6 +29,8 @@ namespace Ryujinx.Graphics.GAL
 
         void UpdateCounters();
 
+        void PreFrame();
+
         ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler);
 
         void ResetCounter(CounterType type);

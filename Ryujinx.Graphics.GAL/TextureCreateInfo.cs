@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct TextureCreateInfo
+    public struct TextureCreateInfo : IEquatable<TextureCreateInfo>
     {
         public int Width         { get; }
         public int Height        { get; }
@@ -115,6 +115,30 @@ namespace Ryujinx.Graphics.GAL
         private static int GetLevelSize(int size, int level)
         {
             return Math.Max(1, size >> level);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Width, Height);
+        }
+
+        bool IEquatable<TextureCreateInfo>.Equals(TextureCreateInfo other)
+        {
+            return Width == other.Width &&
+                   Height == other.Height &&
+                   Depth == other.Depth &&
+                   Levels == other.Levels &&
+                   Samples == other.Samples &&
+                   BlockWidth == other.BlockWidth &&
+                   BlockHeight == other.BlockHeight &&
+                   BytesPerPixel == other.BytesPerPixel &&
+                   Format == other.Format &&
+                   DepthStencilMode == other.DepthStencilMode &&
+                   Target == other.Target &&
+                   SwizzleR == other.SwizzleR &&
+                   SwizzleG == other.SwizzleG &&
+                   SwizzleB == other.SwizzleB &&
+                   SwizzleA == other.SwizzleA;
         }
     }
 }

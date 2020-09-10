@@ -151,7 +151,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             byte[] data = _context.Renderer.GetBufferData(Handle, offset, (int)size);
 
-            _context.PhysicalMemory.Write(address, data);
+            // TODO: When write tracking shaders, they will need to be aware of changes in overlapping buffers.
+            _context.PhysicalMemory.WriteUntracked(address, data);
         }
 
         /// <summary>

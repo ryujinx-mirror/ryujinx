@@ -147,28 +147,51 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if the view sizes of a two given texture informations match.
+        /// Obtain the minimum compatibility level of two provided view compatibility results.
+        /// </summary>
+        /// <param name="first">The first compatibility level</param>
+        /// <param name="second">The second compatibility level</param>
+        /// <returns>The minimum compatibility level of two provided view compatibility results</returns>
+        public static TextureViewCompatibility PropagateViewCompatibility(TextureViewCompatibility first, TextureViewCompatibility second)
+        {
+            if (first == TextureViewCompatibility.Incompatible || second == TextureViewCompatibility.Incompatible)
+            {
+                return TextureViewCompatibility.Incompatible;
+            }
+            else if (first == TextureViewCompatibility.CopyOnly || second == TextureViewCompatibility.CopyOnly)
+            {
+                return TextureViewCompatibility.CopyOnly;
+            }
+            else
+            {
+                return TextureViewCompatibility.Full;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the sizes of two given textures are view compatible.
         /// </summary>
         /// <param name="lhs">Texture information of the texture view</param>
         /// <param name="rhs">Texture information of the texture view to match against</param>
         /// <param name="level">Mipmap level of the texture view in relation to this texture</param>
-        /// <param name="isCopy">True to check for copy compatibility rather than view compatibility</param>
         /// <returns>True if the sizes are compatible, false otherwise</returns>
-        public static bool ViewSizeMatches(TextureInfo lhs, TextureInfo rhs, int level, bool isCopy)
+        public static TextureViewCompatibility ViewSizeMatches(TextureInfo lhs, TextureInfo rhs, int level)
         {
             Size size = GetAlignedSize(lhs, level);
 
             Size otherSize = GetAlignedSize(rhs);
 
+            TextureViewCompatibility result = TextureViewCompatibility.Full;
+
             // For copies, we can copy a subset of the 3D texture slices,
             // so the depth may be different in this case.
-            if (!isCopy && rhs.Target == Target.Texture3D && size.Depth != otherSize.Depth)
+            if (rhs.Target == Target.Texture3D && size.Depth != otherSize.Depth)
             {
-                return false;
+                result = TextureViewCompatibility.CopyOnly;
             }
 
-            return size.Width  == otherSize.Width &&
-                   size.Height == otherSize.Height;
+            return (size.Width  == otherSize.Width &&
+                    size.Height == otherSize.Height) ? result : TextureViewCompatibility.Incompatible;
         }
 
         /// <summary>
@@ -330,38 +353,48 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="rhs">Texture information of the texture view</param>
         /// <param name="isCopy">True to check for copy rather than view compatibility</param>
         /// <returns>True if the targets are compatible, false otherwise</returns>
-        public static bool ViewTargetCompatible(TextureInfo lhs, TextureInfo rhs, bool isCopy)
+        public static TextureViewCompatibility ViewTargetCompatible(TextureInfo lhs, TextureInfo rhs)
         {
+            bool result = false;
             switch (lhs.Target)
             {
                 case Target.Texture1D:
                 case Target.Texture1DArray:
-                    return rhs.Target == Target.Texture1D ||
-                           rhs.Target == Target.Texture1DArray;
+                    result = rhs.Target == Target.Texture1D ||
+                             rhs.Target == Target.Texture1DArray;
+                    break;
 
                 case Target.Texture2D:
-                    return rhs.Target == Target.Texture2D ||
-                           rhs.Target == Target.Texture2DArray;
+                    result = rhs.Target == Target.Texture2D ||
+                             rhs.Target == Target.Texture2DArray;
+                    break;
 
                 case Target.Texture2DArray:
                 case Target.Cubemap:
                 case Target.CubemapArray:
-                    return rhs.Target == Target.Texture2D ||
-                           rhs.Target == Target.Texture2DArray ||
-                           rhs.Target == Target.Cubemap ||
-                           rhs.Target == Target.CubemapArray;
+                    result = rhs.Target == Target.Texture2D ||
+                             rhs.Target == Target.Texture2DArray ||
+                             rhs.Target == Target.Cubemap ||
+                             rhs.Target == Target.CubemapArray;
+                    break;
 
                 case Target.Texture2DMultisample:
                 case Target.Texture2DMultisampleArray:
-                    return rhs.Target == Target.Texture2DMultisample ||
-                           rhs.Target == Target.Texture2DMultisampleArray;
+                    result = rhs.Target == Target.Texture2DMultisample ||
+                             rhs.Target == Target.Texture2DMultisampleArray;
+                    break;
 
                 case Target.Texture3D:
-                    return rhs.Target == Target.Texture3D ||
-                          (rhs.Target == Target.Texture2D && isCopy);
+                    if (rhs.Target == Target.Texture2D)
+                    {
+                        return TextureViewCompatibility.CopyOnly;
+                    }
+
+                    result = rhs.Target == Target.Texture3D;
+                    break;
             }
 
-            return false;
+            return result ? TextureViewCompatibility.Full : TextureViewCompatibility.Incompatible;
         }
 
         /// <summary>

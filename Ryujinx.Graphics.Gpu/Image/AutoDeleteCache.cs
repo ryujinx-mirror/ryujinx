@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -40,6 +41,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Texture oldestTexture = _textures.First.Value;
 
+                oldestTexture.SynchronizeMemory();
+
+                if (oldestTexture.IsModified)
+                {
+                    // The texture must be flushed if it falls out of the auto delete cache.
+                    // Flushes out of the auto delete cache do not trigger write tracking,
+                    // as it is expected that other overlapping textures exist that have more up-to-date contents.
+                    oldestTexture.Flush(false); 
+                }
+
                 _textures.RemoveFirst();
 
                 oldestTexture.DecrementReferenceCount();
@@ -72,6 +83,26 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Add(texture);
             }
+        }
+
+        public bool Remove(Texture texture, bool flush)
+        {
+            if (texture.CacheNode == null)
+            {
+                return false;
+            }
+
+            // Remove our reference to this texture.
+            if (flush && texture.IsModified)
+            {
+                texture.Flush(false);
+            }
+
+            _textures.Remove(texture.CacheNode);
+
+            texture.CacheNode = null;
+
+            return texture.DecrementReferenceCount();
         }
 
         public IEnumerator<Texture> GetEnumerator()
