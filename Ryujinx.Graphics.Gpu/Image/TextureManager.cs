@@ -398,7 +398,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // While upscaling works for all targets defined by IsUpscaleCompatible, we additionally blacklist targets here that
             // may have undesirable results (upscaling blur textures) or simply waste GPU resources (upscaling texture atlas).
 
-            if (!(info.FormatInfo.Format.IsDepthOrStencil() || info.FormatInfo.Format.HasOneComponent()))
+            if (!(info.FormatInfo.Format.IsDepthOrStencil() || info.FormatInfo.Components == 1))
             {
                 // Discount square textures that aren't depth-stencil like. (excludes game textures, cubemap faces, most 3D texture LUT, texture atlas)
                 // Detect if the texture is possibly square. Widths may be aligned, so to remove the uncertainty we align both the width and height.
@@ -1037,11 +1037,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 if (formatInfo.Format.IsAstcUnorm())
                 {
-                    formatInfo = new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4);
+                    formatInfo = new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4, 4);
                 }
                 else if (formatInfo.Format.IsAstcSrgb())
                 {
-                    formatInfo = new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4);
+                    formatInfo = new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4, 4);
                 }
             }
 
@@ -1052,12 +1052,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // The shader will need the appropriate conversion code to compensate.
                 switch (formatInfo.Format)
                 {
-                    case Format.R8Snorm:           formatInfo = new FormatInfo(Format.R8Sint,           1, 1, 1); break;
-                    case Format.R16Snorm:          formatInfo = new FormatInfo(Format.R16Sint,          1, 1, 2); break;
-                    case Format.R8G8Snorm:         formatInfo = new FormatInfo(Format.R8G8Sint,         1, 1, 2); break;
-                    case Format.R16G16Snorm:       formatInfo = new FormatInfo(Format.R16G16Sint,       1, 1, 4); break;
-                    case Format.R8G8B8A8Snorm:     formatInfo = new FormatInfo(Format.R8G8B8A8Sint,     1, 1, 4); break;
-                    case Format.R16G16B16A16Snorm: formatInfo = new FormatInfo(Format.R16G16B16A16Sint, 1, 1, 8); break;
+                    case Format.R8Snorm:           formatInfo = new FormatInfo(Format.R8Sint,           1, 1, 1, 1); break;
+                    case Format.R16Snorm:          formatInfo = new FormatInfo(Format.R16Sint,          1, 1, 2, 1); break;
+                    case Format.R8G8Snorm:         formatInfo = new FormatInfo(Format.R8G8Sint,         1, 1, 2, 2); break;
+                    case Format.R16G16Snorm:       formatInfo = new FormatInfo(Format.R16G16Sint,       1, 1, 4, 2); break;
+                    case Format.R8G8B8A8Snorm:     formatInfo = new FormatInfo(Format.R8G8B8A8Sint,     1, 1, 4, 4); break;
+                    case Format.R16G16B16A16Snorm: formatInfo = new FormatInfo(Format.R16G16B16A16Sint, 1, 1, 8, 4); break;
                 }
             }
 

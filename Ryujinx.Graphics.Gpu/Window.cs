@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu
             Action<object>             releaseCallback,
             object                     userObj)
         {
-            FormatInfo formatInfo = new FormatInfo(format, 1, 1, bytesPerPixel);
+            FormatInfo formatInfo = new FormatInfo(format, 1, 1, bytesPerPixel, 4);
 
             TextureInfo info = new TextureInfo(
                 address,

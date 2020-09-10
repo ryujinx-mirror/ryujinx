@@ -341,38 +341,5 @@ namespace Ryujinx.Graphics.GAL
         {
             return format.IsUint() || format.IsSint();
         }
-
-        /// <summary>
-        /// Checks if the texture format only has one component.
-        /// </summary>
-        /// <param name="format">Texture format</param>
-        /// <returns>True if the texture format only has one component, false otherwise</returns>
-        public static bool HasOneComponent(this Format format)
-        {
-            switch (format)
-            {
-                case Format.R8Unorm:
-                case Format.R8Snorm:
-                case Format.R8Uint:
-                case Format.R8Sint:
-                case Format.R16Float:
-                case Format.R16Unorm:
-                case Format.R16Snorm:
-                case Format.R16Uint:
-                case Format.R16Sint:
-                case Format.R32Float:
-                case Format.R32Uint:
-                case Format.R32Sint:
-                case Format.R8Uscaled:
-                case Format.R8Sscaled:
-                case Format.R16Uscaled:
-                case Format.R16Sscaled:
-                case Format.R32Uscaled:
-                case Format.R32Sscaled:
-                    return true;
-            }
-
-            return false;
-        }
     }
 }

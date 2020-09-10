@@ -398,6 +398,49 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Checks if a swizzle component in two textures functionally match, taking into account if the components are defined.
+        /// </summary>
+        /// <param name="lhs">Texture information to compare</param>
+        /// <param name="rhs">Texture information to compare with</param>
+        /// <param name="swizzleLhs">Swizzle component for the first texture</param>
+        /// <param name="swizzleRhs">Swizzle component for the second texture</param>
+        /// <param name="component">Component index, starting at 0 for red</param>
+        /// <returns>True if the swizzle components functionally match, false othersize</returns>
+        private static bool SwizzleComponentMatches(TextureInfo lhs, TextureInfo rhs, SwizzleComponent swizzleLhs, SwizzleComponent swizzleRhs, int component)
+        {
+            int lhsComponents = lhs.FormatInfo.Components;
+            int rhsComponents = rhs.FormatInfo.Components;
+
+            if (lhsComponents == 4 && rhsComponents == 4)
+            {
+                return swizzleLhs == swizzleRhs;
+            }
+
+            // Swizzles after the number of components a format defines are "undefined".
+            // We allow these to not be equal under certain circumstances.
+            // This can only happen when there are less than 4 components in a format.
+            // It tends to happen when float depth textures are sampled.
+
+            bool lhsDefined = (swizzleLhs - SwizzleComponent.Red) < lhsComponents;
+            bool rhsDefined = (swizzleRhs - SwizzleComponent.Red) < rhsComponents;
+
+            if (lhsDefined == rhsDefined)
+            {
+                // If both are undefined, return true. Otherwise just check if they're equal.
+                return lhsDefined ? swizzleLhs == swizzleRhs : true;
+            }
+            else
+            {
+                SwizzleComponent defined = lhsDefined ? swizzleLhs : swizzleRhs;
+                SwizzleComponent undefined = lhsDefined ? swizzleRhs : swizzleLhs;
+
+                // Undefined swizzle can be matched by a forced value (0, 1), exact equality, or expected value.
+                // For example, R___ matches R001, RGBA but not RBGA.
+                return defined == undefined || defined < SwizzleComponent.Red || defined == SwizzleComponent.Red + component;
+            }
+        }
+
+        /// <summary>
         /// Checks if the texture shader sampling parameters of two texture informations match.
         /// </summary>
         /// <param name="lhs">Texture information to compare</param>
@@ -406,10 +449,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         public static bool SamplerParamsMatches(TextureInfo lhs, TextureInfo rhs)
         {
             return lhs.DepthStencilMode == rhs.DepthStencilMode &&
-                   lhs.SwizzleR         == rhs.SwizzleR &&
-                   lhs.SwizzleG         == rhs.SwizzleG &&
-                   lhs.SwizzleB         == rhs.SwizzleB &&
-                   lhs.SwizzleA         == rhs.SwizzleA;
+                   SwizzleComponentMatches(lhs, rhs, lhs.SwizzleR, rhs.SwizzleR, 0) &&
+                   SwizzleComponentMatches(lhs, rhs, lhs.SwizzleG, rhs.SwizzleG, 1) &&
+                   SwizzleComponentMatches(lhs, rhs, lhs.SwizzleB, rhs.SwizzleB, 2) &&
+                   SwizzleComponentMatches(lhs, rhs, lhs.SwizzleA, rhs.SwizzleA, 3);
         }
 
         /// <summary>
