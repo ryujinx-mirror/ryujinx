@@ -13,18 +13,17 @@ namespace ARMeilleure.Translation
 
     class EmitterContext
     {
-        private Dictionary<Operand, BasicBlock> _irLabels;
-
-        private IntrusiveList<BasicBlock> _irBlocks;
+        private readonly Dictionary<Operand, BasicBlock> _irLabels;
+        private readonly IntrusiveList<BasicBlock> _irBlocks;
 
         private BasicBlock _irBlock;
+        private BasicBlock _ifBlock;
 
         private bool _needsNewBlock;
 
         public EmitterContext()
         {
             _irLabels = new Dictionary<Operand, BasicBlock>();
-
             _irBlocks = new IntrusiveList<BasicBlock>();
 
             _needsNewBlock = true;
@@ -57,16 +56,16 @@ namespace ARMeilleure.Translation
 
         public void Branch(Operand label)
         {
-            Add(Instruction.Branch, null);
+            NewNextBlockIfNeeded();
 
-            BranchToLabel(label);
+            BranchToLabel(label, uncond: true);
         }
 
         public void BranchIf(Operand label, Operand op1, Operand op2, Comparison comp)
         {
             Add(Instruction.BranchIf, null, op1, op2, Const((int)comp));
 
-            BranchToLabel(label);
+            BranchToLabel(label, uncond: false);
         }
 
         public void BranchIfFalse(Operand label, Operand op1)
@@ -574,10 +573,7 @@ namespace ARMeilleure.Translation
 
         private Operand Add(Intrinsic intrin, Operand dest, params Operand[] sources)
         {
-            if (_needsNewBlock)
-            {
-                NewNextBlock();
-            }
+            NewNextBlockIfNeeded();
 
             IntrinsicOperation operation = new IntrinsicOperation(intrin, dest, sources);
 
@@ -586,7 +582,7 @@ namespace ARMeilleure.Translation
             return dest;
         }
 
-        private void BranchToLabel(Operand label)
+        private void BranchToLabel(Operand label, bool uncond)
         {
             if (!_irLabels.TryGetValue(label, out BasicBlock branchBlock))
             {
@@ -595,7 +591,15 @@ namespace ARMeilleure.Translation
                 _irLabels.Add(label, branchBlock);
             }
 
-            _irBlock.Branch = branchBlock;
+            if (uncond)
+            {
+                _irBlock.AddSuccessor(branchBlock);
+            }
+            else
+            {
+                // Defer registration of successor to _irBlock so that the order of successors is correct.
+                _ifBlock = branchBlock;
+            }
 
             _needsNewBlock = true;
         }
@@ -629,9 +633,16 @@ namespace ARMeilleure.Translation
 
         private void NextBlock(BasicBlock nextBlock)
         {
-            if (_irBlock != null && !EndsWithUnconditional(_irBlock))
+            if (_irBlock != null && _irBlock.SuccessorCount == 0 && !EndsWithUnconditional(_irBlock))
             {
-                _irBlock.Next = nextBlock;
+                _irBlock.AddSuccessor(nextBlock);
+
+                if (_ifBlock != null)
+                {
+                    _irBlock.AddSuccessor(_ifBlock);
+
+                    _ifBlock = null;
+                }
             }
 
             _irBlock = nextBlock;
@@ -642,8 +653,7 @@ namespace ARMeilleure.Translation
         private static bool EndsWithUnconditional(BasicBlock block)
         {
             return block.Operations.Last is Operation lastOp &&
-                   (lastOp.Instruction == Instruction.Branch ||
-                    lastOp.Instruction == Instruction.Return ||
+                   (lastOp.Instruction == Instruction.Return ||
                     lastOp.Instruction == Instruction.Tailcall);
         }
 

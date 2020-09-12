@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 
 namespace ARMeilleure.IntermediateRepresentation
 {
     class BasicBlock : IIntrusiveListNode<BasicBlock>
     {
+        private readonly List<BasicBlock> _successors = new List<BasicBlock>();
+
         public int Index { get; set; }
 
         public BasicBlock ListPrevious { get; set; }
@@ -11,69 +14,82 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public IntrusiveList<Node> Operations { get; }
 
-        private BasicBlock _next;
-        private BasicBlock _branch;
-
-        public BasicBlock Next
-        {
-            get => _next;
-            set => _next = AddSuccessor(_next, value);
-        }
-
-        public BasicBlock Branch
-        {
-            get => _branch;
-            set => _branch = AddSuccessor(_branch, value);
-        }
-
         public List<BasicBlock> Predecessors { get; }
 
         public HashSet<BasicBlock> DominanceFrontiers { get; }
-
         public BasicBlock ImmediateDominator { get; set; }
 
-        public BasicBlock()
+        public int SuccessorCount => _successors.Count;
+
+        public BasicBlock() : this(index: -1) { }
+
+        public BasicBlock(int index)
         {
             Operations = new IntrusiveList<Node>();
-
             Predecessors = new List<BasicBlock>();
-
             DominanceFrontiers = new HashSet<BasicBlock>();
 
-            Index = -1;
-        }
-
-        public BasicBlock(int index) : this()
-        {
             Index = index;
         }
 
-        private BasicBlock AddSuccessor(BasicBlock oldBlock, BasicBlock newBlock)
+        public void AddSuccessor(BasicBlock block)
         {
-            oldBlock?.Predecessors.Remove(this);
-            newBlock?.Predecessors.Add(this);
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
 
-            return newBlock;
+            block.Predecessors.Add(this);
+
+            _successors.Add(block);
+        }
+
+        public void RemoveSuccessor(int index)
+        {
+            BasicBlock oldBlock = _successors[index];
+
+            oldBlock.Predecessors.Remove(this);
+
+            _successors.RemoveAt(index);
+        }
+
+        public BasicBlock GetSuccessor(int index)
+        {
+            return _successors[index];
+        }
+
+        public void SetSuccessor(int index, BasicBlock block)
+        {
+            if (block == null)
+            {
+                throw new ArgumentNullException(nameof(block));
+            }
+
+            BasicBlock oldBlock = _successors[index];
+
+            oldBlock.Predecessors.Remove(this);
+            block.Predecessors.Add(this);
+
+            _successors[index] = block;
         }
 
         public void Append(Node node)
         {
-            // If the branch block is not null, then the list of operations
-            // should end with a branch instruction. We insert the new operation
-            // before this branch.
-            if (_branch != null || (Operations.Last != null && IsLeafBlock()))
-            {
-                Operations.AddBefore(Operations.Last, node);
-            }
-            else
-            {
-                Operations.AddLast(node);
-            }
-        }
+            var lastOp = Operations.Last as Operation;
 
-        private bool IsLeafBlock()
-        {
-            return _branch == null && _next == null;
+            // Append node before terminal or to end if no terminal.
+            switch (lastOp?.Instruction)
+            {
+                case Instruction.Return:
+                case Instruction.Tailcall:
+                case Instruction.BranchIf:
+                    Operations.AddBefore(lastOp, node);
+                    break;
+
+                default:
+                    Operations.AddLast(node);
+                    break;
+            }
         }
 
         public Node GetLastOp()

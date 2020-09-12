@@ -171,14 +171,9 @@ namespace ARMeilleure.Translation
 
                     RegisterMask inputs = localInputs[block.Index];
 
-                    if (block.Next != null)
+                    for (int i = 0; i < block.SuccessorCount; i++)
                     {
-                        inputs |= globalInputs[block.Next.Index];
-                    }
-
-                    if (block.Branch != null)
-                    {
-                        inputs |= globalInputs[block.Branch.Index];
+                        inputs |= globalInputs[block.GetSuccessor(i).Index];
                     }
 
                     inputs &= ~globalCmnOutputs[block.Index];

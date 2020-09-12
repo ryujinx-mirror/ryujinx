@@ -427,18 +427,5 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         {
             return local.Assignments.Count + local.Uses.Count;
         }
-
-        private static IEnumerable<BasicBlock> Successors(BasicBlock block)
-        {
-            if (block.Next != null)
-            {
-                yield return block.Next;
-            }
-
-            if (block.Branch != null)
-            {
-                yield return block.Branch;
-            }
-        }
     }
 }

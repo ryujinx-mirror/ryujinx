@@ -309,8 +309,6 @@ namespace ARMeilleure.Translation
 
             context.Return(Const(0L));
 
-            context.Branch(lblExit);
-
             context.MarkLabel(lblNonZero);
 
             count = context.Subtract(count, Const(1));

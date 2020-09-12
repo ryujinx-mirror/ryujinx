@@ -32,7 +32,6 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.BitwiseExclusiveOr,      GenerateBitwiseExclusiveOr);
             Add(Instruction.BitwiseNot,              GenerateBitwiseNot);
             Add(Instruction.BitwiseOr,               GenerateBitwiseOr);
-            Add(Instruction.Branch,                  GenerateBranch);
             Add(Instruction.BranchIf,                GenerateBranchIf);
             Add(Instruction.ByteSwap,                GenerateByteSwap);
             Add(Instruction.Call,                    GenerateCall);
@@ -166,6 +165,23 @@ namespace ARMeilleure.CodeGen.X86
                         if (node is Operation operation)
                         {
                             GenerateOperation(context, operation);
+                        }
+                    }
+
+                    if (block.SuccessorCount == 0)
+                    {
+                        // The only blocks which can have 0 successors are exit blocks.
+                        Debug.Assert(block.Operations.Last is Operation operation &&
+                                     (operation.Instruction == Instruction.Tailcall ||
+                                      operation.Instruction == Instruction.Return));
+                    }
+                    else
+                    {
+                        BasicBlock succ = block.GetSuccessor(0);
+
+                        if (succ != block.ListNext)
+                        {
+                            context.JumpTo(succ);
                         }
                     }
                 }
@@ -512,11 +528,6 @@ namespace ARMeilleure.CodeGen.X86
             context.Assembler.Or(dest, src2, dest.Type);
         }
 
-        private static void GenerateBranch(CodeGenContext context, Operation operation)
-        {
-            context.JumpTo(context.CurrBlock.Branch);
-        }
-
         private static void GenerateBranchIf(CodeGenContext context, Operation operation)
         {
             Operand comp = operation.GetSource(2);
@@ -527,7 +538,7 @@ namespace ARMeilleure.CodeGen.X86
 
             GenerateCompareCommon(context, operation);
 
-            context.JumpTo(cond, context.CurrBlock.Branch);
+            context.JumpTo(cond, context.CurrBlock.GetSuccessor(1));
         }
 
         private static void GenerateByteSwap(CodeGenContext context, Operation operation)

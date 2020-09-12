@@ -57,17 +57,20 @@ namespace ARMeilleure.Diagnostics
         {
             DumpBlockName(block);
 
-            if (block.Next != null)
+            if (block.SuccessorCount > 0)
             {
-                _builder.Append(" (next ");
-                DumpBlockName(block.Next);
-                _builder.Append(')');
-            }
+                _builder.Append(" (");
 
-            if (block.Branch != null)
-            {
-                _builder.Append(" (branch ");
-                DumpBlockName(block.Branch);
+                for (int i = 0; i < block.SuccessorCount; i++)
+                {
+                    DumpBlockName(block.GetSuccessor(i));
+
+                    if (i < block.SuccessorCount - 1)
+                    {
+                        _builder.Append(", ");
+                    }
+                }
+
                 _builder.Append(')');
             }
 

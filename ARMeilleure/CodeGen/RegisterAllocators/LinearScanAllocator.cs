@@ -626,16 +626,11 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     continue;
                 }
 
-                bool hasSingleOrNoSuccessor = block.Next == null || block.Branch == null;
+                bool hasSingleOrNoSuccessor = block.SuccessorCount <= 1;
 
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < block.SuccessorCount; i++)
                 {
-                    // This used to use an enumerable, but it ended up generating a lot of garbage, so now it is a loop.
-                    BasicBlock successor = (i == 0) ? block.Next : block.Branch;
-                    if (successor == null)
-                    {
-                        continue;
-                    }
+                    BasicBlock successor = block.GetSuccessor(i);
 
                     int succIndex = successor.Index;
 
@@ -643,7 +638,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     // (the successor before the split) should be right after it.
                     if (IsSplitEdgeBlock(successor))
                     {
-                        succIndex = FirstSuccessor(successor).Index;
+                        succIndex = successor.GetSuccessor(0).Index;
                     }
 
                     CopyResolver copyResolver = new CopyResolver();
@@ -883,10 +878,11 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                     BitMap liveOut = blkLiveOut[block.Index];
 
-                    if ((block.Next != null && liveOut.Set(blkLiveIn[block.Next.Index])) || 
-                        (block.Branch != null && liveOut.Set(blkLiveIn[block.Branch.Index])))
+                    for (int i = 0; i < block.SuccessorCount; i++)
                     {
-                        modified = true;
+                        BasicBlock succ = block.GetSuccessor(i);
+
+                        modified |= liveOut.Set(blkLiveIn[succ.Index]);
                     }
 
                     BitMap liveIn = blkLiveIn[block.Index];
@@ -1000,11 +996,6 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private static int GetRegisterId(Register register)
         {
             return (register.Index << 1) | (register.Type == RegisterType.Vector ? 1 : 0);
-        }
-
-        private static BasicBlock FirstSuccessor(BasicBlock block)
-        {
-            return block.Next ?? block.Branch;
         }
 
         private static IEnumerable<Node> BottomOperations(BasicBlock block)
