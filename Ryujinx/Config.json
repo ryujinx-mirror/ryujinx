@@ -1,6 +1,6 @@
 {
   "version": 11,
-  "res_scale": 2,
+  "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
   "graphics_shaders_dump_path": "",
