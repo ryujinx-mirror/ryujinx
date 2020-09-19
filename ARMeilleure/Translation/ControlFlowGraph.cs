@@ -7,26 +7,37 @@ namespace ARMeilleure.Translation
 {
     class ControlFlowGraph
     {
+        private BasicBlock[] _postOrderBlocks;
+        private int[] _postOrderMap;
+
         public BasicBlock Entry { get; }
         public IntrusiveList<BasicBlock> Blocks { get; }
-        public BasicBlock[] PostOrderBlocks { get; }
-        public int[] PostOrderMap { get; }
+        public BasicBlock[] PostOrderBlocks => _postOrderBlocks;
+        public int[] PostOrderMap => _postOrderMap; 
 
         public ControlFlowGraph(BasicBlock entry, IntrusiveList<BasicBlock> blocks)
         {
             Entry = entry;
             Blocks = blocks;
 
-            RemoveUnreachableBlocks(blocks);
+            Update(removeUnreachableBlocks: true);
+        }
+
+        public void Update(bool removeUnreachableBlocks)
+        {
+            if (removeUnreachableBlocks)
+            {
+                RemoveUnreachableBlocks(Blocks);
+            }
 
             var visited = new HashSet<BasicBlock>();
             var blockStack = new Stack<BasicBlock>();
 
-            PostOrderBlocks = new BasicBlock[blocks.Count];
-            PostOrderMap = new int[blocks.Count];
+            Array.Resize(ref _postOrderBlocks, Blocks.Count);
+            Array.Resize(ref _postOrderMap, Blocks.Count);
 
-            visited.Add(entry);
-            blockStack.Push(entry);
+            visited.Add(Entry);
+            blockStack.Push(Entry);
 
             int index = 0;
 

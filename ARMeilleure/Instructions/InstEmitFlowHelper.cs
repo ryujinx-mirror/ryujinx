@@ -174,7 +174,7 @@ namespace ARMeilleure.Instructions
                 Operand lblContinue = context.GetLabel(nextAddr.Value);
 
                 // We need to clear out the call flag for the return address before comparing it.
-                context.BranchIf(lblContinue, context.BitwiseAnd(returnAddress, Const(~CallFlag)), nextAddr, Comparison.Equal);
+                context.BranchIf(lblContinue, context.BitwiseAnd(returnAddress, Const(~CallFlag)), nextAddr, Comparison.Equal, BasicBlockFrequency.Cold);
 
                 context.Return(returnAddress);
             }

@@ -57,6 +57,11 @@ namespace ARMeilleure.Diagnostics
         {
             DumpBlockName(block);
 
+            if (block.Frequency == BasicBlockFrequency.Cold)
+            {
+                _builder.Append(" cold");
+            }
+
             if (block.SuccessorCount > 0)
             {
                 _builder.Append(" (");

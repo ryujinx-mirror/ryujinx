@@ -147,7 +147,7 @@ namespace ARMeilleure.Instructions
 
             context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath);
+            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
             EmitReadIntFallback(context, address, rt, size);
 
@@ -165,7 +165,7 @@ namespace ARMeilleure.Instructions
 
             Operand lblFastPath = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            context.BranchIfFalse(lblFastPath, isUnalignedAddr, BasicBlockFrequency.Cold);
 
             // The call is not expected to return (it should throw).
             context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);
@@ -216,7 +216,7 @@ namespace ARMeilleure.Instructions
 
             context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath);
+            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
             EmitReadVectorFallback(context, address, vector, rt, elem, size);
 
@@ -256,7 +256,7 @@ namespace ARMeilleure.Instructions
 
             context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath);
+            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
             EmitWriteIntFallback(context, address, rt, size);
 
@@ -274,7 +274,7 @@ namespace ARMeilleure.Instructions
 
             Operand lblFastPath = Label();
 
-            context.BranchIfFalse(lblFastPath, isUnalignedAddr);
+            context.BranchIfFalse(lblFastPath, isUnalignedAddr, BasicBlockFrequency.Cold);
 
             // The call is not expected to return (it should throw).
             context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);
@@ -331,7 +331,7 @@ namespace ARMeilleure.Instructions
 
             context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath);
+            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
             EmitWriteVectorFallback(context, address, rt, elem, size);
 
@@ -402,7 +402,7 @@ namespace ARMeilleure.Instructions
                     Operand lblNotWatched = Label();
 
                     // Is the page currently being monitored for modifications? If so we need to call MarkRegionAsModified.
-                    context.BranchIf(lblNotWatched, pte, Const(0L), Comparison.GreaterOrEqual);
+                    context.BranchIf(lblNotWatched, pte, Const(0L), Comparison.GreaterOrEqual, BasicBlockFrequency.Cold);
 
                     // Mark the region as modified. Size here doesn't matter as address is assumed to be size aligned here.
                     context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.MarkRegionAsModified)), address, Const(1UL));
@@ -412,7 +412,7 @@ namespace ARMeilleure.Instructions
                 Operand lblNonNull = Label();
 
                 // Skip exception if the PTE address is non-null (not zero).
-                context.BranchIfTrue(lblNonNull, pte);
+                context.BranchIfTrue(lblNonNull, pte, BasicBlockFrequency.Cold);
 
                 // The call is not expected to return (it should throw).
                 context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);

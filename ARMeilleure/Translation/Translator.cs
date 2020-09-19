@@ -301,11 +301,11 @@ namespace ARMeilleure.Translation
             Operand lblNonZero = Label();
             Operand lblExit    = Label();
 
-            context.BranchIfTrue(lblNonZero, count);
+            context.BranchIfTrue(lblNonZero, count, BasicBlockFrequency.Cold);
 
             Operand running = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.CheckSynchronization)));
 
-            context.BranchIfTrue(lblExit, running);
+            context.BranchIfTrue(lblExit, running, BasicBlockFrequency.Cold);
 
             context.Return(Const(0L));
 

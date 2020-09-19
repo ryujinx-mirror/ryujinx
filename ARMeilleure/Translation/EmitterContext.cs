@@ -20,6 +20,7 @@ namespace ARMeilleure.Translation
         private BasicBlock _ifBlock;
 
         private bool _needsNewBlock;
+        private BasicBlockFrequency _nextBlockFreq;
 
         public EmitterContext()
         {
@@ -27,6 +28,7 @@ namespace ARMeilleure.Translation
             _irBlocks = new IntrusiveList<BasicBlock>();
 
             _needsNewBlock = true;
+            _nextBlockFreq = BasicBlockFrequency.Default;
         }
 
         public Operand Add(Operand op1, Operand op2)
@@ -58,24 +60,24 @@ namespace ARMeilleure.Translation
         {
             NewNextBlockIfNeeded();
 
-            BranchToLabel(label, uncond: true);
+            BranchToLabel(label, uncond: true, BasicBlockFrequency.Default);
         }
 
-        public void BranchIf(Operand label, Operand op1, Operand op2, Comparison comp)
+        public void BranchIf(Operand label, Operand op1, Operand op2, Comparison comp, BasicBlockFrequency falseFreq = default)
         {
             Add(Instruction.BranchIf, null, op1, op2, Const((int)comp));
 
-            BranchToLabel(label, uncond: false);
+            BranchToLabel(label, uncond: false, falseFreq);
         }
 
-        public void BranchIfFalse(Operand label, Operand op1)
+        public void BranchIfFalse(Operand label, Operand op1, BasicBlockFrequency falseFreq = default)
         {
-            BranchIf(label, op1, Const(op1.Type, 0), Comparison.Equal);
+            BranchIf(label, op1, Const(op1.Type, 0), Comparison.Equal, falseFreq);
         }
 
-        public void BranchIfTrue(Operand label, Operand op1)
+        public void BranchIfTrue(Operand label, Operand op1, BasicBlockFrequency falseFreq = default)
         {
-            BranchIf(label, op1, Const(op1.Type, 0), Comparison.NotEqual);
+            BranchIf(label, op1, Const(op1.Type, 0), Comparison.NotEqual, falseFreq);
         }
 
         public Operand ByteSwap(Operand op1)
@@ -582,7 +584,7 @@ namespace ARMeilleure.Translation
             return dest;
         }
 
-        private void BranchToLabel(Operand label, bool uncond)
+        private void BranchToLabel(Operand label, bool uncond, BasicBlockFrequency nextFreq)
         {
             if (!_irLabels.TryGetValue(label, out BasicBlock branchBlock))
             {
@@ -602,10 +604,13 @@ namespace ARMeilleure.Translation
             }
 
             _needsNewBlock = true;
+            _nextBlockFreq = nextFreq;
         }
 
-        public void MarkLabel(Operand label)
+        public void MarkLabel(Operand label, BasicBlockFrequency nextFreq = default)
         {
+            _nextBlockFreq = nextFreq;
+
             if (_irLabels.TryGetValue(label, out BasicBlock nextBlock))
             {
                 nextBlock.Index = _irBlocks.Count;
@@ -633,7 +638,7 @@ namespace ARMeilleure.Translation
 
         private void NextBlock(BasicBlock nextBlock)
         {
-            if (_irBlock != null && _irBlock.SuccessorCount == 0 && !EndsWithUnconditional(_irBlock))
+            if (_irBlock?.SuccessorCount == 0 && !EndsWithUnconditional(_irBlock))
             {
                 _irBlock.AddSuccessor(nextBlock);
 
@@ -646,8 +651,10 @@ namespace ARMeilleure.Translation
             }
 
             _irBlock = nextBlock;
+            _irBlock.Frequency = _nextBlockFreq;
 
             _needsNewBlock = false;
+            _nextBlockFreq = BasicBlockFrequency.Default;
         }
 
         private static bool EndsWithUnconditional(BasicBlock block)

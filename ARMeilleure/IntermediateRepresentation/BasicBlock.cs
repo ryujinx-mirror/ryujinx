@@ -5,9 +5,11 @@ namespace ARMeilleure.IntermediateRepresentation
 {
     class BasicBlock : IIntrusiveListNode<BasicBlock>
     {
-        private readonly List<BasicBlock> _successors = new List<BasicBlock>();
+        private readonly List<BasicBlock> _successors;
 
         public int Index { get; set; }
+
+        public BasicBlockFrequency Frequency { get; set; }
 
         public BasicBlock ListPrevious { get; set; }
         public BasicBlock ListNext { get; set; }
@@ -25,6 +27,8 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public BasicBlock(int index)
         {
+            _successors = new List<BasicBlock>();
+
             Operations = new IntrusiveList<Node>();
             Predecessors = new List<BasicBlock>();
             DominanceFrontiers = new HashSet<BasicBlock>();

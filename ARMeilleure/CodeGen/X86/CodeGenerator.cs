@@ -106,6 +106,8 @@ namespace ARMeilleure.CodeGen.X86
 
             X86Optimizer.RunPass(cfg);
 
+            BlockPlacement.RunPass(cfg);
+
             Logger.EndPass(PassName.Optimization, cfg);
 
             Logger.StartPass(PassName.PreAllocation);
@@ -186,9 +188,11 @@ namespace ARMeilleure.CodeGen.X86
                     }
                 }
 
+                byte[] code = context.GetCode();
+
                 Logger.EndPass(PassName.CodeGeneration);
 
-                return new CompiledFunction(context.GetCode(), unwindInfo);
+                return new CompiledFunction(code, unwindInfo);
             }
         }
 
