@@ -64,22 +64,9 @@
             return true;
         }
 
-        public bool QuerySupportsViewportSwizzle()
-        {
-            return true;
-        }
-
         public TextureFormat QueryTextureFormat(int handle)
         {
             return TextureFormat.R8G8B8A8Unorm;
-        }
-
-        public int QueryViewportSwizzle(int component)
-        {
-            // Bit 0: Negate flag.
-            // Bits 2-1: Component.
-            // Example: 0b110 = W, 0b111 = -W, 0b000 = X, 0b010 = Y etc.
-            return component << 1;
         }
     }
 }
