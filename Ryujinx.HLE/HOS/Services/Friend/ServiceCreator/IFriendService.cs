@@ -1,24 +1,46 @@
+using LibHac.Ns;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService;
 using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 {
     class IFriendService : IpcService
     {
         private FriendServicePermissionLevel _permissionLevel;
+        private KEvent                       _completionEvent;
 
         public IFriendService(FriendServicePermissionLevel permissionLevel)
         {
             _permissionLevel = permissionLevel;
+        }
+
+        [Command(0)]
+        // GetCompletionEvent() -> handle<copy>
+        public ResultCode GetCompletionEvent(ServiceCtx context)
+        {
+            if (_completionEvent == null)
+            {
+                _completionEvent = new KEvent(context.Device.System.KernelContext);
+            }
+
+            if (context.Process.HandleTable.GenerateHandle(_completionEvent.ReadableEvent, out int completionEventHandle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(completionEventHandle);
+
+            return ResultCode.Success;
         }
 
         [Command(10100)]
@@ -249,6 +271,46 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 
             context.Memory.Write((ulong)bufferPosition,        playHistoryRegistrationKeyBuffer);
             context.Memory.Write((ulong)bufferPosition + 0x20, new byte[0x20]); // HmacHash
+
+            return ResultCode.Success;
+        }
+
+        [Command(10702)]
+        // nn::friends::AddPlayHistory(nn::account::Uid, u64, pid, buffer<nn::friends::PlayHistoryRegistrationKey, 0x19>, buffer<nn::friends::InAppScreenName, 0x19>, buffer<nn::friends::InAppScreenName, 0x19>)
+        public ResultCode AddPlayHistory(ServiceCtx context)
+        {
+            UserId userId = context.RequestData.ReadStruct<UserId>();
+
+            // Pid placeholder
+            context.RequestData.ReadInt64();
+            long pid = context.Process.Pid;
+
+            long playHistoryRegistrationKeyPosition = context.Request.PtrBuff[0].Position;
+            long PlayHistoryRegistrationKeySize     = context.Request.PtrBuff[0].Size;
+
+            long inAppScreenName1Position = context.Request.PtrBuff[1].Position;
+            long inAppScreenName1Size     = context.Request.PtrBuff[1].Size;
+
+            long inAppScreenName2Position = context.Request.PtrBuff[2].Position;
+            long inAppScreenName2Size     = context.Request.PtrBuff[2].Size;
+
+            if (userId.IsNull || inAppScreenName1Size > 0x48 || inAppScreenName2Size > 0x48)
+            {
+                return ResultCode.InvalidArgument;
+            }
+
+            // TODO: Call nn::arp::GetApplicationControlProperty here when implemented.
+            ApplicationControlProperty controlProperty = context.Device.Application.ControlData.Value;
+
+            /*
+
+            NOTE: The service calls nn::friends::detail::service::core::PlayHistoryManager to store informations using the registration key computed in GetPlayHistoryRegistrationKey.
+                  Then calls nn::friends::detail::service::core::FriendListManager to update informations on the friend list.
+                  We currently don't support play history and online services so it's fine to do nothing.
+
+            */
+
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend);
 
             return ResultCode.Success;
         }
