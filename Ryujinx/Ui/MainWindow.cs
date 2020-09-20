@@ -882,11 +882,26 @@ namespace Ryujinx.Ui
 
         private void Open_Ryu_Folder(object sender, EventArgs args)
         {
-            Process.Start(new ProcessStartInfo()
+            Process.Start(new ProcessStartInfo
             {
                 FileName        = AppDataManager.BaseDirPath,
                 UseShellExecute = true,
                 Verb            = "open"
+            });
+        }
+
+        private void OpenLogsFolder_Pressed(object sender, EventArgs args)
+        {
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+
+            DirectoryInfo directory = new DirectoryInfo(logPath);
+            directory.Create();
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = logPath,
+                UseShellExecute = true,
+                Verb = "open"
             });
         }
 

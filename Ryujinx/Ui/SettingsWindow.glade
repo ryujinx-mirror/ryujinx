@@ -1978,23 +1978,6 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkButton" id="_openLogsFolderButton">
-                                    <property name="label" translatable="yes">Open Logs Folder</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="receives_default">True</property>
-                                    <property name="tooltip_text" translatable="yes">Opens the folder where logs are written to.</property>
-                                    <property name="halign">start</property>
-                                    <property name="margin_bottom">10</property>
-                                    <signal name="clicked" handler="OpenLogsFolder_Pressed" swapped="no"/>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkCheckButton" id="_stubLogToggle">
                                     <property name="label" translatable="yes">Enable Stub Logs</property>
                                     <property name="visible">True</property>
