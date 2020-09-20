@@ -154,6 +154,52 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
+        [Command(30)]
+        // BeginBlockingHomeButtonShortAndLongPressed()
+        public ResultCode BeginBlockingHomeButtonShortAndLongPressed(ServiceCtx context)
+        {
+            // NOTE: This set two internal fields at offsets 0x89 and 0x8B to value 1 then it signals an internal event.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
+        [Command(31)]
+        // EndBlockingHomeButtonShortAndLongPressed()
+        public ResultCode EndBlockingHomeButtonShortAndLongPressed(ServiceCtx context)
+        {
+            // NOTE: This set two internal fields at offsets 0x89 and 0x8B to value 0 then it signals an internal event.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
+        [Command(32)] // 2.0.0+
+        // BeginBlockingHomeButton(u64 nano_second)
+        public ResultCode BeginBlockingHomeButton(ServiceCtx context)
+        {
+            ulong nanoSeconds = context.RequestData.ReadUInt64();
+
+            // NOTE: This set two internal fields at offsets 0x89 to value 1 and 0x90 to value of "nanoSeconds" then it signals an internal event.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { nanoSeconds });
+
+            return ResultCode.Success;
+        }
+
+        [Command(33)] // 2.0.0+
+        // EndBlockingHomeButton()
+        public ResultCode EndBlockingHomeButton(ServiceCtx context)
+        {
+            // NOTE: This set two internal fields at offsets 0x89 and 0x90 to value 0 then it signals an internal event.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [Command(40)]
         // NotifyRunning() -> b8
         public ResultCode NotifyRunning(ServiceCtx context)
