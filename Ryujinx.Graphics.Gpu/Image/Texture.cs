@@ -259,7 +259,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             _views.Remove(texture);
 
-            texture._viewStorage = null;
+            texture._viewStorage = texture;
 
             DeleteIfNotUsed();
         }
