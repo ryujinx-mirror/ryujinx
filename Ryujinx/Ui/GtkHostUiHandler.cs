@@ -2,6 +2,7 @@ using Gtk;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using System;
 using System.Threading;
 
@@ -120,6 +121,12 @@ namespace Ryujinx.Ui
             userText = error ? null : inputText;
 
             return error || okPressed;
+        }
+
+        public void ExecuteProgram(HLE.Switch device, ProgramSpecifyKind kind, ulong value)
+        {
+            device.UserChannelPersistence.ExecuteProgram(kind, value);
+            MainWindow.GlWidget?.Exit();
         }
     }
 }

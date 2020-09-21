@@ -13,6 +13,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.HOS;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -246,7 +247,7 @@ namespace Ryujinx.Ui
             return workingPath;
         }
 
-        private void ExtractSection(NcaSectionType ncaSectionType)
+        private void ExtractSection(NcaSectionType ncaSectionType, int programIndex = 0)
         {
             FileChooserDialog fileChooser = new FileChooserDialog("Choose the folder to extract into", null, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Extract", ResponseType.Accept);
             fileChooser.SetPosition(WindowPosition.Center);
@@ -340,36 +341,12 @@ namespace Ryujinx.Ui
                             return;
                         }
 
-                        string titleUpdateMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "updates.json");
 
-                        if (File.Exists(titleUpdateMetadataPath))
+                        (Nca updatePatchNca, _) = ApplicationLoader.GetGameUpdateData(_virtualFileSystem, mainNca.Header.TitleId.ToString("x16"), programIndex, out _);
+
+                        if (updatePatchNca != null)
                         {
-                            string updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
-
-                            if (File.Exists(updatePath))
-                            {
-                                FileStream updateFile = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
-                                PartitionFileSystem nsp = new PartitionFileSystem(updateFile.AsStorage());
-
-                                _virtualFileSystem.ImportTickets(nsp);
-
-                                foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
-                                {
-                                    nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                                    Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
-
-                                    if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != mainNca.Header.TitleId.ToString("x16"))
-                                    {
-                                        break;
-                                    }
-
-                                    if (nca.Header.ContentType == NcaContentType.Program)
-                                    {
-                                        patchNca = nca;
-                                    }
-                                }
-                            }
+                            patchNca = updatePatchNca;
                         }
 
                         int index = Nca.GetSectionIndexFromType(ncaSectionType, mainNca.Header.ContentType);

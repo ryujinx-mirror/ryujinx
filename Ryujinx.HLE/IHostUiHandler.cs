@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 
 namespace Ryujinx.HLE
 {
@@ -22,5 +23,13 @@ namespace Ryujinx.HLE
         /// </summary>
         /// <returns>True when OK is pressed, False otherwise.</returns>
         bool DisplayMessageDialog(ControllerAppletUiArgs args);
+
+        /// <summary>
+        /// Tell the UI that we need to transisition to another program.
+        /// </summary>
+        /// <param name="device">The device instance.</param>
+        /// <param name="kind">The program kind.</param>
+        /// <param name="value">The value associated to the <paramref name="kind"/>.</param>
+        void ExecuteProgram(Switch device, ProgramSpecifyKind kind, ulong value);
     }
 }

@@ -9,6 +9,7 @@ using LibHac.Ns;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.HOS;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -83,63 +84,47 @@ namespace Ryujinx.Ui
                 {
                     PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
 
-                    _virtualFileSystem.ImportTickets(nsp);
-
-                    foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
+                    try
                     {
-                        nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        (Nca patchNca, Nca controlNca) = ApplicationLoader.GetGameUpdateDataFromPartition(_virtualFileSystem, nsp, _titleId, 0);
 
-                        try
+                        if (controlNca != null && patchNca != null)
                         {
-                            Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
+                            ApplicationControlProperty controlData = new ApplicationControlProperty();
 
-                            if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" == _titleId)
-                            {
-                                if (nca.Header.ContentType == NcaContentType.Control)
-                                {
-                                    ApplicationControlProperty controlData = new ApplicationControlProperty();
+                            controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                            nacpFile.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                                    nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(out IFile nacpFile, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-                                    nacpFile.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
+                            RadioButton radioButton = new RadioButton($"Version {controlData.DisplayVersion.ToString()} - {path}");
+                            radioButton.JoinGroup(_noUpdateRadioButton);
 
-                                    RadioButton radioButton = new RadioButton($"Version {controlData.DisplayVersion.ToString()} - {path}");
-                                    radioButton.JoinGroup(_noUpdateRadioButton);
+                            _availableUpdatesBox.Add(radioButton);
+                            _radioButtonToPathDictionary.Add(radioButton, path);
 
-                                    _availableUpdatesBox.Add(radioButton);
-                                    _radioButtonToPathDictionary.Add(radioButton, path);
-
-                                    radioButton.Show();
-                                    radioButton.Active = true;
-                                }
-                            }
-                            else
-                            {
-                                GtkDialog.CreateErrorDialog("The specified file does not contain an update for the selected title!");
-                                
-                                break;
-                            }
+                            radioButton.Show();
+                            radioButton.Active = true;
                         }
-                        catch (InvalidDataException exception)
+                        else
                         {
-                            Logger.Error?.Print(LogClass.Application, $"{exception.Message}. Errored File: {path}");
-
-                            if (showErrorDialog)
-                            {
-                                GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", "The NCA header content type check has failed. This is usually because the header key is incorrect or missing.");
-                            }
-                            
-                            break;
+                            GtkDialog.CreateErrorDialog("The specified file does not contain an update for the selected title!");
                         }
-                        catch (MissingKeyException exception)
+                    }
+                    catch (InvalidDataException exception)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"{exception.Message}. Errored File: {path}");
+
+                        if (showErrorDialog)
                         {
-                            Logger.Error?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {path}");
+                            GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", "The NCA header content type check has failed. This is usually because the header key is incorrect or missing.");
+                        }
+                    }
+                    catch (MissingKeyException exception)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}. Errored File: {path}");
 
-                            if (showErrorDialog)
-                            {
-                                GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", $"Your key set is missing a key with the name: {exception.Name}");
-                            }
-
-                            break;
+                        if (showErrorDialog)
+                        {
+                            GtkDialog.CreateInfoDialog("Ryujinx - Error", "Add Update Failed!", $"Your key set is missing a key with the name: {exception.Name}");
                         }
                     }
                 }

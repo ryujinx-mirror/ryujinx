@@ -5,11 +5,13 @@ using LibHac.Fs;
 using LibHac.Ns;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
+using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
@@ -35,11 +37,27 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         }
 
         [Command(1)]
-        // PopLaunchParameter(u32) -> object<nn::am::service::IStorage>
+        // PopLaunchParameter(LaunchParameterKind kind) -> object<nn::am::service::IStorage>
         public ResultCode PopLaunchParameter(ServiceCtx context)
         {
-            // Only the first 0x18 bytes of the Data seems to be actually used.
-            MakeObject(context, new AppletAE.IStorage(StorageHelper.MakeLaunchParams(context.Device.System.State.Account.LastOpenedUser)));
+            LaunchParameterKind kind = (LaunchParameterKind)context.RequestData.ReadUInt32();
+
+            byte[] storageData;
+
+            switch (kind)
+            {
+                case LaunchParameterKind.UserChannel:
+                    storageData = context.Device.UserChannelPersistence.Pop();
+                    break;
+                case LaunchParameterKind.PreselectedUser:
+                    // Only the first 0x18 bytes of the Data seems to be actually used.
+                    storageData = StorageHelper.MakeLaunchParams(context.Device.System.State.Account.LastOpenedUser);
+                    break;
+                default:
+                    throw new NotImplementedException($"Unknown LaunchParameterKind {kind}");
+            }
+
+            MakeObject(context, new AppletAE.IStorage(storageData));
 
             return ResultCode.Success;
         }
@@ -376,14 +394,49 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return (ResultCode)QueryPlayStatisticsManager.GetPlayStatistics(context, true);
         }
 
+        [Command(120)] // 5.0.0+
+        // ExecuteProgram(ProgramSpecifyKind kind, u64 value)
+        public ResultCode ExecuteProgram(ServiceCtx context)
+        {
+            ProgramSpecifyKind kind = (ProgramSpecifyKind)context.RequestData.ReadUInt32();
+
+            // padding
+            context.RequestData.ReadUInt32();
+
+            ulong value = context.RequestData.ReadUInt64();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { kind, value });
+
+            context.Device.UiHandler.ExecuteProgram(context.Device, kind, value);
+
+            return ResultCode.Success;
+        }
+
+        [Command(121)] // 5.0.0+
+        // ClearUserChannel()
+        public ResultCode ClearUserChannel(ServiceCtx context)
+        {
+            context.Device.UserChannelPersistence.Clear();
+
+            return ResultCode.Success;
+        }
+
+        [Command(122)] // 5.0.0+
+        // UnpopToUserChannel(object<nn::am::service::IStorage> input_storage)
+        public ResultCode UnpopToUserChannel(ServiceCtx context)
+        {
+            AppletAE.IStorage data = GetObject<AppletAE.IStorage>(context, 0);
+
+            context.Device.UserChannelPersistence.Push(data.Data);
+
+            return ResultCode.Success;
+        }
+
         [Command(123)] // 5.0.0+
         // GetPreviousProgramIndex() -> s32 program_index
         public ResultCode GetPreviousProgramIndex(ServiceCtx context)
         {
-            // TODO: The output PreviousProgramIndex is -1 when there was no previous title.
-            //       When multi-process will be supported, return the last program index.
-
-            int previousProgramIndex = -1;
+            int previousProgramIndex = context.Device.UserChannelPersistence.PreviousIndex;
 
             context.ResponseData.Write(previousProgramIndex);
 

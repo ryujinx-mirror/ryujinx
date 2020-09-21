@@ -15,6 +15,7 @@ using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,32 +29,33 @@ namespace Ryujinx.HLE.HOS
 
     public class ApplicationLoader
     {
-        private readonly Switch _device;
-        private readonly ContentManager _contentManager;
-        private readonly VirtualFileSystem _fileSystem;
-
-        public BlitStruct<ApplicationControlProperty> ControlData { get; set; }
-
-        public string TitleName { get; private set; }
-        public string DisplayVersion { get; private set; }
-
-        public ulong TitleId { get; private set; }
-        public string TitleIdText => TitleId.ToString("x16");
-
-        public bool TitleIs64Bit { get; private set; }
-
-        public bool EnablePtc => _device.System.EnablePtc;
-
         // Binaries from exefs are loaded into mem in this order. Do not change.
         private static readonly string[] ExeFsPrefixes = { "rtld", "main", "subsdk*", "sdk" };
 
+        private readonly Switch            _device;
+        private readonly ContentManager    _contentManager;
+        private readonly VirtualFileSystem _fileSystem;
+
+        private string _titleName;
+        private string _displayVersion;
+        private BlitStruct<ApplicationControlProperty> _controlData;
+
+        public BlitStruct<ApplicationControlProperty> ControlData => _controlData;
+        public string TitleName => _titleName;
+        public string DisplayVersion => _displayVersion;
+
+        public ulong  TitleId      { get; private set; }
+        public bool   TitleIs64Bit { get; private set; }
+
+        public string TitleIdText => TitleId.ToString("x16");
+
         public ApplicationLoader(Switch device, VirtualFileSystem fileSystem, ContentManager contentManager)
         {
-            _device = device;
+            _device         = device;
             _contentManager = contentManager;
-            _fileSystem = fileSystem;
+            _fileSystem     = fileSystem;
 
-            ControlData = new BlitStruct<ApplicationControlProperty>(1);
+            _controlData = new BlitStruct<ApplicationControlProperty>(1);
 
             // Clear Mods cache
             _fileSystem.ModLoader.Clear();
@@ -80,19 +82,26 @@ namespace Ryujinx.HLE.HOS
             LoadExeFs(codeFs, metaData);
         }
 
-        private (Nca main, Nca patch, Nca control) GetGameData(PartitionFileSystem pfs)
+        public static (Nca main, Nca patch, Nca control) GetGameData(VirtualFileSystem fileSystem, PartitionFileSystem pfs, int programIndex)
         {
-            Nca mainNca = null;
-            Nca patchNca = null;
+            Nca mainNca    = null;
+            Nca patchNca   = null;
             Nca controlNca = null;
 
-            _fileSystem.ImportTickets(pfs);
+            fileSystem.ImportTickets(pfs);
 
             foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
             {
                 pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                Nca nca = new Nca(_fileSystem.KeySet, ncaFile.AsStorage());
+                Nca nca = new Nca(fileSystem.KeySet, ncaFile.AsStorage());
+
+                int ncaProgramIndex = (int)(nca.Header.TitleId & 0xF);
+
+                if (ncaProgramIndex != programIndex)
+                {
+                    continue;
+                }
 
                 if (nca.Header.ContentType == NcaContentType.Program)
                 {
@@ -116,11 +125,77 @@ namespace Ryujinx.HLE.HOS
             return (mainNca, patchNca, controlNca);
         }
 
+        public static (Nca patch, Nca control) GetGameUpdateDataFromPartition(VirtualFileSystem fileSystem, PartitionFileSystem pfs, string titleId, int programIndex)
+        {
+            Nca patchNca = null;
+            Nca controlNca = null;
+
+            fileSystem.ImportTickets(pfs);
+
+            foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
+            {
+                pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                Nca nca = new Nca(fileSystem.KeySet, ncaFile.AsStorage());
+
+                int ncaProgramIndex = (int)(nca.Header.TitleId & 0xF);
+
+                if (ncaProgramIndex != programIndex)
+                {
+                    continue;
+                }
+
+                if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != titleId)
+                {
+                    break;
+                }
+
+                if (nca.Header.ContentType == NcaContentType.Program)
+                {
+                    patchNca = nca;
+                }
+                else if (nca.Header.ContentType == NcaContentType.Control)
+                {
+                    controlNca = nca;
+                }
+            }
+
+            return (patchNca, controlNca);
+        }
+
+        public static (Nca patch, Nca control) GetGameUpdateData(VirtualFileSystem fileSystem, string titleId, int programIndex, out string updatePath)
+        {
+            updatePath = null;
+
+            if (ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdBase))
+            {
+                // Clear the program index part.
+                titleIdBase &= 0xFFFFFFFFFFFFFFF0;
+
+                // Load update informations if existing.
+                string titleUpdateMetadataPath = Path.Combine(AppDataManager.GamesDirPath, titleIdBase.ToString("x16"), "updates.json");
+
+                if (File.Exists(titleUpdateMetadataPath))
+                {
+                    updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
+
+                    if (File.Exists(updatePath))
+                    {
+                        FileStream file = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
+                        PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+
+                        return GetGameUpdateDataFromPartition(fileSystem, nsp, titleIdBase.ToString("x16"), programIndex);
+                    }
+                }
+            }
+
+            return (null, null);
+        }
+
         public void LoadXci(string xciFile)
         {
             FileStream file = new FileStream(xciFile, FileMode.Open, FileAccess.Read);
-
-            Xci xci = new Xci(_fileSystem.KeySet, file.AsStorage());
+            Xci        xci  = new Xci(_fileSystem.KeySet, file.AsStorage());
 
             if (!xci.HasPartition(XciPartitionType.Secure))
             {
@@ -131,13 +206,13 @@ namespace Ryujinx.HLE.HOS
 
             PartitionFileSystem securePartition = xci.OpenPartition(XciPartitionType.Secure);
 
-            Nca mainNca = null;
-            Nca patchNca = null;
-            Nca controlNca = null;
+            Nca mainNca;
+            Nca patchNca;
+            Nca controlNca;
 
             try
             {
-                (mainNca, patchNca, controlNca) = GetGameData(securePartition);
+                (mainNca, patchNca, controlNca) = GetGameData(_fileSystem, securePartition, _device.UserChannelPersistence.Index);
             }
             catch (Exception e)
             {
@@ -154,7 +229,6 @@ namespace Ryujinx.HLE.HOS
             }
 
             _contentManager.LoadEntries(_device);
-
             _contentManager.ClearAocData();
             _contentManager.AddAocData(securePartition, xciFile, mainNca.Header.TitleId);
 
@@ -163,17 +237,16 @@ namespace Ryujinx.HLE.HOS
 
         public void LoadNsp(string nspFile)
         {
-            FileStream file = new FileStream(nspFile, FileMode.Open, FileAccess.Read);
+            FileStream          file = new FileStream(nspFile, FileMode.Open, FileAccess.Read);
+            PartitionFileSystem nsp  = new PartitionFileSystem(file.AsStorage());
 
-            PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
-
-            Nca mainNca = null;
-            Nca patchNca = null;
-            Nca controlNca = null;
+            Nca mainNca;
+            Nca patchNca;
+            Nca controlNca;
 
             try
             {
-                (mainNca, patchNca, controlNca) = GetGameData(nsp);
+                (mainNca, patchNca, controlNca) = GetGameData(_fileSystem, nsp, _device.UserChannelPersistence.Index);
             }
             catch (Exception e)
             {
@@ -206,8 +279,7 @@ namespace Ryujinx.HLE.HOS
         public void LoadNca(string ncaFile)
         {
             FileStream file = new FileStream(ncaFile, FileMode.Open, FileAccess.Read);
-
-            Nca nca = new Nca(_fileSystem.KeySet, file.AsStorage(false));
+            Nca        nca  = new Nca(_fileSystem.KeySet, file.AsStorage(false));
 
             LoadNca(nca, null, null);
         }
@@ -221,45 +293,23 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            IStorage dataStorage = null;
-            IFileSystem codeFs = null;
+            IStorage    dataStorage = null;
+            IFileSystem codeFs      = null;
 
-            // Load Update
-            string titleUpdateMetadataPath = Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "updates.json");
+            (Nca updatePatchNca, Nca updateControlNca) = GetGameUpdateData(_fileSystem, mainNca.Header.TitleId.ToString("x16"), _device.UserChannelPersistence.Index, out _);
 
-            if (File.Exists(titleUpdateMetadataPath))
+            if (updatePatchNca != null)
             {
-                string updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
-
-                if (File.Exists(updatePath))
-                {
-                    FileStream file = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
-                    PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
-
-                    _fileSystem.ImportTickets(nsp);
-
-                    foreach (DirectoryEntryEx fileEntry in nsp.EnumerateEntries("/", "*.nca"))
-                    {
-                        nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                        Nca nca = new Nca(_fileSystem.KeySet, ncaFile.AsStorage());
-
-                        if ($"{nca.Header.TitleId.ToString("x16")[..^3]}000" != mainNca.Header.TitleId.ToString("x16"))
-                        {
-                            break;
-                        }
-
-                        if (nca.Header.ContentType == NcaContentType.Program)
-                        {
-                            patchNca = nca;
-                        }
-                        else if (nca.Header.ContentType == NcaContentType.Control)
-                        {
-                            controlNca = nca;
-                        }
-                    }
-                }
+                patchNca = updatePatchNca;
             }
+
+            if (updateControlNca != null)
+            {
+                controlNca = updateControlNca;
+            }
+
+            // Load program 0 control NCA as we are going to need it for display version.
+            (_, Nca updateProgram0ControlNca) = GetGameUpdateData(_fileSystem, mainNca.Header.TitleId.ToString("x16"), 0, out _);
 
             // Load Aoc
             string titleAocMetadataPath = Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "dlc.json");
@@ -315,11 +365,21 @@ namespace Ryujinx.HLE.HOS
 
             if (controlNca != null)
             {
-                ReadControlData(controlNca);
+                ReadControlData(_device, controlNca, ref _controlData, ref _titleName, ref _displayVersion);
             }
             else
             {
                 ControlData.ByteSpan.Clear();
+            }
+
+            // NOTE: Nintendo doesn't guarantee that the display version will be updated on sub programs when updating a multi program application.
+            // BODY: As such, to avoid PTC cache confusion, we only trust the the program 0 display version when launching a sub program.
+            if (updateProgram0ControlNca != null && _device.UserChannelPersistence.Index != 0)
+            {
+                string dummyTitleName = "";
+                BlitStruct<ApplicationControlProperty> dummyControl = new BlitStruct<ApplicationControlProperty>(1);
+
+                ReadControlData(_device, updateProgram0ControlNca, ref dummyControl, ref dummyTitleName, ref _displayVersion);
             }
 
             if (dataStorage == null)
@@ -329,6 +389,7 @@ namespace Ryujinx.HLE.HOS
             else
             {
                 IStorage newStorage = _fileSystem.ModLoader.ApplyRomFsMods(TitleId, dataStorage);
+
                 _fileSystem.SetRomFs(newStorage.AsStream(FileAccess.Read));
             }
 
@@ -346,6 +407,7 @@ namespace Ryujinx.HLE.HOS
         private Npdm ReadNpdm(IFileSystem fs)
         {
             Result result = fs.OpenFile(out IFile npdmFile, "/main.npdm".ToU8Span(), OpenMode.Read);
+
             Npdm metaData;
 
             if (ResultFs.PathNotFound.Includes(result))
@@ -359,39 +421,36 @@ namespace Ryujinx.HLE.HOS
                 metaData = new Npdm(npdmFile.AsStream());
             }
 
-            TitleId = metaData.Aci0.TitleId;
+            TitleId      = metaData.Aci0.TitleId;
             TitleIs64Bit = metaData.Is64Bit;
 
             return metaData;
         }
 
-        private void ReadControlData(Nca controlNca)
+        private static void ReadControlData(Switch device, Nca controlNca, ref BlitStruct<ApplicationControlProperty> controlData, ref string titleName, ref string displayVersion)
         {
-            IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
-
-            Result result = controlFs.OpenFile(out IFile controlFile, "/control.nacp".ToU8Span(), OpenMode.Read);
+            IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
+            Result      result    = controlFs.OpenFile(out IFile controlFile, "/control.nacp".ToU8Span(), OpenMode.Read);
 
             if (result.IsSuccess())
             {
-                result = controlFile.Read(out long bytesRead, 0, ControlData.ByteSpan, ReadOption.None);
+                result = controlFile.Read(out long bytesRead, 0, controlData.ByteSpan, ReadOption.None);
 
-                if (result.IsSuccess() && bytesRead == ControlData.ByteSpan.Length)
+                if (result.IsSuccess() && bytesRead == controlData.ByteSpan.Length)
                 {
-                    TitleName = ControlData.Value
-                        .Titles[(int)_device.System.State.DesiredTitleLanguage].Name.ToString();
+                    titleName = controlData.Value.Titles[(int)device.System.State.DesiredTitleLanguage].Name.ToString();
 
-                    if (string.IsNullOrWhiteSpace(TitleName))
+                    if (string.IsNullOrWhiteSpace(titleName))
                     {
-                        TitleName = ControlData.Value.Titles.ToArray()
-                            .FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
+                        titleName = controlData.Value.Titles.ToArray().FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
                     }
 
-                    DisplayVersion = ControlData.Value.DisplayVersion.ToString();
+                    displayVersion = controlData.Value.DisplayVersion.ToString();
                 }
             }
             else
             {
-                ControlData.ByteSpan.Clear();
+                controlData.ByteSpan.Clear();
             }
         }
 
@@ -428,18 +487,18 @@ namespace Ryujinx.HLE.HOS
             // ExeFs file replacements
             bool modified = _fileSystem.ModLoader.ApplyExefsMods(TitleId, nsos);
 
-            var programs = nsos.ToArray();
+            NsoExecutable[] programs = nsos.ToArray();
 
             modified |= _fileSystem.ModLoader.ApplyNsoPatches(TitleId, programs);
 
             _contentManager.LoadEntries(_device);
 
-            if (EnablePtc && modified)
+            if (_device.System.EnablePtc && modified)
             {
                 Logger.Warning?.Print(LogClass.Ptc, $"Detected exefs modifications. PPTC disabled.");
             }
 
-            Ptc.Initialize(TitleIdText, DisplayVersion, EnablePtc && !modified);
+            Ptc.Initialize(TitleIdText, DisplayVersion, _device.System.EnablePtc && !modified);
 
             ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: programs);
         }
@@ -447,15 +506,15 @@ namespace Ryujinx.HLE.HOS
         public void LoadProgram(string filePath)
         {
             Npdm metaData = GetDefaultNpdm();
-
-            bool isNro = Path.GetExtension(filePath).ToLower() == ".nro";
+            bool isNro    = Path.GetExtension(filePath).ToLower() == ".nro";
 
             IExecutable executable;
 
             if (isNro)
             {
-                FileStream input = new FileStream(filePath, FileMode.Open);
-                NroExecutable obj = new NroExecutable(input.AsStorage());
+                FileStream    input = new FileStream(filePath, FileMode.Open);
+                NroExecutable obj   = new NroExecutable(input.AsStorage());
+
                 executable = obj;
 
                 // homebrew NRO can actually have some data after the actual NRO
@@ -466,20 +525,19 @@ namespace Ryujinx.HLE.HOS
                     BinaryReader reader = new BinaryReader(input);
 
                     uint asetMagic = reader.ReadUInt32();
-
                     if (asetMagic == 0x54455341)
                     {
                         uint asetVersion = reader.ReadUInt32();
                         if (asetVersion == 0)
                         {
                             ulong iconOffset = reader.ReadUInt64();
-                            ulong iconSize = reader.ReadUInt64();
+                            ulong iconSize   = reader.ReadUInt64();
 
                             ulong nacpOffset = reader.ReadUInt64();
-                            ulong nacpSize = reader.ReadUInt64();
+                            ulong nacpSize   = reader.ReadUInt64();
 
                             ulong romfsOffset = reader.ReadUInt64();
-                            ulong romfsSize = reader.ReadUInt64();
+                            ulong romfsSize   = reader.ReadUInt64();
 
                             if (romfsSize != 0)
                             {
@@ -533,8 +591,8 @@ namespace Ryujinx.HLE.HOS
 
             _contentManager.LoadEntries(_device);
 
-            TitleName = metaData.TitleName;
-            TitleId = metaData.Aci0.TitleId;
+            _titleName   = metaData.TitleName;
+            TitleId      = metaData.Aci0.TitleId;
             TitleIs64Bit = metaData.Is64Bit;
 
             ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: executable);
@@ -572,25 +630,24 @@ namespace Ryujinx.HLE.HOS
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
-            FileSystemClient fs = _fileSystem.FsClient;
+            FileSystemClient fileSystem = _fileSystem.FsClient;
+            Result           resultCode = fileSystem.EnsureApplicationCacheStorage(out _, applicationId, ref control);
 
-            Result rc = fs.EnsureApplicationCacheStorage(out _, applicationId, ref control);
-
-            if (rc.IsFailure())
+            if (resultCode.IsFailure())
             {
-                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationCacheStorage. Result code {rc.ToStringWithName()}");
+                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationCacheStorage. Result code {resultCode.ToStringWithName()}");
 
-                return rc;
+                return resultCode;
             }
 
-            rc = EnsureApplicationSaveData(fs, out _, applicationId, ref control, ref user);
+            resultCode = EnsureApplicationSaveData(fileSystem, out _, applicationId, ref control, ref user);
 
-            if (rc.IsFailure())
+            if (resultCode.IsFailure())
             {
-                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationSaveData. Result code {rc.ToStringWithName()}");
+                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationSaveData. Result code {resultCode.ToStringWithName()}");
             }
 
-            return rc;
+            return resultCode;
         }
     }
 }
