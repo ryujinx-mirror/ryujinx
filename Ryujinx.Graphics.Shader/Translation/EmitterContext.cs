@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
@@ -127,6 +128,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         regIndex++;
                     }
+
+                    regIndex = BitUtils.AlignUp(regIndex, 4);
                 }
             }
         }
