@@ -24,8 +24,6 @@ namespace Ryujinx.HLE.HOS.Kernel
         public Syscall Syscall { get; }
         public SyscallHandler SyscallHandler { get; }
 
-        public CountdownEvent ThreadCounter { get; }
-
         public KResourceLimit ResourceLimit { get; }
 
         public KMemoryRegionManager[] MemoryRegions { get; }
@@ -56,8 +54,6 @@ namespace Ryujinx.HLE.HOS.Kernel
             Syscall = new Syscall(device, this);
 
             SyscallHandler = new SyscallHandler(this);
-
-            ThreadCounter = new CountdownEvent(1);
 
             ResourceLimit = new KResourceLimit(this);
 

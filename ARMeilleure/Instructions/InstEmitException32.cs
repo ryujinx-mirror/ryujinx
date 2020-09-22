@@ -27,6 +27,8 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
 
             context.LoadFromContext();
+
+            Translator.EmitSynchronization(context);
         }
     }
 }

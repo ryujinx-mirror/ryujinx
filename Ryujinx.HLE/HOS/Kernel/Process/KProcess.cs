@@ -791,19 +791,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private void InterruptHandler(object sender, EventArgs e)
         {
             KernelContext.Scheduler.ContextSwitch();
+            KernelContext.Scheduler.GetCurrentThread().HandlePostSyscall();
         }
 
         public void IncrementThreadCount()
         {
             Interlocked.Increment(ref _threadCount);
-
-            KernelContext.ThreadCounter.AddCount();
         }
 
         public void DecrementThreadCountAndTerminateIfZero()
         {
-            KernelContext.ThreadCounter.Signal();
-
             if (Interlocked.Decrement(ref _threadCount) == 0)
             {
                 Terminate();
@@ -812,8 +809,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public void DecrementToZeroWhileTerminatingCurrent()
         {
-            KernelContext.ThreadCounter.Signal();
-
             while (Interlocked.Decrement(ref _threadCount) != 0)
             {
                 Destroy();
@@ -1000,24 +995,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 KernelContext.CriticalSection.Leave();
             }
 
-            KThread blockedThread = null;
-
-            lock (_threadingLock)
+            while (true)
             {
-                foreach (KThread thread in _threads)
-                {
-                    if (thread != currentThread && (thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
-                    {
-                        thread.IncrementReferenceCount();
+                KThread blockedThread = null;
 
-                        blockedThread = thread;
-                        break;
+                lock (_threadingLock)
+                {
+                    foreach (KThread thread in _threads)
+                    {
+                        if (thread != currentThread && (thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
+                        {
+                            thread.IncrementReferenceCount();
+
+                            blockedThread = thread;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (blockedThread != null)
-            {
+                if (blockedThread == null)
+                {
+                    break;
+                }
+
                 blockedThread.Terminate();
                 blockedThread.DecrementReferenceCount();
             }

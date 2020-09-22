@@ -1,7 +1,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.Translation;
 
-using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.Instructions
@@ -27,6 +26,8 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
 
             context.LoadFromContext();
+
+            Translator.EmitSynchronization(context);
         }
 
         public static void Und(ArmEmitterContext context)

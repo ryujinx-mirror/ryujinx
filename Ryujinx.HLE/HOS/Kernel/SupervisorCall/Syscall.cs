@@ -2,14 +2,12 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 {
@@ -25,29 +23,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         // IPC
-
-        private struct HleIpcMessage
-        {
-            public KProcess Process { get; }
-            public KThread Thread { get; }
-            public KClientSession Session { get; }
-            public IpcMessage Message { get; }
-            public long MessagePtr { get; }
-
-            public HleIpcMessage(
-                KProcess process,
-                KThread thread,
-                KClientSession session,
-                IpcMessage message,
-                long messagePtr)
-            {
-                Process = process;
-                Thread = thread;
-                Session = session;
-                Message = message;
-                MessagePtr = messagePtr;
-            }
-        }
 
         public KernelResult ConnectToNamedPort(ulong namePtr, out int handle)
         {
@@ -135,16 +110,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                 currentThread.Reschedule(ThreadSchedState.Paused);
 
-                IpcMessage message = new IpcMessage(messageData, (long)messagePtr);
-
-                ThreadPool.QueueUserWorkItem(ProcessIpcRequest, new HleIpcMessage(
-                    process,
-                    currentThread,
-                    clientSession,
-                    message,
-                    (long)messagePtr));
-
-                _context.ThreadCounter.AddCount();
+                clientSession.Service.Server.PushMessage(_device, currentThread, clientSession, messagePtr, messageSize);
 
                 _context.CriticalSection.Leave();
 
@@ -156,24 +122,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                 return KernelResult.InvalidHandle;
             }
-        }
-
-        private void ProcessIpcRequest(object state)
-        {
-            HleIpcMessage ipcMessage = (HleIpcMessage)state;
-
-            ipcMessage.Thread.ObjSyncResult = IpcHandler.IpcCall(
-                _device,
-                ipcMessage.Process,
-                ipcMessage.Process.CpuMemory,
-                ipcMessage.Thread,
-                ipcMessage.Session,
-                ipcMessage.Message,
-                ipcMessage.MessagePtr);
-
-            _context.ThreadCounter.Signal();
-
-            ipcMessage.Thread.Reschedule(ThreadSchedState.Running);
         }
 
         private KernelResult SendSyncRequest(int handle)

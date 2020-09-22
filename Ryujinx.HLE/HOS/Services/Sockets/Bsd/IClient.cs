@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
         private List<BsdSocket> _sockets = new List<BsdSocket>();
 
-        public IClient(ServiceCtx context, bool isPrivileged)
+        public IClient(ServiceCtx context, bool isPrivileged)  : base(new ServerBase("BsdServer"))
         {
             _isPrivileged = isPrivileged;
         }

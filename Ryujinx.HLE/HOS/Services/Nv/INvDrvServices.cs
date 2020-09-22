@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private bool _transferMemInitialized = false;
 
-        public INvDrvServices(ServiceCtx context)
+        public INvDrvServices(ServiceCtx context) : base(new ServerBase("NvservicesServer"))
         {
             _owner = null;
         }

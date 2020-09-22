@@ -30,7 +30,7 @@ using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.IO;
-
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -147,7 +147,7 @@ namespace Ryujinx.HLE.HOS
 
             // Configure and setup internal offset
             TimeSpanType internalOffset = TimeSpanType.FromSeconds(ConfigurationState.Instance.System.SystemTimeOffset);
-            
+
             TimeSpanType systemTimeOffset = new TimeSpanType(systemTime.NanoSeconds + internalOffset.NanoSeconds);
 
             if (systemTime.IsDaylightSavingTime() && !systemTimeOffset.IsDaylightSavingTime())
@@ -318,17 +318,18 @@ namespace Ryujinx.HLE.HOS
 
                 terminationThread.Start();
 
+                // Wait until the thread is actually started.
+                while (terminationThread.HostThread.ThreadState == ThreadState.Unstarted)
+                {
+                    Thread.Sleep(10);
+                }
+
+                // Wait until the termination thread is done terminating all the other threads.
+                terminationThread.HostThread.Join();
+
                 // Destroy nvservices channels as KThread could be waiting on some user events.
                 // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
                 INvDrvServices.Destroy();
-
-                // This is needed as the IPC Dummy KThread is also counted in the ThreadCounter.
-                KernelContext.ThreadCounter.Signal();
-
-                // It's only safe to release resources once all threads
-                // have exited.
-                KernelContext.ThreadCounter.Signal();
-                KernelContext.ThreadCounter.Wait();
 
                 AudioRendererManager.Dispose();
 

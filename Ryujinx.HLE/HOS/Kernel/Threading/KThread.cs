@@ -348,6 +348,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     if ((SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.Running)
                     {
                         // TODO: GIC distributor stuffs (sgir changes ect)
+                        Context.RequestInterrupt();
                     }
 
                     SignaledObj   = null;

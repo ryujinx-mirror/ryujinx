@@ -290,7 +290,7 @@ namespace ARMeilleure.Translation
             return context.GetControlFlowGraph();
         }
 
-        private static void EmitSynchronization(EmitterContext context)
+        internal static void EmitSynchronization(EmitterContext context)
         {
             long countOffs = NativeContext.GetCounterOffset();
 

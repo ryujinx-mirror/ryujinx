@@ -15,13 +15,13 @@ namespace Ryujinx.HLE.HOS.Services
     {
         public IReadOnlyDictionary<int, MethodInfo> Commands { get; }
 
+        public ServerBase Server { get; private set; }
+
         private IdDictionary _domainObjects;
-
         private int _selfId;
-
         private bool _isDomain;
 
-        public IpcService()
+        public IpcService(ServerBase server = null)
         {
             Commands = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(type => type == GetType())
@@ -30,8 +30,9 @@ namespace Ryujinx.HLE.HOS.Services
                 .Select(command => (((CommandAttribute)command).Id, methodInfo)))
                 .ToDictionary(command => command.Id, command => command.methodInfo);
 
-            _domainObjects = new IdDictionary();
+            Server = server;
 
+            _domainObjects = new IdDictionary();
             _selfId = -1;
         }
 
@@ -152,6 +153,8 @@ namespace Ryujinx.HLE.HOS.Services
         {
             IpcService service = context.Session.Service;
 
+            obj.TrySetServer(service.Server);
+
             if (service._isDomain)
             {
                 context.Response.ObjectIds.Add(service.Add(obj));
@@ -192,6 +195,18 @@ namespace Ryujinx.HLE.HOS.Services
             IIpcService obj = service.GetObject(objId);
 
             return obj is T ? (T)obj : null;
+        }
+
+        public bool TrySetServer(ServerBase newServer)
+        {
+            if (Server == null)
+            {
+                Server = newServer;
+
+                return true;
+            }
+
+            return false;
         }
 
         private int Add(IIpcService obj)
