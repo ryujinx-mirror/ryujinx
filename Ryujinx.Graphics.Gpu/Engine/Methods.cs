@@ -87,8 +87,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             state.RegisterCallback(MethodOffset.ResetCounter, ResetCounter);
 
-            state.RegisterCallback(MethodOffset.DrawEnd,   DrawEnd);
-            state.RegisterCallback(MethodOffset.DrawBegin, DrawBegin);
+            state.RegisterCallback(MethodOffset.DrawEnd,                      DrawEnd);
+            state.RegisterCallback(MethodOffset.DrawBegin,                    DrawBegin);
+            state.RegisterCallback(MethodOffset.DrawIndexedSmall,             DrawIndexedSmall);
+            state.RegisterCallback(MethodOffset.DrawIndexedSmall2,            DrawIndexedSmall2);
+            state.RegisterCallback(MethodOffset.DrawIndexedSmallIncInstance,  DrawIndexedSmallIncInstance);
+            state.RegisterCallback(MethodOffset.DrawIndexedSmallIncInstance2, DrawIndexedSmallIncInstance2);
 
             state.RegisterCallback(MethodOffset.IndexBufferCount, SetIndexBufferCount);
 
@@ -111,7 +115,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// Updates host state based on the current guest GPU state.
         /// </summary>
         /// <param name="state">Guest GPU state</param>
-        private void UpdateState(GpuState state)
+        /// <param name="firstIndex">Index of the first index buffer element used on the draw</param>
+        /// <param name="indexCount">Number of index buffer elements used on the draw</param>
+        private void UpdateState(GpuState state, int firstIndex, int indexCount)
         {
             bool tfEnable = state.Get<Boolean32>(MethodOffset.TfEnable);
 
@@ -233,7 +239,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (state.QueryModified(MethodOffset.IndexBufferState))
             {
-                UpdateIndexBufferState(state);
+                UpdateIndexBufferState(state, firstIndex, indexCount);
             }
 
             if (state.QueryModified(MethodOffset.VertexBufferDrawState,
@@ -273,7 +279,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (tfEnable && !_prevTfEnable)
             {
-                _context.Renderer.Pipeline.BeginTransformFeedback(PrimitiveType.Convert());
+                _context.Renderer.Pipeline.BeginTransformFeedback(Topology);
                 _prevTfEnable = true;
             }
         }
@@ -742,14 +748,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// Updates host index buffer binding based on guest GPU state.
         /// </summary>
         /// <param name="state">Current GPU state</param>
-        private void UpdateIndexBufferState(GpuState state)
+        /// <param name="firstIndex">Index of the first index buffer element used on the draw</param>
+        /// <param name="indexCount">Number of index buffer elements used on the draw</param>
+        private void UpdateIndexBufferState(GpuState state, int firstIndex, int indexCount)
         {
             var indexBuffer = state.Get<IndexBufferState>(MethodOffset.IndexBufferState);
 
-            _firstIndex = indexBuffer.First;
-            _indexCount = indexBuffer.Count;
-
-            if (_indexCount == 0)
+            if (indexCount == 0)
             {
                 return;
             }
@@ -758,7 +763,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             // Do not use the end address to calculate the size, because
             // the result may be much larger than the real size of the index buffer.
-            ulong size = (ulong)(_firstIndex + _indexCount);
+            ulong size = (ulong)(firstIndex + indexCount);
 
             switch (indexBuffer.Type)
             {
@@ -806,7 +811,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 ulong size;
 
-                if (_inlineIndexCount != 0 || _drawIndexed || stride == 0 || instanced)
+                if (_ibStreamer.HasInlineIndexData || _drawIndexed || stride == 0 || instanced)
                 {
                     // This size may be (much) larger than the real vertex buffer size.
                     // Avoid calculating it this way, unless we don't have any other option.

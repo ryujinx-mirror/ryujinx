@@ -24,6 +24,25 @@ namespace Ryujinx.Graphics.Gpu.State
         Patches
     }
 
+    /// <summary>
+    /// Alternative primitive type that might override <see cref="PrimitiveType"/>.
+    /// </summary>
+    enum PrimitiveTypeOverride
+    {
+        Invalid = 0,
+        Points = 1,
+        Lines = 2,
+        LineStrip = 3,
+        Triangles = 4,
+        TriangleStrip = 5,
+        TriangleFan = 0x1015,
+        LinesAdjacency = 10,
+        LineStripAdjacency = 11,
+        TrianglesAdjacency = 12,
+        TriangleStripAdjacency = 13,
+        Patches = 14
+    }
+
     static class PrimitiveTypeConverter
     {
         /// <summary>
@@ -51,6 +70,30 @@ namespace Ryujinx.Graphics.Gpu.State
                 PrimitiveType.TriangleStripAdjacency => PrimitiveTopology.TriangleStripAdjacency,
                 PrimitiveType.Patches                => PrimitiveTopology.Patches,
                 _                                    => PrimitiveTopology.Triangles
+            };
+        }
+
+        /// <summary>
+        /// Converts the primitive type into something that can be used with the host API.
+        /// </summary>
+        /// <param name="type">The primitive type to convert</param>
+        /// <returns>A host compatible enum value</returns>
+        public static PrimitiveTopology Convert(this PrimitiveTypeOverride type)
+        {
+            return type switch
+            {
+                PrimitiveTypeOverride.Points                 => PrimitiveTopology.Points,
+                PrimitiveTypeOverride.Lines                  => PrimitiveTopology.Lines,
+                PrimitiveTypeOverride.LineStrip              => PrimitiveTopology.LineStrip,
+                PrimitiveTypeOverride.Triangles              => PrimitiveTopology.Triangles,
+                PrimitiveTypeOverride.TriangleStrip          => PrimitiveTopology.TriangleStrip,
+                PrimitiveTypeOverride.TriangleFan            => PrimitiveTopology.TriangleFan,
+                PrimitiveTypeOverride.LinesAdjacency         => PrimitiveTopology.LinesAdjacency,
+                PrimitiveTypeOverride.LineStripAdjacency     => PrimitiveTopology.LineStripAdjacency,
+                PrimitiveTypeOverride.TrianglesAdjacency     => PrimitiveTopology.TrianglesAdjacency,
+                PrimitiveTypeOverride.TriangleStripAdjacency => PrimitiveTopology.TriangleStripAdjacency,
+                PrimitiveTypeOverride.Patches                => PrimitiveTopology.Patches,
+                _                                            => PrimitiveTopology.Triangles
             };
         }
     }

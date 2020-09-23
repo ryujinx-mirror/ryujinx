@@ -348,7 +348,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Update host framebuffer attachments based on currently bound render target buffers.
         /// </summary>
-        private void UpdateRenderTargets()
+        public void UpdateRenderTargets()
         {
             bool anyChanged = false;
 

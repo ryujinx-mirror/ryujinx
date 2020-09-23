@@ -1,18 +1,12 @@
-using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
-using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
         private bool _drawIndexed;
-
-        private int _firstIndex;
-        private int _indexCount;
 
         private bool _instancedDrawPending;
         private bool _instancedIndexed;
@@ -26,22 +20,34 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private int _instanceIndex;
 
-        private BufferHandle _inlineIndexBuffer = BufferHandle.Null;
-        private int _inlineIndexBufferSize;
-        private int _inlineIndexCount;
+        private IbStreamer _ibStreamer;
 
         /// <summary>
-        /// Primitive type of the current draw.
+        /// Primitive topology of the current draw.
         /// </summary>
-        public PrimitiveType PrimitiveType { get; private set; }
+        public PrimitiveTopology Topology { get; private set; }
 
         /// <summary>
-        /// Finishes draw call.
+        /// Finishes the draw call.
         /// This draws geometry on the bound buffers based on the current GPU state.
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <param name="argument">Method call argument</param>
         private void DrawEnd(GpuState state, int argument)
+        {
+            var indexBuffer = state.Get<IndexBufferState>(MethodOffset.IndexBufferState);
+
+            DrawEnd(state, indexBuffer.First, indexBuffer.Count);
+        }
+
+        /// <summary>
+        /// Finishes the draw call.
+        /// This draws geometry on the bound buffers based on the current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="firstIndex">Index of the first index buffer element used on the draw</param>
+        /// <param name="indexCount">Number of index buffer elements used on the draw</param>
+        private void DrawEnd(GpuState state, int firstIndex, int indexCount)
         {
             ConditionalRenderEnabled renderEnable = GetRenderEnable(state);
 
@@ -62,7 +68,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            UpdateState(state);
+            UpdateState(state, firstIndex, indexCount);
 
             bool instanced = _vsUsesInstanceId || _isAnyVbInstanced;
 
@@ -72,11 +78,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 _instancedIndexed = _drawIndexed;
 
-                _instancedFirstIndex    = _firstIndex;
-                _instancedFirstVertex   = state.Get<int>(MethodOffset.FirstVertex);
+                _instancedFirstIndex = firstIndex;
+                _instancedFirstVertex = state.Get<int>(MethodOffset.FirstVertex);
                 _instancedFirstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
-                _instancedIndexCount = _indexCount;
+                _instancedIndexCount = indexCount;
 
                 var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
@@ -95,31 +101,31 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             int firstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
-            if (_inlineIndexCount != 0)
+            int inlineIndexCount = _ibStreamer.GetAndResetInlineIndexCount();
+
+            if (inlineIndexCount != 0)
             {
                 int firstVertex = state.Get<int>(MethodOffset.FirstVertex);
 
-                BufferRange br = new BufferRange(_inlineIndexBuffer, 0, _inlineIndexCount * 4);
+                BufferRange br = new BufferRange(_ibStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
 
                 _context.Methods.BufferManager.SetIndexBuffer(br, IndexType.UInt);
 
                 _context.Renderer.Pipeline.DrawIndexed(
-                    _inlineIndexCount,
+                    inlineIndexCount,
                     1,
-                    _firstIndex,
+                    firstIndex,
                     firstVertex,
                     firstInstance);
-
-                _inlineIndexCount = 0;
             }
             else if (_drawIndexed)
             {
                 int firstVertex = state.Get<int>(MethodOffset.FirstVertex);
 
                 _context.Renderer.Pipeline.DrawIndexed(
-                    _indexCount,
+                    indexCount,
                     1,
-                    _firstIndex,
+                    firstIndex,
                     firstVertex,
                     firstInstance);
             }
@@ -150,22 +156,46 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void DrawBegin(GpuState state, int argument)
         {
-            if ((argument & (1 << 26)) != 0)
+            bool incrementInstance = (argument & (1 << 26)) != 0;
+            bool resetInstance     = (argument & (1 << 27)) == 0;
+
+            PrimitiveType type = (PrimitiveType)(argument & 0xffff);
+
+            PrimitiveTypeOverride typeOverride = state.Get<PrimitiveTypeOverride>(MethodOffset.PrimitiveTypeOverride);
+
+            if (typeOverride != PrimitiveTypeOverride.Invalid)
+            {
+                DrawBegin(incrementInstance, resetInstance, typeOverride.Convert());
+            }
+            else
+            {
+                DrawBegin(incrementInstance, resetInstance, type.Convert());
+            }
+        }
+
+        /// <summary>
+        /// Starts draw.
+        /// This sets primitive type and instanced draw parameters.
+        /// </summary>
+        /// <param name="incrementInstance">Indicates if the current instance should be incremented</param>
+        /// <param name="resetInstance">Indicates if the current instance should be set to zero</param>
+        /// <param name="topology">Primitive topology</param>
+        private void DrawBegin(bool incrementInstance, bool resetInstance, PrimitiveTopology topology)
+        {
+            if (incrementInstance)
             {
                 _instanceIndex++;
             }
-            else if ((argument & (1 << 27)) == 0)
+            else if (resetInstance)
             {
                 PerformDeferredDraws();
 
                 _instanceIndex = 0;
             }
 
-            PrimitiveType type = (PrimitiveType)(argument & 0xffff);
+            _context.Renderer.Pipeline.SetPrimitiveTopology(topology);
 
-            _context.Renderer.Pipeline.SetPrimitiveTopology(type.Convert());
-
-            PrimitiveType = type;
+            Topology = topology;
         }
 
         /// <summary>
@@ -180,29 +210,80 @@ namespace Ryujinx.Graphics.Gpu.Engine
         }
 
         /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexedSmall(GpuState state, int argument)
+        {
+            DrawIndexedSmall(state, argument, false);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexedSmall2(GpuState state, int argument)
+        {
+            DrawIndexedSmall(state, argument);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements,
+        /// while also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexedSmallIncInstance(GpuState state, int argument)
+        {
+            DrawIndexedSmall(state, argument, true);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements,
+        /// while also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexedSmallIncInstance2(GpuState state, int argument)
+        {
+            DrawIndexedSmallIncInstance(state, argument);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements,
+        /// while optionally also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
+        /// <param name="instanced">True to increment the current instance value, false otherwise</param>
+        private void DrawIndexedSmall(GpuState state, int argument, bool instanced)
+        {
+            PrimitiveTypeOverride typeOverride = state.Get<PrimitiveTypeOverride>(MethodOffset.PrimitiveTypeOverride);
+
+            DrawBegin(instanced, !instanced, typeOverride.Convert());
+
+            int firstIndex = argument & 0xffff;
+            int indexCount = (argument >> 16) & 0xfff;
+
+            bool oldDrawIndexed = _drawIndexed;
+
+            _drawIndexed = true;
+
+            DrawEnd(state, firstIndex, indexCount);
+
+            _drawIndexed = oldDrawIndexed;
+        }
+
+        /// <summary>
         /// Pushes four 8-bit index buffer elements.
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <param name="argument">Method call argument</param>
         private void VbElementU8(GpuState state, int argument)
         {
-            byte i0 = (byte)argument;
-            byte i1 = (byte)(argument >> 8);
-            byte i2 = (byte)(argument >> 16);
-            byte i3 = (byte)(argument >> 24);
-
-            Span<uint> data = stackalloc uint[4];
-
-            data[0] = i0;
-            data[1] = i1;
-            data[2] = i2;
-            data[3] = i3;
-
-            int offset = _inlineIndexCount * 4;
-
-            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
-
-            _inlineIndexCount += 4;
+            _ibStreamer.VbElementU8(_context.Renderer, argument);
         }
 
         /// <summary>
@@ -212,19 +293,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void VbElementU16(GpuState state, int argument)
         {
-            ushort i0 = (ushort)argument;
-            ushort i1 = (ushort)(argument >> 16);
-
-            Span<uint> data = stackalloc uint[2];
-
-            data[0] = i0;
-            data[1] = i1;
-
-            int offset = _inlineIndexCount * 4;
-
-            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
-
-            _inlineIndexCount += 2;
+            _ibStreamer.VbElementU16(_context.Renderer, argument);
         }
 
         /// <summary>
@@ -234,46 +303,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void VbElementU32(GpuState state, int argument)
         {
-            uint i0 = (uint)argument;
-
-            Span<uint> data = stackalloc uint[1];
-
-            data[0] = i0;
-
-            int offset = _inlineIndexCount++ * 4;
-
-            _context.Renderer.SetBufferData(GetInlineIndexBuffer(offset), offset, MemoryMarshal.Cast<uint, byte>(data));
-        }
-
-        /// <summary>
-        /// Gets the handle of a buffer large enough to hold the data that will be written to <paramref name="offset"/>.
-        /// </summary>
-        /// <param name="offset">Offset where the data will be written</param>
-        /// <returns>Buffer handle</returns>
-        private BufferHandle GetInlineIndexBuffer(int offset)
-        {
-            // Calculate a reasonable size for the buffer that can fit all the data,
-            // and that also won't require frequent resizes if we need to push more data.
-            int size = BitUtils.AlignUp(offset + 0x10, 0x200);
-
-            if (_inlineIndexBuffer == BufferHandle.Null)
-            {
-                _inlineIndexBuffer = _context.Renderer.CreateBuffer(size);
-                _inlineIndexBufferSize = size;
-            }
-            else if (_inlineIndexBufferSize < size)
-            {
-                BufferHandle oldBuffer = _inlineIndexBuffer;
-                int oldSize = _inlineIndexBufferSize;
-
-                _inlineIndexBuffer = _context.Renderer.CreateBuffer(size);
-                _inlineIndexBufferSize = size;
-
-                _context.Renderer.Pipeline.CopyBuffer(oldBuffer, _inlineIndexBuffer, 0, 0, oldSize);
-                _context.Renderer.DeleteBuffer(oldBuffer);
-            }
-
-            return _inlineIndexBuffer;
+            _ibStreamer.VbElementU32(_context.Renderer, argument);
         }
 
         /// <summary>

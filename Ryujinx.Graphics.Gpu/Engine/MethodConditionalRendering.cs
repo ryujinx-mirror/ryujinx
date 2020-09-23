@@ -6,13 +6,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        enum ConditionalRenderEnabled
-        {
-            False,
-            True,
-            Host
-        }
-
         /// <summary>
         /// Checks if draws and clears should be performed, according
         /// to currently set conditional rendering conditions.
