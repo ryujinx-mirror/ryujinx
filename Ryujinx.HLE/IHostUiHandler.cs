@@ -31,5 +31,10 @@ namespace Ryujinx.HLE
         /// <param name="kind">The program kind.</param>
         /// <param name="value">The value associated to the <paramref name="kind"/>.</param>
         void ExecuteProgram(Switch device, ProgramSpecifyKind kind, ulong value);
+
+        /// Displays a Message Dialog box specific to Error Applet and blocks until it is closed.
+        /// </summary>
+        /// <returns>False when OK is pressed, True when another button (Details) is pressed.</returns>
+        bool DisplayErrorAppletDialog(string title, string message, string[] buttonsText);
     }
 }
