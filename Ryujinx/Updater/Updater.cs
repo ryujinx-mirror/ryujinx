@@ -77,6 +77,17 @@ namespace Ryujinx
                     _jobId    = (string)buildToken["jobs"][0]["jobId"];
                     _buildVer = (string)buildToken["version"];
                     _buildUrl = $"{AppveyorApiUrl}/buildjobs/{_jobId}/artifacts/ryujinx-{_buildVer}-{_platformExt}";
+
+                    // If build not done, assume no new update are availaible.
+                    if ((string)buildToken["jobs"][0]["status"] != "success")
+                    {
+                        if (showVersionUpToDate)
+                        {
+                            GtkDialog.CreateInfoDialog("Ryujinx - Updater", "You are already using the most updated version of Ryujinx!", "");
+                        }
+
+                        return;
+                    }
                 }
             }
             catch (Exception exception)
