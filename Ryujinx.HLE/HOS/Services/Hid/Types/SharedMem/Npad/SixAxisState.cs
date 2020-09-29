@@ -7,8 +7,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ulong SampleTimestamp2;
         public HidVector Accelerometer;
         public HidVector Gyroscope;
-        HidVector unknownSensor;
+        public HidVector Rotations;
         public fixed float Orientation[9];
-        ulong _unknown2;
+        public ulong _unknown2;
     }
 }

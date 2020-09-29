@@ -7,11 +7,6 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkEntryCompletion" id="_systemTimeZoneCompletion">
-    <property name="inline-completion">True</property>
-    <property name="inline-selection">True</property>
-    <property name="minimum-key-length">0</property>
-  </object>
   <object class="GtkAdjustment" id="_systemTimeDaySpinAdjustment">
     <property name="lower">1</property>
     <property name="upper">31</property>
@@ -39,6 +34,11 @@
     <property name="upper">2060</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkEntryCompletion" id="_systemTimeZoneCompletion">
+    <property name="minimum_key_length">0</property>
+    <property name="inline_completion">True</property>
+    <property name="inline_selection">True</property>
   </object>
   <object class="GtkWindow" id="_settingsWin">
     <property name="can_focus">False</property>
@@ -1062,6 +1062,17 @@
                             <property name="position">2</property>
                           </packing>
                         </child>
+                        <child>
+                          <object class="GtkSeparator">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
                         <property name="position">1</property>
@@ -1737,8 +1748,8 @@
                                         <property name="tooltip_text" translatable="yes">Floating point resolution scale, such as 1.5. Non-integral scales are more likely to cause issues or crash.</property>
                                         <property name="valign">center</property>
                                         <property name="caps_lock_warning">False</property>
-                                        <property name="placeholder-text">1.0</property>
-                                        <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                                        <property name="placeholder_text">1.0</property>
+                                        <property name="input_purpose">number</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>

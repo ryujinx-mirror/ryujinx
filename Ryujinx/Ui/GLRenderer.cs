@@ -13,6 +13,7 @@ using Ryujinx.HLE.HOS.Services.Hid;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Ryujinx.Motion;
 
 namespace Ryujinx.Ui
 {
@@ -48,6 +49,8 @@ namespace Ryujinx.Ui
 
         private HotkeyButtons _prevHotkeyButtons;
 
+        private Client _dsuClient;
+
         private GraphicsDebugLevel _glLogLevel;
 
         public GlRenderer(Switch device, GraphicsDebugLevel glLogLevel)
@@ -79,6 +82,8 @@ namespace Ryujinx.Ui
 
             this.Shown += Renderer_Shown;
 
+            _dsuClient = new Client();
+
             _glLogLevel = glLogLevel;
         }
 
@@ -90,6 +95,7 @@ namespace Ryujinx.Ui
         private void GLRenderer_ShuttingDown(object sender, EventArgs args)
         {
             _device.DisposeGpu();
+            _dsuClient?.Dispose();
         }
 
         private void Parent_FocusOutEvent(object o, Gtk.FocusOutEventArgs args)
@@ -104,6 +110,7 @@ namespace Ryujinx.Ui
 
         private void GLRenderer_Destroyed(object sender, EventArgs e)
         {
+            _dsuClient?.Dispose();
             Dispose();
         }
 
@@ -287,6 +294,7 @@ namespace Ryujinx.Ui
 
         public void Exit()
         {
+            _dsuClient?.Dispose();
             if (IsStopped)
             {
                 return;
@@ -406,7 +414,10 @@ namespace Ryujinx.Ui
             }
 
             List<GamepadInput> gamepadInputs = new List<GamepadInput>(NpadDevices.MaxControllers);
+            List<SixAxisInput> motionInputs  = new List<SixAxisInput>(NpadDevices.MaxControllers);
 
+            MotionDevice motionDevice = new MotionDevice(_dsuClient);
+            
             foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
             {
                 ControllerKeys   currentButton = 0;
@@ -418,6 +429,11 @@ namespace Ryujinx.Ui
                 int leftJoystickDy  = 0;
                 int rightJoystickDx = 0;
                 int rightJoystickDy = 0;
+
+                if (inputConfig.EnableMotion)
+                {
+                    motionDevice.RegisterController(inputConfig.PlayerIndex);
+                }
 
                 if (inputConfig is KeyboardConfig keyboardConfig)
                 {
@@ -488,6 +504,19 @@ namespace Ryujinx.Ui
 
                 currentButton |= _device.Hid.UpdateStickButtons(leftJoystick, rightJoystick);
 
+                motionDevice.Poll(inputConfig.PlayerIndex, inputConfig.Slot);
+
+                SixAxisInput sixAxisInput = new SixAxisInput()
+                {
+                    PlayerId      = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
+                    Accelerometer = motionDevice.Accelerometer,
+                    Gyroscope     = motionDevice.Gyroscope,
+                    Rotation      = motionDevice.Rotation,
+                    Orientation   = motionDevice.Orientation
+                };
+
+                motionInputs.Add(sixAxisInput);
+
                 gamepadInputs.Add(new GamepadInput
                 {
                     PlayerId = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
@@ -495,9 +524,29 @@ namespace Ryujinx.Ui
                     LStick   = leftJoystick,
                     RStick   = rightJoystick
                 });
-            }
 
+                if (inputConfig.ControllerType == Common.Configuration.Hid.ControllerType.JoyconPair)
+                {
+                    if (!inputConfig.MirrorInput)
+                    {
+                        motionDevice.Poll(inputConfig.PlayerIndex, inputConfig.AltSlot);
+
+                        sixAxisInput = new SixAxisInput()
+                        {
+                            PlayerId      = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
+                            Accelerometer = motionDevice.Accelerometer,
+                            Gyroscope     = motionDevice.Gyroscope,
+                            Rotation      = motionDevice.Rotation,
+                            Orientation   = motionDevice.Orientation
+                        };
+                    }
+
+                    motionInputs.Add(sixAxisInput);
+                }
+            }
+            
             _device.Hid.Npads.Update(gamepadInputs);
+            _device.Hid.Npads.UpdateSixAxis(motionInputs);
 
             if(IsFocused)
             {

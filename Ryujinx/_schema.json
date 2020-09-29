@@ -460,6 +460,110 @@
               "default": "O"
             }
           }
+        },
+        "enable_motion": {
+          "$id": "#/definitions/keyboard_config/properties/enable_motion",
+          "type": "boolean",
+          "title": "Enable Motion Controls",
+          "description": "Enables Motion Controls",
+          "default": false,
+          "examples": [
+            true,
+            false
+          ]
+        },
+        "sensitivity": {
+          "$id": "#/definitions/keyboard_config/properties/sensitivity",
+          "type": "integer",
+          "title": "Sensitivity",
+          "description": "Gyro sensitivity",
+          "default": 100,
+          "minimum": 0,
+          "maximum": 1000,
+          "examples": [
+            90,
+            100,
+            150
+          ]
+        },
+        "gyro_deadzone": {
+          "$id": "#/definitions/keyboard_config/properties/gyro_deadzone",
+          "type": "number",
+          "title": "Gyro Deadzone",
+          "description": "Controller Left Analog Stick Deadzone",
+          "default": 1,
+          "minimum": 0.00,
+          "maximum": 100.00,
+          "examples": [
+            0.01
+          ]
+        },
+        "slot": {
+          "$id": "#/definitions/keyboard_config/properties/slot",
+          "type": "integer",
+          "title": "Slot",
+          "description": "DSU motion client slot for main controller",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 4,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "alt_slot": {
+          "$id": "#/definitions/keyboard_config/properties/alt_slot",
+          "type": "integer",
+          "title": "Alternate Slot",
+          "description": "DSU motion client slot for secondary controller, eg Right Joycon in Paired mode",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 4,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "mirror_input": {
+          "$id": "#/definitions/keyboard_config/properties/mirror_input",
+          "type": "boolean",
+          "title": "Mirror Motion Input",
+          "description": "Mirrors main motion input in Paired mode",
+          "default": true,
+          "examples": [
+            true,
+            false
+          ]
+        },
+        "dsu_server_port": {
+          "$id": "#/definitions/keyboard_config/properties/dsu_server_port",
+          "type": "integer",
+          "title": "DSU Server Port",
+          "description": "DSU motion server port",
+          "default": 26760,
+          "minimum": 0,
+          "maximum": 36654,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "dsu_server_host": {
+          "$id": "#/definitions/keyboard_config/properties/dsu_server_host",
+          "type": "string",
+          "title": "DSU Server Host Address",
+          "description": "DSU motion server host address",
+          "default": "127.0.0.1",
+          "examples": [
+            "127.0.0.1",
+            "example.host.com"
+          ]
         }
       }
     },
@@ -695,6 +799,110 @@
               "default": "Button9"
             }
           }
+        },
+        "enable_motion": {
+          "$id": "#/definitions/controller_config/properties/enable_motion",
+          "type": "boolean",
+          "title": "Enable Motion Controls",
+          "description": "Enables Motion Controls",
+          "default": false,
+          "examples": [
+            true,
+            false
+          ]
+        },
+        "sensitivity": {
+          "$id": "#/definitions/controller_config/properties/sensitivity",
+          "type": "integer",
+          "title": "Sensitivity",
+          "description": "Gyro sensitivity",
+          "default": 100,
+          "minimum": 0,
+          "maximum": 1000,
+          "examples": [
+            90,
+            100,
+            150
+          ]
+        },
+        "gyro_deadzone": {
+          "$id": "#/definitions/controller_config/properties/gyro_deadzone",
+          "type": "number",
+          "title": "Gyro Deadzone",
+          "description": "Controller Left Analog Stick Deadzone",
+          "default": 1,
+          "minimum": 0.00,
+          "maximum": 100.00,
+          "examples": [
+            0.01
+          ]
+        },
+        "slot": {
+          "$id": "#/definitions/controller_config/properties/slot",
+          "type": "integer",
+          "title": "Slot",
+          "description": "DSU motion client slot for main controller",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 4,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "alt_slot": {
+          "$id": "#/definitions/controller_config/properties/alt_slot",
+          "type": "integer",
+          "title": "Alternate Slot",
+          "description": "DSU motion client slot for secondary controller, eg Right Joycon in Paired mode",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 4,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "mirror_input": {
+          "$id": "#/definitions/controller_config/properties/mirror_input",
+          "type": "boolean",
+          "title": "Mirror Motion Input",
+          "description": "Mirrors main motion input in Paired mode",
+          "default": true,
+          "examples": [
+            true,
+            false
+          ]
+        },
+        "dsu_server_port": {
+          "$id": "#/definitions/controller_config/properties/dsu_server_port",
+          "type": "integer",
+          "title": "DSU Server Port",
+          "description": "DSU motion server port",
+          "default": 26760,
+          "minimum": 0,
+          "maximum": 36654,
+          "examples": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        "dsu_server_host": {
+          "$id": "#/definitions/controller_config/properties/dsu_server_host",
+          "type": "string",
+          "title": "DSU Server Host Address",
+          "description": "DSU motion server host address",
+          "default": "127.0.0.1",
+          "examples": [
+            "127.0.0.1",
+            "example.host.com"
+          ]
         }
       }
     }
@@ -1241,7 +1449,15 @@
             "button_zr": "O",
             "button_sl": "Unbound",
             "button_sr": "Unbound"
-          }
+          },
+          "slot": 0,
+          "alt_slot": 0,
+          "mirror_input": false,
+          "dsu_server_host": "127.0.0.1",
+          "dsu_server_port": 26760,
+          "sensitivity": 100,
+          "gyro_deadzone": 1,
+          "enable_motion": false
         }
       ]
     },

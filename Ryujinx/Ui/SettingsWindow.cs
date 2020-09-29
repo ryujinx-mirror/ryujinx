@@ -82,6 +82,7 @@ namespace Ryujinx.Ui
         [GUI] ToggleButton    _configureController7;
         [GUI] ToggleButton    _configureController8;
         [GUI] ToggleButton    _configureControllerH;
+
 #pragma warning restore CS0649, IDE0044
 
         public SettingsWindow(VirtualFileSystem virtualFileSystem, HLE.FileSystem.Content.ContentManager contentManager) : this(new Builder("Ryujinx.Ui.SettingsWindow.glade"), virtualFileSystem, contentManager) { }
