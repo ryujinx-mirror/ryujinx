@@ -49,36 +49,38 @@ namespace Ryujinx.Ui
 
 #pragma warning disable CS0169, CS0649, IDE0044
 
-        [GUI] MenuBar        _menuBar;
-        [GUI] Box            _footerBox;
-        [GUI] Box            _statusBar;
-        [GUI] MenuItem       _stopEmulation;
-        [GUI] MenuItem       _fullScreen;
-        [GUI] CheckMenuItem  _favToggle;
-        [GUI] MenuItem       _firmwareInstallDirectory;
-        [GUI] MenuItem       _firmwareInstallFile;
-        [GUI] Label          _hostStatus;
-        [GUI] CheckMenuItem  _iconToggle;
-        [GUI] CheckMenuItem  _developerToggle;
-        [GUI] CheckMenuItem  _appToggle;
-        [GUI] CheckMenuItem  _timePlayedToggle;
-        [GUI] CheckMenuItem  _versionToggle;
-        [GUI] CheckMenuItem  _lastPlayedToggle;
-        [GUI] CheckMenuItem  _fileExtToggle;
-        [GUI] CheckMenuItem  _pathToggle;
-        [GUI] CheckMenuItem  _fileSizeToggle;
-        [GUI] Label          _dockedMode;
-        [GUI] Label          _gameStatus;
-        [GUI] TreeView       _gameTable;
-        [GUI] TreeSelection  _gameTableSelection;
-        [GUI] ScrolledWindow _gameTableWindow;
-        [GUI] Label          _gpuName;
-        [GUI] Label          _progressLabel;
-        [GUI] Label          _firmwareVersionLabel;
-        [GUI] LevelBar       _progressBar;
-        [GUI] Box            _viewBox;
-        [GUI] Label          _vSyncStatus;
-        [GUI] Box            _listStatusBox;
+        [GUI] public MenuItem ExitMenuItem;
+        [GUI] public MenuItem UpdateMenuItem;
+        [GUI] MenuBar         _menuBar;
+        [GUI] Box             _footerBox;
+        [GUI] Box             _statusBar;
+        [GUI] MenuItem        _stopEmulation;
+        [GUI] MenuItem        _fullScreen;
+        [GUI] CheckMenuItem   _favToggle;
+        [GUI] MenuItem        _firmwareInstallDirectory;
+        [GUI] MenuItem        _firmwareInstallFile;
+        [GUI] Label           _hostStatus;
+        [GUI] CheckMenuItem   _iconToggle;
+        [GUI] CheckMenuItem   _developerToggle;
+        [GUI] CheckMenuItem   _appToggle;
+        [GUI] CheckMenuItem   _timePlayedToggle;
+        [GUI] CheckMenuItem   _versionToggle;
+        [GUI] CheckMenuItem   _lastPlayedToggle;
+        [GUI] CheckMenuItem   _fileExtToggle;
+        [GUI] CheckMenuItem   _pathToggle;
+        [GUI] CheckMenuItem   _fileSizeToggle;
+        [GUI] Label           _dockedMode;
+        [GUI] Label           _gameStatus;
+        [GUI] TreeView        _gameTable;
+        [GUI] TreeSelection   _gameTableSelection;
+        [GUI] ScrolledWindow  _gameTableWindow;
+        [GUI] Label           _gpuName;
+        [GUI] Label           _progressLabel;
+        [GUI] Label           _firmwareVersionLabel;
+        [GUI] LevelBar        _progressBar;
+        [GUI] Box             _viewBox;
+        [GUI] Label           _vSyncStatus;
+        [GUI] Box             _listStatusBox;
 
 #pragma warning restore CS0649, IDE0044, CS0169
 
@@ -1163,15 +1165,9 @@ namespace Ryujinx.Ui
 
         private void Update_Pressed(object sender, EventArgs args)
         {
-            string ryuUpdater = System.IO.Path.Combine(AppDataManager.BaseDirPath, "RyuUpdater.exe");
-
-            try
+            if (Updater.CanUpdate(true))
             {
-                Process.Start(new ProcessStartInfo(ryuUpdater, "/U") { UseShellExecute = true });
-            }
-            catch(System.ComponentModel.Win32Exception)
-            {
-                GtkDialog.CreateErrorDialog("Update canceled by user or updater was not found");
+                Updater.BeginParse(this, true);
             }
         }
 

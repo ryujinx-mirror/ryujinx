@@ -10,6 +10,7 @@ using Ryujinx.Ui.Diagnostic;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Ryujinx
 {
@@ -43,6 +44,9 @@ namespace Ryujinx
                     launchPath = arg;
                 }
             }
+
+            // Delete backup files after updating
+            Task.Run(Updater.CleanupUpdate);
 
             Toolkit.Init(new ToolkitOptions
             {
@@ -120,6 +124,11 @@ namespace Ryujinx
             if (launchPath != null)
             {
                 mainWindow.LoadApplication(launchPath);
+            }
+
+            if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
+            {
+                Updater.BeginParse(mainWindow, false);
             }
 
             Application.Run();

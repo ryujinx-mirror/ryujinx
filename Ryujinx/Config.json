@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 14,
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
@@ -19,6 +19,7 @@
   "system_time_offset": 0,
   "docked_mode": false,
   "enable_discord_integration": true,
+  "check_updates_on_start": true,
   "enable_vsync": true,
   "enable_multicore_scheduling": true,
   "enable_ptc": false,

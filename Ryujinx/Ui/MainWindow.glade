@@ -81,7 +81,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="Exit">
+                      <object class="GtkMenuItem" id="ExitMenuItem">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Exit Ryujinx</property>
@@ -320,10 +320,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="CheckUpdates">
+                      <object class="GtkMenuItem" id="UpdateMenuItem">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Check for updates to Ryujinx (requires Ryujinx Installer)</property>
+                        <property name="tooltip_text" translatable="yes">Check for updates to Ryujinx</property>
                         <property name="label" translatable="yes">Check for Updates</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="Update_Pressed" swapped="no"/>

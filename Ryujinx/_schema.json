@@ -719,7 +719,7 @@
       "type": "number",
       "title": "Custom Resolution Scale",
       "description": "A custom floating point scale applied to applicable render targets. Only active when Resolution Scale is -1.",
-      "default": 1.0,
+      "default": 1.0
     },
     "max_anisotropy": {
       "$id": "#/properties/max_anisotropy",
@@ -960,6 +960,17 @@
       "type": "boolean",
       "title": "Enable Discord Rich Presence",
       "description": "Enable or disable Discord Rich Presence",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
+    "check_updates_on_start": {
+      "$id": "#/properties/check_updates_on_start",
+      "type": "boolean",
+      "title": "Checks for updates when ryujinx starts when enabled",
+      "description": "Checks for updates when ryujinx starts when enabled",
       "default": true,
       "examples": [
         true,

@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 12;
+        public const int CurrentVersion = 14;
 
         public int Version { get; set; }
 
@@ -117,6 +117,11 @@ namespace Ryujinx.Configuration
         /// Enables or disables Discord Rich Presence
         /// </summary>
         public bool EnableDiscordIntegration { get; set; }
+
+        /// <summary>
+        /// Checks for updates when Ryujinx starts when enabled
+        /// </summary>
+        public bool CheckUpdatesOnStart { get; set; }
 
         /// <summary>
         /// Enables or disables Vertical Sync
