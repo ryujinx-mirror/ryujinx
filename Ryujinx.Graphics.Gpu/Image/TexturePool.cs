@@ -144,6 +144,22 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             Target target = descriptor.UnpackTextureTarget().Convert((samplesInX | samplesInY) != 1);
 
+            // We use 2D targets for 1D textures as that makes texture cache
+            // management easier. We don't know the target for render target
+            // and copies, so those would normally use 2D targets, which are
+            // not compatible with 1D targets. By doing that we also allow those
+            // to match when looking for compatible textures on the cache.
+            if (target == Target.Texture1D)
+            {
+                target = Target.Texture2D;
+                height = 1;
+            }
+            else if (target == Target.Texture1DArray)
+            {
+                target = Target.Texture2DArray;
+                height = 1;
+            }
+
             uint format = descriptor.UnpackFormat();
             bool srgb   = descriptor.UnpackSrgb();
 

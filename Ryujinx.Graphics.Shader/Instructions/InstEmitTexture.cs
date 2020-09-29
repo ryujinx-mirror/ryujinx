@@ -11,6 +11,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
+        private const bool Sample1DAs2D = true;
+
         public static void Suld(EmitterContext context)
         {
             OpCodeImage op = (OpCodeImage)context.CurrOp;
@@ -38,10 +40,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(raIndex++, RegisterType.Gpr));
             }
 
-            bool isArray = op.Dimensions == ImageDimensions.Image1DArray ||
-                           op.Dimensions == ImageDimensions.Image2DArray;
-
-            Operand arrayIndex = isArray ? Ra() : null;
+            Operand arrayIndex = type.HasFlag(SamplerType.Array) ? Ra() : null;
 
             List<Operand> sourcesList = new List<Operand>();
 
@@ -57,7 +56,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Ra());
             }
 
-            if (isArray)
+            if (Sample1DAs2D && (type & SamplerType.Mask) == SamplerType.Texture1D)
+            {
+                sourcesList.Add(Const(0));
+
+                type &= ~SamplerType.Mask;
+                type |= SamplerType.Texture2D;
+            }
+
+            if (type.HasFlag(SamplerType.Array))
             {
                 sourcesList.Add(arrayIndex);
 
@@ -186,10 +193,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(rbIndex++, RegisterType.Gpr));
             }
 
-            bool isArray = op.Dimensions == ImageDimensions.Image1DArray ||
-                           op.Dimensions == ImageDimensions.Image2DArray;
-
-            Operand arrayIndex = isArray ? Ra() : null;
+            Operand arrayIndex = type.HasFlag(SamplerType.Array) ? Ra() : null;
 
             List<Operand> sourcesList = new List<Operand>();
 
@@ -205,7 +209,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Ra());
             }
 
-            if (isArray)
+            if (Sample1DAs2D && (type & SamplerType.Mask) == SamplerType.Texture1D)
+            {
+                sourcesList.Add(Const(0));
+
+                type &= ~SamplerType.Mask;
+                type |= SamplerType.Texture2D;
+            }
+
+            if (type.HasFlag(SamplerType.Array))
             {
                 sourcesList.Add(arrayIndex);
 
@@ -355,6 +367,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 flags = ConvertTextureFlags(texsOp.Target);
 
+                // We don't need to handle 1D -> Buffer conversions here as
+                // only texture sample with integer coordinates can ever use buffer targets.
+
                 if ((type & SamplerType.Array) != 0)
                 {
                     Operand arrayIndex = Ra();
@@ -380,6 +395,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     {
                         case TextureTarget.Texture1DLodZero:
                             sourcesList.Add(Ra());
+
+                            if (Sample1DAs2D)
+                            {
+                                sourcesList.Add(ConstF(0));
+
+                                type &= ~SamplerType.Mask;
+                                type |= SamplerType.Texture2D;
+                            }
+
                             sourcesList.Add(ConstF(0));
                             break;
 
@@ -423,7 +447,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (op is OpCodeTlds tldsOp)
             {
-                type = ConvertSamplerType (tldsOp.Target);
+                type = ConvertSamplerType(tldsOp.Target);
 
                 if (type == SamplerType.None)
                 {
@@ -449,12 +473,29 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                         if (type != SamplerType.TextureBuffer)
                         {
-                            sourcesList.Add(Const(0));
+                            if (Sample1DAs2D)
+                            {
+                                sourcesList.Add(ConstF(0));
+
+                                type &= ~SamplerType.Mask;
+                                type |= SamplerType.Texture2D;
+                            }
+
+                            sourcesList.Add(ConstF(0));
                         }
                         break;
 
                     case TexelLoadTarget.Texture1DLodLevel:
                         sourcesList.Add(Ra());
+
+                        if (Sample1DAs2D)
+                        {
+                            sourcesList.Add(ConstF(0));
+
+                            type &= ~SamplerType.Mask;
+                            type |= SamplerType.Texture2D;
+                        }
+
                         sourcesList.Add(Rb());
                         break;
 
@@ -649,6 +690,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Ra());
             }
 
+            bool is1DTo2D = Sample1DAs2D && type == SamplerType.Texture1D;
+
+            if (is1DTo2D)
+            {
+                sourcesList.Add(ConstF(0));
+
+                type = SamplerType.Texture2D;
+            }
+
             if (op.IsArray)
             {
                 sourcesList.Add(arrayIndex);
@@ -677,6 +727,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     Operand packed = packedOffs[(index >> 2) & 1];
 
                     sourcesList.Add(context.BitfieldExtractS32(packed, Const((index & 3) * 8), Const(6)));
+                }
+
+                if (is1DTo2D)
+                {
+                    for (int index = 0; index < offsetTexelsCount; index++)
+                    {
+                        sourcesList.Add(Const(0));
+                    }
                 }
 
                 flags |= op.Offset == TextureGatherOffset.Offsets
@@ -784,6 +842,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             for (int index = 0; index < coordsCount; index++)
             {
                 sourcesList.Add(Ra());
+            }
+
+            if (Sample1DAs2D && type == SamplerType.Texture1D)
+            {
+                sourcesList.Add(ConstF(0));
+
+                type = SamplerType.Texture2D;
             }
 
             if (op.IsArray)
@@ -898,6 +963,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Ra());
             }
 
+            bool is1DTo2D = Sample1DAs2D && type == SamplerType.Texture1D;
+
+            if (is1DTo2D)
+            {
+                sourcesList.Add(ConstF(0));
+
+                type = SamplerType.Texture2D;
+            }
+
             Operand packedParams = Ra();
 
             if (op.IsArray)
@@ -911,6 +985,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
             for (int dIndex = 0; dIndex < 2 * coordsCount; dIndex++)
             {
                 sourcesList.Add(Rb());
+
+                if (is1DTo2D)
+                {
+                    sourcesList.Add(ConstF(0));
+                }
             }
 
             if (op.HasOffset)
@@ -918,6 +997,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 for (int index = 0; index < coordsCount; index++)
                 {
                     sourcesList.Add(context.BitfieldExtractS32(packedParams, Const(16 + index * 4), Const(4)));
+                }
+
+                if (is1DTo2D)
+                {
+                    sourcesList.Add(Const(0));
                 }
 
                 flags |= TextureFlags.Offset;
@@ -1112,6 +1196,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             for (int index = 0; index < coordsCount; index++)
             {
                 sourcesList.Add(Ra());
+            }
+
+            if (Sample1DAs2D && type == SamplerType.Texture1D)
+            {
+                sourcesList.Add(ConstF(0));
+
+                type = SamplerType.Texture2D;
             }
 
             if (op.IsArray)
