@@ -202,7 +202,7 @@ namespace ARMeilleure.Translation
 
             Logger.StartPass(PassName.RegisterUsage);
 
-            RegisterUsage.RunPass(cfg, mode, isCompleteFunction: false);
+            RegisterUsage.RunPass(cfg, mode);
 
             Logger.EndPass(PassName.RegisterUsage);
 

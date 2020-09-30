@@ -9,12 +9,6 @@ namespace ARMeilleure.Translation
 {
     static class RegisterUsage
     {
-        private const long CallerSavedIntRegistersMask = 0x7fL  << 9;
-        private const long PStateNzcvFlagsMask         = 0xfL   << 60;
-        private const long FpStateNzcvFlagsMask        = 0xfL   << 60;
-
-        private const long CallerSavedVecRegistersMask = 0xffffL << 16;
-
         private const int RegsCount = 32;
         private const int RegsMask  = RegsCount - 1;
 
@@ -70,7 +64,7 @@ namespace ARMeilleure.Translation
             }
         }
 
-        public static void RunPass(ControlFlowGraph cfg, ExecutionMode mode, bool isCompleteFunction)
+        public static void RunPass(ControlFlowGraph cfg, ExecutionMode mode)
         {
             // Compute local register inputs and outputs used inside blocks.
             RegisterMask[] localInputs  = new RegisterMask[cfg.Blocks.Count];
@@ -215,8 +209,8 @@ namespace ARMeilleure.Translation
 
                 if (EndsWithReturn(block) || hasContextStore)
                 {
-                    StoreLocals(block, globalOutputs[block.Index].IntMask, RegisterType.Integer, mode, isCompleteFunction);
-                    StoreLocals(block, globalOutputs[block.Index].VecMask, RegisterType.Vector,  mode, isCompleteFunction);
+                    StoreLocals(block, globalOutputs[block.Index].IntMask, RegisterType.Integer, mode);
+                    StoreLocals(block, globalOutputs[block.Index].VecMask, RegisterType.Vector,  mode);
                 }
             }
         }
@@ -309,20 +303,8 @@ namespace ARMeilleure.Translation
             block.Operations.AddFirst(loadArg0);
         }
 
-        private static void StoreLocals(BasicBlock block, long outputs, RegisterType baseType, ExecutionMode mode, bool isCompleteFunction)
+        private static void StoreLocals(BasicBlock block, long outputs, RegisterType baseType, ExecutionMode mode)
         {
-            if (Optimizations.AssumeStrictAbiCompliance && isCompleteFunction)
-            {
-                if (baseType == RegisterType.Integer || baseType == RegisterType.Flag)
-                {
-                    outputs = ClearCallerSavedIntRegs(outputs);
-                }
-                else /* if (baseType == RegisterType.Vector || baseType == RegisterType.FpFlag) */
-                {
-                    outputs = ClearCallerSavedVecRegs(outputs);
-                }
-            }
-
             Operand arg0 = Local(OperandType.I64);
 
             Operation loadArg0 = Operation(Instruction.LoadArgument, arg0, Const(0));
@@ -395,22 +377,6 @@ namespace ARMeilleure.Translation
             }
 
             return operation.Instruction == Instruction.Return;
-        }
-
-        private static long ClearCallerSavedIntRegs(long mask)
-        {
-            // TODO: ARM32 support.
-            mask &= ~(CallerSavedIntRegistersMask | PStateNzcvFlagsMask);
-
-            return mask;
-        }
-
-        private static long ClearCallerSavedVecRegs(long mask)
-        {
-            // TODO: ARM32 support.
-            mask &= ~(CallerSavedVecRegistersMask | FpStateNzcvFlagsMask);
-
-            return mask;
         }
     }
 }
