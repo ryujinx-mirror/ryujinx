@@ -112,9 +112,9 @@ namespace Ryujinx.Common
 
         public static Stream GetStream(string filename)
         {
-            var (assembly, _) = ResolveManifestPath(filename);
+            var (assembly, path) = ResolveManifestPath(filename);
 
-            return GetStream(assembly, filename);
+            return GetStream(assembly, path);
         }
 
         public static Stream GetStream(Assembly assembly, string filename)
