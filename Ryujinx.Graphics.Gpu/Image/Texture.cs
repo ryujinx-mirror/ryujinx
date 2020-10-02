@@ -657,6 +657,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Info.Height,
                     _depth,
                     Info.Levels,
+                    _layers,
                     out Span<byte> decoded))
                 {
                     string texInfo = $"{Info.Target} {Info.FormatInfo.Format} {Info.Width}x{Info.Height}x{Info.DepthOrLayers} levels {Info.Levels}";

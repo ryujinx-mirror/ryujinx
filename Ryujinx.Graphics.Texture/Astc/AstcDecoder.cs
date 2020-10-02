@@ -30,7 +30,8 @@ namespace Ryujinx.Graphics.Texture.Astc
             int width,
             int height,
             int depth,
-            int levels)
+            int levels,
+            int layers)
         {
             if ((uint)blockWidth > 12)
             {
@@ -48,7 +49,7 @@ namespace Ryujinx.Graphics.Texture.Astc
             BlockSizeX = blockWidth;
             BlockSizeY = blockHeight;
 
-            Levels = new AstcLevel[levels];
+            Levels = new AstcLevel[levels * layers];
 
             Success = true;
 
@@ -59,20 +60,23 @@ namespace Ryujinx.Graphics.Texture.Astc
 
             for (int i = 0; i < levels; i++)
             {
-                ref AstcLevel level = ref Levels[i];
+                for (int j = 0; j < layers; j++)
+                {
+                    ref AstcLevel level = ref Levels[i * layers + j];
 
-                level.ImageSizeX = Math.Max(1, width >> i);
-                level.ImageSizeY = Math.Max(1, height >> i);
-                level.ImageSizeZ = Math.Max(1, depth >> i);
+                    level.ImageSizeX = Math.Max(1, width >> i);
+                    level.ImageSizeY = Math.Max(1, height >> i);
+                    level.ImageSizeZ = Math.Max(1, depth >> i);
 
-                level.BlockCountX = (level.ImageSizeX + blockWidth - 1) / blockWidth;
-                level.BlockCountY = (level.ImageSizeY + blockHeight - 1) / blockHeight;
+                    level.BlockCountX = (level.ImageSizeX + blockWidth - 1) / blockWidth;
+                    level.BlockCountY = (level.ImageSizeY + blockHeight - 1) / blockHeight;
 
-                level.StartBlock = currentInputBlock;
-                level.OutputByteOffset = currentOutputOffset;
+                    level.StartBlock = currentInputBlock;
+                    level.OutputByteOffset = currentOutputOffset;
 
-                currentInputBlock += level.TotalBlockCount;
-                currentOutputOffset += level.PixelCount * 4;
+                    currentInputBlock += level.TotalBlockCount;
+                    currentOutputOffset += level.PixelCount * 4;
+                }
             }
 
             TotalBlockCount = currentInputBlock;
@@ -94,7 +98,7 @@ namespace Ryujinx.Graphics.Texture.Astc
             public int PixelCount => ImageSizeX * ImageSizeY * ImageSizeZ;
         }
 
-        public static int QueryDecompressedSize(int sizeX, int sizeY, int sizeZ, int levelCount)
+        public static int QueryDecompressedSize(int sizeX, int sizeY, int sizeZ, int levelCount, int layerCount)
         {
             int size = 0;
 
@@ -104,7 +108,7 @@ namespace Ryujinx.Graphics.Texture.Astc
                 int levelSizeY = Math.Max(1, sizeY >> i);
                 int levelSizeZ = Math.Max(1, sizeZ >> i);
 
-                size += levelSizeX * levelSizeY * levelSizeZ;
+                size += levelSizeX * levelSizeY * levelSizeZ * layerCount;
             }
 
             return size * 4;
@@ -221,11 +225,12 @@ namespace Ryujinx.Graphics.Texture.Astc
             int height,
             int depth,
             int levels,
+            int layers,
             out Span<byte> decoded)
         {
-            byte[] output = new byte[QueryDecompressedSize(width, height, depth, levels)];
+            byte[] output = new byte[QueryDecompressedSize(width, height, depth, levels, layers)];
 
-            AstcDecoder decoder = new AstcDecoder(data, output, blockWidth, blockHeight, width, height, depth, levels);
+            AstcDecoder decoder = new AstcDecoder(data, output, blockWidth, blockHeight, width, height, depth, levels, layers);
 
             for (int i = 0; i < decoder.TotalBlockCount; i++)
             {
@@ -245,9 +250,10 @@ namespace Ryujinx.Graphics.Texture.Astc
             int width,
             int height,
             int depth,
-            int levels)
+            int levels,
+            int layers)
         {
-            AstcDecoder decoder = new AstcDecoder(data, outputBuffer, blockWidth, blockHeight, width, height, depth, levels);
+            AstcDecoder decoder = new AstcDecoder(data, outputBuffer, blockWidth, blockHeight, width, height, depth, levels, layers);
 
             for (int i = 0; i < decoder.TotalBlockCount; i++)
             {
@@ -265,9 +271,10 @@ namespace Ryujinx.Graphics.Texture.Astc
             int width,
             int height,
             int depth,
-            int levels)
+            int levels,
+            int layers)
         {
-            AstcDecoder decoder = new AstcDecoder(data, outputBuffer, blockWidth, blockHeight, width, height, depth, levels);
+            AstcDecoder decoder = new AstcDecoder(data, outputBuffer, blockWidth, blockHeight, width, height, depth, levels, layers);
 
             // Lazy parallelism
             Enumerable.Range(0, decoder.TotalBlockCount).AsParallel().ForAll(x => decoder.ProcessBlock(x));
@@ -283,11 +290,12 @@ namespace Ryujinx.Graphics.Texture.Astc
             int height,
             int depth,
             int levels,
+            int layers,
             out Span<byte> decoded)
         {
-            byte[] output = new byte[QueryDecompressedSize(width, height, depth, levels)];
+            byte[] output = new byte[QueryDecompressedSize(width, height, depth, levels, layers)];
 
-            AstcDecoder decoder = new AstcDecoder(data, output, blockWidth, blockHeight, width, height, depth, levels);
+            AstcDecoder decoder = new AstcDecoder(data, output, blockWidth, blockHeight, width, height, depth, levels, layers);
 
             Enumerable.Range(0, decoder.TotalBlockCount).AsParallel().ForAll(x => decoder.ProcessBlock(x));
 
