@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // Do we have a block after the current one?
-                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null)
+                if (currBlock.BrIndir != null && HasBlockAfter(gpuAccessor, currBlock, startAddress))
                 {
                     bool targetVisited = visited.ContainsKey(currBlock.EndAddress);
 
@@ -152,6 +152,19 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
 
             return blocks.ToArray();
+        }
+
+        private static bool HasBlockAfter(IGpuAccessor gpuAccessor, Block currBlock, ulong startAdddress)
+        {
+            if (!gpuAccessor.MemoryMapped(startAdddress + currBlock.EndAddress) ||
+                !gpuAccessor.MemoryMapped(startAdddress + currBlock.EndAddress + 7))
+            {
+                return false;
+            }
+
+            ulong inst = gpuAccessor.MemoryRead<ulong>(startAdddress + currBlock.EndAddress);
+
+            return inst != 0UL;
         }
 
         private static bool BinarySearch(List<Block> blocks, ulong address, out int index)

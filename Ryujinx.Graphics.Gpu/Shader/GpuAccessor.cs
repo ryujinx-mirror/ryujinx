@@ -3,7 +3,6 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
-using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -82,6 +81,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public T MemoryRead<T>(ulong address) where T : unmanaged
         {
             return _context.MemoryManager.Read<T>(address);
+        }
+
+        /// <summary>
+        /// Checks if a given memory address is mapped.
+        /// </summary>
+        /// <param name="address">GPU virtual address to be checked</param>
+        /// <returns>True if the address is mapped, false otherwise</returns>
+        public bool MemoryMapped(ulong address)
+        {
+            return _context.MemoryManager.IsMapped(address);
         }
 
         /// <summary>

@@ -9,6 +9,11 @@
 
         T MemoryRead<T>(ulong address) where T : unmanaged;
 
+        public bool MemoryMapped(ulong address)
+        {
+            return true;
+        }
+
         public int QueryComputeLocalSizeX()
         {
             return 1;

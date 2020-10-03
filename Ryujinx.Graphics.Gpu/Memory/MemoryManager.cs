@@ -311,6 +311,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Checks if a given page is mapped.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address of the page to check</param>
+        /// <returns>True if the page is mapped, false otherwise</returns>
+        public bool IsMapped(ulong gpuVa)
+        {
+            return Translate(gpuVa) != PteUnmapped;
+        }
+
+        /// <summary>
         /// Translates a GPU virtual address to a CPU virtual address.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to be translated</param>
