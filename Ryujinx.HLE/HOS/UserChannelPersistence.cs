@@ -10,6 +10,7 @@ namespace Ryujinx.HLE.HOS
         public int PreviousIndex { get; private set; }
         public int Index { get; private set; }
         public ProgramSpecifyKind Kind { get; private set; }
+        public bool ShouldRestart { get; set; }
 
         public UserChannelPersistence()
         {
@@ -42,6 +43,7 @@ namespace Ryujinx.HLE.HOS
         {
             Kind = kind;
             PreviousIndex = Index;
+            ShouldRestart = true;
 
             switch (kind)
             {

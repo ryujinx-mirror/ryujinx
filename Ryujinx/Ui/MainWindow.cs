@@ -975,9 +975,10 @@ namespace Ryujinx.Ui
 
         private void HandleRelaunch()
         {
-            // If the previous index isn't -1, that mean we are relaunching.
-            if (_userChannelPersistence.PreviousIndex != -1)
+            if (_userChannelPersistence.PreviousIndex != -1 && _userChannelPersistence.ShouldRestart)
             {
+                _userChannelPersistence.ShouldRestart = false;
+
                 LoadApplication(_gamePath);
             }
             else
