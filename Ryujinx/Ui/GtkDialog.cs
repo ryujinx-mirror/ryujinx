@@ -56,5 +56,10 @@ namespace Ryujinx.Ui
 
             return response == ResponseType.Yes;
         }
+
+        internal static bool CreateExitDialog()
+        {
+            return CreateChoiceDialog("Ryujinx - Exit", "Are you sure you want to stop emulation?", "All unsaved data will be lost!");
+        }
     }
 }
