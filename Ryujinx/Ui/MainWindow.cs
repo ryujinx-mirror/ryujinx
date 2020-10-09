@@ -918,12 +918,22 @@ namespace Ryujinx.Ui
 
         private void Exit_Pressed(object sender, EventArgs args)
         {
-            End(_emulationContext);
+            if (!_gameLoaded || GtkDialog.CreateExitDialog())
+            {
+                End(_emulationContext);
+            }
         }
 
         private void Window_Close(object sender, DeleteEventArgs args)
         {
-            End(_emulationContext);
+            if (!_gameLoaded || GtkDialog.CreateExitDialog())
+            {
+                End(_emulationContext);
+            }
+            else
+            {
+                args.RetVal = true;
+            }
         }
 
         private void StopEmulation_Pressed(object sender, EventArgs args)
