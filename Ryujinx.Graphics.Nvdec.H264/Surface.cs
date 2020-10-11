@@ -8,6 +8,9 @@ namespace Ryujinx.Graphics.Nvdec.H264
     {
         public AVFrame* Frame { get; }
 
+        public int RequestedWidth { get; }
+        public int RequestedHeight { get; }
+
         public Plane YPlane => new Plane((IntPtr)Frame->data[0], Stride * Height);
         public Plane UPlane => new Plane((IntPtr)Frame->data[1], UvStride * UvHeight);
         public Plane VPlane => new Plane((IntPtr)Frame->data[2], UvStride * UvHeight);
@@ -19,8 +22,11 @@ namespace Ryujinx.Graphics.Nvdec.H264
         public int UvHeight => (Frame->height + 1) >> 1;
         public int UvStride => Frame->linesize[1];
 
-        public Surface()
+        public Surface(int width, int height)
         {
+            RequestedWidth = width;
+            RequestedHeight = height;
+
             Frame = ffmpeg.av_frame_alloc();
         }
 

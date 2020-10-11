@@ -11,18 +11,33 @@ namespace Ryujinx.Graphics.Nvdec.H264
 
         private readonly byte[] _workBuffer = new byte[WorkBufferSize];
 
-        private readonly FFmpegContext _context = new FFmpegContext();
+        private FFmpegContext _context = new FFmpegContext();
+
+        private int _oldOutputWidth;
+        private int _oldOutputHeight;
 
         public ISurface CreateSurface(int width, int height)
         {
-            return new Surface();
+            return new Surface(width, height);
         }
 
         public bool Decode(ref H264PictureInfo pictureInfo, ISurface output, ReadOnlySpan<byte> bitstream)
         {
+            Surface outSurf = (Surface)output;
+
+            if (outSurf.RequestedWidth != _oldOutputWidth ||
+                outSurf.RequestedHeight != _oldOutputHeight)
+            {
+                _context.Dispose();
+                _context = new FFmpegContext();
+
+                _oldOutputWidth = outSurf.RequestedWidth;
+                _oldOutputHeight = outSurf.RequestedHeight;
+            }
+
             Span<byte> bs = Prepend(bitstream, SpsAndPpsReconstruction.Reconstruct(ref pictureInfo, _workBuffer));
 
-            return _context.DecodeFrame((Surface)output, bs) == 0;
+            return _context.DecodeFrame(outSurf, bs) == 0;
         }
 
         private static byte[] Prepend(ReadOnlySpan<byte> data, ReadOnlySpan<byte> prep)
