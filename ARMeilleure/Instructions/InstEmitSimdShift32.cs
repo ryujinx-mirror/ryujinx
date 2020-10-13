@@ -5,6 +5,8 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 
+using static ARMeilleure.Instructions.InstEmitHelper;
+using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
@@ -22,6 +24,13 @@ namespace ARMeilleure.Instructions
         public static void Vqrshrun(ArmEmitterContext context)
         {
             EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+        }
+
+        public static void Vqshrn(ArmEmitterContext context)
+        {
+            OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
+
+            EmitShrImmSaturatingNarrowOp(context, op.U ? ShrImmSaturatingNarrowFlags.VectorZxZx : ShrImmSaturatingNarrowFlags.VectorSxSx);
         }
 
         public static void Vrshr(ArmEmitterContext context)
@@ -103,6 +112,38 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorBinaryOpSx32(context, (op1, op2) => EmitShlRegOp(context, op2, op1, op.Size, false));
             }
+        }
+
+        public static void Vshll(ArmEmitterContext context)
+        {
+            OpCode32SimdShImmLong op = (OpCode32SimdShImmLong)context.CurrOp;
+
+            Operand res = context.VectorZero();
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, !op.U);
+
+                if (op.Size == 2)
+                {
+                    if (op.U)
+                    {
+                        me = context.ZeroExtend32(OperandType.I64, me);
+                    }
+                    else
+                    {
+                        me = context.SignExtend32(OperandType.I64, me);
+                    }
+                }
+
+                me = context.ShiftLeft(me, Const(op.Shift));
+
+                res = EmitVectorInsert(context, res, me, index, op.Size + 1);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
         }
 
         public static void Vshr(ArmEmitterContext context)

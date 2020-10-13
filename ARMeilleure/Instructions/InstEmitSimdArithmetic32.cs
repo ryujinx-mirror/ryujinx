@@ -14,6 +14,20 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit32
     {
+        public static void Vabd_I(ArmEmitterContext context)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            EmitVectorBinaryOpI32(context, (op1, op2) => EmitAbs(context, context.Subtract(op1, op2)), !op.U);
+        }
+
+        public static void Vabdl_I(ArmEmitterContext context)
+        {
+            OpCode32SimdRegLong op = (OpCode32SimdRegLong)context.CurrOp;
+
+            EmitVectorBinaryLongOpI32(context, (op1, op2) => EmitAbs(context, context.Subtract(op1, op2)), !op.U);
+        }
+
         public static void Vabs_S(ArmEmitterContext context)
         {
             OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;
@@ -105,6 +119,13 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorBinaryOpZx32(context, (op1, op2) => context.Add(op1, op2));
             }
+        }
+
+        public static void Vaddl_I(ArmEmitterContext context)
+        {
+            OpCode32SimdRegLong op = (OpCode32SimdRegLong)context.CurrOp;
+
+            EmitVectorBinaryLongOpI32(context, (op1, op2) => context.Add(op1, op2), !op.U);
         }
 
         public static void Vaddw_I(ArmEmitterContext context)
@@ -260,6 +281,20 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulSub), op1, op2, op3);
                 });
+            }
+        }
+
+        public static void Vhadd(ArmEmitterContext context)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            if (op.U)
+            {
+                EmitVectorBinaryOpZx32(context, (op1, op2) => context.ShiftRightUI(context.Add(op1, op2), Const(1)));
+            }
+            else
+            {
+                EmitVectorBinaryOpSx32(context, (op1, op2) => context.ShiftRightSI(context.Add(op1, op2), Const(1)));
             }
         }
 

@@ -8,7 +8,14 @@
         {
             Q = false;
             RegisterSize = RegisterSize.Simd64;
+
             Polynomial = ((opCode >> 9) & 0x1) != 0;
+
+            // Subclasses have their own handling of Vx to account for before checking.
+            if (GetType() == typeof(OpCode32SimdRegLong) && DecoderHelper.VectorArgumentsInvalid(true, Vd))
+            {
+                Instruction = InstDescriptor.Undefined;
+            }
         }
     }
 }

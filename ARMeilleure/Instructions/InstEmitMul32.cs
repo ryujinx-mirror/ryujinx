@@ -283,6 +283,26 @@ namespace ARMeilleure.Instructions
             EmitGenericAluStoreA32(context, op.Rd, false, res);
         }
 
+        public static void Umaal(ArmEmitterContext context)
+        {
+            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+
+            Operand n   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rn));
+            Operand m   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rm));
+            Operand dHi = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.RdHi));
+            Operand dLo = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.RdLo));
+
+            Operand res = context.Multiply(n, m);
+                    res = context.Add(res, dHi);
+                    res = context.Add(res, dLo);
+
+            Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
+            Operand lo = context.ConvertI64ToI32(res);
+
+            EmitGenericAluStoreA32(context, op.RdHi, false, hi);
+            EmitGenericAluStoreA32(context, op.RdLo, false, lo);
+        }
+
         public static void Umlal(ArmEmitterContext context)
         {
             EmitMlal(context, false);
