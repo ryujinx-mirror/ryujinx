@@ -1,4 +1,3 @@
-using Ryujinx.Common;
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
@@ -85,7 +84,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     this.Copy(dest, src);
                 }
 
-                int regIndex = 0;
+                int regIndexBase = 0;
 
                 for (int rtIndex = 0; rtIndex < 8; rtIndex++)
                 {
@@ -100,7 +99,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         int fragmentOutputColorAttr = AttributeConsts.FragmentOutputColorBase + rtIndex * 16;
 
-                        Operand src = Register(regIndex, RegisterType.Gpr);
+                        Operand src = Register(regIndexBase + component, RegisterType.Gpr);
 
                         // Perform B <-> R swap if needed, for BGRA formats (not supported on OpenGL).
                         if (component == 0 || component == 2)
@@ -125,11 +124,12 @@ namespace Ryujinx.Graphics.Shader.Translation
                         {
                             this.Copy(Attribute(fragmentOutputColorAttr + component * 4), src);
                         }
-
-                        regIndex++;
                     }
 
-                    regIndex = BitUtils.AlignUp(regIndex, 4);
+                    if (target.Enabled)
+                    {
+                        regIndexBase += 4;
+                    }
                 }
             }
         }
