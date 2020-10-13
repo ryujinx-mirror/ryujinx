@@ -9,9 +9,9 @@ namespace Ryujinx.Graphics.GAL
         Maximum,
 
         AddGl             = 0x8006,
-        SubtractGl        = 0x8007,
-        ReverseSubtractGl = 0x8008,
-        MinimumGl         = 0x800a,
-        MaximumGl         = 0x800b
+        MinimumGl         = 0x8007,
+        MaximumGl         = 0x8008,
+        SubtractGl        = 0x800a,
+        ReverseSubtractGl = 0x800b
     }
 }

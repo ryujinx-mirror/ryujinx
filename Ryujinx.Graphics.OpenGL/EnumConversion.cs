@@ -104,18 +104,18 @@ namespace Ryujinx.Graphics.OpenGL
                 case BlendOp.Add:
                 case BlendOp.AddGl:
                     return BlendEquationMode.FuncAdd;
-                case BlendOp.Subtract:
-                case BlendOp.SubtractGl:
-                    return BlendEquationMode.FuncSubtract;
-                case BlendOp.ReverseSubtract:
-                case BlendOp.ReverseSubtractGl:
-                    return BlendEquationMode.FuncReverseSubtract;
                 case BlendOp.Minimum:
                 case BlendOp.MinimumGl:
                     return BlendEquationMode.Min;
                 case BlendOp.Maximum:
                 case BlendOp.MaximumGl:
                     return BlendEquationMode.Max;
+                case BlendOp.Subtract:
+                case BlendOp.SubtractGl:
+                    return BlendEquationMode.FuncSubtract;
+                case BlendOp.ReverseSubtract:
+                case BlendOp.ReverseSubtractGl:
+                    return BlendEquationMode.FuncReverseSubtract;
             }
 
             Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(BlendOp)} enum value: {op}.");
