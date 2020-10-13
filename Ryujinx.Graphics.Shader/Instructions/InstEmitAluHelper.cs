@@ -100,5 +100,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(GetNF(), context.FPCompareLess (dest, zero, fpType));
             }
         }
+
+        public static Operand AddWithCarry(EmitterContext context, Operand lhs, Operand rhs, out Operand carryOut)
+        {
+            Operand result = context.IAdd(lhs, rhs);
+
+            // C = Rd < Rn
+            carryOut = context.INegate(context.ICompareLessUnsigned(result, lhs));
+
+            return result;
+        }
     }
 }

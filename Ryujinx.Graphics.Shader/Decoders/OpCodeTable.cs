@@ -179,6 +179,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("010010111101xx", InstEmit.Lea,     typeof(OpCodeAluCbuf));
             Set("0011011x11010x", InstEmit.Lea,     typeof(OpCodeAluImm));
             Set("0101101111010x", InstEmit.Lea,     typeof(OpCodeAluReg));
+            Set("000110xxxxxxxx", InstEmit.Lea_Hi,  typeof(OpCodeAluCbuf));
+            Set("0101101111011x", InstEmit.Lea_Hi,  typeof(OpCodeAluReg));
             Set("0100110001000x", InstEmit.Lop,     typeof(OpCodeLopCbuf));
             Set("0011100001000x", InstEmit.Lop,     typeof(OpCodeLopImm));
             Set("000001xxxxxxxx", InstEmit.Lop,     typeof(OpCodeLopImm32));

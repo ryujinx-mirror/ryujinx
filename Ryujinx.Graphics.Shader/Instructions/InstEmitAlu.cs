@@ -405,6 +405,51 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: CC, X
         }
 
+        public static void Lea_Hi(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool isReg = op is OpCodeAluReg;
+            bool negateA;
+            int shift;
+
+            if (isReg)
+            {
+                negateA = op.RawOpCode.Extract(37);
+                shift   = op.RawOpCode.Extract(28, 5);
+            }
+            else
+            {
+                negateA = op.RawOpCode.Extract(56);
+                shift   = op.RawOpCode.Extract(51, 5);
+            }
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+            Operand srcC = GetSrcC(context);
+
+            Operand aLow = context.ShiftLeft(srcA, Const(shift));
+            Operand aHigh = shift == 0 ? Const(0) : context.ShiftRightU32(srcA, Const(32 - shift));
+            aHigh = context.BitwiseOr(aHigh, context.ShiftLeft(srcC, Const(shift)));
+
+            if (negateA)
+            {
+                // Perform 64-bit negation by doing bitwise not of the value,
+                // then adding 1 and carrying over from low to high.
+                aLow = context.BitwiseNot(aLow);
+                aHigh = context.BitwiseNot(aHigh);
+
+                aLow = AddWithCarry(context, aLow, Const(1), out Operand aLowCOut);
+                aHigh = context.IAdd(aHigh, aLowCOut);
+            }
+
+            Operand res = context.IAdd(aHigh, srcB);
+
+            context.Copy(GetDest(context), res);
+
+            // TODO: CC, X
+        }
+
         public static void Lop(EmitterContext context)
         {
             IOpCodeLop op = (IOpCodeLop)context.CurrOp;
