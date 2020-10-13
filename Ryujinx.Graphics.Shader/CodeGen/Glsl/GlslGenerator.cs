@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         public static GlslProgram Generate(StructuredProgramInfo info, ShaderConfig config)
         {
-            CodeGenContext context = new CodeGenContext(config);
+            CodeGenContext context = new CodeGenContext(config, info.UsesCbIndexing);
 
             Declarations.Declare(context, info);
 

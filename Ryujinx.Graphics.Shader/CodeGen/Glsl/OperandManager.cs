@@ -92,7 +92,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return name;
         }
 
-        public string GetExpression(AstOperand operand, ShaderConfig config)
+        public string GetExpression(AstOperand operand, ShaderConfig config, bool cbIndexable)
         {
             switch (operand.Type)
             {
@@ -103,7 +103,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     return NumberFormatter.FormatInt(operand.Value);
 
                 case OperandType.ConstantBuffer:
-                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, config.Stage);
+                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, config.Stage, cbIndexable);
 
                 case OperandType.LocalVariable:
                     return _locals[operand];
@@ -115,13 +115,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             throw new ArgumentException($"Invalid operand type \"{operand.Type}\".");
         }
 
-        public static string GetConstantBufferName(int slot, int offset, ShaderStage stage)
+        public static string GetConstantBufferName(int slot, int offset, ShaderStage stage, bool cbIndexable)
         {
-            string ubName = GetUbName(stage, slot);
-
-            ubName += "[" + (offset >> 2) + "]";
-
-            return ubName + "." + GetSwizzleMask(offset & 3);
+            return $"{GetUbName(stage, slot, cbIndexable)}[{offset >> 2}].{GetSwizzleMask(offset & 3)}";
         }
 
         private static string GetVec4Indexed(string vectorName, string indexExpr)
@@ -134,18 +130,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"({result})";
         }
 
-        public static string GetConstantBufferName(IAstNode slot, string offsetExpr, ShaderStage stage)
+        public static string GetConstantBufferName(int slot, string offsetExpr, ShaderStage stage, bool cbIndexable)
         {
-            // Non-constant slots are not supported.
-            // It is expected that upstream stages are never going to generate non-constant
-            // slot access.
-            AstOperand operand = (AstOperand)slot;
+            return GetVec4Indexed(GetUbName(stage, slot, cbIndexable) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3");
+        }
 
-            string ubName = GetUbName(stage, operand.Value);
-
-            string index0 = "[" + offsetExpr + " >> 2]";
-
-            return GetVec4Indexed(ubName + index0, offsetExpr + " & 3");
+        public static string GetConstantBufferName(string slotExpr, string offsetExpr, ShaderStage stage)
+        {
+            return GetVec4Indexed(GetUbName(stage, slotExpr) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3");
         }
 
         public static string GetOutAttributeName(AstOperand attr, ShaderConfig config)
@@ -228,13 +220,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return isOutAttr ? "// bad_attr0x" + value.ToString("X") : "0.0";
         }
 
-        public static string GetUbName(ShaderStage stage, int slot)
+        public static string GetUbName(ShaderStage stage, int slot, bool cbIndexable)
         {
-            string ubName = GetShaderStagePrefix(stage);
+            if (cbIndexable)
+            {
+                return GetUbName(stage, NumberFormatter.FormatInt(slot, VariableType.S32));
+            }
 
-            ubName += "_" + DefaultNames.UniformNamePrefix + slot;
+            return $"{GetShaderStagePrefix(stage)}_{DefaultNames.UniformNamePrefix}{slot}_{DefaultNames.UniformNameSuffix}";
+        }
 
-            return ubName + "_" + DefaultNames.UniformNameSuffix;
+        private static string GetUbName(ShaderStage stage, string slotExpr)
+        {
+            return $"{GetShaderStagePrefix(stage)}_{DefaultNames.UniformNamePrefix}[{slotExpr}].{DefaultNames.DataName}";
         }
 
         public static string GetSamplerName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)

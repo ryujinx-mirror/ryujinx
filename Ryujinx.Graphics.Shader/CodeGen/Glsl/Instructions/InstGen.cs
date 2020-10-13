@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else if (node is AstOperand operand)
             {
-                return context.OperandManager.GetExpression(operand, context.Config);
+                return context.OperandManager.GetExpression(operand, context.Config, context.CbIndexable);
             }
 
             throw new ArgumentException($"Invalid node type \"{node?.GetType().Name ?? "null"}\".");

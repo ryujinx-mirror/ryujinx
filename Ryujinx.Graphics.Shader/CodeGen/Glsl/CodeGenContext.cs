@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public ShaderConfig Config { get; }
 
+        public bool CbIndexable { get; }
+
         public List<BufferDescriptor>  CBufferDescriptors { get; }
         public List<BufferDescriptor>  SBufferDescriptors { get; }
         public List<TextureDescriptor> TextureDescriptors { get; }
@@ -25,9 +27,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private string _indentation;
 
-        public CodeGenContext(ShaderConfig config)
+        public CodeGenContext(ShaderConfig config, bool cbIndexable)
         {
             Config = config;
+            CbIndexable = cbIndexable;
 
             CBufferDescriptors = new List<BufferDescriptor>();
             SBufferDescriptors = new List<BufferDescriptor>();
@@ -85,9 +88,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             int cBufSlot = bindless ? operand.CbufSlot : 0;
             int cBufOffset = bindless ? operand.CbufOffset : 0;
 
-            return TextureDescriptors.FindIndex(descriptor => 
-                descriptor.Type == texOp.Type && 
-                descriptor.HandleIndex == texOp.Handle && 
+            return TextureDescriptors.FindIndex(descriptor =>
+                descriptor.Type == texOp.Type &&
+                descriptor.HandleIndex == texOp.Handle &&
                 descriptor.CbufSlot == cBufSlot &&
                 descriptor.CbufOffset == cBufOffset);
         }

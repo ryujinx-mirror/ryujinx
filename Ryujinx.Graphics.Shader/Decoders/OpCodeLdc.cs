@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Offset { get; }
         public int Slot   { get; }
 
+        public CbIndexMode IndexMode { get; }
         public IntegerSize Size { get; }
 
         public OpCodeLdc(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
@@ -20,7 +21,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Offset = (opCode.Extract(20, 16) << 16) >> 16;
             Slot   = opCode.Extract(36, 5);
 
-            Size = (IntegerSize)opCode.Extract(48, 3);
+            IndexMode = (CbIndexMode)opCode.Extract(44, 2);
+            Size      = (IntegerSize)opCode.Extract(48, 3);
         }
     }
 }

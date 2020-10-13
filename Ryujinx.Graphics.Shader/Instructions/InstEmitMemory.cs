@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
                 }
             }
- 
+
             if (op.Mode == InterpolationMode.Default)
             {
                 Operand srcB = GetSrcB(context);
@@ -152,7 +152,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             int count = op.Size == IntegerSize.B64 ? 2 : 1;
 
-            Operand addr = context.IAdd(GetSrcA(context), Const(op.Offset));
+            Operand slot = Const(op.Slot);
+            Operand srcA = GetSrcA(context);
+
+            if (op.IndexMode == CbIndexMode.Is ||
+                op.IndexMode == CbIndexMode.Isl)
+            {
+                slot = context.IAdd(slot, context.BitfieldExtractU32(srcA, Const(16), Const(16)));
+                srcA = context.BitwiseAnd(srcA, Const(0xffff));
+            }
+
+            Operand addr = context.IAdd(srcA, Const(op.Offset));
 
             Operand wordOffset = context.ShiftRightU32(addr, Const(2));
 
@@ -169,7 +179,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 Operand offset = context.IAdd(wordOffset, Const(index));
 
-                Operand value = context.LoadConstant(Const(op.Slot), offset);
+                Operand value = context.LoadConstant(slot, offset);
 
                 if (isSmallInt)
                 {

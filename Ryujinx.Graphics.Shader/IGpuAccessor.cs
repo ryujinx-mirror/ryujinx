@@ -39,6 +39,11 @@
             return 0xc000;
         }
 
+        public uint QueryConstantBufferUse()
+        {
+            return 0xffff;
+        }
+
         public bool QueryIsTextureBuffer(int handle)
         {
             return false;

@@ -213,51 +213,57 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareUniforms(CodeGenContext context, StructuredProgramInfo info)
         {
-            foreach (int cbufSlot in info.CBuffers.OrderBy(x => x))
+            string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
+
+            if (info.UsesCbIndexing)
             {
                 string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
-                ubName += "_" + DefaultNames.UniformNamePrefix + cbufSlot;
+                ubName += "_" + DefaultNames.UniformNamePrefix;
 
-                context.CBufferDescriptors.Add(new BufferDescriptor(ubName, cbufSlot));
+                string blockName = $"{ubName}_{DefaultNames.BlockSuffix}";
 
-                context.AppendLine("layout (std140) uniform " + ubName);
+                int maxSlot = 0;
+
+                foreach (int cbufSlot in info.CBuffers.OrderBy(x => x))
+                {
+                    context.CBufferDescriptors.Add(new BufferDescriptor($"{blockName}[{cbufSlot}]", cbufSlot));
+
+                    if (maxSlot < cbufSlot)
+                    {
+                        maxSlot = cbufSlot;
+                    }
+                }
+
+                context.AppendLine("layout (std140) uniform " + blockName);
 
                 context.EnterScope();
 
-                string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
+                context.AppendLine("vec4 " + DefaultNames.DataName + ubSize + ";");
 
-                context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, cbufSlot) + ubSize + ";");
+                string arraySize = NumberFormatter.FormatInt(maxSlot + 1);
 
-                context.LeaveScope(";");
+                context.LeaveScope($" {ubName}[{arraySize}];");
             }
-        }
-
-        private static bool DeclareRenderScale(CodeGenContext context)
-        {
-            if ((context.Config.UsedFeatures & (FeatureFlags.FragCoordXY | FeatureFlags.IntegerSampling)) != 0)
+            else
             {
-                string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-                int scaleElements = context.TextureDescriptors.Count;
-
-                if (context.Config.Stage == ShaderStage.Fragment)
+                foreach (int cbufSlot in info.CBuffers.OrderBy(x => x))
                 {
-                    scaleElements++; // Also includes render target scale, for gl_FragCoord.
+                    string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+
+                    ubName += "_" + DefaultNames.UniformNamePrefix + cbufSlot;
+
+                    context.CBufferDescriptors.Add(new BufferDescriptor(ubName, cbufSlot));
+
+                    context.AppendLine("layout (std140) uniform " + ubName);
+
+                    context.EnterScope();
+
+                    context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, cbufSlot, false) + ubSize + ";");
+
+                    context.LeaveScope(";");
                 }
-
-                context.AppendLine($"uniform float {stage}_renderScale[{scaleElements}];");
-
-                if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
-                {
-                    context.AppendLine();
-                    AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
-                }
-
-                return true;
             }
-
-            return false;
         }
 
         private static void DeclareStorages(CodeGenContext context, StructuredProgramInfo info)
@@ -498,6 +504,33 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 context.AppendLine($"layout (location = {attr}) out vec4 {name};");
             }
+        }
+
+        private static bool DeclareRenderScale(CodeGenContext context)
+        {
+            if ((context.Config.UsedFeatures & (FeatureFlags.FragCoordXY | FeatureFlags.IntegerSampling)) != 0)
+            {
+                string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+
+                int scaleElements = context.TextureDescriptors.Count;
+
+                if (context.Config.Stage == ShaderStage.Fragment)
+                {
+                    scaleElements++; // Also includes render target scale, for gl_FragCoord.
+                }
+
+                context.AppendLine($"uniform float {stage}_renderScale[{scaleElements}];");
+
+                if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
+                {
+                    context.AppendLine();
+                    AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         private static void AppendHelperFunction(CodeGenContext context, string filename)

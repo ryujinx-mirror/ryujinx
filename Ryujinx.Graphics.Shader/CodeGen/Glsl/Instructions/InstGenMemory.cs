@@ -125,7 +125,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             offsetExpr = Enclose(offsetExpr, src2, Instruction.ShiftRightS32, isLhs: true);
 
-            return OperandManager.GetConstantBufferName(src1, offsetExpr, context.Config.Stage);
+            if (src1 is AstOperand oper && oper.Type == OperandType.Constant)
+            {
+                return OperandManager.GetConstantBufferName(oper.Value, offsetExpr, context.Config.Stage, context.CbIndexable);
+            }
+            else
+            {
+                string slotExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
+
+                return OperandManager.GetConstantBufferName(slotExpr, offsetExpr, context.Config.Stage);
+            }
         }
 
         public static string LoadLocal(CodeGenContext context, AstOperation operation)

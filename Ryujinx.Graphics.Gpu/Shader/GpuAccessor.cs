@@ -124,6 +124,17 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public int QueryComputeSharedMemorySize() => _sharedMemorySize;
 
         /// <summary>
+        /// Queries Constant Buffer usage information.
+        /// </summary>
+        /// <returns>A mask where each bit set indicates a bound constant buffer</returns>
+        public uint QueryConstantBufferUse()
+        {
+            return _compute
+                ? _context.Methods.BufferManager.GetComputeUniformBufferUseMask()
+                : _context.Methods.BufferManager.GetGraphicsUniformBufferUseMask(_stageIndex);
+        }
+
+        /// <summary>
         /// Queries texture target information.
         /// </summary>
         /// <param name="handle">Texture handle</param>

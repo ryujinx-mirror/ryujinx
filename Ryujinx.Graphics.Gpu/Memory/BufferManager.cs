@@ -147,6 +147,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Sets a transform feedback buffer on the graphics pipeline.
+        /// The output from the vertex transformation stages are written into the feedback buffer.
+        /// </summary>
+        /// <param name="index">Index of the transform feedback buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the transform feedback buffer</param>
         public void SetTransformFeedbackBuffer(int index, ulong gpuVa, ulong size)
         {
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
@@ -265,6 +272,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets a bit mask indicating which compute uniform buffers are currently bound.
+        /// </summary>
+        /// <returns>Mask where each bit set indicates a bound constant buffer</returns>
+        public uint GetComputeUniformBufferUseMask()
+        {
+            uint mask = 0;
+
+            for (int i = 0; i < _cpUniformBuffers.Buffers.Length; i++)
+            {
+                if (_cpUniformBuffers.Buffers[i].Address != 0)
+                {
+                    mask |= 1u << i;
+                }
+            }
+
+            return mask;
+        }
+
+        /// <summary>
         /// Sets the enabled uniform buffers mask on the graphics pipeline.
         /// Each bit set on the mask indicates that the respective buffer index is enabled.
         /// </summary>
@@ -275,6 +301,26 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _gpUniformBuffers[stage].EnableMask = mask;
 
             _gpUniformBuffersDirty = true;
+        }
+
+        /// <summary>
+        /// Gets a bit mask indicating which graphics uniform buffers are currently bound.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <returns>Mask where each bit set indicates a bound constant buffer</returns>
+        public uint GetGraphicsUniformBufferUseMask(int stage)
+        {
+            uint mask = 0;
+
+            for (int i = 0; i < _gpUniformBuffers[stage].Buffers.Length; i++)
+            {
+                if (_gpUniformBuffers[stage].Buffers[i].Address != 0)
+                {
+                    mask |= 1u << i;
+                }
+            }
+
+            return mask;
         }
 
         /// <summary>

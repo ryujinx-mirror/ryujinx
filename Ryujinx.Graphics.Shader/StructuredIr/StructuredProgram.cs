@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
@@ -73,12 +74,24 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 {
                     Operand slot = operation.GetSource(0);
 
-                    if (slot.Type != OperandType.Constant)
+                    if (slot.Type == OperandType.Constant)
                     {
-                        throw new InvalidOperationException("Found load with non-constant constant buffer slot.");
+                        context.Info.CBuffers.Add(slot.Value);
                     }
+                    else
+                    {
+                        // If the value is not constant, then we don't know
+                        // how many constant buffers are used, so we assume
+                        // all of them are used.
+                        int cbCount = 32 - BitOperations.LeadingZeroCount(context.Config.GpuAccessor.QueryConstantBufferUse());
 
-                    context.Info.CBuffers.Add(slot.Value);
+                        for (int index = 0; index < cbCount; index++)
+                        {
+                            context.Info.CBuffers.Add(index);
+                        }
+
+                        context.Info.UsesCbIndexing = true;
+                    }
                 }
                 else if (UsesStorage(inst))
                 {
