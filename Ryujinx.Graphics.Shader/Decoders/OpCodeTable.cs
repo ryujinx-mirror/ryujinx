@@ -185,7 +185,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0011100001000x", InstEmit.Lop,     typeof(OpCodeLopImm));
             Set("000001xxxxxxxx", InstEmit.Lop,     typeof(OpCodeLopImm32));
             Set("0101110001000x", InstEmit.Lop,     typeof(OpCodeLopReg));
-            Set("0010000xxxxxxx", InstEmit.Lop3,    typeof(OpCodeLopCbuf));
+            Set("0000001xxxxxxx", InstEmit.Lop3,    typeof(OpCodeLopCbuf));
             Set("001111xxxxxxxx", InstEmit.Lop3,    typeof(OpCodeLopImm));
             Set("0101101111100x", InstEmit.Lop3,    typeof(OpCodeLopReg));
             Set("1110111110011x", InstEmit.Membar,  typeof(OpCodeMemoryBarrier));
