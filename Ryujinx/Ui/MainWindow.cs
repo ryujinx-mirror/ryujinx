@@ -59,7 +59,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem   _favToggle;
         [GUI] MenuItem        _firmwareInstallDirectory;
         [GUI] MenuItem        _firmwareInstallFile;
-        [GUI] Label           _hostStatus;
+        [GUI] Label           _fifoStatus;
         [GUI] CheckMenuItem   _iconToggle;
         [GUI] CheckMenuItem   _developerToggle;
         [GUI] CheckMenuItem   _appToggle;
@@ -792,8 +792,8 @@ namespace Ryujinx.Ui
         {
             Application.Invoke(delegate
             {
-                _hostStatus.Text = args.HostStatus;
                 _gameStatus.Text = args.GameStatus;
+                _fifoStatus.Text = args.FifoStatus;
                 _gpuName.Text    = args.GpuName;
                 _dockedMode.Text = args.DockedMode;
 

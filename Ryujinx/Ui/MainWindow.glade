@@ -521,7 +521,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_hostStatus">
+                      <object class="GtkLabel" id="_gameStatus">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="halign">start</property>
@@ -546,7 +546,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_gameStatus">
+                      <object class="GtkLabel" id="_fifoStatus">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="halign">start</property>
