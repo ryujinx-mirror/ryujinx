@@ -78,7 +78,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.CopyTexture, CopyTexture);
 
             state.RegisterCallback(MethodOffset.TextureBarrier,      TextureBarrier);
-            state.RegisterCallback(MethodOffset.InvalidateTextures,  InvalidateTextures);
             state.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
 
             state.RegisterCallback(MethodOffset.VbElementU8,  VbElementU8);
@@ -1154,16 +1153,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void TextureBarrier(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrier();
-        }
-
-        /// <summary>
-        /// Invalidates all modified textures on the cache.
-        /// </summary>
-        /// <param name="state">Current GPU state (unused)</param>
-        /// <param name="argument">Method call argument (unused)</param>
-        private void InvalidateTextures(GpuState state, int argument)
-        {
-            TextureManager.Flush();
         }
 
         /// <summary>

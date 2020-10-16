@@ -42,7 +42,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ulong dstBaseAddress = _context.MemoryManager.Translate(_params.DstAddress.Pack());
 
-            _context.Methods.TextureManager.Flush(dstBaseAddress, (ulong)_size);
+            // Trigger read tracking, to flush any managed resources in the destination region.
+            _context.PhysicalMemory.GetSpan(dstBaseAddress, _size, true);
 
             _finished = false;
         }

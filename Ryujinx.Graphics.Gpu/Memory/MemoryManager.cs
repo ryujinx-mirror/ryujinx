@@ -125,6 +125,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             lock (_pageTable)
             {
+                MemoryUnmapped?.Invoke(this, new UnmapEventArgs(va, size));
+
                 for (ulong offset = 0; offset < size; offset += PageSize)
                 {
                     SetPte(va + offset, pa + offset);
@@ -201,6 +203,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             lock (_pageTable)
             {
+                MemoryUnmapped?.Invoke(this, new UnmapEventArgs(va, size));
+
                 for (ulong offset = 0; offset < size; offset += PageSize)
                 {
                     if (IsPageInUse(va + offset))

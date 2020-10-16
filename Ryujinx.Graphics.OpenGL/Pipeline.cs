@@ -5,6 +5,7 @@ using Ryujinx.Graphics.OpenGL.Image;
 using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader;
 using System;
+using System.Threading;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -1163,6 +1164,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         internal (int drawHandle, int readHandle) GetBoundFramebuffers()
         {
+            if (BackgroundContextWorker.InBackground)
+            {
+                return (0, 0);
+            }
+
             return (_boundDrawFramebuffer, _boundReadFramebuffer);
         }
 

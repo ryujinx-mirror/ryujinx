@@ -163,27 +163,27 @@ namespace ARMeilleure.Instructions
         #region "Read"
         public static byte ReadByte(ulong address)
         {
-            return GetMemoryManager().Read<byte>(address);
+            return GetMemoryManager().ReadTracked<byte>(address);
         }
 
         public static ushort ReadUInt16(ulong address)
         {
-            return GetMemoryManager().Read<ushort>(address);
+            return GetMemoryManager().ReadTracked<ushort>(address);
         }
 
         public static uint ReadUInt32(ulong address)
         {
-            return GetMemoryManager().Read<uint>(address);
+            return GetMemoryManager().ReadTracked<uint>(address);
         }
 
         public static ulong ReadUInt64(ulong address)
         {
-            return GetMemoryManager().Read<ulong>(address);
+            return GetMemoryManager().ReadTracked<ulong>(address);
         }
 
         public static V128 ReadVector128(ulong address)
         {
-            return GetMemoryManager().Read<V128>(address);
+            return GetMemoryManager().ReadTracked<V128>(address);
         }
         #endregion
 
@@ -214,9 +214,9 @@ namespace ARMeilleure.Instructions
         }
         #endregion
 
-        public static void MarkRegionAsModified(ulong address, ulong size)
+        public static void SignalMemoryTracking(ulong address, ulong size, bool write)
         {
-            GetMemoryManager().MarkRegionAsModified(address, size);
+            GetMemoryManager().SignalMemoryTracking(address, size, write);
         }
 
         public static void ThrowInvalidMemoryAccess(ulong address)

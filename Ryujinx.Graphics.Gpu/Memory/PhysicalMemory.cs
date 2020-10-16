@@ -1,4 +1,5 @@
 using Ryujinx.Cpu;
+using Ryujinx.Cpu.Tracking;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -29,10 +30,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Start address of the range</param>
         /// <param name="size">Size in bytes to be range</param>
+        /// <param name="tracked">True if read tracking is triggered on the span</param>
         /// <returns>A read only span of the data at the specified memory location</returns>
-        public ReadOnlySpan<byte> GetSpan(ulong address, int size)
+        public ReadOnlySpan<byte> GetSpan(ulong address, int size, bool tracked = false)
         {
-            return _cpuMemory.GetSpan(address, size);
+            return _cpuMemory.GetSpan(address, size, tracked);
         }
 
         /// <summary>
@@ -78,17 +80,38 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Checks if a specified virtual memory region has been modified by the CPU since the last call.
+        /// Obtains a memory tracking handle for the given virtual region. This should be disposed when finished with.
         /// </summary>
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
-        /// <param name="name">Resource name</param>
-        /// <param name="modifiedRanges">Optional array where the modified ranges should be written</param>
-        /// <returns>The number of modified ranges</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int QueryModified(ulong address, ulong size, ResourceName name, (ulong, ulong)[] modifiedRanges = null)
+        /// <returns>The memory tracking handle</returns>
+        public CpuRegionHandle BeginTracking(ulong address, ulong size)
         {
-            return _cpuMemory.QueryModified(address, size, (int)name, modifiedRanges);
+            return _cpuMemory.BeginTracking(address, size);
+        }
+
+        /// <summary>
+        /// Obtains a memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
+        /// </summary>
+        /// <param name="address">CPU virtual address of the region</param>
+        /// <param name="size">Size of the region</param>
+        /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <returns>The memory tracking handle</returns>
+        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, ulong granularity = 4096)
+        {
+            return _cpuMemory.BeginGranularTracking(address, size, granularity);
+        }
+
+        /// <summary>
+        /// Obtains a smart memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
+        /// </summary>
+        /// <param name="address">CPU virtual address of the region</param>
+        /// <param name="size">Size of the region</param>
+        /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <returns>The memory tracking handle</returns>
+        public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity = 4096)
+        {
+            return _cpuMemory.BeginSmartGranularTracking(address, size, granularity);
         }
     }
 }

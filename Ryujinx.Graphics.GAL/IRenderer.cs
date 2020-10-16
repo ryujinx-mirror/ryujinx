@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.GAL
 
         IWindow Window { get; }
 
+        void BackgroundContextAction(Action action);
+
         IShader CompileShader(ShaderProgram shader);
 
         BufferHandle CreateBuffer(int size);

@@ -391,23 +391,22 @@ namespace ARMeilleure.Instructions
 
             if (lblSlowPath != null)
             {
-                context.BranchIf(lblSlowPath, pte, Const(0L), Comparison.LessOrEqual);
+                ulong protection = (write ? 3UL : 1UL) << 48;
+                context.BranchIfTrue(lblSlowPath, context.BitwiseAnd(pte, Const(protection)));
             }
             else
             {
                 // When no label is provided to jump to a slow path if the address is invalid,
                 // we do the validation ourselves, and throw if needed.
-                if (write)
-                {
-                    Operand lblNotWatched = Label();
 
-                    // Is the page currently being monitored for modifications? If so we need to call MarkRegionAsModified.
-                    context.BranchIf(lblNotWatched, pte, Const(0L), Comparison.GreaterOrEqual, BasicBlockFrequency.Cold);
+                Operand lblNotWatched = Label();
 
-                    // Mark the region as modified. Size here doesn't matter as address is assumed to be size aligned here.
-                    context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.MarkRegionAsModified)), address, Const(1UL));
-                    context.MarkLabel(lblNotWatched);
-                }
+                // Is the page currently being tracked for read/write? If so we need to call MarkRegionAsModified.
+                context.BranchIf(lblNotWatched, pte, Const(0L), Comparison.GreaterOrEqual, BasicBlockFrequency.Cold);
+
+                // Mark the region as modified. Size here doesn't matter as address is assumed to be size aligned here.
+                context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SignalMemoryTracking)), address, Const(1UL), Const(write ? 1 : 0));
+                context.MarkLabel(lblNotWatched);
 
                 Operand lblNonNull = Label();
 
@@ -417,9 +416,9 @@ namespace ARMeilleure.Instructions
                 // The call is not expected to return (it should throw).
                 context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);
                 context.MarkLabel(lblNonNull);
-
-                pte = context.BitwiseAnd(pte, Const(0xffffffffffffUL));
             }
+
+            pte = context.BitwiseAnd(pte, Const(0xffffffffffffUL)); // Ignore any software protection bits. (they are still used by c# memory access)
 
             Operand pageOffset = context.BitwiseAnd(address, Const(address.Type, PageMask));
 

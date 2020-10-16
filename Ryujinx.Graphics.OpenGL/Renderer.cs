@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
@@ -21,7 +22,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         public IWindow Window => _window;
 
-        internal TextureCopy TextureCopy { get; }
+        private TextureCopy _textureCopy;
+        private TextureCopy _backgroundTextureCopy;
+        internal TextureCopy TextureCopy => BackgroundContextWorker.InBackground ? _backgroundTextureCopy : _textureCopy;
 
         internal ResourcePool ResourcePool { get; }
 
@@ -34,7 +37,8 @@ namespace Ryujinx.Graphics.OpenGL
             _pipeline = new Pipeline();
             _counters = new Counters();
             _window = new Window(this);
-            TextureCopy = new TextureCopy(this);
+            _textureCopy = new TextureCopy(this);
+            _backgroundTextureCopy = new TextureCopy(this);
             ResourcePool = new ResourcePool();
         }
 
@@ -135,9 +139,27 @@ namespace Ryujinx.Graphics.OpenGL
             _counters.QueueReset(type);
         }
 
+        public void BackgroundContextAction(Action action)
+        {
+            if (GraphicsContext.CurrentContext != null)
+            {
+                action(); // We have a context already - use that (assuming it is the main one).
+            }
+            else
+            {
+                _window.BackgroundContext.Invoke(action);
+            }
+        }
+
+        public void InitializeBackgroundContext(IGraphicsContext baseContext)
+        {
+            _window.InitializeBackgroundContext(baseContext);
+        }
+
         public void Dispose()
         {
-            TextureCopy.Dispose();
+            _textureCopy.Dispose();
+            _backgroundTextureCopy.Dispose();
             ResourcePool.Dispose();
             _pipeline.Dispose();
             _window.Dispose();

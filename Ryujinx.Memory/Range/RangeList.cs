@@ -2,20 +2,22 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Ryujinx.Graphics.Gpu.Memory
+namespace Ryujinx.Memory.Range
 {
     /// <summary>
-    /// List of GPU resources with data on guest memory.
+    /// Sorted list of ranges that supports binary search.
     /// </summary>
-    /// <typeparam name="T">Type of the GPU resource</typeparam>
-    class RangeList<T> : IEnumerable<T> where T : IRange
+    /// <typeparam name="T">Type of the range.</typeparam>
+    public class RangeList<T> : IEnumerable<T> where T : IRange
     {
         private const int ArrayGrowthSize = 32;
 
         private readonly List<T> _items;
 
+        public int Count => _items.Count;
+
         /// <summary>
-        /// Creates a new GPU resources list.
+        /// Creates a new range list.
         /// </summary>
         public RangeList()
         {
@@ -135,24 +137,21 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             ulong endAddress = address + size;
 
-            lock (_items)
+            foreach (T item in _items)
             {
-                foreach (T item in _items)
+                if (item.Address >= endAddress)
                 {
-                    if (item.Address >= endAddress)
+                    break;
+                }
+
+                if (item.OverlapsWith(address, size))
+                {
+                    if (outputIndex == output.Length)
                     {
-                        break;
+                        Array.Resize(ref output, outputIndex + ArrayGrowthSize);
                     }
 
-                    if (item.OverlapsWith(address, size))
-                    {
-                        if (outputIndex == output.Length)
-                        {
-                            Array.Resize(ref output, outputIndex + ArrayGrowthSize);
-                        }
-
-                        output[outputIndex++] = item;
-                    }
+                    output[outputIndex++] = item;
                 }
             }
 

@@ -1,4 +1,7 @@
+using OpenTK;
+using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Platform;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
 using System;
@@ -16,6 +19,8 @@ namespace Ryujinx.Graphics.OpenGL
         private int _height;
 
         private int _copyFramebufferHandle;
+
+        internal BackgroundContextWorker BackgroundContext { get; private set; }
 
         public Window(Renderer renderer)
         {
@@ -161,8 +166,15 @@ namespace Ryujinx.Graphics.OpenGL
             return handle;
         }
 
+        public void InitializeBackgroundContext(IGraphicsContext baseContext)
+        {
+            BackgroundContext = new BackgroundContextWorker(baseContext);
+        }
+
         public void Dispose()
         {
+            BackgroundContext.Dispose();
+
             if (_copyFramebufferHandle != 0)
             {
                 GL.DeleteFramebuffer(_copyFramebufferHandle);
