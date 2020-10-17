@@ -31,6 +31,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         // Note: Those attributes are used internally by the translator
         // only, they don't exist on Maxwell.
+        public const int SpecialMask             = 0xff << 24;
         public const int FragmentOutputDepth     = 0x1000000;
         public const int FragmentOutputColorBase = 0x1000010;
         public const int FragmentOutputColorEnd  = FragmentOutputColorBase + 8 * 16;

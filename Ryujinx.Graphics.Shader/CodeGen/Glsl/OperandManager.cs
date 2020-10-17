@@ -206,7 +206,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     string name = builtInAttr.Name;
 
-                    if (config.Stage == ShaderStage.Geometry && !isOutAttr)
+                    if (config.Stage == ShaderStage.Geometry && (value & AttributeConsts.SpecialMask) == 0 && !isOutAttr)
                     {
                         name = $"gl_in[{indexExpr}].{name}";
                     }
