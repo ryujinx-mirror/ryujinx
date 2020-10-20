@@ -345,14 +345,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                         string indexedSamplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
-                        desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Handle + index * 2);
+                        desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Format, texOp.Handle + index * 2);
 
                         context.TextureDescriptors.Add(desc);
                     }
                 }
                 else
                 {
-                    desc = new TextureDescriptor(samplerName, texOp.Type, texOp.Handle);
+                    desc = new TextureDescriptor(samplerName, texOp.Type, texOp.Format, texOp.Handle);
 
                     context.TextureDescriptors.Add(desc);
                 }
@@ -371,10 +371,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 if (!images.TryAdd(imageName, texOp))
                 {
-                    // Ensure that all texture operations share the same format.
-                    // This avoid errors like mismatched formats.
-                    texOp.Format = images[imageName].Format;
-
                     continue;
                 }
 
@@ -404,14 +400,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                         string indexedSamplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
-                        var desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Handle + index * 2);
+                        var desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Format, texOp.Handle + index * 2);
 
                         context.TextureDescriptors.Add(desc);
                     }
                 }
                 else
                 {
-                    var desc = new TextureDescriptor(imageName, texOp.Type, texOp.Handle);
+                    var desc = new TextureDescriptor(imageName, texOp.Type, texOp.Format, texOp.Handle);
 
                     context.ImageDescriptors.Add(desc);
                 }

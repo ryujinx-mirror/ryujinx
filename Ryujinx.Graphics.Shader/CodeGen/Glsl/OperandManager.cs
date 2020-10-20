@@ -260,7 +260,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static string GetImageName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)
         {
-            string suffix = texOp.Handle.ToString("X");
+            string suffix = texOp.Handle.ToString("X") + "_" + texOp.Format.ToGlslFormat();
 
             if ((texOp.Type & SamplerType.Indexed) != 0)
             {

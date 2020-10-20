@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetIndexBuffer(BufferRange buffer, IndexType type);
 
-        void SetImage(int index, ShaderStage stage, ITexture texture);
+        void SetImage(int index, ShaderStage stage, ITexture texture, Format imageFormat);
 
         void SetLogicOpState(bool enable, LogicalOp op);
 

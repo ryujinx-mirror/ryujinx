@@ -898,19 +898,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if the view format is compatible with this texture format.
-        /// In general, the formats are considered compatible if the bytes per pixel values are equal,
-        /// but there are more complex rules for some formats, like compressed or depth-stencil formats.
-        /// This follows the host API copy compatibility rules.
-        /// </summary>
-        /// <param name="info">Texture information of the texture view</param>
-        /// <returns>True if the formats are compatible, false otherwise</returns>
-        private bool ViewFormatCompatible(TextureInfo info)
-        {
-            return TextureCompatibility.FormatCompatible(Info.FormatInfo, info.FormatInfo);
-        }
-
-        /// <summary>
         /// Gets a texture of the specified target type from this texture.
         /// This can be used to get an array texture from a non-array texture and vice-versa.
         /// If this texture and the requested targets are equal, then this texture Host texture is returned directly.

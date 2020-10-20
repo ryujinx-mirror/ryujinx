@@ -256,6 +256,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Format.R8G8B8A8Snorm     => TextureFormat.R8G8B8A8Snorm,
                 Format.R8G8B8A8Uint      => TextureFormat.R8G8B8A8Uint,
                 Format.R8G8B8A8Sint      => TextureFormat.R8G8B8A8Sint,
+                Format.R8G8B8A8Srgb      => TextureFormat.R8G8B8A8Unorm,
                 Format.R16G16B16A16Float => TextureFormat.R16G16B16A16Float,
                 Format.R16G16B16A16Unorm => TextureFormat.R16G16B16A16Unorm,
                 Format.R16G16B16A16Snorm => TextureFormat.R16G16B16A16Snorm,

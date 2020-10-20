@@ -693,7 +693,7 @@ namespace Ryujinx.Graphics.OpenGL
             SetFrontFace(_frontFace = frontFace.Convert());
         }
 
-        public void SetImage(int index, ShaderStage stage, ITexture texture)
+        public void SetImage(int index, ShaderStage stage, ITexture texture, Format imageFormat)
         {
             int unit = _program.GetImageUnit(stage, index);
 
@@ -701,11 +701,12 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 TextureBase texBase = (TextureBase)texture;
 
-                FormatInfo formatInfo = FormatTable.GetFormatInfo(texBase.Format);
+                SizedInternalFormat format = FormatTable.GetImageFormat(imageFormat);
 
-                SizedInternalFormat format = (SizedInternalFormat)formatInfo.PixelInternalFormat;
-
-                GL.BindImageTexture(unit, texBase.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
+                if (format != 0)
+                {
+                    GL.BindImageTexture(unit, texBase.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
+                }
             }
         }
 

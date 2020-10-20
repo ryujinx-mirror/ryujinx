@@ -15,6 +15,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public Target Target { get; }
 
         /// <summary>
+        /// For images, indicates the format specified on the shader.
+        /// </summary>
+        public Format Format { get; }
+
+        /// <summary>
         /// Shader texture handle.
         /// This is an index into the texture constant buffer.
         /// </summary>
@@ -47,11 +52,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs the texture binding information structure.
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
+        /// <param name="format">Format of the image as declared on the shader</param>
         /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, int handle, TextureUsageFlags flags)
+        public TextureBindingInfo(Target target, Format format, int handle, TextureUsageFlags flags)
         {
             Target = target;
+            Format = format;
             Handle = handle;
 
             IsBindless = false;
@@ -60,6 +67,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             CbufOffset = 0;
 
             Flags = flags;
+        }
+
+        /// <summary>
+        /// Constructs the texture binding information structure.
+        /// </summary>
+        /// <param name="target">The shader sampler target type</param>
+        /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
+        /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
+        public TextureBindingInfo(Target target, int handle, TextureUsageFlags flags) : this(target, (Format)0, handle, flags)
+        {
         }
 
         /// <summary>
@@ -72,6 +89,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public TextureBindingInfo(Target target, int cbufSlot, int cbufOffset, TextureUsageFlags flags)
         {
             Target = target;
+            Format = 0;
             Handle = 0;
 
             IsBindless = true;

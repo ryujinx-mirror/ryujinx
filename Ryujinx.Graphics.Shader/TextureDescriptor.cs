@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Shader
 
         public SamplerType Type { get; }
 
+        public TextureFormat Format { get; }
+
         public int HandleIndex { get; }
 
         public bool IsBindless { get; }
@@ -15,10 +17,11 @@ namespace Ryujinx.Graphics.Shader
 
         public TextureUsageFlags Flags { get; set; }
 
-        public TextureDescriptor(string name, SamplerType type, int handleIndex)
+        public TextureDescriptor(string name, SamplerType type, TextureFormat format, int handleIndex)
         {
             Name        = name;
             Type        = type;
+            Format      = format;
             HandleIndex = handleIndex;
 
             IsBindless = false;
@@ -33,6 +36,7 @@ namespace Ryujinx.Graphics.Shader
         {
             Name        = name;
             Type        = type;
+            Format      = TextureFormat.Unknown;
             HandleIndex = 0;
 
             IsBindless = true;

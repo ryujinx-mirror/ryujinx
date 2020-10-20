@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 var descriptor = info.Textures[index];
 
-                Target target = GetTarget(descriptor.Type);
+                Target target = ShaderTexture.GetTarget(descriptor.Type);
 
                 if (descriptor.IsBindless)
                 {
@@ -148,9 +148,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 var descriptor = info.Images[index];
 
-                Target target = GetTarget(descriptor.Type);
+                Target target = ShaderTexture.GetTarget(descriptor.Type);
+                Format format = ShaderTexture.GetFormat(descriptor.Format);
 
-                imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex, descriptor.Flags);
+                imageBindings[index] = new TextureBindingInfo(target, format, descriptor.HandleIndex, descriptor.Flags);
             }
 
             TextureManager.SetComputeImages(imageBindings);

@@ -1014,7 +1014,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     var descriptor = info.Textures[index];
 
-                    Target target = GetTarget(descriptor.Type);
+                    Target target = ShaderTexture.GetTarget(descriptor.Type);
 
                     if (descriptor.IsBindless)
                     {
@@ -1034,9 +1034,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     var descriptor = info.Images[index];
 
-                    Target target = GetTarget(descriptor.Type);
+                    Target target = ShaderTexture.GetTarget(descriptor.Type);
+                    Format format = ShaderTexture.GetFormat(descriptor.Format);
 
-                    imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex, descriptor.Flags);
+                    imageBindings[index] = new TextureBindingInfo(target, format, descriptor.HandleIndex, descriptor.Flags);
                 }
 
                 TextureManager.SetGraphicsImages(stage, imageBindings);
@@ -1094,53 +1095,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 _context.Renderer.Pipeline.SetUserClipDistance(i, (clipMask & (1 << i)) != 0);
             }
-        }
-
-        /// <summary>
-        /// Gets texture target from a sampler type.
-        /// </summary>
-        /// <param name="type">Sampler type</param>
-        /// <returns>Texture target value</returns>
-        private static Target GetTarget(SamplerType type)
-        {
-            type &= ~(SamplerType.Indexed | SamplerType.Shadow);
-
-            switch (type)
-            {
-                case SamplerType.Texture1D:
-                    return Target.Texture1D;
-
-                case SamplerType.TextureBuffer:
-                    return Target.TextureBuffer;
-
-                case SamplerType.Texture1D | SamplerType.Array:
-                    return Target.Texture1DArray;
-
-                case SamplerType.Texture2D:
-                    return Target.Texture2D;
-
-                case SamplerType.Texture2D | SamplerType.Array:
-                    return Target.Texture2DArray;
-
-                case SamplerType.Texture2D | SamplerType.Multisample:
-                    return Target.Texture2DMultisample;
-
-                case SamplerType.Texture2D | SamplerType.Multisample | SamplerType.Array:
-                    return Target.Texture2DMultisampleArray;
-
-                case SamplerType.Texture3D:
-                    return Target.Texture3D;
-
-                case SamplerType.TextureCube:
-                    return Target.Cubemap;
-
-                case SamplerType.TextureCube | SamplerType.Array:
-                    return Target.CubemapArray;
-            }
-
-            Logger.Warning?.Print(LogClass.Gpu, $"Invalid sampler type \"{type}\".");
-
-            return Target.Texture2D;
         }
 
         /// <summary>
