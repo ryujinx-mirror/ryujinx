@@ -304,7 +304,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     Format format = binding.Format;
 
-                    if (format == 0)
+                    if (format == 0 && texture != null)
                     {
                         format = texture.Format;
                     }
