@@ -2,9 +2,11 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeCsel : OpCodeAlu, IOpCodeCond
     {
-        public int Rm { get; private set; }
+        public int Rm { get; }
 
-        public Condition Cond { get; private set; }
+        public Condition Cond { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeCsel(inst, address, opCode);
 
         public OpCodeCsel(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

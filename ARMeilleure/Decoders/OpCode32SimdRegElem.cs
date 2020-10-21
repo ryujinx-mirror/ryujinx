@@ -2,6 +2,8 @@
 {
     class OpCode32SimdRegElem : OpCode32SimdReg
     {
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRegElem(inst, address, opCode);
+
         public OpCode32SimdRegElem(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Q = ((opCode >> 24) & 0x1) != 0;

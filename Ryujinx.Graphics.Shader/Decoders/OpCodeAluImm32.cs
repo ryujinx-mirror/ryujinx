@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         public int Immediate { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeAluImm32(emitter, address, opCode);
+
         public OpCodeAluImm32(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Immediate = opCode.Extract(20, 32);

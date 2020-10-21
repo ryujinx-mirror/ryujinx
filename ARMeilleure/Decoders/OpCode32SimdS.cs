@@ -5,8 +5,10 @@
         public int Vd { get; protected set; }
         public int Vm { get; protected set; }
         public int Opc { get; protected set; } // "with_zero" (Opc<1>) [Vcmp, Vcmpe].
-        public int Opc2 { get; private set; } // opc2 or RM (opc2<1:0>) [Vcvt, Vrint].
+        public int Opc2 { get; } // opc2 or RM (opc2<1:0>) [Vcvt, Vrint].
         public int Size { get; protected set; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdS(inst, address, opCode);
 
         public OpCode32SimdS(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

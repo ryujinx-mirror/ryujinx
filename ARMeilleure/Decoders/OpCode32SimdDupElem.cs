@@ -2,7 +2,9 @@
 {
     class OpCode32SimdDupElem : OpCode32Simd
     {
-        public int Index { get; private set; }
+        public int Index { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdDupElem(inst, address, opCode);
 
         public OpCode32SimdDupElem(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

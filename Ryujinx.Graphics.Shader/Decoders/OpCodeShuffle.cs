@@ -19,6 +19,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public Register Predicate48 { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeShuffle(emitter, address, opCode);
+
         public OpCodeShuffle(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rd = new Register(opCode.Extract(0,  8), RegisterType.Gpr);

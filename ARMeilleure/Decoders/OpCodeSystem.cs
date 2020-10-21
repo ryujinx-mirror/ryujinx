@@ -2,12 +2,14 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSystem : OpCode
     {
-        public int Rt  { get; private set; }
-        public int Op2 { get; private set; }
-        public int CRm { get; private set; }
-        public int CRn { get; private set; }
-        public int Op1 { get; private set; }
-        public int Op0 { get; private set; }
+        public int Rt  { get; }
+        public int Op2 { get; }
+        public int CRm { get; }
+        public int CRn { get; }
+        public int Op1 { get; }
+        public int Op0 { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSystem(inst, address, opCode);
 
         public OpCodeSystem(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

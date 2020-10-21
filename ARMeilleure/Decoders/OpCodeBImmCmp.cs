@@ -2,7 +2,9 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeBImmCmp : OpCodeBImm
     {
-        public int Rt { get; private set; }
+        public int Rt { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeBImmCmp(inst, address, opCode);
 
         public OpCodeBImmCmp(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

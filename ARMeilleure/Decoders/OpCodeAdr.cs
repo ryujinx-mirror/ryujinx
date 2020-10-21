@@ -2,11 +2,13 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeAdr : OpCode
     {
-        public int Rd { get; private set; }
+        public int Rd { get; }
 
-        public long Immediate { get; private set; }
+        public long Immediate { get; }
 
-         public OpCodeAdr(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeAdr(inst, address, opCode);
+
+        public OpCodeAdr(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Rd = opCode & 0x1f;
 

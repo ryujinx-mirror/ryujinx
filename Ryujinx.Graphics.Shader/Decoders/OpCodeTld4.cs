@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool Bindless => false;
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeTld4(emitter, address, opCode);
+
         public OpCodeTld4(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             HasDepthCompare = opCode.Extract(50);

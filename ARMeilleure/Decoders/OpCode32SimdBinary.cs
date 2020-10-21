@@ -5,6 +5,8 @@
     /// </summary>
     class OpCode32SimdBinary : OpCode32SimdReg
     {
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdBinary(inst, address, opCode);
+
         public OpCode32SimdBinary(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Size = 3;

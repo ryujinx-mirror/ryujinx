@@ -4,12 +4,14 @@
     {
         public int Size => 2;
 
-        public int Vn { get; private set; }
-        public int Rt { get; private set; }
-        public int Op { get; private set; }
+        public int Vn { get; }
+        public int Rt { get; }
+        public int Op { get; }
 
-        public int Opc1 { get; private set; }
-        public int Opc2 { get; private set; }
+        public int Opc1 { get; }
+        public int Opc2 { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMovGp(inst, address, opCode);
 
         public OpCode32SimdMovGp(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

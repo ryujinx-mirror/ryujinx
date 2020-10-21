@@ -2,6 +2,8 @@
 {
     class OpCode32SimdRegWide : OpCode32SimdReg
     {
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRegWide(inst, address, opCode);
+
         public OpCode32SimdRegWide(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Q = false;

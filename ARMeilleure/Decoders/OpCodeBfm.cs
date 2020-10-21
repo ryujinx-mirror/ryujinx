@@ -2,10 +2,12 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeBfm : OpCodeAlu
     {
-        public long WMask { get; private set; }
-        public long TMask { get; private set; }
-        public int  Pos   { get; private set; }
-        public int  Shift { get; private set; }
+        public long WMask { get; }
+        public long TMask { get; }
+        public int  Pos   { get; }
+        public int  Shift { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeBfm(inst, address, opCode);
 
         public OpCodeBfm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

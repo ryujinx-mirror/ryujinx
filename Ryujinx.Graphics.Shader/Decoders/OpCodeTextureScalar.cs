@@ -41,6 +41,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool IsFp16 { get; protected set; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeTextureScalar(emitter, address, opCode);
+
         public OpCodeTextureScalar(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rd0 = new Register(opCode.Extract(0,  8), RegisterType.Gpr);

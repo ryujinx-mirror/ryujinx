@@ -5,16 +5,18 @@ namespace ARMeilleure.Decoders
     class OpCode32Mem : OpCode32, IOpCode32Mem
     {
         public int Rt { get; protected set; }
-        public int Rn { get; private set; }
+        public int Rn { get; }
 
         public int Immediate { get; protected set; }
 
-        public bool Index        { get; private set; }
-        public bool Add          { get; private set; }
-        public bool WBack        { get; private set; }
-        public bool Unprivileged { get; private set; }
+        public bool Index        { get; }
+        public bool Add          { get; }
+        public bool WBack        { get; }
+        public bool Unprivileged { get; }
 
-        public bool IsLoad { get; private set; }
+        public bool IsLoad { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32Mem(inst, address, opCode);
 
         public OpCode32Mem(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

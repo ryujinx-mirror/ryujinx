@@ -2,12 +2,14 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32Sat : OpCode32
     {
-        public int Rn { get; private set; }
-        public int Imm5 { get; private set; }
-        public int Rd { get; private set; }
-        public int SatImm { get; private set; }
+        public int Rn { get; }
+        public int Imm5 { get; }
+        public int Rd { get; }
+        public int SatImm { get; }
 
-        public ShiftType ShiftType { get; private set; }
+        public ShiftType ShiftType { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32Sat(inst, address, opCode);
 
         public OpCode32Sat(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

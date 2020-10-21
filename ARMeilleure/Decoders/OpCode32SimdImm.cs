@@ -2,15 +2,17 @@
 {
     class OpCode32SimdImm : OpCode32SimdBase, IOpCode32SimdImm
     {
-        public bool Q { get; private set; }
-        public long Immediate { get; private set; }
+        public bool Q { get; }
+        public long Immediate { get; }
         public int Elems => GetBytesCount() >> Size;
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdImm(inst, address, opCode);
 
         public OpCode32SimdImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Vd = (opCode >> 12) & 0xf;
             Vd |= (opCode >> 18) & 0x10;
-            
+
             Q = ((opCode >> 6) & 0x1) > 0;
 
             int cMode = (opCode >> 8) & 0xf;

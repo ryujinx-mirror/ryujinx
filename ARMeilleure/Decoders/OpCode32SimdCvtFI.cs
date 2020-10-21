@@ -2,6 +2,8 @@
 {
     class OpCode32SimdCvtFI : OpCode32SimdS
     {
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdCvtFI(inst, address, opCode);
+
         public OpCode32SimdCvtFI(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Opc = (opCode >> 7) & 0x1;

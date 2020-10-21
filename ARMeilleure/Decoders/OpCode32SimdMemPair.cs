@@ -10,19 +10,21 @@ namespace ARMeilleure.Decoders
             1, 1, 4, 2,
             1, 1, 3, 1,
             1, 1, 2, 1,
-            1, 1, 1, 1 
+            1, 1, 1, 1
         };
 
-        public int Vd { get; private set; }
-        public int Rn { get; private set; }
-        public int Rm { get; private set; }
-        public int Align { get; private set; }
-        public bool WBack { get; private set; }
-        public bool RegisterIndex { get; private set; }
-        public int Size { get; private set; }
+        public int Vd { get; }
+        public int Rn { get; }
+        public int Rm { get; }
+        public int Align { get; }
+        public bool WBack { get; }
+        public bool RegisterIndex { get; }
+        public int Size { get; }
         public int Elems => 8 >> Size;
-        public int Regs { get; private set; }
-        public int Increment { get; private set; }
+        public int Regs { get; }
+        public int Increment { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemPair(inst, address, opCode);
 
         public OpCode32SimdMemPair(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

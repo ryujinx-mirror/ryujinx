@@ -4,16 +4,18 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32SimdMemSingle : OpCode32, IOpCode32Simd
     {
-        public int Vd { get; private set; }
-        public int Rn { get; private set; }
-        public int Rm { get; private set; }
-        public int IndexAlign { get; private set; }
-        public int Index { get; private set; }
-        public bool WBack { get; private set; }
-        public bool RegisterIndex { get; private set; }
-        public int Size { get; private set; }
-        public bool Replicate { get; private set; }
-        public int Increment { get; private set; }
+        public int Vd { get; }
+        public int Rn { get; }
+        public int Rm { get; }
+        public int IndexAlign { get; }
+        public int Index { get; }
+        public bool WBack { get; }
+        public bool RegisterIndex { get; }
+        public int Size { get; }
+        public bool Replicate { get; }
+        public int Increment { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemSingle(inst, address, opCode);
 
         public OpCode32SimdMemSingle(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
@@ -29,8 +31,8 @@ namespace ARMeilleure.Decoders
                 Size = (opCode >> 6) & 0x3;
                 Increment = ((opCode >> 5) & 1) + 1;
                 Index = 0;
-            } 
-            else 
+            }
+            else
             {
                 Increment = (((IndexAlign >> Size) & 1) == 0) ? 1 : 2;
                 Index = IndexAlign >> (1 + Size);

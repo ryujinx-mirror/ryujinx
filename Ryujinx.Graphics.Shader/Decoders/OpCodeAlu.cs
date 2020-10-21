@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool SetCondCode { get; protected set; }
         public bool Saturate    { get; protected set; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeAlu(emitter, address, opCode);
+
         public OpCodeAlu(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rd          = new Register(opCode.Extract(0,  8), RegisterType.Gpr);

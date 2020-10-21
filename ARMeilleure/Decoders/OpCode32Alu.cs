@@ -2,10 +2,12 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32Alu : OpCode32, IOpCode32Alu
     {
-        public int Rd { get; private set; }
-        public int Rn { get; private set; }
+        public int Rd { get; }
+        public int Rn { get; }
 
-        public bool SetFlags { get; private set; }
+        public bool SetFlags { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32Alu(inst, address, opCode);
 
         public OpCode32Alu(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

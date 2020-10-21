@@ -2,8 +2,10 @@
 {
     class OpCode32MemRsImm : OpCode32Mem
     {
-        public int Rm { get; private set; }
-        public ShiftType ShiftType { get; private set; }
+        public int Rm { get; }
+        public ShiftType ShiftType { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32MemRsImm(inst, address, opCode);
 
         public OpCode32MemRsImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

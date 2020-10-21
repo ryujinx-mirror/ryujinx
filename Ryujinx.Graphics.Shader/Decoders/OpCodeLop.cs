@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public Register Predicate48 { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeLop(emitter, address, opCode);
+
         public OpCodeLop(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             InvertA = opCode.Extract(39);

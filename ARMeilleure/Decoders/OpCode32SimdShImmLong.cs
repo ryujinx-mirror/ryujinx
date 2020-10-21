@@ -2,7 +2,9 @@
 {
     class OpCode32SimdShImmLong : OpCode32Simd
     {
-        public int Shift { get; private set; }
+        public int Shift { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdShImmLong(inst, address, opCode);
 
         public OpCode32SimdShImmLong(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

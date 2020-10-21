@@ -4,9 +4,11 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32AluImm : OpCode32Alu
     {
-        public int Immediate { get; private set; }
+        public int Immediate { get; }
 
-        public bool IsRotated { get; private set; }
+        public bool IsRotated { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32AluImm(inst, address, opCode);
 
         public OpCode32AluImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

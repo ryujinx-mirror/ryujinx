@@ -4,6 +4,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     class OpCodeTexB : OpCodeTex
     {
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeTexB(emitter, address, opCode);
+
         public OpCodeTexB(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             switch (opCode.Extract(37, 3))

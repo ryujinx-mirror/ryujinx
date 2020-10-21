@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool FlushToZero { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeSet(emitter, address, opCode);
+
         public OpCodeSet(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Predicate0 = new Register(opCode.Extract(0, 3), RegisterType.Predicate);

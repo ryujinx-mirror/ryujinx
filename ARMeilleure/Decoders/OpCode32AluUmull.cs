@@ -2,16 +2,18 @@
 {
     class OpCode32AluUmull : OpCode32
     {
-        public int RdLo { get; private set; }
-        public int RdHi { get; private set; }
-        public int Rn { get; private set; }
-        public int Rm { get; private set; }
+        public int RdLo { get; }
+        public int RdHi { get; }
+        public int Rn { get; }
+        public int Rm { get; }
 
-        public bool NHigh { get; private set; }
-        public bool MHigh { get; private set; }
+        public bool NHigh { get; }
+        public bool MHigh { get; }
 
-        public bool SetFlags { get; private set; }
-        public DataOp DataOp { get; private set; }
+        public bool SetFlags { get; }
+        public DataOp DataOp { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32AluUmull(inst, address, opCode);
 
         public OpCode32AluUmull(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

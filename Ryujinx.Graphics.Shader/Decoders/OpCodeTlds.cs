@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         public TexelLoadTarget Target => (TexelLoadTarget)RawType;
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeTlds(emitter, address, opCode);
+
         public OpCodeTlds(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode) { }
     }
 }

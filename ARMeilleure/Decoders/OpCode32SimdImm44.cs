@@ -2,17 +2,19 @@
 {
     class OpCode32SimdImm44 : OpCode32, IOpCode32SimdImm
     {
-        public int Vd { get; private set; }
-        public long Immediate { get; private set; }
-        public int Size { get; private set; }
-        public int Elems { get; private set; }
+        public int Vd { get; }
+        public long Immediate { get; }
+        public int Size { get; }
+        public int Elems { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdImm44(inst, address, opCode);
 
         public OpCode32SimdImm44(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Size = (opCode >> 8) & 0x3;
 
             bool single = Size != 3;
-            
+
             if (single)
             {
                 Vd = ((opCode >> 22) & 0x1) | ((opCode >> 11) & 0x1e);

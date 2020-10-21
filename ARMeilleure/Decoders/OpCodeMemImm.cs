@@ -5,7 +5,7 @@ namespace ARMeilleure.Decoders
         public    long Immediate { get; protected set; }
         public    bool WBack     { get; protected set; }
         public    bool PostIdx   { get; protected set; }
-        protected bool Unscaled  { get; private   set; }
+        protected bool Unscaled  { get; }
 
         private enum MemOp
         {
@@ -15,6 +15,8 @@ namespace ARMeilleure.Decoders
             PreIndexed   = 3,
             Unsigned
         }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeMemImm(inst, address, opCode);
 
         public OpCodeMemImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

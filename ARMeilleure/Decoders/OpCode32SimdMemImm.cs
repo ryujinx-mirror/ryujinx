@@ -2,11 +2,13 @@
 {
     class OpCode32SimdMemImm : OpCode32, IOpCode32Simd
     {
-        public int Vd { get; private set; }
-        public int Rn { get; private set; }
-        public int Size { get; private set; }
-        public bool Add { get; private set; }
-        public int Immediate { get; private set; }
+        public int Vd { get; }
+        public int Rn { get; }
+        public int Size { get; }
+        public bool Add { get; }
+        public int Immediate { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemImm(inst, address, opCode);
 
         public OpCode32SimdMemImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

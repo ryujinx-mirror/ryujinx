@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool InvertP { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeVote(emitter, address, opCode);
+
         public OpCodeVote(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rd          = new Register(opCode.Extract(0,  8), RegisterType.Gpr);

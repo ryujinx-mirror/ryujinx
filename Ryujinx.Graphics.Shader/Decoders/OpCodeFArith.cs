@@ -11,6 +11,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool FlushToZero { get; }
         public bool AbsoluteA   { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeFArith(emitter, address, opCode);
+
         public OpCodeFArith(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             RoundingMode = (RoundingMode)opCode.Extract(39, 2);

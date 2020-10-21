@@ -2,10 +2,12 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdMemMs : OpCodeMemReg, IOpCodeSimd
     {
-        public int  Reps   { get; private set; }
-        public int  SElems { get; private set; }
-        public int  Elems  { get; private set; }
-        public bool WBack  { get; private set; }
+        public int  Reps   { get; }
+        public int  SElems { get; }
+        public int  Elems  { get; }
+        public bool WBack  { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdMemMs(inst, address, opCode);
 
         public OpCodeSimdMemMs(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

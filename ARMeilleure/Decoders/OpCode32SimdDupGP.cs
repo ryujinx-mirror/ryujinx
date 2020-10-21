@@ -2,10 +2,12 @@
 {
     class OpCode32SimdDupGP : OpCode32, IOpCode32Simd
     {
-        public int Size { get; private set; }
-        public int Vd { get; private set; }
-        public int Rt { get; private set; }
-        public bool Q { get; private set; }
+        public int Size { get; }
+        public int Vd { get; }
+        public int Rt { get; }
+        public bool Q { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdDupGP(inst, address, opCode);
 
         public OpCode32SimdDupGP(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

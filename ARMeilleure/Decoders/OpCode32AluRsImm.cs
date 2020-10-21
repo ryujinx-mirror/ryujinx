@@ -2,10 +2,12 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32AluRsImm : OpCode32Alu
     {
-        public int Rm        { get; private set; }
-        public int Immediate { get; private set; }
+        public int Rm        { get; }
+        public int Immediate { get; }
 
-        public ShiftType ShiftType { get; private set; }
+        public ShiftType ShiftType { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32AluRsImm(inst, address, opCode);
 
         public OpCode32AluRsImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

@@ -8,6 +8,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         public Dictionary<OpCodeBranchPop, Operand> PopOps { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodePush(emitter, address, opCode);
+
         public OpCodePush(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             PopOps = new Dictionary<OpCodeBranchPop, Operand>();

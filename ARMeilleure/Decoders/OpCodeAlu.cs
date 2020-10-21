@@ -3,9 +3,11 @@ namespace ARMeilleure.Decoders
     class OpCodeAlu : OpCode, IOpCodeAlu
     {
         public int Rd { get; protected set; }
-        public int Rn { get; private   set; }
+        public int Rn { get; }
 
-        public DataOp DataOp { get; private set; }
+        public DataOp DataOp { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeAlu(inst, address, opCode);
 
         public OpCodeAlu(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

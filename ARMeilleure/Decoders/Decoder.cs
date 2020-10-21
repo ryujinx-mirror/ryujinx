@@ -339,7 +339,7 @@ namespace ARMeilleure.Decoders
 
             if (makeOp != null)
             {
-                return (OpCode)makeOp(inst, address, opCode);
+                return makeOp(inst, address, opCode);
             }
             else
             {

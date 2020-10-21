@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool PushTarget { get; protected set; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeBranch(emitter, address, opCode);
+
         public OpCodeBranch(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Condition = (Condition)(opCode & 0x1f);

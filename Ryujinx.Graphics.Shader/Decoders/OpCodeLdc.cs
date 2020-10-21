@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public CbIndexMode IndexMode { get; }
         public IntegerSize Size { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeLdc(emitter, address, opCode);
+
         public OpCodeLdc(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rd = new Register(opCode.Extract(0, 8), RegisterType.Gpr);

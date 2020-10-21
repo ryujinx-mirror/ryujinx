@@ -2,15 +2,17 @@
 {
     class OpCode32SimdMemMult : OpCode32
     {
-        public int Rn { get; private set; }
-        public int Vd { get; private set; }
+        public int Rn { get; }
+        public int Vd { get; }
 
-        public int RegisterRange { get; private set; }
-        public int Offset { get; private set; }
-        public int PostOffset { get; private set; }
-        public bool IsLoad { get; private set; }
-        public bool DoubleWidth { get; private set; }
-        public bool Add { get; private set; }
+        public int RegisterRange { get; }
+        public int Offset { get; }
+        public int PostOffset { get; }
+        public bool IsLoad { get; }
+        public bool DoubleWidth { get; }
+        public bool Add { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemMult(inst, address, opCode);
 
         public OpCode32SimdMemMult(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

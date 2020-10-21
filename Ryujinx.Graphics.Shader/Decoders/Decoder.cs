@@ -231,7 +231,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                 long opCode = gpuAccessor.MemoryRead<long>(startAddress + opAddress);
 
-                (InstEmitter emitter, OpCodeTable.OpActivator opActivator) = OpCodeTable.GetEmitter(opCode);
+                (InstEmitter emitter, OpCodeTable.MakeOp makeOp) = OpCodeTable.GetEmitter(opCode);
 
                 if (emitter == null)
                 {
@@ -242,12 +242,12 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     continue;
                 }
 
-                if (opActivator == null)
+                if (makeOp == null)
                 {
-                    throw new ArgumentNullException(nameof(opActivator));
+                    throw new ArgumentNullException(nameof(makeOp));
                 }
 
-                OpCode op = (OpCode)opActivator(emitter, opAddress, opCode);
+                OpCode op = makeOp(emitter, opAddress, opCode);
 
                 block.OpCodes.Add(op);
             }

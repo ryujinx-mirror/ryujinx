@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public LogicalOperation LogicalOpAB { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodePset(emitter, address, opCode);
+
         public OpCodePset(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Predicate12 = new Register(opCode.Extract(12, 3), RegisterType.Predicate);

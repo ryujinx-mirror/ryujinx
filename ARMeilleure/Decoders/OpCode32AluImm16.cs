@@ -2,7 +2,9 @@
 {
     class OpCode32AluImm16 : OpCode32Alu
     {
-        public int Immediate { get; private set; }
+        public int Immediate { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32AluImm16(inst, address, opCode);
 
         public OpCode32AluImm16(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

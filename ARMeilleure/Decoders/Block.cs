@@ -14,7 +14,7 @@ namespace ARMeilleure.Decoders
         public bool TailCall { get; set; }
         public bool Exit     { get; set; }
 
-        public List<OpCode> OpCodes { get; private set; }
+        public List<OpCode> OpCodes { get; }
 
         public Block()
         {

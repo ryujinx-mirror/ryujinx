@@ -2,14 +2,16 @@
 {
     class OpCode32System : OpCode32
     {
-        public int Opc1 { get; private set; }
-        public int CRn { get; private set; }
-        public int Rt { get; private set; }
-        public int Opc2 { get; private set; }
-        public int CRm { get; private set; }
-        public int MrrcOp { get; private set; }
+        public int Opc1 { get; }
+        public int CRn { get; }
+        public int Rt { get; }
+        public int Opc2 { get; }
+        public int CRm { get; }
+        public int MrrcOp { get; }
 
-        public int Coproc { get; private set; }
+        public int Coproc { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32System(inst, address, opCode);
 
         public OpCode32System(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

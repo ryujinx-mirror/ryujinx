@@ -2,11 +2,13 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeMemLit : OpCode, IOpCodeLit
     {
-        public int  Rt        { get; private set; }
-        public long Immediate { get; private set; }
-        public int  Size      { get; private set; }
-        public bool Signed    { get; private set; }
-        public bool Prefetch  { get; private set; }
+        public int  Rt        { get; }
+        public long Immediate { get; }
+        public int  Size      { get; }
+        public bool Signed    { get; }
+        public bool Prefetch  { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeMemLit(inst, address, opCode);
 
         public OpCodeMemLit(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

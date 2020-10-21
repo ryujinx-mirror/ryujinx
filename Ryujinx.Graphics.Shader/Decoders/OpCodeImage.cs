@@ -20,6 +20,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool UseComponents { get; }
         public bool IsBindless    { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeImage(emitter, address, opCode);
+
         public OpCodeImage(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Ra = new Register(opCode.Extract(8,  8), RegisterType.Gpr);

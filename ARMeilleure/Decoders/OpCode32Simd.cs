@@ -5,7 +5,9 @@
         public int Opc { get; protected set; }
         public bool Q { get; protected set; }
         public bool F { get; protected set; }
-        public bool U { get; private set; }
+        public bool U { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32Simd(inst, address, opCode);
 
         public OpCode32Simd(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

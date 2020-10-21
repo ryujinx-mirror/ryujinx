@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public FPHalfSwizzle SwizzleB { get; }
         public FPHalfSwizzle SwizzleC { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeHfmaReg(emitter, address, opCode);
+
         public OpCodeHfmaReg(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             Rb = new Register(opCode.Extract(20, 8), RegisterType.Gpr);

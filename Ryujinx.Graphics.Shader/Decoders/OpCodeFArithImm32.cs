@@ -14,6 +14,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public float Immediate { get; }
 
+        public new static OpCode Create(InstEmitter emitter, ulong address, long opCode) => new OpCodeFArithImm32(emitter, address, opCode);
+
         public OpCodeFArithImm32(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
             int imm = opCode.Extract(20, 32);

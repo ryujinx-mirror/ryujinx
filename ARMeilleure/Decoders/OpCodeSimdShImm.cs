@@ -4,7 +4,9 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdShImm : OpCodeSimd
     {
-        public int Imm { get; private set; }
+        public int Imm { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdShImm(inst, address, opCode);
 
         public OpCodeSimdShImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {

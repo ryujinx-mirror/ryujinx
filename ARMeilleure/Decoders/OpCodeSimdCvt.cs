@@ -2,7 +2,9 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdCvt : OpCodeSimd
     {
-        public int FBits { get; private set; }
+        public int FBits { get; }
+
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdCvt(inst, address, opCode);
 
         public OpCodeSimdCvt(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
