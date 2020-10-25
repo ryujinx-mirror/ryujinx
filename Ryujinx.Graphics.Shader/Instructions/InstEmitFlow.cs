@@ -51,10 +51,25 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        public static void Depbar(EmitterContext context) { }
+        public static void Cal(EmitterContext context)
+        {
+            OpCodeBranch op = (OpCodeBranch)context.CurrOp;
+
+            context.Call(context.GetFunctionId(op.GetAbsoluteAddress()), false);
+        }
+
+        public static void Depbar(EmitterContext context)
+        {
+        }
 
         public static void Exit(EmitterContext context)
         {
+            if (context.IsNonMain)
+            {
+                context.Config.GpuAccessor.Log("Invalid exit on non-main function.");
+                return;
+            }
+
             OpCodeExit op = (OpCodeExit)context.CurrOp;
 
             // TODO: Figure out how this is supposed to work in the
@@ -70,11 +85,25 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Discard();
         }
 
-        public static void Nop(EmitterContext context) { }
+        public static void Nop(EmitterContext context)
+        {
+        }
 
         public static void Pbk(EmitterContext context)
         {
             EmitPbkOrSsy(context);
+        }
+
+        public static void Ret(EmitterContext context)
+        {
+            if (context.IsNonMain)
+            {
+                context.Return();
+            }
+            else
+            {
+                context.Config.GpuAccessor.Log("Invalid return on main function.");
+            }
         }
 
         public static void Ssy(EmitterContext context)

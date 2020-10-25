@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using System;
 
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenCall;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenPacking;
@@ -82,6 +83,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 string op = info.OpName;
 
+                // Return may optionally have a return value (and in this case it is unary).
+                if (inst == Instruction.Return && operation.SourcesCount != 0)
+                {
+                    return $"{op} {GetSoureExpr(context, operation.GetSource(0), context.CurrentFunction.ReturnType)}";
+                }
+
                 int arity = (int)(info.Type & InstType.ArityMask);
 
                 string[] expr = new string[arity];
@@ -116,6 +123,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 switch (inst)
                 {
+                    case Instruction.Call:
+                        return Call(context, operation);
+
                     case Instruction.ImageLoad:
                         return ImageLoadOrStore(context, operation);
 

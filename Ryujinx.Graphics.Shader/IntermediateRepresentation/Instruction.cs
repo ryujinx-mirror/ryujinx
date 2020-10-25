@@ -31,6 +31,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         Branch,
         BranchIfFalse,
         BranchIfTrue,
+        Call,
+        CallOutArgument,
         Ceiling,
         Clamp,
         ClampU32,

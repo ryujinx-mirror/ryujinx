@@ -14,22 +14,33 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public int SourcesCount => _sources.Length;
 
-        public AstOperation(Instruction inst, params IAstNode[] sources)
+        public AstOperation(Instruction inst, IAstNode[] sources, int sourcesCount)
         {
             Inst     = inst;
             _sources = sources;
 
-            foreach (IAstNode source in sources)
+            for (int index = 0; index < sources.Length; index++)
             {
-                AddUse(source, this);
+                if (index < sourcesCount)
+                {
+                    AddUse(sources[index], this);
+                }
+                else
+                {
+                    AddDef(sources[index], this);
+                }
             }
 
             Index = 0;
         }
 
-        public AstOperation(Instruction inst, int index, params IAstNode[] sources) : this(inst, sources)
+        public AstOperation(Instruction inst, int index, IAstNode[] sources, int sourcesCount) : this(inst, sources, sourcesCount)
         {
             Index = index;
+        }
+
+        public AstOperation(Instruction inst, params IAstNode[] sources) : this(inst, sources, sources.Length)
+        {
         }
 
         public IAstNode GetSource(int index)

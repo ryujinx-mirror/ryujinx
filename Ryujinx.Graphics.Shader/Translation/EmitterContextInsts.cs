@@ -136,6 +136,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.BranchIfTrue, d, a);
         }
 
+        public static Operand Call(this EmitterContext context, int funcId, bool returns, params Operand[] args)
+        {
+            Operand[] args2 = new Operand[args.Length + 1];
+
+            args2[0] = Const(funcId);
+            args.CopyTo(args2, 1);
+
+            return context.Add(Instruction.Call, returns ? Local() : null, args2);
+        }
+
         public static Operand ConditionalSelect(this EmitterContext context, Operand a, Operand b, Operand c)
         {
             return context.Add(Instruction.ConditionalSelect, Local(), a, b, c);
@@ -521,11 +531,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.PackHalf2x16, Local(), a, b);
         }
 
-        public static Operand Return(this EmitterContext context)
+        public static void Return(this EmitterContext context)
         {
             context.PrepareForReturn();
+            context.Add(Instruction.Return);
+        }
 
-            return context.Add(Instruction.Return);
+        public static void Return(this EmitterContext context, Operand returnValue)
+        {
+            context.PrepareForReturn();
+            context.Add(Instruction.Return, null, returnValue);
         }
 
         public static Operand ShiftLeft(this EmitterContext context, Operand a, Operand b)

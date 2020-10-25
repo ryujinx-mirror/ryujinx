@@ -24,6 +24,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         }
 
         public bool HasBranch => _branch != null;
+        public bool Reachable => Index == 0 || Predecessors.Count != 0;
 
         public List<BasicBlock> Predecessors { get; }
 

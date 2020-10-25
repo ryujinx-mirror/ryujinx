@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
@@ -96,6 +97,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             switch (operand.Type)
             {
+                case OperandType.Argument:
+                    return GetArgumentName(operand.Value);
+
                 case OperandType.Attribute:
                     return GetAttributeName(operand, config);
 
@@ -287,7 +291,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return "xyzw"[value];
         }
 
-        public static VariableType GetNodeDestType(IAstNode node)
+        public static string GetArgumentName(int argIndex)
+        {
+            return $"{DefaultNames.ArgumentNamePrefix}{argIndex}";
+        }
+
+        public static VariableType GetNodeDestType(CodeGenContext context, IAstNode node)
         {
             if (node is AstOperation operation)
             {
@@ -297,6 +306,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 if (operation.Inst == Instruction.LoadAttribute)
                 {
                     return GetOperandVarType((AstOperand)operation.GetSource(0));
+                }
+                else if (operation.Inst == Instruction.Call)
+                {
+                    AstOperand funcId = (AstOperand)operation.GetSource(0);
+
+                    Debug.Assert(funcId.Type == OperandType.Constant);
+
+                    return context.GetFunction(funcId.Value).ReturnType;
                 }
                 else if (operation is AstTextureOperation texOp &&
                          (texOp.Inst == Instruction.ImageLoad ||
@@ -309,6 +326,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
             else if (node is AstOperand operand)
             {
+                if (operand.Type == OperandType.Argument)
+                {
+                    int argIndex = operand.Value;
+
+                    return context.CurrentFunction.GetArgumentType(argIndex);
+                }
+
                 return GetOperandVarType(operand);
             }
             else

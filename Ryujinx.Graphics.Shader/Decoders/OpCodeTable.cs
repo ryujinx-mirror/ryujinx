@@ -46,6 +46,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("111000100100xx", InstEmit.Bra,     OpCodeBranch.Create);
             Set("111000110100xx", InstEmit.Brk,     OpCodeBranchPop.Create);
             Set("111000100101xx", InstEmit.Brx,     OpCodeBranchIndir.Create);
+            Set("111000100110xx", InstEmit.Cal,     OpCodeBranch.Create);
             Set("0101000010100x", InstEmit.Csetp,   OpCodePset.Create);
             Set("0100110001110x", InstEmit.Dadd,    OpCodeFArithCbuf.Create);
             Set("0011100x01110x", InstEmit.Dadd,    OpCodeDArithImm.Create);
@@ -185,6 +186,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0011100x11110x", InstEmit.R2p,     OpCodeAluImm.Create);
             Set("0101110011110x", InstEmit.R2p,     OpCodeAluReg.Create);
             Set("1110101111111x", InstEmit.Red,     OpCodeRed.Create);
+            Set("111000110010xx", InstEmit.Ret,     OpCodeExit.Create);
             Set("0100110010010x", InstEmit.Rro,     OpCodeFArithCbuf.Create);
             Set("0011100x10010x", InstEmit.Rro,     OpCodeFArithImm.Create);
             Set("0101110010010x", InstEmit.Rro,     OpCodeFArithReg.Create);

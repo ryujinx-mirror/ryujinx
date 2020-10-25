@@ -49,6 +49,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.BitwiseOr,                VariableType.Int,    VariableType.Int,    VariableType.Int);
             Add(Instruction.BranchIfTrue,             VariableType.None,   VariableType.Bool);
             Add(Instruction.BranchIfFalse,            VariableType.None,   VariableType.Bool);
+            Add(Instruction.Call,                     VariableType.Scalar);
             Add(Instruction.Ceiling,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.Clamp,                    VariableType.Scalar, VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.ClampU32,                 VariableType.U32,    VariableType.U32,    VariableType.U32,    VariableType.U32);
@@ -150,6 +151,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 inst == Instruction.TextureSample)
             {
                 return VariableType.F32;
+            }
+            else if (inst == Instruction.Call)
+            {
+                return VariableType.S32;
             }
 
             return GetFinalVarType(_infoTbl[(int)(inst & Instruction.Mask)].SrcTypes[index], inst);

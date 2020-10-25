@@ -10,13 +10,32 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     static class GlslGenerator
     {
+        private const string MainFunctionName = "main";
+
         public static GlslProgram Generate(StructuredProgramInfo info, ShaderConfig config)
         {
-            CodeGenContext context = new CodeGenContext(config, info.UsesCbIndexing);
+            CodeGenContext context = new CodeGenContext(info, config);
 
             Declarations.Declare(context, info);
 
-            PrintMainBlock(context, info);
+            if (info.Functions.Count != 0)
+            {
+                for (int i = 1; i < info.Functions.Count; i++)
+                {
+                    context.AppendLine($"{GetFunctionSignature(info.Functions[i])};");
+                }
+
+                context.AppendLine();
+
+                for (int i = 1; i < info.Functions.Count; i++)
+                {
+                    PrintFunction(context, info, info.Functions[i]);
+
+                    context.AppendLine();
+                }
+            }
+
+            PrintFunction(context, info, info.Functions[0], MainFunctionName);
 
             return new GlslProgram(
                 context.CBufferDescriptors.ToArray(),
@@ -26,53 +45,76 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.GetCode());
         }
 
-        private static void PrintMainBlock(CodeGenContext context, StructuredProgramInfo info)
+        private static void PrintFunction(CodeGenContext context, StructuredProgramInfo info, StructuredFunction function, string funcName = null)
         {
-            context.AppendLine("void main()");
+            context.CurrentFunction = function;
 
+            context.AppendLine(GetFunctionSignature(function, funcName));
             context.EnterScope();
 
-            Declarations.DeclareLocals(context, info);
+            Declarations.DeclareLocals(context, function);
 
-            // Some games will leave some elements of gl_Position uninitialized,
-            // in those cases, the elements will contain undefined values according
-            // to the spec, but on NVIDIA they seems to be always initialized to (0, 0, 0, 1),
-            // so we do explicit initialization to avoid UB on non-NVIDIA gpus.
-            if (context.Config.Stage == ShaderStage.Vertex)
+            if (funcName == MainFunctionName)
             {
-                context.AppendLine("gl_Position = vec4(0.0, 0.0, 0.0, 1.0);");
-            }
-
-            // Ensure that unused attributes are set, otherwise the downstream
-            // compiler may eliminate them.
-            // (Not needed for fragment shader as it is the last stage).
-            if (context.Config.Stage != ShaderStage.Compute &&
-                context.Config.Stage != ShaderStage.Fragment)
-            {
-                for (int attr = 0; attr < Declarations.MaxAttributes; attr++)
+                // Some games will leave some elements of gl_Position uninitialized,
+                // in those cases, the elements will contain undefined values according
+                // to the spec, but on NVIDIA they seems to be always initialized to (0, 0, 0, 1),
+                // so we do explicit initialization to avoid UB on non-NVIDIA gpus.
+                if (context.Config.Stage == ShaderStage.Vertex)
                 {
-                    if (info.OAttributes.Contains(attr))
-                    {
-                        continue;
-                    }
+                    context.AppendLine("gl_Position = vec4(0.0, 0.0, 0.0, 1.0);");
+                }
 
-                    if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+                // Ensure that unused attributes are set, otherwise the downstream
+                // compiler may eliminate them.
+                // (Not needed for fragment shader as it is the last stage).
+                if (context.Config.Stage != ShaderStage.Compute &&
+                    context.Config.Stage != ShaderStage.Fragment)
+                {
+                    for (int attr = 0; attr < Declarations.MaxAttributes; attr++)
                     {
-                        context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0;");
-                        context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0;");
-                        context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0;");
-                        context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 0;");
-                    }
-                    else
-                    {
-                        context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0);");
+                        if (info.OAttributes.Contains(attr))
+                        {
+                            continue;
+                        }
+
+                        if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+                        {
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 0;");
+                        }
+                        else
+                        {
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0);");
+                        }
                     }
                 }
             }
 
-            PrintBlock(context, info.MainBlock);
+            PrintBlock(context, function.MainBlock);
 
             context.LeaveScope();
+        }
+
+        private static string GetFunctionSignature(StructuredFunction function, string funcName = null)
+        {
+            string[] args = new string[function.InArguments.Length + function.OutArguments.Length];
+
+            for (int i = 0; i < function.InArguments.Length; i++)
+            {
+                args[i] = $"{Declarations.GetVarTypeName(function.InArguments[i])} {OperandManager.GetArgumentName(i)}";
+            }
+
+            for (int i = 0; i < function.OutArguments.Length; i++)
+            {
+                int j = i + function.InArguments.Length;
+
+                args[j] = $"out {Declarations.GetVarTypeName(function.OutArguments[i])} {OperandManager.GetArgumentName(j)}";
+            }
+
+            return $"{Declarations.GetVarTypeName(function.ReturnType)} {funcName ?? function.Name}({string.Join(", ", args)})";
         }
 
         private static void PrintBlock(CodeGenContext context, AstBlock block)
@@ -123,8 +165,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (node is AstAssignment assignment)
                 {
-                    VariableType srcType = OperandManager.GetNodeDestType(assignment.Source);
-                    VariableType dstType = OperandManager.GetNodeDestType(assignment.Destination);
+                    VariableType srcType = OperandManager.GetNodeDestType(context, assignment.Source);
+                    VariableType dstType = OperandManager.GetNodeDestType(context, assignment.Destination);
 
                     string dest;
 
@@ -154,7 +196,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static string GetCondExpr(CodeGenContext context, IAstNode cond)
         {
-            VariableType srcType = OperandManager.GetNodeDestType(cond);
+            VariableType srcType = OperandManager.GetNodeDestType(context, cond);
 
             return ReinterpretCast(context, cond, srcType, VariableType.Bool);
         }

@@ -187,9 +187,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        public static void DeclareLocals(CodeGenContext context, StructuredProgramInfo info)
+        public static void DeclareLocals(CodeGenContext context, StructuredFunction function)
         {
-            foreach (AstOperand decl in info.Locals)
+            foreach (AstOperand decl in function.Locals)
             {
                 string name = context.OperandManager.DeclareLocal(decl);
 
@@ -197,13 +197,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static string GetVarTypeName(VariableType type)
+        public static string GetVarTypeName(VariableType type)
         {
             switch (type)
             {
                 case VariableType.Bool: return "bool";
                 case VariableType.F32:  return "precise float";
                 case VariableType.F64:  return "double";
+                case VariableType.None: return "void";
                 case VariableType.S32:  return "int";
                 case VariableType.U32:  return "uint";
             }

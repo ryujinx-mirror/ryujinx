@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             int               handle,
             int               arraySize,
             int               index,
-            params IAstNode[] sources) : base(inst, index, sources)
+            params IAstNode[] sources) : base(inst, index, sources, sources.Length)
         {
             Type      = type;
             Format    = format;

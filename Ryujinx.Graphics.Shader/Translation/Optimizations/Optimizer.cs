@@ -287,6 +287,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     case Instruction.AtomicOr:
                     case Instruction.AtomicSwap:
                     case Instruction.AtomicXor:
+                    case Instruction.Call:
+                    case Instruction.CallOutArgument:
                         return true;
                 }
             }

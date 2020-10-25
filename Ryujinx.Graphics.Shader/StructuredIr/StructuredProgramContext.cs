@@ -24,11 +24,25 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         private int _currEndIndex;
         private int _loopEndIndex;
 
+        public StructuredFunction CurrentFunction { get; private set; }
+
         public StructuredProgramInfo Info { get; }
 
         public ShaderConfig Config { get; }
 
-        public StructuredProgramContext(int blocksCount, ShaderConfig config)
+        public StructuredProgramContext(ShaderConfig config)
+        {
+            Info = new StructuredProgramInfo();
+
+            Config = config;
+        }
+
+        public void EnterFunction(
+            int blocksCount,
+            string name,
+            VariableType returnType,
+            VariableType[] inArguments,
+            VariableType[] outArguments)
         {
             _loopTails = new HashSet<BasicBlock>();
 
@@ -45,9 +59,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             _currEndIndex = blocksCount;
             _loopEndIndex = blocksCount;
 
-            Info = new StructuredProgramInfo(_currBlock);
+            CurrentFunction = new StructuredFunction(_currBlock, name, returnType, inArguments, outArguments);
+        }
 
-            Config = config;
+        public void LeaveFunction()
+        {
+            Info.Functions.Add(CurrentFunction);
         }
 
         public void EnterBlock(BasicBlock block)
@@ -185,7 +202,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // so it is reset to false by the "local" assignment anyway.
             if (block.Index != 0)
             {
-                Info.MainBlock.AddFirst(Assign(gotoTempAsg.Destination, Const(IrConsts.False)));
+                CurrentFunction.MainBlock.AddFirst(Assign(gotoTempAsg.Destination, Const(IrConsts.False)));
             }
         }
 
@@ -253,7 +270,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             AstOperand newTemp = Local(type);
 
-            Info.Locals.Add(newTemp);
+            CurrentFunction.Locals.Add(newTemp);
 
             return newTemp;
         }
@@ -304,7 +321,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 _localsMap.Add(operand, astOperand);
 
-                Info.Locals.Add(astOperand);
+                CurrentFunction.Locals.Add(astOperand);
             }
 
             return astOperand;

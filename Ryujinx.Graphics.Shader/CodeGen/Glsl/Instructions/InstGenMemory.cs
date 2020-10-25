@@ -226,7 +226,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
 
-            VariableType srcType = OperandManager.GetNodeDestType(src2);
+            VariableType srcType = OperandManager.GetNodeDestType(context, src2);
 
             string src = TypeConversion.ReinterpretCast(context, src2, srcType, VariableType.U32);
 
@@ -242,7 +242,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             string indexExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
             string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
 
-            VariableType srcType = OperandManager.GetNodeDestType(src3);
+            VariableType srcType = OperandManager.GetNodeDestType(context, src3);
 
             string src = TypeConversion.ReinterpretCast(context, src3, srcType, VariableType.U32);
 

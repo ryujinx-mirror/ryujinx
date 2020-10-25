@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.BitwiseExclusiveOr,       InstType.OpBinaryCom,    "^",               7);
             Add(Instruction.BitwiseNot,               InstType.OpUnary,        "~",               0);
             Add(Instruction.BitwiseOr,                InstType.OpBinaryCom,    "|",               8);
+            Add(Instruction.Call,                     InstType.Special);
             Add(Instruction.Ceiling,                  InstType.CallUnary,      "ceil");
             Add(Instruction.Clamp,                    InstType.CallTernary,    "clamp");
             Add(Instruction.ClampU32,                 InstType.CallTernary,    "clamp");
@@ -135,7 +136,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         public static string GetSoureExpr(CodeGenContext context, IAstNode node, VariableType dstType)
         {
-            return ReinterpretCast(context, node, OperandManager.GetNodeDestType(node), dstType);
+            return ReinterpretCast(context, node, OperandManager.GetNodeDestType(context, node), dstType);
         }
 
         public static string Enclose(string expr, IAstNode node, Instruction pInst, bool isLhs)

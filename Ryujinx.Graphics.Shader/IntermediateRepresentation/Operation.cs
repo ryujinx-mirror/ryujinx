@@ -48,6 +48,25 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Index = index;
         }
 
+        public void AppendOperands(params Operand[] operands)
+        {
+            int startIndex = _sources.Length;
+
+            Array.Resize(ref _sources, startIndex + operands.Length);
+
+            for (int index = 0; index < operands.Length; index++)
+            {
+                Operand source = operands[index];
+
+                if (source.Type == OperandType.LocalVariable)
+                {
+                    source.UseOps.Add(this);
+                }
+
+                _sources[startIndex + index] = source;
+            }
+        }
+
         private Operand AssignDest(Operand dest)
         {
             if (dest != null && dest.Type == OperandType.LocalVariable)

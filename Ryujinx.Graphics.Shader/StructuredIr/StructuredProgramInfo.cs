@@ -4,9 +4,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     class StructuredProgramInfo
     {
-        public AstBlock MainBlock { get; }
-
-        public HashSet<AstOperand> Locals { get; }
+        public List<StructuredFunction> Functions { get; }
 
         public HashSet<int> CBuffers { get; }
         public HashSet<int> SBuffers { get; }
@@ -22,11 +20,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public HashSet<AstTextureOperation> Samplers { get; }
         public HashSet<AstTextureOperation> Images   { get; }
 
-        public StructuredProgramInfo(AstBlock mainBlock)
+        public StructuredProgramInfo()
         {
-            MainBlock = mainBlock;
-
-            Locals = new HashSet<AstOperand>();
+            Functions = new List<StructuredFunction>();
 
             CBuffers = new HashSet<int>();
             SBuffers = new HashSet<int>();

@@ -22,6 +22,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string LocalMemoryName  = "local_mem";
         public const string SharedMemoryName = "shared_mem";
 
+        public const string ArgumentNamePrefix = "a";
+
         public const string UndefinedName = "undef";
 
         public const string IsBgraName = "is_bgra";

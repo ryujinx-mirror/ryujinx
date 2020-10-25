@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     {
         public static void Optimize(StructuredProgramContext context)
         {
-            AstBlock mainBlock = context.Info.MainBlock;
+            AstBlock mainBlock = context.CurrentFunction.MainBlock;
 
             // When debug mode is enabled, we disable expression propagation
             // (this makes comparison with the disassembly easier).
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                         {
                             visitor.Block.Remove(assignment);
 
-                            context.Info.Locals.Remove(propVar);
+                            context.CurrentFunction.Locals.Remove(propVar);
                         }
                     }
                 }
