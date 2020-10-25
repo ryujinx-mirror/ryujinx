@@ -16,6 +16,11 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class Texture : IRange, IDisposable
     {
+        // How many updates we need before switching to the byte-by-byte comparison
+        // modification check method.
+        // This method uses much more memory so we want to avoid it if possible.
+        private const int ByteComparisonSwitchThreshold = 4;
+
         private GpuContext _context;
 
         private SizeInfo _sizeInfo;
@@ -51,6 +56,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         private int _firstLevel;
 
         private bool _hasData;
+        private int _updateCount;
+        private byte[] _currentData;
 
         private ITexture _arrayViewTexture;
         private Target   _arrayViewTarget;
@@ -545,7 +552,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if the memory for this texture was modified, and returns true if it was. 
+        /// Checks if the memory for this texture was modified, and returns true if it was.
         /// The modified flags are consumed as a result.
         /// </summary>
         /// <remarks>
@@ -590,6 +597,27 @@ namespace Ryujinx.Graphics.Gpu.Image
             ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, (int)Size);
 
             IsModified = false;
+
+            // If the host does not support ASTC compression, we need to do the decompression.
+            // The decompression is slow, so we want to avoid it as much as possible.
+            // This does a byte-by-byte check and skips the update if the data is equal in this case.
+            // This improves the speed on applications that overwrites ASTC data without changing anything.
+            if (Info.FormatInfo.Format.IsAstc() && !_context.Capabilities.SupportsAstcCompression)
+            {
+                if (_updateCount < ByteComparisonSwitchThreshold)
+                {
+                    _updateCount++;
+                }
+                else
+                {
+                    bool dataMatches = _currentData != null && data.SequenceEqual(_currentData);
+                    _currentData = data.ToArray();
+                    if (dataMatches)
+                    {
+                        return;
+                    }
+                }
+            }
 
             data = ConvertToHostCompatibleFormat(data);
 
@@ -1132,6 +1160,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         private void DisposeTextures()
         {
+            _currentData = null;
             HostTexture.Release();
 
             _arrayViewTexture?.Release();
