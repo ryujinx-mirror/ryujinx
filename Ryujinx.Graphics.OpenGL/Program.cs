@@ -131,8 +131,6 @@ namespace Ryujinx.Graphics.OpenGL
 
             CheckProgramLink();
 
-            Bind();
-
             int ubBindingPoint = 0;
             int sbBindingPoint = 0;
             int textureUnit    = 0;
@@ -189,7 +187,7 @@ namespace Ryujinx.Graphics.OpenGL
                         continue;
                     }
 
-                    GL.Uniform1(location, textureUnit);
+                    GL.ProgramUniform1(Handle, location, textureUnit);
 
                     int uIndex = (int)shader.Stage << TexStageShift | samplerIndex++;
 
@@ -209,7 +207,7 @@ namespace Ryujinx.Graphics.OpenGL
                         continue;
                     }
 
-                    GL.Uniform1(location, imageUnit);
+                    GL.ProgramUniform1(Handle, location, imageUnit);
 
                     int uIndex = (int)shader.Stage << ImgStageShift | imageIndex++;
 

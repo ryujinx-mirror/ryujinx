@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.GAL
     {
         private static readonly BufferRange _empty = new BufferRange(BufferHandle.Null, 0, 0);
 
-        public BufferRange Empty => _empty;
+        public static BufferRange Empty => _empty;
 
         public BufferHandle Handle { get; }
 

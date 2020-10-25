@@ -75,7 +75,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetTexture(int index, ShaderStage stage, ITexture texture);
 
-        void SetTransformFeedbackBuffer(int index, BufferRange buffer);
+        void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers);
         void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
 
         void SetUserClipDistance(int index, bool enableClip);

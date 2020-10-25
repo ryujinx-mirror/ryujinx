@@ -6,6 +6,11 @@ namespace Ryujinx.Graphics.OpenGL
 {
     static class Buffer
     {
+        public static BufferHandle Create()
+        {
+            return Handle.FromInt32<BufferHandle>(GL.GenBuffer());
+        }
+
         public static BufferHandle Create(int size)
         {
             int handle = GL.GenBuffer();
@@ -38,6 +43,12 @@ namespace Ryujinx.Graphics.OpenGL
             GL.GetBufferSubData(BufferTarget.CopyReadBuffer, (IntPtr)offset, size, data);
 
             return data;
+        }
+
+        public static void Resize(BufferHandle handle, int size)
+        {
+            GL.BindBuffer(BufferTarget.CopyWriteBuffer, handle.ToInt32());
+            GL.BufferData(BufferTarget.CopyWriteBuffer, size, IntPtr.Zero, BufferUsageHint.StreamCopy);
         }
 
         public static void SetData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data)

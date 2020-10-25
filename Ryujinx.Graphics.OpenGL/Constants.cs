@@ -6,5 +6,6 @@
         public const int MaxViewports = 16;
         public const int MaxVertexAttribs = 16;
         public const int MaxVertexBuffers = 16;
+        public const int MaxTransformFeedbackBuffers = 4;
     }
 }

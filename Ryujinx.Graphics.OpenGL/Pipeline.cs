@@ -5,7 +5,6 @@ using Ryujinx.Graphics.OpenGL.Image;
 using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader;
 using System;
-using System.Threading;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -49,6 +48,10 @@ namespace Ryujinx.Graphics.OpenGL
         private bool _scissor0Enable = false;
 
         private bool _tfEnabled;
+        private TransformFeedbackPrimitiveType _tfTopology;
+
+        private readonly BufferHandle[] _tfbs;
+        private readonly BufferRange[] _tfbTargets;
 
         private ColorF _blendConstant;
 
@@ -74,6 +77,9 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 _cpRenderScale[index] = 1f;
             }
+
+            _tfbs = new BufferHandle[Constants.MaxTransformFeedbackBuffers];
+            _tfbTargets = new BufferRange[Constants.MaxTransformFeedbackBuffers];
         }
 
         public void Barrier()
@@ -83,7 +89,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void BeginTransformFeedback(PrimitiveTopology topology)
         {
-            GL.BeginTransformFeedback(topology.ConvertToTfType());
+            GL.BeginTransformFeedback(_tfTopology = topology.ConvertToTfType());
             _tfEnabled = true;
         }
 
@@ -175,7 +181,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PrepareForDraw();
+            PreDraw();
 
             if (_primitiveType == PrimitiveType.Quads)
             {
@@ -190,7 +196,7 @@ namespace Ryujinx.Graphics.OpenGL
                 DrawImpl(vertexCount, instanceCount, firstVertex, firstInstance);
             }
 
-            _framebuffer.SignalModified();
+            PostDraw();
         }
 
         private void DrawQuadsImpl(
@@ -293,7 +299,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PrepareForDraw();
+            PreDraw();
 
             int indexElemSize = 1;
 
@@ -335,7 +341,7 @@ namespace Ryujinx.Graphics.OpenGL
                     firstInstance);
             }
 
-            _framebuffer.SignalModified();
+            PostDraw();
         }
 
         private void DrawQuadsIndexedImpl(
@@ -790,9 +796,9 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (_tfEnabled)
             {
-                GL.PauseTransformFeedback();
+                GL.EndTransformFeedback();
                 _program.Bind();
-                GL.ResumeTransformFeedback();
+                GL.BeginTransformFeedback(_tfTopology);
             }
             else
             {
@@ -993,19 +999,39 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetTransformFeedbackBuffer(int index, BufferRange buffer)
+        public void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers)
         {
-            const BufferRangeTarget target = BufferRangeTarget.TransformFeedbackBuffer;
+            if (_tfEnabled)
+            {
+                GL.EndTransformFeedback();
+            }
+
+            int count = Math.Min(buffers.Length, Constants.MaxTransformFeedbackBuffers);
+
+            for (int i = 0; i < count; i++)
+            {
+                BufferRange buffer = buffers[i];
+                _tfbTargets[i] = buffer;
+
+                if (buffer.Handle == BufferHandle.Null)
+                {
+                    GL.BindBufferBase(BufferRangeTarget.TransformFeedbackBuffer, i, 0);
+                    continue;
+                }
+
+                if (_tfbs[i] == BufferHandle.Null)
+                {
+                    _tfbs[i] = Buffer.Create();
+                }
+
+                Buffer.Resize(_tfbs[i], buffer.Size);
+                Buffer.Copy(buffer.Handle, _tfbs[i], buffer.Offset, 0, buffer.Size);
+                GL.BindBufferBase(BufferRangeTarget.TransformFeedbackBuffer, i, _tfbs[i].ToInt32());
+            }
 
             if (_tfEnabled)
             {
-                GL.PauseTransformFeedback();
-                GL.BindBufferRange(target, index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
-                GL.ResumeTransformFeedback();
-            }
-            else
-            {
-                GL.BindBufferRange(target, index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
+                GL.BeginTransformFeedback(_tfTopology);
             }
         }
 
@@ -1104,7 +1130,7 @@ namespace Ryujinx.Graphics.OpenGL
                 ? BufferRangeTarget.ShaderStorageBuffer
                 : BufferRangeTarget.UniformBuffer;
 
-            if (buffer.Handle == null)
+            if (buffer.Handle == BufferHandle.Null)
             {
                 GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
                 return;
@@ -1237,13 +1263,29 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        private void PrepareForDraw()
+        private void PreDraw()
         {
             _vertexArray.Validate();
 
             if (_unit0Texture != null)
             {
                 _unit0Texture.Bind(0);
+            }
+        }
+
+        private void PostDraw()
+        {
+            _framebuffer?.SignalModified();
+
+            if (_tfEnabled)
+            {
+                for (int i = 0; i < Constants.MaxTransformFeedbackBuffers; i++)
+                {
+                    if (_tfbTargets[i].Handle != BufferHandle.Null)
+                    {
+                        Buffer.Copy(_tfbs[i], _tfbTargets[i].Handle, 0, _tfbTargets[i].Offset, _tfbTargets[i].Size);
+                    }
+                }
             }
         }
 
@@ -1319,6 +1361,15 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Dispose()
         {
+            for (int i = 0; i < Constants.MaxTransformFeedbackBuffers; i++)
+            {
+                if (_tfbs[i] != BufferHandle.Null)
+                {
+                    Buffer.Delete(_tfbs[i]);
+                    _tfbs[i] = BufferHandle.Null;
+                }
+            }
+
             _framebuffer?.Dispose();
             _vertexArray?.Dispose();
         }
