@@ -40,8 +40,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(raIndex++, RegisterType.Gpr));
             }
 
-            Operand arrayIndex = type.HasFlag(SamplerType.Array) ? Ra() : null;
-
             List<Operand> sourcesList = new List<Operand>();
 
             if (op.IsBindless)
@@ -66,7 +64,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type.HasFlag(SamplerType.Array))
             {
-                sourcesList.Add(arrayIndex);
+                sourcesList.Add(Ra());
 
                 type |= SamplerType.Array;
             }
@@ -193,8 +191,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(rbIndex++, RegisterType.Gpr));
             }
 
-            Operand arrayIndex = type.HasFlag(SamplerType.Array) ? Ra() : null;
-
             List<Operand> sourcesList = new List<Operand>();
 
             if (op.IsBindless)
@@ -219,7 +215,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type.HasFlag(SamplerType.Array))
             {
-                sourcesList.Add(arrayIndex);
+                sourcesList.Add(Ra());
 
                 type |= SamplerType.Array;
             }
