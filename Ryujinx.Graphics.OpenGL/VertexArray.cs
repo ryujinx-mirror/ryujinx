@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 VertexBufferDescriptor vb = vertexBuffers[index];
 
-                if (vb.Buffer.Handle != null)
+                if (vb.Buffer.Handle != BufferHandle.Null)
                 {
                     GL.BindVertexBuffer(bindingIndex, vb.Buffer.Handle.ToInt32(), (IntPtr)vb.Buffer.Offset, vb.Stride);
 
@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     GL.EnableVertexAttribArray(index);
                 }
-                
+
                 int offset = attrib.Offset;
                 int size   = fmtInfo.Components;
 
@@ -129,7 +129,7 @@ namespace Ryujinx.Graphics.OpenGL
                     continue;
                 }
 
-                if (_vertexBuffers[attrib.BufferIndex].Buffer.Handle == null)
+                if (_vertexBuffers[attrib.BufferIndex].Buffer.Handle == BufferHandle.Null)
                 {
                     GL.DisableVertexAttribArray(attribIndex);
 
