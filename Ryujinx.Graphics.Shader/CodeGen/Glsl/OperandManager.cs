@@ -247,7 +247,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 AstOperand operand = texOp.GetSource(0) as AstOperand;
 
-                suffix = "_cb" + operand.CbufSlot + "_" + operand.CbufOffset;
+                suffix = $"_{texOp.Type.ToGlslSamplerType()}_cb{operand.CbufSlot}_{operand.CbufOffset}";
             }
             else
             {

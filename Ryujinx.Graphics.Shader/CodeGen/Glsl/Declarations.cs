@@ -317,7 +317,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     continue;
                 }
 
-                string samplerTypeName = GetSamplerTypeName(texOp.Type);
+                string samplerTypeName = texOp.Type.ToGlslSamplerType();
 
                 context.AppendLine("uniform " + samplerTypeName + " " + samplerName + ";");
             }
@@ -382,7 +382,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     layout = "layout(" + layout + ") ";
                 }
 
-                string imageTypeName = GetImageTypeName(texOp.Type, texOp.Format.GetComponentType());
+                string imageTypeName = texOp.Type.ToGlslImageType(texOp.Format.GetComponentType());
 
                 context.AppendLine("uniform " + layout + imageTypeName + " " + imageName + ";");
             }
@@ -536,73 +536,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             context.AppendLine(code.Replace("\t", CodeGenContext.Tab));
             context.AppendLine();
-        }
-
-        private static string GetSamplerTypeName(SamplerType type)
-        {
-            string typeName;
-
-            switch (type & SamplerType.Mask)
-            {
-                case SamplerType.Texture1D:     typeName = "sampler1D";     break;
-                case SamplerType.TextureBuffer: typeName = "samplerBuffer"; break;
-                case SamplerType.Texture2D:     typeName = "sampler2D";     break;
-                case SamplerType.Texture3D:     typeName = "sampler3D";     break;
-                case SamplerType.TextureCube:   typeName = "samplerCube";   break;
-
-                default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
-            }
-
-            if ((type & SamplerType.Multisample) != 0)
-            {
-                typeName += "MS";
-            }
-
-            if ((type & SamplerType.Array) != 0)
-            {
-                typeName += "Array";
-            }
-
-            if ((type & SamplerType.Shadow) != 0)
-            {
-                typeName += "Shadow";
-            }
-
-            return typeName;
-        }
-
-        private static string GetImageTypeName(SamplerType type, VariableType componentType)
-        {
-            string typeName;
-
-            switch (type & SamplerType.Mask)
-            {
-                case SamplerType.Texture1D:     typeName = "image1D";     break;
-                case SamplerType.TextureBuffer: typeName = "imageBuffer"; break;
-                case SamplerType.Texture2D:     typeName = "image2D";     break;
-                case SamplerType.Texture3D:     typeName = "image3D";     break;
-                case SamplerType.TextureCube:   typeName = "imageCube";   break;
-
-                default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
-            }
-
-            if ((type & SamplerType.Multisample) != 0)
-            {
-                typeName += "MS";
-            }
-
-            if ((type & SamplerType.Array) != 0)
-            {
-                typeName += "Array";
-            }
-
-            switch (componentType)
-            {
-                case VariableType.U32: typeName = 'u' + typeName; break;
-                case VariableType.S32: typeName = 'i' + typeName; break;
-            }
-
-            return typeName;
         }
     }
 }
