@@ -407,20 +407,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     if ((context.Config.Stage == ShaderStage.Fragment || context.Config.Stage == ShaderStage.Compute) &&
                         (texOp.Flags & TextureFlags.Bindless) == 0 &&
-                        texOp.Type != SamplerType.Indexed &&
-                        pCount == 2)
+                        texOp.Type != SamplerType.Indexed)
                     {
-                        return "Helper_TexelFetchScale(" + vector + ", " + index + ")";
+                        if (pCount == 3 && isArray)
+                        {
+                            // The array index is not scaled, just x and y.
+                            return "ivec3(Helper_TexelFetchScale((" + vector + ").xy, " + index + "), (" + vector + ").z)";
+                        }
+                        else if (pCount == 2 && !isArray)
+                        {
+                            return "Helper_TexelFetchScale(" + vector + ", " + index + ")";
+                        }
                     }
-                    else
-                    {
-                        // Resolution scaling cannot be applied to this texture right now.
-                        // Flag so that we know to blacklist scaling on related textures when binding them.
 
-                        TextureDescriptor descriptor = context.TextureDescriptors[index];
-                        descriptor.Flags |= TextureUsageFlags.ResScaleUnsupported;
-                        context.TextureDescriptors[index] = descriptor;
-                    }
+                    // Resolution scaling cannot be applied to this texture right now.
+                    // Flag so that we know to blacklist scaling on related textures when binding them.
+
+                    TextureDescriptor descriptor = context.TextureDescriptors[index];
+                    descriptor.Flags |= TextureUsageFlags.ResScaleUnsupported;
+                    context.TextureDescriptors[index] = descriptor;
                 }
 
                 return vector;
