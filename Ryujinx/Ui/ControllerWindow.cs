@@ -447,6 +447,8 @@ namespace Ryujinx.Ui
                 Enum.TryParse(_rSl.Label,          out Key rButtonSl);
                 Enum.TryParse(_rSr.Label,          out Key rButtonSr);
 
+                int.TryParse(_dsuServerPort.Buffer.Text, out int port);
+
                 return new KeyboardConfig
                 {
                     Index          = int.Parse(_inputDevice.ActiveId.Split("/")[1]),
@@ -489,11 +491,11 @@ namespace Ryujinx.Ui
                     EnableMotion  = _enableMotion.Active,
                     MirrorInput   = _mirrorInput.Active,
                     Slot          = (int)_slotNumber.Value,
-                    AltSlot       = (int)_slotNumber.Value,
+                    AltSlot       = (int)_altSlotNumber.Value,
                     Sensitivity   = (int)_sensitivity.Value,
                     GyroDeadzone  = _gyroDeadzone.Value,
                     DsuServerHost = _dsuServerHost.Buffer.Text,
-                    DsuServerPort = int.Parse(_dsuServerPort.Buffer.Text)
+                    DsuServerPort = port
                 };
             }
             
@@ -524,6 +526,8 @@ namespace Ryujinx.Ui
                 Enum.TryParse(_zR.Label,           out ControllerInputId rButtonZr);
                 Enum.TryParse(_rSl.Label,          out ControllerInputId rButtonSl);
                 Enum.TryParse(_rSr.Label,          out ControllerInputId rButtonSr);
+
+                int.TryParse(_dsuServerPort.Buffer.Text, out int port);
 
                 return new ControllerConfig
                 {
@@ -570,11 +574,11 @@ namespace Ryujinx.Ui
                     EnableMotion  = _enableMotion.Active,
                     MirrorInput   = _mirrorInput.Active,
                     Slot          = (int)_slotNumber.Value,
-                    AltSlot       = (int)_slotNumber.Value,
+                    AltSlot       = (int)_altSlotNumber.Value,
                     Sensitivity   = (int)_sensitivity.Value,
                     GyroDeadzone  = _gyroDeadzone.Value,
                     DsuServerHost = _dsuServerHost.Buffer.Text,
-                    DsuServerPort = int.Parse(_dsuServerPort.Buffer.Text)
+                    DsuServerPort = port
                 };
             }
 

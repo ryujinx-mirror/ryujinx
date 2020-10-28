@@ -512,7 +512,7 @@ namespace Ryujinx.Ui
 
                 currentButton |= _device.Hid.UpdateStickButtons(leftJoystick, rightJoystick);
 
-                motionDevice.Poll(inputConfig.PlayerIndex, inputConfig.Slot);
+                motionDevice.Poll(inputConfig, inputConfig.Slot);
 
                 SixAxisInput sixAxisInput = new SixAxisInput()
                 {
@@ -537,7 +537,7 @@ namespace Ryujinx.Ui
                 {
                     if (!inputConfig.MirrorInput)
                     {
-                        motionDevice.Poll(inputConfig.PlayerIndex, inputConfig.AltSlot);
+                        motionDevice.Poll(inputConfig, inputConfig.AltSlot);
 
                         sixAxisInput = new SixAxisInput()
                         {

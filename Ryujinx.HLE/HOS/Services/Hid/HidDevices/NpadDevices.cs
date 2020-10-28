@@ -337,6 +337,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 {
                     i++;
 
+                    if (i >= states.Count)
+                    {
+                        return;
+                    }
+
                     SetSixAxisState(states[i], true);
                 }
             }

@@ -38,13 +38,11 @@ namespace Ryujinx.Motion
             }
         }
 
-        public void Poll(PlayerIndex player, int slot)
+        public void Poll(InputConfig config, int slot)
         {
-            InputConfig config = ConfigurationState.Instance.Hid.InputConfig.Value.Find(x => x.PlayerIndex == player);
-
             Orientation = new float[9];
 
-            if (!config.EnableMotion || !_motionSource.TryGetData((int)player, slot, out MotionInput input))
+            if (!config.EnableMotion || !_motionSource.TryGetData((int)config.PlayerIndex, slot, out MotionInput input))
             {
                 Accelerometer = new Vector3();
                 Gyroscope     = new Vector3();
