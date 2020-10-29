@@ -754,7 +754,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
 
                     break;
-                } 
+                }
                 else if (overlapCompatibility == TextureViewCompatibility.CopyOnly)
                 {
                     // TODO: Copy rules for targets created after the container texture. See below.
@@ -833,7 +833,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     TextureInfo overlapInfo = AdjustSizes(texture, overlap.Info, oInfo.FirstLevel);
 
-                    TextureCreateInfo createInfo = GetCreateInfo(overlapInfo, _context.Capabilities);
+                    TextureCreateInfo createInfo = GetCreateInfo(overlapInfo, _context.Capabilities, overlap.ScaleFactor);
 
                     if (texture.ScaleFactor != overlap.ScaleFactor)
                     {
@@ -944,7 +944,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
                 else
                 {
-                    // Bpp may be a mismatch between the target texture and the param. 
+                    // Bpp may be a mismatch between the target texture and the param.
                     // Due to the way linear strided and block layouts work, widths can be multiplied by Bpp for comparison.
                     // Note: tex.Width is the aligned texture size. Prefer param.XCount, as the destination should be a texture with that exact size.
 
@@ -1054,8 +1054,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="info">Texture information</param>
         /// <param name="caps">GPU capabilities</param>
+        /// <param name="scale">Texture scale factor, to be applied to the texture size</param>
         /// <returns>The texture creation information</returns>
-        public static TextureCreateInfo GetCreateInfo(TextureInfo info, Capabilities caps)
+        public static TextureCreateInfo GetCreateInfo(TextureInfo info, Capabilities caps, float scale)
         {
             FormatInfo formatInfo = info.FormatInfo;
 
@@ -1091,6 +1092,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             int height = info.Height / info.SamplesInY;
 
             int depth = info.GetDepth() * info.GetLayers();
+
+            if (scale != 1f)
+            {
+                width  = (int)MathF.Ceiling(width  * scale);
+                height = (int)MathF.Ceiling(height * scale);
+            }
 
             return new TextureCreateInfo(
                 width,

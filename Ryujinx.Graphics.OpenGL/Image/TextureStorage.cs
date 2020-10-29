@@ -37,9 +37,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             GL.BindTexture(target, Handle);
 
-            int width = (int)Math.Ceiling(Info.Width * ScaleFactor);
-            int height = (int)Math.Ceiling(Info.Height * ScaleFactor);
-
             FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
             SizedInternalFormat internalFormat;
@@ -60,7 +57,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget1d.Texture1D,
                         Info.Levels,
                         internalFormat,
-                        width);
+                        Info.Width);
                     break;
 
                 case Target.Texture1DArray:
@@ -68,8 +65,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget2d.Texture1DArray,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.Texture2D:
@@ -77,8 +74,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget2d.Texture2D,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.Texture2DArray:
@@ -86,8 +83,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget3d.Texture2DArray,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height,
+                        Info.Width,
+                        Info.Height,
                         Info.Depth);
                     break;
 
@@ -96,8 +93,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTargetMultisample2d.Texture2DMultisample,
                         Info.Samples,
                         internalFormat,
-                        width,
-                        height,
+                        Info.Width,
+                        Info.Height,
                         true);
                     break;
 
@@ -106,8 +103,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTargetMultisample3d.Texture2DMultisampleArray,
                         Info.Samples,
                         internalFormat,
-                        width,
-                        height,
+                        Info.Width,
+                        Info.Height,
                         Info.Depth,
                         true);
                     break;
@@ -117,8 +114,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget3d.Texture3D,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height,
+                        Info.Width,
+                        Info.Height,
                         Info.Depth);
                     break;
 
@@ -127,8 +124,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         TextureTarget2d.TextureCubeMap,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height);
+                        Info.Width,
+                        Info.Height);
                     break;
 
                 case Target.CubemapArray:
@@ -136,8 +133,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         (TextureTarget3d)All.TextureCubeMapArray,
                         Info.Levels,
                         internalFormat,
-                        width,
-                        height,
+                        Info.Width,
+                        Info.Height,
                         Info.Depth);
                     break;
 

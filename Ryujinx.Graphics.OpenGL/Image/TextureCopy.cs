@@ -129,7 +129,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public TextureView BgraSwap(TextureView from)
         {
-            TextureView to = (TextureView)_renderer.CreateTexture(from.Info, 1f);
+            TextureView to = (TextureView)_renderer.CreateTexture(from.Info, from.ScaleFactor);
 
             EnsurePbo(from);
 
