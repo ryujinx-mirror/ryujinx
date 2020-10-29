@@ -45,6 +45,7 @@ namespace Ryujinx.Ui
             {
                 string ryuName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Ryujinx.exe" : "Ryujinx";
                 string ryuExe  = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ryuName);
+                string ryuArg = String.Join(" ", Environment.GetCommandLineArgs());
 
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
@@ -52,7 +53,7 @@ namespace Ryujinx.Ui
                     unixFileInfo.FileAccessPermissions |= FileAccessPermissions.UserExecute;
                 }
 
-                Process.Start(ryuExe);
+                Process.Start(ryuExe, ryuArg);
 
                 Environment.Exit(0);
             }
