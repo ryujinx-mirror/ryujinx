@@ -395,18 +395,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Invalidates a range of memory on all GPU resource pools (both texture and sampler pools).
-        /// </summary>
-        /// <param name="address">Start address of the range to invalidate</param>
-        /// <param name="size">Size of the range to invalidate</param>
-        public void InvalidatePoolRange(ulong address, ulong size)
-        {
-            _samplerPool?.InvalidateRange(address, size);
-
-            _texturePoolCache.InvalidateRange(address, size);
-        }
-
-        /// <summary>
         /// Force all bound textures and images to be rebound the next time CommitBindings is called.
         /// </summary>
         public void Rebind()

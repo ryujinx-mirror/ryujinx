@@ -72,20 +72,5 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             return pool;
         }
-
-        /// <summary>
-        /// Invalidates a memory range of all intersecting texture pools on the cache.
-        /// </summary>
-        /// <param name="address">Start address of the range to invalidate</param>
-        /// <param name="size">Size of the range to invalidate</param>
-        public void InvalidateRange(ulong address, ulong size)
-        {
-            for (LinkedListNode<TexturePool> node = _pools.First; node != null; node = node.Next)
-            {
-                TexturePool pool = node.Value;
-
-                pool.InvalidateRange(address, size);
-            }
-        }
     }
 }
