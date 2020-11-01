@@ -46,8 +46,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
             else if (srcInfo.IsCompressed && !dstInfo.IsCompressed)
             {
-                dstWidth  *= dstInfo.BlockWidth;
-                dstHeight *= dstInfo.BlockHeight;
+                dstWidth  *= srcInfo.BlockWidth;
+                dstHeight *= srcInfo.BlockHeight;
             }
 
             int width  = Math.Min(srcWidth,  dstWidth);
