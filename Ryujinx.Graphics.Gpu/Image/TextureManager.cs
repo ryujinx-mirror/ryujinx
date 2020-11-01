@@ -1058,19 +1058,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture creation information</returns>
         public static TextureCreateInfo GetCreateInfo(TextureInfo info, Capabilities caps, float scale)
         {
-            FormatInfo formatInfo = info.FormatInfo;
-
-            if (!caps.SupportsAstcCompression)
-            {
-                if (formatInfo.Format.IsAstcUnorm())
-                {
-                    formatInfo = new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4, 4);
-                }
-                else if (formatInfo.Format.IsAstcSrgb())
-                {
-                    formatInfo = new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4, 4);
-                }
-            }
+            FormatInfo formatInfo = TextureCompatibility.ToHostCompatibleFormat(info, caps);
 
             if (info.Target == Target.TextureBuffer)
             {
@@ -1079,12 +1067,24 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // The shader will need the appropriate conversion code to compensate.
                 switch (formatInfo.Format)
                 {
-                    case Format.R8Snorm:           formatInfo = new FormatInfo(Format.R8Sint,           1, 1, 1, 1); break;
-                    case Format.R16Snorm:          formatInfo = new FormatInfo(Format.R16Sint,          1, 1, 2, 1); break;
-                    case Format.R8G8Snorm:         formatInfo = new FormatInfo(Format.R8G8Sint,         1, 1, 2, 2); break;
-                    case Format.R16G16Snorm:       formatInfo = new FormatInfo(Format.R16G16Sint,       1, 1, 4, 2); break;
-                    case Format.R8G8B8A8Snorm:     formatInfo = new FormatInfo(Format.R8G8B8A8Sint,     1, 1, 4, 4); break;
-                    case Format.R16G16B16A16Snorm: formatInfo = new FormatInfo(Format.R16G16B16A16Sint, 1, 1, 8, 4); break;
+                    case Format.R8Snorm:
+                        formatInfo = new FormatInfo(Format.R8Sint, 1, 1, 1, 1);
+                        break;
+                    case Format.R16Snorm:
+                        formatInfo = new FormatInfo(Format.R16Sint, 1, 1, 2, 1);
+                        break;
+                    case Format.R8G8Snorm:
+                        formatInfo = new FormatInfo(Format.R8G8Sint, 1, 1, 2, 2);
+                        break;
+                    case Format.R16G16Snorm:
+                        formatInfo = new FormatInfo(Format.R16G16Sint, 1, 1, 4, 2);
+                        break;
+                    case Format.R8G8B8A8Snorm:
+                        formatInfo = new FormatInfo(Format.R8G8B8A8Sint, 1, 1, 4, 4);
+                        break;
+                    case Format.R16G16B16A16Snorm:
+                        formatInfo = new FormatInfo(Format.R16G16B16A16Sint, 1, 1, 8, 4);
+                        break;
                 }
             }
 

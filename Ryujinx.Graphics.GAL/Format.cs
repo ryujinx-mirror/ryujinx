@@ -341,5 +341,25 @@ namespace Ryujinx.Graphics.GAL
         {
             return format.IsUint() || format.IsSint();
         }
+
+        /// <summary>
+        /// Checks if the texture format is a BC4 compressed format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is a BC4 compressed format, false otherwise</returns>
+        public static bool IsBc4(this Format format)
+        {
+            return format == Format.Bc4Unorm || format == Format.Bc4Snorm;
+        }
+
+        /// <summary>
+        /// Checks if the texture format is a BC5 compressed format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is a BC5 compressed format, false otherwise</returns>
+        public static bool IsBc5(this Format format)
+        {
+            return format == Format.Bc5Unorm || format == Format.Bc5Snorm;
+        }
     }
 }

@@ -671,6 +671,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     data);
             }
 
+            // Handle compressed cases not supported by the host:
+            // - ASTC is usually not supported on desktop cards.
+            // - BC4/BC5 is not supported on 3D textures.
             if (!_context.Capabilities.SupportsAstcCompression && Info.FormatInfo.Format.IsAstc())
             {
                 if (!AstcDecoder.TryDecodeToRgba8(
@@ -691,6 +694,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 data = decoded;
             }
+            else if (Info.Target == Target.Texture3D && Info.FormatInfo.Format.IsBc4())
+            {
+                data = BCnDecoder.DecodeBC4(data, Info.Width, Info.Height, _depth, Info.Levels, _layers, Info.FormatInfo.Format == Format.Bc4Snorm);
+            }
+            else if (Info.Target == Target.Texture3D && Info.FormatInfo.Format.IsBc5())
+            {
+                data = BCnDecoder.DecodeBC5(data, Info.Width, Info.Height, _depth, Info.Levels, _layers, Info.FormatInfo.Format == Format.Bc5Snorm);
+            }
 
             return data;
         }
@@ -707,8 +718,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void Flush(bool tracked = true)
         {
             IsModified = false;
-
-            if (Info.FormatInfo.Format.IsAstc())
+            if (TextureCompatibility.IsFormatHostIncompatible(Info, _context.Capabilities))
             {
                 return; // Flushing this format is not supported, as it may have been converted to another host format.
             }
@@ -739,10 +749,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             _context.Renderer.BackgroundContextAction(() =>
             {
                 IsModified = false;
-                if (Info.FormatInfo.Format.IsAstc())
+                if (TextureCompatibility.IsFormatHostIncompatible(Info, _context.Capabilities))
                 {
-                    // ASTC textures are not in their original format, so cannot be flushed.
-                    return;
+                    return; // Flushing this format is not supported, as it may have been converted to another host format.
                 }
 
                 ITexture texture = HostTexture;

@@ -27,6 +27,68 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Checks if a format is host incompatible.
+        /// </summary>
+        /// <remarks>
+        /// Host incompatible formats can't be used directly, the texture data needs to be converted
+        /// to a compatible format first.
+        /// </remarks>
+        /// <param name="info">Texture information</param>
+        /// <param name="caps">Host GPU capabilities</param>
+        /// <returns>True if the format is incompatible, false otherwise</returns>
+        public static bool IsFormatHostIncompatible(TextureInfo info, Capabilities caps)
+        {
+            Format originalFormat = info.FormatInfo.Format;
+            return ToHostCompatibleFormat(info, caps).Format != originalFormat;
+        }
+
+        /// <summary>
+        /// Converts a incompatible format to a host compatible format, or return the format directly
+        /// if it is already host compatible.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to convert a incompatible compressed format to the decompressor
+        /// output format.
+        /// </remarks>
+        /// <param name="info">Texture information</param>
+        /// <param name="caps">Host GPU capabilities</param>
+        /// <returns>A host compatible format</returns>
+        public static FormatInfo ToHostCompatibleFormat(TextureInfo info, Capabilities caps)
+        {
+            if (!caps.SupportsAstcCompression)
+            {
+                if (info.FormatInfo.Format.IsAstcUnorm())
+                {
+                    return new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4, 4);
+                }
+                else if (info.FormatInfo.Format.IsAstcSrgb())
+                {
+                    return new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4, 4);
+                }
+            }
+
+            if (info.Target == Target.Texture3D)
+            {
+                // The host API does not support 3D BC4/BC5 compressed formats.
+                // We assume software decompression will be done for those textures,
+                // and so we adjust the format here to match the decompressor output.
+                switch (info.FormatInfo.Format)
+                {
+                    case Format.Bc4Unorm:
+                        return new FormatInfo(Format.R8Unorm, 1, 1, 1, 1);
+                    case Format.Bc4Snorm:
+                        return new FormatInfo(Format.R8Snorm, 1, 1, 1, 1);
+                    case Format.Bc5Unorm:
+                        return new FormatInfo(Format.R8G8Unorm, 1, 1, 2, 2);
+                    case Format.Bc5Snorm:
+                        return new FormatInfo(Format.R8G8Snorm, 1, 1, 2, 2);
+                }
+            }
+
+            return info.FormatInfo;
+        }
+
+        /// <summary>
         /// Finds the appropriate depth format for a copy texture if the source texture has a depth format.
         /// </summary>
         /// <param name="dstTextureFormat">Destination CopyTexture Format</param>
