@@ -14,6 +14,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             GL.SamplerParameter(Handle, SamplerParameterName.TextureMinFilter, (int)info.MinFilter.Convert());
             GL.SamplerParameter(Handle, SamplerParameterName.TextureMagFilter, (int)info.MagFilter.Convert());
 
+            if (HwCapabilities.SupportsSeamlessCubemapPerTexture)
+            {
+                GL.SamplerParameter(Handle, (SamplerParameterName)ArbSeamlessCubemapPerTexture.TextureCubeMapSeamless, info.SeamlessCubemap ? 1 : 0);
+            }
+
             GL.SamplerParameter(Handle, SamplerParameterName.TextureWrapS, (int)info.AddressU.Convert());
             GL.SamplerParameter(Handle, SamplerParameterName.TextureWrapT, (int)info.AddressV.Convert());
             GL.SamplerParameter(Handle, SamplerParameterName.TextureWrapR, (int)info.AddressP.Convert());

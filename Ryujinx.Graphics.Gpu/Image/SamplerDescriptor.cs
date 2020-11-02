@@ -185,6 +185,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Unpacks the seamless cubemap flag.
+        /// </summary>
+        /// <returns>The seamless cubemap flag</returns>
+        public bool UnpackSeamlessCubemap()
+        {
+            return (Word1 & (1 << 9)) != 0;
+        }
+
+        /// <summary>
         /// Unpacks the reduction filter, used with texture minification linear filtering.
         /// This describes how the final value will be computed from neighbouring pixels.
         /// </summary>

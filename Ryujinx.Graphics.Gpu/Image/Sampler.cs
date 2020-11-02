@@ -23,6 +23,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             MinFilter minFilter = descriptor.UnpackMinFilter();
             MagFilter magFilter = descriptor.UnpackMagFilter();
 
+            bool seamlessCubemap = descriptor.UnpackSeamlessCubemap();
+
             AddressMode addressU = descriptor.UnpackAddressU();
             AddressMode addressV = descriptor.UnpackAddressV();
             AddressMode addressP = descriptor.UnpackAddressP();
@@ -49,6 +51,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             HostSampler = context.Renderer.CreateSampler(new SamplerCreateInfo(
                 minFilter,
                 magFilter,
+                seamlessCubemap,
                 addressU,
                 addressV,
                 addressP,

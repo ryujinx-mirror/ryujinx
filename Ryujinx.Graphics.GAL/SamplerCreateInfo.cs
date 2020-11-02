@@ -5,6 +5,8 @@ namespace Ryujinx.Graphics.GAL
         public MinFilter MinFilter { get; }
         public MagFilter MagFilter { get; }
 
+        public bool SeamlessCubemap { get; }
+
         public AddressMode AddressU { get; }
         public AddressMode AddressV { get; }
         public AddressMode AddressP { get; }
@@ -22,6 +24,7 @@ namespace Ryujinx.Graphics.GAL
         public SamplerCreateInfo(
             MinFilter   minFilter,
             MagFilter   magFilter,
+            bool        seamlessCubemap,
             AddressMode addressU,
             AddressMode addressV,
             AddressMode addressP,
@@ -33,18 +36,19 @@ namespace Ryujinx.Graphics.GAL
             float       mipLodBias,
             float       maxAnisotropy)
         {
-            MinFilter     = minFilter;
-            MagFilter     = magFilter;
-            AddressU      = addressU;
-            AddressV      = addressV;
-            AddressP      = addressP;
-            CompareMode   = compareMode;
-            CompareOp     = compareOp;
-            BorderColor   = borderColor;
-            MinLod        = minLod;
-            MaxLod        = maxLod;
-            MipLodBias    = mipLodBias;
-            MaxAnisotropy = maxAnisotropy;
+            MinFilter       = minFilter;
+            MagFilter       = magFilter;
+            SeamlessCubemap = seamlessCubemap;
+            AddressU        = addressU;
+            AddressV        = addressV;
+            AddressP        = addressP;
+            CompareMode     = compareMode;
+            CompareOp       = compareOp;
+            BorderColor     = borderColor;
+            MinLod          = minLod;
+            MaxLod          = maxLod;
+            MipLodBias      = mipLodBias;
+            MaxAnisotropy   = maxAnisotropy;
         }
     }
 }
