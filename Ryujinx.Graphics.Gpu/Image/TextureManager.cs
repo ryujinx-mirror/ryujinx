@@ -195,6 +195,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets the first available bound colour target, or the depth stencil target if not present.
+        /// </summary>
+        /// <returns>The first bound colour target, otherwise the depth stencil target</returns>
+        public Texture GetAnyRenderTarget()
+        {
+            return _rtColors[0] ?? _rtDepthStencil;
+        }
+
+        /// <summary>
         /// Updates the Render Target scale, given the currently bound render targets.
         /// This will update scale to match the configured scale, scale textures that are eligible but not scaled,
         /// and propagate blacklisted status from one texture to the ones bound with it.

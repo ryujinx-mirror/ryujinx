@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             AppendLine("}" + suffix);
         }
 
-        public int FindTextureDescriptorIndex(AstTextureOperation texOp)
+        private int FindDescriptorIndex(List<TextureDescriptor> list, AstTextureOperation texOp)
         {
             AstOperand operand = texOp.GetSource(0) as AstOperand;
             bool bindless = (texOp.Flags & TextureFlags.Bindless) > 0;
@@ -92,11 +92,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             int cBufSlot = bindless ? operand.CbufSlot : 0;
             int cBufOffset = bindless ? operand.CbufOffset : 0;
 
-            return TextureDescriptors.FindIndex(descriptor =>
+            return list.FindIndex(descriptor =>
                 descriptor.Type == texOp.Type &&
                 descriptor.HandleIndex == texOp.Handle &&
+                descriptor.Format == texOp.Format &&
                 descriptor.CbufSlot == cBufSlot &&
                 descriptor.CbufOffset == cBufOffset);
+        }
+
+        public int FindTextureDescriptorIndex(AstTextureOperation texOp)
+        {
+            return FindDescriptorIndex(TextureDescriptors, texOp);
+        }
+
+        public int FindImageDescriptorIndex(AstTextureOperation texOp)
+        {
+            return FindDescriptorIndex(ImageDescriptors, texOp);
         }
 
         public StructuredFunction GetFunction(int id)

@@ -509,7 +509,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
-                int scaleElements = context.TextureDescriptors.Count;
+                int scaleElements = context.TextureDescriptors.Count + context.ImageDescriptors.Count;
 
                 if (context.Config.Stage == ShaderStage.Fragment)
                 {

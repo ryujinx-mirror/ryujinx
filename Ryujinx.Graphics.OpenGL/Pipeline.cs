@@ -32,12 +32,10 @@ namespace Ryujinx.Graphics.OpenGL
         private int _boundReadFramebuffer;
 
         private int[] _fpIsBgra = new int[8];
-        private float[] _fpRenderScale = new float[33];
-        private float[] _cpRenderScale = new float[32];
+        private float[] _fpRenderScale = new float[65];
+        private float[] _cpRenderScale = new float[64];
 
         private TextureBase _unit0Texture;
-        private TextureBase _rtColor0Texture;
-        private TextureBase _rtDepthTexture;
 
         private FrontFaceDirection _frontFace;
         private ClipOrigin _clipOrigin;
@@ -847,9 +845,6 @@ namespace Ryujinx.Graphics.OpenGL
         {
             EnsureFramebuffer();
 
-            _rtColor0Texture = (TextureBase)colors[0];
-            _rtDepthTexture = (TextureBase)depthStencil;
-
             for (int index = 0; index < colors.Length; index++)
             {
                 TextureView color = (TextureView)colors[index];
@@ -962,39 +957,6 @@ namespace Ryujinx.Graphics.OpenGL
                 else
                 {
                     ((TextureBase)texture).Bind(unit);
-                }
-
-                // Update scale factor for bound textures.
-
-                switch (stage)
-                {
-                    case ShaderStage.Fragment:
-                        if (_program.FragmentRenderScaleUniform != -1)
-                        {
-                            // Only update and send sampled texture scales if the shader uses them.
-                            bool interpolate = false;
-                            float scale = texture.ScaleFactor;
-
-                            if (scale != 1)
-                            {
-                                TextureBase activeTarget = _rtColor0Texture ?? _rtDepthTexture;
-
-                                if (activeTarget != null && activeTarget.Width / (float)texture.Width == activeTarget.Height / (float)texture.Height)
-                                {
-                                    // If the texture's size is a multiple of the sampler size,
-                                    // enable interpolation using gl_FragCoord.
-                                    // (helps "invent" new integer values between scaled pixels)
-                                    interpolate = true;
-                                }
-                            }
-
-                            _fpRenderScale[index + 1] = interpolate ? -scale : scale;
-                        }
-                        break;
-
-                    case ShaderStage.Compute:
-                        _cpRenderScale[index] = texture.ScaleFactor;
-                        break;
                 }
             }
         }
@@ -1232,7 +1194,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void UpdateRenderScale(ShaderStage stage, int textureCount)
+        public void UpdateRenderScale(ShaderStage stage, float[] scales, int textureCount, int imageCount)
         {
             if (_program != null)
             {
@@ -1241,14 +1203,16 @@ namespace Ryujinx.Graphics.OpenGL
                     case ShaderStage.Fragment:
                         if (_program.FragmentRenderScaleUniform != -1)
                         {
-                            GL.Uniform1(_program.FragmentRenderScaleUniform, textureCount + 1, _fpRenderScale);
+                            Array.Copy(scales, 0, _fpRenderScale, 1, textureCount + imageCount);
+                            GL.Uniform1(_program.FragmentRenderScaleUniform, 1 + textureCount + imageCount, _fpRenderScale);
                         }
                         break;
 
                     case ShaderStage.Compute:
                         if (_program.ComputeRenderScaleUniform != -1)
                         {
-                            GL.Uniform1(_program.ComputeRenderScaleUniform, textureCount, _cpRenderScale);
+                            Array.Copy(scales, 0, _cpRenderScale, 0, textureCount + imageCount);
+                            GL.Uniform1(_program.ComputeRenderScaleUniform, textureCount + imageCount, _cpRenderScale);
                         }
                         break;
                 }

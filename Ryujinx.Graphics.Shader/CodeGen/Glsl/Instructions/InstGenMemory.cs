@@ -47,6 +47,43 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 texCall += ", " + str;
             }
 
+            string ApplyScaling(string vector)
+            {
+                int index = context.FindImageDescriptorIndex(texOp);
+                TextureUsageFlags flags = TextureUsageFlags.NeedsScaleValue;
+
+                if ((context.Config.Stage == ShaderStage.Fragment || context.Config.Stage == ShaderStage.Compute) &&
+                    texOp.Inst == Instruction.ImageLoad &&
+                    !isBindless &&
+                    !isIndexed)
+                {
+                    // Image scales start after texture ones.
+                    int scaleIndex = context.TextureDescriptors.Count + index;
+
+                    if (pCount == 3 && isArray)
+                    {
+                        // The array index is not scaled, just x and y.
+                        vector = "ivec3(Helper_TexelFetchScale((" + vector + ").xy, " + scaleIndex + "), (" + vector + ").z)";
+                    }
+                    else if (pCount == 2 && !isArray)
+                    {
+                        vector = "Helper_TexelFetchScale(" + vector + ", " + scaleIndex + ")";
+                    }
+                    else
+                    {
+                        flags |= TextureUsageFlags.ResScaleUnsupported;
+                    }
+                }
+                else
+                {
+                    flags |= TextureUsageFlags.ResScaleUnsupported;
+                }
+
+                context.ImageDescriptors[index] = context.ImageDescriptors[index].SetFlag(flags);
+
+                return vector;
+            }
+
             if (pCount > 1)
             {
                 string[] elems = new string[pCount];
@@ -56,7 +93,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     elems[index] = Src(VariableType.S32);
                 }
 
-                Append("ivec" + pCount + "(" + string.Join(", ", elems) + ")");
+                Append(ApplyScaling("ivec" + pCount + "(" + string.Join(", ", elems) + ")"));
             }
             else
             {
@@ -404,28 +441,35 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 if (intCoords)
                 {
                     int index = context.FindTextureDescriptorIndex(texOp);
+                    TextureUsageFlags flags = TextureUsageFlags.NeedsScaleValue;
 
                     if ((context.Config.Stage == ShaderStage.Fragment || context.Config.Stage == ShaderStage.Compute) &&
-                        (texOp.Flags & TextureFlags.Bindless) == 0 &&
-                        texOp.Type != SamplerType.Indexed)
+                        !isBindless &&
+                        !isIndexed)
                     {
                         if (pCount == 3 && isArray)
                         {
                             // The array index is not scaled, just x and y.
-                            return "ivec3(Helper_TexelFetchScale((" + vector + ").xy, " + index + "), (" + vector + ").z)";
+                            vector = "ivec3(Helper_TexelFetchScale((" + vector + ").xy, " + index + "), (" + vector + ").z)";
                         }
                         else if (pCount == 2 && !isArray)
                         {
-                            return "Helper_TexelFetchScale(" + vector + ", " + index + ")";
+                            vector = "Helper_TexelFetchScale(" + vector + ", " + index + ")";
                         }
+                        else
+                        {
+                            flags |= TextureUsageFlags.ResScaleUnsupported;
+                        }
+                    } 
+                    else
+                    {
+                        // Resolution scaling cannot be applied to this texture right now.
+                        // Flag so that we know to blacklist scaling on related textures when binding them.
+
+                        flags |= TextureUsageFlags.ResScaleUnsupported;
                     }
 
-                    // Resolution scaling cannot be applied to this texture right now.
-                    // Flag so that we know to blacklist scaling on related textures when binding them.
-
-                    TextureDescriptor descriptor = context.TextureDescriptors[index];
-                    descriptor.Flags |= TextureUsageFlags.ResScaleUnsupported;
-                    context.TextureDescriptors[index] = descriptor;
+                    context.TextureDescriptors[index] = context.TextureDescriptors[index].SetFlag(flags);
                 }
 
                 return vector;

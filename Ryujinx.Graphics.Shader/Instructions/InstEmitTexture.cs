@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Suld(EmitterContext context)
         {
+            context.Config.SetUsedFeature(FeatureFlags.IntegerSampling);
+
             OpCodeImage op = (OpCodeImage)context.CurrOp;
 
             SamplerType type = ConvertSamplerType(op.Dimensions);

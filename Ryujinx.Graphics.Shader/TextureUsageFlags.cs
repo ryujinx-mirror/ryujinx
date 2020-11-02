@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Shader
         None = 0,
 
         // Integer sampled textures must be noted for resolution scaling.
-        ResScaleUnsupported = 1 << 0
+        ResScaleUnsupported = 1 << 0,
+        NeedsScaleValue = 1 << 1
     }
 }
