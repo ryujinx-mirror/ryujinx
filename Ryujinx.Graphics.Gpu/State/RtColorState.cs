@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.State
         public GpuVa        Address;
         public int          WidthOrStride;
         public int          Height;
-        public RtFormat     Format;
+        public ColorFormat  Format;
         public MemoryLayout MemoryLayout;
         public int          Depth;
         public int          LayerSize;

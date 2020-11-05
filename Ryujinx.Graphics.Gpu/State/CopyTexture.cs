@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.State
     struct CopyTexture
     {
 #pragma warning disable CS0649
-        public RtFormat     Format;
+        public ColorFormat  Format;
         public Boolean32    LinearLayout;
         public MemoryLayout MemoryLayout;
         public int          Depth;

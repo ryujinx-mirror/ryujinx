@@ -451,9 +451,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="copyTexture">Copy texture to find or create</param>
+        /// <param name="formatInfo">Format information of the copy texture</param>
         /// <param name="preferScaling">Indicates if the texture should be scaled from the start</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(CopyTexture copyTexture, bool preferScaling = true)
+        public Texture FindOrCreateTexture(CopyTexture copyTexture, FormatInfo formatInfo, bool preferScaling = true)
         {
             ulong address = _context.MemoryManager.Translate(copyTexture.Address.Pack());
 
@@ -464,8 +465,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             int gobBlocksInY = copyTexture.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = copyTexture.MemoryLayout.UnpackGobBlocksInZ();
-
-            FormatInfo formatInfo = copyTexture.Format.Convert();
 
             int width;
 

@@ -1,6 +1,5 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Texture;
 using System;
 
@@ -89,26 +88,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Finds the appropriate depth format for a copy texture if the source texture has a depth format.
-        /// </summary>
-        /// <param name="dstTextureFormat">Destination CopyTexture Format</param>
-        /// <param name="srcTextureFormat">Source Texture Format</param>
-        /// <returns>Derived RtFormat if srcTextureFormat is a depth format, otherwise return dstTextureFormat.</returns>
-        public static RtFormat DeriveDepthFormat(RtFormat dstTextureFormat, Format srcTextureFormat)
-        {
-            return srcTextureFormat switch
-            {
-                Format.S8Uint => RtFormat.S8Uint,
-                Format.D16Unorm => RtFormat.D16Unorm,
-                Format.D24X8Unorm => RtFormat.D24Unorm,
-                Format.D32Float => RtFormat.D32Float,
-                Format.D24UnormS8Uint => RtFormat.D24UnormS8Uint,
-                Format.D32FloatS8Uint => RtFormat.D32FloatS8Uint,
-                _ => dstTextureFormat
-            };
-        }
-
-        /// <summary>
         /// Checks if two formats are compatible, according to the host API copy format compatibility rules.
         /// </summary>
         /// <param name="lhs">First comparand</param>
@@ -116,7 +95,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if the formats are compatible, false otherwise</returns>
         public static bool FormatCompatible(FormatInfo lhs, FormatInfo rhs)
         {
-            if (IsDsFormat(lhs.Format) || IsDsFormat(rhs.Format))
+            if (lhs.Format.IsDepthOrStencil() || rhs.Format.IsDepthOrStencil())
             {
                 return lhs.Format == rhs.Format;
             }
@@ -566,27 +545,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return FormatClass.Unclassified;
-        }
-
-        /// <summary>
-        /// Checks if the format is a depth-stencil texture format.
-        /// </summary>
-        /// <param name="format">Format to check</param>
-        /// <returns>True if the format is a depth-stencil format (including depth only), false otherwise</returns>
-        private static bool IsDsFormat(Format format)
-        {
-            switch (format)
-            {
-                case Format.D16Unorm:
-                case Format.D24X8Unorm:
-                case Format.D24UnormS8Uint:
-                case Format.D32Float:
-                case Format.D32FloatS8Uint:
-                case Format.S8Uint:
-                    return true;
-            }
-
-            return false;
         }
     }
 }

@@ -19,7 +19,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             var dstCopyTexture = state.Get<CopyTexture>(MethodOffset.CopyDstTexture);
             var srcCopyTexture = state.Get<CopyTexture>(MethodOffset.CopySrcTexture);
 
-            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture);
+            var srcCopyTextureFormat = srcCopyTexture.Format.Convert();
+
+            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat);
 
             if (srcTexture == null)
             {
@@ -29,9 +31,18 @@ namespace Ryujinx.Graphics.Gpu.Engine
             // When the source texture that was found has a depth format,
             // we must enforce the target texture also has a depth format,
             // as copies between depth and color formats are not allowed.
-            dstCopyTexture.Format = TextureCompatibility.DeriveDepthFormat(dstCopyTexture.Format, srcTexture.Format);
+            FormatInfo dstCopyTextureFormat;
 
-            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, srcTexture.ScaleMode == Image.TextureScaleMode.Scaled);
+            if (srcTexture.Format.IsDepthOrStencil())
+            {
+                dstCopyTextureFormat = srcCopyTextureFormat;
+            }
+            else
+            {
+                dstCopyTextureFormat = dstCopyTexture.Format.Convert();
+            }
+
+            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled);
 
             if (dstTexture == null)
             {
@@ -89,7 +100,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 srcCopyTexture.Height++;
 
-                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcTexture.ScaleMode == Image.TextureScaleMode.Scaled);
+                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled);
                 if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
                 {
                     srcTexture.PropagateScale(dstTexture);
