@@ -287,7 +287,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             {
                 LiveRange range = _ranges[splitIndex];
 
-                if (position > range.Start && position <= range.End)
+                if (position > range.Start && position < range.End)
                 {
                     right._ranges.Add(new LiveRange(position, range.End));
 
