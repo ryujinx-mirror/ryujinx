@@ -274,7 +274,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            if (alignSizes)
+            bool isTextureBuffer = lhs.Target == Target.TextureBuffer || rhs.Target == Target.TextureBuffer;
+
+            if (alignSizes && !isTextureBuffer)
             {
                 Size size0 = GetAlignedSize(lhs);
                 Size size1 = GetAlignedSize(rhs);
