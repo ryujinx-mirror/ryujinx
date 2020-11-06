@@ -2,7 +2,11 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.Loader;
+using Ryujinx.Common.Logging;
 using System;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Ryujinx.HLE.Loaders.Executables
 {
@@ -23,7 +27,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         public int DataSize { get; }
         public int BssSize { get; }
 
-        public string Name;
+        public string   Name;
         public Buffer32 BuildId;
 
         public NsoExecutable(IStorage inStorage, string name = null)
@@ -33,22 +37,25 @@ namespace Ryujinx.HLE.Loaders.Executables
             reader.Initialize(inStorage.AsFile(OpenMode.Read)).ThrowIfFailure();
 
             TextOffset = (int)reader.Header.Segments[0].MemoryOffset;
-            RoOffset = (int)reader.Header.Segments[1].MemoryOffset;
+            RoOffset   = (int)reader.Header.Segments[1].MemoryOffset;
             DataOffset = (int)reader.Header.Segments[2].MemoryOffset;
-            BssSize = (int)reader.Header.BssSize;
+            BssSize    = (int)reader.Header.BssSize;
 
             reader.GetSegmentSize(NsoReader.SegmentType.Data, out uint uncompressedSize).ThrowIfFailure();
+
             Program = new byte[DataOffset + uncompressedSize];
 
-            TextSize = DecompressSection(reader, NsoReader.SegmentType.Text, TextOffset, Program);
-            RoSize   = DecompressSection(reader, NsoReader.SegmentType.Ro,   RoOffset,   Program);
-            DataSize = DecompressSection(reader, NsoReader.SegmentType.Data, DataOffset, Program);
+            TextSize = DecompressSection(reader, NsoReader.SegmentType.Text, TextOffset);
+            RoSize   = DecompressSection(reader, NsoReader.SegmentType.Ro,   RoOffset);
+            DataSize = DecompressSection(reader, NsoReader.SegmentType.Data, DataOffset);
 
-            Name = name;
+            Name    = name;
             BuildId = reader.Header.ModuleId;
+
+            PrintRoSectionInfo();
         }
 
-        private static int DecompressSection(NsoReader reader, NsoReader.SegmentType segmentType, int offset, byte[] Program)
+        private int DecompressSection(NsoReader reader, NsoReader.SegmentType segmentType, int offset)
         {
             reader.GetSegmentSize(segmentType, out uint uncompressedSize).ThrowIfFailure();
 
@@ -57,6 +64,41 @@ namespace Ryujinx.HLE.Loaders.Executables
             reader.ReadSegment(segmentType, span).ThrowIfFailure();
 
             return (int)uncompressedSize;
+        }
+
+        private void PrintRoSectionInfo()
+        {
+            byte[]        roBuffer      = Ro.ToArray();
+            string        rawTextBuffer = Encoding.ASCII.GetString(roBuffer, 0, RoSize);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            int    length     = BitConverter.ToInt32(roBuffer, 4);
+            string moduleName = Encoding.UTF8.GetString(roBuffer, 8, length);
+            
+            MatchCollection moduleMatches = Regex.Matches(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase);
+            if (moduleMatches.Count > 0)
+            {
+                moduleName = moduleMatches.First().Value;
+            }
+
+            stringBuilder.AppendLine($"    Module: {moduleName}");
+
+            MatchCollection fsSdkMatches = Regex.Matches(rawTextBuffer, @"sdk_version: ([0-9.]*)");
+            if (fsSdkMatches.Count != 0)
+            {
+                stringBuilder.AppendLine($"    FS SDK Version: {fsSdkMatches.First().Value.Replace("sdk_version: ", "")}");
+            }
+
+            MatchCollection sdkMwMatches = Regex.Matches(rawTextBuffer, @"SDK MW[ -~]*");
+            if (sdkMwMatches.Count != 0)
+            {
+                string libHeader  = "    SDK Libraries: ";
+                string libContent = string.Join($"\n{new string(' ', libHeader.Length)}", sdkMwMatches);
+
+                stringBuilder.AppendLine($"{libHeader}{libContent}");
+            }
+
+            Logger.Info?.Print(LogClass.Loader, $"{Name}:\n{stringBuilder.ToString().TrimEnd('\r', '\n')}");
         }
     }
 }
