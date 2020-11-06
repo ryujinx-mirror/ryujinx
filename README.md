@@ -16,7 +16,7 @@
 </p>
 
 <h5 align="center">
-    As of August 2020, Ryujinx goes past menus and in-game on over 1,500 commercial titles. Of those, more than half are considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
+    As of November 2020, Ryujinx has been tested to go past menus to in-game on approximately 1,900 commercial titles. Of those, over 1,000 are considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
 </h5>
 
 ## Usage
