@@ -2,7 +2,6 @@ using Ryujinx.Common;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Texture;
 using System;
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
@@ -17,24 +16,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="cbp">Copy command parameters</param>
         /// <param name="tex">Texture to compare</param>
         /// <param name="linear">True if the texture is linear, false if block linear</param>
-        /// <param name="bpp">Texture bytes per pixel</param>
         /// <param name="stride">Texture stride</param>
         /// <returns></returns>
-        private bool IsTextureCopyComplete(CopyBufferParams cbp, CopyBufferTexture tex, bool linear, int bpp, int stride)
+        private bool IsTextureCopyComplete(CopyBufferParams cbp, CopyBufferTexture tex, bool linear, int stride)
         {
             if (linear)
             {
-                int alignWidth = StrideAlignment / bpp;
-                return tex.RegionX  == 0 &&
-                       tex.RegionY  == 0 &&
-                       stride / bpp == BitUtils.AlignUp(cbp.XCount, alignWidth);
+                return tex.RegionX == 0 &&
+                       tex.RegionY == 0 &&
+                       stride      == BitUtils.AlignUp(cbp.XCount, StrideAlignment);
             }
             else
             {
-                int alignWidth = GobAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
-                       tex.Width   == BitUtils.AlignUp(cbp.XCount, alignWidth) &&
+                       tex.Width   == BitUtils.AlignUp(cbp.XCount, GobAlignment) &&
                        tex.Height  == cbp.YCount;
             }
         }
@@ -64,9 +60,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             if (copy2D)
             {
                 // Buffer to texture copy.
-                int srcBpp = swizzle.UnpackSrcComponentsCount() * swizzle.UnpackComponentSize();
-                int dstBpp = swizzle.UnpackDstComponentsCount() * swizzle.UnpackComponentSize();
-
                 var dst = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferDstTexture);
                 var src = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferSrcTexture);
 
@@ -77,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     srcLinear,
                     src.MemoryLayout.UnpackGobBlocksInY(),
                     src.MemoryLayout.UnpackGobBlocksInZ(),
-                    srcBpp);
+                    1);
 
                 var dstCalculator = new OffsetCalculator(
                     dst.Width,
@@ -86,7 +79,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     dstLinear,
                     dst.MemoryLayout.UnpackGobBlocksInY(),
                     dst.MemoryLayout.UnpackGobBlocksInZ(),
-                    dstBpp);
+                    1);
 
                 ulong srcBaseAddress = _context.MemoryManager.Translate(cbp.SrcAddress.Pack());
                 ulong dstBaseAddress = _context.MemoryManager.Translate(cbp.DstAddress.Pack());
@@ -95,10 +88,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dst.RegionX, dst.RegionY, cbp.XCount, cbp.YCount);
 
                 ReadOnlySpan<byte> srcSpan = _context.PhysicalMemory.GetSpan(srcBaseAddress + (ulong)srcBaseOffset, srcSize, true);
-                Span<byte> dstSpan = _context.PhysicalMemory.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
+                Span<byte> dstSpan         = _context.PhysicalMemory.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
 
-                bool completeSource = IsTextureCopyComplete(cbp, src, srcLinear, srcBpp, cbp.SrcStride);
-                bool completeDest = IsTextureCopyComplete(cbp, dst, dstLinear, dstBpp, cbp.DstStride);
+                bool completeSource = IsTextureCopyComplete(cbp, src, srcLinear, cbp.SrcStride);
+                bool completeDest   = IsTextureCopyComplete(cbp, dst, dstLinear, cbp.DstStride);
 
                 if (completeSource && completeDest)
                 {
@@ -127,10 +120,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                                 1,
                                 1,
                                 1,
-                                srcBpp,
+                                1,
                                 src.MemoryLayout.UnpackGobBlocksInY(),
                                 src.MemoryLayout.UnpackGobBlocksInZ(),
-                                src.MemoryLayout.UnpackGobBlocksInX(),
+                                1,
                                 new SizeInfo((int)target.Size),
                                 srcSpan);
                         }
@@ -174,16 +167,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     return true;
                 }
 
-                bool _ = srcBpp switch
-                {
-                    1 => Convert<byte>(dstSpan, srcSpan),
-                    2 => Convert<ushort>(dstSpan, srcSpan),
-                    4 => Convert<uint>(dstSpan, srcSpan),
-                    8 => Convert<ulong>(dstSpan, srcSpan),
-                    12 => Convert<Bpp12Pixel>(dstSpan, srcSpan),
-                    16 => Convert<Vector128<byte>>(dstSpan, srcSpan),
-                    _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
-                };
+                Convert<byte>(dstSpan, srcSpan);
 
                 _context.PhysicalMemory.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
             }
