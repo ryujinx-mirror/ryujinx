@@ -20,10 +20,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            // Scissor affects clears aswell.
+            // Scissor and rasterizer discard also affect clears.
             if (state.QueryModified(MethodOffset.ScissorState))
             {
                 UpdateScissorState(state);
+            }
+
+            if (state.QueryModified(MethodOffset.RasterizeEnable))
+            {
+                UpdateRasterizerState(state);
             }
 
             int index = (argument >> 6) & 0xf;
