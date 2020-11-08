@@ -2,13 +2,12 @@ namespace Ryujinx.Graphics.Shader
 {
     public struct BufferDescriptor
     {
-        public string Name { get; }
-
+        public int Binding { get; }
         public int Slot { get; }
 
-        public BufferDescriptor(string name, int slot)
+        public BufferDescriptor(int binding, int slot)
         {
-            Name = name;
+            Binding = binding;
             Slot = slot;
         }
     }

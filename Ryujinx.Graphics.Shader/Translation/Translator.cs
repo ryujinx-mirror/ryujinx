@@ -24,15 +24,28 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        public static ShaderProgram Translate(ulong address, IGpuAccessor gpuAccessor, TranslationFlags flags)
+        public static ShaderProgram Translate(
+            ulong address,
+            IGpuAccessor gpuAccessor,
+            TranslationFlags flags,
+            TranslationCounts counts = null)
         {
-            return Translate(DecodeShader(address, gpuAccessor, flags, out ShaderConfig config), config);
+            counts ??= new TranslationCounts();
+
+            return Translate(DecodeShader(address, gpuAccessor, flags, counts, out ShaderConfig config), config);
         }
 
-        public static ShaderProgram Translate(ulong addressA, ulong addressB, IGpuAccessor gpuAccessor, TranslationFlags flags)
+        public static ShaderProgram Translate(
+            ulong addressA,
+            ulong addressB,
+            IGpuAccessor gpuAccessor,
+            TranslationFlags flags,
+            TranslationCounts counts = null)
         {
-            FunctionCode[] funcA = DecodeShader(addressA, gpuAccessor, flags | TranslationFlags.VertexA, out ShaderConfig configA);
-            FunctionCode[] funcB = DecodeShader(addressB, gpuAccessor, flags, out ShaderConfig config);
+            counts ??= new TranslationCounts();
+
+            FunctionCode[] funcA = DecodeShader(addressA, gpuAccessor, flags | TranslationFlags.VertexA, counts, out ShaderConfig configA);
+            FunctionCode[] funcB = DecodeShader(addressB, gpuAccessor, flags, counts, out ShaderConfig config);
 
             config.SetUsedFeature(configA.UsedFeatures);
 
@@ -105,19 +118,24 @@ namespace Ryujinx.Graphics.Shader.Translation
             return new ShaderProgram(spInfo, config.Stage, glslCode, config.Size, sizeA);
         }
 
-        private static FunctionCode[] DecodeShader(ulong address, IGpuAccessor gpuAccessor, TranslationFlags flags, out ShaderConfig config)
+        private static FunctionCode[] DecodeShader(
+            ulong address,
+            IGpuAccessor gpuAccessor,
+            TranslationFlags flags,
+            TranslationCounts counts,
+            out ShaderConfig config)
         {
             Block[][] cfg;
 
             if ((flags & TranslationFlags.Compute) != 0)
             {
-                config = new ShaderConfig(gpuAccessor, flags);
+                config = new ShaderConfig(gpuAccessor, flags, counts);
 
                 cfg = Decoder.Decode(gpuAccessor, address);
             }
             else
             {
-                config = new ShaderConfig(new ShaderHeader(gpuAccessor, address), gpuAccessor, flags);
+                config = new ShaderConfig(new ShaderHeader(gpuAccessor, address), gpuAccessor, flags, counts);
 
                 cfg = Decoder.Decode(gpuAccessor, address + HeaderSize);
             }

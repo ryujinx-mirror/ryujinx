@@ -42,9 +42,9 @@ namespace Ryujinx.Graphics.OpenGL
             ResourcePool = new ResourcePool();
         }
 
-        public IShader CompileShader(ShaderProgram shader)
+        public IShader CompileShader(ShaderStage stage, string code)
         {
-            return new Shader(shader);
+            return new Shader(stage, code);
         }
 
         public BufferHandle CreateBuffer(int size)

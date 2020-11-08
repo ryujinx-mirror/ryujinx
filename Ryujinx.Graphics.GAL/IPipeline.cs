@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetIndexBuffer(BufferRange buffer, IndexType type);
 
-        void SetImage(int index, ShaderStage stage, ITexture texture, Format imageFormat);
+        void SetImage(int binding, ITexture texture, Format imageFormat);
 
         void SetLogicOpState(bool enable, LogicalOp op);
 
@@ -64,19 +64,19 @@ namespace Ryujinx.Graphics.GAL
         void SetRenderTargetColorMasks(ReadOnlySpan<uint> componentMask);
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
-        void SetSampler(int index, ShaderStage stage, ISampler sampler);
+        void SetSampler(int binding, ISampler sampler);
 
         void SetScissorEnable(int index, bool enable);
         void SetScissor(int index, int x, int y, int width, int height);
 
         void SetStencilTest(StencilTestDescriptor stencilTest);
 
-        void SetStorageBuffer(int index, ShaderStage stage, BufferRange buffer);
+        void SetStorageBuffers(ReadOnlySpan<BufferRange> buffers);
 
-        void SetTexture(int index, ShaderStage stage, ITexture texture);
+        void SetTexture(int binding, ITexture texture);
 
         void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers);
-        void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
+        void SetUniformBuffers(ReadOnlySpan<BufferRange> buffers);
 
         void SetUserClipDistance(int index, bool enableClip);
 

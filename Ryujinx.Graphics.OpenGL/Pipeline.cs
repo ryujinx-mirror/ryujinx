@@ -697,20 +697,20 @@ namespace Ryujinx.Graphics.OpenGL
             SetFrontFace(_frontFace = frontFace.Convert());
         }
 
-        public void SetImage(int index, ShaderStage stage, ITexture texture, Format imageFormat)
+        public void SetImage(int binding, ITexture texture, Format imageFormat)
         {
-            int unit = _program.GetImageUnit(stage, index);
-
-            if (unit != -1 && texture != null)
+            if (texture == null)
             {
-                TextureBase texBase = (TextureBase)texture;
+                return;
+            }
 
-                SizedInternalFormat format = FormatTable.GetImageFormat(imageFormat);
+            TextureBase texBase = (TextureBase)texture;
 
-                if (format != 0)
-                {
-                    GL.BindImageTexture(unit, texBase.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
-                }
+            SizedInternalFormat format = FormatTable.GetImageFormat(imageFormat);
+
+            if (format != 0)
+            {
+                GL.BindImageTexture(binding, texBase.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
             }
         }
 
@@ -866,14 +866,14 @@ namespace Ryujinx.Graphics.OpenGL
             UpdateDepthTest();
         }
 
-        public void SetSampler(int index, ShaderStage stage, ISampler sampler)
+        public void SetSampler(int binding, ISampler sampler)
         {
-            int unit = _program.GetTextureUnit(stage, index);
-
-            if (unit != -1 && sampler != null)
+            if (sampler == null)
             {
-                ((Sampler)sampler).Bind(unit);
+                return;
             }
+
+            ((Sampler)sampler).Bind(binding);
         }
 
         public void SetScissorEnable(int index, bool enable)
@@ -939,25 +939,25 @@ namespace Ryujinx.Graphics.OpenGL
             _stencilFrontMask = stencilTest.FrontMask;
         }
 
-        public void SetStorageBuffer(int index, ShaderStage stage, BufferRange buffer)
+        public void SetStorageBuffers(ReadOnlySpan<BufferRange> buffers)
         {
-            SetBuffer(index, stage, buffer, isStorage: true);
+            SetBuffers(buffers, isStorage: true);
         }
 
-        public void SetTexture(int index, ShaderStage stage, ITexture texture)
+        public void SetTexture(int binding, ITexture texture)
         {
-            int unit = _program.GetTextureUnit(stage, index);
-
-            if (unit != -1 && texture != null)
+            if (texture == null)
             {
-                if (unit == 0)
-                {
-                    _unit0Texture = (TextureBase)texture;
-                }
-                else
-                {
-                    ((TextureBase)texture).Bind(unit);
-                }
+                return;
+            }
+
+            if (binding == 0)
+            {
+                _unit0Texture = (TextureBase)texture;
+            }
+            else
+            {
+                ((TextureBase)texture).Bind(binding);
             }
         }
 
@@ -997,9 +997,9 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer)
+        public void SetUniformBuffers(ReadOnlySpan<BufferRange> buffers)
         {
-            SetBuffer(index, stage, buffer, isStorage: false);
+            SetBuffers(buffers, isStorage: false);
         }
 
         public void SetUserClipDistance(int index, bool enableClip)
@@ -1077,30 +1077,22 @@ namespace Ryujinx.Graphics.OpenGL
             GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
         }
 
-        private void SetBuffer(int index, ShaderStage stage, BufferRange buffer, bool isStorage)
+        private void SetBuffers(ReadOnlySpan<BufferRange> buffers, bool isStorage)
         {
-            int bindingPoint = isStorage
-                ? _program.GetStorageBufferBindingPoint(stage, index)
-                : _program.GetUniformBufferBindingPoint(stage, index);
+            BufferRangeTarget target = isStorage ? BufferRangeTarget.ShaderStorageBuffer : BufferRangeTarget.UniformBuffer;
 
-            if (bindingPoint == -1)
+            for (int index = 0; index < buffers.Length; index++)
             {
-                return;
+                BufferRange buffer = buffers[index];
+
+                if (buffer.Handle == BufferHandle.Null)
+                {
+                    GL.BindBufferRange(target, index, 0, IntPtr.Zero, 0);
+                    continue;
+                }
+
+                GL.BindBufferRange(target, index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
             }
-
-            BufferRangeTarget target = isStorage
-                ? BufferRangeTarget.ShaderStorageBuffer
-                : BufferRangeTarget.UniformBuffer;
-
-            if (buffer.Handle == BufferHandle.Null)
-            {
-                GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
-                return;
-            }
-
-            IntPtr bufferOffset = (IntPtr)buffer.Offset;
-
-            GL.BindBufferRange(target, bindingPoint, buffer.Handle.ToInt32(), bufferOffset, buffer.Size);
         }
 
         private void SetOrigin(ClipOrigin origin)

@@ -2,79 +2,79 @@
 {
     public interface IGpuAccessor
     {
-        public void Log(string message)
+        void Log(string message)
         {
             // No default log output.
         }
 
         T MemoryRead<T>(ulong address) where T : unmanaged;
 
-        public bool MemoryMapped(ulong address)
+        bool MemoryMapped(ulong address)
         {
             return true;
         }
 
-        public int QueryComputeLocalSizeX()
+        int QueryComputeLocalSizeX()
         {
             return 1;
         }
 
-        public int QueryComputeLocalSizeY()
+        int QueryComputeLocalSizeY()
         {
             return 1;
         }
 
-        public int QueryComputeLocalSizeZ()
+        int QueryComputeLocalSizeZ()
         {
             return 1;
         }
 
-        public int QueryComputeLocalMemorySize()
+        int QueryComputeLocalMemorySize()
         {
             return 0x1000;
         }
 
-        public int QueryComputeSharedMemorySize()
+        int QueryComputeSharedMemorySize()
         {
             return 0xc000;
         }
 
-        public uint QueryConstantBufferUse()
+        uint QueryConstantBufferUse()
         {
             return 0xffff;
         }
 
-        public bool QueryIsTextureBuffer(int handle)
+        bool QueryIsTextureBuffer(int handle)
         {
             return false;
         }
 
-        public bool QueryIsTextureRectangle(int handle)
+        bool QueryIsTextureRectangle(int handle)
         {
             return false;
         }
 
-        public InputTopology QueryPrimitiveTopology()
+        InputTopology QueryPrimitiveTopology()
         {
             return InputTopology.Points;
         }
 
-        public int QueryStorageBufferOffsetAlignment()
+        int QueryStorageBufferOffsetAlignment()
         {
             return 16;
         }
 
-        public bool QuerySupportsImageLoadFormatted()
+        bool QuerySupportsImageLoadFormatted()
         {
             return true;
         }
 
-        public bool QuerySupportsNonConstantTextureOffset()
+        bool QuerySupportsNonConstantTextureOffset()
         {
             return true;
         }
 
-        public TextureFormat QueryTextureFormat(int handle)
+        TextureFormat QueryTextureFormat(int handle)
         {
             return TextureFormat.R8G8B8A8Unorm;
         }

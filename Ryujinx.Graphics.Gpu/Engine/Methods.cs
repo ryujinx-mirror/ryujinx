@@ -6,6 +6,7 @@ using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
@@ -997,6 +998,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _vsUsesInstanceId = gs.Shaders[0]?.Program.Info.UsesInstanceId ?? false;
 
+            int storageBufferBindingsCount = 0;
+            int uniformBufferBindingsCount = 0;
+
             for (int stage = 0; stage < Constants.ShaderStages; stage++)
             {
                 ShaderProgramInfo info = gs.Shaders[stage]?.Program.Info;
@@ -1005,6 +1009,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (info == null)
                 {
+                    TextureManager.SetGraphicsTextures(stage, Array.Empty<TextureBindingInfo>());
+                    TextureManager.SetGraphicsImages(stage, Array.Empty<TextureBindingInfo>());
+                    BufferManager.SetGraphicsStorageBufferBindings(stage, null);
+                    BufferManager.SetGraphicsUniformBufferBindings(stage, null);
                     continue;
                 }
 
@@ -1018,11 +1026,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     if (descriptor.IsBindless)
                     {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.CbufSlot, descriptor.CbufOffset, descriptor.Flags);
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.Binding, descriptor.CbufSlot, descriptor.CbufOffset, descriptor.Flags);
                     }
                     else
                     {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex, descriptor.Flags);
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.Binding, descriptor.HandleIndex, descriptor.Flags);
                     }
                 }
 
@@ -1037,27 +1045,27 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     Target target = ShaderTexture.GetTarget(descriptor.Type);
                     Format format = ShaderTexture.GetFormat(descriptor.Format);
 
-                    imageBindings[index] = new TextureBindingInfo(target, format, descriptor.HandleIndex, descriptor.Flags);
+                    imageBindings[index] = new TextureBindingInfo(target, format, descriptor.Binding, descriptor.HandleIndex, descriptor.Flags);
                 }
 
                 TextureManager.SetGraphicsImages(stage, imageBindings);
 
-                uint sbEnableMask = 0;
-                uint ubEnableMask = 0;
+                BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
+                BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
 
-                for (int index = 0; index < info.SBuffers.Count; index++)
+                if (info.SBuffers.Count != 0)
                 {
-                    sbEnableMask |= 1u << info.SBuffers[index].Slot;
+                    storageBufferBindingsCount = Math.Max(storageBufferBindingsCount, info.SBuffers.Max(x => x.Binding) + 1);
                 }
 
-                for (int index = 0; index < info.CBuffers.Count; index++)
+                if (info.CBuffers.Count != 0)
                 {
-                    ubEnableMask |= 1u << info.CBuffers[index].Slot;
+                    uniformBufferBindingsCount = Math.Max(uniformBufferBindingsCount, info.CBuffers.Max(x => x.Binding) + 1);
                 }
-
-                BufferManager.SetGraphicsStorageBufferEnableMask(stage, sbEnableMask);
-                BufferManager.SetGraphicsUniformBufferEnableMask(stage, ubEnableMask);
             }
+
+            BufferManager.SetGraphicsStorageBufferBindingsCount(storageBufferBindingsCount);
+            BufferManager.SetGraphicsUniformBufferBindingsCount(uniformBufferBindingsCount);
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
         }

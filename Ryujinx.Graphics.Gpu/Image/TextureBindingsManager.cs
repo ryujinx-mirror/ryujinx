@@ -265,11 +265,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             for (int index = 0; index < _textureBindings[stageIndex].Length; index++)
             {
-                TextureBindingInfo binding = _textureBindings[stageIndex][index];
+                TextureBindingInfo bindingInfo = _textureBindings[stageIndex][index];
 
                 int packedId;
 
-                if (binding.IsBindless)
+                if (bindingInfo.IsBindless)
                 {
                     ulong address;
 
@@ -277,18 +277,18 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     if (_isCompute)
                     {
-                        address = bufferManager.GetComputeUniformBufferAddress(binding.CbufSlot);
+                        address = bufferManager.GetComputeUniformBufferAddress(bindingInfo.CbufSlot);
                     }
                     else
                     {
-                        address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, binding.CbufSlot);
+                        address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, bindingInfo.CbufSlot);
                     }
 
-                    packedId = _context.PhysicalMemory.Read<int>(address + (ulong)binding.CbufOffset * 4);
+                    packedId = _context.PhysicalMemory.Read<int>(address + (ulong)bindingInfo.CbufOffset * 4);
                 }
                 else
                 {
-                    packedId = ReadPackedId(stageIndex, binding.Handle, _textureBufferIndex);
+                    packedId = ReadPackedId(stageIndex, bindingInfo.Handle, _textureBufferIndex);
                 }
 
                 int textureId = UnpackTextureId(packedId);
@@ -305,18 +305,18 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 Texture texture = pool.Get(textureId);
 
-                ITexture hostTexture = texture?.GetTargetTexture(binding.Target);
+                ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
 
                 if (_textureState[stageIndex][index].Texture != hostTexture || _rebind)
                 {
-                    if (UpdateScale(texture, binding, index, stage))
+                    if (UpdateScale(texture, bindingInfo, index, stage))
                     {
-                        hostTexture = texture?.GetTargetTexture(binding.Target);
+                        hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                     }
 
                     _textureState[stageIndex][index].Texture = hostTexture;
 
-                    _context.Renderer.Pipeline.SetTexture(index, stage, hostTexture);
+                    _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTexture);
                 }
 
                 if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
@@ -335,7 +335,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     _textureState[stageIndex][index].Sampler = hostSampler;
 
-                    _context.Renderer.Pipeline.SetSampler(index, stage, hostSampler);
+                    _context.Renderer.Pipeline.SetSampler(bindingInfo.Binding, hostSampler);
                 }
             }
         }
@@ -359,14 +359,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             for (int index = 0; index < _imageBindings[stageIndex].Length; index++)
             {
-                TextureBindingInfo binding = _imageBindings[stageIndex][index];
+                TextureBindingInfo bindingInfo = _imageBindings[stageIndex][index];
 
-                int packedId = ReadPackedId(stageIndex, binding.Handle, _textureBufferIndex);
+                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, _textureBufferIndex);
                 int textureId = UnpackTextureId(packedId);
 
                 Texture texture = pool.Get(textureId);
 
-                ITexture hostTexture = texture?.GetTargetTexture(binding.Target);
+                ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
 
                 if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
                 {
@@ -378,21 +378,21 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (_imageState[stageIndex][index].Texture != hostTexture || _rebind)
                 {
-                    if (UpdateScale(texture, binding, baseScaleIndex + index, stage))
+                    if (UpdateScale(texture, bindingInfo, baseScaleIndex + index, stage))
                     {
-                        hostTexture = texture?.GetTargetTexture(binding.Target);
+                        hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                     }
 
                     _imageState[stageIndex][index].Texture = hostTexture;
 
-                    Format format = binding.Format;
+                    Format format = bindingInfo.Format;
 
                     if (format == 0 && texture != null)
                     {
                         format = texture.Format;
                     }
 
-                    _context.Renderer.Pipeline.SetImage(index, stage, hostTexture, format);
+                    _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTexture, format);
                 }
             }
         }

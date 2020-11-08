@@ -20,6 +20,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public Format Format { get; }
 
         /// <summary>
+        /// Shader texture host binding point.
+        /// </summary>
+        public int Binding { get; }
+
+        /// <summary>
         /// Shader texture handle.
         /// This is an index into the texture constant buffer.
         /// </summary>
@@ -53,13 +58,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
         /// <param name="format">Format of the image as declared on the shader</param>
+        /// <param name="binding">The shader texture binding point</param>
         /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, Format format, int handle, TextureUsageFlags flags)
+        public TextureBindingInfo(Target target, Format format, int binding, int handle, TextureUsageFlags flags)
         {
-            Target = target;
-            Format = format;
-            Handle = handle;
+            Target  = target;
+            Format  = format;
+            Binding = binding;
+            Handle  = handle;
 
             IsBindless = false;
 
@@ -73,9 +80,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs the texture binding information structure.
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
+        /// <param name="binding">The shader texture binding point</param>
         /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, int handle, TextureUsageFlags flags) : this(target, (Format)0, handle, flags)
+        public TextureBindingInfo(Target target, int binding, int handle, TextureUsageFlags flags) : this(target, (Format)0, binding, handle, flags)
         {
         }
 
@@ -83,14 +91,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs the bindless texture binding information structure.
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
+        /// <param name="binding">The shader texture binding point</param>
         /// <param name="cbufSlot">Constant buffer slot where the bindless texture handle is located</param>
         /// <param name="cbufOffset">Constant buffer offset of the bindless texture handle</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, int cbufSlot, int cbufOffset, TextureUsageFlags flags)
+        public TextureBindingInfo(Target target, int binding, int cbufSlot, int cbufOffset, TextureUsageFlags flags)
         {
-            Target = target;
-            Format = 0;
-            Handle = 0;
+            Target  = target;
+            Format  = 0;
+            Binding = binding;
+            Handle  = 0;
 
             IsBindless = true;
 

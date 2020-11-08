@@ -2,7 +2,7 @@ namespace Ryujinx.Graphics.Shader
 {
     public struct TextureDescriptor
     {
-        public string Name { get; }
+        public int Binding { get; }
 
         public SamplerType Type { get; }
 
@@ -17,9 +17,9 @@ namespace Ryujinx.Graphics.Shader
 
         public TextureUsageFlags Flags { get; set; }
 
-        public TextureDescriptor(string name, SamplerType type, TextureFormat format, int handleIndex)
+        public TextureDescriptor(int binding, SamplerType type, TextureFormat format, int handleIndex)
         {
-            Name        = name;
+            Binding     = binding;
             Type        = type;
             Format      = format;
             HandleIndex = handleIndex;
@@ -32,9 +32,9 @@ namespace Ryujinx.Graphics.Shader
             Flags = TextureUsageFlags.None;
         }
 
-        public TextureDescriptor(string name, SamplerType type, int cbufSlot, int cbufOffset)
+        public TextureDescriptor(int binding, SamplerType type, int cbufSlot, int cbufOffset)
         {
-            Name        = name;
+            Binding     = binding;
             Type        = type;
             Format      = TextureFormat.Unknown;
             HandleIndex = 0;

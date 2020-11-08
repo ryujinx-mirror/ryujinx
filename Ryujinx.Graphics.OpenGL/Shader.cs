@@ -8,31 +8,22 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
-        private ShaderProgram _program;
-
-        public ShaderProgramInfo Info => _program.Info;
-
-        public ShaderStage Stage => _program.Stage;
-
-        public Shader(ShaderProgram program)
+        public Shader(ShaderStage stage, string code)
         {
-            _program = program;
-
-            ShaderType type = ShaderType.VertexShader;
-
-            switch (program.Stage)
+            ShaderType type = stage switch
             {
-                case ShaderStage.Compute:                type = ShaderType.ComputeShader;        break;
-                case ShaderStage.Vertex:                 type = ShaderType.VertexShader;         break;
-                case ShaderStage.TessellationControl:    type = ShaderType.TessControlShader;    break;
-                case ShaderStage.TessellationEvaluation: type = ShaderType.TessEvaluationShader; break;
-                case ShaderStage.Geometry:               type = ShaderType.GeometryShader;       break;
-                case ShaderStage.Fragment:               type = ShaderType.FragmentShader;       break;
-            }
+                ShaderStage.Compute => ShaderType.ComputeShader,
+                ShaderStage.Vertex => ShaderType.VertexShader,
+                ShaderStage.TessellationControl => ShaderType.TessControlShader,
+                ShaderStage.TessellationEvaluation => ShaderType.TessEvaluationShader,
+                ShaderStage.Geometry => ShaderType.GeometryShader,
+                ShaderStage.Fragment => ShaderType.FragmentShader,
+                _ => ShaderType.VertexShader
+            };
 
             Handle = GL.CreateShader(type);
 
-            GL.ShaderSource(Handle, program.Code);
+            GL.ShaderSource(Handle, code);
             GL.CompileShader(Handle);
         }
 

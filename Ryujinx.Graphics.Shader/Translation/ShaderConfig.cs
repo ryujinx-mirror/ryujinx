@@ -20,11 +20,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public TranslationFlags Flags { get; }
 
+        public TranslationCounts Counts { get; }
+
         public int Size { get; private set; }
 
         public FeatureFlags UsedFeatures { get; private set; }
 
-        public ShaderConfig(IGpuAccessor gpuAccessor, TranslationFlags flags)
+        public ShaderConfig(IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
             Stage             = ShaderStage.Compute;
             OutputTopology    = OutputTopology.PointList;
@@ -38,9 +40,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             Flags             = flags;
             Size              = 0;
             UsedFeatures      = FeatureFlags.None;
+            Counts            = counts;
         }
 
-        public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationFlags flags)
+        public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
             Stage             = header.Stage;
             OutputTopology    = header.OutputTopology;
@@ -54,6 +57,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             Flags             = flags;
             Size              = 0;
             UsedFeatures      = FeatureFlags.None;
+            Counts            = counts;
         }
 
         public int GetDepthRegister()
