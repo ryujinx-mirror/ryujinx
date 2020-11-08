@@ -15,6 +15,7 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
+using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
 using Ryujinx.HLE.HOS.Services.Mii;
@@ -52,6 +53,8 @@ namespace Ryujinx.HLE.HOS
         internal VirtualDeviceSessionRegistry AudioDeviceSessionRegistry { get; private set; }
 
         public SystemStateMgr State { get; private set; }
+
+        internal PerformanceState PerformanceState { get; private set; }
 
         internal AppletStateMgr AppletState { get; private set; }
 
@@ -93,6 +96,8 @@ namespace Ryujinx.HLE.HOS
             Device = device;
 
             State = new SystemStateMgr();
+
+            PerformanceState = new PerformanceState();
 
             // Note: This is not really correct, but with HLE of services, the only memory
             // region used that is used is Application, so we can use the other ones for anything.
