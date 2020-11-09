@@ -305,24 +305,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
-                if (!samplers.Add(samplerName))
+                if ((texOp.Flags & TextureFlags.Bindless) != 0 || !samplers.Add(samplerName))
                 {
                     continue;
                 }
 
                 int firstBinding = -1;
 
-                if ((texOp.Flags & TextureFlags.Bindless) != 0)
-                {
-                    AstOperand operand = texOp.GetSource(0) as AstOperand;
-
-                    firstBinding = context.Config.Counts.IncrementTexturesCount();
-
-                    var desc = new TextureDescriptor(firstBinding, texOp.Type, operand.CbufSlot, operand.CbufOffset);
-
-                    context.TextureDescriptors.Add(desc);
-                }
-                else if ((texOp.Type & SamplerType.Indexed) != 0)
+                if ((texOp.Type & SamplerType.Indexed) != 0)
                 {
                     for (int index = 0; index < texOp.ArraySize; index++)
                     {
@@ -333,7 +323,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             firstBinding = binding;
                         }
 
-                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.Handle + index * 2);
+                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle + index * 2);
 
                         context.TextureDescriptors.Add(desc);
                     }
@@ -342,7 +332,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 {
                     firstBinding = context.Config.Counts.IncrementTexturesCount();
 
-                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.Handle);
+                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle);
 
                     context.TextureDescriptors.Add(desc);
                 }
@@ -363,7 +353,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 string imageName = OperandManager.GetImageName(context.Config.Stage, texOp, indexExpr);
 
-                if (!images.Add(imageName))
+                if ((texOp.Flags & TextureFlags.Bindless) != 0 || !images.Add(imageName))
                 {
                     continue;
                 }
@@ -381,7 +371,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             firstBinding = binding;
                         }
 
-                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.Handle + index * 2);
+                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle + index * 2);
 
                         context.ImageDescriptors.Add(desc);
                     }
@@ -390,7 +380,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 {
                     firstBinding = context.Config.Counts.IncrementImagesCount();
 
-                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.Handle);
+                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle);
 
                     context.ImageDescriptors.Add(desc);
                 }

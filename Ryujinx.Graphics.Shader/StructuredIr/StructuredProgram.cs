@@ -117,6 +117,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     texOp.Type,
                     texOp.Format,
                     texOp.Flags,
+                    texOp.CbufSlot,
                     texOp.Handle,
                     4, // TODO: Non-hardcoded array size.
                     texOp.Index,

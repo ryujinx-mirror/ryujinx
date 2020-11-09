@@ -15,7 +15,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isArray   = (texOp.Type & SamplerType.Array) != 0;
+            // TODO: Bindless texture support. For now we just return 0/do nothing.
+            if (isBindless)
+            {
+                return texOp.Inst == Instruction.ImageLoad ? NumberFormatter.FormatFloat(0) : "// imageStore(bindless)";
+            }
+
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
             string texCall = texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore";
@@ -79,7 +85,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     flags |= TextureUsageFlags.ResScaleUnsupported;
                 }
 
-                context.ImageDescriptors[index] = context.ImageDescriptors[index].SetFlag(flags);
+                if (!isBindless)
+                {
+                    context.ImageDescriptors[index] = context.ImageDescriptors[index].SetFlag(flags);
+                }
 
                 return vector;
             }
@@ -212,6 +221,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
+            // TODO: Bindless texture support. For now we just return 0.
+            if (isBindless)
+            {
+                return NumberFormatter.FormatFloat(0);
+            }
+
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
             string indexExpr = null;
@@ -305,6 +320,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             bool isIndexed     = (texOp.Type & SamplerType.Indexed)     != 0;
             bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
             bool isShadow      = (texOp.Type & SamplerType.Shadow)      != 0;
+
+            // TODO: Bindless texture support. For now we just return 0.
+            if (isBindless)
+            {
+                return NumberFormatter.FormatFloat(0);
+            }
 
             // This combination is valid, but not available on GLSL.
             // For now, ignore the LOD level and do a normal sample.
@@ -469,7 +490,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         flags |= TextureUsageFlags.ResScaleUnsupported;
                     }
 
-                    context.TextureDescriptors[index] = context.TextureDescriptors[index].SetFlag(flags);
+                    if (!isBindless)
+                    {
+                        context.TextureDescriptors[index] = context.TextureDescriptors[index].SetFlag(flags);
+                    }
                 }
 
                 return vector;
@@ -571,6 +595,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+
+            // TODO: Bindless texture support. For now we just return 0.
+            if (isBindless)
+            {
+                return NumberFormatter.FormatInt(0);
+            }
 
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 

@@ -5,15 +5,14 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     class BindlessElimination
     {
-        private const int NvnTextureBufferSlot = 2;
-
         public static void RunPass(BasicBlock block, ShaderConfig config)
         {
             // We can turn a bindless into regular access by recognizing the pattern
             // produced by the compiler for separate texture and sampler.
             // We check for the following conditions:
+            // - The handle is a constant buffer value.
             // - The handle is the result of a bitwise OR logical operation.
-            // - Both sources of the OR operation comes from CB2 (used by NVN to hold texture handles).
+            // - Both sources of the OR operation comes from a constant buffer.
             for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
             {
                 if (!(node.Value is TextureOperation texOp))
@@ -26,9 +25,19 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (texOp.Inst == Instruction.TextureSample)
+                if (texOp.Inst == Instruction.Lod ||
+                    texOp.Inst == Instruction.TextureSample ||
+                    texOp.Inst == Instruction.TextureSize)
                 {
-                    if (!(texOp.GetSource(0).AsgOp is Operation handleCombineOp))
+                    Operand bindlessHandle = texOp.GetSource(0);
+
+                    if (bindlessHandle.Type == OperandType.ConstantBuffer)
+                    {
+                        texOp.SetHandle(bindlessHandle.GetCbufOffset(), bindlessHandle.GetCbufSlot());
+                        continue;
+                    }
+
+                    if (!(bindlessHandle.AsgOp is Operation handleCombineOp))
                     {
                         continue;
                     }
@@ -41,21 +50,21 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     Operand src0 = handleCombineOp.GetSource(0);
                     Operand src1 = handleCombineOp.GetSource(1);
 
-                    if (src0.Type != OperandType.ConstantBuffer || src0.GetCbufSlot() != NvnTextureBufferSlot ||
-                        src1.Type != OperandType.ConstantBuffer || src1.GetCbufSlot() != NvnTextureBufferSlot)
+                    if (src0.Type != OperandType.ConstantBuffer ||
+                        src1.Type != OperandType.ConstantBuffer || src0.GetCbufSlot() != src1.GetCbufSlot())
                     {
                         continue;
                     }
 
-                    texOp.SetHandle(src0.GetCbufOffset() | (src1.GetCbufOffset() << 16));
+                    texOp.SetHandle(src0.GetCbufOffset() | (src1.GetCbufOffset() << 16), src0.GetCbufSlot());
                 }
                 else if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
                 {
                     Operand src0 = texOp.GetSource(0);
 
-                    if (src0.Type == OperandType.ConstantBuffer && src0.GetCbufSlot() == NvnTextureBufferSlot)
+                    if (src0.Type == OperandType.ConstantBuffer)
                     {
-                        texOp.SetHandle(src0.GetCbufOffset());
+                        texOp.SetHandle(src0.GetCbufOffset(), src0.GetCbufSlot());
                         texOp.Format = config.GetTextureFormat(texOp.Handle);
                     }
                 }

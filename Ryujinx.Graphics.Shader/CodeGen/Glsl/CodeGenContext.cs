@@ -86,18 +86,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private int FindDescriptorIndex(List<TextureDescriptor> list, AstTextureOperation texOp)
         {
-            AstOperand operand = texOp.GetSource(0) as AstOperand;
-            bool bindless = (texOp.Flags & TextureFlags.Bindless) > 0;
-
-            int cBufSlot = bindless ? operand.CbufSlot : 0;
-            int cBufOffset = bindless ? operand.CbufOffset : 0;
-
             return list.FindIndex(descriptor =>
                 descriptor.Type == texOp.Type &&
+                descriptor.CbufSlot == texOp.CbufSlot &&
                 descriptor.HandleIndex == texOp.Handle &&
-                descriptor.Format == texOp.Format &&
-                descriptor.CbufSlot == cBufSlot &&
-                descriptor.CbufOffset == cBufOffset);
+                descriptor.Format == texOp.Format);
         }
 
         public int FindTextureDescriptorIndex(AstTextureOperation texOp)

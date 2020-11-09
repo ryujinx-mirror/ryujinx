@@ -8,7 +8,7 @@ using static Ryujinx.Graphics.Shader.Translation.GlobalMemory;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
-    static class Lowering
+    static class Rewriter
     {
         public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
         {

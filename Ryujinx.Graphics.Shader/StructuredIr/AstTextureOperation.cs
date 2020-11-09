@@ -8,6 +8,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public TextureFormat Format { get; }
         public TextureFlags  Flags  { get; }
 
+        public int CbufSlot  { get; }
         public int Handle    { get; }
         public int ArraySize { get; }
 
@@ -16,6 +17,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             SamplerType       type,
             TextureFormat     format,
             TextureFlags      flags,
+            int               cbufSlot,
             int               handle,
             int               arraySize,
             int               index,
@@ -24,6 +26,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Type      = type;
             Format    = format;
             Flags     = flags;
+            CbufSlot  = cbufSlot;
             Handle    = handle;
             ArraySize = arraySize;
         }

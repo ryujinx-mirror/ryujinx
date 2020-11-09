@@ -192,7 +192,7 @@ namespace Ryujinx.Graphics.Texture
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-         private static void CalculateBC3Alpha(Span<byte> alpha)
+        private static void CalculateBC3Alpha(Span<byte> alpha)
         {
             for (int i = 2; i < 8; i++)
             {

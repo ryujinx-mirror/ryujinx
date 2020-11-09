@@ -96,7 +96,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     Optimizer.RunPass(cfg.Blocks, config);
 
-                    Lowering.RunPass(cfg.Blocks, config);
+                    Rewriter.RunPass(cfg.Blocks, config);
                 }
 
                 funcs[i] = new Function(cfg.Blocks, $"fun{i}", false, inArgumentsCount, outArgumentsCount);

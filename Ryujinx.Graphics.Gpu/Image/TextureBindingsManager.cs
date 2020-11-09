@@ -267,30 +267,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo bindingInfo = _textureBindings[stageIndex][index];
 
-                int packedId;
+                int textureBufferIndex = bindingInfo.CbufSlot < 0 ? _textureBufferIndex : bindingInfo.CbufSlot;
 
-                if (bindingInfo.IsBindless)
-                {
-                    ulong address;
-
-                    var bufferManager = _context.Methods.BufferManager;
-
-                    if (_isCompute)
-                    {
-                        address = bufferManager.GetComputeUniformBufferAddress(bindingInfo.CbufSlot);
-                    }
-                    else
-                    {
-                        address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, bindingInfo.CbufSlot);
-                    }
-
-                    packedId = _context.PhysicalMemory.Read<int>(address + (ulong)bindingInfo.CbufOffset * 4);
-                }
-                else
-                {
-                    packedId = ReadPackedId(stageIndex, bindingInfo.Handle, _textureBufferIndex);
-                }
-
+                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex);
                 int textureId = UnpackTextureId(packedId);
                 int samplerId;
 
@@ -361,7 +340,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo bindingInfo = _imageBindings[stageIndex][index];
 
-                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, _textureBufferIndex);
+                int textureBufferIndex = bindingInfo.CbufSlot < 0 ? _textureBufferIndex : bindingInfo.CbufSlot;
+
+                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex);
                 int textureId = UnpackTextureId(packedId);
 
                 Texture texture = pool.Get(textureId);

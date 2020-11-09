@@ -1024,14 +1024,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     Target target = ShaderTexture.GetTarget(descriptor.Type);
 
-                    if (descriptor.IsBindless)
-                    {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.Binding, descriptor.CbufSlot, descriptor.CbufOffset, descriptor.Flags);
-                    }
-                    else
-                    {
-                        textureBindings[index] = new TextureBindingInfo(target, descriptor.Binding, descriptor.HandleIndex, descriptor.Flags);
-                    }
+                    textureBindings[index] = new TextureBindingInfo(
+                        target,
+                        descriptor.Binding,
+                        descriptor.CbufSlot,
+                        descriptor.HandleIndex,
+                        descriptor.Flags);
                 }
 
                 TextureManager.SetGraphicsTextures(stage, textureBindings);
@@ -1045,7 +1043,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     Target target = ShaderTexture.GetTarget(descriptor.Type);
                     Format format = ShaderTexture.GetFormat(descriptor.Format);
 
-                    imageBindings[index] = new TextureBindingInfo(target, format, descriptor.Binding, descriptor.HandleIndex, descriptor.Flags);
+                    imageBindings[index] = new TextureBindingInfo(
+                        target,
+                        format,
+                        descriptor.Binding,
+                        descriptor.CbufSlot,
+                        descriptor.HandleIndex,
+                        descriptor.Flags);
                 }
 
                 TextureManager.SetGraphicsImages(stage, imageBindings);
