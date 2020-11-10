@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Texture;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -354,6 +355,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             int samplesInX = msaaMode.SamplesInX();
             int samplesInY = msaaMode.SamplesInY();
 
+            var extents = state.Get<ViewportExtents>(MethodOffset.ViewportExtents, 0);
+            Size sizeHint = new Size(extents.X + extents.Width, extents.Y + extents.Height, 1);
+
             bool changedScale = false;
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
@@ -369,7 +373,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     continue;
                 }
 
-                Texture color = TextureManager.FindOrCreateTexture(colorState, samplesInX, samplesInY);
+                Texture color = TextureManager.FindOrCreateTexture(colorState, samplesInX, samplesInY, sizeHint);
 
                 changedScale |= TextureManager.SetRenderTargetColor(index, color);
 
@@ -388,7 +392,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 var dsState = state.Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
                 var dsSize  = state.Get<Size3D>(MethodOffset.RtDepthStencilSize);
 
-                depthStencil = TextureManager.FindOrCreateTexture(dsState, dsSize, samplesInX, samplesInY);
+                depthStencil = TextureManager.FindOrCreateTexture(dsState, dsSize, samplesInX, samplesInY, sizeHint);
             }
 
             changedScale |= TextureManager.SetRenderTargetDepthStencil(depthStencil);

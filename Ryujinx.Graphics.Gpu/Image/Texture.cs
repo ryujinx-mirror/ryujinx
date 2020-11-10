@@ -50,6 +50,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public bool IsModified { get; internal set; }
 
+        /// <summary>
+        /// Set when a texture has been changed size. This indicates that it may need to be
+        /// changed again when obtained as a sampler.
+        /// </summary>
+        public bool ChangedSize { get; internal set; }
+
         private int _depth;
         private int _layers;
         private int _firstLayer;
@@ -353,6 +359,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
         private void RecreateStorageOrView(int width, int height, int depthOrLayers)
         {
+            ChangedSize = true;
+
             SetInfo(new TextureInfo(
                 Info.Address,
                 width,

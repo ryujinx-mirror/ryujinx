@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Graphics.Texture;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine
@@ -19,9 +20,30 @@ namespace Ryujinx.Graphics.Gpu.Engine
             var dstCopyTexture = state.Get<CopyTexture>(MethodOffset.CopyDstTexture);
             var srcCopyTexture = state.Get<CopyTexture>(MethodOffset.CopySrcTexture);
 
+            var region = state.Get<CopyRegion>(MethodOffset.CopyRegion);
+
+            var control = state.Get<CopyTextureControl>(MethodOffset.CopyTextureControl);
+
+            int srcX1 = (int)(region.SrcXF >> 32);
+            int srcY1 = (int)(region.SrcYF >> 32);
+
+            int srcX2 = (int)((region.SrcXF + region.SrcWidthRF * region.DstWidth) >> 32);
+            int srcY2 = (int)((region.SrcYF + region.SrcHeightRF * region.DstHeight) >> 32);
+
+            int dstX1 = region.DstX;
+            int dstY1 = region.DstY;
+
+            int dstX2 = region.DstX + region.DstWidth;
+            int dstY2 = region.DstY + region.DstHeight;
+
+            // The source and destination textures should at least be as big as the region being requested.
+            // The hints will only resize within alignment constraints, so out of bound copies won't resize in most cases.
+            var srcHint = new Size(srcX2, srcY2, 1);
+            var dstHint = new Size(dstX2, dstY2, 1);
+
             var srcCopyTextureFormat = srcCopyTexture.Format.Convert();
 
-            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat);
+            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, true, srcHint);
 
             if (srcTexture == null)
             {
@@ -42,7 +64,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTextureFormat = dstCopyTexture.Format.Convert();
             }
 
-            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled);
+            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
 
             if (dstTexture == null)
             {
@@ -53,22 +75,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 srcTexture.PropagateScale(dstTexture);
             }
-
-            var control = state.Get<CopyTextureControl>(MethodOffset.CopyTextureControl);
-
-            var region = state.Get<CopyRegion>(MethodOffset.CopyRegion);
-
-            int srcX1 = (int)(region.SrcXF >> 32);
-            int srcY1 = (int)(region.SrcYF >> 32);
-
-            int srcX2 = (int)((region.SrcXF + region.SrcWidthRF  * region.DstWidth)  >> 32);
-            int srcY2 = (int)((region.SrcYF + region.SrcHeightRF * region.DstHeight) >> 32);
-
-            int dstX1 = region.DstX;
-            int dstY1 = region.DstY;
-
-            int dstX2 = region.DstX + region.DstWidth;
-            int dstY2 = region.DstY + region.DstHeight;
 
             float scale = srcTexture.ScaleFactor; // src and dest scales are identical now.
 
@@ -100,7 +106,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 srcCopyTexture.Height++;
 
-                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled);
+                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, srcHint);
                 if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
                 {
                     srcTexture.PropagateScale(dstTexture);
