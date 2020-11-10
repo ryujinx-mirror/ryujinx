@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         BitwiseAnd         = 5,
         BitwiseOr          = 6,
         BitwiseExclusiveOr = 7,
-        Swap               = 8
+        Swap               = 8,
+        SafeAdd            = 10 // Only supported by ATOM.
     }
 }

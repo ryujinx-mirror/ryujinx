@@ -34,6 +34,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 #region Instructions
             Set("1110111111011x", InstEmit.Ald,     OpCodeAttribute.Create);
             Set("1110111111110x", InstEmit.Ast,     OpCodeAttribute.Create);
+            Set("11101101xxxxxx", InstEmit.Atom,    OpCodeAtom.Create);
             Set("11101100xxxxxx", InstEmit.Atoms,   OpCodeAtom.Create);
             Set("1111000010101x", InstEmit.Bar,     OpCodeBarrier.Create);
             Set("0100110000000x", InstEmit.Bfe,     OpCodeAluCbuf.Create);
