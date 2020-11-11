@@ -4,6 +4,7 @@
     {
         (ulong address, ulong size)[] GetPhysicalRegions(ulong va, ulong size);
 
+        bool IsRangeMapped(ulong va, ulong size);
         void TrackingReprotect(ulong va, ulong size, MemoryPermission protection);
     }
 }
