@@ -165,5 +165,19 @@ namespace Ryujinx.Graphics.OpenGL
             _window.Dispose();
             _counters.Dispose();
         }
+
+        public IProgram LoadProgramBinary(byte[] programBinary)
+        {
+            Program program = new Program(programBinary);
+
+            if (program.IsLinked)
+            {
+                return program;
+            }
+
+            program.Dispose();
+
+            return null;
+        }
     }
 }

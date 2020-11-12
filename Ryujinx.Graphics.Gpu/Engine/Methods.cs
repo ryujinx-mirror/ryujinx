@@ -1000,14 +1000,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ShaderBundle gs = ShaderCache.GetGraphicsShader(state, addresses);
 
-            _vsUsesInstanceId = gs.Shaders[0]?.Program.Info.UsesInstanceId ?? false;
+            _vsUsesInstanceId = gs.Shaders[0]?.Info.UsesInstanceId ?? false;
 
             int storageBufferBindingsCount = 0;
             int uniformBufferBindingsCount = 0;
 
             for (int stage = 0; stage < Constants.ShaderStages; stage++)
             {
-                ShaderProgramInfo info = gs.Shaders[stage]?.Program.Info;
+                ShaderProgramInfo info = gs.Shaders[stage]?.Info;
 
                 _currentProgramInfo[stage] = info;
 

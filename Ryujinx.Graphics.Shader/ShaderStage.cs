@@ -1,12 +1,14 @@
 namespace Ryujinx.Graphics.Shader
 {
-    public enum ShaderStage
+    public enum ShaderStage : byte
     {
         Compute,
         Vertex,
         TessellationControl,
         TessellationEvaluation,
         Geometry,
-        Fragment
+        Fragment,
+
+        Count
     }
 }

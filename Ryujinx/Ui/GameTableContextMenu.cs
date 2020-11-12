@@ -111,22 +111,34 @@ namespace Ryujinx.Ui
 
             MenuItem managePtcMenu = new MenuItem("Cache Management");
 
-            MenuItem purgePtcCache = new MenuItem("Purge PPTC cache")
+            MenuItem purgePtcCache = new MenuItem("Purge PPTC Cache")
             {
                 TooltipText = "Delete the Application's PPTC cache."
             };
-            
-            MenuItem openPtcDir = new MenuItem("Open PPTC directory")
+
+            MenuItem purgeShaderCache = new MenuItem("Purge Shader Cache")
             {
-                TooltipText = "Open the directory which contains Application's PPTC cache."
+                TooltipText = "Delete the Application's shader cache."
             };
+
+            MenuItem openPtcDir = new MenuItem("Open PPTC Directory")
+            {
+                TooltipText = "Open the directory which contains the Application's PPTC cache."
+            };
+
+            MenuItem openShaderCacheDir = new MenuItem("Open Shader Cache Directory")
+            {
+                TooltipText = "Open the directory which contains the Application's shader cache."
+            };
+
+            Menu manageSubMenu = new Menu();
             
-            Menu managePtcSubMenu = new Menu();
+            manageSubMenu.Append(purgePtcCache);
+            manageSubMenu.Append(purgeShaderCache);
+            manageSubMenu.Append(openPtcDir);
+            manageSubMenu.Append(openShaderCacheDir);
             
-            managePtcSubMenu.Append(purgePtcCache);
-            managePtcSubMenu.Append(openPtcDir);
-            
-            managePtcMenu.Submenu = managePtcSubMenu;
+            managePtcMenu.Submenu = manageSubMenu;
 
             openSaveUserDir.Activated    += OpenSaveUserDir_Clicked;
             openSaveDeviceDir.Activated  += OpenSaveDeviceDir_Clicked;
@@ -138,8 +150,10 @@ namespace Ryujinx.Ui
             extractExeFs.Activated       += ExtractExeFs_Clicked;
             extractLogo.Activated        += ExtractLogo_Clicked;
             purgePtcCache.Activated      += PurgePtcCache_Clicked;
+            purgeShaderCache.Activated   += PurgeShaderCache_Clicked;
             openPtcDir.Activated         += OpenPtcDir_Clicked;
-            
+            openShaderCacheDir.Activated += OpenShaderCacheDir_Clicked;
+
             this.Add(openSaveUserDir);
             this.Add(openSaveDeviceDir);
             this.Add(openSaveBcatDir);
@@ -640,6 +654,24 @@ namespace Ryujinx.Ui
                 Verb            = "open"
             });
         }
+
+        private void OpenShaderCacheDir_Clicked(object sender, EventArgs args)
+        {
+            string titleId        = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
+            string shaderCacheDir = System.IO.Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "shader");
+
+            if (!Directory.Exists(shaderCacheDir))
+            {
+                Directory.CreateDirectory(shaderCacheDir);
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName        = shaderCacheDir,
+                UseShellExecute = true,
+                Verb            = "open"
+            });
+        }
         
         private void PurgePtcCache_Clicked(object sender, EventArgs args)
         {
@@ -672,6 +704,42 @@ namespace Ryujinx.Ui
                     catch(Exception e)
                     {
                         Logger.Error?.Print(LogClass.Application, $"Error purging PPTC cache {file.Name}: {e}");
+                    }
+                }
+            }
+
+            warningDialog.Dispose();
+        }
+
+        private void PurgeShaderCache_Clicked(object sender, EventArgs args)
+        {
+            string[] tableEntry = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n");
+            string titleId = tableEntry[1].ToLower();
+
+            DirectoryInfo shaderCacheDir = new DirectoryInfo(System.IO.Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "shader"));
+
+            MessageDialog warningDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null)
+            {
+                Title          = "Ryujinx - Warning",
+                Text           = $"You are about to delete the shader cache for '{tableEntry[0]}'. Are you sure you want to proceed?",
+                WindowPosition = WindowPosition.Center
+            };
+
+            List<DirectoryInfo> cacheDirectory = new List<DirectoryInfo>();
+
+            if (shaderCacheDir.Exists) { cacheDirectory.AddRange(shaderCacheDir.EnumerateDirectories("*")); }
+
+            if (cacheDirectory.Count > 0 && warningDialog.Run() == (int)ResponseType.Yes)
+            {
+                foreach (DirectoryInfo directory in cacheDirectory)
+                {
+                    try
+                    {
+                        directory.Delete(true);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Error purging shader cache {directory.Name}: {e}");
                     }
                 }
             }

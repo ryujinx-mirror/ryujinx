@@ -199,19 +199,6 @@ namespace Ryujinx.Ui
             Gtk.Application.Invoke(delegate
             {
                 parent.Present();
-
-                string titleNameSection = string.IsNullOrWhiteSpace(_device.Application.TitleName) ? string.Empty
-                    : $" - {_device.Application.TitleName}";
-
-                string titleVersionSection = string.IsNullOrWhiteSpace(_device.Application.DisplayVersion) ? string.Empty
-                    : $" v{_device.Application.DisplayVersion}";
-
-                string titleIdSection = string.IsNullOrWhiteSpace(_device.Application.TitleIdText) ? string.Empty
-                    : $" ({_device.Application.TitleIdText.ToUpper()})";
-
-                string titleArchSection = _device.Application.TitleIs64Bit ? " (64-bit)" : " (32-bit)";
-
-                parent.Title = $"Ryujinx {Program.Version}{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
             });
 
             Thread renderLoopThread = new Thread(Render)
@@ -313,7 +300,7 @@ namespace Ryujinx.Ui
         {
             if (!(_device.Gpu.Renderer is Renderer))
             {
-                throw new NotSupportedException($"GPU renderer must be an OpenGL renderer when using GLRenderer!");
+                throw new NotSupportedException($"GPU renderer must be an OpenGL renderer when using {typeof(Renderer).Name}!");
             }
 
             _renderer = (Renderer)_device.Gpu.Renderer;
@@ -327,7 +314,7 @@ namespace Ryujinx.Ui
             parent.Present();
             GraphicsContext.MakeCurrent(WindowInfo);
 
-            _renderer.Initialize(_glLogLevel);
+            _device.Gpu.Initialize(_glLogLevel);
 
             // Make sure the first frame is not transparent.
             GL.ClearColor(OpenTK.Color.Black);

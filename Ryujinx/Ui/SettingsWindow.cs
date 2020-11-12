@@ -42,6 +42,7 @@ namespace Ryujinx.Ui
         [GUI] CheckButton     _discordToggle;
         [GUI] CheckButton     _checkUpdatesToggle;
         [GUI] CheckButton     _vSyncToggle;
+        [GUI] CheckButton     _shaderCacheToggle;
         [GUI] CheckButton     _multiSchedToggle;
         [GUI] CheckButton     _ptcToggle;
         [GUI] CheckButton     _fsicToggle;
@@ -180,6 +181,11 @@ namespace Ryujinx.Ui
             if (ConfigurationState.Instance.Graphics.EnableVsync)
             {
                 _vSyncToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Graphics.EnableShaderCache)
+            {
+                _shaderCacheToggle.Click();
             }
 
             if (ConfigurationState.Instance.System.EnableMulticoreScheduling)
@@ -528,6 +534,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.EnableDiscordIntegration.Value         = _discordToggle.Active;
             ConfigurationState.Instance.CheckUpdatesOnStart.Value              = _checkUpdatesToggle.Active;
             ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;
+            ConfigurationState.Instance.Graphics.EnableShaderCache.Value       = _shaderCacheToggle.Active;
             ConfigurationState.Instance.System.EnableMulticoreScheduling.Value = _multiSchedToggle.Active;
             ConfigurationState.Instance.System.EnablePtc.Value                 = _ptcToggle.Active;
             ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;

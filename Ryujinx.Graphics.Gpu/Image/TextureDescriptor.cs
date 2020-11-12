@@ -1,3 +1,5 @@
+using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
+
 namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
@@ -226,6 +228,25 @@ namespace Ryujinx.Graphics.Gpu.Image
         public TextureMsaaMode UnpackTextureMsaaMode()
         {
             return (TextureMsaaMode)((Word7 >> 8) & 0xf);
+        }
+
+        /// <summary>
+        /// Create the equivalent of this TextureDescriptor for the shader cache.
+        /// </summary>
+        /// <returns>The equivalent of this TextureDescriptor for the shader cache.</returns>
+        public GuestTextureDescriptor ToCache()
+        {
+            GuestTextureDescriptor result = new GuestTextureDescriptor
+            {
+                Handle = uint.MaxValue,
+                Descriptor = this
+            };
+
+            // Clear the virtual address
+            result.Descriptor.Word0 = 0;
+            result.Descriptor.Word2 &= 0xFFFF0000;
+
+            return result;
         }
     }
 }

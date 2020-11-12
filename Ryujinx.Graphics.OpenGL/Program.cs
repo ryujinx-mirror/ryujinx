@@ -3,6 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader.CodeGen.Glsl;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +22,8 @@ namespace Ryujinx.Graphics.OpenGL
         public Program(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors)
         {
             Handle = GL.CreateProgram();
+
+            GL.ProgramParameter(Handle, ProgramParameterName.ProgramBinaryRetrievableHint, 1);
 
             for (int index = 0; index < shaders.Length; index++)
             {
@@ -93,6 +96,27 @@ namespace Ryujinx.Graphics.OpenGL
             ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
         }
 
+        public Program(ReadOnlySpan<byte> code)
+        {
+            BinaryFormat binaryFormat = (BinaryFormat)BinaryPrimitives.ReadInt32LittleEndian(code.Slice(code.Length - 4, 4));
+
+            Handle = GL.CreateProgram();
+
+            unsafe
+            {
+                fixed (byte* ptr = code)
+                {
+                    GL.ProgramBinary(Handle, binaryFormat, (IntPtr)ptr, code.Length - 4);
+                }
+            }
+
+            CheckProgramLink();
+
+            FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
+            FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
+            ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
+        }
+
         public void Bind()
         {
             GL.UseProgram(Handle);
@@ -111,6 +135,19 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 IsLinked = true;
             }
+        }
+
+        public byte[] GetBinary()
+        {
+            GL.GetProgram(Handle, (GetProgramParameterName)All.ProgramBinaryLength, out int size);
+
+            byte[] data = new byte[size + 4];
+
+            GL.GetProgramBinary(Handle, size, out _, out BinaryFormat binFormat, data);
+
+            BinaryPrimitives.WriteInt32LittleEndian(data.AsSpan().Slice(size, 4), (int)binFormat);
+
+            return data;
         }
 
         public void Dispose()

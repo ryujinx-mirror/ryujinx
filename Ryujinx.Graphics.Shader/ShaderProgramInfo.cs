@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader
 
         public bool UsesInstanceId { get; }
 
-        internal ShaderProgramInfo(
+        public ShaderProgramInfo(
             BufferDescriptor[]  cBuffers,
             BufferDescriptor[]  sBuffers,
             TextureDescriptor[] textures,

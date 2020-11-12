@@ -14,8 +14,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public ShaderProgram Program { get; }
 
         /// <summary>
+        /// Shader program information.
+        /// </summary>
+        public ShaderProgramInfo Info { get; }
+
+        /// <summary>
         /// Host shader object.
         /// </summary>
+        /// <remarks>Null if the host shader program cache is in use.</remarks>
         public IShader HostShader { get; set; }
 
         /// <summary>
@@ -32,11 +38,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Creates a new instace of the shader code holder.
         /// </summary>
         /// <param name="program">Shader program</param>
+        /// <param name="info">Shader program information</param>
         /// <param name="code">Maxwell binary shader code</param>
         /// <param name="code2">Optional binary shader code of the "Vertex A" shader, when combined with "Vertex B"</param>
-        public ShaderCodeHolder(ShaderProgram program, byte[] code, byte[] code2 = null)
+        public ShaderCodeHolder(ShaderProgram program, ShaderProgramInfo info, byte[] code, byte[] code2 = null)
         {
             Program = program;
+            Info    = info;
             Code    = code;
             Code2   = code2;
         }

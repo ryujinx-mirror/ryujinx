@@ -3,7 +3,7 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeTextureScalar : OpCode
+    class OpCodeTextureScalar : OpCodeTextureBase
     {
 #region "Component mask LUT"
         private const int ____ = 0x0;
@@ -33,8 +33,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Register Rb  { get; }
         public Register Rd1 { get; }
 
-        public int Immediate { get; }
-
         public int ComponentMask { get; protected set; }
 
         protected int RawType;
@@ -49,8 +47,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Ra  = new Register(opCode.Extract(8,  8), RegisterType.Gpr);
             Rb  = new Register(opCode.Extract(20, 8), RegisterType.Gpr);
             Rd1 = new Register(opCode.Extract(28, 8), RegisterType.Gpr);
-
-            Immediate = opCode.Extract(36, 13);
 
             int compSel = opCode.Extract(50, 3);
 

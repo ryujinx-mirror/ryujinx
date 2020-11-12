@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Ryujinx.Graphics.Shader.Translation
 {
     class ShaderConfig
@@ -26,38 +28,42 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public FeatureFlags UsedFeatures { get; private set; }
 
+        public HashSet<int> TextureHandlesForCache { get; }
+
         public ShaderConfig(IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
-            Stage             = ShaderStage.Compute;
-            OutputTopology    = OutputTopology.PointList;
-            MaxOutputVertices = 0;
-            LocalMemorySize   = 0;
-            ImapTypes         = null;
-            OmapTargets       = null;
-            OmapSampleMask    = false;
-            OmapDepth         = false;
-            GpuAccessor       = gpuAccessor;
-            Flags             = flags;
-            Size              = 0;
-            UsedFeatures      = FeatureFlags.None;
-            Counts            = counts;
+            Stage                  = ShaderStage.Compute;
+            OutputTopology         = OutputTopology.PointList;
+            MaxOutputVertices      = 0;
+            LocalMemorySize        = 0;
+            ImapTypes              = null;
+            OmapTargets            = null;
+            OmapSampleMask         = false;
+            OmapDepth              = false;
+            GpuAccessor            = gpuAccessor;
+            Flags                  = flags;
+            Size                   = 0;
+            UsedFeatures           = FeatureFlags.None;
+            Counts                 = counts;
+            TextureHandlesForCache = new HashSet<int>();
         }
 
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
-            Stage             = header.Stage;
-            OutputTopology    = header.OutputTopology;
-            MaxOutputVertices = header.MaxOutputVertexCount;
-            LocalMemorySize   = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;
-            ImapTypes         = header.ImapTypes;
-            OmapTargets       = header.OmapTargets;
-            OmapSampleMask    = header.OmapSampleMask;
-            OmapDepth         = header.OmapDepth;
-            GpuAccessor       = gpuAccessor;
-            Flags             = flags;
-            Size              = 0;
-            UsedFeatures      = FeatureFlags.None;
-            Counts            = counts;
+            Stage                  = header.Stage;
+            OutputTopology         = header.OutputTopology;
+            MaxOutputVertices      = header.MaxOutputVertexCount;
+            LocalMemorySize        = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;
+            ImapTypes              = header.ImapTypes;
+            OmapTargets            = header.OmapTargets;
+            OmapSampleMask         = header.OmapSampleMask;
+            OmapDepth              = header.OmapDepth;
+            GpuAccessor            = gpuAccessor;
+            Flags                  = flags;
+            Size                   = 0;
+            UsedFeatures           = FeatureFlags.None;
+            Counts                 = counts;
+            TextureHandlesForCache = new HashSet<int>();
         }
 
         public int GetDepthRegister()

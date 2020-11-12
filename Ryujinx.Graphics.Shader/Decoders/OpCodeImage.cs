@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeImage : OpCode
+    class OpCodeImage : OpCodeTextureBase
     {
         public Register Ra { get; }
         public Register Rb { get; }
@@ -14,8 +14,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool ByteAddress { get; }
 
         public ImageDimensions Dimensions { get; }
-
-        public int Immediate { get; }
 
         public bool UseComponents { get; }
         public bool IsBindless    { get; }
@@ -43,7 +41,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             Dimensions = (ImageDimensions)opCode.Extract(33, 3);
 
-            Immediate  =  opCode.Extract(36, 13);
             IsBindless = !opCode.Extract(51);
         }
     }

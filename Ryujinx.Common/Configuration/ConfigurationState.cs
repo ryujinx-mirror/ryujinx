@@ -298,13 +298,19 @@ namespace Ryujinx.Configuration
             /// </summary>
             public ReactiveObject<bool> EnableVsync { get; private set; }
 
+            /// <summary>
+            /// Enables or disables Shader cache
+            /// </summary>
+            public ReactiveObject<bool> EnableShaderCache { get; private set; }
+
             public GraphicsSection()
             {
-                ResScale        = new ReactiveObject<int>();
-                ResScaleCustom  = new ReactiveObject<float>();
-                MaxAnisotropy   = new ReactiveObject<float>();
-                ShadersDumpPath = new ReactiveObject<string>();
-                EnableVsync     = new ReactiveObject<bool>();
+                ResScale          = new ReactiveObject<int>();
+                ResScaleCustom    = new ReactiveObject<float>();
+                MaxAnisotropy     = new ReactiveObject<float>();
+                ShadersDumpPath   = new ReactiveObject<string>();
+                EnableVsync       = new ReactiveObject<bool>();
+                EnableShaderCache = new ReactiveObject<bool>();
             }
         }
 
@@ -401,6 +407,7 @@ namespace Ryujinx.Configuration
                 EnableDiscordIntegration  = EnableDiscordIntegration,
                 CheckUpdatesOnStart       = CheckUpdatesOnStart,
                 EnableVsync               = Graphics.EnableVsync,
+                EnableShaderCache         = Graphics.EnableShaderCache,
                 EnableMulticoreScheduling = System.EnableMulticoreScheduling,
                 EnablePtc                 = System.EnablePtc,
                 EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
@@ -461,6 +468,7 @@ namespace Ryujinx.Configuration
             EnableDiscordIntegration.Value         = true;
             CheckUpdatesOnStart.Value              = true;
             Graphics.EnableVsync.Value             = true;
+            Graphics.EnableShaderCache.Value       = true;
             System.EnableMulticoreScheduling.Value = true;
             System.EnablePtc.Value                 = false;
             System.EnableFsIntegrityChecks.Value   = true;
@@ -727,6 +735,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 16)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 16.");
+
+                configurationFileFormat.EnableShaderCache = true;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -753,6 +770,7 @@ namespace Ryujinx.Configuration
             EnableDiscordIntegration.Value         = configurationFileFormat.EnableDiscordIntegration;
             CheckUpdatesOnStart.Value              = configurationFileFormat.CheckUpdatesOnStart;
             Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
+            Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
             System.EnableMulticoreScheduling.Value = configurationFileFormat.EnableMulticoreScheduling;
             System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
             System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;

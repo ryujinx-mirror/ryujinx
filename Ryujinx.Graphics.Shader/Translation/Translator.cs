@@ -3,7 +3,6 @@ using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation.Optimizations;
-using System;
 using System.Collections.Generic;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -14,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         private const int HeaderSize = 0x50;
 
-        private struct FunctionCode
+        internal struct FunctionCode
         {
             public Operation[] Code { get; }
 
@@ -24,7 +23,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        public static ShaderProgram Translate(
+        public static TranslatorContext CreateContext(
             ulong address,
             IGpuAccessor gpuAccessor,
             TranslationFlags flags,
@@ -32,10 +31,12 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             counts ??= new TranslationCounts();
 
-            return Translate(DecodeShader(address, gpuAccessor, flags, counts, out ShaderConfig config), config);
+            Block[][] cfg = DecodeShader(address, gpuAccessor, flags, counts, out ShaderConfig config);
+
+            return new TranslatorContext(address, cfg, config);
         }
 
-        public static ShaderProgram Translate(
+        public static TranslatorContext CreateContext(
             ulong addressA,
             ulong addressB,
             IGpuAccessor gpuAccessor,
@@ -44,15 +45,13 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             counts ??= new TranslationCounts();
 
-            FunctionCode[] funcA = DecodeShader(addressA, gpuAccessor, flags | TranslationFlags.VertexA, counts, out ShaderConfig configA);
-            FunctionCode[] funcB = DecodeShader(addressB, gpuAccessor, flags, counts, out ShaderConfig config);
+            Block[][] cfgA = DecodeShader(addressA, gpuAccessor, flags | TranslationFlags.VertexA, counts, out ShaderConfig configA);
+            Block[][] cfgB = DecodeShader(addressB, gpuAccessor, flags, counts, out ShaderConfig configB);
 
-            config.SetUsedFeature(configA.UsedFeatures);
-
-            return Translate(Combine(funcA, funcB), config, configA.Size);
+            return new TranslatorContext(addressA, addressB, cfgA, cfgB, configA, configB);
         }
 
-        private static ShaderProgram Translate(FunctionCode[] functions, ShaderConfig config, int sizeA = 0)
+        internal static ShaderProgram Translate(FunctionCode[] functions, ShaderConfig config, out ShaderProgramInfo shaderProgramInfo, int sizeA = 0)
         {
             var cfgs = new ControlFlowGraph[functions.Length];
             var frus = new RegisterUsage.FunctionRegisterUsage[functions.Length];
@@ -106,7 +105,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             GlslProgram program = GlslGenerator.Generate(sInfo, config);
 
-            ShaderProgramInfo spInfo = new ShaderProgramInfo(
+            shaderProgramInfo = new ShaderProgramInfo(
                 program.CBufferDescriptors,
                 program.SBufferDescriptors,
                 program.TextureDescriptors,
@@ -115,10 +114,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             string glslCode = program.Code;
 
-            return new ShaderProgram(spInfo, config.Stage, glslCode, config.Size, sizeA);
+            return new ShaderProgram(config.Stage, glslCode, config.Size, sizeA);
         }
 
-        private static FunctionCode[] DecodeShader(
+        private static Block[][] DecodeShader(
             ulong address,
             IGpuAccessor gpuAccessor,
             TranslationFlags flags,
@@ -126,6 +125,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             out ShaderConfig config)
         {
             Block[][] cfg;
+            ulong maxEndAddress = 0;
 
             if ((flags & TranslationFlags.Compute) != 0)
             {
@@ -140,13 +140,34 @@ namespace Ryujinx.Graphics.Shader.Translation
                 cfg = Decoder.Decode(gpuAccessor, address + HeaderSize);
             }
 
-            if (cfg == null)
+            for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
             {
-                gpuAccessor.Log("Invalid branch detected, failed to build CFG.");
+                for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
+                {
+                    Block block = cfg[funcIndex][blkIndex];
 
-                return Array.Empty<FunctionCode>();
+                    if (maxEndAddress < block.EndAddress)
+                    {
+                        maxEndAddress = block.EndAddress;
+                    }
+
+                    for (int index = 0; index < block.OpCodes.Count; index++)
+                    {
+                        if (block.OpCodes[index] is OpCodeTextureBase texture)
+                        {
+                            config.TextureHandlesForCache.Add(texture.HandleOffset);
+                        }
+                    }
+                }
             }
 
+            config.SizeAdd((int)maxEndAddress + (flags.HasFlag(TranslationFlags.Compute) ? 0 : HeaderSize));
+
+            return cfg;
+        }
+
+        internal static FunctionCode[] EmitShader(Block[][] cfg, ShaderConfig config)
+        {
             Dictionary<ulong, int> funcIds = new Dictionary<ulong, int>();
 
             for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
@@ -156,8 +177,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             List<FunctionCode> funcs = new List<FunctionCode>();
 
-            ulong maxEndAddress = 0;
-
             for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
             {
                 EmitterContext context = new EmitterContext(config, funcIndex != 0, funcIds);
@@ -165,11 +184,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
                 {
                     Block block = cfg[funcIndex][blkIndex];
-
-                    if (maxEndAddress < block.EndAddress)
-                    {
-                        maxEndAddress = block.EndAddress;
-                    }
 
                     context.CurrBlock = block;
 
@@ -181,12 +195,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                 funcs.Add(new FunctionCode(context.GetOperations()));
             }
 
-            config.SizeAdd((int)maxEndAddress + (flags.HasFlag(TranslationFlags.Compute) ? 0 : HeaderSize));
-
             return funcs.ToArray();
         }
 
-        internal static void EmitOps(EmitterContext context, Block block)
+        private static void EmitOps(EmitterContext context, Block block)
         {
             for (int opIndex = 0; opIndex < block.OpCodes.Count; opIndex++)
             {
@@ -266,102 +278,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                     context.MarkLabel(predSkipLbl);
                 }
             }
-        }
-
-        private static FunctionCode[] Combine(FunctionCode[] a, FunctionCode[] b)
-        {
-            // Here we combine two shaders.
-            // For shader A:
-            // - All user attribute stores on shader A are turned into copies to a
-            // temporary variable. It's assumed that shader B will consume them.
-            // - All return instructions are turned into branch instructions, the
-            // branch target being the start of the shader B code.
-            // For shader B:
-            // - All user attribute loads on shader B are turned into copies from a
-            // temporary variable, as long that attribute is written by shader A.
-            FunctionCode[] output = new FunctionCode[a.Length + b.Length - 1];
-
-            List<Operation> ops = new List<Operation>(a.Length + b.Length);
-
-            Operand[] temps = new Operand[AttributeConsts.UserAttributesCount * 4];
-
-            Operand lblB = Label();
-
-            for (int index = 0; index < a[0].Code.Length; index++)
-            {
-                Operation operation = a[0].Code[index];
-
-                if (IsUserAttribute(operation.Dest))
-                {
-                    int tIndex = (operation.Dest.Value - AttributeConsts.UserAttributeBase) / 4;
-
-                    Operand temp = temps[tIndex];
-
-                    if (temp == null)
-                    {
-                        temp = Local();
-
-                        temps[tIndex] = temp;
-                    }
-
-                    operation.Dest = temp;
-                }
-
-                if (operation.Inst == Instruction.Return)
-                {
-                    ops.Add(new Operation(Instruction.Branch, lblB));
-                }
-                else
-                {
-                    ops.Add(operation);
-                }
-            }
-
-            ops.Add(new Operation(Instruction.MarkLabel, lblB));
-
-            for (int index = 0; index < b[0].Code.Length; index++)
-            {
-                Operation operation = b[0].Code[index];
-
-                for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
-                {
-                    Operand src = operation.GetSource(srcIndex);
-
-                    if (IsUserAttribute(src))
-                    {
-                        Operand temp = temps[(src.Value - AttributeConsts.UserAttributeBase) / 4];
-
-                        if (temp != null)
-                        {
-                            operation.SetSource(srcIndex, temp);
-                        }
-                    }
-                }
-
-                ops.Add(operation);
-            }
-
-            output[0] = new FunctionCode(ops.ToArray());
-
-            for (int i = 1; i < a.Length; i++)
-            {
-                output[i] = a[i];
-            }
-
-            for (int i = 1; i < b.Length; i++)
-            {
-                output[a.Length + i - 1] = b[i];
-            }
-
-            return output;
-        }
-
-        private static bool IsUserAttribute(Operand operand)
-        {
-            return operand != null &&
-                   operand.Type == OperandType.Attribute &&
-                   operand.Value >= AttributeConsts.UserAttributeBase &&
-                   operand.Value <  AttributeConsts.UserAttributeEnd;
         }
     }
 }

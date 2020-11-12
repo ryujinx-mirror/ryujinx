@@ -2,15 +2,15 @@ namespace Ryujinx.Graphics.Shader
 {
     public struct TextureDescriptor
     {
-        public int Binding { get; }
+        public readonly int Binding;
 
-        public SamplerType Type { get; }
-        public TextureFormat Format { get; }
+        public readonly SamplerType Type;
+        public readonly TextureFormat Format;
 
-        public int CbufSlot { get; }
-        public int HandleIndex { get; }
+        public readonly int CbufSlot;
+        public readonly int HandleIndex;
 
-        public TextureUsageFlags Flags { get; set; }
+        public TextureUsageFlags Flags;
 
         public TextureDescriptor(int binding, SamplerType type, TextureFormat format, int cbufSlot, int handleIndex)
         {

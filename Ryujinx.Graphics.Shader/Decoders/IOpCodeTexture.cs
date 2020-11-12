@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         int ComponentMask { get; }
 
-        int Immediate { get; }
+        int HandleOffset { get; }
 
         TextureLodMode LodMode { get; }
 

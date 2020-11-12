@@ -27,6 +27,8 @@ namespace Ryujinx.Graphics.GAL
 
         Capabilities GetCapabilities();
 
+        IProgram LoadProgramBinary(byte[] programBinary);
+
         void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data);
 
         void UpdateCounters();

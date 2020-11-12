@@ -36,7 +36,7 @@ namespace Ryujinx.ShaderTools
 
                 byte[] data = File.ReadAllBytes(args[^1]);
 
-                string code = Translator.Translate(0, new GpuAccessor(data), flags).Code;
+                string code = Translator.CreateContext(0, new GpuAccessor(data), flags).Translate(out _).Code;
 
                 Console.WriteLine(code);
             }

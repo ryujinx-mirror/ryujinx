@@ -21,6 +21,7 @@
   "enable_discord_integration": true,
   "check_updates_on_start": true,
   "enable_vsync": true,
+  "enable_shader_cache": true,
   "enable_multicore_scheduling": true,
   "enable_ptc": false,
   "enable_fs_integrity_checks": true,

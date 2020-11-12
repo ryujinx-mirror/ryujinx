@@ -2,8 +2,8 @@ namespace Ryujinx.Graphics.Shader
 {
     public struct BufferDescriptor
     {
-        public int Binding { get; }
-        public int Slot { get; }
+        public readonly int Binding;
+        public readonly int Slot;
 
         public BufferDescriptor(int binding, int slot)
         {

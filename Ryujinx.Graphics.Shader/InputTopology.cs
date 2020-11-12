@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader
 {
-    public enum InputTopology
+    public enum InputTopology : byte
     {
         Points,
         Lines,

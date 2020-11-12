@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             foreach (ShaderCodeHolder holder in Shaders)
             {
-                holder?.HostShader.Dispose();
+                holder?.HostShader?.Dispose();
             }
         }
     }
