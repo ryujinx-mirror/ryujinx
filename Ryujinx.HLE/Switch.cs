@@ -10,6 +10,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services;
+using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Memory;
@@ -110,6 +111,8 @@ namespace Ryujinx.HLE
             EnableDeviceVsync = ConfigurationState.Instance.Graphics.EnableVsync;
 
             System.State.DockedMode = ConfigurationState.Instance.System.EnableDockedMode;
+
+            System.PerformanceState.PerformanceMode = System.State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
             if (ConfigurationState.Instance.System.EnableMulticoreScheduling)
             {

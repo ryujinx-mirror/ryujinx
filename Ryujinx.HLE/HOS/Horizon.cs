@@ -250,6 +250,7 @@ namespace Ryujinx.HLE.HOS
             if (e.NewValue != State.DockedMode)
             {
                 State.DockedMode = e.NewValue;
+                PerformanceState.PerformanceMode = State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
                 AppletState.EnqueueMessage(MessageInfo.OperationModeChanged);
                 AppletState.EnqueueMessage(MessageInfo.PerformanceModeChanged);
