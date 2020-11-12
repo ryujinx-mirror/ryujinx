@@ -355,8 +355,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             int samplesInX = msaaMode.SamplesInX();
             int samplesInY = msaaMode.SamplesInY();
 
-            var extents = state.Get<ViewportExtents>(MethodOffset.ViewportExtents, 0);
-            Size sizeHint = new Size(extents.X + extents.Width, extents.Y + extents.Height, 1);
+            var scissor = state.Get<ScreenScissorState>(MethodOffset.ScreenScissorState);
+            Size sizeHint = new Size(scissor.X + scissor.Width, scissor.Y + scissor.Height, 1);
 
             bool changedScale = false;
 

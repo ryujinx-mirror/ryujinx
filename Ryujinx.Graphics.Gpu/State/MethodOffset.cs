@@ -45,6 +45,7 @@ namespace Ryujinx.Graphics.Gpu.State
         TextureBarrierTiled             = 0x3df,
         RtColorMaskShared               = 0x3e4,
         RtDepthStencilState             = 0x3f8,
+        ScreenScissorState              = 0x3fd,
         VertexAttribState               = 0x458,
         RtControl                       = 0x487,
         RtDepthStencilSize              = 0x48a,
