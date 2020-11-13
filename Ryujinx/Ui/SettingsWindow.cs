@@ -365,6 +365,69 @@ namespace Ryujinx.Ui
             _systemTimeMinuteSpin.ValueChanged += SystemTimeSpin_ValueChanged;
         }
 
+        private void SaveSettings()
+        {
+            List<string> gameDirs = new List<string>();
+
+            _gameDirsBoxStore.GetIterFirst(out TreeIter treeIter);
+            for (int i = 0; i < _gameDirsBoxStore.IterNChildren(); i++)
+            {
+                gameDirs.Add((string)_gameDirsBoxStore.GetValue(treeIter, 0));
+
+                _gameDirsBoxStore.IterNext(ref treeIter);
+            }
+
+            if (!float.TryParse(_resScaleText.Buffer.Text, out float resScaleCustom) || resScaleCustom <= 0.0f)
+            {
+                resScaleCustom = 1.0f;
+            }
+
+            if (_validTzRegions.Contains(_systemTimeZoneEntry.Text))
+            {
+                ConfigurationState.Instance.System.TimeZone.Value = _systemTimeZoneEntry.Text;
+            }
+
+            ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableStub.Value                = _stubLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableDebug.Value               = _debugLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableGuest.Value               = _guestLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableFsAccessLog.Value         = _fsAccessLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableFileLog.Value             = _fileLogToggle.Active;
+            ConfigurationState.Instance.Logger.GraphicsDebugLevel.Value        = Enum.Parse<GraphicsDebugLevel>(_graphicsDebugLevel.ActiveId);
+            ConfigurationState.Instance.System.EnableDockedMode.Value          = _dockedModeToggle.Active;
+            ConfigurationState.Instance.EnableDiscordIntegration.Value         = _discordToggle.Active;
+            ConfigurationState.Instance.CheckUpdatesOnStart.Value              = _checkUpdatesToggle.Active;
+            ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;
+            ConfigurationState.Instance.Graphics.EnableShaderCache.Value       = _shaderCacheToggle.Active;
+            ConfigurationState.Instance.System.EnableMulticoreScheduling.Value = _multiSchedToggle.Active;
+            ConfigurationState.Instance.System.EnablePtc.Value                 = _ptcToggle.Active;
+            ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;
+            ConfigurationState.Instance.System.IgnoreMissingServices.Value     = _ignoreToggle.Active;
+            ConfigurationState.Instance.Hid.EnableKeyboard.Value               = _directKeyboardAccess.Active;
+            ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
+            ConfigurationState.Instance.System.Language.Value                  = Enum.Parse<Language>(_systemLanguageSelect.ActiveId);
+            ConfigurationState.Instance.System.Region.Value                    = Enum.Parse<Configuration.System.Region>(_systemRegionSelect.ActiveId);
+            ConfigurationState.Instance.System.SystemTimeOffset.Value          = _systemTimeOffset;
+            ConfigurationState.Instance.Ui.CustomThemePath.Value               = _custThemePath.Buffer.Text;
+            ConfigurationState.Instance.Graphics.ShadersDumpPath.Value         = _graphicsShadersDumpPath.Buffer.Text;
+            ConfigurationState.Instance.Ui.GameDirs.Value                      = gameDirs;
+            ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value     = (int)_fsLogSpinAdjustment.Value;
+            ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId);
+            ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
+            ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
+
+            if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
+            {
+                ConfigurationState.Instance.System.AudioBackend.Value = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
+            }
+
+            MainWindow.SaveConfig();
+            MainWindow.UpdateGraphicsConfig();
+            MainWindow.ApplyTheme();
+        }
+
         //Events
         private void TimeZoneEntry_FocusOut(Object sender, FocusOutEventArgs e)
         {
@@ -501,66 +564,13 @@ namespace Ryujinx.Ui
 
         private void SaveToggle_Activated(object sender, EventArgs args)
         {
-            List<string> gameDirs = new List<string>();
-
-            _gameDirsBoxStore.GetIterFirst(out TreeIter treeIter);
-            for (int i = 0; i < _gameDirsBoxStore.IterNChildren(); i++)
-            {
-                gameDirs.Add((string)_gameDirsBoxStore.GetValue(treeIter, 0));
-
-                _gameDirsBoxStore.IterNext(ref treeIter);
-            }
-
-            if (!float.TryParse(_resScaleText.Buffer.Text, out float resScaleCustom) || resScaleCustom <= 0.0f)
-            {
-                resScaleCustom = 1.0f;
-            }
-            
-            if (_validTzRegions.Contains(_systemTimeZoneEntry.Text))
-            {
-                ConfigurationState.Instance.System.TimeZone.Value = _systemTimeZoneEntry.Text;
-            }
-
-            ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableStub.Value                = _stubLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableDebug.Value               = _debugLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableGuest.Value               = _guestLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableFsAccessLog.Value         = _fsAccessLogToggle.Active;
-            ConfigurationState.Instance.Logger.EnableFileLog.Value             = _fileLogToggle.Active;
-            ConfigurationState.Instance.Logger.GraphicsDebugLevel.Value        = Enum.Parse<GraphicsDebugLevel>(_graphicsDebugLevel.ActiveId);
-            ConfigurationState.Instance.System.EnableDockedMode.Value          = _dockedModeToggle.Active;
-            ConfigurationState.Instance.EnableDiscordIntegration.Value         = _discordToggle.Active;
-            ConfigurationState.Instance.CheckUpdatesOnStart.Value              = _checkUpdatesToggle.Active;
-            ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;
-            ConfigurationState.Instance.Graphics.EnableShaderCache.Value       = _shaderCacheToggle.Active;
-            ConfigurationState.Instance.System.EnableMulticoreScheduling.Value = _multiSchedToggle.Active;
-            ConfigurationState.Instance.System.EnablePtc.Value                 = _ptcToggle.Active;
-            ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;
-            ConfigurationState.Instance.System.IgnoreMissingServices.Value     = _ignoreToggle.Active;
-            ConfigurationState.Instance.Hid.EnableKeyboard.Value               = _directKeyboardAccess.Active;
-            ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
-            ConfigurationState.Instance.System.Language.Value                  = Enum.Parse<Language>(_systemLanguageSelect.ActiveId);
-            ConfigurationState.Instance.System.Region.Value                    = Enum.Parse<Configuration.System.Region>(_systemRegionSelect.ActiveId);
-            ConfigurationState.Instance.System.SystemTimeOffset.Value          = _systemTimeOffset;
-            ConfigurationState.Instance.Ui.CustomThemePath.Value               = _custThemePath.Buffer.Text;
-            ConfigurationState.Instance.Graphics.ShadersDumpPath.Value         = _graphicsShadersDumpPath.Buffer.Text;
-            ConfigurationState.Instance.Ui.GameDirs.Value                      = gameDirs;
-            ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value     = (int)_fsLogSpinAdjustment.Value;
-            ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId);
-            ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
-            ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
-
-            if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
-            {
-                ConfigurationState.Instance.System.AudioBackend.Value = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
-            }
-
-            MainWindow.SaveConfig();
-            MainWindow.UpdateGraphicsConfig();
-            MainWindow.ApplyTheme();
+            SaveSettings();
             Dispose();
+        }
+
+        private void ApplyToggle_Activated(object sender, EventArgs args)
+        {
+            SaveSettings();
         }
 
         private void CloseToggle_Activated(object sender, EventArgs args)
