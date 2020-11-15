@@ -123,7 +123,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="_checkUpdatesToggle">
-                                    <property name="label" translatable="yes">Check for updates on launch</property>
+                                    <property name="label" translatable="yes">Check for Updates on Launch</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
