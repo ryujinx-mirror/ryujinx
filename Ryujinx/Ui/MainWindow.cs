@@ -329,6 +329,7 @@ namespace Ryujinx.Ui
             }
             else
             {
+#if !DEBUG
                 if (ConfigurationState.Instance.Logger.EnableDebug.Value)
                 {
                     MessageDialog debugWarningDialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Warning, ButtonsType.YesNo, null)
@@ -364,7 +365,7 @@ namespace Ryujinx.Ui
 
                     shadersDumpWarningDialog.Dispose();
                 }
-
+#endif
                 Logger.RestartTime();
 
                 HLE.Switch device = InitializeSwitchInstance();
