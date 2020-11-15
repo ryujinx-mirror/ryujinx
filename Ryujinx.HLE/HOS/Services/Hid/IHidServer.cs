@@ -1190,6 +1190,17 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
+        [Command(310)] // 6.0.0+
+        // ResetSevenSixAxisSensorTimestamp(pid, nn::applet::AppletResourceUserId)
+        public ResultCode ResetSevenSixAxisSensorTimestamp(ServiceCtx context)
+        {
+            long appletResourceUserId = context.RequestData.ReadInt64();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
+
+            return ResultCode.Success;
+        }
+
         [Command(400)]
         // IsUsbFullKeyControllerEnabled() -> bool IsEnabled
         public ResultCode IsUsbFullKeyControllerEnabled(ServiceCtx context)

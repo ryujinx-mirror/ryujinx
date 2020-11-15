@@ -8,15 +8,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class ICommonStateGetter : IpcService
     {
-        private Apm.ManagerServer       apmManagerServer;
-        private Apm.SystemManagerServer apmSystemManagerServer;
+        private Apm.ManagerServer       _apmManagerServer;
+        private Apm.SystemManagerServer _apmSystemManagerServer;
+        private Lbl.LblControllerServer _lblControllerServer;
 
-        private bool _vrModeEnabled = false;
+        private bool _vrModeEnabled = true;
 
         public ICommonStateGetter(ServiceCtx context)
         {
-            apmManagerServer       = new Apm.ManagerServer(context);
-            apmSystemManagerServer = new Apm.SystemManagerServer(context);
+            _apmManagerServer       = new Apm.ManagerServer(context);
+            _apmSystemManagerServer = new Apm.SystemManagerServer(context);
+            _lblControllerServer    = new Lbl.LblControllerServer(context);
         }
 
         [Command(0)]
@@ -66,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetPerformanceMode() -> nn::apm::PerformanceMode
         public ResultCode GetPerformanceMode(ServiceCtx context)
         {
-            return (ResultCode)apmManagerServer.GetPerformanceMode(context);
+            return (ResultCode)_apmManagerServer.GetPerformanceMode(context);
         }
 
         [Command(8)]
@@ -96,6 +98,56 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             context.ResponseData.Write(_vrModeEnabled);
 
             return ResultCode.Success;
+        }
+
+        [Command(51)] // 3.0.0+
+        // SetVrModeEnabled(b8)
+        public ResultCode SetVrModeEnabled(ServiceCtx context)
+        {
+            bool vrModeEnabled = context.RequestData.ReadBoolean();
+
+            UpdateVrMode(vrModeEnabled);
+
+            return ResultCode.Success;
+        }
+
+        [Command(53)] // 7.0.0+
+        // BeginVrModeEx()
+        public ResultCode BeginVrModeEx(ServiceCtx context)
+        {
+            UpdateVrMode(true);
+
+            return ResultCode.Success;
+        }
+
+        [Command(54)] // 7.0.0+
+        // EndVrModeEx()
+        public ResultCode EndVrModeEx(ServiceCtx context)
+        {
+            UpdateVrMode(false);
+
+            return ResultCode.Success;
+        }
+
+        private void UpdateVrMode(bool vrModeEnabled)
+        {
+            if (_vrModeEnabled == vrModeEnabled)
+            {
+                return;
+            }
+
+            _vrModeEnabled = vrModeEnabled;
+
+            if (vrModeEnabled)
+            {
+                _lblControllerServer.EnableVrMode();
+            }
+            else
+            {
+                _lblControllerServer.DisableVrMode();
+            }
+
+            // TODO: It signals an internal event of ICommonStateGetter. We have to determine where this event is used. 
         }
 
         [Command(60)] // 3.0.0+
@@ -135,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 return ResultCode.InvalidParameters;
             }
 
-            apmSystemManagerServer.SetCpuBoostMode((Apm.CpuBoostMode)cpuBoostMode);
+            _apmSystemManagerServer.SetCpuBoostMode((Apm.CpuBoostMode)cpuBoostMode);
 
             // TODO: It signals an internal event of ICommonStateGetter. We have to determine where this event is used. 
 
@@ -146,7 +198,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetCurrentPerformanceConfiguration() -> nn::apm::PerformanceConfiguration
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
         {
-            return (ResultCode)apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
+            return (ResultCode)_apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
         }
     }
 }
