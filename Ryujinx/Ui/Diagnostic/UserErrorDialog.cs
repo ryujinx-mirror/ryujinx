@@ -58,6 +58,8 @@ namespace Ryujinx.Ui.Diagnostic
                     return "Firmware not found";
                 case UserError.FirmwareParsingFailed:
                     return "Firmware parsing error";
+                case UserError.ApplicationNotFound:
+                    return "Application not found";
                 case UserError.Unknown:
                     return "Unknown error";
                 default:
@@ -75,6 +77,8 @@ namespace Ryujinx.Ui.Diagnostic
                     return "Ryujinx was unable to find any firmwares installed";
                 case UserError.FirmwareParsingFailed:
                     return "Ryujinx was unable to parse the provided firmware. This is usually caused by outdated keys.";
+                case UserError.ApplicationNotFound:
+                    return "Ryujinx couldn't find a valid application at the given path.";
                 case UserError.Unknown:
                     return "An unknown error occured!";
                 default:
