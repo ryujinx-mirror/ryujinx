@@ -35,12 +35,12 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
 If you wish to build the emulator yourself  you will need to:
 
-**Step one:** Install the [.NET Core 3.1 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).
+**Step one:** Install the [.NET 5.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/5.0).
 
 **Step two (choose one):**  
 **(Variant one)**
 
-After the installation of the Net Core SDK is done; go ahead and copy the Clone link from GitHub from here (via Clone or Download --> Copy HTTPS Link. You can Git Clone the repo by using Git Bash or Git CMD.
+After the installation of the .NET SDK is done; go ahead and copy the Clone link from GitHub from here (via Clone or Download --> Copy HTTPS Link. You can Git Clone the repo by using Git Bash or Git CMD.
 
 **(Variant two):**
 

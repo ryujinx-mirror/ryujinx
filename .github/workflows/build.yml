@@ -1,27 +1,39 @@
-name: "Build job"
+name: Build job
+
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
+    paths-ignore:
+      - '.github/*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '*.yml'
+      - 'README.md'
   pull_request:
-    branches:
-      - '*'
+    branches: [ master ]
+    paths-ignore:
+      - '.github/*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '*.yml'
+      - 'README.md'
+
 jobs:
   build:
+    name: ${{ matrix.os }} (${{ matrix.configuration }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        dotnet: ['3.1.100']
-        environment: ['Debug', 'Release']
-    name: ${{ matrix.environment }} build (Dotnet ${{ matrix.dotnet }}, OS ${{ matrix.os }})
+        configuration: [Debug, Release]
+      fail-fast: false
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
     steps:
-      - uses: actions/checkout@master
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: ${{ matrix.dotnet }}
+          dotnet-version: 5.0.x
       - name: Build
-        run: dotnet build -c "${{ matrix.environment }}"
+        run: dotnet build -c "${{ matrix.configuration }}"
       - name: Test
-        run: dotnet test -c "${{ matrix.environment }}"
+        run: dotnet test -c "${{ matrix.configuration }}"

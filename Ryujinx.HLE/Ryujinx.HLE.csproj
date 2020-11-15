@@ -1,34 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <LangVersion>8.0</LangVersion>
-    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-    <Configurations>Debug;Release</Configurations>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TargetFramework>net5.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <!-- Due to Concentus. -->
-  <PropertyGroup>
-    <NoWarn>NU1605</NoWarn>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Homebrew.npdm" />
-    <None Remove="RyujinxProfileImage.jpg" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Homebrew.npdm" />
-    <EmbeddedResource Include="RyujinxProfileImage.jpg" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Audio.Renderer\Ryujinx.Audio.Renderer.csproj" />
@@ -48,6 +23,21 @@
     <PackageReference Include="Concentus" Version="1.1.7" />
     <PackageReference Include="LibHac" Version="0.12.0" />
     <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
+  </ItemGroup>
+
+  <!-- Due to Concentus. -->
+  <PropertyGroup>
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Homebrew.npdm" />
+    <None Remove="RyujinxProfileImage.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Homebrew.npdm" />
+    <EmbeddedResource Include="RyujinxProfileImage.jpg" />
   </ItemGroup>
 
 </Project>
