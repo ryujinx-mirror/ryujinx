@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private Apm.SystemManagerServer _apmSystemManagerServer;
         private Lbl.LblControllerServer _lblControllerServer;
 
-        private bool _vrModeEnabled = true;
+        private bool _vrModeEnabled = false;
 
         public ICommonStateGetter(ServiceCtx context)
         {
