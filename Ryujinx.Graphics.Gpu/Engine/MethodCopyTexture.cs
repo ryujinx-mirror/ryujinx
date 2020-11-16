@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (srcTexture.Format.IsDepthOrStencil())
             {
-                dstCopyTextureFormat = srcCopyTextureFormat;
+                dstCopyTextureFormat = srcTexture.Info.FormatInfo;
             }
             else
             {
