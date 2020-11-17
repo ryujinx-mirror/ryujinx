@@ -35,7 +35,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
 If you wish to build the emulator yourself  you will need to:
 
-**Step one:** Install the [.NET 5.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/5.0).
+**Step one:** Install the X64 version of [.NET 5.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/5.0).
 
 **Step two (choose one):**  
 **(Variant one)**
@@ -49,7 +49,7 @@ Download the ZIP Tarball. Then extract it to a directory of your choice.
 **Step three:**
 
 Build the App using a Command prompt in the project directory. You can quickly access it by holding shift in explorer (in the Ryujinx directory) then right clicking, and typing the following command:  
-Run `dotnet build -c Release -r win-x64` inside the Ryujinx project folder to build Ryujinx binaries.
+Run `dotnet build -c Release` inside the Ryujinx project folder to build Ryujinx binaries.
 
 Ryujinx system files are stored in the `Ryujinx` folder. This folder is located in the user folder, which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
 
