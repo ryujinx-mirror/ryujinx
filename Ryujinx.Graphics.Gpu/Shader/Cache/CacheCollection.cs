@@ -34,6 +34,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             SaveManifest,
 
             /// <summary>
+            /// Remove entries from the hash manifest and save it.
+            /// </summary>
+            RemoveManifestEntries,
+
+            /// <summary>
             /// Flush temporary cache to archive.
             /// </summary>
             FlushToArchive,
@@ -228,10 +233,23 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         }
 
         /// <summary>
+        /// Queue a task to remove entries from the hash manifest.
+        /// </summary>
+        /// <param name="entries">Entries to remove from the manifest</param>
+        public void RemoveManifestEntriesAsync(HashSet<Hash128> entries)
+        {
+            _fileWriterWorkerQueue.Add(new CacheFileOperationTask
+            {
+                Type = CacheFileOperation.RemoveManifestEntries,
+                Data = entries
+            });
+        }
+
+        /// <summary>
         /// Remove given entries from the manifest.
         /// </summary>
         /// <param name="entries">Entries to remove from the manifest</param>
-        public void RemoveManifestEntries(HashSet<Hash128> entries)
+        private void RemoveManifestEntries(HashSet<Hash128> entries)
         {
             lock (_hashTable)
             {
@@ -487,6 +505,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                     break;
                 case CacheFileOperation.SaveManifest:
                     SaveManifest();
+                    break;
+                case CacheFileOperation.RemoveManifestEntries:
+                    RemoveManifestEntries((HashSet<Hash128>)task.Data);
                     break;
                 case CacheFileOperation.FlushToArchive:
                     FlushToArchive();
