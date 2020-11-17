@@ -25,8 +25,6 @@ namespace Ryujinx.Graphics.OpenGL
 
         private int _stencilFrontMask;
         private bool _depthMask;
-        private bool _depthTest;
-        private bool _hasDepthBuffer;
 
         private int _boundDrawFramebuffer;
         private int _boundReadFramebuffer;
@@ -671,12 +669,18 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void SetDepthTest(DepthTestDescriptor depthTest)
         {
-            GL.DepthFunc((DepthFunction)depthTest.Func.Convert());
+            if (depthTest.TestEnable)
+            {
+                GL.Enable(EnableCap.DepthTest);
+                GL.DepthFunc((DepthFunction)depthTest.Func.Convert());
+            }
+            else
+            {
+                GL.Disable(EnableCap.DepthTest);
+            }
 
+            GL.DepthMask(depthTest.WriteEnable);
             _depthMask = depthTest.WriteEnable;
-            _depthTest = depthTest.TestEnable;
-
-            UpdateDepthTest();
         }
 
         public void SetFaceCulling(bool enable, Face face)
@@ -860,10 +864,6 @@ namespace Ryujinx.Graphics.OpenGL
 
             _framebuffer.AttachDepthStencil(depthStencilView);
             _framebuffer.SetDrawBuffers(colors.Length);
-
-            _hasDepthBuffer = depthStencil != null && depthStencilView.Format != Format.S8Uint;
-
-            UpdateDepthTest();
         }
 
         public void SetSampler(int binding, ISampler sampler)
@@ -1158,31 +1158,6 @@ namespace Ryujinx.Graphics.OpenGL
             if (_program != null)
             {
                 GL.Uniform1(_program.FragmentIsBgraUniform, 8, _fpIsBgra);
-            }
-        }
-
-        private void UpdateDepthTest()
-        {
-            // Enabling depth operations is only valid when we have
-            // a depth buffer, otherwise it's not allowed.
-            if (_hasDepthBuffer)
-            {
-                if (_depthTest)
-                {
-                    GL.Enable(EnableCap.DepthTest);
-                }
-                else
-                {
-                    GL.Disable(EnableCap.DepthTest);
-                }
-
-                GL.DepthMask(_depthMask);
-            }
-            else
-            {
-                GL.Disable(EnableCap.DepthTest);
-
-                GL.DepthMask(false);
             }
         }
 
