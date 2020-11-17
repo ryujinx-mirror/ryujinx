@@ -31,6 +31,9 @@ namespace ARMeilleure.Translation
 
         private volatile int _threadCount;
 
+        // FIXME: Remove this once the init logic of the emulator will be redone
+        public static ManualResetEvent IsReadyForTranslation = new ManualResetEvent(false);
+
         public Translator(IJitMemoryAllocator allocator, IMemoryManager memory)
         {
             _memory = memory;
@@ -83,6 +86,8 @@ namespace ARMeilleure.Translation
         {
             if (Interlocked.Increment(ref _threadCount) == 1)
             {
+                IsReadyForTranslation.WaitOne();
+
                 if (Ptc.State == PtcState.Enabled)
                 {
                     Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable);

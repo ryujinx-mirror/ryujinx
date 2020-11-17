@@ -1,4 +1,5 @@
 using ARMeilleure.State;
+using ARMeilleure.Translation;
 using NUnit.Framework;
 using Ryujinx.Cpu;
 using Ryujinx.Memory;
@@ -54,6 +55,7 @@ namespace Ryujinx.Tests.Cpu
             _memory.Map(CodeBaseAddress, 0, Size * 2);
 
             _context = CpuContext.CreateExecutionContext();
+            Translator.IsReadyForTranslation.Set();
 
             _cpuContext = new CpuContext(_memory);
 

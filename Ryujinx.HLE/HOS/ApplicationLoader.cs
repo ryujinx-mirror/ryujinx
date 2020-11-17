@@ -503,8 +503,6 @@ namespace Ryujinx.HLE.HOS
 
             Ptc.Initialize(TitleIdText, DisplayVersion, _device.System.EnablePtc && !modified);
 
-            _device.Gpu.ReadyEvent.WaitOne();
-
             ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: programs);
         }
 
@@ -602,9 +600,7 @@ namespace Ryujinx.HLE.HOS
 
             // Explicitly null titleid to disable the shader cache
             Graphics.Gpu.GraphicsConfig.TitleId = null;
-
             _device.Gpu.HostInitalized.Set();
-            _device.Gpu.ReadyEvent.WaitOne();
 
             ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: executable);
         }

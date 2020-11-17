@@ -1,4 +1,3 @@
-using Ryujinx.Common.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
@@ -18,11 +17,6 @@ namespace Ryujinx.Graphics.Gpu
         /// Event signaled when the host emulation context is ready to be used by the gpu context.
         /// </summary>
         public ManualResetEvent HostInitalized { get; }
-
-        /// <summary>
-        /// Event signaled when the gpu context is ready to be used.
-        /// </summary>
-        public ManualResetEvent ReadyEvent { get; }
 
         /// <summary>
         /// Host renderer.
@@ -93,20 +87,16 @@ namespace Ryujinx.Graphics.Gpu
             _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
 
             HostInitalized = new ManualResetEvent(false);
-            ReadyEvent = new ManualResetEvent(false);
         }
 
         /// <summary>
-        /// Initialize the GPU emulation context.
+        /// Initialize the GPU shader cache.
         /// </summary>
-        /// <param name="logLevel">The log level required.</param>
-        public void Initialize(GraphicsDebugLevel logLevel)
+        public void InitializeShaderCache()
         {
             HostInitalized.WaitOne();
 
-            Renderer.Initialize(logLevel);
             Methods.ShaderCache.Initialize();
-            ReadyEvent.Set();
         }
 
         /// <summary>
@@ -142,7 +132,6 @@ namespace Ryujinx.Graphics.Gpu
             Renderer.Dispose();
             GPFifo.Dispose();
             HostInitalized.Dispose();
-            ReadyEvent.Dispose();
         }
     }
 }
