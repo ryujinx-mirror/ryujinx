@@ -2,6 +2,7 @@ using Ryujinx.Common;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Texture;
 using System;
+using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
@@ -10,28 +11,39 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private const int StrideAlignment = 32;
         private const int GobAlignment = 64;
 
+        enum CopyFlags
+        {
+            SrcLinear = 1 << 7,
+            DstLinear = 1 << 8,
+            MultiLineEnable = 1 << 9,
+            RemapEnable = 1 << 10
+        }
+
         /// <summary>
         /// Determine if a buffer-to-texture region covers the entirety of a texture.
         /// </summary>
         /// <param name="cbp">Copy command parameters</param>
         /// <param name="tex">Texture to compare</param>
         /// <param name="linear">True if the texture is linear, false if block linear</param>
+        /// <param name="bpp">Texture bytes per pixel</param>
         /// <param name="stride">Texture stride</param>
         /// <returns></returns>
-        private bool IsTextureCopyComplete(CopyBufferParams cbp, CopyBufferTexture tex, bool linear, int stride)
+        private bool IsTextureCopyComplete(CopyBufferParams cbp, CopyBufferTexture tex, bool linear, int bpp, int stride)
         {
             if (linear)
             {
+                int alignWidth = StrideAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
-                       stride      == BitUtils.AlignUp(cbp.XCount, StrideAlignment);
+                       stride / bpp == BitUtils.AlignUp(cbp.XCount, alignWidth);
             }
             else
             {
+                int alignWidth = GobAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
-                       tex.Width   == BitUtils.AlignUp(cbp.XCount, GobAlignment) &&
-                       tex.Height  == cbp.YCount;
+                       tex.Width == BitUtils.AlignUp(cbp.XCount, alignWidth) &&
+                       tex.Height == cbp.YCount;
             }
         }
 
@@ -46,9 +58,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             var swizzle = state.Get<CopyBufferSwizzle>(MethodOffset.CopyBufferSwizzle);
 
-            bool srcLinear = (argument & (1 << 7)) != 0;
-            bool dstLinear = (argument & (1 << 8)) != 0;
-            bool copy2D    = (argument & (1 << 9)) != 0;
+            CopyFlags copyFlags = (CopyFlags)argument;
+
+            bool srcLinear = copyFlags.HasFlag(CopyFlags.SrcLinear);
+            bool dstLinear = copyFlags.HasFlag(CopyFlags.DstLinear);
+            bool copy2D    = copyFlags.HasFlag(CopyFlags.MultiLineEnable);
+            bool remap     = copyFlags.HasFlag(CopyFlags.RemapEnable);
 
             int size = cbp.XCount;
 
@@ -60,6 +75,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             if (copy2D)
             {
                 // Buffer to texture copy.
+                int srcBpp = remap ? swizzle.UnpackSrcComponentsCount() * swizzle.UnpackComponentSize() : 1;
+                int dstBpp = remap ? swizzle.UnpackDstComponentsCount() * swizzle.UnpackComponentSize() : 1;
+
                 var dst = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferDstTexture);
                 var src = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferSrcTexture);
 
@@ -70,7 +88,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     srcLinear,
                     src.MemoryLayout.UnpackGobBlocksInY(),
                     src.MemoryLayout.UnpackGobBlocksInZ(),
-                    1);
+                    srcBpp);
 
                 var dstCalculator = new OffsetCalculator(
                     dst.Width,
@@ -79,7 +97,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     dstLinear,
                     dst.MemoryLayout.UnpackGobBlocksInY(),
                     dst.MemoryLayout.UnpackGobBlocksInZ(),
-                    1);
+                    dstBpp);
 
                 ulong srcBaseAddress = _context.MemoryManager.Translate(cbp.SrcAddress.Pack());
                 ulong dstBaseAddress = _context.MemoryManager.Translate(cbp.DstAddress.Pack());
@@ -90,8 +108,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 ReadOnlySpan<byte> srcSpan = _context.PhysicalMemory.GetSpan(srcBaseAddress + (ulong)srcBaseOffset, srcSize, true);
                 Span<byte> dstSpan         = _context.PhysicalMemory.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
 
-                bool completeSource = IsTextureCopyComplete(cbp, src, srcLinear, cbp.SrcStride);
-                bool completeDest   = IsTextureCopyComplete(cbp, dst, dstLinear, cbp.DstStride);
+                bool completeSource = IsTextureCopyComplete(cbp, src, srcLinear, srcBpp, cbp.SrcStride);
+                bool completeDest   = IsTextureCopyComplete(cbp, dst, dstLinear, dstBpp, cbp.DstStride);
 
                 if (completeSource && completeDest)
                 {
@@ -120,7 +138,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                                 1,
                                 1,
                                 1,
-                                1,
+                                srcBpp,
                                 src.MemoryLayout.UnpackGobBlocksInY(),
                                 src.MemoryLayout.UnpackGobBlocksInZ(),
                                 1,
@@ -167,7 +185,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     return true;
                 }
 
-                Convert<byte>(dstSpan, srcSpan);
+                bool _ = srcBpp switch
+                {
+                    1 => Convert<byte>(dstSpan, srcSpan),
+                    2 => Convert<ushort>(dstSpan, srcSpan),
+                    4 => Convert<uint>(dstSpan, srcSpan),
+                    8 => Convert<ulong>(dstSpan, srcSpan),
+                    12 => Convert<Bpp12Pixel>(dstSpan, srcSpan),
+                    16 => Convert<Vector128<byte>>(dstSpan, srcSpan),
+                    _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
+                };
 
                 _context.PhysicalMemory.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
             }
