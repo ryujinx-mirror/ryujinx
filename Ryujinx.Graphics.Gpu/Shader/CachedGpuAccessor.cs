@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private readonly GpuContext _context;
         private readonly ReadOnlyMemory<byte> _data;
         private readonly GuestGpuAccessorHeader _header;
-        private readonly Dictionary<int, Image.TextureDescriptor> _textureDescriptors;
+        private readonly Dictionary<int, GuestTextureDescriptor> _textureDescriptors;
 
         /// <summary>
         /// Creates a new instance of the cached GPU state accessor for shader translation.
@@ -26,11 +26,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _context = context;
             _data = data;
             _header = header;
-            _textureDescriptors = new Dictionary<int, Image.TextureDescriptor>();
+            _textureDescriptors = new Dictionary<int, GuestTextureDescriptor>();
 
             foreach (KeyValuePair<int, GuestTextureDescriptor> guestTextureDescriptor in guestTextureDescriptors)
             {
-                _textureDescriptors.Add(guestTextureDescriptor.Key, guestTextureDescriptor.Value.Descriptor);
+                _textureDescriptors.Add(guestTextureDescriptor.Key, guestTextureDescriptor.Value);
             }
         }
 
@@ -141,9 +141,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="handle">Index of the texture (this is the word offset of the handle in the constant buffer)</param>
         /// <returns>Texture descriptor</returns>
-        public override Image.TextureDescriptor GetTextureDescriptor(int handle)
+        public override Image.ITextureDescriptor GetTextureDescriptor(int handle)
         {
-            if (!_textureDescriptors.TryGetValue(handle, out Image.TextureDescriptor textureDescriptor))
+            if (!_textureDescriptors.TryGetValue(handle, out GuestTextureDescriptor textureDescriptor))
             {
                 throw new ArgumentException();
             }

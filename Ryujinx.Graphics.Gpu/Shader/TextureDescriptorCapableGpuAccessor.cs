@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     {
         public abstract T MemoryRead<T>(ulong address) where T : unmanaged;
 
-        public abstract Image.TextureDescriptor GetTextureDescriptor(int handle);
+        public abstract ITextureDescriptor GetTextureDescriptor(int handle);
 
         /// <summary>
         /// Queries texture format information, for shaders using image load or store.

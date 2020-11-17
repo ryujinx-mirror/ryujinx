@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Texture target.
     /// </summary>
-    enum TextureTarget
+    enum TextureTarget : byte
     {
         Texture1D,
         Texture2D,

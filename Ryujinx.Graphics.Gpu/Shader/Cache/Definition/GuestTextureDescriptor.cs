@@ -4,12 +4,38 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
 {
     /// <summary>
-    /// Mostly identical to TextureDescriptor from <see cref="Image"/> but we don't store the address of the texture and store its handle instead.
+    /// Contains part of TextureDescriptor from <see cref="Image"/> used for shader codegen.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 0x20, Pack = 1)]
-    struct GuestTextureDescriptor
+    [StructLayout(LayoutKind.Sequential, Size = 0xC, Pack = 1)]
+    struct GuestTextureDescriptor : ITextureDescriptor
     {
         public uint Handle;
-        internal TextureDescriptor Descriptor;
+        public uint Format;
+        public TextureTarget Target;
+        [MarshalAs(UnmanagedType.I1)]
+        public bool IsSrgb;
+        [MarshalAs(UnmanagedType.I1)]
+        public bool IsTextureCoordNormalized;
+        public byte Reserved;
+
+        public uint UnpackFormat()
+        {
+            return Format;
+        }
+
+        public bool UnpackSrgb()
+        {
+            return IsSrgb;
+        }
+
+        public bool UnpackTextureCoordNormalized()
+        {
+            return IsTextureCoordNormalized;
+        }
+
+        public TextureTarget UnpackTextureTarget()
+        {
+            return Target;
+        }
     }
 }

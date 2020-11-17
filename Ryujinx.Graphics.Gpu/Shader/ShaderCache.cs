@@ -35,9 +35,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private Dictionary<Hash128, ShaderBundle> _cpProgramsDiskCache;
 
         /// <summary>
-        /// Version of the codegen (to be incremented when codegen changes).
+        /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 1;
+        private const ulong ShaderCodeGenVersion = 1717;
 
         /// <summary>
         /// Creates a new instance of the shader cache.
@@ -888,7 +888,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 foreach (int textureHandle in textureHandlesInUse)
                 {
-                    GuestTextureDescriptor textureDescriptor = gpuAccessor.GetTextureDescriptor(textureHandle).ToCache();
+                    GuestTextureDescriptor textureDescriptor = ((Image.TextureDescriptor)gpuAccessor.GetTextureDescriptor(textureHandle)).ToCache();
 
                     textureDescriptor.Handle = (uint)textureHandle;
 

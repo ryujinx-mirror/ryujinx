@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Maxwell texture descriptor, as stored on the GPU texture pool memory region.
     /// </summary>
-    struct TextureDescriptor
+    struct TextureDescriptor : ITextureDescriptor
     {
 #pragma warning disable CS0649
         public uint Word0;
@@ -239,12 +239,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             GuestTextureDescriptor result = new GuestTextureDescriptor
             {
                 Handle = uint.MaxValue,
-                Descriptor = this
-            };
+                Format = UnpackFormat(),
+                Target = UnpackTextureTarget(),
+                IsSrgb = UnpackSrgb(),
+                IsTextureCoordNormalized = UnpackTextureCoordNormalized(),
 
-            // Clear the virtual address
-            result.Descriptor.Word0 = 0;
-            result.Descriptor.Word2 &= 0xFFFF0000;
+            };
 
             return result;
         }

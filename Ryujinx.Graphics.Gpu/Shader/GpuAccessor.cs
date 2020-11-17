@@ -185,7 +185,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="handle">Index of the texture (this is the word offset of the handle in the constant buffer)</param>
         /// <returns>Texture descriptor</returns>
-        public override Image.TextureDescriptor GetTextureDescriptor(int handle)
+        public override Image.ITextureDescriptor GetTextureDescriptor(int handle)
         {
             if (_compute)
             {
