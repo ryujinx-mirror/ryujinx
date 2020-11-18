@@ -72,16 +72,21 @@ namespace Ryujinx.HLE.Loaders.Executables
             string        rawTextBuffer = Encoding.ASCII.GetString(roBuffer, 0, RoSize);
             StringBuilder stringBuilder = new StringBuilder();
 
-            int    length     = BitConverter.ToInt32(roBuffer, 4);
-            string moduleName = Encoding.UTF8.GetString(roBuffer, 8, length);
-            
-            MatchCollection moduleMatches = Regex.Matches(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase);
-            if (moduleMatches.Count > 0)
-            {
-                moduleName = moduleMatches.First().Value;
-            }
+            int zero = BitConverter.ToInt32(roBuffer, 0);
 
-            stringBuilder.AppendLine($"    Module: {moduleName}");
+            if (zero == 0)
+            {
+                int    length     = BitConverter.ToInt32(roBuffer, 4);
+                string modulePath = Encoding.UTF8.GetString(roBuffer, 8, length);
+
+                MatchCollection moduleMatches = Regex.Matches(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase);
+                if (moduleMatches.Count > 0)
+                {
+                    modulePath = moduleMatches.First().Value;
+                }
+
+                stringBuilder.AppendLine($"    Module: {modulePath}");
+            }
 
             MatchCollection fsSdkMatches = Regex.Matches(rawTextBuffer, @"sdk_version: ([0-9.]*)");
             if (fsSdkMatches.Count != 0)
@@ -98,7 +103,10 @@ namespace Ryujinx.HLE.Loaders.Executables
                 stringBuilder.AppendLine($"{libHeader}{libContent}");
             }
 
-            Logger.Info?.Print(LogClass.Loader, $"{Name}:\n{stringBuilder.ToString().TrimEnd('\r', '\n')}");
+            if (stringBuilder.Length > 0)
+            {
+                Logger.Info?.Print(LogClass.Loader, $"{Name}:\n{stringBuilder.ToString().TrimEnd('\r', '\n')}");
+            }
         }
     }
 }
