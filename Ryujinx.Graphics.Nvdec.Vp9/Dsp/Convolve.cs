@@ -389,11 +389,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             ConvolveAvgVert(src, srcStride, dst, dstStride, filter, y0Q4, yStepQ4, w, h);
         }
 
-        [StructLayout(LayoutKind.Sequential, Size = 64 * 135)]
-        struct Temp
-        {
-        }
-
+        [SkipLocalsInit]
         public static unsafe void Convolve8(
             byte* src,
             int srcStride,
@@ -422,8 +418,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             // When calling in frame scaling function, the smallest scaling factor is x1/4
             // ==> yStepQ4 = 64. Since w and h are at most 16, the temp buffer is still
             // big enough.
-            Temp tempStruct;
-            byte* temp = (byte*)Unsafe.AsPointer(ref tempStruct); // Avoid zero initialization.
+            byte* temp = stackalloc byte[64 * 135];
             int intermediateHeight = (((h - 1) * yStepQ4 + y0Q4) >> SubpelBits) + SubpelTaps;
 
             Debug.Assert(w <= 64);

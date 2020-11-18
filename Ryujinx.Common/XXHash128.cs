@@ -66,33 +66,13 @@ namespace Ryujinx.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe static Hash128 Mult64To128(ulong lhs, ulong rhs)
+        private static Hash128 Mult64To128(ulong lhs, ulong rhs)
         {
-            // TODO: Use BigMul once .NET 5 lands.
-            if (Bmi2.X64.IsSupported)
-            {
-                ulong low;
-                ulong high = Bmi2.X64.MultiplyNoFlags(lhs, rhs, &low);
-                return new Hash128
-                {
-                    Low = low,
-                    High = high
-                };
-            }
-
-            ulong loLo = Mult32To64((uint)lhs, (uint)rhs);
-            ulong hiLo = Mult32To64(lhs >> 32, (uint)rhs);
-            ulong loHi = Mult32To64((uint)lhs, rhs >> 32);
-            ulong hiHi = Mult32To64(lhs >> 32, rhs >> 32);
-
-            ulong cross = (loLo >> 32) + (uint)hiLo + loHi;
-            ulong upper = (hiLo >> 32) + (cross >> 32) + hiHi;
-            ulong lower = (cross << 32) | (uint)loLo;
-
+            ulong high = Math.BigMul(lhs, rhs, out ulong low);
             return new Hash128
             {
-                Low = lower,
-                High = upper
+                Low = low,
+                High = high
             };
         }
 
@@ -321,9 +301,10 @@ namespace Ryujinx.Common
             return Xxh3Avalanche(result64);
         }
 
+        [SkipLocalsInit]
         private static Hash128 Xxh3HashLong128bInternal(ReadOnlySpan<byte> input, ReadOnlySpan<byte> secret)
         {
-            Span<ulong> acc = stackalloc ulong[AccNb]; // TODO: Use SkipLocalsInit attribute once .NET 5 lands.
+            Span<ulong> acc = stackalloc ulong[AccNb];
             Xxh3InitAcc.CopyTo(acc);
 
             Xxh3HashLongInternalLoop(acc, input, secret);

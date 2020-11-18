@@ -7,8 +7,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Common
 {
     internal static class BitUtils
     {
-        // FIXME: Enable inlining here after AVX2 gather bug is fixed.
-        // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ClipPixel(int val)
         {
             return (byte)((val > 255) ? 255 : (val < 0) ? 0 : val);
