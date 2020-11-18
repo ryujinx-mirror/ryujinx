@@ -1,5 +1,6 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Unwinding;
+using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Memory;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
@@ -10,7 +11,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ namespace ARMeilleure.Translation.PTC
     {
         private const string HeaderMagic = "PTChd";
 
-        private const int InternalVersion = 1273; //! To be incremented manually for each change to the ARMeilleure project.
+        private const int InternalVersion = 1650; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -646,21 +646,7 @@ namespace ARMeilleure.Translation.PTC
 
         private static ulong GetFeatureInfo()
         {
-            ulong featureInfo = 0ul;
-
-            featureInfo |= (Sse3.IsSupported      ? 1ul : 0ul) << 0;
-            featureInfo |= (Pclmulqdq.IsSupported ? 1ul : 0ul) << 1;
-            featureInfo |= (Ssse3.IsSupported     ? 1ul : 0ul) << 9;
-            featureInfo |= (Fma.IsSupported       ? 1ul : 0ul) << 12;
-            featureInfo |= (Sse41.IsSupported     ? 1ul : 0ul) << 19;
-            featureInfo |= (Sse42.IsSupported     ? 1ul : 0ul) << 20;
-            featureInfo |= (Popcnt.IsSupported    ? 1ul : 0ul) << 23;
-            featureInfo |= (Aes.IsSupported       ? 1ul : 0ul) << 25;
-            featureInfo |= (Avx.IsSupported       ? 1ul : 0ul) << 28;
-            featureInfo |= (Sse.IsSupported       ? 1ul : 0ul) << 57;
-            featureInfo |= (Sse2.IsSupported      ? 1ul : 0ul) << 58;
-
-            return featureInfo;
+            return (ulong)HardwareCapabilities.FeatureInfoEdx << 32 | (uint)HardwareCapabilities.FeatureInfoEcx;
         }
 
         private struct Header

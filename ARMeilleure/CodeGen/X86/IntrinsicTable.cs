@@ -162,6 +162,8 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Unpckhps,   new IntrinsicInfo(X86Instruction.Unpckhps,   IntrinsicType.Binary));
             Add(Intrinsic.X86Unpcklpd,   new IntrinsicInfo(X86Instruction.Unpcklpd,   IntrinsicType.Binary));
             Add(Intrinsic.X86Unpcklps,   new IntrinsicInfo(X86Instruction.Unpcklps,   IntrinsicType.Binary));
+            Add(Intrinsic.X86Vcvtph2ps,  new IntrinsicInfo(X86Instruction.Vcvtph2ps,  IntrinsicType.Unary));
+            Add(Intrinsic.X86Vcvtps2ph,  new IntrinsicInfo(X86Instruction.Vcvtps2ph,  IntrinsicType.BinaryImm));
             Add(Intrinsic.X86Xorpd,      new IntrinsicInfo(X86Instruction.Xorpd,      IntrinsicType.Binary));
             Add(Intrinsic.X86Xorps,      new IntrinsicInfo(X86Instruction.Xorps,      IntrinsicType.Binary));
         }
