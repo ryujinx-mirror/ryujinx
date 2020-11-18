@@ -42,6 +42,7 @@ namespace Ryujinx.Ui
         private bool   _mousePressed;
 
         private bool _toggleFullscreen;
+        private bool _toggleDockedMode;
 
         private readonly long _ticksPerFrame;
 
@@ -163,6 +164,19 @@ namespace Ryujinx.Ui
             }
 
             _toggleFullscreen = toggleFullscreen;
+
+            bool toggleDockedMode = keyboard.IsKeyDown(OpenTK.Input.Key.F9);
+
+            if (toggleDockedMode != _toggleDockedMode)
+            {
+                if (toggleDockedMode)
+                {
+                    ConfigurationState.Instance.System.EnableDockedMode.Value =
+                        !ConfigurationState.Instance.System.EnableDockedMode.Value;
+                }
+            }
+
+            _toggleDockedMode = toggleDockedMode;
         }
 
         private void GLRenderer_Initialized(object sender, EventArgs e)
