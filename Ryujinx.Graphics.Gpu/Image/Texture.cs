@@ -809,33 +809,36 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if (Info.IsLinear)
+            if (Info.Target != Target.TextureBuffer)
             {
-                data = LayoutConverter.ConvertLinearToLinearStrided(
-                    Info.Width,
-                    Info.Height,
-                    Info.FormatInfo.BlockWidth,
-                    Info.FormatInfo.BlockHeight,
-                    Info.Stride,
-                    Info.FormatInfo.BytesPerPixel,
-                    data);
-            }
-            else
-            {
-                data = LayoutConverter.ConvertLinearToBlockLinear(
-                    Info.Width,
-                    Info.Height,
-                    _depth,
-                    Info.Levels,
-                    _layers,
-                    Info.FormatInfo.BlockWidth,
-                    Info.FormatInfo.BlockHeight,
-                    Info.FormatInfo.BytesPerPixel,
-                    Info.GobBlocksInY,
-                    Info.GobBlocksInZ,
-                    Info.GobBlocksInTileX,
-                    _sizeInfo,
-                    data);
+                if (Info.IsLinear)
+                {
+                    data = LayoutConverter.ConvertLinearToLinearStrided(
+                        Info.Width,
+                        Info.Height,
+                        Info.FormatInfo.BlockWidth,
+                        Info.FormatInfo.BlockHeight,
+                        Info.Stride,
+                        Info.FormatInfo.BytesPerPixel,
+                        data);
+                }
+                else
+                {
+                    data = LayoutConverter.ConvertLinearToBlockLinear(
+                        Info.Width,
+                        Info.Height,
+                        _depth,
+                        Info.Levels,
+                        _layers,
+                        Info.FormatInfo.BlockWidth,
+                        Info.FormatInfo.BlockHeight,
+                        Info.FormatInfo.BytesPerPixel,
+                        Info.GobBlocksInY,
+                        Info.GobBlocksInZ,
+                        Info.GobBlocksInTileX,
+                        _sizeInfo,
+                        data);
+                }
             }
 
             return data;
