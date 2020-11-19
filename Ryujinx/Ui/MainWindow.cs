@@ -117,9 +117,9 @@ namespace Ryujinx.Ui
                 End(null);
             }
 
-            _virtualFileSystem = VirtualFileSystem.CreateInstance();
+            _virtualFileSystem      = VirtualFileSystem.CreateInstance();
             _userChannelPersistence = new UserChannelPersistence();
-            _contentManager    = new ContentManager(_virtualFileSystem);
+            _contentManager         = new ContentManager(_virtualFileSystem);
 
             if (migrationNeeded)
             {
@@ -846,6 +846,16 @@ namespace Ryujinx.Ui
             string path = (string)_tableStore.GetValue(treeIter, 9);
 
             LoadApplication(path);
+        }
+
+        private void VSyncStatus_Clicked(object sender, ButtonReleaseEventArgs args)
+        {
+            _emulationContext.EnableDeviceVsync = !_emulationContext.EnableDeviceVsync;
+        }
+
+        private void DockedMode_Clicked(object sender, ButtonReleaseEventArgs args)
+        {
+            ConfigurationState.Instance.System.EnableDockedMode.Value = !ConfigurationState.Instance.System.EnableDockedMode.Value;
         }
 
         private void Row_Clicked(object sender, ButtonReleaseEventArgs args)

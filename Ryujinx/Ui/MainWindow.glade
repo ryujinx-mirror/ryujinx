@@ -470,13 +470,21 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkLabel" id="_vSyncStatus">
+                      <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="label" translatable="yes">VSync</property>
+                        <property name="margin_left">0</property>
+                        <signal name="button-release-event" handler="VSyncStatus_Clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkLabel" id="_vSyncStatus">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="margin_left">5</property>
+                            <property name="margin_right">5</property>
+                            <property name="label" translatable="yes">VSync</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -496,12 +504,20 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_dockedMode">
+                      <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
+                        <property name="margin_left">0</property>
+                        <signal name="button-release-event" handler="DockedMode_Clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkLabel" id="_dockedMode">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="margin_left">5</property>
+                            <property name="margin_right">5</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
