@@ -149,17 +149,46 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
             return ResultCode.Success;
         }
 
+        [Command(9)] // 4.0.0+
+        // GetAudioOutBufferCount() -> u32
+        public ResultCode GetAudioOutBufferCount(ServiceCtx context)
+        {
+            uint bufferCount = _audioOut.GetBufferCount(_track);
+
+            context.ResponseData.Write(bufferCount);
+
+            return ResultCode.Success;
+        }
+
+        [Command(10)] // 4.0.0+
+        // GetAudioOutPlayedSampleCount() -> u64
+        public ResultCode GetAudioOutPlayedSampleCount(ServiceCtx context)
+        {
+            ulong playedSampleCount = _audioOut.GetPlayedSampleCount(_track);
+
+            context.ResponseData.Write(playedSampleCount);
+
+            return ResultCode.Success;
+        }
+
+        [Command(11)] // 4.0.0+
+        // FlushAudioOutBuffers() -> b8
+        public ResultCode FlushAudioOutBuffers(ServiceCtx context)
+        {
+            bool heldBuffers = _audioOut.FlushBuffers(_track);
+
+            context.ResponseData.Write(heldBuffers);
+
+            return ResultCode.Success;
+        }
+
         [Command(12)] // 6.0.0+
         // SetAudioOutVolume(s32)
         public ResultCode SetAudioOutVolume(ServiceCtx context)
         {
-            // Games send a gain value here, so we need to apply it on the current volume value.
+            float volume = context.RequestData.ReadSingle();
 
-            float gain          = context.RequestData.ReadSingle();
-            float currentVolume = _audioOut.GetVolume();
-            float newVolume     = Math.Clamp(currentVolume + gain, 0.0f, 1.0f);
-
-            _audioOut.SetVolume(newVolume);
+            _audioOut.SetVolume(_track, volume);
 
             return ResultCode.Success;
         }
@@ -168,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
         // GetAudioOutVolume() -> s32
         public ResultCode GetAudioOutVolume(ServiceCtx context)
         {
-            float volume = _audioOut.GetVolume();
+            float volume = _audioOut.GetVolume(_track);
 
             context.ResponseData.Write(volume);
 

@@ -54,6 +54,16 @@ namespace Ryujinx.Audio.SoundIo
         /// </summary>
         public ConcurrentQueue<long> ReleasedBuffers { get; private set; }
 
+        /// <summary>
+        /// Buffer count of the track
+        /// </summary>
+        public uint BufferCount => (uint)m_ReservedBuffers.Count;
+
+        /// <summary>
+        /// Played sample count of the track
+        /// </summary>
+        public ulong PlayedSampleCount { get; private set; }
+
         private int _hardwareChannels;
         private int _virtualChannels;
 
@@ -430,6 +440,8 @@ namespace Ryujinx.Audio.SoundIo
 
             AudioStream.EndWrite();
 
+            PlayedSampleCount += (ulong)samples.Length;
+
             UpdateReleasedBuffers(samples.Length);
         }
 
@@ -569,6 +581,28 @@ namespace Ryujinx.Audio.SoundIo
         public bool ContainsBuffer(long bufferTag)
         {
             return m_ReservedBuffers.Any(x => x.Tag == bufferTag);
+        }
+
+        /// <summary>
+        /// Flush all track buffers
+        /// </summary>
+        public bool FlushBuffers()
+        {
+            m_Buffer.Clear();
+
+            if (m_ReservedBuffers.Count > 0)
+            {
+                foreach (var buffer in m_ReservedBuffers)
+                {
+                    ReleasedBuffers.Enqueue(buffer.Tag);
+                }
+
+                OnBufferReleased();
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -45,9 +45,15 @@ namespace Ryujinx.Audio
 
         void Stop(int trackId);
 
-        float GetVolume();
+        uint GetBufferCount(int trackId);
 
-        void SetVolume(float volume);
+        ulong GetPlayedSampleCount(int trackId);
+
+        bool FlushBuffers(int trackId);
+
+        float GetVolume(int trackId);
+
+        void SetVolume(int trackId, float volume);
 
         PlaybackState GetState(int trackId);
     }

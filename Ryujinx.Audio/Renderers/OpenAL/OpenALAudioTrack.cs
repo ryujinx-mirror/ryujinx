@@ -11,9 +11,12 @@ namespace Ryujinx.Audio
         public int           SampleRate { get; private set; }
         public ALFormat      Format     { get; private set; }
         public PlaybackState State      { get; set; }
+        public float         Volume     { get; private set; }
 
         public int HardwareChannels { get; }
         public int VirtualChannels { get; }
+        public uint BufferCount => (uint)_buffers.Count;
+        public ulong PlayedSampleCount { get; set; }
 
         private ReleaseCallback _callback;
 
@@ -123,6 +126,34 @@ namespace Ryujinx.Audio
 
                 _callback();
             }
+        }
+
+        public bool FlushBuffers()
+        {
+            while (_queuedTagsQueue.TryDequeue(out long tag))
+            {
+                _releasedTagsQueue.Enqueue(tag);
+            }
+
+            _callback();
+
+            foreach (var buffer in _buffers)
+            {
+                AL.DeleteBuffer(buffer.Value);
+            }
+
+            bool heldBuffers = _buffers.Count > 0;
+
+            _buffers.Clear();
+
+            return heldBuffers;
+        }
+
+        public void SetVolume(float volume)
+        {
+            Volume = volume;
+
+            AL.Source(SourceId, ALSourcef.Gain, Volume);
         }
 
         public void Dispose()

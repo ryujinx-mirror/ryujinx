@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Audio
@@ -15,6 +14,7 @@ namespace Ryujinx.Audio
         private ConcurrentQueue<int> _trackIds;
         private ConcurrentQueue<long> _buffers;
         private ConcurrentDictionary<int, ReleaseCallback> _releaseCallbacks;
+        private ulong _playedSampleCount;
 
         public DummyAudioOut()
         {
@@ -76,6 +76,8 @@ namespace Ryujinx.Audio
         {
             _buffers.Enqueue(bufferTag);
 
+            _playedSampleCount += (ulong)buffer.Length;
+
             if (_releaseCallbacks.TryGetValue(trackId, out var callback))
             {
                 callback?.Invoke();
@@ -86,9 +88,15 @@ namespace Ryujinx.Audio
 
         public void Stop(int trackId) { }
 
-        public float GetVolume() => _volume;
+        public uint GetBufferCount(int trackId) => (uint)_buffers.Count;
 
-        public void SetVolume(float volume)
+        public ulong GetPlayedSampleCount(int trackId) => _playedSampleCount;
+
+        public bool FlushBuffers(int trackId) => false;
+
+        public float GetVolume(int trackId) => _volume;
+
+        public void SetVolume(int trackId, float volume)
         {
             _volume = volume;
         }

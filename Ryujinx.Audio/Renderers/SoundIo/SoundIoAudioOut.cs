@@ -16,16 +16,6 @@ namespace Ryujinx.Audio
         private const int MaximumTracks = 256;
 
         /// <summary>
-        /// The volume of audio renderer
-        /// </summary>
-        private float _volume = 1.0f;
-
-        /// <summary>
-        /// True if the volume of audio renderer have changed
-        /// </summary>
-        private bool _volumeChanged;
-
-        /// <summary>
         /// The <see cref="SoundIO"/> audio context
         /// </summary>
         private SoundIO _audioContext;
@@ -155,14 +145,7 @@ namespace Ryujinx.Audio
         public void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer) where T : struct
         {
             if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
-            {
-                if (_volumeChanged)
-                {
-                    track.AudioStream.SetVolume(_volume);
-
-                    _volumeChanged = false;
-                }
-                    
+            {   
                 track.AppendBuffer(bufferTag, buffer);
             }
         }
@@ -192,21 +175,70 @@ namespace Ryujinx.Audio
         }
 
         /// <summary>
-        /// Get playback volume
+        /// Get track buffer count
         /// </summary>
-        public float GetVolume() => _volume;
+        /// <param name="trackId">The ID of the track to get buffer count</param>
+        public uint GetBufferCount(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                return track.BufferCount;
+            }
+
+            return 0;
+        }
 
         /// <summary>
-        /// Set playback volume
+        /// Get track played sample count
+        /// </summary>
+        /// <param name="trackId">The ID of the track to get played sample</param>
+        public ulong GetPlayedSampleCount(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                return track.PlayedSampleCount;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Flush all track buffers
+        /// </summary>
+        /// <param name="trackId">The ID of the track to flush</param>
+        public bool FlushBuffers(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                return track.FlushBuffers();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Set track volume
         /// </summary>
         /// <param name="volume">The volume of the playback</param>
-        public void SetVolume(float volume)
+        public void SetVolume(int trackId, float volume)
         {
-            if (!_volumeChanged)
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
             {
-                _volume        = volume;
-                _volumeChanged = true;
+                track.AudioStream.SetVolume(volume);
             }
+        }
+
+        /// <summary>
+        /// Get track volume
+        /// </summary>
+        public float GetVolume(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                return track.AudioStream.Volume;
+            }
+
+            return 1.0f;
         }
 
         /// <summary>
