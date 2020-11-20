@@ -120,7 +120,16 @@ namespace ARMeilleure.Translation.PTC
             {
                 int hashSize = md5.HashSize / 8;
 
-                deflateStream.CopyTo(stream);
+                try
+                {
+                    deflateStream.CopyTo(stream);
+                }
+                catch
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
 
                 stream.Seek(0L, SeekOrigin.Begin);
 
