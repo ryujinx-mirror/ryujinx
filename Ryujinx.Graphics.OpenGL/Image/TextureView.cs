@@ -112,6 +112,14 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 // so it doesn't work for all cases.
                 TextureView emulatedView = (TextureView)_renderer.CreateTexture(info, ScaleFactor);
 
+                _renderer.TextureCopy.CopyUnscaled(
+                    this,
+                    emulatedView,
+                    0,
+                    firstLayer,
+                    0,
+                    firstLevel);
+
                 emulatedView._emulatedViewParent = this;
 
                 emulatedView.FirstLayer = firstLayer;
@@ -134,7 +142,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     _incompatibleFormatView = (TextureView)_renderer.CreateTexture(Info, ScaleFactor);
                 }
 
-                TextureCopyUnscaled.Copy(_parent.Info, _incompatibleFormatView.Info, _parent.Handle, _incompatibleFormatView.Handle, FirstLayer, 0, FirstLevel, 0);
+                _renderer.TextureCopy.CopyUnscaled(_parent, _incompatibleFormatView, FirstLayer, 0, FirstLevel, 0);
 
                 return _incompatibleFormatView.Handle;
             }
@@ -146,7 +154,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             if (_incompatibleFormatView != null)
             {
-                TextureCopyUnscaled.Copy(_incompatibleFormatView.Info, _parent.Info, _incompatibleFormatView.Handle, _parent.Handle, 0, FirstLayer, 0, FirstLevel);
+                _renderer.TextureCopy.CopyUnscaled(_incompatibleFormatView, _parent, 0, FirstLayer, 0, FirstLevel);
             }
         }
 
@@ -154,15 +162,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             TextureView destinationView = (TextureView)destination;
 
-            TextureCopyUnscaled.Copy(Info, destinationView.Info, Handle, destinationView.Handle, 0, firstLayer, 0, firstLevel);
+            _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
 
             if (destinationView._emulatedViewParent != null)
             {
-                TextureCopyUnscaled.Copy(
-                    Info,
-                    destinationView._emulatedViewParent.Info,
-                    Handle,
-                    destinationView._emulatedViewParent.Handle,
+                _renderer.TextureCopy.CopyUnscaled(
+                    this,
+                    destinationView._emulatedViewParent,
                     0,
                     destinationView.FirstLayer,
                     0,
@@ -200,6 +206,50 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public void WriteToPbo(int offset, bool forceBgra)
         {
             WriteTo(IntPtr.Zero + offset, forceBgra);
+        }
+
+        public int WriteToPbo2D(int offset, int layer, int level)
+        {
+            return WriteTo2D(IntPtr.Zero + offset, layer, level);
+        }
+
+        private int WriteTo2D(IntPtr data, int layer, int level)
+        {
+            TextureTarget target = Target.Convert();
+
+            Bind(target, 0);
+
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
+
+            PixelFormat pixelFormat = format.PixelFormat;
+            PixelType pixelType = format.PixelType;
+
+            if (target == TextureTarget.TextureCubeMap || target == TextureTarget.TextureCubeMapArray)
+            {
+                target = TextureTarget.TextureCubeMapPositiveX + (layer % 6);
+            }
+
+            int mipSize = Info.GetMipSize2D(level);
+
+            // The GL function returns all layers. Must return the offset of the layer we're interested in.
+            int resultOffset = target switch
+            {
+                TextureTarget.TextureCubeMapArray => (layer / 6) * mipSize,
+                TextureTarget.Texture1DArray => layer * mipSize,
+                TextureTarget.Texture2DArray => layer * mipSize,
+                _ => 0
+            };
+
+            if (format.IsCompressed)
+            {
+                GL.GetCompressedTexImage(target, level, data);
+            }
+            else
+            {
+                GL.GetTexImage(target, level, pixelFormat, pixelType, data);
+            }
+
+            return resultOffset;
         }
 
         private void WriteTo(IntPtr data, bool forceBgra = false)
@@ -261,6 +311,172 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public void ReadFromPbo(int offset, int size)
         {
             ReadFrom(IntPtr.Zero + offset, size);
+        }
+
+        public void ReadFromPbo2D(int offset, int layer, int level, int width, int height)
+        {
+            ReadFrom2D(IntPtr.Zero + offset, layer, level, width, height);
+        }
+
+        private void ReadFrom2D(IntPtr data, int layer, int level, int width, int height)
+        {
+            TextureTarget target = Target.Convert();
+
+            int mipSize = Info.GetMipSize2D(level);
+
+            Bind(target, 0);
+
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
+
+            switch (Target)
+            {
+                case Target.Texture1D:
+                    if (format.IsCompressed)
+                    {
+                        GL.CompressedTexSubImage1D(
+                            target,
+                            level,
+                            0,
+                            width,
+                            format.PixelFormat,
+                            mipSize,
+                            data);
+                    }
+                    else
+                    {
+                        GL.TexSubImage1D(
+                            target,
+                            level,
+                            0,
+                            width,
+                            format.PixelFormat,
+                            format.PixelType,
+                            data);
+                    }
+                    break;
+
+                case Target.Texture1DArray:
+                    if (format.IsCompressed)
+                    {
+                        GL.CompressedTexSubImage2D(
+                            target,
+                            level,
+                            0,
+                            layer,
+                            width,
+                            1,
+                            format.PixelFormat,
+                            mipSize,
+                            data);
+                    }
+                    else
+                    {
+                        GL.TexSubImage2D(
+                            target,
+                            level,
+                            0,
+                            layer,
+                            width,
+                            1,
+                            format.PixelFormat,
+                            format.PixelType,
+                            data);
+                    }
+                    break;
+
+                case Target.Texture2D:
+                    if (format.IsCompressed)
+                    {
+                        GL.CompressedTexSubImage2D(
+                            target,
+                            level,
+                            0,
+                            0,
+                            width,
+                            height,
+                            format.PixelFormat,
+                            mipSize,
+                            data);
+                    }
+                    else
+                    {
+                        GL.TexSubImage2D(
+                            target,
+                            level,
+                            0,
+                            0,
+                            width,
+                            height,
+                            format.PixelFormat,
+                            format.PixelType,
+                            data);
+                    }
+                    break;
+
+                case Target.Texture2DArray:
+                case Target.Texture3D:
+                case Target.CubemapArray:
+                    if (format.IsCompressed)
+                    {
+                        GL.CompressedTexSubImage3D(
+                            target,
+                            level,
+                            0,
+                            0,
+                            layer,
+                            width,
+                            height,
+                            1,
+                            format.PixelFormat,
+                            mipSize,
+                            data);
+                    }
+                    else
+                    {
+                        GL.TexSubImage3D(
+                            target,
+                            level,
+                            0,
+                            0,
+                            layer,
+                            width,
+                            height,
+                            1,
+                            format.PixelFormat,
+                            format.PixelType,
+                            data);
+                    }
+                    break;
+
+                case Target.Cubemap:
+                    if (format.IsCompressed)
+                    {
+                        GL.CompressedTexSubImage2D(
+                            TextureTarget.TextureCubeMapPositiveX + layer,
+                            level,
+                            0,
+                            0,
+                            width,
+                            height,
+                            format.PixelFormat,
+                            mipSize,
+                            data);
+                    }
+                    else
+                    {
+                        GL.TexSubImage2D(
+                            TextureTarget.TextureCubeMapPositiveX + layer,
+                            level,
+                            0,
+                            0,
+                            width,
+                            height,
+                            format.PixelFormat,
+                            format.PixelType,
+                            data);
+                    }
+                    break;
+            }
         }
 
         private void ReadFrom(IntPtr data, int size)

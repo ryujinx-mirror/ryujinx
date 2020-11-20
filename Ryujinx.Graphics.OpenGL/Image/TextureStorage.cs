@@ -5,7 +5,7 @@ using System;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
-    class TextureStorage
+    class TextureStorage : ITextureInfo 
     {
         public int Handle { get; private set; }
         public float ScaleFactor { get; private set; }

@@ -197,7 +197,8 @@ namespace Ryujinx.Graphics.Texture
                 alignment = GobStride / bytesPerPixel;
             }
 
-            (gobBlocksInY, gobBlocksInZ) = GetMipGobBlockSizes(height, depth, blockHeight, gobBlocksInY, gobBlocksInZ);
+            // Height has already been divided by block height, so pass it as 1.
+            (gobBlocksInY, gobBlocksInZ) = GetMipGobBlockSizes(height, depth, 1, gobBlocksInY, gobBlocksInZ);
 
             int blockOfGobsHeight = gobBlocksInY * GobHeight;
             int blockOfGobsDepth  = gobBlocksInZ;
