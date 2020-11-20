@@ -387,7 +387,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if eligible</returns>
         public bool IsUpscaleCompatible(TextureInfo info)
         {
-            return (info.Target == Target.Texture2D || info.Target == Target.Texture2DArray) && info.Levels == 1 && !info.FormatInfo.IsCompressed && UpscaleSafeMode(info);
+            return (info.Target == Target.Texture2D || info.Target == Target.Texture2DArray) && !info.FormatInfo.IsCompressed && UpscaleSafeMode(info);
         }
 
         /// <summary>
@@ -400,6 +400,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             // While upscaling works for all targets defined by IsUpscaleCompatible, we additionally blacklist targets here that
             // may have undesirable results (upscaling blur textures) or simply waste GPU resources (upscaling texture atlas).
+
+            if (info.Levels > 3)
+            {
+                // Textures with more than 3 levels are likely to be game textures, rather than render textures.
+                // Small textures with full mips are likely to be removed by the next check.
+                return false;
+            }
 
             if (!(info.FormatInfo.Format.IsDepthOrStencil() || info.FormatInfo.Components == 1))
             {

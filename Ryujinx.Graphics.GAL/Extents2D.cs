@@ -1,3 +1,5 @@
+using Ryujinx.Common;
+
 namespace Ryujinx.Graphics.GAL
 {
     public struct Extents2D
@@ -13,6 +15,17 @@ namespace Ryujinx.Graphics.GAL
             Y1 = y1;
             X2 = x2;
             Y2 = y2;
+        }
+
+        public Extents2D Reduce(int level)
+        {
+            int div = 1 << level;
+            
+            return new Extents2D(
+                X1 >> level, 
+                Y1 >> level,
+                BitUtils.DivRoundUp(X2, div),
+                BitUtils.DivRoundUp(Y2, div));
         }
     }
 }

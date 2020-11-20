@@ -431,48 +431,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Helper method for copying our Texture2DArray texture to the given target, with scaling.
-        /// This creates temporary views for each array layer on both textures, copying each one at a time.
-        /// </summary>
-        /// <param name="target">The texture array to copy to</param>
-        private void CopyArrayScaled(ITexture target)
-        {
-            TextureInfo viewInfo = new TextureInfo(
-                Info.Address,
-                Info.Width,
-                Info.Height,
-                1,
-                Info.Levels,
-                Info.SamplesInX,
-                Info.SamplesInY,
-                Info.Stride,
-                Info.IsLinear,
-                Info.GobBlocksInY,
-                Info.GobBlocksInZ,
-                Info.GobBlocksInTileX,
-                Target.Texture2D,
-                Info.FormatInfo,
-                Info.DepthStencilMode,
-                Info.SwizzleR,
-                Info.SwizzleG,
-                Info.SwizzleB,
-                Info.SwizzleA);
-
-            TextureCreateInfo createInfo = TextureManager.GetCreateInfo(viewInfo, _context.Capabilities, ScaleFactor);
-
-            for (int i = 0; i < Info.DepthOrLayers; i++)
-            {
-                ITexture from = HostTexture.CreateView(createInfo, i, 0);
-                ITexture to = target.CreateView(createInfo, i, 0);
-
-                from.CopyTo(to, new Extents2D(0, 0, from.Width, from.Height), new Extents2D(0, 0, to.Width, to.Height), true);
-
-                from.Release();
-                to.Release();
-            }
-        }
-
-        /// <summary>
         /// Copy the host texture to a scaled one. If a texture is not provided, create it with the given scale.
         /// </summary>
         /// <param name="scale">Scale factor</param>
@@ -486,14 +444,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 storage = _context.Renderer.CreateTexture(createInfo, scale);
             }
 
-            if (Info.Target == Target.Texture2DArray)
-            {
-                CopyArrayScaled(storage);
-            }
-            else
-            {
-                HostTexture.CopyTo(storage, new Extents2D(0, 0, HostTexture.Width, HostTexture.Height), new Extents2D(0, 0, storage.Width, storage.Height), true);
-            }
+            HostTexture.CopyTo(storage, new Extents2D(0, 0, HostTexture.Width, HostTexture.Height), new Extents2D(0, 0, storage.Width, storage.Height), true);
 
             return storage;
         }

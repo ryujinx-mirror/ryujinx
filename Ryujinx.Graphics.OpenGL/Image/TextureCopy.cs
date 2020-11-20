@@ -34,37 +34,60 @@ namespace Ryujinx.Graphics.OpenGL.Image
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, GetSrcFramebufferLazy());
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, GetDstFramebufferLazy());
 
-            Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle);
-            Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle);
+            int levels = Math.Min(src.Info.Levels, dst.Info.Levels);
+            int layers = Math.Min(src.Info.GetLayers(), dst.Info.GetLayers());
 
-            ClearBufferMask mask = GetMask(src.Format);
-
-            if ((mask & (ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit)) != 0 || src.Format.IsInteger())
+            for (int level = 0; level < levels; level++)
             {
-                linearFilter = false;
+                for (int layer = 0; layer < layers; layer++)
+                {
+                    if (layers > 1)
+                    {
+                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, level, layer);
+                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, level, layer);
+                    }
+                    else
+                    {
+                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, level);
+                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, level);
+                    }
+
+                    ClearBufferMask mask = GetMask(src.Format);
+
+                    if ((mask & (ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit)) != 0 || src.Format.IsInteger())
+                    {
+                        linearFilter = false;
+                    }
+
+                    BlitFramebufferFilter filter = linearFilter
+                        ? BlitFramebufferFilter.Linear
+                        : BlitFramebufferFilter.Nearest;
+
+                    GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+                    GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+                    GL.Disable(EnableCap.RasterizerDiscard);
+                    GL.Disable(IndexedEnableCap.ScissorTest, 0);
+
+                    GL.BlitFramebuffer(
+                        srcRegion.X1,
+                        srcRegion.Y1,
+                        srcRegion.X2,
+                        srcRegion.Y2,
+                        dstRegion.X1,
+                        dstRegion.Y1,
+                        dstRegion.X2,
+                        dstRegion.Y2,
+                        mask,
+                        filter);
+                }
+
+                if (level < levels - 1)
+                {
+                    srcRegion = srcRegion.Reduce(1);
+                    dstRegion = dstRegion.Reduce(1);
+                }
             }
-
-            BlitFramebufferFilter filter = linearFilter
-                ? BlitFramebufferFilter.Linear
-                : BlitFramebufferFilter.Nearest;
-
-            GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
-            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-
-            GL.Disable(EnableCap.RasterizerDiscard);
-            GL.Disable(IndexedEnableCap.ScissorTest, 0);
-
-            GL.BlitFramebuffer(
-                srcRegion.X1,
-                srcRegion.Y1,
-                srcRegion.X2,
-                srcRegion.Y2,
-                dstRegion.X1,
-                dstRegion.Y1,
-                dstRegion.X2,
-                dstRegion.Y2,
-                mask,
-                filter);
 
             Attach(FramebufferTarget.ReadFramebuffer, src.Format, 0);
             Attach(FramebufferTarget.DrawFramebuffer, dst.Format, 0);
@@ -191,24 +214,38 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
         }
 
-        private static void Attach(FramebufferTarget target, Format format, int handle)
+        private static FramebufferAttachment AttachmentForFormat(Format format)
         {
             if (format == Format.D24UnormS8Uint || format == Format.D32FloatS8Uint)
             {
-                GL.FramebufferTexture(target, FramebufferAttachment.DepthStencilAttachment, handle, 0);
+                return FramebufferAttachment.DepthStencilAttachment;
             }
             else if (IsDepthOnly(format))
             {
-                GL.FramebufferTexture(target, FramebufferAttachment.DepthAttachment, handle, 0);
+                return FramebufferAttachment.DepthAttachment;
             }
             else if (format == Format.S8Uint)
             {
-                GL.FramebufferTexture(target, FramebufferAttachment.StencilAttachment, handle, 0);
+                return FramebufferAttachment.StencilAttachment;
             }
             else
             {
-                GL.FramebufferTexture(target, FramebufferAttachment.ColorAttachment0, handle, 0);
+                return FramebufferAttachment.ColorAttachment0;
             }
+        }
+
+        private static void Attach(FramebufferTarget target, Format format, int handle, int level = 0)
+        {
+            FramebufferAttachment attachment = AttachmentForFormat(format);
+
+            GL.FramebufferTexture(target, attachment, handle, level);
+        }
+
+        private static void Attach(FramebufferTarget target, Format format, int handle, int level, int layer)
+        {
+            FramebufferAttachment attachment = AttachmentForFormat(format);
+
+            GL.FramebufferTextureLayer(target, attachment, handle, level, layer);
         }
 
         private static ClearBufferMask GetMask(Format format)

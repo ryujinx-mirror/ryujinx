@@ -71,12 +71,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
-            {
-                srcTexture.PropagateScale(dstTexture);
-            }
-
-            float scale = srcTexture.ScaleFactor; // src and dest scales are identical now.
+            float scale = srcTexture.ScaleFactor;
+            float dstScale = dstTexture.ScaleFactor;
 
             Extents2D srcRegion = new Extents2D(
                 (int)Math.Ceiling(scale * (srcX1 / srcTexture.Info.SamplesInX)),
@@ -85,10 +81,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 (int)Math.Ceiling(scale * (srcY2 / srcTexture.Info.SamplesInY)));
 
             Extents2D dstRegion = new Extents2D(
-                (int)Math.Ceiling(scale * (dstX1 / dstTexture.Info.SamplesInX)),
-                (int)Math.Ceiling(scale * (dstY1 / dstTexture.Info.SamplesInY)),
-                (int)Math.Ceiling(scale * (dstX2 / dstTexture.Info.SamplesInX)),
-                (int)Math.Ceiling(scale * (dstY2 / dstTexture.Info.SamplesInY)));
+                (int)Math.Ceiling(dstScale * (dstX1 / dstTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(dstScale * (dstY1 / dstTexture.Info.SamplesInY)),
+                (int)Math.Ceiling(dstScale * (dstX2 / dstTexture.Info.SamplesInX)),
+                (int)Math.Ceiling(dstScale * (dstY2 / dstTexture.Info.SamplesInY)));
 
             bool linearFilter = control.UnpackLinearFilter();
 
@@ -107,10 +103,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 srcCopyTexture.Height++;
 
                 srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, srcHint);
-                if (srcTexture.ScaleFactor != dstTexture.ScaleFactor)
-                {
-                    srcTexture.PropagateScale(dstTexture);
-                }
+                scale = srcTexture.ScaleFactor;
 
                 srcRegion = new Extents2D(
                     (int)Math.Ceiling(scale * ((srcX1 / srcTexture.Info.SamplesInX) - srcTexture.Info.Width)),
