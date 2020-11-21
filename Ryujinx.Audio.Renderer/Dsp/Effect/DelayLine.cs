@@ -42,7 +42,15 @@ namespace Ryujinx.Audio.Renderer.Dsp.Effect
         {
             CurrentSampleCount = Math.Min(SampleCountMax, targetSampleCount);
             _currentSampleIndex = 0;
-            _lastSampleIndex = CurrentSampleCount - 1;
+
+            if (CurrentSampleCount == 0)
+            {
+                _lastSampleIndex = 0;
+            }
+            else
+            {
+                _lastSampleIndex = CurrentSampleCount - 1;
+            }
         }
 
         public void SetDelay(float delayTime)
