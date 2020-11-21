@@ -83,34 +83,28 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private void ProcessReverb3dMono(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
         {
-            const int delayLineSampleIndexOffset = -1;
-
-            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableMono, TargetEarlyDelayLineIndicesTableMono, TargetOutputFeedbackIndicesTableMono, delayLineSampleIndexOffset);
+            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableMono, TargetEarlyDelayLineIndicesTableMono, TargetOutputFeedbackIndicesTableMono);
         }
 
         private void ProcessReverb3dStereo(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
         {
-            const int delayLineSampleIndexOffset = 1;
-
-            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableStereo, TargetEarlyDelayLineIndicesTableStereo, TargetOutputFeedbackIndicesTableStereo, delayLineSampleIndexOffset);
+            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableStereo, TargetEarlyDelayLineIndicesTableStereo, TargetOutputFeedbackIndicesTableStereo);
         }
 
         private void ProcessReverb3dQuadraphonic(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
         {
-            const int delayLineSampleIndexOffset = 1;
-
-            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableQuadraphonic, TargetEarlyDelayLineIndicesTableQuadraphonic, TargetOutputFeedbackIndicesTableQuadraphonic, delayLineSampleIndexOffset);
+            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableQuadraphonic, TargetEarlyDelayLineIndicesTableQuadraphonic, TargetOutputFeedbackIndicesTableQuadraphonic);
         }
 
         private void ProcessReverb3dSurround(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
         {
-            const int delayLineSampleIndexOffset = 1;
-
-            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableSurround, TargetEarlyDelayLineIndicesTableSurround, TargetOutputFeedbackIndicesTableSurround, delayLineSampleIndexOffset);
+            ProcessReverb3dGeneric(outputBuffers, inputBuffers, sampleCount, OutputEarlyIndicesTableSurround, TargetEarlyDelayLineIndicesTableSurround, TargetOutputFeedbackIndicesTableSurround);
         }
 
-        private void ProcessReverb3dGeneric(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable, int delayLineSampleIndexOffset)
+        private void ProcessReverb3dGeneric(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable)
         {
+            const int delayLineSampleIndexOffset = 1;
+
             ref Reverb3dState state = ref State.Span[0];
 
             bool isMono = Parameter.ChannelCount == 1;
