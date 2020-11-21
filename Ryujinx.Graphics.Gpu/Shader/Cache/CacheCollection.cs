@@ -540,7 +540,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         public void AddValue(ref Hash128 keyHash, byte[] value)
         {
             Debug.Assert(value != null);
-            Debug.Assert(GetValueRaw(ref keyHash) != null);
 
             bool isAlreadyPresent;
 
