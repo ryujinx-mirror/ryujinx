@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [Command(3)] // 3.0.0+
+        [Command(2)] // 3.0.0+
         // ListAudioInsAuto() -> (u32 count, buffer<bytes, 0x22> names)
         public ResultCode ListAudioInsAuto(ServiceCtx context)
         {
