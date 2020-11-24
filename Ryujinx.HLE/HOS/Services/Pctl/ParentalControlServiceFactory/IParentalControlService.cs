@@ -10,8 +10,12 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private ulong _titleId;
         private bool  _freeCommunicationEnabled;
         private int[] _ratingAge;
+
+        // TODO: Find where they are set.
+        private bool  _restrictionEnabled                  = false;
         private bool  _featuresRestriction                 = false;
         private bool  _stereoVisionRestrictionConfigurable = true;
+
         private bool  _stereoVisionRestriction             = false;
 
         public IParentalControlService(ServiceCtx context, bool withInitialize, int permissionFlag)
@@ -73,12 +77,14 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // CheckFreeCommunicationPermission()
         public ResultCode CheckFreeCommunicationPermission(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+            // TODO: This checks some extra internal fields which are to be determined.
 
-            if (!_freeCommunicationEnabled)
+            if (!_freeCommunicationEnabled && _restrictionEnabled)
             {
                 return ResultCode.FreeCommunicationDisabled;
             }
+
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
 
             return ResultCode.Success;
         }
@@ -88,6 +94,20 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         public ResultCode ConfirmStereoVisionPermission(ServiceCtx context)
         {
             return IsStereoVisionPermittedImpl();
+        }
+
+        [Command(1031)]
+        // IsRestrictionEnabled() -> b8
+        public ResultCode IsRestrictionEnabled(ServiceCtx context)
+        {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            context.ResponseData.Write(_restrictionEnabled);
+
+            return ResultCode.Success;
         }
 
         [Command(1061)] // 4.0.0+
