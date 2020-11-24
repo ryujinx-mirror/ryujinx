@@ -159,18 +159,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
-        // GetSaveDataSize(u8, nn::account::Uid) -> (u64, u64)
         [Command(26)] // 3.0.0+
+        // GetSaveDataSize(u8 save_data_type, nn::account::Uid) -> (u64 save_size, u64 journal_size)
         public ResultCode GetSaveDataSize(ServiceCtx context)
         {
-            SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadByte();
+            SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
+            Uid          userId       = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
 
-            context.RequestData.BaseStream.Seek(7, System.IO.SeekOrigin.Current);
+            // NOTE: Service calls nn::fs::FindSaveDataWithFilter with SaveDataType = 1 hardcoded.
+            //       Then it calls nn::fs::GetSaveDataAvailableSize and nn::fs::GetSaveDataJournalSize to get the sizes.
+            //       Since LibHac currently doesn't support the 2 last methods, we can hardcode the values to 200mb.
 
-            Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
-
-            // TODO: We return a size of 2GB as we use a directory based save system. This should be enough for most of the games.
-            context.ResponseData.Write(2000000000u);
+            context.ResponseData.Write((long)200000000);
+            context.ResponseData.Write((long)200000000);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { saveDataType, userId });
 
