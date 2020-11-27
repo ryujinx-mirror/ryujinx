@@ -367,7 +367,7 @@ namespace Ryujinx.Audio
             {
                 lock (track)
                 {
-                    return track.Volume;
+                    return track.GetVolume();
                 }
             }
 

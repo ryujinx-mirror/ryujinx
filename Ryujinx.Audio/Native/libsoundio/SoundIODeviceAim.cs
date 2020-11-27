@@ -1,9 +1,8 @@
-﻿using System;
-namespace SoundIOSharp
+﻿namespace SoundIOSharp
 {
-	public enum SoundIODeviceAim // soundio.h (228, 6)
-	{
-		Input = 0,
-		Output = 1,
-	}
+    public enum SoundIODeviceAim // soundio.h (228, 6)
+    {
+        Input,
+        Output
+    }
 }

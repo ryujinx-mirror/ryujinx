@@ -11,7 +11,6 @@ namespace Ryujinx.Audio
         public int           SampleRate { get; private set; }
         public ALFormat      Format     { get; private set; }
         public PlaybackState State      { get; set; }
-        public float         Volume     { get; private set; }
 
         public int HardwareChannels { get; }
         public int VirtualChannels { get; }
@@ -151,9 +150,14 @@ namespace Ryujinx.Audio
 
         public void SetVolume(float volume)
         {
-            Volume = volume;
+            AL.Source(SourceId, ALSourcef.Gain, volume);
+        }
 
-            AL.Source(SourceId, ALSourcef.Gain, Volume);
+        public float GetVolume()
+        {
+            AL.GetSource(SourceId, ALSourcef.Gain, out float volume);
+
+            return volume;
         }
 
         public void Dispose()

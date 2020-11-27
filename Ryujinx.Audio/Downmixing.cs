@@ -24,26 +24,30 @@ namespace Ryujinx.Audio
             public short Right;
         }
 
-        private const int Q15Bits = 16;
-        private const int RawQ15One = 1 << Q15Bits;
-        private const int RawQ15HalfOne = (int)(0.5f * RawQ15One);
-        private const int Minus3dBInQ15 = (int)(0.707f * RawQ15One);
-        private const int Minus6dBInQ15 = (int)(0.501f * RawQ15One);
+        private const int Q15Bits        = 16;
+        private const int RawQ15One      = 1 << Q15Bits;
+        private const int RawQ15HalfOne  = (int)(0.5f * RawQ15One);
+        private const int Minus3dBInQ15  = (int)(0.707f * RawQ15One);
+        private const int Minus6dBInQ15  = (int)(0.501f * RawQ15One);
         private const int Minus12dBInQ15 = (int)(0.251f * RawQ15One);
 
-        private static int[] DefaultSurroundToStereoCoefficients = new int[4]
+        private static readonly int[] DefaultSurroundToStereoCoefficients = new int[4]
         {
             RawQ15One,
             Minus3dBInQ15,
             Minus12dBInQ15,
-            Minus3dBInQ15,
+            Minus3dBInQ15
         };
 
-        private static int[] DefaultStereoToMonoCoefficients = new int[2]
+        private static readonly int[] DefaultStereoToMonoCoefficients = new int[2]
         {
             Minus6dBInQ15,
-            Minus6dBInQ15,
+            Minus6dBInQ15
         };
+
+        private const int SurroundChannelCount = 6;
+        private const int StereoChannelCount   = 2;
+        private const int MonoChannelCount     = 1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ReadOnlySpan<Channel51FormatPCM16> GetSurroundBuffer(ReadOnlySpan<short> data)
@@ -72,9 +76,6 @@ namespace Ryujinx.Audio
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static short[] DownMixSurroundToStereo(ReadOnlySpan<int> coefficients, ReadOnlySpan<short> data)
         {
-            const int SurroundChannelCount = 6;
-            const int StereoChannelCount = 2;
-
             int samplePerChannelCount = data.Length / SurroundChannelCount;
 
             short[] downmixedBuffer = new short[samplePerChannelCount * StereoChannelCount];
@@ -85,7 +86,7 @@ namespace Ryujinx.Audio
             {
                 Channel51FormatPCM16 channel = channels[i];
 
-                downmixedBuffer[i * 2] = DownMixSurroundToStereo(coefficients, channel.BackLeft, channel.LowFrequency, channel.FrontCenter, channel.FrontLeft);
+                downmixedBuffer[i * 2]     = DownMixSurroundToStereo(coefficients, channel.BackLeft, channel.LowFrequency, channel.FrontCenter, channel.FrontLeft);
                 downmixedBuffer[i * 2 + 1] = DownMixSurroundToStereo(coefficients, channel.BackRight, channel.LowFrequency, channel.FrontCenter, channel.FrontRight);
             }
 
@@ -95,9 +96,6 @@ namespace Ryujinx.Audio
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static short[] DownMixStereoToMono(ReadOnlySpan<int> coefficients, ReadOnlySpan<short> data)
         {
-            const int StereoChannelCount = 2;
-            const int MonoChannelCount = 1;
-
             int samplePerChannelCount = data.Length / StereoChannelCount;
 
             short[] downmixedBuffer = new short[samplePerChannelCount * MonoChannelCount];

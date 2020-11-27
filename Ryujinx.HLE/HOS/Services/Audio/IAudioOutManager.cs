@@ -20,10 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // ListAudioOuts() -> (u32 count, buffer<bytes, 6>)
         public ResultCode ListAudioOuts(ServiceCtx context)
         {
-            return ListAudioOutsImpl(
-                context,
-                context.Request.ReceiveBuff[0].Position,
-                context.Request.ReceiveBuff[0].Size);
+            return ListAudioOutsImpl(context, context.Request.ReceiveBuff[0].Position, context.Request.ReceiveBuff[0].Size);
         }
 
         [Command(1)]
@@ -31,12 +28,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out)
         public ResultCode OpenAudioOut(ServiceCtx context)
         {
-            return OpenAudioOutImpl(
-                context,
-                context.Request.SendBuff[0].Position,
-                context.Request.SendBuff[0].Size,
-                context.Request.ReceiveBuff[0].Position,
-                context.Request.ReceiveBuff[0].Size);
+            return OpenAudioOutImpl(context, context.Request.SendBuff[0].Position,    context.Request.SendBuff[0].Size,
+                                             context.Request.ReceiveBuff[0].Position, context.Request.ReceiveBuff[0].Size);
         }
 
         [Command(2)] // 3.0.0+
@@ -56,12 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             (long sendPosition, long sendSize) = context.Request.GetBufferType0x21();
             (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
 
-            return OpenAudioOutImpl(
-                context,
-                sendPosition,
-                sendSize,
-                recvPosition,
-                recvSize);
+            return OpenAudioOutImpl(context, sendPosition, sendSize, recvPosition, recvSize);
         }
 
         private ResultCode ListAudioOutsImpl(ServiceCtx context, long position, long size)
@@ -88,10 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
         private ResultCode OpenAudioOutImpl(ServiceCtx context, long sendPosition, long sendSize, long receivePosition, long receiveSize)
         {
-            string deviceName = MemoryHelper.ReadAsciiString(
-                context.Memory,
-                sendPosition,
-                sendSize);
+            string deviceName = MemoryHelper.ReadAsciiString(context.Memory, sendPosition, sendSize);
 
             if (deviceName == string.Empty)
             {

@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Audio.SoundIo;
 using SoundIOSharp;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Audio

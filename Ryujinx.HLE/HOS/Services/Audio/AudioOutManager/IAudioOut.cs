@@ -85,16 +85,16 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
         {
             long tag = context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_audioOut.ContainsBuffer(_track, tag) ? 1 : 0);
+            context.ResponseData.Write(_audioOut.ContainsBuffer(_track, tag));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)] // 3.0.0+
         // AppendAudioOutBufferAuto(u64 tag, buffer<nn::audio::AudioOutBuffer, 0x21>)
         public ResultCode AppendAudioOutBufferAuto(ServiceCtx context)
         {
-            (long position, long size) = context.Request.GetBufferType0x21();
+            (long position, _) = context.Request.GetBufferType0x21();
 
             return AppendAudioOutBufferImpl(context, position);
         }
@@ -103,9 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
         {
             long tag = context.RequestData.ReadInt64();
 
-            AudioOutData data = MemoryHelper.Read<AudioOutData>(
-                context.Memory,
-                position);
+            AudioOutData data = MemoryHelper.Read<AudioOutData>(context.Memory, position);
 
             // NOTE: Assume PCM16 all the time, change if new format are found.
             short[] buffer = new short[data.SampleBufferSize / sizeof(short)];
