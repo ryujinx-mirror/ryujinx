@@ -1192,7 +1192,7 @@ namespace Ryujinx.Ui
         {
             if (Updater.CanUpdate(true))
             {
-                Updater.BeginParse(this, true);
+                _ = Updater.BeginParse(this, true);
             }
         }
 

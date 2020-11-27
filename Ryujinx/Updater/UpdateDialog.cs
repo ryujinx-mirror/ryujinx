@@ -70,7 +70,7 @@ namespace Ryujinx.Ui
                 SecondaryText.Text = "";
                 _restartQuery      = true;
 
-                Updater.UpdateRyujinx(this, _buildUrl);
+                _ = Updater.UpdateRyujinx(this, _buildUrl);
             }
         }
 

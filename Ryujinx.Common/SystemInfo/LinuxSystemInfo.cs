@@ -1,8 +1,10 @@
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Common.SystemInfo
 {
+    [SupportedOSPlatform("linux")]
     internal class LinuxSysteminfo : SystemInfo
     {
         public override string CpuName { get; }

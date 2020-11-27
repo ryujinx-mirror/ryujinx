@@ -2,9 +2,11 @@ using Ryujinx.Common.Logging;
 using System;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Common.SystemInfo
 {
+    [SupportedOSPlatform("windows")]
     internal class WindowsSysteminfo : SystemInfo
     {
         public override string CpuName { get; }

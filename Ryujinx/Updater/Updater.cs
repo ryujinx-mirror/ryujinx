@@ -10,6 +10,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Ryujinx
@@ -163,7 +164,7 @@ namespace Ryujinx
             {
                 using (Stream         inStream   = File.OpenRead(updateFile))
                 using (Stream         gzipStream = new GZipInputStream(inStream))
-                using (TarInputStream tarStream  = new TarInputStream(gzipStream))
+                using (TarInputStream tarStream  = new TarInputStream(gzipStream, Encoding.ASCII))
                 {
                     updateDialog.ProgressBar.MaxValue = inStream.Length;
 

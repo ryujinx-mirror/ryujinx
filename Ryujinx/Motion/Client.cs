@@ -24,8 +24,8 @@ namespace Ryujinx.Motion
         private readonly Dictionary<int, Dictionary<int, MotionInput>> _motionData;
         private readonly Dictionary<int, UdpClient> _clients;
 
-        private bool[] _clientErrorStatus = new bool[Enum.GetValues(typeof(PlayerIndex)).Length];
-        private long[] _clientRetryTimer  = new long[Enum.GetValues(typeof(PlayerIndex)).Length];
+        private readonly bool[] _clientErrorStatus = new bool[Enum.GetValues(typeof(PlayerIndex)).Length];
+        private readonly long[] _clientRetryTimer  = new long[Enum.GetValues(typeof(PlayerIndex)).Length];
 
         public Client()
         {
@@ -48,11 +48,9 @@ namespace Ryujinx.Motion
                     {
                         client.Value?.Dispose();
                     }
-#pragma warning disable CS0168
-                    catch (SocketException ex)
-#pragma warning restore CS0168
+                    catch (SocketException socketException)
                     {
-                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to dispose motion client. Error code {ex.ErrorCode}");
+                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to dispose motion client. Error: {socketException.ErrorCode}");
                     }
                 }
 
@@ -94,20 +92,20 @@ namespace Ryujinx.Motion
                         ReceiveLoop(player);
                     });
                 }
-                catch (FormatException fex)
+                catch (FormatException formatException)
                 {
                     if (!_clientErrorStatus[player])
                     {
-                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to connect to motion source at {host}:{port}. Error {fex.Message}");
+                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to connect to motion source at {host}:{port}. Error: {formatException.Message}");
 
                         _clientErrorStatus[player] = true;
                     }
                 }
-                catch (SocketException sex)
+                catch (SocketException socketException)
                 {
                     if (!_clientErrorStatus[player])
                     {
-                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to connect to motion source at {host}:{port}. Error code {sex.ErrorCode}");
+                        Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to connect to motion source at {host}:{port}. Error: {socketException.ErrorCode}");
 
                         _clientErrorStatus[player] = true;
                     }
@@ -118,8 +116,10 @@ namespace Ryujinx.Motion
 
                     SetRetryTimer(player);
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
+                    Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to register motion client. Error: {exception.Message}");
+
                     _clientErrorStatus[player] = true;
 
                     RemoveClient(player);
@@ -166,11 +166,11 @@ namespace Ryujinx.Motion
                     {
                         _client?.Send(data, data.Length);
                     }
-                    catch (SocketException ex)
+                    catch (SocketException socketException)
                     {
                         if (!_clientErrorStatus[clientId])
                         {
-                            Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to send data request to motion source at {_client.Client.RemoteEndPoint}. Error code {ex.ErrorCode}");
+                            Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to send data request to motion source at {_client.Client.RemoteEndPoint}. Error: {socketException.ErrorCode}");
                         }
 
                         _clientErrorStatus[clientId] = true;
@@ -181,7 +181,7 @@ namespace Ryujinx.Motion
 
                         SetRetryTimer(clientId);
                     }
-                    catch (ObjectDisposedException dex)
+                    catch (ObjectDisposedException)
                     {
                         _clientErrorStatus[clientId] = true;
 
@@ -231,7 +231,7 @@ namespace Ryujinx.Motion
 
         private bool CanConnect(int clientId)
         {
-            return _clientRetryTimer[clientId] == 0 ? true : PerformanceCounter.ElapsedMilliseconds - 5000 > _clientRetryTimer[clientId];
+            return _clientRetryTimer[clientId] == 0 || PerformanceCounter.ElapsedMilliseconds - 5000 > _clientRetryTimer[clientId];
         }
 
         public void ReceiveLoop(int clientId)
@@ -251,16 +251,14 @@ namespace Ryujinx.Motion
                                 continue;
                             }
 
-#pragma warning disable CS4014
                             Task.Run(() => HandleResponse(data, clientId));
-#pragma warning restore CS4014
                         }
                     }
-                    catch (SocketException ex)
+                    catch (SocketException socketException)
                     {
                         if (!_clientErrorStatus[clientId])
                         {
-                            Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to receive data from motion source at {endPoint}. Error code {ex.ErrorCode}");
+                            Logger.Warning?.PrintMsg(LogClass.Hid, $"Unable to receive data from motion source at {endPoint}. Error: {socketException.ErrorCode}");
                         }
 
                         _clientErrorStatus[clientId] = true;
@@ -285,19 +283,16 @@ namespace Ryujinx.Motion
             }
         }
 
-#pragma warning disable CS1998
         public void HandleResponse(byte[] data, int clientId)
-#pragma warning restore CS1998
         {
             ResetRetryTimer(clientId);
 
             MessageType type = (MessageType)BitConverter.ToUInt32(data.AsSpan().Slice(16, 4));
 
-            data = data.AsSpan().Slice(16).ToArray();
+            data = data.AsSpan()[16..].ToArray();
 
-            using MemoryStream mem = new MemoryStream(data);
-
-            using BinaryReader reader = new BinaryReader(mem);
+            using MemoryStream stream = new MemoryStream(data);
+            using BinaryReader reader = new BinaryReader(stream);
 
             switch (type)
             {
@@ -335,21 +330,25 @@ namespace Ryujinx.Motion
                         {
                             if (_motionData[clientId].ContainsKey(slot))
                             {
-                                var previousData = _motionData[clientId][slot];
+                                MotionInput previousData = _motionData[clientId][slot];
 
                                 previousData.Update(accelerometer, gyroscrope, timestamp, config.Sensitivity, (float)config.GyroDeadzone);
                             }
                             else
                             {
                                 MotionInput input = new MotionInput();
+
                                 input.Update(accelerometer, gyroscrope, timestamp, config.Sensitivity, (float)config.GyroDeadzone);
+
                                 _motionData[clientId].Add(slot, input);
                             }
                         }
                         else
                         {
                             MotionInput input = new MotionInput();
+
                             input.Update(accelerometer, gyroscrope, timestamp, config.Sensitivity, (float)config.GyroDeadzone);
+
                             _motionData.Add(clientId, new Dictionary<int, MotionInput>() { { slot, input } });
                         }
                     }
@@ -366,36 +365,34 @@ namespace Ryujinx.Motion
 
             Header header = GenerateHeader(clientId);
 
-            using (MemoryStream mem = new MemoryStream())
+            using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                using (BinaryWriter writer = new BinaryWriter(mem))
+                writer.WriteStruct(header);
+
+                ControllerInfoRequest request = new ControllerInfoRequest()
                 {
-                    writer.WriteStruct(header);
+                    Type       = MessageType.Info,
+                    PortsCount = 4
+                };
 
-                    ControllerInfoRequest request = new ControllerInfoRequest()
-                    {
-                        Type = MessageType.Info,
-                        PortsCount = 4
-                    };
+                request.PortIndices[0] = (byte)slot;
 
-                    request.PortIndices[0] = (byte)slot;
+                writer.WriteStruct(request);
 
-                    writer.WriteStruct(request);
+                header.Length = (ushort)(stream.Length - 16);
 
-                    header.Length = (ushort)(mem.Length - 16);
+                writer.Seek(6, SeekOrigin.Begin);
+                writer.Write(header.Length);
 
-                    writer.Seek(6, SeekOrigin.Begin);
-                    writer.Write(header.Length);
+                header.Crc32 = Crc32Algorithm.Compute(stream.ToArray());
 
-                    header.Crc32 = Crc32Algorithm.Compute(mem.ToArray());
+                writer.Seek(8, SeekOrigin.Begin);
+                writer.Write(header.Crc32);
 
-                    writer.Seek(8, SeekOrigin.Begin);
-                    writer.Write(header.Crc32);
+                byte[] data = stream.ToArray();
 
-                    byte[] data = mem.ToArray();
-
-                    Send(data, clientId);
-                }
+                Send(data, clientId);
             }
         }
 
@@ -408,35 +405,33 @@ namespace Ryujinx.Motion
 
             Header header = GenerateHeader(clientId);
 
-            using (MemoryStream mem = new MemoryStream())
+            using (MemoryStream stream = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                using (BinaryWriter writer = new BinaryWriter(mem))
+                writer.WriteStruct(header);
+
+                ControllerDataRequest request = new ControllerDataRequest()
                 {
-                    writer.WriteStruct(header);
+                    Type           = MessageType.Data,
+                    Slot           = (byte)slot,
+                    SubscriberType = SubscriberType.Slot
+                };
 
-                    ControllerDataRequest request = new ControllerDataRequest()
-                    {
-                        Type = MessageType.Data,
-                        Slot = (byte)slot,
-                        SubscriberType = SubscriberType.Slot
-                    };
+                writer.WriteStruct(request);
 
-                    writer.WriteStruct(request);
+                header.Length = (ushort)(stream.Length - 16);
 
-                    header.Length = (ushort)(mem.Length - 16);
+                writer.Seek(6, SeekOrigin.Begin);
+                writer.Write(header.Length);
 
-                    writer.Seek(6, SeekOrigin.Begin);
-                    writer.Write(header.Length);
+                header.Crc32 = Crc32Algorithm.Compute(stream.ToArray());
 
-                    header.Crc32 = Crc32Algorithm.Compute(mem.ToArray());
+                writer.Seek(8, SeekOrigin.Begin);
+                writer.Write(header.Crc32);
 
-                    writer.Seek(8, SeekOrigin.Begin);
-                    writer.Write(header.Crc32);
+                byte[] data = stream.ToArray();
 
-                    byte[] data = mem.ToArray();
-
-                    Send(data, clientId);
-                }
+                Send(data, clientId);
             }
         }
 

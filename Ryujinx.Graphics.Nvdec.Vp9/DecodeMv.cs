@@ -918,9 +918,10 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
                 if (mi.Mode != PredictionMode.ZeroMv)
                 {
+                    Span<Mv> tmpMvs = stackalloc Mv[Constants.MaxMvRefCandidates];
+
                     for (refr = 0; refr < 1 + isCompound; ++refr)
                     {
-                        Span<Mv> tmpMvs = stackalloc Mv[Constants.MaxMvRefCandidates];
                         sbyte frame = mi.RefFrame[refr];
                         int refmvCount;
 
