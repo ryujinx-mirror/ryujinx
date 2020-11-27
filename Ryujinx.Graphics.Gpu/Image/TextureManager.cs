@@ -682,26 +682,43 @@ namespace Ryujinx.Graphics.Gpu.Image
                 sameAddressOverlapsCount = _textures.FindOverlaps(info.Address, ref _textureOverlaps);
             }
 
+            Texture texture = null;
+
+            TextureMatchQuality bestQuality = TextureMatchQuality.NoMatch;
+
             for (int index = 0; index < sameAddressOverlapsCount; index++)
             {
                 Texture overlap = _textureOverlaps[index];
 
-                if (overlap.IsPerfectMatch(info, flags))
+                TextureMatchQuality matchQuality = overlap.IsExactMatch(info, flags);
+
+                if (matchQuality == TextureMatchQuality.Perfect)
                 {
-                    if (!isSamplerTexture)
-                    {
-                        // If not a sampler texture, it is managed by the auto delete
-                        // cache, ensure that it is on the "top" of the list to avoid
-                        // deletion.
-                        _cache.Lift(overlap);
-                    }
-
-                    ChangeSizeIfNeeded(info, overlap, isSamplerTexture, sizeHint);
-
-                    overlap.SynchronizeMemory();
-
-                    return overlap;
+                    texture = overlap;
+                    break;
                 }
+                else if (matchQuality > bestQuality)
+                {
+                    texture = overlap;
+                    bestQuality = matchQuality;
+                }
+            }
+
+            if (texture != null)
+            {
+                if (!isSamplerTexture)
+                {
+                    // If not a sampler texture, it is managed by the auto delete
+                    // cache, ensure that it is on the "top" of the list to avoid
+                    // deletion.
+                    _cache.Lift(texture);
+                }
+
+                ChangeSizeIfNeeded(info, texture, isSamplerTexture, sizeHint);
+
+                texture.SynchronizeMemory();
+
+                return texture;
             }
 
             // Calculate texture sizes, used to find all overlapping textures.
@@ -742,8 +759,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 overlapsCount = _textures.FindOverlaps(info.Address, size, ref _textureOverlaps);
             }
-
-            Texture texture = null;
 
             for (int index = 0; index < overlapsCount; index++)
             {

@@ -800,29 +800,31 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="info">Texture information to compare against</param>
         /// <param name="flags">Comparison flags</param>
-        /// <returns>True if the textures are strictly equal or similar, false otherwise</returns>
-        public bool IsPerfectMatch(TextureInfo info, TextureSearchFlags flags)
+        /// <returns>A value indicating how well this texture matches the given info</returns>
+        public TextureMatchQuality IsExactMatch(TextureInfo info, TextureSearchFlags flags)
         {
-            if (!TextureCompatibility.FormatMatches(Info, info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0))
+            TextureMatchQuality matchQuality = TextureCompatibility.FormatMatches(Info, info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0);
+
+            if (matchQuality == TextureMatchQuality.NoMatch)
             {
-                return false;
+                return matchQuality;
             }
 
             if (!TextureCompatibility.LayoutMatches(Info, info))
             {
-                return false;
+                return TextureMatchQuality.NoMatch;
             }
 
             if (!TextureCompatibility.SizeMatches(Info, info, (flags & TextureSearchFlags.Strict) == 0))
             {
-                return false;
+                return TextureMatchQuality.NoMatch;
             }
 
             if ((flags & TextureSearchFlags.ForSampler) != 0 || (flags & TextureSearchFlags.Strict) != 0)
             {
                 if (!TextureCompatibility.SamplerParamsMatches(Info, info))
                 {
-                    return false;
+                    return TextureMatchQuality.NoMatch;
                 }
             }
 
@@ -832,15 +834,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (!msTargetCompatible && !TextureCompatibility.TargetAndSamplesCompatible(Info, info))
                 {
-                    return false;
+                    return TextureMatchQuality.NoMatch;
                 }
             }
             else if (!TextureCompatibility.TargetAndSamplesCompatible(Info, info))
             {
-                return false;
+                return TextureMatchQuality.NoMatch;
             }
 
-            return Info.Address == info.Address && Info.Levels == info.Levels;
+            return Info.Address == info.Address && Info.Levels == info.Levels ? matchQuality : TextureMatchQuality.NoMatch;
         }
 
         /// <summary>

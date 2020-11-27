@@ -125,14 +125,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="rhs">Texture information to compare with</param>
         /// <param name="forSampler">Indicates that the texture will be used for shader sampling</param>
         /// <param name="forCopy">Indicates that the texture will be used as copy source or target</param>
-        /// <returns>True if the format matches, with the given comparison rules</returns>
-        public static bool FormatMatches(TextureInfo lhs, TextureInfo rhs, bool forSampler, bool forCopy)
+        /// <returns>A value indicating how well the formats match</returns>
+        public static TextureMatchQuality FormatMatches(TextureInfo lhs, TextureInfo rhs, bool forSampler, bool forCopy)
         {
             // D32F and R32F texture have the same representation internally,
             // however the R32F format is used to sample from depth textures.
             if (lhs.FormatInfo.Format == Format.D32Float && rhs.FormatInfo.Format == Format.R32Float && (forSampler || forCopy))
             {
-                return true;
+                return TextureMatchQuality.FormatAlias;
             }
 
             if (forCopy)
@@ -141,22 +141,22 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // use equivalent color formats. We must also consider them as compatible.
                 if (lhs.FormatInfo.Format == Format.S8Uint && rhs.FormatInfo.Format == Format.R8Unorm)
                 {
-                    return true;
+                    return TextureMatchQuality.FormatAlias;
                 }
 
                 if (lhs.FormatInfo.Format == Format.D16Unorm && rhs.FormatInfo.Format == Format.R16Unorm)
                 {
-                    return true;
+                    return TextureMatchQuality.FormatAlias;
                 }
 
                 if ((lhs.FormatInfo.Format == Format.D24UnormS8Uint ||
                      lhs.FormatInfo.Format == Format.D24X8Unorm) && rhs.FormatInfo.Format == Format.B8G8R8A8Unorm)
                 {
-                    return true;
+                    return TextureMatchQuality.FormatAlias;
                 }
             }
 
-            return lhs.FormatInfo.Format == rhs.FormatInfo.Format;
+            return lhs.FormatInfo.Format == rhs.FormatInfo.Format ? TextureMatchQuality.Perfect : TextureMatchQuality.NoMatch;
         }
 
         /// <summary>

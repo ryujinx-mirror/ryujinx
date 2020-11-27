@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     // If the descriptors are the same, the texture is the same,
                     // we don't need to remove as it was not modified. Just continue.
-                    if (texture.IsPerfectMatch(GetInfo(descriptor), TextureSearchFlags.Strict))
+                    if (texture.IsExactMatch(GetInfo(descriptor), TextureSearchFlags.Strict) != TextureMatchQuality.NoMatch)
                     {
                         continue;
                     }
