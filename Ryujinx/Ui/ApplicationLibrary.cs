@@ -390,6 +390,13 @@ namespace Ryujinx.Ui
 
                 ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId);
 
+                if (appMetadata.LastPlayed != "Never" && !DateTime.TryParse(appMetadata.LastPlayed, out _))
+                {
+                    Logger.Warning?.Print(LogClass.Application, $"Last played datetime \"{appMetadata.LastPlayed}\" is invalid for current system culture, skipping (did current culture change?)");
+
+                    appMetadata.LastPlayed = "Never";
+                }
+
                 ApplicationData data = new ApplicationData
                 {
                     Favorite      = appMetadata.Favorite,
