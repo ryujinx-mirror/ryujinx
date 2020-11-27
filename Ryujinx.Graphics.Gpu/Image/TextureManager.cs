@@ -408,6 +408,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
+            if (info.Width < 8 || info.Height < 8)
+            {
+                // Discount textures with small dimensions.
+                return false;
+            }
+
             if (!(info.FormatInfo.Format.IsDepthOrStencil() || info.FormatInfo.Components == 1))
             {
                 // Discount square textures that aren't depth-stencil like. (excludes game textures, cubemap faces, most 3D texture LUT, texture atlas)
