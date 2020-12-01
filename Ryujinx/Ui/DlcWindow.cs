@@ -195,6 +195,26 @@ namespace Ryujinx.Ui
                 }
             }
         }
+        
+        private void RemoveAllButton_Clicked(object sender, EventArgs args)
+        {
+            List<TreeIter> toRemove = new List<TreeIter>();
+
+            if (_dlcTreeView.Model.GetIterFirst(out TreeIter iter))
+            {
+                do
+                {
+                    toRemove.Add(iter);
+                } 
+                while (_dlcTreeView.Model.IterNext(ref iter));
+            }
+
+            foreach (TreeIter i in toRemove)
+            {
+                TreeIter j = i;
+                ((TreeStore)_dlcTreeView.Model).Remove(ref j);
+            }
+        }
 
         private void SaveButton_Clicked(object sender, EventArgs args)
         {

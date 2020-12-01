@@ -13,6 +13,7 @@ using Ryujinx.HLE.HOS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using GUI        = Gtk.Builder.ObjectAttribute;
@@ -60,19 +61,16 @@ namespace Ryujinx.Ui
             }
 
             _baseTitleInfoLabel.Text = $"Updates Available for {titleName} [{titleId.ToUpper()}]";
+            _noUpdateRadioButton.Active = true;
 
             foreach (string path in _titleUpdateWindowData.Paths)
             {
                 AddUpdate(path, false);
             }
 
-            _noUpdateRadioButton.Active = true;
-            foreach (KeyValuePair<RadioButton, string> keyValuePair in _radioButtonToPathDictionary)
+            foreach ((RadioButton update, var _) in _radioButtonToPathDictionary.Where(keyValuePair => keyValuePair.Value == _titleUpdateWindowData.Selected))
             {
-                if (keyValuePair.Value == _titleUpdateWindowData.Selected)
-                {
-                    keyValuePair.Key.Active = true;
-                }
+                update.Active = true;
             }
         }
 
@@ -131,6 +129,19 @@ namespace Ryujinx.Ui
             }
         }
 
+        private void RemoveUpdates(bool removeSelectedOnly = false)
+        {
+            foreach (RadioButton radioButton in _noUpdateRadioButton.Group)
+            {
+                if (radioButton.Label != "No Update" && (!removeSelectedOnly || radioButton.Active))
+                {
+                    _availableUpdatesBox.Remove(radioButton);
+                    _radioButtonToPathDictionary.Remove(radioButton);
+                    radioButton.Dispose();
+                }
+            }
+        }
+
         private void AddButton_Clicked(object sender, EventArgs args)
         {
             FileChooserDialog fileChooser = new FileChooserDialog("Select update files", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept)
@@ -154,20 +165,19 @@ namespace Ryujinx.Ui
 
         private void RemoveButton_Clicked(object sender, EventArgs args)
         {
-            foreach (RadioButton radioButton in _noUpdateRadioButton.Group)
-            {
-                if (radioButton.Label != "No Update" && radioButton.Active)
-                {
-                    _availableUpdatesBox.Remove(radioButton);
-                    _radioButtonToPathDictionary.Remove(radioButton);
-                    radioButton.Dispose();
-                }
-            }
+            RemoveUpdates(true);
+        }
+
+        private void RemoveAllButton_Clicked(object sender, EventArgs args)
+        {
+            RemoveUpdates();
         }
 
         private void SaveButton_Clicked(object sender, EventArgs args)
         {
             _titleUpdateWindowData.Paths.Clear();
+            _titleUpdateWindowData.Selected = "";
+
             foreach (string paths in _radioButtonToPathDictionary.Values)
             {
                 _titleUpdateWindowData.Paths.Add(paths);
