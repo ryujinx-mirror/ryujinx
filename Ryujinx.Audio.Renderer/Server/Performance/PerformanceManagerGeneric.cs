@@ -277,7 +277,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
 
         public override void TapFrame(bool dspRunningBehind, uint voiceDropCount, ulong startRenderingTicks)
         {
-            if (_availableFrameCount > 1)
+            if (_availableFrameCount > 0)
             {
                 int targetIndexForHistory = _indexHistoryWrite;
 
