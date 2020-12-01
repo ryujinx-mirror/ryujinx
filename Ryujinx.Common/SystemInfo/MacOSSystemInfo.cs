@@ -8,7 +8,7 @@ using Ryujinx.Common.Logging;
 namespace Ryujinx.Common.SystemInfo
 {
     [SupportedOSPlatform("macos")]
-    internal class MacOSSysteminfo : SystemInfo
+    internal class MacOSSystemInfo : SystemInfo
     {
         public override string CpuName { get; }
         public override ulong RamSize { get; }
@@ -65,7 +65,7 @@ namespace Ryujinx.Common.SystemInfo
             return res;
         }
 
-        public MacOSSysteminfo()
+        public MacOSSystemInfo()
         {
             ulong ramSize = 0;
 

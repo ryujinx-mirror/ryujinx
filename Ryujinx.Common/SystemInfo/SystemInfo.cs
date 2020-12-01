@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Common.SystemInfo
 {
@@ -7,35 +8,23 @@ namespace Ryujinx.Common.SystemInfo
         public virtual string OsDescription => $"{RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})";
         public virtual string CpuName => "Unknown";
         public virtual ulong RamSize => 0;
-
-        public string RamSizeInMB
-        {
-            get
-            {
-                if (RamSize == 0)
-                {
-                    return "Unknown";
-                }
-
-                return $"{RamSize / 1024 / 1024} MB";
-            }
-        }
+        public string RamSizeInMB => (RamSize == 0) ? "Unknown" : $"{RamSize / 1024 / 1024} MB";
 
         public static SystemInfo Instance { get; }
 
         static SystemInfo()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
-                Instance = new WindowsSysteminfo();
+                Instance = new WindowsSystemInfo();
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (OperatingSystem.IsLinux())
             {
-                Instance = new LinuxSysteminfo();
+                Instance = new LinuxSystemInfo();
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            else if (OperatingSystem.IsMacOS())
             {
-                Instance = new MacOSSysteminfo();
+                Instance = new MacOSSystemInfo();
             }
             else
             {
