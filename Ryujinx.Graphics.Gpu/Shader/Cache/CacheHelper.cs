@@ -333,6 +333,23 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         }
 
         /// <summary>
+        /// Builds gpu state flags using information from the given gpu accessor.
+        /// </summary>
+        /// <param name="gpuAccessor">The gpu accessor</param>
+        /// <returns>The gpu state flags</returns>
+        private static GuestGpuStateFlags GetGpuStateFlags(IGpuAccessor gpuAccessor)
+        {
+            GuestGpuStateFlags flags = 0;
+
+            if (gpuAccessor.QueryEarlyZForce())
+            {
+                flags |= GuestGpuStateFlags.EarlyZForce;
+            }
+
+            return flags;
+        }
+
+        /// <summary>
         /// Create a new instance of <see cref="GuestGpuAccessorHeader"/> from an gpu accessor.
         /// </summary>
         /// <param name="gpuAccessor">The gpu accessor</param>
@@ -347,6 +364,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 ComputeLocalMemorySize = gpuAccessor.QueryComputeLocalMemorySize(),
                 ComputeSharedMemorySize = gpuAccessor.QueryComputeSharedMemorySize(),
                 PrimitiveTopology = gpuAccessor.QueryPrimitiveTopology(),
+                StateFlags = GetGpuStateFlags(gpuAccessor)
             };
         }
 

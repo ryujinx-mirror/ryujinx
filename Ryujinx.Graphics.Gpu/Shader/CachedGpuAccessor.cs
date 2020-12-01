@@ -150,5 +150,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             return textureDescriptor;
         }
+
+        /// <summary>
+        /// Queries if host state forces early depth testing.
+        /// </summary>
+        /// <returns>True if early depth testing is forced</returns>
+        public bool QueryEarlyZForce()
+        {
+            return (_header.StateFlags & GuestGpuStateFlags.EarlyZForce) != 0;
+        }
     }
 }

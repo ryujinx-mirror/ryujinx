@@ -78,5 +78,10 @@
         {
             return TextureFormat.R8G8B8A8Unorm;
         }
+
+        bool QueryEarlyZForce()
+        {
+            return false;
+        }
     }
 }

@@ -55,8 +55,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         public ushort Reserved2;
 
         /// <summary>
-        /// Unused/reserved.
+        /// GPU boolean state that can influence shader compilation.
         /// </summary>
-        public byte Reserved3;
+        public GuestGpuStateFlags StateFlags;
     }
 }

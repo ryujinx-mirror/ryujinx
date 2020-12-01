@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.State
         LaunchDma                       = 0x6c,
         LoadInlineData                  = 0x6d,
         CopyDstTexture                  = 0x80,
+        EarlyZForce                     = 0x84,
         CopySrcTexture                  = 0x8c,
         DispatchParamsAddress           = 0xad,
         Dispatch                        = 0xaf,

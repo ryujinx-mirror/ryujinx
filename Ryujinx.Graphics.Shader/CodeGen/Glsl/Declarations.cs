@@ -141,6 +141,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 if (context.Config.Stage == ShaderStage.Fragment)
                 {
+                    if (context.Config.GpuAccessor.QueryEarlyZForce())
+                    {
+                        context.AppendLine("layout(early_fragment_tests) in;");
+                        context.AppendLine();
+                    }
+
                     context.AppendLine($"uniform bool {DefaultNames.IsBgraName}[8];");
                     context.AppendLine();
                 }
