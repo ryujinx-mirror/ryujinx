@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
@@ -82,6 +82,11 @@ namespace Ryujinx.Configuration
             /// </summary>
             public ReactiveObject<string> CustomThemePath { get; private set; }
 
+            /// <summary>
+            /// Start games in fullscreen mode
+            /// </summary>
+            public ReactiveObject<bool> StartFullscreen { get; private set; }
+
             public UiSection()
             {
                 GuiColumns        = new Columns();
@@ -89,6 +94,7 @@ namespace Ryujinx.Configuration
                 GameDirs          = new ReactiveObject<List<string>>();
                 EnableCustomTheme = new ReactiveObject<bool>();
                 CustomThemePath   = new ReactiveObject<string>();
+                StartFullscreen   = new ReactiveObject<bool>();
             }
         }
 
@@ -435,6 +441,7 @@ namespace Ryujinx.Configuration
                 GameDirs                  = Ui.GameDirs,
                 EnableCustomTheme         = Ui.EnableCustomTheme,
                 CustomThemePath           = Ui.CustomThemePath,
+                StartFullscreen           = Ui.StartFullscreen,
                 EnableKeyboard            = Hid.EnableKeyboard,
                 Hotkeys                   = Hid.Hotkeys,
                 KeyboardConfig            = keyboardConfigList,
@@ -490,6 +497,7 @@ namespace Ryujinx.Configuration
             Ui.GameDirs.Value                      = new List<string>();
             Ui.EnableCustomTheme.Value             = false;
             Ui.CustomThemePath.Value               = "";
+            Ui.StartFullscreen.Value               = false;
             Hid.EnableKeyboard.Value               = false;
             Hid.Hotkeys.Value = new KeyboardHotkeys
             {
@@ -744,6 +752,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 17)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 17.");
+
+                configurationFileFormat.StartFullscreen = false;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -792,6 +809,7 @@ namespace Ryujinx.Configuration
             Ui.GameDirs.Value                      = configurationFileFormat.GameDirs;
             Ui.EnableCustomTheme.Value             = configurationFileFormat.EnableCustomTheme;
             Ui.CustomThemePath.Value               = configurationFileFormat.CustomThemePath;
+            Ui.StartFullscreen.Value               = configurationFileFormat.StartFullscreen;
             Hid.EnableKeyboard.Value               = configurationFileFormat.EnableKeyboard;
             Hid.Hotkeys.Value                      = configurationFileFormat.Hotkeys;
             Hid.InputConfig.Value                  = inputConfig;

@@ -1379,6 +1379,17 @@
       "description": "Path to custom GUI theme",
       "default": ""
     },
+    "start_fullscreen": {
+      "$id": "#/properties/start_fullscreen",
+      "type": "boolean",
+      "title": "Start games in fullscreen mode",
+      "description": "Start games in fullscreen mode",
+      "default": false,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "enable_keyboard": {
       "$id": "#/properties/enable_keyboard",
       "type": "boolean",

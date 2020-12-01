@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 16;
+        public const int CurrentVersion = 17;
 
         public int Version { get; set; }
 
@@ -187,6 +187,11 @@ namespace Ryujinx.Configuration
         /// Path to custom GUI theme
         /// </summary>
         public string CustomThemePath { get; set; }
+
+        /// <summary>
+        /// Start games in fullscreen mode
+        /// </summary>
+        public bool StartFullscreen { get; set; }
 
         /// <summary>
         /// Enable or disable keyboard support (Independent from controllers binding)

@@ -1,5 +1,5 @@
-{
-  "version": 15,
+{ 
+  "version": 17,
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
@@ -47,6 +47,7 @@
   "game_dirs": [],
   "enable_custom_theme": false,
   "custom_theme_path": "",
+  "start_fullscreen": false,
   "enable_keyboard": false,
   "hotkeys": {
     "toggle_vsync": "Tab"

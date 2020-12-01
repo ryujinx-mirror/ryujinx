@@ -113,10 +113,25 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkCheckMenuItem" id="_startFullScreen">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Start Games in Fullscreen Mode</property>
+                        <property name="use_underline">True</property>
+                        <signal name="toggled" handler="StartFullScreen_Toggled" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="_stopEmulation">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Stop emualtion of the current game and return to game selection</property>
+                        <property name="tooltip_text" translatable="yes">Stop emulation of the current game and return to game selection</property>
                         <property name="label" translatable="yes">Stop Emulation</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="StopEmulation_Pressed" swapped="no"/>
