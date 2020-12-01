@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// </summary>
         /// <param name="header">The header of the cached shader entry</param>
         /// <param name="code">The code of this shader</param>
-        private GuestShaderCacheEntry(GuestShaderCacheEntryHeader header, byte[] code)
+        public GuestShaderCacheEntry(GuestShaderCacheEntryHeader header, byte[] code)
         {
             Header = header;
             Code = code;

@@ -84,14 +84,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// <summary>
         /// Check the validity of the header.
         /// </summary>
-        /// <param name="version">The target version in use</param>
         /// <param name="graphicsApi">The target graphics api in use</param>
         /// <param name="hashType">The target hash type in use</param>
         /// <param name="data">The data after this header</param>
         /// <returns>True if the header is valid</returns>
-        public bool IsValid(ulong version, CacheGraphicsApi graphicsApi, CacheHashType hashType, ReadOnlySpan<byte> data)
+        /// <remarks>This doesn't check that versions match</remarks>
+        public bool IsValid(CacheGraphicsApi graphicsApi, CacheHashType hashType, ReadOnlySpan<byte> data)
         {
-            return Version == version && GraphicsApi == graphicsApi && HashType == hashType && TableChecksum == CalculateCrc16(data);
+            return GraphicsApi == graphicsApi && HashType == hashType && TableChecksum == CalculateCrc16(data);
         }
     }
 }

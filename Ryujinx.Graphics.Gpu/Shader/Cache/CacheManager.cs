@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <summary>
         /// Version of the guest cache shader (to increment when guest cache structure change).
         /// </summary>
-        private const ulong GuestCacheVersion = 1717;
+        private const ulong GuestCacheVersion = 1759;
 
         /// <summary>
         /// Create a new cache manager instance
@@ -45,7 +45,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             _hashType = hashType;
             _shaderProvider = shaderProvider;
 
-            string baseCacheDirectory = Path.Combine(AppDataManager.GamesDirPath, titleId, "cache", "shader");
+            string baseCacheDirectory = CacheHelper.GetBaseCacheDirectory(titleId);
+
+            CacheMigration.Run(baseCacheDirectory, graphicsApi, hashType, shaderProvider);
 
             _guestProgramCache = new CacheCollection(baseCacheDirectory, _hashType, CacheGraphicsApi.Guest, "", "program", GuestCacheVersion);
             _hostProgramCache = new CacheCollection(baseCacheDirectory, _hashType, _graphicsApi, _shaderProvider, "host", shaderCodeGenVersion);
@@ -78,16 +80,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         {
             _guestProgramCache.Synchronize();
             _hostProgramCache.Synchronize();
-        }
-
-        /// <summary>
-        /// Computes the hash of some data using the current cache hashing algorithm.
-        /// </summary>
-        /// <param name="data">Some data to generate a hash for.</param>
-        /// <returns>The hash of some data using the current hashing algorithm of the cache</returns>
-        public Hash128 ComputeHash(ReadOnlySpan<byte> data)
-        {
-            return XXHash128.ComputeHash(data);
         }
 
         /// <summary>

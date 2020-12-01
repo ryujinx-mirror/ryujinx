@@ -125,26 +125,26 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// Get the temp path to the cache data directory.
         /// </summary>
         /// <returns>The temp path to the cache data directory</returns>
-        private string GetCacheTempDataPath() => Path.Combine(_cacheDirectory, "temp");
+        private string GetCacheTempDataPath() => CacheHelper.GetCacheTempDataPath(_cacheDirectory);
 
         /// <summary>
         /// The path to the cache archive file.
         /// </summary>
         /// <returns>The path to the cache archive file</returns>
-        private string GetArchivePath() => Path.Combine(_cacheDirectory, "cache.zip");
+        private string GetArchivePath() => CacheHelper.GetArchivePath(_cacheDirectory);
 
         /// <summary>
         /// The path to the cache manifest file.
         /// </summary>
         /// <returns>The path to the cache manifest file</returns>
-        private string GetManifestPath() => Path.Combine(_cacheDirectory, "cache.info");
+        private string GetManifestPath() => CacheHelper.GetManifestPath(_cacheDirectory);
 
         /// <summary>
         /// Create a new temp path to the given cached file via its hash.
         /// </summary>
         /// <param name="key">The hash of the cached data</param>
         /// <returns>New path to the given cached file</returns>
-        private string GenCacheTempFilePath(Hash128 key) => Path.Combine(GetCacheTempDataPath(), key.ToString());
+        private string GenCacheTempFilePath(Hash128 key) => CacheHelper.GenCacheTempFilePath(_cacheDirectory, key);
 
         /// <summary>
         /// Create a new cache collection.
@@ -162,7 +162,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 throw new NotImplementedException($"{hashType}");
             }
 
-            _cacheDirectory = GenerateCachePath(baseCacheDirectory, graphicsApi, shaderProvider, cacheName);
+            _cacheDirectory = CacheHelper.GenerateCachePath(baseCacheDirectory, graphicsApi, shaderProvider, cacheName);
             _graphicsApi = graphicsApi;
             _hashType = hashType;
             _version = version;
@@ -178,13 +178,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// </summary>
         private void Load()
         {
-            bool isInvalid = false;
+            bool isValid = false;
 
-            if (!Directory.Exists(_cacheDirectory))
-            {
-                isInvalid = true;
-            }
-            else
+            if (Directory.Exists(_cacheDirectory))
             {
                 string manifestPath = GetManifestPath();
 
@@ -196,9 +192,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                     {
                         Memory<byte> hashTableRaw = rawManifest.Slice(Unsafe.SizeOf<CacheManifestHeader>());
 
-                        isInvalid = !manifestHeader.IsValid(_version, _graphicsApi, _hashType, hashTableRaw.Span);
+                        isValid = manifestHeader.IsValid(_graphicsApi, _hashType, hashTableRaw.Span) && _version == manifestHeader.Version;
 
-                        if (!isInvalid)
+                        if (isValid)
                         {
                             ReadOnlySpan<Hash128> hashTable = MemoryMarshal.Cast<byte, Hash128>(hashTableRaw.Span);
 
@@ -209,13 +205,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                         }
                     }
                 }
-                else
-                {
-                    isInvalid = true;
-                }
             }
 
-            if (isInvalid)
+            if (!isValid)
             {
                 Logger.Warning?.Print(LogClass.Gpu, $"Shader collection \"{_cacheDirectory}\" got invalidated, cache will need to be rebuilt.");
 
@@ -324,22 +316,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             // Update the content of the zip.
             lock (_hashTable)
             {
-                foreach (Hash128 hash in _hashTable)
-                {
-                    string cacheTempFilePath = GenCacheTempFilePath(hash);
-
-                    if (File.Exists(cacheTempFilePath))
-                    {
-                        string cacheHash = $"{hash}";
-
-                        ZipArchiveEntry entry = _cacheArchive.GetEntry(cacheHash);
-
-                        entry?.Delete();
-
-                        _cacheArchive.CreateEntryFromFile(cacheTempFilePath, cacheHash);
-                        File.Delete(cacheTempFilePath);
-                    }
-                }
+                CacheHelper.EnsureArchiveUpToDate(_cacheDirectory, _cacheArchive, _hashTable);
 
                 // Close the instance to force a flush.
                 _cacheArchive.Dispose();
@@ -362,54 +339,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// </summary>
         private void SaveManifest()
         {
-            CacheManifestHeader manifestHeader = new CacheManifestHeader(_version, _graphicsApi, _hashType);
-
             byte[] data;
 
             lock (_hashTable)
             {
-                data = new byte[Unsafe.SizeOf<CacheManifestHeader>() + _hashTable.Count * Unsafe.SizeOf<Hash128>()];
-
-                // CacheManifestHeader has the same size as a Hash128.
-                Span<Hash128> dataSpan = MemoryMarshal.Cast<byte, Hash128>(data.AsSpan()).Slice(1);
-
-                int i = 0;
-
-                foreach (Hash128 hash in _hashTable)
-                {
-                    dataSpan[i++] = hash;
-                }
+                data = CacheHelper.ComputeManifest(_version, _graphicsApi, _hashType, _hashTable);
             }
 
-            manifestHeader.UpdateChecksum(data.AsSpan().Slice(Unsafe.SizeOf<CacheManifestHeader>()));
-
-            MemoryMarshal.Write(data, ref manifestHeader);
-
             File.WriteAllBytes(GetManifestPath(), data);
-        }
-
-        /// <summary>
-        /// Generate the path to the cache directory.
-        /// </summary>
-        /// <param name="baseCacheDirectory">The base of the cache directory</param>
-        /// <param name="graphicsApi">The graphics api in use</param>
-        /// <param name="shaderProvider">The name of the shader provider in use</param>
-        /// <param name="cacheName">The name of the cache</param>
-        /// <returns>The path to the cache directory</returns>
-        private static string GenerateCachePath(string baseCacheDirectory, CacheGraphicsApi graphicsApi, string shaderProvider, string cacheName)
-        {
-            string graphicsApiName = graphicsApi switch
-            {
-                CacheGraphicsApi.OpenGL => "opengl",
-                CacheGraphicsApi.OpenGLES => "opengles",
-                CacheGraphicsApi.Vulkan => "vulkan",
-                CacheGraphicsApi.DirectX => "directx",
-                CacheGraphicsApi.Metal => "metal",
-                CacheGraphicsApi.Guest => "guest",
-                _ => throw new NotImplementedException(graphicsApi.ToString()),
-            };
-
-            return Path.Combine(baseCacheDirectory, graphicsApiName, shaderProvider, cacheName);
         }
 
         /// <summary>
@@ -438,27 +375,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
             if (found)
             {
-                ZipArchiveEntry archiveEntry = _cacheArchive.GetEntry($"{keyHash}");
-
-                if (archiveEntry != null)
-                {
-                    try
-                    {
-                        byte[] result = new byte[archiveEntry.Length];
-
-                        using (Stream archiveStream = archiveEntry.Open())
-                        {
-                            archiveStream.Read(result);
-
-                            return result;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error?.Print(LogClass.Gpu, $"Cannot load cache file {keyHash} from archive");
-                        Logger.Error?.Print(LogClass.Gpu, e.ToString());
-                    }
-                }
+                return CacheHelper.ReadFromArchive(_cacheArchive, keyHash);
             }
 
             return null;
@@ -480,17 +397,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
             if (found)
             {
-                string cacheTempFilePath = GenCacheTempFilePath(keyHash);
-
-                try
-                {
-                    return File.ReadAllBytes(GenCacheTempFilePath(keyHash));
-                }
-                catch (Exception e)
-                {
-                    Logger.Error?.Print(LogClass.Gpu, $"Cannot load cache file at {cacheTempFilePath}");
-                    Logger.Error?.Print(LogClass.Gpu, e.ToString());
-                }
+                return CacheHelper.ReadFromFile(GetCacheTempDataPath(), keyHash);
             }
 
             return null;
