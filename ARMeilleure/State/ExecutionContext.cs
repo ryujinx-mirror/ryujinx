@@ -66,7 +66,7 @@ namespace ARMeilleure.State
             }
         }
 
-        internal bool Running { get; private set; }
+        public bool Running { get; private set; }
 
         public event EventHandler<EventArgs>              Interrupt;
         public event EventHandler<InstExceptionEventArgs> Break;

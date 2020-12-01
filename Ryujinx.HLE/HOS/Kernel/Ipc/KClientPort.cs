@@ -14,10 +14,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public bool IsLight => _parent.IsLight;
 
-        // TODO: Remove that, we need it for now to allow HLE
-        // SM implementation to work with the new IPC system.
-        public IpcService Service { get; set; }
-
         public KClientPort(KernelContext context, KPort parent, int maxSessions) : base(context)
         {
             _maxSessions = maxSessions;
@@ -44,11 +40,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
 
             KSession session = new KSession(KernelContext, this);
-
-            if (Service != null)
-            {
-                session.ClientSession.Service = Service;
-            }
 
             KernelResult result = _parent.EnqueueIncomingSession(session.ServerSession);
 

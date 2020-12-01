@@ -10,15 +10,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private readonly long _ownerPid;
 
-        private readonly MemoryPermission _ownerPermission;
-        private readonly MemoryPermission _userPermission;
+        private readonly KMemoryPermission _ownerPermission;
+        private readonly KMemoryPermission _userPermission;
 
         public KSharedMemory(
             KernelContext    context,
             KPageList        pageList,
             long             ownerPid,
-            MemoryPermission ownerPermission,
-            MemoryPermission userPermission) : base(context)
+            KMemoryPermission ownerPermission,
+            KMemoryPermission userPermission) : base(context)
         {
             _pageList        = pageList;
             _ownerPid        = ownerPid;
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong            address,
             ulong            size,
             KProcess         process,
-            MemoryPermission permission)
+            KMemoryPermission permission)
         {
             ulong pagesCountRounded = BitUtils.DivRoundUp(size, KMemoryManager.PageSize);
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.InvalidSize;
             }
 
-            MemoryPermission expectedPermission = process.Pid == _ownerPid
+            KMemoryPermission expectedPermission = process.Pid == _ownerPid
                 ? _ownerPermission
                 : _userPermission;
 

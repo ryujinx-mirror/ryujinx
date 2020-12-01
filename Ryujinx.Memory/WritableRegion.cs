@@ -1,17 +1,17 @@
 ﻿using System;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Memory
 {
     public sealed class WritableRegion : IDisposable
     {
-        private readonly MemoryManager _mm;
+        private readonly IVirtualMemoryManager _mm;
         private readonly ulong _va;
 
         private bool NeedsWriteback => _mm != null;
 
         public Memory<byte> Memory { get; }
 
-        internal WritableRegion(MemoryManager mm, ulong va, Memory<byte> memory)
+        public WritableRegion(IVirtualMemoryManager mm, ulong va, Memory<byte> memory)
         {
             _mm = mm;
             _va = va;

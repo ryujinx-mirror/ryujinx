@@ -1,5 +1,6 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
@@ -11,18 +12,17 @@ using System.Reflection;
 
 namespace Ryujinx.HLE.HOS.Services.Sm
 {
-    [Service("sm:")]
     class IUserInterface : IpcService
     {
         private Dictionary<string, Type> _services;
 
-        private ConcurrentDictionary<string, KPort> _registeredServices;
+        private readonly ConcurrentDictionary<string, KPort> _registeredServices;
 
         private readonly ServerBase _commonServer;
 
         private bool _isInitialized;
 
-        public IUserInterface(ServiceCtx context = null) : base(new ServerBase("SmServer"))
+        public IUserInterface(KernelContext context)
         {
             _registeredServices = new ConcurrentDictionary<string, KPort>();
 
@@ -31,18 +31,9 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 .Select(service => (((ServiceAttribute)service).Name, type)))
                 .ToDictionary(service => service.Name, service => service.type);
 
-            _commonServer = new ServerBase("CommonServer");
-        }
+            TrySetServer(new ServerBase(context, "SmServer") { SmObject = this });
 
-        public static void InitializePort(Horizon system)
-        {
-            KPort port = new KPort(system.KernelContext, 256, false, 0);
-
-            port.ClientPort.SetName("sm:");
-
-            IUserInterface smService = new IUserInterface();
-
-            port.ClientPort.Service = smService;
+            _commonServer = new ServerBase(context, "CommonServer");
         }
 
         [Command(0)]
@@ -92,16 +83,13 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                         : (IpcService)Activator.CreateInstance(type, context);
 
                     service.TrySetServer(_commonServer);
-
-                    session.ClientSession.Service = service;
+                    service.Server.AddSessionObj(session.ServerSession, service);
                 }
                 else
                 {
                     if (ServiceConfiguration.IgnoreMissingServices)
                     {
                         Logger.Warning?.Print(LogClass.Service, $"Missing service {name} ignored");
-
-                        session.ClientSession.Service = new DummyService(name);
                     }
                     else
                     {
@@ -142,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             int maxSessions = context.RequestData.ReadInt32();
 
-            if (name == string.Empty)
+            if (string.IsNullOrEmpty(name))
             {
                 return ResultCode.InvalidName;
             }
@@ -185,7 +173,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             int maxSessions = context.RequestData.ReadInt32();
 
-            if (name == string.Empty)
+            if (string.IsNullOrEmpty(name))
             {
                 return ResultCode.InvalidName;
             }

@@ -2,6 +2,7 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu.Types;
+using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
 
@@ -15,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
         private KEvent _errorEvent;
         private KEvent _unknownEvent;
 
-        public NvHostCtrlGpuDeviceFile(ServiceCtx context) : base(context)
+        public NvHostCtrlGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
         {
             _errorEvent   = new KEvent(context.Device.System.KernelContext);
             _unknownEvent = new KEvent(context.Device.System.KernelContext);
@@ -98,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
 
             if (targetEvent != null)
             {
-                if (Owner.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != KernelResult.Success)
+                if (Context.Process.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

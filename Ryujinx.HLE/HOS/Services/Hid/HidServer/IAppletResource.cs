@@ -8,6 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
     class IAppletResource : IpcService
     {
         private KSharedMemory _hidSharedMem;
+        private int           _hidSharedMemHandle;
 
         public IAppletResource(KSharedMemory hidSharedMem)
         {
@@ -18,12 +19,15 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
         // GetSharedMemoryHandle() -> handle<copy>
         public ResultCode GetSharedMemoryHandle(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out int handle) != KernelResult.Success)
+            if (_hidSharedMemHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out _hidSharedMemHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_hidSharedMemHandle);
 
             return ResultCode.Success;
         }

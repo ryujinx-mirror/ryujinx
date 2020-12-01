@@ -1,15 +1,15 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Process;
-
-namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
+﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    class BufferQueue
+    static class BufferQueue
     {
-        public static void CreateBufferQueue(Switch device, KProcess process, out BufferQueueProducer producer, out BufferQueueConsumer consumer)
+        public static BufferQueueCore CreateBufferQueue(Switch device, long pid, out BufferQueueProducer producer, out BufferQueueConsumer consumer)
         {
-            BufferQueueCore core = new BufferQueueCore(device, process);
+            BufferQueueCore core = new BufferQueueCore(device, pid);
 
             producer = new BufferQueueProducer(core);
             consumer = new BufferQueueConsumer(core);
+
+            return core;
         }
     }
 }

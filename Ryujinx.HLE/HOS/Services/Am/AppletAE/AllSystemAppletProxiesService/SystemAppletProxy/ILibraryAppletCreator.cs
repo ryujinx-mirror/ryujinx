@@ -49,7 +49,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             }
 
             var data = new byte[transferMem.Size];
-            context.Memory.Read(transferMem.Address, data);
+            transferMem.Creator.CpuMemory.Read(transferMem.Address, data);
+
+            context.Device.System.KernelContext.Syscall.CloseHandle(handle);
 
             MakeObject(context, new IStorage(data));
 

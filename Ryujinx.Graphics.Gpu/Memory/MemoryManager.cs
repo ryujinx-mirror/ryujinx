@@ -1,4 +1,4 @@
-using Ryujinx.Cpu;
+using Ryujinx.Memory;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

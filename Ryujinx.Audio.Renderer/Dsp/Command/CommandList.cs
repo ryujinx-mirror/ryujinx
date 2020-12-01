@@ -19,7 +19,7 @@ using Ryujinx.Audio.Renderer.Integration;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 
@@ -37,7 +37,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public List<ICommand> Commands { get; }
 
-        public MemoryManager MemoryManager { get; }
+        public IVirtualMemoryManager MemoryManager { get; }
 
         public HardwareDevice OutputDevice { get; private set; }
 
@@ -50,7 +50,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         {
         }
 
-        public CommandList(MemoryManager memoryManager, Memory<float> mixBuffer, uint sampleCount, uint sampleRate, uint mixBufferCount, uint voiceChannelCountMax)
+        public CommandList(IVirtualMemoryManager memoryManager, Memory<float> mixBuffer, uint sampleCount, uint sampleRate, uint mixBufferCount, uint voiceChannelCountMax)
         {
             SampleCount = sampleCount;
             SampleRate = sampleRate;

@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Memory
 {
-    class MemoryNotContiguousException : Exception
+    public class MemoryNotContiguousException : Exception
     {
         public MemoryNotContiguousException() : base("The specified memory region is not contiguous.")
         {

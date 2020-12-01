@@ -4,7 +4,6 @@ using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Memory;
-using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
@@ -12,6 +11,7 @@ using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -27,47 +27,45 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         private static Dictionary<string, Type> _deviceFileRegistry =
                    new Dictionary<string, Type>()
         {
-                       { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
-                       { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
-                       { "/dev/nvhost-ctrl-gpu", typeof(NvHostCtrlGpuDeviceFile) },
-                       { "/dev/nvhost-as-gpu",   typeof(NvHostAsGpuDeviceFile)   },
-                       { "/dev/nvhost-gpu",      typeof(NvHostGpuDeviceFile)     },
-                     //{ "/dev/nvhost-msenc",    typeof(NvHostChannelDeviceFile) },
-                       { "/dev/nvhost-nvdec",    typeof(NvHostChannelDeviceFile) },
-                     //{ "/dev/nvhost-nvjpg",    typeof(NvHostChannelDeviceFile) },
-                       { "/dev/nvhost-vic",      typeof(NvHostChannelDeviceFile) },
-                     //{ "/dev/nvhost-display",  typeof(NvHostChannelDeviceFile) },
+            { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
+            { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
+            { "/dev/nvhost-ctrl-gpu", typeof(NvHostCtrlGpuDeviceFile) },
+            { "/dev/nvhost-as-gpu",   typeof(NvHostAsGpuDeviceFile)   },
+            { "/dev/nvhost-gpu",      typeof(NvHostGpuDeviceFile)     },
+            //{ "/dev/nvhost-msenc",    typeof(NvHostChannelDeviceFile) },
+            { "/dev/nvhost-nvdec",    typeof(NvHostChannelDeviceFile) },
+            //{ "/dev/nvhost-nvjpg",    typeof(NvHostChannelDeviceFile) },
+            { "/dev/nvhost-vic",      typeof(NvHostChannelDeviceFile) },
+            //{ "/dev/nvhost-display",  typeof(NvHostChannelDeviceFile) },
         };
 
         private static IdDictionary _deviceFileIdRegistry = new IdDictionary();
 
-        private KProcess _owner;
+        private IVirtualMemoryManager _clientMemory;
+        private long _owner;
 
         private bool _transferMemInitialized = false;
 
-        public INvDrvServices(ServiceCtx context) : base(new ServerBase("NvservicesServer"))
+        public INvDrvServices(ServiceCtx context) : base(new ServerBase(context.Device.System.KernelContext, "NvservicesServer"))
         {
-            _owner = null;
+            _owner = 0;
         }
 
         private int Open(ServiceCtx context, string path)
         {
-            if (context.Process == _owner)
+            if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
             {
-                if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
-                {
-                    ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx) });
+                ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(long) });
 
-                    NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context });
+                NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context, _clientMemory, _owner });
 
-                    deviceFile.Path = path;
+                deviceFile.Path = path;
 
-                    return _deviceFileIdRegistry.Add(deviceFile);
-                }
-                else
-                {
-                    Logger.Warning?.Print(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
-                }
+                return _deviceFileIdRegistry.Add(deviceFile);
+            }
+            else
+            {
+                Logger.Warning?.Print(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
             }
 
             return -1;
@@ -150,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 return NvResult.NotImplemented;
             }
 
-            if (deviceFile.Owner.Pid != _owner.Pid)
+            if (deviceFile.Owner != _owner)
             {
                 return NvResult.AccessDenied;
             }
@@ -160,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private NvResult EnsureInitialized()
         {
-            if (_owner == null)
+            if (_owner == 0)
             {
                 Logger.Warning?.Print(LogClass.ServiceNv, "INvDrvServices is not initialized!");
 
@@ -229,8 +227,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             if (errorCode == NvResult.Success)
             {
                 long pathPtr = context.Request.SendBuff[0].Position;
+                long pathSize = context.Request.SendBuff[0].Size;
 
-                string path = MemoryHelper.ReadAsciiString(context.Memory, pathPtr);
+                string path = MemoryHelper.ReadAsciiString(context.Memory, pathPtr, pathSize);
 
                 fd = Open(context, path);
 
@@ -322,7 +321,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             // TODO: When transfer memory will be implemented, this could be removed.
             _transferMemInitialized = true;
 
-            _owner = context.Process;
+            int clientHandle = context.Request.HandleDesc.ToCopy[0];
+
+            _clientMemory = context.Process.HandleTable.GetKProcess(clientHandle).CpuMemory;
+
+            context.Device.System.KernelContext.Syscall.GetProcessId(clientHandle, out _owner);
 
             context.ResponseData.Write((uint)NvResult.Success);
 
@@ -425,7 +428,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // ForceSetClientPid(u64) -> u32 error_code
         public ResultCode ForceSetClientPid(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(8)]
@@ -452,7 +455,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // InitializeDevtools(u32, handle<copy>) -> u32 error_code;
         public ResultCode InitializeDevtools(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(11)] // 3.0.0+

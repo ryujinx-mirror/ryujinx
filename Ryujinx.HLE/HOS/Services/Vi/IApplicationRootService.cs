@@ -5,8 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
     [Service("vi:u")]
     class IApplicationRootService : IpcService
     {
-        // vi:u/m/s aren't on 3 separate threads but we can't put them together with the current ServerBase
-        public IApplicationRootService(ServiceCtx context) : base(new ServerBase("ViServerU")) { }
+        public IApplicationRootService(ServiceCtx context) : base(new ServerBase(context.Device.System.KernelContext, "ViServerU")) { }
 
         [Command(0)]
         // GetDisplayService(u32) -> object<nn::visrv::sf::IApplicationDisplayService>

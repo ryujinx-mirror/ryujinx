@@ -8,12 +8,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
     {
         private KProcess _creator;
 
+        // TODO: Remove when we no longer need to read it from the owner directly.
+        public KProcess Creator => _creator;
+
         private readonly KPageList _pageList;
 
         public ulong Address { get; private set; }
         public ulong Size => _pageList.GetPagesCount() * KMemoryManager.PageSize;
 
-        public MemoryPermission Permission { get; private set; }
+        public KMemoryPermission Permission { get; private set; }
 
         private bool _hasBeenInitialized;
         private bool _isMapped;
@@ -23,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _pageList = new KPageList();
         }
 
-        public KernelResult Initialize(ulong address, ulong size, MemoryPermission permission)
+        public KernelResult Initialize(ulong address, ulong size, KMemoryPermission permission)
         {
             KProcess creator = KernelContext.Scheduler.GetCurrentProcess();
 

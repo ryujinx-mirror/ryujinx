@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong Size    { get; }
 
         public MemoryState      State            { get; }
-        public MemoryPermission Permission       { get; }
+        public KMemoryPermission Permission       { get; }
         public MemoryAttribute  Attribute        { get; }
-        public MemoryPermission SourcePermission { get; }
+        public KMemoryPermission SourcePermission { get; }
 
         public int IpcRefCount    { get; }
         public int DeviceRefCount { get; }
@@ -17,9 +17,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong            address,
             ulong            size,
             MemoryState      state,
-            MemoryPermission permission,
+            KMemoryPermission permission,
             MemoryAttribute  attribute,
-            MemoryPermission sourcePermission,
+            KMemoryPermission sourcePermission,
             int              ipcRefCount,
             int              deviceRefCount)
         {

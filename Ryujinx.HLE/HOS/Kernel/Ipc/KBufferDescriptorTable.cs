@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         copySize,
                         stateMask,
                         stateMask,
-                        MemoryPermission.ReadAndWrite,
+                        KMemoryPermission.ReadAndWrite,
                         attributeMask,
                         MemoryAttribute.None,
                         desc.ServerAddress);
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         clientEndAddr - clientEndAddrTruncated,
                         stateMask,
                         stateMask,
-                        MemoryPermission.ReadAndWrite,
+                        KMemoryPermission.ReadAndWrite,
                         attributeMask,
                         MemoryAttribute.None,
                         serverEndAddrTruncated);

@@ -1,61 +1,192 @@
-using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services
 {
     class ServerBase
     {
-        private struct IpcRequest
-        {
-            public Switch Device { get; }
-            public KProcess Process => Thread?.Owner;
-            public KThread Thread { get; }
-            public KClientSession Session { get; }
-            public ulong MessagePtr { get; }
-            public ulong MessageSize { get; }
+        // Must be the maximum value used by services (highest one know is the one used by nvservices = 0x8000).
+        // Having a size that is too low will cause failures as data copy will fail if the receiving buffer is
+        // not large enough.
+        private const int PointerBufferSize = 0x8000;
 
-            public IpcRequest(Switch device, KThread thread, KClientSession session, ulong messagePtr, ulong messageSize)
+        private readonly static int[] DefaultCapabilities = new int[]
+        {
+            0x030363F7,
+            0x1FFFFFCF,
+            0x207FFFEF,
+            0x47E0060F,
+            0x0048BFFF,
+            0x01007FFF
+        };
+
+        private readonly KernelContext _context;
+        private readonly KProcess _selfProcess;
+
+        private readonly List<int> _sessionHandles = new List<int>();
+        private readonly List<int> _portHandles = new List<int>();
+        private readonly Dictionary<int, IpcService> _sessions = new Dictionary<int, IpcService>();
+        private readonly Dictionary<int, IpcService> _ports = new Dictionary<int, IpcService>();
+
+        public ManualResetEvent InitDone { get; }
+        public IpcService SmObject { get; set; }
+        public string Name { get; }
+
+        public ServerBase(KernelContext context, string name)
+        {
+            InitDone = new ManualResetEvent(false);
+            Name = name;
+            _context = context;
+
+            const ProcessCreationFlags flags =
+                ProcessCreationFlags.EnableAslr |
+                ProcessCreationFlags.AddressSpace64Bit |
+                ProcessCreationFlags.Is64Bit |
+                ProcessCreationFlags.PoolPartitionSystem;
+
+            ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, flags, 0, 0);
+
+            context.Syscall.CreateProcess(creationInfo, DefaultCapabilities, out int handle, null, ServerLoop);
+
+            _selfProcess = context.Scheduler.GetCurrentProcess().HandleTable.GetKProcess(handle);
+
+            context.Syscall.StartProcess(handle, 44, 3, 0x1000);
+        }
+
+        private void AddPort(int serverPortHandle, IpcService obj)
+        {
+            _portHandles.Add(serverPortHandle);
+            _ports.Add(serverPortHandle, obj);
+        }
+
+        public void AddSessionObj(KServerSession serverSession, IpcService obj)
+        {
+            _selfProcess.HandleTable.GenerateHandle(serverSession, out int serverSessionHandle);
+            AddSessionObj(serverSessionHandle, obj);
+        }
+
+        public void AddSessionObj(int serverSessionHandle, IpcService obj)
+        {
+            _sessionHandles.Add(serverSessionHandle);
+            _sessions.Add(serverSessionHandle, obj);
+        }
+
+        private void ServerLoop()
+        {
+            if (SmObject != null)
             {
-                Device = device;
-                Thread = thread;
-                Session = session;
-                MessagePtr = messagePtr;
-                MessageSize = messageSize;
+                _context.Syscall.ManageNamedPort("sm:", 50, out int serverPortHandle);
+
+                AddPort(serverPortHandle, SmObject);
+
+                InitDone.Set();
+            }
+            else
+            {
+                InitDone.Dispose();
             }
 
-            public void SignalDone(KernelResult result)
+            KThread thread = _context.Scheduler.GetCurrentThread();
+            ulong messagePtr = thread.TlsAddress;
+            _context.Syscall.SetHeapSize(0x200000, out ulong heapAddr);
+
+            _selfProcess.CpuMemory.Write(messagePtr + 0x0, 0);
+            _selfProcess.CpuMemory.Write(messagePtr + 0x4, 2 << 10);
+            _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
+
+            int replyTargetHandle = 0;
+
+            while (true)
             {
-                Thread.ObjSyncResult = result;
-                Thread.Reschedule(ThreadSchedState.Running);
+                int[] handles = _portHandles.ToArray();
+
+                for (int i = 0; i < handles.Length; i++)
+                {
+                    if (_context.Syscall.AcceptSession(handles[i], out int serverSessionHandle) == KernelResult.Success)
+                    {
+                        AddSessionObj(serverSessionHandle, _ports[handles[i]]);
+                    }
+                }
+
+                handles = _sessionHandles.ToArray();
+
+                var rc = _context.Syscall.ReplyAndReceive(handles, replyTargetHandle, 1000000L, out int signaledIndex);
+
+                thread.HandlePostSyscall();
+
+                if (!thread.Context.Running)
+                {
+                    break;
+                }
+
+                replyTargetHandle = 0;
+
+                if (rc == KernelResult.Success && signaledIndex != -1)
+                {
+                    int signaledHandle = handles[signaledIndex];
+
+                    if (Process(signaledHandle, heapAddr))
+                    {
+                        replyTargetHandle = signaledHandle;
+                    }
+                }
+                else
+                {
+                    _selfProcess.CpuMemory.Write(messagePtr + 0x0, 0);
+                    _selfProcess.CpuMemory.Write(messagePtr + 0x4, 2 << 10);
+                    _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
+                }
             }
         }
 
-        private readonly AsyncWorkQueue<IpcRequest> _ipcProcessor;
-
-        public ServerBase(string name)
+        private bool Process(int serverSessionHandle, ulong recvListAddr)
         {
-            _ipcProcessor = new AsyncWorkQueue<IpcRequest>(Process, name);
-        }
+            KProcess process = _context.Scheduler.GetCurrentProcess();
+            KThread thread = _context.Scheduler.GetCurrentThread();
+            ulong messagePtr = thread.TlsAddress;
+            ulong messageSize = 0x100;
 
-        public void PushMessage(Switch device, KThread thread, KClientSession session, ulong messagePtr, ulong messageSize)
-        {
-            _ipcProcessor.Add(new IpcRequest(device, thread, session, messagePtr, messageSize));
-        }
+            byte[] reqData = new byte[messageSize];
 
-        private void Process(IpcRequest message)
-        {
-            byte[] reqData = new byte[message.MessageSize];
+            process.CpuMemory.Read(messagePtr, reqData);
 
-            message.Process.CpuMemory.Read(message.MessagePtr, reqData);
-
-            IpcMessage request = new IpcMessage(reqData, (long)message.MessagePtr);
+            IpcMessage request = new IpcMessage(reqData, (long)messagePtr);
             IpcMessage response = new IpcMessage();
+
+            ulong tempAddr = recvListAddr;
+            int sizesOffset = request.RawData.Length - ((request.RecvListBuff.Count * 2 + 3) & ~3);
+
+            bool noReceive = true;
+
+            for (int i = 0; i < request.ReceiveBuff.Count; i++)
+            {
+                noReceive &= (request.ReceiveBuff[i].Position == 0);
+            }
+
+            if (noReceive)
+            {
+                for (int i = 0; i < request.RecvListBuff.Count; i++)
+                {
+                    int size = BinaryPrimitives.ReadInt16LittleEndian(request.RawData.AsSpan().Slice(sizesOffset + i * 2, 2));
+
+                    response.PtrBuff.Add(new IpcPtrBuffDesc((long)tempAddr, i, size));
+
+                    request.RecvListBuff[i] = new IpcRecvListBuffDesc((long)tempAddr, size);
+
+                    tempAddr += (ulong)size;
+                }
+            }
+
+            bool shouldReply = true;
 
             using (MemoryStream raw = new MemoryStream(request.RawData))
             {
@@ -71,17 +202,16 @@ namespace Ryujinx.HLE.HOS.Services
                         BinaryWriter resWriter = new BinaryWriter(resMs);
 
                         ServiceCtx context = new ServiceCtx(
-                            message.Device,
-                            message.Process,
-                            message.Process.CpuMemory,
-                            message.Thread,
-                            message.Session,
+                            _context.Device,
+                            process,
+                            process.CpuMemory,
+                            thread,
                             request,
                             response,
                             reqReader,
                             resWriter);
 
-                        message.Session.Service.CallMethod(context);
+                        _sessions[serverSessionHandle].CallMethod(context);
 
                         response.RawData = resMs.ToArray();
                     }
@@ -95,11 +225,11 @@ namespace Ryujinx.HLE.HOS.Services
                     switch (cmdId)
                     {
                         case 0:
-                            request = FillResponse(response, 0, message.Session.Service.ConvertToDomain());
+                            request = FillResponse(response, 0, _sessions[serverSessionHandle].ConvertToDomain());
                             break;
 
                         case 3:
-                            request = FillResponse(response, 0, 0x1000);
+                            request = FillResponse(response, 0, PointerBufferSize);
                             break;
 
                         // TODO: Whats the difference between IpcDuplicateSession/Ex?
@@ -107,12 +237,11 @@ namespace Ryujinx.HLE.HOS.Services
                         case 4:
                             int unknown = reqReader.ReadInt32();
 
-                            if (message.Process.HandleTable.GenerateHandle(message.Session, out int handle) != KernelResult.Success)
-                            {
-                                throw new InvalidOperationException("Out of handles!");
-                            }
+                            _context.Syscall.CreateSession(false, 0, out int dupServerSessionHandle, out int dupClientSessionHandle);
 
-                            response.HandleDesc = IpcHandleDesc.MakeMove(handle);
+                            AddSessionObj(dupServerSessionHandle, _sessions[serverSessionHandle]);
+
+                            response.HandleDesc = IpcHandleDesc.MakeMove(dupClientSessionHandle);
 
                             request = FillResponse(response, 0);
 
@@ -123,18 +252,24 @@ namespace Ryujinx.HLE.HOS.Services
                 }
                 else if (request.Type == IpcMessageType.CloseSession)
                 {
-                    message.SignalDone(KernelResult.PortRemoteClosed);
-                    return;
+                    _context.Syscall.CloseHandle(serverSessionHandle);
+                    _sessionHandles.Remove(serverSessionHandle);
+                    IpcService service = _sessions[serverSessionHandle];
+                    if (service is IDisposable disposableObj)
+                    {
+                        disposableObj.Dispose();
+                    }
+                    _sessions.Remove(serverSessionHandle);
+                    shouldReply = false;
                 }
                 else
                 {
                     throw new NotImplementedException(request.Type.ToString());
                 }
 
-                message.Process.CpuMemory.Write(message.MessagePtr, response.GetBytes((long)message.MessagePtr));
+                process.CpuMemory.Write(messagePtr, response.GetBytes((long)messagePtr, recvListAddr | ((ulong)PointerBufferSize << 48)));
+                return shouldReply;
             }
-
-            message.SignalDone(KernelResult.Success);
         }
 
         private static IpcMessage FillResponse(IpcMessage response, long result, params int[] values)

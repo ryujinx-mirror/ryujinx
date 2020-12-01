@@ -10,13 +10,17 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public FocusState FocusState { get; private set; }
 
-        public KEvent MessageEvent { get; private set; }
+        public KEvent MessageEvent { get; }
+
+        public IdDictionary AppletResourceUserIds { get; }
 
         public AppletStateMgr(Horizon system)
         {
             _messages = new ConcurrentQueue<MessageInfo>();
 
             MessageEvent = new KEvent(system.KernelContext);
+
+            AppletResourceUserIds = new IdDictionary();
         }
 
         public void SetFocus(bool isFocused)

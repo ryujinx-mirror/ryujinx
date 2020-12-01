@@ -19,7 +19,7 @@ using Ryujinx.Audio.Renderer.Dsp;
 using Ryujinx.Audio.Renderer.Integration;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
+using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -288,7 +288,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <param name="workBufferSize">The guest work buffer size.</param>
         /// <param name="processHandle">The process handle of the application.</param>
         /// <returns>A <see cref="ResultCode"/> reporting an error or a success.</returns>
-        public ResultCode OpenAudioRenderer(out AudioRenderSystem renderer, MemoryManager memoryManager, ref AudioRendererConfiguration parameter, ulong appletResourceUserId, ulong workBufferAddress, ulong workBufferSize, uint processHandle)
+        public ResultCode OpenAudioRenderer(out AudioRenderSystem renderer, IVirtualMemoryManager memoryManager, ref AudioRendererConfiguration parameter, ulong appletResourceUserId, ulong workBufferAddress, ulong workBufferSize, uint processHandle)
         {
             int sessionId = AcquireSessionId();
 
@@ -321,6 +321,14 @@ namespace Ryujinx.Audio.Renderer.Server
         {
             if (disposing)
             {
+                lock (_audioProcessorLock)
+                {
+                    if (_isRunning)
+                    {
+                        StopLocked();
+                    }
+                }
+
                 Processor.Dispose();
 
                 foreach (HardwareDevice device in OutputDevices)

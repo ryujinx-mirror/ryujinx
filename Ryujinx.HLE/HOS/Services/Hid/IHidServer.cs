@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private HidAccelerometerParameters _accelerometerParams;
         private HidVibrationValue          _vibrationValue;
 
-        public IHidServer(ServiceCtx context) : base(new ServerBase("HidServer"))
+        public IHidServer(ServiceCtx context) : base(new ServerBase(context.Device.System.KernelContext, "HidServer"))
         {
             _xpadIdEvent                 = new KEvent(context.Device.System.KernelContext);
             _palmaOperationCompleteEvent = new KEvent(context.Device.System.KernelContext);
@@ -559,9 +559,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             ControllerType type = (ControllerType)context.RequestData.ReadInt32();
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { 
-                    appletResourceUserId, 
-                    type 
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
+                    appletResourceUserId,
+                    type
                 });
 
             context.Device.Hid.Npads.SupportedStyleSets = type;
@@ -577,9 +577,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.ResponseData.Write((int)context.Device.Hid.Npads.SupportedStyleSets);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { 
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
                     appletResourceUserId,
-                    context.Device.Hid.Npads.SupportedStyleSets 
+                    context.Device.Hid.Npads.SupportedStyleSets
                 });
 
             return ResultCode.Success;
@@ -704,9 +704,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
             context.Device.Hid.Npads.JoyHold = (NpadJoyHoldType)context.RequestData.ReadInt64();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { 
-                    appletResourceUserId, 
-                    context.Device.Hid.Npads.JoyHold 
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
+                    appletResourceUserId,
+                    context.Device.Hid.Npads.JoyHold
                 });
 
             return ResultCode.Success;
@@ -720,9 +720,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.ResponseData.Write((long)context.Device.Hid.Npads.JoyHold);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { 
-                    appletResourceUserId, 
-                    context.Device.Hid.Npads.JoyHold 
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
+                    appletResourceUserId,
+                    context.Device.Hid.Npads.JoyHold
                 });
 
             return ResultCode.Success;

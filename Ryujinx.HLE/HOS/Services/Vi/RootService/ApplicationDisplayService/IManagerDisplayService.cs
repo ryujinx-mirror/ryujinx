@@ -1,11 +1,10 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 {
     class IManagerDisplayService : IpcService
     {
-        private static IApplicationDisplayService _applicationDisplayService;
+        private IApplicationDisplayService _applicationDisplayService;
 
         public IManagerDisplayService(IApplicationDisplayService applicationDisplayService)
         {
@@ -16,10 +15,13 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)
         {
-            long layerFlags = context.RequestData.ReadInt64();
-            long displayId  = context.RequestData.ReadInt64();
+            long layerFlags           = context.RequestData.ReadInt64();
+            long displayId            = context.RequestData.ReadInt64();
+            long appletResourceUserId = context.RequestData.ReadInt64();
 
-            context.Device.System.SurfaceFlinger.CreateLayer(context.Process, out long layerId);
+            long pid = context.Device.System.AppletState.AppletResourceUserIds.GetData<long>((int)appletResourceUserId);
+
+            context.Device.System.SurfaceFlinger.CreateLayer(pid, out long layerId);
 
             context.ResponseData.Write(layerId);
 

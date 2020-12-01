@@ -120,11 +120,11 @@ namespace Ryujinx.HLE.HOS
             iirsPageList.AddRange(iirsPa, IirsSize / KMemoryManager.PageSize);
             timePageList.AddRange(timePa, TimeSize / KMemoryManager.PageSize);
 
-            HidSharedMem  = new KSharedMemory(KernelContext, hidPageList,  0, 0, MemoryPermission.Read);
-            FontSharedMem = new KSharedMemory(KernelContext, fontPageList, 0, 0, MemoryPermission.Read);
-            IirsSharedMem = new KSharedMemory(KernelContext, iirsPageList, 0, 0, MemoryPermission.Read);
+            HidSharedMem  = new KSharedMemory(KernelContext, hidPageList,  0, 0, KMemoryPermission.Read);
+            FontSharedMem = new KSharedMemory(KernelContext, fontPageList, 0, 0, KMemoryPermission.Read);
+            IirsSharedMem = new KSharedMemory(KernelContext, iirsPageList, 0, 0, KMemoryPermission.Read);
 
-            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timePageList, 0, 0, MemoryPermission.Read);
+            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timePageList, 0, 0, KMemoryPermission.Read);
 
             TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timePa - DramMemoryMap.DramBase, TimeSize);
 
@@ -133,8 +133,6 @@ namespace Ryujinx.HLE.HOS
             AppletState.SetFocus(true);
 
             Font = new SharedFontManager(device, fontPa - DramMemoryMap.DramBase);
-
-            IUserInterface.InitializePort(this);
 
             VsyncEvent = new KEvent(KernelContext);
 
@@ -222,6 +220,16 @@ namespace Ryujinx.HLE.HOS
             }
 
             AudioRendererManager.Initialize(writableEvents, devices);
+        }
+
+        public void InitializeServices()
+        {
+            IUserInterface sm = new IUserInterface(KernelContext);
+
+            // Wait until SM server thread is done with initialization,
+            // only then doing connections to SM is safe.
+            sm.Server.InitDone.WaitOne();
+            sm.Server.InitDone.Dispose();
         }
 
         public void LoadKip(string kipPath)

@@ -12,6 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
     class IDeliveryCacheProgressService : IpcService
     {
         private KEvent _event;
+        private int    _eventHandle;
 
         public IDeliveryCacheProgressService(ServiceCtx context)
         {
@@ -22,12 +23,15 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // GetEvent() -> handle<copy>
         public ResultCode GetEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_eventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out _eventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_eventHandle);
 
             Logger.Stub?.PrintStub(LogClass.ServiceBcat);
 

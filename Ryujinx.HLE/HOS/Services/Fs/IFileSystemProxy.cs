@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         }
 
         [Command(8)]
-        // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path) 
+        // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path)
         // -> object<nn::fssrv::sf::IFileSystem> contentFs
         public ResultCode OpenFileSystemWithId(ServiceCtx context)
         {
@@ -138,12 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             // Workaround that by setting the application ID and owner ID if they're not already set
             if (attribute.ProgramId == ProgramId.InvalidId)
             {
-                attribute.ProgramId = new ProgramId(context.Process.TitleId);
-            }
-
-            if (creationInfo.OwnerId == 0)
-            {
-                creationInfo.OwnerId = 0;
+                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
             }
 
             Logger.Info?.Print(LogClass.ServiceFs, $"Creating save with title ID {attribute.ProgramId.Value:x16}");
@@ -215,12 +210,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             // Workaround that by setting the application ID and owner ID if they're not already set
             if (attribute.ProgramId == ProgramId.InvalidId)
             {
-                attribute.ProgramId = new ProgramId(context.Process.TitleId);
-            }
-
-            if (creationInfo.OwnerId == 0)
-            {
-                creationInfo.OwnerId = 0;
+                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
             }
 
             Result result = _baseFileSystemProxy.CreateSaveDataFileSystemWithHashSalt(ref attribute, ref creationInfo, ref metaCreateInfo, ref hashSalt);
@@ -239,7 +229,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             // Workaround that by setting the application ID if it's not already set
             if (attribute.ProgramId == ProgramId.InvalidId)
             {
-                attribute.ProgramId = new ProgramId(context.Process.TitleId);
+                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
             }
 
             Result result = _baseFileSystemProxy.OpenSaveDataFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem, spaceId, ref attribute);
@@ -280,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             // Workaround that by setting the application ID if it's not already set
             if (attribute.ProgramId == ProgramId.InvalidId)
             {
-                attribute.ProgramId = new ProgramId(context.Process.TitleId);
+                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
             }
 
             Result result = _baseFileSystemProxy.OpenReadOnlySaveDataFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem, spaceId, ref attribute);
@@ -328,7 +318,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             filter.SetSaveDataType(SaveDataType.Cache);
             filter.SetProgramId(new ProgramId(context.Process.TitleId));
 
-            // FS would query the User and SdCache space IDs to find where the existing cache is (if any). 
+            // FS would query the User and SdCache space IDs to find where the existing cache is (if any).
             // We always have the SD card inserted, so we can always use SdCache for now.
             Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderBySaveDataSpaceId(
                 out ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> infoReader, SaveDataSpaceId.SdCache);

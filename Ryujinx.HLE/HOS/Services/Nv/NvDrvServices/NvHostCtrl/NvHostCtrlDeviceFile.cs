@@ -5,7 +5,7 @@ using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
 using Ryujinx.HLE.HOS.Services.Settings;
-
+using Ryujinx.Memory;
 using System;
 using System.Text;
 using System.Threading;
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private Switch        _device;
         private NvHostEvent[] _events;
 
-        public NvHostCtrlDeviceFile(ServiceCtx context) : base(context)
+        public NvHostCtrlDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
         {
             if (NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object productionModeSetting))
             {
@@ -126,7 +126,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
             if (targetEvent != null)
             {
-                if (Owner.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != KernelResult.Success)
+                if (Context.Process.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

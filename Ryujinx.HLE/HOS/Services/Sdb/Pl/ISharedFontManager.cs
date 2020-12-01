@@ -9,6 +9,8 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
     [Service("pl:s")] // 9.0.0+
     class ISharedFontManager : IpcService
     {
+        private int _fontSharedMemHandle;
+
         public ISharedFontManager(ServiceCtx context) { }
 
         [Command(0)]
@@ -63,12 +65,15 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         {
             context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager);
 
-            if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out int handle) != KernelResult.Success)
+            if (_fontSharedMemHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out _fontSharedMemHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_fontSharedMemHandle);
 
             return ResultCode.Success;
         }

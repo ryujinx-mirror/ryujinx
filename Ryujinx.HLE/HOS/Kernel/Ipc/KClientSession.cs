@@ -16,10 +16,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KClientPort ParentPort { get; }
 
-        // TODO: Remove that, we need it for now to allow HLE
-        // services implementation to work with the new IPC system.
-        public IpcService Service { get; set; }
-
         public KClientSession(KernelContext context, KSession parent, KClientPort parentPort) : base(context)
         {
             _parent    = parent;
@@ -84,11 +80,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             _parent.DisconnectClient();
             _parent.DecrementReferenceCount();
-
-            if (Service is IDisposable disposableObj)
-            {
-                disposableObj.Dispose();
-            }
         }
     }
 }

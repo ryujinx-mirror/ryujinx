@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
-    class KSession : KAutoObject, IDisposable
+    class KSession : KAutoObject
     {
         public KServerSession ServerSession { get; }
         public KClientSession ClientSession { get; }
@@ -34,19 +34,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             if (ClientSession.State == ChannelState.Open)
             {
                 ClientSession.State = ChannelState.ServerDisconnected;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing && ClientSession.Service is IDisposable disposableService)
-            {
-                disposableService.Dispose();
             }
         }
 

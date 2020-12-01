@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Ryujinx.Cpu;
+using Ryujinx.Memory;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.State
@@ -33,22 +33,22 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             public uint WriteOffset;
             private uint _reserved;
 
-            public static uint GetReadOffset(MemoryManager manager, ulong bufferAddress)
+            public static uint GetReadOffset(IVirtualMemoryManager manager, ulong bufferAddress)
             {
                 return manager.Read<uint>(bufferAddress + ReadOffsetPosition);
             }
 
-            public static uint GetWriteOffset(MemoryManager manager, ulong bufferAddress)
+            public static uint GetWriteOffset(IVirtualMemoryManager manager, ulong bufferAddress)
             {
                 return manager.Read<uint>(bufferAddress + WriteOffsetPosition);
             }
 
-            public static void SetReadOffset(MemoryManager manager, ulong bufferAddress, uint value)
+            public static void SetReadOffset(IVirtualMemoryManager manager, ulong bufferAddress, uint value)
             {
                 manager.Write(bufferAddress + ReadOffsetPosition, value);
             }
 
-            public static void SetWriteOffset(MemoryManager manager, ulong bufferAddress, uint value)
+            public static void SetWriteOffset(IVirtualMemoryManager manager, ulong bufferAddress, uint value)
             {
                 manager.Write(bufferAddress + WriteOffsetPosition, value);
             }

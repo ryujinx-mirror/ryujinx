@@ -229,6 +229,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess dummyProcess = new KProcess(_context);
 
+            dummyProcess.HandleTable.Initialize(1024);
+
             KThread dummyThread = new KThread(_context);
 
             dummyThread.Initialize(0, 0, 0, 44, 0, dummyProcess, ThreadType.Dummy);

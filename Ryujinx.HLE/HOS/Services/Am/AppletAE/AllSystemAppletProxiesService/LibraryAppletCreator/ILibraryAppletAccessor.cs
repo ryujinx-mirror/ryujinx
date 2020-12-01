@@ -18,6 +18,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         private KEvent _normalOutDataEvent;
         private KEvent _interactiveOutDataEvent;
 
+        private int _stateChangedEventHandle;
+        private int _normalOutDataEventHandle;
+        private int _interactiveOutDataEventHandle;
+
         public ILibraryAppletAccessor(AppletId appletId, Horizon system)
         {
             _stateChangedEvent       = new KEvent(system.KernelContext);
@@ -32,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             _applet.AppletStateChanged        += OnAppletStateChanged;
             _normalSession.DataAvailable      += OnNormalOutData;
             _interactiveSession.DataAvailable += OnInteractiveOutData;
-            
+
             Logger.Info?.Print(LogClass.ServiceAm, $"Applet '{appletId}' created.");
         }
 
@@ -55,12 +59,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetAppletStateChangedEvent() -> handle<copy>
         public ResultCode GetAppletStateChangedEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_stateChangedEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_stateChangedEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_stateChangedEvent.ReadableEvent, out _stateChangedEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_stateChangedEventHandle);
 
             return ResultCode.Success;
         }
@@ -69,8 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
-            return (ResultCode)_applet.Start(_normalSession.GetConsumer(),
-                                             _interactiveSession.GetConsumer());
+            return (ResultCode)_applet.Start(_normalSession.GetConsumer(), _interactiveSession.GetConsumer());
         }
 
         [Command(30)]
@@ -138,12 +144,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetPopOutDataEvent() -> handle<copy>
         public ResultCode GetPopOutDataEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_normalOutDataEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_normalOutDataEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_normalOutDataEvent.ReadableEvent, out _normalOutDataEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_normalOutDataEventHandle);
 
             return ResultCode.Success;
         }
@@ -152,12 +162,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetPopInteractiveOutDataEvent() -> handle<copy>
         public ResultCode GetPopInteractiveOutDataEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_interactiveOutDataEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_interactiveOutDataEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_interactiveOutDataEvent.ReadableEvent, out _interactiveOutDataEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_interactiveOutDataEventHandle);
 
             return ResultCode.Success;
         }

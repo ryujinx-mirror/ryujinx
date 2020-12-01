@@ -13,7 +13,7 @@ namespace Ryujinx.Cpu
     /// <summary>
     /// Represents a CPU memory manager.
     /// </summary>
-    public sealed class MemoryManager : IMemoryManager, IDisposable, IVirtualMemoryManager
+    public sealed class MemoryManager : IMemoryManager, IVirtualMemoryManager, IDisposable
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;
@@ -468,6 +468,11 @@ namespace Ryujinx.Cpu
         /// <returns>True if the entire range is mapped, false otherwise</returns>
         public bool IsRangeMapped(ulong va, ulong size)
         {
+            if (size == 0UL)
+            {
+                return true;
+            }
+
             ulong endVa = (va + size + PageMask) & ~(ulong)PageMask;
 
             va &= ~(ulong)PageMask;

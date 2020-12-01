@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidAddress;
             }
 
-            StructReader reader = new StructReader(context.Memory, nrrAddress);
+            StructReader reader = new StructReader(_owner.CpuMemory, nrrAddress);
             NrrHeader    header = reader.Read<NrrHeader>();
 
             if (header.Magic != NrrMagic)
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             {
                 byte[] temp = new byte[0x20];
 
-                context.Memory.Read((ulong)(nrrAddress + header.HashOffset + (i * 0x20)), temp);
+                _owner.CpuMemory.Read((ulong)(nrrAddress + header.HashOffset + (i * 0x20)), temp);
 
                 hashes.Add(temp);
             }
@@ -131,8 +131,8 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidAddress;
             }
 
-            uint magic       = context.Memory.Read<uint>(nroAddress + 0x10);
-            uint nroFileSize = context.Memory.Read<uint>(nroAddress + 0x18);
+            uint magic       = _owner.CpuMemory.Read<uint>(nroAddress + 0x10);
+            uint nroFileSize = _owner.CpuMemory.Read<uint>(nroAddress + 0x18);
 
             if (magic != NroMagic || nroSize != nroFileSize)
             {
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             byte[] nroData = new byte[nroSize];
 
-            context.Memory.Read(nroAddress, nroData);
+            _owner.CpuMemory.Read(nroAddress, nroData);
 
             byte[] nroHash = null;
 
@@ -176,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             // Check if everything is contiguous.
             if (nro.RoOffset   != nro.TextOffset + nro.Text.Length ||
                 nro.DataOffset != nro.RoOffset   + nro.Ro.Length   ||
-                nroFileSize           != nro.DataOffset + nro.Data.Length)
+                nroFileSize    != nro.DataOffset + nro.Data.Length)
             {
                 return ResultCode.InvalidNro;
             }
@@ -337,21 +337,21 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             KernelResult result;
 
-            result = process.MemoryManager.SetProcessMemoryPermission(textStart, roStart - textStart, MemoryPermission.ReadAndExecute);
+            result = process.MemoryManager.SetProcessMemoryPermission(textStart, roStart - textStart, KMemoryPermission.ReadAndExecute);
 
             if (result != KernelResult.Success)
             {
                 return result;
             }
 
-            result = process.MemoryManager.SetProcessMemoryPermission(roStart, dataStart - roStart, MemoryPermission.Read);
+            result = process.MemoryManager.SetProcessMemoryPermission(roStart, dataStart - roStart, KMemoryPermission.Read);
 
             if (result != KernelResult.Success)
             {
                 return result;
             }
 
-            return process.MemoryManager.SetProcessMemoryPermission(dataStart, bssEnd - dataStart, MemoryPermission.ReadAndWrite);
+            return process.MemoryManager.SetProcessMemoryPermission(dataStart, bssEnd - dataStart, KMemoryPermission.ReadAndWrite);
         }
 
         private ResultCode RemoveNrrInfo(long nrrAddress)
@@ -420,9 +420,9 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return (ResultCode)result;
         }
 
-        private ResultCode IsInitialized(KProcess process)
+        private ResultCode IsInitialized(long pid)
         {
-            if (_owner != null && _owner.Pid == process.Pid)
+            if (_owner != null && _owner.Pid == pid)
             {
                 return ResultCode.Success;
             }
@@ -434,7 +434,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         // LoadNro(u64, u64, u64, u64, u64, pid) -> u64
         public ResultCode LoadNro(ServiceCtx context)
         {
-            ResultCode result = IsInitialized(context.Process);
+            ResultCode result = IsInitialized(_owner.Pid);
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -454,11 +454,11 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
                 if (result == ResultCode.Success)
                 {
-                    result = MapNro(context.Process, info, out nroMappedAddress);
+                    result = MapNro(_owner, info, out nroMappedAddress);
 
                     if (result == ResultCode.Success)
                     {
-                        result = (ResultCode)SetNroMemoryPermissions(context.Process, info.Executable, nroMappedAddress);
+                        result = (ResultCode)SetNroMemoryPermissions(_owner, info.Executable, nroMappedAddress);
 
                         if (result == ResultCode.Success)
                         {
@@ -479,7 +479,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         // UnloadNro(u64, u64, pid)
         public ResultCode UnloadNro(ServiceCtx context)
         {
-            ResultCode result = IsInitialized(context.Process);
+            ResultCode result = IsInitialized(_owner.Pid);
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -503,7 +503,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         // LoadNrr(u64, u64, u64, pid)
         public ResultCode LoadNrr(ServiceCtx context)
         {
-            ResultCode result = IsInitialized(context.Process);
+            ResultCode result = IsInitialized(_owner.Pid);
 
             // pid placeholder, zero
             context.RequestData.ReadUInt64();
@@ -536,7 +536,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         // UnloadNrr(u64, u64, pid)
         public ResultCode UnloadNrr(ServiceCtx context)
         {
-            ResultCode result = IsInitialized(context.Process);
+            ResultCode result = IsInitialized(_owner.Pid);
 
             // pid placeholder, zero
             context.RequestData.ReadUInt64();
@@ -565,7 +565,8 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidSession;
             }
 
-            _owner = context.Process;
+            _owner = context.Process.HandleTable.GetKProcess(context.Request.HandleDesc.ToCopy[0]);
+            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
 
             return ResultCode.Success;
         }

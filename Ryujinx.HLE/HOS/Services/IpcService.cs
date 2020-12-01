@@ -1,8 +1,6 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
-using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +15,7 @@ namespace Ryujinx.HLE.HOS.Services
 
         public ServerBase Server { get; private set; }
 
+        private IpcService _parent;
         private IdDictionary _domainObjects;
         private int _selfId;
         private bool _isDomain;
@@ -32,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             Server = server;
 
+            _parent = this;
             _domainObjects = new IdDictionary();
             _selfId = -1;
         }
@@ -62,8 +62,8 @@ namespace Ryujinx.HLE.HOS.Services
                 int domainWord0 = context.RequestData.ReadInt32();
                 int domainObjId = context.RequestData.ReadInt32();
 
-                int domainCmd       = (domainWord0 >> 0)  & 0xff;
-                int inputObjCount   = (domainWord0 >> 8)  & 0xff;
+                int domainCmd = (domainWord0 >> 0) & 0xff;
+                int inputObjCount = (domainWord0 >> 8) & 0xff;
                 int dataPayloadSize = (domainWord0 >> 16) & 0xffff;
 
                 context.RequestData.BaseStream.Seek(0x10 + dataPayloadSize, SeekOrigin.Begin);
@@ -96,8 +96,8 @@ namespace Ryujinx.HLE.HOS.Services
                 }
             }
 
-            long sfciMagic =      context.RequestData.ReadInt64();
-            int  commandId = (int)context.RequestData.ReadInt64();
+            long sfciMagic = context.RequestData.ReadInt64();
+            int commandId = (int)context.RequestData.ReadInt64();
 
             bool serviceExists = service.Commands.TryGetValue(commandId, out MethodInfo processRequest);
 
@@ -145,56 +145,37 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 string dbgMessage = $"{service.GetType().FullName}: {commandId}";
 
-                throw new ServiceNotImplementedException(context, dbgMessage);
+                throw new ServiceNotImplementedException(service, context, dbgMessage);
             }
         }
 
-        protected static void MakeObject(ServiceCtx context, IpcService obj)
+        protected void MakeObject(ServiceCtx context, IpcService obj)
         {
-            IpcService service = context.Session.Service;
+            obj.TrySetServer(_parent.Server);
 
-            obj.TrySetServer(service.Server);
-
-            if (service._isDomain)
+            if (_parent._isDomain)
             {
-                context.Response.ObjectIds.Add(service.Add(obj));
+                obj._parent = _parent;
+
+                context.Response.ObjectIds.Add(_parent.Add(obj));
             }
             else
             {
-                KSession session = new KSession(context.Device.System.KernelContext);
+                context.Device.System.KernelContext.Syscall.CreateSession(false, 0, out int serverSessionHandle, out int clientSessionHandle);
 
-                session.ClientSession.Service = obj;
+                obj.Server.AddSessionObj(serverSessionHandle, obj);
 
-                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
-                {
-                    throw new InvalidOperationException("Out of handles!");
-                }
-
-                session.ServerSession.DecrementReferenceCount();
-                session.ClientSession.DecrementReferenceCount();
-
-                context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
+                context.Response.HandleDesc = IpcHandleDesc.MakeMove(clientSessionHandle);
             }
         }
 
-        protected static T GetObject<T>(ServiceCtx context, int index) where T : IpcService
+        protected T GetObject<T>(ServiceCtx context, int index) where T : IpcService
         {
-            IpcService service = context.Session.Service;
-
-            if (!service._isDomain)
-            {
-                int handle = context.Request.HandleDesc.ToMove[index];
-
-                KClientSession session = context.Process.HandleTable.GetObject<KClientSession>(handle);
-
-                return session?.Service is T ? (T)session.Service : null;
-            }
-
             int objId = context.Request.ObjectIds[index];
 
-            IIpcService obj = service.GetObject(objId);
+            IIpcService obj = _parent.GetObject(objId);
 
-            return obj is T ? (T)obj : null;
+            return obj is T t ? t : null;
         }
 
         public bool TrySetServer(ServerBase newServer)
@@ -229,6 +210,11 @@ namespace Ryujinx.HLE.HOS.Services
         private IIpcService GetObject(int id)
         {
             return _domainObjects.GetData<IIpcService>(id);
+        }
+
+        public void SetParent(IpcService parent)
+        {
+            _parent = parent._parent;
         }
     }
 }

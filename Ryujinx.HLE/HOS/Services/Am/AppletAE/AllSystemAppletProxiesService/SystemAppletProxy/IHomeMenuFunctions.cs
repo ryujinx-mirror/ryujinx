@@ -9,6 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
     class IHomeMenuFunctions : IpcService
     {
         private KEvent _channelEvent;
+        private int    _channelEventHandle;
 
         public IHomeMenuFunctions(Horizon system)
         {
@@ -29,12 +30,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetPopFromGeneralChannelEvent() -> handle<copy>
         public ResultCode GetPopFromGeneralChannelEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_channelEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_channelEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_channelEvent.ReadableEvent, out _channelEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_channelEventHandle);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 

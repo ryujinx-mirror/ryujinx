@@ -22,12 +22,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult SendSyncRequest32([R(0)] int handle)
         {
-            return _syscall.SendSyncRequestHLE(handle);
+            return _syscall.SendSyncRequest(handle);
         }
 
         public KernelResult SendSyncRequestWithUserBuffer32([R(0)] uint messagePtr, [R(1)] uint messageSize, [R(2)] int handle)
         {
-            return _syscall.SendSyncRequestWithUserBufferHLE(messagePtr, messageSize, handle);
+            return _syscall.SendSyncRequestWithUserBuffer(messagePtr, messageSize, handle);
         }
 
         public KernelResult CreateSession32(
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
-        public KernelResult MapSharedMemory32([R(0)] int handle, [R(1)] uint address, [R(2)] uint size, [R(3)] MemoryPermission permission)
+        public KernelResult MapSharedMemory32([R(0)] int handle, [R(1)] uint address, [R(2)] uint size, [R(3)] KMemoryPermission permission)
         {
             return _syscall.MapSharedMemory(handle, address, size, permission);
         }
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public KernelResult CreateTransferMemory32(
             [R(1)] uint address,
             [R(2)] uint size,
-            [R(3)] MemoryPermission permission,
+            [R(3)] KMemoryPermission permission,
             [R(1)] out int handle)
         {
             return _syscall.CreateTransferMemory(address, size, permission, out handle);
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(2)] uint srcLow,
             [R(3)] uint srcHigh,
             [R(4)] uint sizeHigh,
-            [R(5)] MemoryPermission permission)
+            [R(5)] KMemoryPermission permission)
         {
             ulong src = srcLow | ((ulong)srcHigh << 32);
             ulong size = sizeLow | ((ulong)sizeHigh << 32);

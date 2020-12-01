@@ -8,9 +8,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong PagesCount  { get; private set; }
 
         public MemoryState      State            { get; private set; }
-        public MemoryPermission Permission       { get; private set; }
+        public KMemoryPermission Permission       { get; private set; }
         public MemoryAttribute  Attribute        { get; private set; }
-        public MemoryPermission SourcePermission { get; private set; }
+        public KMemoryPermission SourcePermission { get; private set; }
 
         public int IpcRefCount    { get; private set; }
         public int DeviceRefCount { get; private set; }
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong            baseAddress,
             ulong            pagesCount,
             MemoryState      state,
-            MemoryPermission permission,
+            KMemoryPermission permission,
             MemoryAttribute  attribute,
             int              ipcRefCount    = 0,
             int              deviceRefCount = 0)
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             DeviceRefCount = deviceRefCount;
         }
 
-        public void SetState(MemoryPermission permission, MemoryState state, MemoryAttribute attribute)
+        public void SetState(KMemoryPermission permission, MemoryState state, MemoryAttribute attribute)
         {
             Permission = permission;
             State      = state;
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             Attribute |= attribute;
         }
 
-        public void SetIpcMappingPermission(MemoryPermission newPermission)
+        public void SetIpcMappingPermission(KMemoryPermission newPermission)
         {
             int oldIpcRefCount = IpcRefCount++;
 
@@ -54,8 +54,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 SourcePermission = Permission;
 
-                Permission &= ~MemoryPermission.ReadAndWrite;
-                Permission |=  MemoryPermission.ReadAndWrite & newPermission;
+                Permission &= ~KMemoryPermission.ReadAndWrite;
+                Permission |=  KMemoryPermission.ReadAndWrite & newPermission;
             }
 
             Attribute |= MemoryAttribute.IpcMapped;
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 Permission = SourcePermission;
 
-                SourcePermission = MemoryPermission.None;
+                SourcePermission = KMemoryPermission.None;
 
                 Attribute &= ~MemoryAttribute.IpcMapped;
             }

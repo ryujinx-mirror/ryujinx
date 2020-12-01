@@ -2,36 +2,36 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     struct ProcessCreationInfo
     {
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public int   Version { get; private set; }
-        public ulong TitleId  { get; private set; }
+        public int Version { get; }
+        public ulong TitleId { get; }
 
-        public ulong CodeAddress    { get; private set; }
-        public int   CodePagesCount { get; private set; }
+        public ulong CodeAddress { get; }
+        public int CodePagesCount { get; }
 
-        public int MmuFlags                 { get; private set; }
-        public int ResourceLimitHandle      { get; private set; }
-        public int PersonalMmHeapPagesCount { get; private set; }
+        public ProcessCreationFlags Flags { get; }
+        public int ResourceLimitHandle { get; }
+        public int SystemResourcePagesCount { get; }
 
         public ProcessCreationInfo(
             string name,
-            int    category,
-            ulong  titleId,
-            ulong  codeAddress,
-            int    codePagesCount,
-            int    mmuFlags,
-            int    resourceLimitHandle,
-            int    personalMmHeapPagesCount)
+            int version,
+            ulong titleId,
+            ulong codeAddress,
+            int codePagesCount,
+            ProcessCreationFlags flags,
+            int resourceLimitHandle,
+            int systemResourcePagesCount)
         {
-            Name                     = name;
-            Version                  = category;
-            TitleId                  = titleId;
-            CodeAddress              = codeAddress;
-            CodePagesCount           = codePagesCount;
-            MmuFlags                 = mmuFlags;
-            ResourceLimitHandle      = resourceLimitHandle;
-            PersonalMmHeapPagesCount = personalMmHeapPagesCount;
+            Name = name;
+            Version = version;
+            TitleId = titleId;
+            CodeAddress = codeAddress;
+            CodePagesCount = codePagesCount;
+            Flags = flags;
+            ResourceLimitHandle = resourceLimitHandle;
+            SystemResourcePagesCount = systemResourcePagesCount;
         }
     }
 }

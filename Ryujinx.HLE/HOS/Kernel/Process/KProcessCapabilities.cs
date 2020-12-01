@@ -2,6 +2,7 @@ using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Process
 {
@@ -24,29 +25,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             IrqAccessMask = new byte[0x80];
         }
 
-        public KernelResult InitializeForKernel(int[] caps, KMemoryManager memoryManager)
+        public KernelResult InitializeForKernel(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
         {
             AllowedCpuCoresMask    = 0xf;
             AllowedThreadPriosMask = -1;
             DebuggingFlags        &= ~3;
             KernelReleaseVersion   = KProcess.KernelVersionPacked;
 
-            return Parse(caps, memoryManager);
+            return Parse(capabilities, memoryManager);
         }
 
-        public KernelResult InitializeForUser(int[] caps, KMemoryManager memoryManager)
+        public KernelResult InitializeForUser(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
         {
-            return Parse(caps, memoryManager);
+            return Parse(capabilities, memoryManager);
         }
 
-        private KernelResult Parse(int[] caps, KMemoryManager memoryManager)
+        private KernelResult Parse(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
         {
             int mask0 = 0;
             int mask1 = 0;
 
-            for (int index = 0; index < caps.Length; index++)
+            for (int index = 0; index < capabilities.Length; index++)
             {
-                int cap = caps[index];
+                int cap = capabilities[index];
 
                 if (((cap + 1) & ~cap) != 0x40)
                 {
@@ -59,14 +60,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
                 else
                 {
-                    if ((uint)index + 1 >= caps.Length)
+                    if ((uint)index + 1 >= capabilities.Length)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
                     int prevCap = cap;
 
-                    cap = caps[++index];
+                    cap = capabilities[++index];
 
                     if (((cap + 1) & ~cap) != 0x40)
                     {
@@ -91,9 +92,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                         return KernelResult.InvalidAddress;
                     }
 
-                    MemoryPermission perm = (prevCap >> 31) != 0
-                        ? MemoryPermission.Read
-                        : MemoryPermission.ReadAndWrite;
+                    KMemoryPermission perm = (prevCap >> 31) != 0
+                        ? KMemoryPermission.Read
+                        : KMemoryPermission.ReadAndWrite;
 
                     KernelResult result;
 
@@ -216,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 {
                     long address = ((long)(uint)cap << 4) & 0xffffff000;
 
-                    memoryManager.MapIoMemory(address, KMemoryManager.PageSize, MemoryPermission.ReadAndWrite);
+                    memoryManager.MapIoMemory(address, KMemoryManager.PageSize, KMemoryPermission.ReadAndWrite);
 
                     break;
                 }

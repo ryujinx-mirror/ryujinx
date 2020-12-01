@@ -7,6 +7,12 @@ namespace Ryujinx.HLE.HOS.Ipc
         public long Position { get; private set; }
         public long Size     { get; private set; }
 
+        public IpcRecvListBuffDesc(long position, long size)
+        {
+            Position = position;
+            Size = size;
+        }
+
         public IpcRecvListBuffDesc(BinaryReader reader)
         {
             long value = reader.ReadInt64();

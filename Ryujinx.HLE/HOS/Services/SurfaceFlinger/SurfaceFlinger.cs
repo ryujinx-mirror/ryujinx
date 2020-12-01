@@ -1,10 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
-using Ryujinx.HLE.HOS.Kernel.Process;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
-using Ryujinx.HLE.HOS.Services.Nv.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,7 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             public int                    ProducerBinderId;
             public IGraphicBufferProducer Producer;
             public BufferItemConsumer     Consumer;
-            public KProcess               Owner;
+            public BufferQueueCore        Core;
+            public long                   Owner;
         }
 
         private class TextureCallbackInformation
@@ -84,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
         }
 
-        public IGraphicBufferProducer OpenLayer(KProcess process, long layerId)
+        public IGraphicBufferProducer OpenLayer(long pid, long layerId)
         {
             bool needCreate;
 
@@ -95,13 +93,13 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (needCreate)
             {
-                CreateLayerFromId(process, layerId);
+                CreateLayerFromId(pid, layerId);
             }
 
             return GetProducerByLayerId(layerId);
         }
 
-        public IGraphicBufferProducer CreateLayer(KProcess process, out long layerId)
+        public IGraphicBufferProducer CreateLayer(long pid, out long layerId)
         {
             layerId = 1;
 
@@ -116,25 +114,26 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 }
             }
 
-            CreateLayerFromId(process, layerId);
+            CreateLayerFromId(pid, layerId);
 
             return GetProducerByLayerId(layerId);
         }
 
-        private void CreateLayerFromId(KProcess process, long layerId)
+        private void CreateLayerFromId(long pid, long layerId)
         {
             lock (Lock)
             {
                 Logger.Info?.Print(LogClass.SurfaceFlinger, $"Creating layer {layerId}");
 
-                BufferQueue.CreateBufferQueue(_device, process, out BufferQueueProducer producer, out BufferQueueConsumer consumer);
+                BufferQueueCore core = BufferQueue.CreateBufferQueue(_device, pid, out BufferQueueProducer producer, out BufferQueueConsumer consumer);
 
                 _layers.Add(layerId, new Layer
                 {
                     ProducerBinderId = HOSBinderDriverServer.RegisterBinderObject(producer),
                     Producer         = producer,
                     Consumer         = new BufferItemConsumer(_device, consumer, 0, -1, false, this),
-                    Owner            = process
+                    Core             = core,
+                    Owner            = pid
                 });
 
                 LastId = layerId;
@@ -345,6 +344,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public void Dispose()
         {
             _isRunning = false;
+
+            foreach (Layer layer in _layers.Values)
+            {
+                layer.Core.PrepareForExit();
+            }
         }
 
         public void OnFrameAvailable(ref BufferItem item)

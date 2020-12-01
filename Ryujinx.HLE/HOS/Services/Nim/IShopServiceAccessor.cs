@@ -11,6 +11,8 @@ namespace Ryujinx.HLE.HOS.Services.Nim.ShopServiceAccessServerInterface.ShopServ
     {
         private readonly KEvent _event;
 
+        private int _eventHandle;
+
         public IShopServiceAccessor(Horizon system)
         {
             _event = new KEvent(system.KernelContext);
@@ -22,12 +24,15 @@ namespace Ryujinx.HLE.HOS.Services.Nim.ShopServiceAccessServerInterface.ShopServ
         {
             MakeObject(context, new IShopServiceAsync());
 
-            if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_eventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out _eventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_eventHandle);
 
             Logger.Stub?.PrintStub(LogClass.ServiceNim);
 

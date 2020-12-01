@@ -9,7 +9,9 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     [Service("aoc:u")]
     class IAddOnContentManager : IpcService
     {
-        KEvent _addOnContentListChangedEvent;
+        private readonly KEvent _addOnContentListChangedEvent;
+
+        private int _addOnContentListChangedEventHandle;
 
         public IAddOnContentManager(ServiceCtx context)
         {
@@ -22,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             long pid = context.Process.Pid;
 
-            // Official code checks ApplicationControlProperty.RuntimeAddOnContentInstall 
+            // Official code checks ApplicationControlProperty.RuntimeAddOnContentInstall
             // if true calls ns:am ListAvailableAddOnContent again to get updated count
 
             byte runtimeAddOnContentInstall = context.Device.Application.ControlData.Value.RuntimeAddOnContentInstall;
@@ -135,12 +137,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             // Official code seems to make an internal call to ns:am Cmd 84 GetDynamicCommitEvent()
 
-            if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (_addOnContentListChangedEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out _addOnContentListChangedEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_addOnContentListChangedEventHandle);
 
             Logger.Stub?.PrintStub(LogClass.ServiceNs);
 
@@ -148,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         }
 
 
-        [Command(9)] // [10.0.0+] 
+        [Command(9)] // [10.0.0+]
         // GetAddOnContentLostErrorCode() -> u64
         public ResultCode GetAddOnContentLostErrorCode(ServiceCtx context)
         {

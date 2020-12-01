@@ -31,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public ulong CondVarAddress { get; set; }
 
         private ulong _entrypoint;
+        private ThreadStart _customThreadStart;
 
         public ulong MutexAddress { get; set; }
 
@@ -48,12 +49,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public LinkedListNode<KThread>[] SiblingsPerCore { get; private set; }
 
-        public LinkedList<KThread>     Withholder     { get; set; }
+        public LinkedList<KThread> Withholder { get; set; }
         public LinkedListNode<KThread> WithholderNode { get; set; }
 
         public LinkedListNode<KThread> ProcessListNode { get; set; }
 
-        private LinkedList<KThread>     _mutexWaiters;
+        private LinkedList<KThread> _mutexWaiters;
         private LinkedListNode<KThread> _mutexWaiterNode;
 
         public KThread MutexOwner { get; private set; }
@@ -65,24 +66,28 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public KernelResult ObjSyncResult { get; set; }
 
         public int DynamicPriority { get; set; }
-        public int CurrentCore     { get; set; }
-        public int BasePriority    { get; set; }
-        public int PreferredCore   { get; set; }
+        public int CurrentCore { get; set; }
+        public int BasePriority { get; set; }
+        public int PreferredCore { get; set; }
 
         private long _affinityMaskOverride;
-        private int  _preferredCoreOverride;
+        private int _preferredCoreOverride;
 #pragma warning disable CS0649
-        private int  _affinityOverrideCount;
+        private int _affinityOverrideCount;
 #pragma warning restore CS0649
 
         public ThreadSchedState SchedFlags { get; private set; }
 
         private int _shallBeTerminated;
 
-        public bool ShallBeTerminated { get => _shallBeTerminated != 0; set => _shallBeTerminated = value ? 1 : 0; }
+        public bool ShallBeTerminated
+        {
+            get => _shallBeTerminated != 0;
+            set => _shallBeTerminated = value ? 1 : 0;
+        }
 
         public bool SyncCancelled { get; set; }
-        public bool WaitingSync   { get; set; }
+        public bool WaitingSync { get; set; }
 
         private bool _hasExited;
         private bool _hasBeenInitialized;
@@ -98,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KThread(KernelContext context) : base(context)
         {
-            _scheduler      = KernelContext.Scheduler;
+            _scheduler = KernelContext.Scheduler;
             _schedulingData = KernelContext.Scheduler.SchedulingData;
 
             WaitSyncObjects = new KSynchronizationObject[MaxWaitSyncObjects];
@@ -110,14 +115,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         }
 
         public KernelResult Initialize(
-            ulong      entrypoint,
-            ulong      argsPtr,
-            ulong      stackTop,
-            int        priority,
-            int        defaultCpuCore,
-            KProcess   owner,
-            ThreadType type = ThreadType.User,
-            ThreadStart customHostThreadStart = null)
+            ulong entrypoint,
+            ulong argsPtr,
+            ulong stackTop,
+            int priority,
+            int defaultCpuCore,
+            KProcess owner,
+            ThreadType type,
+            ThreadStart customThreadStart = null)
         {
             if ((uint)type > 3)
             {
@@ -135,11 +140,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             CurrentCore = PreferredCore;
 
             DynamicPriority = priority;
-            BasePriority    = priority;
+            BasePriority = priority;
 
             ObjSyncResult = KernelResult.ThreadNotStarted;
 
             _entrypoint = entrypoint;
+            _customThreadStart = customThreadStart;
 
             if (type == ThreadType.User)
             {
@@ -162,18 +168,18 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 owner.IncrementReferenceCount();
                 owner.IncrementThreadCount();
 
-                is64Bits = (owner.MmuFlags & 1) != 0;
+                is64Bits = owner.Flags.HasFlag(ProcessCreationFlags.Is64Bit);
             }
             else
             {
                 is64Bits = true;
             }
 
-            HostThread = new Thread(customHostThreadStart ?? (() => ThreadStart(entrypoint)));
+            HostThread = new Thread(ThreadStart);
 
             Context = CpuContext.CreateExecutionContext();
 
-            bool isAarch32 = (Owner.MmuFlags & 1) == 0;
+            bool isAarch32 = !Owner.Flags.HasFlag(ProcessCreationFlags.Is64Bit);
 
             Context.IsAarch32 = isAarch32;
 
@@ -189,7 +195,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
 
             Context.CntfrqEl0 = 19200000;
-            Context.Tpidr     = (long)_tlsAddress;
+            Context.Tpidr = (long)_tlsAddress;
 
             owner.SubscribeThreadEventHandlers(Context);
 
@@ -249,7 +255,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 KThread currentThread = KernelContext.Scheduler.GetCurrentThread();
 
-                while (SchedFlags               != ThreadSchedState.TerminationPending &&
+                while (SchedFlags != ThreadSchedState.TerminationPending &&
                        currentThread.SchedFlags != ThreadSchedState.TerminationPending &&
                        !currentThread.ShallBeTerminated)
                 {
@@ -351,7 +357,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         Context.RequestInterrupt();
                     }
 
-                    SignaledObj   = null;
+                    SignaledObj = null;
                     ObjSyncResult = KernelResult.ThreadTerminating;
 
                     ReleaseAndResume();
@@ -524,7 +530,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     // If the candidate was scheduled after the current thread, then it's not worth it,
                     // unless the priority is higher than the current one.
                     if (nextThreadOnCurrentQueue.LastScheduledTime >= thread.LastScheduledTime ||
-                        nextThreadOnCurrentQueue.DynamicPriority    <  thread.DynamicPriority)
+                        nextThreadOnCurrentQueue.DynamicPriority < thread.DynamicPriority)
                     {
                         yield return thread;
                     }
@@ -701,7 +707,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
             else
             {
-                SignaledObj   = null;
+                SignaledObj = null;
                 ObjSyncResult = KernelResult.Cancelled;
 
                 SetNewSchedFlags(ThreadSchedState.Running);
@@ -734,14 +740,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             if (useOverride)
             {
                 _preferredCoreOverride = newCore;
-                _affinityMaskOverride  = newAffinityMask;
+                _affinityMaskOverride = newAffinityMask;
             }
             else
             {
                 long oldAffinityMask = AffinityMask;
 
                 PreferredCore = newCore;
-                AffinityMask  = newAffinityMask;
+                AffinityMask = newAffinityMask;
 
                 if (oldAffinityMask != newAffinityMask)
                 {
@@ -783,7 +789,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void CombineForcePauseFlags()
         {
-            ThreadSchedState oldFlags  = SchedFlags;
+            ThreadSchedState oldFlags = SchedFlags;
             ThreadSchedState lowNibble = SchedFlags & ThreadSchedState.LowMask;
 
             SchedFlags = lowNibble | _forcePauseFlags;
@@ -1143,19 +1149,23 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
         }
 
-        private void ThreadStart(ulong entrypoint)
+        private void ThreadStart()
         {
-            Owner.CpuContext.Execute(Context, entrypoint);
+            KernelStatic.SetKernelContext(KernelContext);
 
-            ThreadExit();
+            if (_customThreadStart != null)
+            {
+                _customThreadStart();
+            }
+            else
+            {
+                Owner.Context.Execute(Context, _entrypoint);
+            }
 
-            Context.Dispose();
-        }
-
-        private void ThreadExit()
-        {
             KernelContext.Scheduler.ExitThread(this);
             KernelContext.Scheduler.RemoveThread(this);
+
+            Context.Dispose();
         }
 
         public bool IsCurrentHostThread()
@@ -1203,9 +1213,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             // Wake up all threads that may be waiting for a mutex being held by this thread.
             foreach (KThread thread in _mutexWaiters)
             {
-                thread.MutexOwner             = null;
+                thread.MutexOwner = null;
                 thread._preferredCoreOverride = 0;
-                thread.ObjSyncResult          = KernelResult.InvalidState;
+                thread.ObjSyncResult = KernelResult.InvalidState;
 
                 thread.ReleaseAndResume();
             }

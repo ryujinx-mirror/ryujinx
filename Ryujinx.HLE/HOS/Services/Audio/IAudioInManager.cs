@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Cpu;
+using Ryujinx.Memory;
 using System;
 using System.Text;
 
@@ -57,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        private uint ListAudioInsImpl(MemoryManager memory, long bufferPosition, long bufferSize, bool filtered = false)
+        private uint ListAudioInsImpl(IVirtualMemoryManager memory, long bufferPosition, long bufferSize, bool filtered = false)
         {
             uint count = 0;
 

@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             Device = device;
             Memory = memory;
 
-            Syscall = new Syscall(device, this);
+            Syscall = new Syscall(this);
 
             SyscallHandler = new SyscallHandler(this);
 

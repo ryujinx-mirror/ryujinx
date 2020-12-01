@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types;
 using System;
@@ -40,11 +40,13 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         private KEvent _waitBufferFreeEvent;
         private KEvent _frameAvailableEvent;
 
-        public KProcess Owner { get; }
+        public long Owner { get; }
+
+        public bool Active { get; private set; }
 
         public const int BufferHistoryArraySize = 8;
 
-        public BufferQueueCore(Switch device, KProcess process)
+        public BufferQueueCore(Switch device, long pid)
         {
             Slots                    = new BufferSlotArray();
             IsAbandoned              = false;
@@ -70,7 +72,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             _waitBufferFreeEvent  = new KEvent(device.System.KernelContext);
             _frameAvailableEvent = new KEvent(device.System.KernelContext);
 
-            Owner = process;
+            Owner = pid;
+
+            Active = true;
 
             BufferHistory        = new BufferInfo[BufferHistoryArraySize];
             EnableExternalEvent  = true;
@@ -162,6 +166,16 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
         }
 
+        public void PrepareForExit()
+        {
+            lock (Lock)
+            {
+                Active = false;
+
+                Monitor.PulseAll(Lock);
+            }
+        }
+
         // TODO: Find an accurate way to handle a regular condvar here as this will wake up unwanted threads in some edge cases.
         public void SignalDequeueEvent()
         {
@@ -170,7 +184,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void WaitDequeueEvent()
         {
-            Monitor.Wait(Lock);
+            Monitor.Exit(Lock);
+
+            KernelStatic.YieldUntilCompletion(WaitForLock);
+
+            Monitor.Enter(Lock);
         }
 
         public void SignalIsAllocatingEvent()
@@ -180,7 +198,22 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void WaitIsAllocatingEvent()
         {
-            Monitor.Wait(Lock);
+            Monitor.Exit(Lock);
+
+            KernelStatic.YieldUntilCompletion(WaitForLock);
+
+            Monitor.Enter(Lock);
+        }
+
+        private void WaitForLock()
+        {
+            lock (Lock)
+            {
+                if (Active)
+                {
+                    Monitor.Wait(Lock);
+                }
+            }
         }
 
         public void FreeBufferLocked(int slot)

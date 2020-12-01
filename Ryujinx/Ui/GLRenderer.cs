@@ -33,9 +33,9 @@ namespace Ryujinx.Ui
 
         public static event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
-        public bool IsActive   { get; set; }
-        public bool IsStopped  { get; set; }
-        public bool IsFocused  { get; set; }
+        private bool _isActive;
+        private bool _isStopped;
+        private bool _isFocused;
 
         private double _mouseX;
         private double _mouseY;
@@ -48,9 +48,9 @@ namespace Ryujinx.Ui
 
         private long _ticks = 0;
 
-        private System.Diagnostics.Stopwatch _chrono;
+        private readonly System.Diagnostics.Stopwatch _chrono;
 
-        private Switch _device;
+        private readonly Switch _device;
 
         private Renderer _renderer;
 
@@ -60,11 +60,13 @@ namespace Ryujinx.Ui
 
         private GraphicsDebugLevel _glLogLevel;
 
+        private readonly ManualResetEvent _exitEvent;
+
         public GlRenderer(Switch device, GraphicsDebugLevel glLogLevel)
             : base (GetGraphicsMode(),
             3, 3,
-            glLogLevel == GraphicsDebugLevel.None 
-            ? GraphicsContextFlags.ForwardCompatible 
+            glLogLevel == GraphicsDebugLevel.None
+            ? GraphicsContextFlags.ForwardCompatible
             : GraphicsContextFlags.ForwardCompatible | GraphicsContextFlags.Debug)
         {
             WaitEvent = new ManualResetEvent(false);
@@ -92,6 +94,8 @@ namespace Ryujinx.Ui
             _dsuClient = new Client();
 
             _glLogLevel = glLogLevel;
+
+            _exitEvent = new ManualResetEvent(false);
         }
 
         private static GraphicsMode GetGraphicsMode()
@@ -107,12 +111,12 @@ namespace Ryujinx.Ui
 
         private void Parent_FocusOutEvent(object o, Gtk.FocusOutEventArgs args)
         {
-            IsFocused = false;
+            _isFocused = false;
         }
 
         private void Parent_FocusInEvent(object o, Gtk.FocusInEventArgs args)
         {
-            IsFocused = true;
+            _isFocused = true;
         }
 
         private void GLRenderer_Destroyed(object sender, EventArgs e)
@@ -123,7 +127,7 @@ namespace Ryujinx.Ui
 
         protected void Renderer_Shown(object sender, EventArgs e)
         {
-            IsFocused = this.ParentWindow.State.HasFlag(Gdk.WindowState.Focused);
+            _isFocused = this.ParentWindow.State.HasFlag(Gdk.WindowState.Focused);
         }
 
         public void HandleScreenState(KeyboardState keyboard)
@@ -204,7 +208,7 @@ namespace Ryujinx.Ui
 
             _chrono.Restart();
 
-            IsActive = true;
+            _isActive = true;
 
             Gtk.Window parent = this.Toplevel as Gtk.Window;
 
@@ -316,13 +320,17 @@ namespace Ryujinx.Ui
         public void Exit()
         {
             _dsuClient?.Dispose();
-            if (IsStopped)
+
+            if (_isStopped)
             {
                 return;
             }
 
-            IsStopped = true;
-            IsActive  = false;
+            _isStopped = true;
+            _isActive  = false;
+
+            _exitEvent.WaitOne();
+            _exitEvent.Dispose();
         }
 
         public void Initialize()
@@ -353,9 +361,9 @@ namespace Ryujinx.Ui
             _device.Gpu.InitializeShaderCache();
             Translator.IsReadyForTranslation.Set();
 
-            while (IsActive)
+            while (_isActive)
             {
-                if (IsStopped)
+                if (_isStopped)
                 {
                     return;
                 }
@@ -401,28 +409,30 @@ namespace Ryujinx.Ui
 
         public void MainLoop()
         {
-            while (IsActive)
+            while (_isActive)
             {
                 UpdateFrame();
 
                 // Polling becomes expensive if it's not slept
                 Thread.Sleep(1);
             }
+
+            _exitEvent.Set();
         }
 
         private bool UpdateFrame()
         {
-            if (!IsActive)
+            if (!_isActive)
             {
                 return true;
             }
 
-            if (IsStopped)
+            if (_isStopped)
             {
                 return false;
             }
 
-            if (IsFocused)
+            if (_isFocused)
             {
                 Gtk.Application.Invoke(delegate
                 {
@@ -444,7 +454,7 @@ namespace Ryujinx.Ui
             List<SixAxisInput> motionInputs  = new List<SixAxisInput>(NpadDevices.MaxControllers);
 
             MotionDevice motionDevice = new MotionDevice(_dsuClient);
-            
+
             foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
             {
                 ControllerKeys   currentButton = 0;
@@ -464,7 +474,7 @@ namespace Ryujinx.Ui
 
                 if (inputConfig is KeyboardConfig keyboardConfig)
                 {
-                    if (IsFocused)
+                    if (_isFocused)
                     {
                         // Keyboard Input
                         KeyboardController keyboardController = new KeyboardController(keyboardConfig);
@@ -571,11 +581,11 @@ namespace Ryujinx.Ui
                     motionInputs.Add(sixAxisInput);
                 }
             }
-            
+
             _device.Hid.Npads.Update(gamepadInputs);
             _device.Hid.Npads.UpdateSixAxis(motionInputs);
 
-            if(IsFocused)
+            if(_isFocused)
             {
                 // Hotkeys
                 HotkeyButtons currentHotkeyButtons = KeyboardController.GetHotkeyButtons(OpenTK.Input.Keyboard.GetState());
@@ -594,7 +604,7 @@ namespace Ryujinx.Ui
 
             // Get screen touch position from left mouse click
             // OpenTK always captures mouse events, even if out of focus, so check if window is focused.
-            if (IsFocused && _mousePressed)
+            if (_isFocused && _mousePressed)
             {
                 int screenWidth  = AllocatedWidth;
                 int screenHeight = AllocatedHeight;

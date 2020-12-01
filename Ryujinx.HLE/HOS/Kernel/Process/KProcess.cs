@@ -6,6 +6,7 @@ using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +16,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     class KProcess : KSynchronizationObject
     {
-        public const int KernelVersionMajor    = 10;
-        public const int KernelVersionMinor    = 4;
+        public const int KernelVersionMajor = 10;
+        public const int KernelVersionMinor = 4;
         public const int KernelVersionRevision = 0;
 
         public const int KernelVersionPacked =
-            (KernelVersionMajor    << 19) |
-            (KernelVersionMinor    << 15) |
+            (KernelVersionMajor << 19) |
+            (KernelVersionMinor << 15) |
             (KernelVersionRevision << 0);
 
         public KMemoryManager MemoryManager { get; private set; }
@@ -47,27 +48,27 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public long[] RandomEntropy { get; private set; }
 
         private bool _signaled;
-        private bool _useSystemMemBlocks;
 
         public string Name { get; private set; }
 
         private int _threadCount;
 
-        public int MmuFlags { get; private set; }
+        public ProcessCreationFlags Flags { get; private set; }
 
         private MemoryRegion _memRegion;
 
         public KProcessCapabilities Capabilities { get; private set; }
 
         public ulong TitleId { get; private set; }
-        public long  Pid     { get; private set; }
+        public long Pid { get; private set; }
 
-        private long  _creationTimestamp;
+        private long _creationTimestamp;
         private ulong _entrypoint;
+        private ThreadStart _customThreadStart;
         private ulong _imageSize;
         private ulong _mainThreadStackSize;
         private ulong _memoryUsageCapacity;
-        private int   _version;
+        private int _version;
 
         public KHandleTable HandleTable { get; private set; }
 
@@ -77,14 +78,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public bool IsPaused { get; private set; }
 
-        public MemoryManager CpuMemory { get; private set; }
-        public CpuContext CpuContext { get; private set; }
+        private IProcessContextFactory _contextFactory;
+        public IProcessContext Context { get; private set; }
+        public IVirtualMemoryManager CpuMemory => Context.AddressSpace;
 
         public HleProcessDebugger Debugger { get; private set; }
 
         public KProcess(KernelContext context) : base(context)
         {
-            _processLock   = new object();
+            _processLock = new object();
             _threadingLock = new object();
 
             AddressArbiter = new KAddressArbiter(context);
@@ -96,6 +98,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             RandomEntropy = new long[KScheduler.CpuCoresCount];
 
+            // TODO: Remove once we no longer need to initialize it externally.
+            HandleTable = new KHandleTable(context);
+
             _threads = new LinkedList<KThread>();
 
             Debugger = new HleProcessDebugger(this);
@@ -103,25 +108,27 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KernelResult InitializeKip(
             ProcessCreationInfo creationInfo,
-            int[]               caps,
-            KPageList           pageList,
-            KResourceLimit      resourceLimit,
-            MemoryRegion        memRegion)
+            ReadOnlySpan<int> capabilities,
+            KPageList pageList,
+            KResourceLimit resourceLimit,
+            MemoryRegion memRegion,
+            IProcessContextFactory contextFactory)
         {
             ResourceLimit = resourceLimit;
-            _memRegion     = memRegion;
+            _memRegion = memRegion;
+            _contextFactory = contextFactory ?? new ProcessContextFactory();
 
-            AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
+            AddressSpaceType addrSpaceType = (AddressSpaceType)((int)(creationInfo.Flags & ProcessCreationFlags.AddressSpaceMask) >> (int)ProcessCreationFlags.AddressSpaceShift);
 
-            InitializeMemoryManager(addrSpaceType, memRegion);
+            InitializeMemoryManager(creationInfo.Flags);
 
-            bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
+            bool aslrEnabled = creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr);
 
             ulong codeAddress = creationInfo.CodeAddress;
 
             ulong codeSize = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;
 
-            KMemoryBlockAllocator memoryBlockAllocator = (MmuFlags & 0x40) != 0
+            KMemoryBlockAllocator memoryBlockAllocator = creationInfo.Flags.HasFlag(ProcessCreationFlags.IsApplication)
                 ? KernelContext.LargeMemoryBlockAllocator
                 : KernelContext.SmallMemoryBlockAllocator;
 
@@ -139,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return result;
             }
 
-            if (!ValidateCodeAddressAndSize(codeAddress, codeSize))
+            if (!MemoryManager.CanContain(codeAddress, codeSize, MemoryState.CodeStatic))
             {
                 return KernelResult.InvalidMemRange;
             }
@@ -148,14 +155,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 codeAddress,
                 pageList,
                 MemoryState.CodeStatic,
-                MemoryPermission.None);
+                KMemoryPermission.None);
 
             if (result != KernelResult.Success)
             {
                 return result;
             }
 
-            result = Capabilities.InitializeForKernel(caps, MemoryManager);
+            result = Capabilities.InitializeForKernel(capabilities, MemoryManager);
 
             if (result != KernelResult.Success)
             {
@@ -176,14 +183,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KernelResult Initialize(
             ProcessCreationInfo creationInfo,
-            int[]               caps,
-            KResourceLimit      resourceLimit,
-            MemoryRegion        memRegion)
+            ReadOnlySpan<int> capabilities,
+            KResourceLimit resourceLimit,
+            MemoryRegion memRegion,
+            IProcessContextFactory contextFactory,
+            ThreadStart customThreadStart = null)
         {
             ResourceLimit = resourceLimit;
-            _memRegion    = memRegion;
+            _memRegion = memRegion;
+            _contextFactory = contextFactory ?? new ProcessContextFactory();
 
-            ulong personalMmHeapSize = GetPersonalMmHeapSize((ulong)creationInfo.PersonalMmHeapPagesCount, memRegion);
+            ulong personalMmHeapSize = GetPersonalMmHeapSize((ulong)creationInfo.SystemResourcePagesCount, memRegion);
 
             ulong codePagesCount = (ulong)creationInfo.CodePagesCount;
 
@@ -205,7 +215,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
-            PersonalMmHeapPagesCount = (ulong)creationInfo.PersonalMmHeapPagesCount;
+            PersonalMmHeapPagesCount = (ulong)creationInfo.SystemResourcePagesCount;
 
             KMemoryBlockAllocator memoryBlockAllocator;
 
@@ -215,16 +225,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
             else
             {
-                memoryBlockAllocator = (MmuFlags & 0x40) != 0
+                memoryBlockAllocator = creationInfo.Flags.HasFlag(ProcessCreationFlags.IsApplication)
                     ? KernelContext.LargeMemoryBlockAllocator
                     : KernelContext.SmallMemoryBlockAllocator;
             }
 
-            AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
+            AddressSpaceType addrSpaceType = (AddressSpaceType)((int)(creationInfo.Flags & ProcessCreationFlags.AddressSpaceMask) >> (int)ProcessCreationFlags.AddressSpaceShift);
 
-            InitializeMemoryManager(addrSpaceType, memRegion);
+            InitializeMemoryManager(creationInfo.Flags);
 
-            bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
+            bool aslrEnabled = creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr);
 
             ulong codeAddress = creationInfo.CodeAddress;
 
@@ -246,7 +256,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return result;
             }
 
-            if (!ValidateCodeAddressAndSize(codeAddress, codeSize))
+            if (!MemoryManager.CanContain(codeAddress, codeSize, MemoryState.CodeStatic))
             {
                 CleanUpForError();
 
@@ -257,7 +267,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 codeAddress,
                 codePagesCount,
                 MemoryState.CodeStatic,
-                MemoryPermission.None);
+                KMemoryPermission.None);
 
             if (result != KernelResult.Success)
             {
@@ -266,7 +276,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return result;
             }
 
-            result = Capabilities.InitializeForUser(caps, MemoryManager);
+            result = Capabilities.InitializeForUser(capabilities, MemoryManager);
 
             if (result != KernelResult.Success)
             {
@@ -289,57 +299,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 CleanUpForError();
             }
 
+            _customThreadStart = customThreadStart;
+
             return result;
-        }
-
-        private bool ValidateCodeAddressAndSize(ulong address, ulong size)
-        {
-            ulong codeRegionStart;
-            ulong codeRegionSize;
-
-            switch (MemoryManager.AddrSpaceWidth)
-            {
-                case 32:
-                    codeRegionStart = 0x200000;
-                    codeRegionSize  = 0x3fe00000;
-                    break;
-
-                case 36:
-                    codeRegionStart = 0x8000000;
-                    codeRegionSize  = 0x78000000;
-                    break;
-
-                case 39:
-                    codeRegionStart = 0x8000000;
-                    codeRegionSize  = 0x7ff8000000;
-                    break;
-
-                default: throw new InvalidOperationException("Invalid address space width on memory manager.");
-            }
-
-            ulong endAddr = address + size;
-
-            ulong codeRegionEnd = codeRegionStart + codeRegionSize;
-
-            if (endAddr     <= address ||
-                endAddr - 1 >  codeRegionEnd - 1)
-            {
-                return false;
-            }
-
-            if (MemoryManager.InsideHeapRegion (address, size) ||
-                MemoryManager.InsideAliasRegion(address, size))
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private KernelResult ParseProcessInfo(ProcessCreationInfo creationInfo)
         {
             // Ensure that the current kernel version is equal or above to the minimum required.
-            uint requiredKernelVersionMajor =  (uint)Capabilities.KernelReleaseVersion >> 19;
+            uint requiredKernelVersionMajor = (uint)Capabilities.KernelReleaseVersion >> 19;
             uint requiredKernelVersionMinor = ((uint)Capabilities.KernelReleaseVersion >> 15) & 0xf;
 
             if (KernelContext.EnableVersionChecks)
@@ -377,31 +345,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             _creationTimestamp = PerformanceCounter.ElapsedMilliseconds;
 
-            MmuFlags    = creationInfo.MmuFlags;
-            _version   = creationInfo.Version;
-            TitleId     = creationInfo.TitleId;
+            Flags = creationInfo.Flags;
+            _version = creationInfo.Version;
+            TitleId = creationInfo.TitleId;
             _entrypoint = creationInfo.CodeAddress;
-            _imageSize  = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;
+            _imageSize = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;
 
-            _useSystemMemBlocks = ((MmuFlags >> 6) & 1) != 0;
-
-            switch ((AddressSpaceType)((MmuFlags >> 1) & 7))
+            switch (Flags & ProcessCreationFlags.AddressSpaceMask)
             {
-                case AddressSpaceType.Addr32Bits:
-                case AddressSpaceType.Addr36Bits:
-                case AddressSpaceType.Addr39Bits:
+                case ProcessCreationFlags.AddressSpace32Bit:
+                case ProcessCreationFlags.AddressSpace64BitDeprecated:
+                case ProcessCreationFlags.AddressSpace64Bit:
                     _memoryUsageCapacity = MemoryManager.HeapRegionEnd -
                                            MemoryManager.HeapRegionStart;
                     break;
 
-                case AddressSpaceType.Addr32BitsNoMap:
+                case ProcessCreationFlags.AddressSpace32BitWithoutAlias:
                     _memoryUsageCapacity = MemoryManager.HeapRegionEnd -
                                            MemoryManager.HeapRegionStart +
                                            MemoryManager.AliasRegionEnd -
                                            MemoryManager.AliasRegionStart;
                     break;
 
-                default: throw new InvalidOperationException($"Invalid MMU flags value 0x{MmuFlags:x2}.");
+                default: throw new InvalidOperationException($"Invalid MMU flags value 0x{Flags:x2}.");
             }
 
             GenerateRandomEntropy();
@@ -469,7 +435,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
 
             ulong regionStart = MemoryManager.TlsIoRegionStart;
-            ulong regionSize  = MemoryManager.TlsIoRegionEnd - regionStart;
+            ulong regionSize = MemoryManager.TlsIoRegionEnd - regionStart;
 
             ulong regionPagesCount = regionSize / KMemoryManager.PageSize;
 
@@ -481,7 +447,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 regionStart,
                 regionPagesCount,
                 MemoryState.ThreadLocal,
-                MemoryPermission.ReadAndWrite,
+                KMemoryPermission.ReadAndWrite,
                 out ulong tlsPageVa);
 
             if (result != KernelResult.Success)
@@ -506,7 +472,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             KernelResult result = KernelResult.Success;
 
-            KTlsPageInfo pageInfo = null;
+            KTlsPageInfo pageInfo;
 
             if (_fullTlsPages.TryGetValue(tlsPageAddr, out pageInfo))
             {
@@ -594,8 +560,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 // Check if the needed size for the code and the stack will fit on the
                 // memory usage capacity of this Process. Also check for possible overflow
                 // on the above addition.
-                if (neededSize > _memoryUsageCapacity ||
-                    neededSize < stackSizeRounded)
+                if (neededSize > _memoryUsageCapacity || neededSize < stackSizeRounded)
                 {
                     threadResourceLimit?.Release(LimitableResource.Thread, 1);
 
@@ -646,7 +611,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     ulong stackPagesCount = stackSizeRounded / KMemoryManager.PageSize;
 
                     ulong regionStart = MemoryManager.StackRegionStart;
-                    ulong regionSize  = MemoryManager.StackRegionEnd - regionStart;
+                    ulong regionSize = MemoryManager.StackRegionEnd - regionStart;
 
                     ulong regionPagesCount = regionSize / KMemoryManager.PageSize;
 
@@ -658,7 +623,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                         regionStart,
                         regionPagesCount,
                         MemoryState.Stack,
-                        MemoryPermission.ReadAndWrite,
+                        KMemoryPermission.ReadAndWrite,
                         out ulong stackBottom);
 
                     if (result != KernelResult.Success)
@@ -703,7 +668,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     stackTop,
                     mainThreadPriority,
                     DefaultCpuCore,
-                    this);
+                    this,
+                    ThreadType.User,
+                    _customThreadStart);
 
                 if (result != KernelResult.Success)
                 {
@@ -730,20 +697,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 SetState(newState);
 
-                // TODO: We can't call KThread.Start from a non-guest thread.
-                // We will need to make some changes to allow the creation of
-                // dummy threads that will be used to initialize the current
-                // thread on KCoreContext so that GetCurrentThread doesn't fail.
-                /* Result = MainThread.Start();
+                result = mainThread.Start();
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
-                    SetState(OldState);
+                    SetState(oldState);
 
                     CleanUpForError();
-                } */
-
-                mainThread.Reschedule(ThreadSchedState.Running);
+                }
 
                 if (result == KernelResult.Success)
                 {
@@ -760,7 +721,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             if (State != newState)
             {
-                State     = newState;
+                State = newState;
                 _signaled = true;
 
                 Signal();
@@ -769,23 +730,23 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KernelResult InitializeThread(
             KThread thread,
-            ulong   entrypoint,
-            ulong   argsPtr,
-            ulong   stackTop,
-            int     priority,
-            int     cpuCore)
+            ulong entrypoint,
+            ulong argsPtr,
+            ulong stackTop,
+            int priority,
+            int cpuCore)
         {
             lock (_processLock)
             {
-                return thread.Initialize(entrypoint, argsPtr, stackTop, priority, cpuCore, this);
+                return thread.Initialize(entrypoint, argsPtr, stackTop, priority, cpuCore, this, ThreadType.User, null);
             }
         }
 
         public void SubscribeThreadEventHandlers(ARMeilleure.State.ExecutionContext context)
         {
-            context.Interrupt      += InterruptHandler;
+            context.Interrupt += InterruptHandler;
             context.SupervisorCall += KernelContext.SyscallHandler.SvcCall;
-            context.Undefined      += UndefinedInstructionHandler;
+            context.Undefined += UndefinedInstructionHandler;
         }
 
         private void InterruptHandler(object sender, EventArgs e)
@@ -910,8 +871,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             {
                 if (State >= ProcessState.Started)
                 {
-                    if (State == ProcessState.Started  ||
-                        State == ProcessState.Crashed  ||
+                    if (State == ProcessState.Started ||
+                        State == ProcessState.Crashed ||
                         State == ProcessState.Attached ||
                         State == ProcessState.DebugSuspended)
                     {
@@ -1072,23 +1033,25 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return result;
         }
 
-        private void InitializeMemoryManager(AddressSpaceType addrSpaceType, MemoryRegion memRegion)
+        private void InitializeMemoryManager(ProcessCreationFlags flags)
         {
-            int addrSpaceBits = addrSpaceType switch
+            int addrSpaceBits = (flags & ProcessCreationFlags.AddressSpaceMask) switch
             {
-                AddressSpaceType.Addr32Bits => 32,
-                AddressSpaceType.Addr36Bits => 36,
-                AddressSpaceType.Addr32BitsNoMap => 32,
-                AddressSpaceType.Addr39Bits => 39,
-                _ => throw new ArgumentException(nameof(addrSpaceType))
+                ProcessCreationFlags.AddressSpace32Bit => 32,
+                ProcessCreationFlags.AddressSpace64BitDeprecated => 36,
+                ProcessCreationFlags.AddressSpace32BitWithoutAlias => 32,
+                ProcessCreationFlags.AddressSpace64Bit => 39,
+                _ => 39
             };
 
-            CpuMemory = new MemoryManager(KernelContext.Memory, 1UL << addrSpaceBits, InvalidAccessHandler);
-            CpuContext = new CpuContext(CpuMemory);
+            Context = _contextFactory.Create(KernelContext.Memory, 1UL << addrSpaceBits, InvalidAccessHandler);
 
             // TODO: This should eventually be removed.
             // The GPU shouldn't depend on the CPU memory manager at all.
-            KernelContext.Device.Gpu.SetVmm(CpuMemory);
+            if (flags.HasFlag(ProcessCreationFlags.IsApplication))
+            {
+                KernelContext.Device.Gpu.SetVmm((MemoryManager)CpuMemory);
+            }
 
             MemoryManager = new KMemoryManager(KernelContext, CpuMemory);
         }
@@ -1109,9 +1072,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             throw new UndefinedInstructionException(e.Address, e.OpCode);
         }
 
-        protected override void Destroy()
-        {
-            CpuMemory.Dispose();
-        }
+        protected override void Destroy() => Context.Dispose();
     }
 }

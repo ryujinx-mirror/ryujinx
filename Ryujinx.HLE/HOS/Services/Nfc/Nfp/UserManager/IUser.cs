@@ -103,98 +103,98 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // StartDetection(bytes<8, 4>)
         public ResultCode StartDetection(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(4)]
         // StopDetection(bytes<8, 4>)
         public ResultCode StopDetection(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(5)]
         // Mount(bytes<8, 4>, u32, u32)
         public ResultCode Mount(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(6)]
         // Unmount(bytes<8, 4>)
         public ResultCode Unmount(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(7)]
         // OpenApplicationArea(bytes<8, 4>, u32)
         public ResultCode OpenApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(8)]
         // GetApplicationArea(bytes<8, 4>) -> (u32, buffer<unknown, 6>)
         public ResultCode GetApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(9)]
         // SetApplicationArea(bytes<8, 4>, buffer<unknown, 5>)
         public ResultCode SetApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(10)]
         // Flush(bytes<8, 4>)
         public ResultCode Flush(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(11)]
         // Restore(bytes<8, 4>)
         public ResultCode Restore(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(12)]
         // CreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode CreateApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(13)]
         // GetTagInfo(bytes<8, 4>) -> buffer<unknown<0x58>, 0x1a>
         public ResultCode GetTagInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(14)]
         // GetRegisterInfo(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
         public ResultCode GetRegisterInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(15)]
         // GetCommonInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetCommonInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(16)]
         // GetModelInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetModelInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(17)]
@@ -308,7 +308,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // GetApplicationAreaSize(bytes<8, 4>) -> u32
         public ResultCode GetApplicationAreaSize(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [Command(23)] // 3.0.0+
@@ -334,7 +334,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // RecreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(context);
+            throw new ServiceNotImplementedException(this, context);
         }
     }
 }

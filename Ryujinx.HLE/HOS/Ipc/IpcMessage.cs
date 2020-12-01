@@ -84,6 +84,11 @@ namespace Ryujinx.HLE.HOS.Ipc
 
             long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);
 
+            if (rawDataSize != 0)
+            {
+                rawDataSize -= (int)pad0;
+            }
+
             reader.BaseStream.Seek(pad0, SeekOrigin.Current);
 
             int recvListCount = recvListFlags - 2;
@@ -107,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Ipc
             }
         }
 
-        public byte[] GetBytes(long cmdPtr)
+        public byte[] GetBytes(long cmdPtr, ulong recvListAddr)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -131,7 +136,11 @@ namespace Ryujinx.HLE.HOS.Ipc
 
                 int dataLength = RawData?.Length ?? 0;
 
-                int pad0 = (int)GetPadSize16(cmdPtr + 8 + handleData.Length);
+                dataLength = (dataLength + 3) & ~3;
+
+                int rawLength = dataLength;
+
+                int pad0 = (int)GetPadSize16(cmdPtr + 8 + handleData.Length + PtrBuff.Count * 8);
 
                 // Apparently, padding after Raw Data is 16 bytes, however when there is
                 // padding before Raw Data too, we need to subtract the size of this padding.
@@ -140,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Ipc
 
                 dataLength = (dataLength + pad0 + pad1) / 4;
 
-                word1 = dataLength & 0x3ff;
+                word1 = (dataLength & 0x3ff) | (2 << 10);
 
                 if (HandleDesc != null)
                 {
@@ -151,14 +160,22 @@ namespace Ryujinx.HLE.HOS.Ipc
                 writer.Write(word1);
                 writer.Write(handleData);
 
+                for (int index = 0; index < PtrBuff.Count; index++)
+                {
+                    writer.Write(PtrBuff[index].GetWord0());
+                    writer.Write(PtrBuff[index].GetWord1());
+                }
+
                 ms.Seek(pad0, SeekOrigin.Current);
 
                 if (RawData != null)
                 {
                     writer.Write(RawData);
+                    ms.Seek(rawLength - RawData.Length, SeekOrigin.Current);
                 }
 
                 writer.Write(new byte[pad1]);
+                writer.Write(recvListAddr);
 
                 return ms.ToArray();
             }

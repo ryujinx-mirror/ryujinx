@@ -816,6 +816,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     }
 
                     Core.WaitDequeueEvent();
+
+                    if (!Core.Active)
+                    {
+                        break;
+                    }
                 }
             }
 

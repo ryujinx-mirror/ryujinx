@@ -22,12 +22,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult SendSyncRequest64([R(0)] int handle)
         {
-            return _syscall.SendSyncRequestHLE(handle);
+            return _syscall.SendSyncRequest(handle);
         }
 
         public KernelResult SendSyncRequestWithUserBuffer64([R(0)] ulong messagePtr, [R(1)] ulong messageSize, [R(2)] int handle)
         {
-            return _syscall.SendSyncRequestWithUserBufferHLE(messagePtr, messageSize, handle);
+            return _syscall.SendSyncRequestWithUserBuffer(messagePtr, messageSize, handle);
         }
 
         public KernelResult SendAsyncRequestWithUserBuffer64(
@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.QueryMemory(infoPtr, position, out pageInfo);
         }
 
-        public KernelResult MapSharedMemory64([R(0)] int handle, [R(1)] ulong address, [R(2)] ulong size, [R(3)] MemoryPermission permission)
+        public KernelResult MapSharedMemory64([R(0)] int handle, [R(1)] ulong address, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
         {
             return _syscall.MapSharedMemory(handle, address, size, permission);
         }
@@ -146,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public KernelResult CreateTransferMemory64(
             [R(1)] ulong address,
             [R(2)] ulong size,
-            [R(3)] MemoryPermission permission,
+            [R(3)] KMemoryPermission permission,
             [R(1)] out int handle)
         {
             return _syscall.CreateTransferMemory(address, size, permission, out handle);
@@ -172,7 +172,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.UnmapProcessCodeMemory(handle, dst, src, size);
         }
 
-        public KernelResult SetProcessMemoryPermission64([R(0)] int handle, [R(1)] ulong src, [R(2)] ulong size, [R(3)] MemoryPermission permission)
+        public KernelResult SetProcessMemoryPermission64([R(0)] int handle, [R(1)] ulong src, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
         {
             return _syscall.SetProcessMemoryPermission(handle, src, size, permission);
         }

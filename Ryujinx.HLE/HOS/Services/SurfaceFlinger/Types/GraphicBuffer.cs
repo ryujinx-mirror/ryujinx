@@ -42,23 +42,23 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             Buffer = parcel.ReadUnmanagedType<NvGraphicBuffer>();
         }
 
-        public void IncrementNvMapHandleRefCount(KProcess process)
+        public void IncrementNvMapHandleRefCount(long pid)
         {
-            NvMapDeviceFile.IncrementMapRefCount(process, Buffer.NvMapId);
+            NvMapDeviceFile.IncrementMapRefCount(pid, Buffer.NvMapId);
 
             for (int i = 0; i < Buffer.Surfaces.Length; i++)
             {
-                NvMapDeviceFile.IncrementMapRefCount(process, Buffer.Surfaces[i].NvMapHandle);
+                NvMapDeviceFile.IncrementMapRefCount(pid, Buffer.Surfaces[i].NvMapHandle);
             }
         }
 
-        public void DecrementNvMapHandleRefCount(KProcess process)
+        public void DecrementNvMapHandleRefCount(long pid)
         {
-            NvMapDeviceFile.DecrementMapRefCount(process, Buffer.NvMapId);
+            NvMapDeviceFile.DecrementMapRefCount(pid, Buffer.NvMapId);
 
             for (int i = 0; i < Buffer.Surfaces.Length; i++)
             {
-                NvMapDeviceFile.DecrementMapRefCount(process, Buffer.Surfaces[i].NvMapHandle);
+                NvMapDeviceFile.DecrementMapRefCount(pid, Buffer.Surfaces[i].NvMapHandle);
             }
         }
 

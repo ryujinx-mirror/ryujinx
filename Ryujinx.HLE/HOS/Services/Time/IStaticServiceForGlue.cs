@@ -15,10 +15,12 @@ namespace Ryujinx.HLE.HOS.Services.Time
         private IStaticServiceForPsc _inner;
         private TimePermissions      _permissions;
 
-        public IStaticServiceForGlue(ServiceCtx context, TimePermissions permissions) : base(new ServerBase("TimeServer"))
+        public IStaticServiceForGlue(ServiceCtx context, TimePermissions permissions) : base(new ServerBase(context.Device.System.KernelContext, "TimeServer"))
         {
             _permissions = permissions;
             _inner       = new IStaticServiceForPsc(context, permissions);
+            _inner.TrySetServer(Server);
+            _inner.SetParent(this);
         }
 
         [Command(0)]

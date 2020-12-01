@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
         private List<BsdSocket> _sockets = new List<BsdSocket>();
 
-        public IClient(ServiceCtx context, bool isPrivileged)  : base(new ServerBase("BsdServer"))
+        public IClient(ServiceCtx context, bool isPrivileged) : base(new ServerBase(context.Device.System.KernelContext, "BsdServer"))
         {
             _isPrivileged = isPrivileged;
         }
@@ -246,6 +246,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             context.ResponseData.Write(0);
 
             Logger.Stub?.PrintStub(LogClass.ServiceBsd);
+
+            // Close transfer memory immediately as we don't use it.
+            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
 
             return ResultCode.Success;
         }
