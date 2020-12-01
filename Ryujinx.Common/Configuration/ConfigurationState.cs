@@ -448,7 +448,7 @@ namespace Ryujinx.Configuration
         {
             Graphics.ResScale.Value                = 1;
             Graphics.ResScaleCustom.Value          = 1.0f;
-            Graphics.MaxAnisotropy.Value           = -1;
+            Graphics.MaxAnisotropy.Value           = -1.0f;
             Graphics.ShadersDumpPath.Value         = "";
             Logger.EnableDebug.Value               = false;
             Logger.EnableStub.Value                = true;
