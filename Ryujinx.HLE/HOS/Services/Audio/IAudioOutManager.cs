@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         private const int    DefaultSampleRate    = 48000;
         private const int    DefaultChannelsCount = 2;
 
-        public IAudioOutManager(ServiceCtx context) : base(new ServerBase(context.Device.System.KernelContext, "AudioOutServer")) { }
+        public IAudioOutManager(ServiceCtx context) : base(context.Device.System.AudOutServer) { }
 
         [Command(0)]
         // ListAudioOuts() -> (u32 count, buffer<bytes, 6>)

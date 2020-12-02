@@ -14,6 +14,7 @@ using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Arp;
@@ -57,6 +58,16 @@ namespace Ryujinx.HLE.HOS
         internal PerformanceState PerformanceState { get; private set; }
 
         internal AppletStateMgr AppletState { get; private set; }
+
+        internal ServerBase BsdServer { get; private set; }
+        internal ServerBase AudRenServer { get; private set; }
+        internal ServerBase AudOutServer { get; private set; }
+        internal ServerBase HidServer { get; private set; }
+        internal ServerBase NvDrvServer { get; private set; }
+        internal ServerBase TimeServer { get; private set; }
+        internal ServerBase ViServer { get; private set; }
+        internal ServerBase ViServerM { get; private set; }
+        internal ServerBase ViServerS { get; private set; }
 
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
@@ -230,6 +241,16 @@ namespace Ryujinx.HLE.HOS
             // only then doing connections to SM is safe.
             sm.Server.InitDone.WaitOne();
             sm.Server.InitDone.Dispose();
+
+            BsdServer = new ServerBase(KernelContext, "BsdServer");
+            AudRenServer = new ServerBase(KernelContext, "AudioRendererServer");
+            AudOutServer = new ServerBase(KernelContext, "AudioOutServer");
+            HidServer = new ServerBase(KernelContext, "HidServer");
+            NvDrvServer = new ServerBase(KernelContext, "NvservicesServer");
+            TimeServer = new ServerBase(KernelContext, "TimeServer");
+            ViServer = new ServerBase(KernelContext, "ViServerU");
+            ViServerM = new ServerBase(KernelContext, "ViServerM");
+            ViServerS = new ServerBase(KernelContext, "ViServerS");
         }
 
         public void LoadKip(string kipPath)

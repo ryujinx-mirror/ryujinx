@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
         public AudioRendererManagerServer(ServiceCtx context) : this(context, new AudioRendererManager(context.Device.System.AudioRendererManager, context.Device.System.AudioDeviceSessionRegistry)) { }
 
-        public AudioRendererManagerServer(ServiceCtx context, IAudioRendererManager impl) : base(new ServerBase(context.Device.System.KernelContext, "AudioRendererServer"))
+        public AudioRendererManagerServer(ServiceCtx context, IAudioRendererManager impl) : base(context.Device.System.AudRenServer)
         {
             _impl = impl;
         }

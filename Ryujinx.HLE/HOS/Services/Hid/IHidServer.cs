@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private HidAccelerometerParameters _accelerometerParams;
         private HidVibrationValue          _vibrationValue;
 
-        public IHidServer(ServiceCtx context) : base(new ServerBase(context.Device.System.KernelContext, "HidServer"))
+        public IHidServer(ServiceCtx context) : base(context.Device.System.HidServer)
         {
             _xpadIdEvent                 = new KEvent(context.Device.System.KernelContext);
             _palmaOperationCompleteEvent = new KEvent(context.Device.System.KernelContext);
