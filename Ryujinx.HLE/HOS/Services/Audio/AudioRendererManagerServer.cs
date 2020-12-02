@@ -30,7 +30,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             ulong workBufferSize = context.RequestData.ReadUInt64();
             ulong appletResourceUserId = context.RequestData.ReadUInt64();
 
-            KTransferMemory workBufferTransferMemory = context.Process.HandleTable.GetObject<KTransferMemory>(context.Request.HandleDesc.ToCopy[0]);
+            int transferMemoryHandle = context.Request.HandleDesc.ToCopy[0];
+            KTransferMemory workBufferTransferMemory = context.Process.HandleTable.GetObject<KTransferMemory>(transferMemoryHandle);
             uint processHandle = (uint)context.Request.HandleDesc.ToCopy[1];
 
             ResultCode result = _impl.OpenAudioRenderer(context, out IAudioRenderer renderer, ref parameter, workBufferSize, appletResourceUserId, workBufferTransferMemory, processHandle);
@@ -40,6 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
                 MakeObject(context, new AudioRendererServer(renderer));
             }
 
+            context.Device.System.KernelContext.Syscall.CloseHandle(transferMemoryHandle);
             context.Device.System.KernelContext.Syscall.CloseHandle((int)processHandle);
 
             return result;
