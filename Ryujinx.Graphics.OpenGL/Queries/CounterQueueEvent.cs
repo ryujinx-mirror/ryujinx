@@ -16,17 +16,21 @@ namespace Ryujinx.Graphics.OpenGL.Queries
         public bool Disposed { get; private set; }
         public bool Invalid { get; set; }
 
+        public ulong DrawIndex { get; }
+
         private CounterQueue _queue;
         private BufferedQuery _counter;
 
         private object _lock = new object();
 
-        public CounterQueueEvent(CounterQueue queue, QueryTarget type)
+        public CounterQueueEvent(CounterQueue queue, QueryTarget type, ulong drawIndex)
         {
             _queue = queue;
 
             _counter = queue.GetQueryObject();
             Type = type;
+
+            DrawIndex = drawIndex;
 
             _counter.Begin();
         }

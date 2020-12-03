@@ -23,9 +23,9 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
-        public CounterQueueEvent QueueReport(CounterType type, EventHandler<ulong> resultHandler)
+        public CounterQueueEvent QueueReport(CounterType type, EventHandler<ulong> resultHandler, ulong lastDrawIndex)
         {
-            return _counterQueues[(int)type].QueueReport(resultHandler);
+            return _counterQueues[(int)type].QueueReport(resultHandler, lastDrawIndex);
         }
 
         public void QueueReset(CounterType type)

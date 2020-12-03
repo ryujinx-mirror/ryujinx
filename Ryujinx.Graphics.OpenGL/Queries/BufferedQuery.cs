@@ -46,7 +46,6 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         public unsafe void End()
         {
-            GL.Flush();
             GL.EndQuery(_type);
 
             GL.BindBuffer(BufferTarget.QueryBuffer, _buffer);

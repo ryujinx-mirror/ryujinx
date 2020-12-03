@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
                 _queryPool.Enqueue(new BufferedQuery(glType));
             }
 
-            _current = new CounterQueueEvent(this, glType);
+            _current = new CounterQueueEvent(this, glType, 0);
 
             _consumerThread = new Thread(EventConsumer);
             _consumerThread.Start();
@@ -95,19 +95,32 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
-        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler)
+        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler, ulong lastDrawIndex)
         {
             CounterQueueEvent result;
+            ulong draws = lastDrawIndex - _current.DrawIndex;
 
             lock (_lock)
             {
-                _current.Complete();
-                _events.Enqueue(_current);
+                // A query's result only matters if more than one draw was performed during it.
+                // Otherwise, dummy it out and return 0 immediately.
+
+                if (draws > 0)
+                {
+                    _current.Complete();
+                    _events.Enqueue(_current);
+
+                    _current.OnResult += resultHandler;
+                }
+                else
+                {
+                    _current.Dispose();
+                    resultHandler(_current, 0);
+                }
 
                 result = _current;
-                result.OnResult += resultHandler;
 
-                _current = new CounterQueueEvent(this, GetTarget(Type));
+                _current = new CounterQueueEvent(this, GetTarget(Type), lastDrawIndex);
             }
 
             _queuedEvent.Set();

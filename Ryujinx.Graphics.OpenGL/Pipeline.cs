@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.OpenGL
 {
     class Pipeline : IPipeline, IDisposable
     {
+        internal ulong DrawCount { get; private set; }
+
         private Program _program;
 
         private bool _rasterizerDiscard;
@@ -1196,6 +1198,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void PreDraw()
         {
+            DrawCount++;
+
             _vertexArray.Validate();
 
             if (_unit0Texture != null)

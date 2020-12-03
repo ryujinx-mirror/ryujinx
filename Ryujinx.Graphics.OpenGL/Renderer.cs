@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler)
         {
-            return _counters.QueueReport(type, resultHandler);
+            return _counters.QueueReport(type, resultHandler, _pipeline.DrawCount);
         }
 
         public void Initialize(GraphicsDebugLevel glLogLevel)
