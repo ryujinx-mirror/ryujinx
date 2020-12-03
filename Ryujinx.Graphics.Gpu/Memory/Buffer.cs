@@ -34,8 +34,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public ulong EndAddress => Address + Size;
 
-        private CpuSmartMultiRegionHandle _memoryTrackingGranular;
+        private CpuMultiRegionHandle _memoryTrackingGranular;
         private CpuRegionHandle _memoryTracking;
+        private readonly Action<ulong, ulong> _modifiedDelegate;
         private int _sequenceNumber;
 
         private bool _useGranular;
@@ -58,12 +59,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (_useGranular)
             {
-                _memoryTrackingGranular = context.PhysicalMemory.BeginSmartGranularTracking(address, size);
+                _memoryTrackingGranular = context.PhysicalMemory.BeginGranularTracking(address, size);
             }
             else
             {
                 _memoryTracking = context.PhysicalMemory.BeginTracking(address, size);
             }
+
+            _modifiedDelegate = new Action<ulong, ulong>(RegionModified);
         }
 
         /// <summary>
@@ -106,24 +109,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (_useGranular)
             {
-                _memoryTrackingGranular.QueryModified(address, size, (ulong mAddress, ulong mSize) =>
-                {
-                    if (mAddress < Address)
-                    {
-                        mAddress = Address;
-                    }
-
-                    ulong maxSize = Address + Size - mAddress;
-
-                    if (mSize > maxSize)
-                    {
-                        mSize = maxSize;
-                    }
-
-                    int offset = (int)(mAddress - Address);
-
-                    _context.Renderer.SetBufferData(Handle, offset, _context.PhysicalMemory.GetSpan(mAddress, (int)mSize));
-                }, _context.SequenceNumber);
+                _memoryTrackingGranular.QueryModified(address, size, _modifiedDelegate, _context.SequenceNumber);
             }
             else
             {
@@ -134,6 +120,30 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     _sequenceNumber = _context.SequenceNumber;
                 }
             }
+        }
+
+        /// <summary>
+        /// Indicate that a region of the buffer was modified, and must be loaded from memory.
+        /// </summary>
+        /// <param name="mAddress">Start address of the modified region</param>
+        /// <param name="mSize">Size of the modified region</param>
+        private void RegionModified(ulong mAddress, ulong mSize)
+        {
+            if (mAddress < Address)
+            {
+                mAddress = Address;
+            }
+
+            ulong maxSize = Address + Size - mAddress;
+
+            if (mSize > maxSize)
+            {
+                mSize = maxSize;
+            }
+
+            int offset = (int)(mAddress - Address);
+
+            _context.Renderer.SetBufferData(Handle, offset, _context.PhysicalMemory.GetSpan(mAddress, (int)mSize));
         }
 
         /// <summary>

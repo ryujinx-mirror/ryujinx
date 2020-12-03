@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public ulong Size { get; }
 
         private readonly CpuMultiRegionHandle _memoryTracking;
+        private readonly Action<ulong, ulong> _modifiedDelegate;
 
         public Pool(GpuContext context, ulong address, int maximumId)
         {
@@ -44,7 +45,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             int count = maximumId + 1;
 
-            ulong size = (ulong)(uint)count * DescriptorSize;;
+            ulong size = (ulong)(uint)count * DescriptorSize;
 
             Items = new T[count];
 
@@ -52,6 +53,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             Size    = size;
 
             _memoryTracking = context.PhysicalMemory.BeginGranularTracking(address, size);
+            _modifiedDelegate = RegionModified;
         }
 
         /// <summary>
@@ -68,22 +70,29 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SynchronizeMemory()
         {
-            _memoryTracking.QueryModified((ulong mAddress, ulong mSize) =>
+            _memoryTracking.QueryModified(_modifiedDelegate);
+        }
+
+        /// <summary>
+        /// Indicate that a region of the pool was modified, and must be loaded from memory.
+        /// </summary>
+        /// <param name="mAddress">Start address of the modified region</param>
+        /// <param name="mSize">Size of the modified region</param>
+        private void RegionModified(ulong mAddress, ulong mSize)
+        {
+            if (mAddress < Address)
             {
-                if (mAddress < Address)
-                {
-                    mAddress = Address;
-                }
+                mAddress = Address;
+            }
 
-                ulong maxSize = Address + Size - mAddress;
+            ulong maxSize = Address + Size - mAddress;
 
-                if (mSize > maxSize)
-                {
-                    mSize = maxSize;
-                }
+            if (mSize > maxSize)
+            {
+                mSize = maxSize;
+            }
 
-                InvalidateRangeImpl(mAddress, mSize);
-            });
+            InvalidateRangeImpl(mAddress, mSize);
         }
 
         protected abstract void InvalidateRangeImpl(ulong address, ulong size);
