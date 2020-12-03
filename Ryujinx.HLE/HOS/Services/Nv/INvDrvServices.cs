@@ -329,6 +329,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             context.ResponseData.Write((uint)NvResult.Success);
 
+            // Close transfer memory immediately as we don't use it.
+            context.Device.System.KernelContext.Syscall.CloseHandle(transferMemHandle);
+
             return ResultCode.Success;
         }
 
@@ -384,9 +387,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 if (errorCode == NvResult.Success)
                 {
-                    KSharedMemory sharedMemory = context.Process.HandleTable.GetObject<KSharedMemory>(sharedMemoryHandle);
-
-                    errorCode = ConvertInternalErrorCode(deviceFile.MapSharedMemory(sharedMemory, argument));
+                    errorCode = ConvertInternalErrorCode(deviceFile.MapSharedMemory(sharedMemoryHandle, argument));
                 }
             }
 

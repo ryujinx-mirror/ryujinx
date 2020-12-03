@@ -28,8 +28,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
             return NvInternalResult.NotImplemented;
         }
 
-        public virtual NvInternalResult MapSharedMemory(KSharedMemory sharedMemory, uint argument)
+        public virtual NvInternalResult MapSharedMemory(int sharedMemoryHandle, uint argument)
         {
+            // Close shared memory immediately as we don't use it.
+            Context.Device.System.KernelContext.Syscall.CloseHandle(sharedMemoryHandle);
+
             return NvInternalResult.NotImplemented;
         }
 

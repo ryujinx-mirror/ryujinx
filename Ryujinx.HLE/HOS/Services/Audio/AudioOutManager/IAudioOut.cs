@@ -1,6 +1,7 @@
 using Ryujinx.Audio;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
@@ -10,18 +11,20 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
 {
     class IAudioOut : IpcService, IDisposable
     {
-        private readonly IAalOutput _audioOut;
-        private readonly KEvent     _releaseEvent;
-        private          int        _releaseEventHandle;
-        private readonly int        _track;
-        private readonly int        _clientHandle;
+        private readonly KernelContext _kernelContext;
+        private readonly IAalOutput    _audioOut;
+        private readonly KEvent        _releaseEvent;
+        private          int           _releaseEventHandle;
+        private readonly int           _track;
+        private readonly int           _clientHandle;
 
-        public IAudioOut(IAalOutput audioOut, KEvent releaseEvent, int track, int clientHandle)
+        public IAudioOut(KernelContext kernelContext, IAalOutput audioOut, KEvent releaseEvent, int track, int clientHandle)
         {
-            _audioOut     = audioOut;
-            _releaseEvent = releaseEvent;
-            _track        = track;
-            _clientHandle = clientHandle;
+            _kernelContext = kernelContext;
+            _audioOut      = audioOut;
+            _releaseEvent  = releaseEvent;
+            _track         = track;
+            _clientHandle  = clientHandle;
         }
 
         [Command(0)]
@@ -217,6 +220,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOutManager
         {
             if (disposing)
             {
+                _kernelContext.Syscall.CloseHandle(_clientHandle);
                 _audioOut.CloseTrack(_track);
             }
         }

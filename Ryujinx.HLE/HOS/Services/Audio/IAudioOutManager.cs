@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             int track = audioOut.OpenTrack(sampleRate, channels, callback);
 
-            MakeObject(context, new IAudioOut(audioOut, releaseEvent, track, context.Request.HandleDesc.ToCopy[0]));
+            MakeObject(context, new IAudioOut(context.Device.System.KernelContext, audioOut, releaseEvent, track, context.Request.HandleDesc.ToCopy[0]));
 
             context.ResponseData.Write(sampleRate);
             context.ResponseData.Write(channels);
