@@ -298,7 +298,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTexture);
                 }
 
-                if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
+                if (hostTexture != null && texture.Target == Target.TextureBuffer)
                 {
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accomodate larger data, so we need to re-bind
@@ -349,7 +349,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
 
-                if (hostTexture != null && texture.Info.Target == Target.TextureBuffer)
+                if (hostTexture != null && texture.Target == Target.TextureBuffer)
                 {
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accomodate larger data, so we need to re-bind

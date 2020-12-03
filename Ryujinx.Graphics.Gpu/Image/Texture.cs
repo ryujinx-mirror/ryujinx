@@ -31,6 +31,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public Format Format => Info.FormatInfo.Format;
 
         /// <summary>
+        /// Texture target.
+        /// </summary>
+        public Target Target { get; private set; }
+
+        /// <summary>
         /// Texture information.
         /// </summary>
         public TextureInfo Info { get; private set; }
@@ -290,7 +295,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             width  <<= _firstLevel;
             height <<= _firstLevel;
 
-            if (Info.Target == Target.Texture3D)
+            if (Target == Target.Texture3D)
             {
                 depthOrLayers <<= _firstLevel;
             }
@@ -532,7 +537,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SynchronizeMemory()
         {
-            if (Info.Target == Target.TextureBuffer)
+            if (Target == Target.TextureBuffer)
             {
                 return;
             }
@@ -653,11 +658,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 data = decoded;
             }
-            else if (Info.Target == Target.Texture3D && Info.FormatInfo.Format.IsBc4())
+            else if (Target == Target.Texture3D && Info.FormatInfo.Format.IsBc4())
             {
                 data = BCnDecoder.DecodeBC4(data, Info.Width, Info.Height, _depth, Info.Levels, _layers, Info.FormatInfo.Format == Format.Bc4Snorm);
             }
-            else if (Info.Target == Target.Texture3D && Info.FormatInfo.Format.IsBc5())
+            else if (Target == Target.Texture3D && Info.FormatInfo.Format.IsBc5())
             {
                 data = BCnDecoder.DecodeBC5(data, Info.Width, Info.Height, _depth, Info.Levels, _layers, Info.FormatInfo.Format == Format.Bc5Snorm);
             }
@@ -760,7 +765,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if (Info.Target != Target.TextureBuffer)
+            if (Target != Target.TextureBuffer)
             {
                 if (Info.IsLinear)
                 {
@@ -903,7 +908,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A view of this texture with the requested target, or null if the target is invalid for this texture</returns>
         public ITexture GetTargetTexture(Target target)
         {
-            if (target == Info.Target)
+            if (target == Target)
             {
                 return HostTexture;
             }
@@ -1008,6 +1013,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private void SetInfo(TextureInfo info)
         {
             Info = info;
+            Target = info.Target;
 
             _depth  = info.GetDepth();
             _layers = info.GetLayers();
