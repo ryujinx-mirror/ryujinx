@@ -406,12 +406,9 @@ namespace ARMeilleure.CodeGen.X86
                         else
                         {
                             EnsureSameReg(dest, src1);
-
                             Debug.Assert(src3.GetRegister().Index == 0);
-
                             context.Assembler.WriteInstruction(info.Inst, dest, src1, src2);
                         }
-
                         break;
                     }
 
@@ -432,6 +429,23 @@ namespace ARMeilleure.CodeGen.X86
                         Debug.Assert(!dest.Type.IsInteger() && src3.Kind == OperandKind.Constant);
 
                         context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src3.AsByte());
+
+                        break;
+                    }
+
+                    case IntrinsicType.Fma:
+                    {
+                        Operand dest = operation.Destination;
+                        Operand src1 = operation.GetSource(0);
+                        Operand src2 = operation.GetSource(1);
+                        Operand src3 = operation.GetSource(2);
+
+                        EnsureSameType(dest, src1, src2, src3);
+                        EnsureSameReg(dest, src1);
+                        Debug.Assert(!dest.Type.IsInteger());
+                        Debug.Assert(HardwareCapabilities.SupportsVexEncoding);
+
+                        context.Assembler.WriteInstruction(info.Inst, dest, src2, src3);
 
                         break;
                     }

@@ -901,6 +901,20 @@ namespace ARMeilleure.Instructions
             context.Copy(initialD, res);
         }
 
+        public static void EmitScalarTernaryOpF32(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
+        {
+            OpCode32SimdRegS op = (OpCode32SimdRegS)context.CurrOp;
+
+            bool doubleSize = (op.Size & 1) != 0;
+
+            Intrinsic inst = doubleSize ? inst64 : inst32;
+
+            EmitScalarTernaryOpSimd32(context, (d, n, m) =>
+            {
+                return context.AddIntrinsic(inst, d, n, m);
+            });
+        }
+
         public static void EmitScalarTernaryOpF32(ArmEmitterContext context, Intrinsic inst32pt1, Intrinsic inst64pt1, Intrinsic inst32pt2, Intrinsic inst64pt2)
         {
             OpCode32SimdRegS op = (OpCode32SimdRegS)context.CurrOp;
