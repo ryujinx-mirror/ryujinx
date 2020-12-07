@@ -76,6 +76,8 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Mulps,       new IntrinsicInfo(X86Instruction.Mulps,       IntrinsicType.Binary));
             Add(Intrinsic.X86Mulsd,       new IntrinsicInfo(X86Instruction.Mulsd,       IntrinsicType.Binary));
             Add(Intrinsic.X86Mulss,       new IntrinsicInfo(X86Instruction.Mulss,       IntrinsicType.Binary));
+            Add(Intrinsic.X86Mxcsrmb,     new IntrinsicInfo(X86Instruction.None,        IntrinsicType.Mxcsr)); // Mask bits.
+            Add(Intrinsic.X86Mxcsrub,     new IntrinsicInfo(X86Instruction.None,        IntrinsicType.Mxcsr)); // Unmask bits.
             Add(Intrinsic.X86Paddb,       new IntrinsicInfo(X86Instruction.Paddb,       IntrinsicType.Binary));
             Add(Intrinsic.X86Paddd,       new IntrinsicInfo(X86Instruction.Paddd,       IntrinsicType.Binary));
             Add(Intrinsic.X86Paddq,       new IntrinsicInfo(X86Instruction.Paddq,       IntrinsicType.Binary));

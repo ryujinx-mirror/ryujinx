@@ -3,6 +3,7 @@ namespace ARMeilleure.CodeGen.X86
     enum IntrinsicType
     {
         Comis_,
+        Mxcsr,
         PopCount,
         Unary,
         UnaryToGpr,

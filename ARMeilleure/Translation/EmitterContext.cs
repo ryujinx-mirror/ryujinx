@@ -573,6 +573,11 @@ namespace ARMeilleure.Translation
             return Add(intrin, Local(OperandType.I64), args);
         }
 
+        public void AddIntrinsicNoRet(Intrinsic intrin, params Operand[] args)
+        {
+            Add(intrin, null, args);
+        }
+
         private Operand Add(Intrinsic intrin, Operand dest, params Operand[] sources)
         {
             NewNextBlockIfNeeded();

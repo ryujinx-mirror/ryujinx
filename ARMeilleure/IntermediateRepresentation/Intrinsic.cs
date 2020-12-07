@@ -65,6 +65,8 @@ namespace ARMeilleure.IntermediateRepresentation
         X86Mulps,
         X86Mulsd,
         X86Mulss,
+        X86Mxcsrmb,
+        X86Mxcsrub,
         X86Paddb,
         X86Paddd,
         X86Paddq,

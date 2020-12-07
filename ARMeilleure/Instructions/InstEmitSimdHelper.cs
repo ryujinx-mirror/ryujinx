@@ -1189,6 +1189,39 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        [Flags]
+        public enum Mxcsr
+        {
+            Ftz = 1 << 15, // Flush To Zero.
+            Um  = 1 << 11, // Underflow Mask.
+            Dm  = 1 << 8,  // Denormal Mask.
+            Daz = 1 << 6   // Denormals Are Zero.
+        }
+
+        public static void EmitSseOrAvxEnterFtzAndDazModesOpF(ArmEmitterContext context, out Operand isTrue)
+        {
+            isTrue = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcrFz)));
+
+            Operand lblTrue = Label();
+            context.BranchIfFalse(lblTrue, isTrue);
+
+            context.AddIntrinsicNoRet(Intrinsic.X86Mxcsrmb, Const((int)(Mxcsr.Ftz | Mxcsr.Um | Mxcsr.Dm | Mxcsr.Daz)));
+
+            context.MarkLabel(lblTrue);
+        }
+
+        public static void EmitSseOrAvxExitFtzAndDazModesOpF(ArmEmitterContext context, Operand isTrue = null)
+        {
+            isTrue ??= context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcrFz)));
+
+            Operand lblTrue = Label();
+            context.BranchIfFalse(lblTrue, isTrue);
+
+            context.AddIntrinsicNoRet(Intrinsic.X86Mxcsrub, Const((int)(Mxcsr.Ftz | Mxcsr.Daz)));
+
+            context.MarkLabel(lblTrue);
+        }
+
         public enum CmpCondition
         {
             // Legacy Sse.

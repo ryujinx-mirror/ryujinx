@@ -380,15 +380,21 @@ namespace ARMeilleure.Instructions
 
         public static void Faddp_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
                 EmitSse2VectorPairwiseOpF(context, (op1, op2) =>
                 {
-                    IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                        {
+                            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
 
-                    Intrinsic addInst = (op.Size & 1) == 0 ? Intrinsic.X86Addps : Intrinsic.X86Addpd;
+                            Intrinsic addInst = (op.Size & 1) == 0 ? Intrinsic.X86Addps : Intrinsic.X86Addpd;
 
-                    return context.AddIntrinsic(addInst, op1, op2);
+                            return context.AddIntrinsic(addInst, op1, op2);
+                        }, scalar: false, op1, op2);
+                    }, scalar: false, op1, op2);
                 });
             }
             else
@@ -479,7 +485,10 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    }, scalar: true, op1, op2);
                 }, scalar: true);
             }
             else
@@ -497,7 +506,10 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    }, scalar: false, op1, op2);
                 }, scalar: false);
             }
             else
@@ -583,7 +595,10 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                        {
+                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                        }, scalar: false, op1, op2);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -604,7 +619,10 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                        {
+                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                        }, scalar: false, op1, op2);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -623,7 +641,10 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    }, scalar: true, op1, op2);
                 }, scalar: true);
             }
             else
@@ -641,7 +662,10 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    }, scalar: false, op1, op2);
                 }, scalar: false);
             }
             else
@@ -727,7 +751,10 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                        {
+                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                        }, scalar: false, op1, op2);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -748,7 +775,10 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                        {
+                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                        }, scalar: false, op1, op2);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -3360,6 +3390,53 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static Operand EmitSseOrAvxHandleFzModeOpF(
+            ArmEmitterContext context,
+            Func2I emit,
+            bool scalar,
+            Operand n = null,
+            Operand m = null)
+        {
+            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
+            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
+
+            EmitSseOrAvxEnterFtzAndDazModesOpF(context, out Operand isTrue);
+
+            Operand res = emit(nCopy, mCopy);
+
+            EmitSseOrAvxExitFtzAndDazModesOpF(context, isTrue);
+
+            if (n != null || m != null)
+            {
+                return res;
+            }
+
+            int sizeF = ((IOpCodeSimd)context.CurrOp).Size & 1;
+
+            if (sizeF == 0)
+            {
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper96(res);
+                }
+                else if (((OpCodeSimdReg)context.CurrOp).RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+            }
+            else /* if (sizeF == 1) */
+            {
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+            }
+
+            context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
+
+            return null;
+        }
+
         private static Operand EmitSse2VectorMaxMinOpF(ArmEmitterContext context, Operand n, Operand m, bool isMax)
         {
             IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
@@ -3419,7 +3496,10 @@ namespace ARMeilleure.Instructions
 
                 Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                    }, scalar: scalar, op1, op2);
                 }, scalar: scalar, nCopy, mCopy);
 
                 if (n != null || m != null)
@@ -3454,7 +3534,10 @@ namespace ARMeilleure.Instructions
 
                 Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
+                    }, scalar: scalar, op1, op2);
                 }, scalar: scalar, nCopy, mCopy);
 
                 if (n != null || m != null)

@@ -17,8 +17,10 @@ namespace Ryujinx.Tests.Cpu
         protected const ulong CodeBaseAddress = 0x1000;
         protected const ulong DataBaseAddress = CodeBaseAddress + Size;
 
-        private const bool Ignore_FpcrFz_FpcrDn = false;
-        private const bool IgnoreAllExcept_FpsrQc = false;
+        private static bool Ignore_FpcrFz = false;
+        private static bool Ignore_FpcrDn = false;
+
+        private static bool IgnoreAllExcept_FpsrQc = false;
 
         private ulong _currAddress;
 
@@ -205,11 +207,14 @@ namespace Ryujinx.Tests.Cpu
                                                 int   fpsr       = 0,
                                                 bool  runUnicorn = true)
         {
-            if (Ignore_FpcrFz_FpcrDn)
+            if (Ignore_FpcrFz)
             {
-#pragma warning disable CS0162
-                fpcr &= ~((1 << (int)Fpcr.Fz) | (1 << (int)Fpcr.Dn));
-#pragma warning restore CS0162
+                fpcr &= ~(1 << (int)Fpcr.Fz);
+            }
+
+            if (Ignore_FpcrDn)
+            {
+                fpcr &= ~(1 << (int)Fpcr.Dn);
             }
 
             Opcode(opcode);
@@ -323,9 +328,7 @@ namespace Ryujinx.Tests.Cpu
 
             if (IgnoreAllExcept_FpsrQc)
             {
-#pragma warning disable CS0162
                 fpsrMask &= Fpsr.Qc;
-#pragma warning restore CS0162
             }
 
             if (fpSkips != FpSkips.None)

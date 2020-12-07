@@ -78,6 +78,11 @@ namespace ARMeilleure.Instructions
             return (ulong)GetContext().Fpcr;
         }
 
+        public static bool GetFpcrFz()
+        {
+            return (GetContext().Fpcr & FPCR.Fz) != 0;
+        }
+
         public static ulong GetFpsr()
         {
             return (ulong)GetContext().Fpsr;
@@ -85,7 +90,7 @@ namespace ARMeilleure.Instructions
 
         public static uint GetFpscr()
         {
-            var context = GetContext();
+            ExecutionContext context = GetContext();
 
             return (uint)(context.Fpsr & FPSR.A32Mask & ~FPSR.Nzcv) |
                    (uint)(context.Fpcr & FPCR.A32Mask);
@@ -143,7 +148,7 @@ namespace ARMeilleure.Instructions
 
         public static void SetFpscr(uint fpscr)
         {
-            var context = GetContext();
+            ExecutionContext context = GetContext();
 
             context.Fpsr = FPSR.A32Mask & (FPSR)fpscr;
             context.Fpcr = FPCR.A32Mask & (FPCR)fpscr;
@@ -250,7 +255,7 @@ namespace ARMeilleure.Instructions
         {
             Statistics.PauseTimer();
 
-            var context = GetContext();
+            ExecutionContext context = GetContext();
 
             context.CheckInterrupt();
 

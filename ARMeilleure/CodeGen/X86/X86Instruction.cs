@@ -2,6 +2,7 @@ namespace ARMeilleure.CodeGen.X86
 {
     enum X86Instruction
     {
+        None,
         Add,
         Addpd,
         Addps,
@@ -60,6 +61,7 @@ namespace ARMeilleure.CodeGen.X86
         Imul128,
         Insertps,
         Jmp,
+        Ldmxcsr,
         Lea,
         Maxpd,
         Maxps,
@@ -186,6 +188,7 @@ namespace ARMeilleure.CodeGen.X86
         Sqrtps,
         Sqrtsd,
         Sqrtss,
+        Stmxcsr,
         Sub,
         Subpd,
         Subps,

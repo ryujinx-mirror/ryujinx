@@ -114,6 +114,16 @@ namespace ARMeilleure.CodeGen.X86
                                 node = HandleVectorInsert8(block.Operations, node, operation);
                             }
                             break;
+
+                        case Instruction.Extended:
+                            IntrinsicOperation intrinOp = (IntrinsicOperation)operation;
+
+                            if (intrinOp.Intrinsic == Intrinsic.X86Mxcsrmb || intrinOp.Intrinsic == Intrinsic.X86Mxcsrub)
+                            {
+                                int stackOffset = stackAlloc.Allocate(OperandType.I32);
+                                operation.SetSources(new Operand[] { Const(stackOffset), operation.GetSource(0) });
+                            }
+                            break;
                     }
                 }
             }
