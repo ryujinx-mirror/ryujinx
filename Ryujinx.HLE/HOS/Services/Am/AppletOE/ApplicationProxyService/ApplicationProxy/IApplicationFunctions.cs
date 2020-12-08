@@ -27,16 +27,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         private KEvent _gpuErrorDetectedSystemEvent;
         private KEvent _friendInvitationStorageChannelEvent;
         private KEvent _notificationStorageChannelEvent;
+        private KEvent _healthWarningDisappearedSystemEvent;
 
         private int _gpuErrorDetectedSystemEventHandle;
         private int _friendInvitationStorageChannelEventHandle;
         private int _notificationStorageChannelEventHandle;
+        private int _healthWarningDisappearedSystemEventHandle;
 
         public IApplicationFunctions(Horizon system)
         {
+            // TODO: Find where they are signaled.
             _gpuErrorDetectedSystemEvent         = new KEvent(system.KernelContext);
             _friendInvitationStorageChannelEvent = new KEvent(system.KernelContext);
             _notificationStorageChannelEvent     = new KEvent(system.KernelContext);
+            _healthWarningDisappearedSystemEvent = new KEvent(system.KernelContext);
         }
 
         [Command(1)]
@@ -518,6 +522,23 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_notificationStorageChannelEventHandle);
+
+            return ResultCode.Success;
+        }
+
+        [Command(160)] // 9.0.0+
+        // GetHealthWarningDisappearedSystemEvent() -> handle<copy>
+        public ResultCode GetHealthWarningDisappearedSystemEvent(ServiceCtx context)
+        {
+            if (_healthWarningDisappearedSystemEventHandle == 0)
+            {
+                if (context.Process.HandleTable.GenerateHandle(_healthWarningDisappearedSystemEvent.ReadableEvent, out _healthWarningDisappearedSystemEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_healthWarningDisappearedSystemEventHandle);
 
             return ResultCode.Success;
         }
