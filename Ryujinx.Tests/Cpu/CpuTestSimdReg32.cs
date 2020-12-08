@@ -293,6 +293,41 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Nzcv);
         }
 
+        [Test, Pairwise, Description("VFNMA.F<size> <Vd>, <Vn>, <Vm>")]
+        public void Vfnma([Values(0u, 1u)] uint rd,
+                          [Values(0u, 1u)] uint rn,
+                          [Values(0u, 1u)] uint rm,
+                          [Values(2u, 3u)] uint size,
+                          [ValueSource("_2S_F_")] ulong z,
+                          [ValueSource("_2S_F_")] ulong a,
+                          [ValueSource("_2S_F_")] ulong b)
+        {
+            uint opcode = 0xe900840;
+
+            if (size == 2)
+            {
+                opcode |= (((rm & 0x1) << 5) | (rm & 0x1e) >> 1);
+                opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
+                opcode |= (((rn & 0x1) << 7) | (rn & 0x1e) >> 15);
+
+            }
+            else
+            {
+                opcode |= (((rm & 0x10) << 1) | (rm & 0xf) << 0);
+                opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
+                opcode |= (((rn & 0x10) << 3) | (rn & 0xf) << 16);
+            }
+
+            opcode |= ((size & 3) << 8);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            CompareAgainstUnicorn();
+        }
+
         [Test, Pairwise, Description("VFNMS.F<size> <Vd>, <Vn>, <Vm>")]
         public void Vfnms([Values(0u, 1u)] uint rd,
                           [Values(0u, 1u)] uint rn,
