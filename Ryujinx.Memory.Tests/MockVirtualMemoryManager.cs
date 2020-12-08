@@ -75,6 +75,11 @@ namespace Ryujinx.Memory.Tests
             throw new NotImplementedException();
         }
 
+        public void SignalMemoryTracking(ulong va, ulong size, bool write)
+        {
+            throw new NotImplementedException();
+        }
+
         public void TrackingReprotect(ulong va, ulong size, MemoryPermission protection)
         {
         }

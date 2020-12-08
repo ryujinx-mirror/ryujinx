@@ -1656,6 +1656,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 }
             }
 
+            // Signal a read for any resources tracking reads in the region, as the other process is likely to use their data.
+            _cpuMemory.SignalMemoryTracking(addressTruncated, endAddrRounded - addressTruncated, false);
+
             lock (_blocks)
             {
                 KernelResult result;
@@ -2036,6 +2039,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong endAddr = address + size;
 
             ulong addressRounded   = BitUtils.AlignUp  (address, PageSize);
+            ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
+            ulong endAddrRounded   = BitUtils.AlignUp  (endAddr, PageSize);
             ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
 
             ulong pagesCount = addressRounded < endAddrTruncated ? (endAddrTruncated - addressRounded) / PageSize : 0;
@@ -2070,6 +2075,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 return KernelResult.OutOfResource;
             }
+
+            // Anything on the client side should see this memory as modified.
+            _cpuMemory.SignalMemoryTracking(addressTruncated, endAddrRounded - addressTruncated, true);
 
             lock (_blocks)
             {

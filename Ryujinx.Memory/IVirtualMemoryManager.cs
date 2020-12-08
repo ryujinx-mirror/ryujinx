@@ -23,6 +23,7 @@ namespace Ryujinx.Memory
         bool IsRangeMapped(ulong va, ulong size);
         ulong GetPhysicalAddress(ulong va);
 
+        void SignalMemoryTracking(ulong va, ulong size, bool write);
         void TrackingReprotect(ulong va, ulong size, MemoryPermission protection);
     }
 }

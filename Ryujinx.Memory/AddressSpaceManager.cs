@@ -545,5 +545,10 @@ namespace Ryujinx.Memory
                 _pageTable[l0] = null;
             }
         }
+
+        public void SignalMemoryTracking(ulong va, ulong size, bool write)
+        {
+            // Only the ARM Memory Manager has tracking for now.
+        }
     }
 }
