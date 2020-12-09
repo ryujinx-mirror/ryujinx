@@ -240,11 +240,37 @@ namespace Ryujinx.Ui
             };
             renderLoopThread.Start();
 
+            Thread nvStutterWorkaround = new Thread(NVStutterWorkaround)
+            {
+                Name = "GUI.NVStutterWorkaround"
+            };
+            nvStutterWorkaround.Start();
+
             MainLoop();
 
             renderLoopThread.Join();
+            nvStutterWorkaround.Join();
 
             Exit();
+        }
+
+        private void NVStutterWorkaround()
+        {
+            while (_isActive)
+            {
+                // When NVIDIA Threaded Optimization is on, the driver will snapshot all threads in the system whenever the application creates any new ones.
+                // The ThreadPool has something called a "GateThread" which terminates itself after some inactivity.
+                // However, it immediately starts up again, since the rules regarding when to terminate and when to start differ.
+                // This creates a new thread every second or so.
+                // The main problem with this is that the thread snapshot can take 70ms, is on the OpenGL thread and will delay rendering any graphics.
+                // This is a little over budget on a frame time of 16ms, so creates a large stutter.
+                // The solution is to keep the ThreadPool active so that it never has a reason to terminate the GateThread.
+
+                // TODO: This should be removed when the issue with the GateThread is resolved.
+
+                ThreadPool.QueueUserWorkItem((state) => { });
+                Thread.Sleep(300);
+            }
         }
 
         protected override bool OnButtonPressEvent(EventButton evnt)
