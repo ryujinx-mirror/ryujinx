@@ -18,7 +18,6 @@
     "system_region",
     "docked_mode",
     "enable_vsync",
-    "enable_multicore_scheduling",
     "enable_ptc",
     "enable_fs_integrity_checks",
     "fs_global_access_log_mode",
@@ -1190,17 +1189,6 @@
       "type": "boolean",
       "title": "Enable Vertical Sync",
       "description": "Enables or disables Vertical Sync",
-      "default": true,
-      "examples": [
-        true,
-        false
-      ]
-    },
-    "enable_multicore_scheduling": {
-      "$id": "#/properties/enable_multicore_scheduling",
-      "type": "boolean",
-      "title": "Enable Multicore Scheduling",
-      "description": "Enables or disables multi-core scheduling of threads",
       "default": true,
       "examples": [
         true,

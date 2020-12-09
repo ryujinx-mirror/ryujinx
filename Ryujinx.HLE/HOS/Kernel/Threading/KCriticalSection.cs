@@ -5,21 +5,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
     class KCriticalSection
     {
         private readonly KernelContext _context;
-
-        public object LockObj { get; private set; }
-
+        private readonly object _lock;
         private int _recursionCount;
+
+        public object Lock => _lock;
 
         public KCriticalSection(KernelContext context)
         {
             _context = context;
-
-            LockObj = new object();
+            _lock = new object();
         }
 
         public void Enter()
         {
-            Monitor.Enter(LockObj);
+            Monitor.Enter(_lock);
 
             _recursionCount++;
         }
@@ -31,61 +30,34 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return;
             }
 
-            bool doContextSwitch = false;
-
             if (--_recursionCount == 0)
             {
-                if (_context.Scheduler.ThreadReselectionRequested)
+                ulong scheduledCoresMask = KScheduler.SelectThreads(_context);
+
+                Monitor.Exit(_lock);
+
+                KThread currentThread = KernelStatic.GetCurrentThread();
+                bool isCurrentThreadSchedulable = currentThread != null && currentThread.IsSchedulable;
+                if (isCurrentThreadSchedulable)
                 {
-                    _context.Scheduler.SelectThreads();
-                }
-
-                Monitor.Exit(LockObj);
-
-                if (_context.Scheduler.MultiCoreScheduling)
-                {
-                    lock (_context.Scheduler.CoreContexts)
-                    {
-                        for (int core = 0; core < KScheduler.CpuCoresCount; core++)
-                        {
-                            KCoreContext coreContext = _context.Scheduler.CoreContexts[core];
-
-                            if (coreContext.ContextSwitchNeeded)
-                            {
-                                KThread currentThread = coreContext.CurrentThread;
-
-                                if (currentThread == null)
-                                {
-                                    // Nothing is running, we can perform the context switch immediately.
-                                    coreContext.ContextSwitch();
-                                }
-                                else if (currentThread.IsCurrentHostThread())
-                                {
-                                    // Thread running on the current core, context switch will block.
-                                    doContextSwitch = true;
-                                }
-                                else
-                                {
-                                    // Thread running on another core, request a interrupt.
-                                    currentThread.Context.RequestInterrupt();
-                                }
-                            }
-                        }
-                    }
+                    KScheduler.EnableScheduling(_context, scheduledCoresMask);
                 }
                 else
                 {
-                    doContextSwitch = true;
+                    KScheduler.EnableSchedulingFromForeignThread(_context, scheduledCoresMask);
+
+                    // If the thread exists but is not schedulable, we still want to suspend
+                    // it if it's not runnable. That allows the kernel to still block HLE threads
+                    // even if they are not scheduled on guest cores.
+                    if (currentThread != null && !currentThread.IsSchedulable && currentThread.Context.Running)
+                    {
+                        currentThread.SchedulerWaitEvent.WaitOne();
+                    }
                 }
             }
             else
             {
-                Monitor.Exit(LockObj);
-            }
-
-            if (doContextSwitch)
-            {
-                _context.Scheduler.ContextSwitch();
+                Monitor.Exit(_lock);
             }
         }
     }

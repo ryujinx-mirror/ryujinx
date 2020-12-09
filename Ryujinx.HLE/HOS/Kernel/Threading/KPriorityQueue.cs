@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
-    class KSchedulingData
+    class KPriorityQueue
     {
         private LinkedList<KThread>[][] _scheduledThreadsPerPrioPerCore;
         private LinkedList<KThread>[][] _suggestedThreadsPerPrioPerCore;
@@ -10,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         private long[] _scheduledPrioritiesPerCore;
         private long[] _suggestedPrioritiesPerCore;
 
-        public KSchedulingData()
+        public KPriorityQueue()
         {
             _suggestedThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
             _scheduledThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
@@ -45,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             long prioMask = prios[core];
 
-            int prio = CountTrailingZeros(prioMask);
+            int prio = BitOperations.TrailingZeroCount(prioMask);
 
             prioMask &= ~(1L << prio);
 
@@ -62,41 +63,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     node = node.Next;
                 }
 
-                prio = CountTrailingZeros(prioMask);
+                prio = BitOperations.TrailingZeroCount(prioMask);
 
                 prioMask &= ~(1L << prio);
             }
         }
 
-        private int CountTrailingZeros(long value)
-        {
-            int count = 0;
-
-            while (((value >> count) & 0xf) == 0 && count < 64)
-            {
-                count += 4;
-            }
-
-            while (((value >> count) & 1) == 0 && count < 64)
-            {
-                count++;
-            }
-
-            return count;
-        }
-
         public void TransferToCore(int prio, int dstCore, KThread thread)
         {
-            bool schedulable = thread.DynamicPriority < KScheduler.PrioritiesCount;
-
-            int srcCore = thread.CurrentCore;
-
-            thread.CurrentCore = dstCore;
-
-            if (srcCore == dstCore || !schedulable)
+            int srcCore = thread.ActiveCore;
+            if (srcCore == dstCore)
             {
                 return;
             }
+
+            thread.ActiveCore = dstCore;
 
             if (srcCore >= 0)
             {
@@ -168,13 +149,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             _scheduledPrioritiesPerCore[core] |= 1L << prio;
         }
 
-        public void Reschedule(int prio, int core, KThread thread)
+        public KThread Reschedule(int prio, int core, KThread thread)
         {
+            if (prio >= KScheduler.PrioritiesCount)
+            {
+                return null;
+            }
+
             LinkedList<KThread> queue = ScheduledQueue(prio, core);
 
             queue.Remove(thread.SiblingsPerCore[core]);
 
             thread.SiblingsPerCore[core] = queue.AddLast(thread);
+
+            return queue.First.Value;
         }
 
         public void Unschedule(int prio, int core, KThread thread)

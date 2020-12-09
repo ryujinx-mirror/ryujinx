@@ -25,14 +25,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KernelResult ArbitrateLock(int ownerHandle, ulong mutexAddress, int requesterHandle)
         {
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             _context.CriticalSection.Enter();
 
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.Success;
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (!KernelTransfer.UserToKernelInt32(_context, mutexAddress, out int mutexValue))
             {
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             _context.CriticalSection.Enter();
 
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             (KernelResult result, KThread newOwnerThread) = MutexUnlock(currentThread, mutexAddress);
 
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             _context.CriticalSection.Enter();
 
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.TimedOut;
@@ -227,7 +227,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             ulong address = requester.MutexAddress;
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (!currentProcess.CpuMemory.IsMapped(address))
             {
@@ -293,7 +293,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KernelResult WaitForAddressIfEqual(ulong address, int value, long timeout)
         {
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             _context.CriticalSection.Enter();
 
@@ -368,7 +368,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             bool  shouldDecrement,
             long  timeout)
         {
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             _context.CriticalSection.Enter();
 
@@ -383,7 +383,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.TimedOut;
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (!KernelTransfer.UserToKernelInt32(_context, address, out int currentValue))
             {
@@ -483,7 +483,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             _context.CriticalSection.Enter();
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (!currentProcess.CpuMemory.IsMapped(address))
             {
@@ -544,7 +544,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 offset = 1;
             }
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (!currentProcess.CpuMemory.IsMapped(address))
             {

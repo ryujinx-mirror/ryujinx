@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
     {
         public static void Wait(KernelContext context, LinkedList<KThread> threadList, object mutex, long timeout)
         {
-            KThread currentThread = context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             context.CriticalSection.Enter();
 

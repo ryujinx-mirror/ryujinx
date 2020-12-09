@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return result;
             }
 
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             if (currentThread.ShallBeTerminated ||
                 currentThread.SchedFlags == ThreadSchedState.TerminationPending)

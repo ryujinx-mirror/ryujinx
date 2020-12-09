@@ -1,6 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
-using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
@@ -13,6 +12,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KSession(KernelContext context, KClientPort parentPort = null) : base(context)
         {
+            IncrementReferenceCount();
+
             ServerSession = new KServerSession(context, this);
             ClientSession = new KClientSession(context, this, parentPort);
 

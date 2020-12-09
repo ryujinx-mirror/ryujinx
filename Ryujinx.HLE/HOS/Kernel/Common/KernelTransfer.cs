@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
     {
         public static bool UserToKernelInt32(KernelContext context, ulong address, out int value)
         {
-            KProcess currentProcess = context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.CpuMemory.IsMapped(address) &&
                 currentProcess.CpuMemory.IsMapped(address + 3))
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static bool UserToKernelInt32Array(KernelContext context, ulong address, Span<int> values)
         {
-            KProcess currentProcess = context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             for (int index = 0; index < values.Length; index++, address += 4)
             {
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static bool UserToKernelString(KernelContext context, ulong address, int size, out string value)
         {
-            KProcess currentProcess = context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.CpuMemory.IsMapped(address) &&
                 currentProcess.CpuMemory.IsMapped(address + (ulong)size - 1))
@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static bool KernelToUserInt32(KernelContext context, ulong address, int value)
         {
-            KProcess currentProcess = context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.CpuMemory.IsMapped(address) &&
                 currentProcess.CpuMemory.IsMapped(address + 3))
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static bool KernelToUserInt64(KernelContext context, ulong address, long value)
         {
-            KProcess currentProcess = context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.CpuMemory.IsMapped(address) &&
                 currentProcess.CpuMemory.IsMapped(address + 7))

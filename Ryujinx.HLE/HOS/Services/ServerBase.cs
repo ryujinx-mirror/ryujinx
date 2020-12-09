@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services
         };
 
         private readonly KernelContext _context;
-        private readonly KProcess _selfProcess;
+        private KProcess _selfProcess;
 
         private readonly List<int> _sessionHandles = new List<int>();
         private readonly List<int> _portHandles = new List<int>();
@@ -55,11 +55,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, flags, 0, 0);
 
-            context.Syscall.CreateProcess(creationInfo, DefaultCapabilities, out int handle, null, ServerLoop);
-
-            _selfProcess = context.Scheduler.GetCurrentProcess().HandleTable.GetKProcess(handle);
-
-            context.Syscall.StartProcess(handle, 44, 3, 0x1000);
+            KernelStatic.StartInitialProcess(context, creationInfo, DefaultCapabilities, 44, ServerLoop);
         }
 
         private void AddPort(int serverPortHandle, IpcService obj)
@@ -82,6 +78,8 @@ namespace Ryujinx.HLE.HOS.Services
 
         private void ServerLoop()
         {
+            _selfProcess = KernelStatic.GetCurrentProcess();
+
             if (SmObject != null)
             {
                 _context.Syscall.ManageNamedPort("sm:", 50, out int serverPortHandle);
@@ -95,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Services
                 InitDone.Dispose();
             }
 
-            KThread thread = _context.Scheduler.GetCurrentThread();
+            KThread thread = KernelStatic.GetCurrentThread();
             ulong messagePtr = thread.TlsAddress;
             _context.Syscall.SetHeapSize(0x200000, out ulong heapAddr);
 
@@ -107,18 +105,14 @@ namespace Ryujinx.HLE.HOS.Services
 
             while (true)
             {
-                int[] handles = _portHandles.ToArray();
+                int[] portHandles = _portHandles.ToArray();
+                int[] sessionHandles = _sessionHandles.ToArray();
+                int[] handles = new int[portHandles.Length + sessionHandles.Length];
 
-                for (int i = 0; i < handles.Length; i++)
-                {
-                    if (_context.Syscall.AcceptSession(handles[i], out int serverSessionHandle) == KernelResult.Success)
-                    {
-                        AddSessionObj(serverSessionHandle, _ports[handles[i]]);
-                    }
-                }
+                portHandles.CopyTo(handles, 0);
+                sessionHandles.CopyTo(handles, portHandles.Length);
 
-                handles = _sessionHandles.ToArray();
-
+                // We still need a timeout here to allow the service to pick up and listen new sessions...
                 var rc = _context.Syscall.ReplyAndReceive(handles, replyTargetHandle, 1000000L, out int signaledIndex);
 
                 thread.HandlePostSyscall();
@@ -130,8 +124,9 @@ namespace Ryujinx.HLE.HOS.Services
 
                 replyTargetHandle = 0;
 
-                if (rc == KernelResult.Success && signaledIndex != -1)
+                if (rc == KernelResult.Success && signaledIndex >= portHandles.Length)
                 {
+                    // We got a IPC request, process it, pass to the appropriate service if needed.
                     int signaledHandle = handles[signaledIndex];
 
                     if (Process(signaledHandle, heapAddr))
@@ -141,6 +136,15 @@ namespace Ryujinx.HLE.HOS.Services
                 }
                 else
                 {
+                    if (rc == KernelResult.Success)
+                    {
+                        // We got a new connection, accept the session to allow servicing future requests.
+                        if (_context.Syscall.AcceptSession(handles[signaledIndex], out int serverSessionHandle) == KernelResult.Success)
+                        {
+                            AddSessionObj(serverSessionHandle, _ports[handles[signaledIndex]]);
+                        }
+                    }
+
                     _selfProcess.CpuMemory.Write(messagePtr + 0x0, 0);
                     _selfProcess.CpuMemory.Write(messagePtr + 0x4, 2 << 10);
                     _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
@@ -150,8 +154,8 @@ namespace Ryujinx.HLE.HOS.Services
 
         private bool Process(int serverSessionHandle, ulong recvListAddr)
         {
-            KProcess process = _context.Scheduler.GetCurrentProcess();
-            KThread thread = _context.Scheduler.GetCurrentThread();
+            KProcess process = KernelStatic.GetCurrentProcess();
+            KThread thread = KernelStatic.GetCurrentThread();
             ulong messagePtr = thread.TlsAddress;
             ulong messageSize = 0x100;
 

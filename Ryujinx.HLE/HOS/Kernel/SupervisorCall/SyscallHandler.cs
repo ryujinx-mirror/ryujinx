@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private void PostSvcHandler()
         {
-            KThread currentThread = _context.Scheduler.GetCurrentThread();
+            KThread currentThread = KernelStatic.GetCurrentThread();
 
             currentThread.HandlePostSyscall();
         }

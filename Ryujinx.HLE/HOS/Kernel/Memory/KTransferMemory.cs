@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult Initialize(ulong address, ulong size, KMemoryPermission permission)
         {
-            KProcess creator = KernelContext.Scheduler.GetCurrentProcess();
+            KProcess creator = KernelStatic.GetCurrentProcess();
 
             _creator = creator;
 

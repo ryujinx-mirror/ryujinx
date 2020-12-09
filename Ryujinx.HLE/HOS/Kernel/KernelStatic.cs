@@ -1,6 +1,9 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Threading;
+﻿using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {
@@ -9,30 +12,52 @@ namespace Ryujinx.HLE.HOS.Kernel
         [ThreadStatic]
         private static KernelContext Context;
 
-        public static void YieldUntilCompletion(Action action)
+        [ThreadStatic]
+        private static KThread CurrentThread;
+
+        public static KernelResult StartInitialProcess(
+            KernelContext context,
+            ProcessCreationInfo creationInfo,
+            ReadOnlySpan<int> capabilities,
+            int mainThreadPriority,
+            ThreadStart customThreadStart)
         {
-            YieldUntilCompletion(Task.Factory.StartNew(action));
-        }
+            KProcess process = new KProcess(context);
 
-        public static void YieldUntilCompletion(Task task)
-        {
-            KThread currentThread = Context.Scheduler.GetCurrentThread();
+            KernelResult result = process.Initialize(
+                creationInfo,
+                capabilities,
+                context.ResourceLimit,
+                MemoryRegion.Service,
+                null,
+                customThreadStart);
 
-            Context.CriticalSection.Enter();
-
-            currentThread.Reschedule(ThreadSchedState.Paused);
-
-            task.ContinueWith((antecedent) =>
+            if (result != KernelResult.Success)
             {
-                currentThread.Reschedule(ThreadSchedState.Running);
-            });
+                return result;
+            }
 
-            Context.CriticalSection.Leave();
+            process.DefaultCpuCore = 3;
+
+            context.Processes.TryAdd(process.Pid, process);
+
+            return process.Start(mainThreadPriority, 0x1000UL);
         }
 
-        internal static void SetKernelContext(KernelContext context)
+        internal static void SetKernelContext(KernelContext context, KThread thread)
         {
             Context = context;
+            CurrentThread = thread;
+        }
+
+        internal static KThread GetCurrentThread()
+        {
+            return CurrentThread;
+        }
+
+        internal static KProcess GetCurrentProcess()
+        {
+            return GetCurrentThread().Owner;
         }
     }
 }

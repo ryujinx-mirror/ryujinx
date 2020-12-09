@@ -115,11 +115,6 @@ namespace Ryujinx.HLE
 
             System.PerformanceState.PerformanceMode = System.State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
-            if (ConfigurationState.Instance.System.EnableMulticoreScheduling)
-            {
-                System.EnableMultiCoreScheduling();
-            }
-
             System.EnablePtc = ConfigurationState.Instance.System.EnablePtc;
 
             System.FsIntegrityCheckLevel = GetIntegrityCheckLevel();

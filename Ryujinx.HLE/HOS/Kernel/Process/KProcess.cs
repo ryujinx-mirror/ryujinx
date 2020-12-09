@@ -78,6 +78,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public bool IsPaused { get; private set; }
 
+        private long _totalTimeRunning;
+
+        public long TotalTimeRunning => _totalTimeRunning;
+
         private IProcessContextFactory _contextFactory;
         public IProcessContext Context { get; private set; }
         public IVirtualMemoryManager CpuMemory => Context.AddressSpace;
@@ -112,11 +116,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             KPageList pageList,
             KResourceLimit resourceLimit,
             MemoryRegion memRegion,
-            IProcessContextFactory contextFactory)
+            IProcessContextFactory contextFactory,
+            ThreadStart customThreadStart = null)
         {
             ResourceLimit = resourceLimit;
             _memRegion = memRegion;
             _contextFactory = contextFactory ?? new ProcessContextFactory();
+            _customThreadStart = customThreadStart;
 
             AddressSpaceType addrSpaceType = (AddressSpaceType)((int)(creationInfo.Flags & ProcessCreationFlags.AddressSpaceMask) >> (int)ProcessCreationFlags.AddressSpaceShift);
 
@@ -176,9 +182,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 throw new InvalidOperationException($"Invalid KIP Id {Pid}.");
             }
 
-            result = ParseProcessInfo(creationInfo);
-
-            return result;
+            return ParseProcessInfo(creationInfo);
         }
 
         public KernelResult Initialize(
@@ -192,6 +196,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             ResourceLimit = resourceLimit;
             _memRegion = memRegion;
             _contextFactory = contextFactory ?? new ProcessContextFactory();
+            _customThreadStart = customThreadStart;
 
             ulong personalMmHeapSize = GetPersonalMmHeapSize((ulong)creationInfo.SystemResourcePagesCount, memRegion);
 
@@ -298,8 +303,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             {
                 CleanUpForError();
             }
-
-            _customThreadStart = customThreadStart;
 
             return result;
         }
@@ -751,8 +754,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private void InterruptHandler(object sender, EventArgs e)
         {
-            KernelContext.Scheduler.ContextSwitch();
-            KernelContext.Scheduler.GetCurrentThread().HandlePostSyscall();
+            KThread currentThread = KernelStatic.GetCurrentThread();
+
+            if (currentThread.IsSchedulable)
+            {
+                KernelContext.Schedulers[currentThread.CurrentCore].Schedule();
+            }
+
+            currentThread.HandlePostSyscall();
         }
 
         public void IncrementThreadCount()
@@ -828,6 +837,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return personalMmHeapPagesCount * KMemoryManager.PageSize;
         }
 
+        public void AddCpuTime(long ticks)
+        {
+            Interlocked.Add(ref _totalTimeRunning, ticks);
+        }
+
         public void AddThread(KThread thread)
         {
             lock (_threadingLock)
@@ -893,7 +907,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (shallTerminate)
             {
-                UnpauseAndTerminateAllThreadsExcept(KernelContext.Scheduler.GetCurrentThread());
+                UnpauseAndTerminateAllThreadsExcept(KernelStatic.GetCurrentThread());
 
                 HandleTable.Destroy();
 
@@ -929,7 +943,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (shallTerminate)
             {
-                UnpauseAndTerminateAllThreadsExcept(KernelContext.Scheduler.GetCurrentThread());
+                UnpauseAndTerminateAllThreadsExcept(KernelStatic.GetCurrentThread());
 
                 HandleTable.Destroy();
 
@@ -1058,7 +1072,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private bool InvalidAccessHandler(ulong va)
         {
-            KernelContext.Scheduler.GetCurrentThreadOrNull()?.PrintGuestStackTrace();
+            KernelStatic.GetCurrentThread().PrintGuestStackTrace();
 
             Logger.Error?.Print(LogClass.Cpu, $"Invalid memory access at virtual address 0x{va:X16}.");
 
@@ -1067,7 +1081,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private void UndefinedInstructionHandler(object sender, InstUndefinedEventArgs e)
         {
-            KernelContext.Scheduler.GetCurrentThreadOrNull()?.PrintGuestStackTrace();
+            KernelStatic.GetCurrentThread().PrintGuestStackTrace();
 
             throw new UndefinedInstructionException(e.Address, e.OpCode);
         }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
@@ -47,17 +48,25 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public void IncrementReferenceCount()
         {
-            Interlocked.Increment(ref _referenceCount);
+            int newRefCount = Interlocked.Increment(ref _referenceCount);
+
+            Debug.Assert(newRefCount >= 2);
         }
 
         public void DecrementReferenceCount()
         {
-            if (Interlocked.Decrement(ref _referenceCount) == 0)
+            int newRefCount = Interlocked.Decrement(ref _referenceCount);
+
+            Debug.Assert(newRefCount >= 0);
+
+            if (newRefCount == 0)
             {
                 Destroy();
             }
         }
 
-        protected virtual void Destroy() { }
+        protected virtual void Destroy()
+        {
+        }
     }
 }

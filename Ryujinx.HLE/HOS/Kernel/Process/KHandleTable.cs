@@ -236,7 +236,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             if (handle == SelfThreadHandle)
             {
-                return _context.Scheduler.GetCurrentThread();
+                return KernelStatic.GetCurrentThread();
             }
             else
             {
@@ -248,7 +248,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             if (handle == SelfProcessHandle)
             {
-                return _context.Scheduler.GetCurrentProcess();
+                return KernelStatic.GetCurrentProcess();
             }
             else
             {

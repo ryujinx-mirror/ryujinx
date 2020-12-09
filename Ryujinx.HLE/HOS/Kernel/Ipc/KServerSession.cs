@@ -214,7 +214,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KernelResult Receive(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
-            KThread  serverThread  = KernelContext.Scheduler.GetCurrentThread();
+            KThread  serverThread  = KernelStatic.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
 
             KernelContext.CriticalSection.Enter();
@@ -594,7 +594,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         public KernelResult Reply(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
-            KThread  serverThread  = KernelContext.Scheduler.GetCurrentThread();
+            KThread  serverThread  = KernelStatic.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
 
             KernelContext.CriticalSection.Enter();
@@ -889,7 +889,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private MessageHeader GetServerMessageHeader(Message serverMsg)
         {
-            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             uint word0 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 0);
             uint word1 = currentProcess.CpuMemory.Read<uint>(serverMsg.Address + 4);

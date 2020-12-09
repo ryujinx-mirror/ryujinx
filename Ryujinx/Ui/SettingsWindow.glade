@@ -1440,24 +1440,6 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="_multiSchedToggle">
-                                    <property name="label" translatable="yes">Enable Multicore Scheduling</property>
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables multi-core scheduling of threads</property>
-                                    <property name="halign">start</property>
-                                    <property name="margin-top">5</property>
-                                    <property name="margin-bottom">5</property>
-                                    <property name="draw-indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">5</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkCheckButton" id="_ptcToggle">
                                     <property name="label" translatable="yes">Enable Profiled Persistent Translation Cache</property>
                                     <property name="visible">True</property>

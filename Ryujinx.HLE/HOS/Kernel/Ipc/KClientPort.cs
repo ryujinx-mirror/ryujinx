@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             clientSession = null;
 
-            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.ResourceLimit != null &&
                !currentProcess.ResourceLimit.Reserve(LimitableResource.Session, 1))
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             clientSession = null;
 
-            KProcess currentProcess = KernelContext.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             if (currentProcess.ResourceLimit != null &&
                !currentProcess.ResourceLimit.Reserve(LimitableResource.Session, 1))

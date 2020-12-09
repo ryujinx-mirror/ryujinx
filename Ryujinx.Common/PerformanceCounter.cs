@@ -32,7 +32,7 @@ namespace Ryujinx.Common
         public static long TicksPerMillisecond { get; }
 
         /// <summary>
-        /// Gets the number of milliseconds elapsed since the system started.
+        /// Gets the number of ticks elapsed since the system started.
         /// </summary>
         public static long ElapsedTicks
         {
@@ -76,7 +76,7 @@ namespace Ryujinx.Common
             TicksPerHour        = TicksPerMinute * 60;
             TicksPerDay         = TicksPerHour * 24;
 
-            _ticksToNs = 1000000000.0 / (double)Stopwatch.Frequency;
+            _ticksToNs = 1000000000.0 / Stopwatch.Frequency;
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Ryujinx.Configuration
                 public ReactiveObject<bool> DevColumn        { get; private set; }
                 public ReactiveObject<bool> VersionColumn    { get; private set; }
                 public ReactiveObject<bool> TimePlayedColumn { get; private set; }
-                public ReactiveObject<bool> LastPlayedColumn { get; private set; } 
+                public ReactiveObject<bool> LastPlayedColumn { get; private set; }
                 public ReactiveObject<bool> FileExtColumn    { get; private set; }
                 public ReactiveObject<bool> FileSizeColumn   { get; private set; }
                 public ReactiveObject<bool> PathColumn       { get; private set; }
@@ -199,11 +199,6 @@ namespace Ryujinx.Configuration
             public ReactiveObject<bool> EnableDockedMode { get; private set; }
 
             /// <summary>
-            /// Enables or disables multi-core scheduling of threads
-            /// </summary>
-            public ReactiveObject<bool> EnableMulticoreScheduling { get; private set; }
-
-            /// <summary>
             /// Enables or disables profiled translation cache persistency
             /// </summary>
             public ReactiveObject<bool> EnablePtc { get; private set; }
@@ -230,17 +225,16 @@ namespace Ryujinx.Configuration
 
             public SystemSection()
             {
-                Language                  = new ReactiveObject<Language>();
-                Region                    = new ReactiveObject<Region>();
-                TimeZone                  = new ReactiveObject<string>();
-                SystemTimeOffset          = new ReactiveObject<long>();
-                EnableDockedMode          = new ReactiveObject<bool>();
-                EnableMulticoreScheduling = new ReactiveObject<bool>();
-                EnablePtc                 = new ReactiveObject<bool>();
-                EnableFsIntegrityChecks   = new ReactiveObject<bool>();
-                FsGlobalAccessLogMode     = new ReactiveObject<int>();
-                AudioBackend              = new ReactiveObject<AudioBackend>();
-                IgnoreMissingServices     = new ReactiveObject<bool>();
+                Language                = new ReactiveObject<Language>();
+                Region                  = new ReactiveObject<Region>();
+                TimeZone                = new ReactiveObject<string>();
+                SystemTimeOffset        = new ReactiveObject<long>();
+                EnableDockedMode        = new ReactiveObject<bool>();
+                EnablePtc               = new ReactiveObject<bool>();
+                EnableFsIntegrityChecks = new ReactiveObject<bool>();
+                FsGlobalAccessLogMode   = new ReactiveObject<int>();
+                AudioBackend            = new ReactiveObject<AudioBackend>();
+                IgnoreMissingServices   = new ReactiveObject<bool>();
             }
         }
 
@@ -414,7 +408,6 @@ namespace Ryujinx.Configuration
                 CheckUpdatesOnStart       = CheckUpdatesOnStart,
                 EnableVsync               = Graphics.EnableVsync,
                 EnableShaderCache         = Graphics.EnableShaderCache,
-                EnableMulticoreScheduling = System.EnableMulticoreScheduling,
                 EnablePtc                 = System.EnablePtc,
                 EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
                 FsGlobalAccessLogMode     = System.FsGlobalAccessLogMode,
@@ -476,7 +469,6 @@ namespace Ryujinx.Configuration
             CheckUpdatesOnStart.Value              = true;
             Graphics.EnableVsync.Value             = true;
             Graphics.EnableShaderCache.Value       = true;
-            System.EnableMulticoreScheduling.Value = true;
             System.EnablePtc.Value                 = false;
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
@@ -788,7 +780,6 @@ namespace Ryujinx.Configuration
             CheckUpdatesOnStart.Value              = configurationFileFormat.CheckUpdatesOnStart;
             Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
-            System.EnableMulticoreScheduling.Value = configurationFileFormat.EnableMulticoreScheduling;
             System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
             System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;
             System.FsGlobalAccessLogMode.Value     = configurationFileFormat.FsGlobalAccessLogMode;

@@ -184,11 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void WaitDequeueEvent()
         {
-            Monitor.Exit(Lock);
-
-            KernelStatic.YieldUntilCompletion(WaitForLock);
-
-            Monitor.Enter(Lock);
+            WaitForLock();
         }
 
         public void SignalIsAllocatingEvent()
@@ -198,21 +194,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void WaitIsAllocatingEvent()
         {
-            Monitor.Exit(Lock);
-
-            KernelStatic.YieldUntilCompletion(WaitForLock);
-
-            Monitor.Enter(Lock);
+            WaitForLock();
         }
 
         private void WaitForLock()
         {
-            lock (Lock)
+            if (Active)
             {
-                if (Active)
-                {
-                    Monitor.Wait(Lock);
-                }
+                Monitor.Wait(Lock);
             }
         }
 

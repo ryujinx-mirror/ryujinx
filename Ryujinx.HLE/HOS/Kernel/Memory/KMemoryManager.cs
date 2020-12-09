@@ -728,7 +728,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.OutOfMemory;
             }
 
-            KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
             lock (_blocks)
             {
@@ -1225,7 +1225,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 ulong remainingPages = remainingSize / PageSize;
 
-                KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+                KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
                 if (currentProcess.ResourceLimit != null &&
                    !currentProcess.ResourceLimit.Reserve(LimitableResource.Memory, remainingSize))
@@ -1355,7 +1355,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     PhysicalMemoryUsage -= heapMappedSize;
 
-                    KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+                    KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
                     currentProcess.ResourceLimit?.Release(LimitableResource.Memory, heapMappedSize);
 
@@ -1504,7 +1504,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     attributeMask | MemoryAttribute.Uncached,
                     attributeExpected))
                 {
-                    KProcess currentProcess = _context.Scheduler.GetCurrentProcess();
+                    KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
                     serverAddress = currentProcess.MemoryManager.GetDramAddressFromVa(serverAddress);
 
@@ -2111,11 +2111,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         }
                     }
                 }
+
+                InsertBlock(addressRounded, pagesCount, RestoreIpcMappingPermissions);
+
+                return KernelResult.Success;
             }
-
-            InsertBlock(addressRounded, pagesCount, RestoreIpcMappingPermissions);
-
-            return KernelResult.Success;
         }
 
         public KernelResult BorrowIpcBuffer(ulong address, ulong size)
