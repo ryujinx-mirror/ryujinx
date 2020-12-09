@@ -401,7 +401,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             ulong address = _context.MemoryManager.Translate(gpuVa);
 
-            if (address == MemoryManager.BadAddress)
+            if (address == MemoryManager.PteUnmapped)
             {
                 return 0;
             }

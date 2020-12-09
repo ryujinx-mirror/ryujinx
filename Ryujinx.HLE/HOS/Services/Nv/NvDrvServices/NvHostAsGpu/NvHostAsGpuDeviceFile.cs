@@ -1,4 +1,5 @@
-﻿using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Collections;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types;
@@ -12,8 +13,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
     class NvHostAsGpuDeviceFile : NvDeviceFile
     {
         private static ConcurrentDictionary<KProcess, AddressSpaceContext> _addressSpaceContextRegistry = new ConcurrentDictionary<KProcess, AddressSpaceContext>();
+        private NvMemoryAllocator _memoryAllocator;
 
-        public NvHostAsGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner) { }
+        public NvHostAsGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
+        { 
+            _memoryAllocator = context.Device.MemoryAllocator; 
+        }
 
         public override NvInternalResult Ioctl(NvIoctl command, Span<byte> arguments)
         {
@@ -92,11 +97,30 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 // the Offset field holds the alignment size instead.
                 if ((arguments.Flags & AddressSpaceFlags.FixedOffset) != 0)
                 {
-                    arguments.Offset = (long)addressSpaceContext.Gmm.ReserveFixed((ulong)arguments.Offset, size);
+                    bool regionInUse = _memoryAllocator.IsRegionInUse((ulong)arguments.Offset, size, out ulong freeAddressStartPosition);
+                    ulong address;
+
+                    if (!regionInUse)
+                    {
+                        _memoryAllocator.AllocateRange((ulong)arguments.Offset, size, freeAddressStartPosition);
+                        address = freeAddressStartPosition;
+                    }
+                    else
+                    {
+                        address = NvMemoryAllocator.PteUnmapped;
+                    }
+
+                    arguments.Offset = (long)address;
                 }
                 else
                 {
-                    arguments.Offset = (long)addressSpaceContext.Gmm.Reserve((ulong)size, (ulong)arguments.Offset);
+                    ulong address = _memoryAllocator.GetFreeAddress((ulong)size, out ulong freeAddressStartPosition, (ulong)arguments.Offset);
+                    if (address != NvMemoryAllocator.PteUnmapped)
+                    {
+                        _memoryAllocator.AllocateRange(address, (ulong)size, freeAddressStartPosition);
+                    }
+
+                    arguments.Offset = unchecked((long)address);
                 }
 
                 if (arguments.Offset < 0)
@@ -128,6 +152,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
                 if (addressSpaceContext.RemoveReservation(arguments.Offset))
                 {
+                    _memoryAllocator.DeallocateRange((ulong)arguments.Offset, size);
                     addressSpaceContext.Gmm.Free((ulong)arguments.Offset, size);
                 }
                 else
@@ -152,6 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 {
                     if (size != 0)
                     {
+                        _memoryAllocator.DeallocateRange((ulong)arguments.Offset, (ulong)size);
                         addressSpaceContext.Gmm.Free((ulong)arguments.Offset, (ulong)size);
                     }
                 }
@@ -252,7 +278,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 }
                 else
                 {
-                    arguments.Offset = (long)addressSpaceContext.Gmm.MapAllocate((ulong)physicalAddress, (ulong)size, pageSize);
+                    ulong va = _memoryAllocator.GetFreeAddress((ulong)size, out ulong freeAddressStartPosition, (ulong) pageSize);
+                    if (va != NvMemoryAllocator.PteUnmapped)
+                    {
+                        _memoryAllocator.AllocateRange(va, (ulong)size, freeAddressStartPosition);
+                    }
+                    arguments.Offset = (long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, va, (ulong)size);
                 }
 
                 if (arguments.Offset < 0)

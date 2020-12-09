@@ -12,6 +12,7 @@ using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Memory;
 using System;
@@ -25,6 +26,8 @@ namespace Ryujinx.HLE
         internal MemoryBlock Memory { get; private set; }
 
         public GpuContext Gpu { get; private set; }
+
+        internal NvMemoryAllocator MemoryAllocator { get; private set; }
 
         internal Host1xDevice Host1x { get; }
 
@@ -68,6 +71,8 @@ namespace Ryujinx.HLE
             Memory = new MemoryBlock(1UL << 32);
 
             Gpu = new GpuContext(renderer);
+
+            MemoryAllocator = new NvMemoryAllocator();
 
             Host1x = new Host1xDevice(Gpu.Synchronization);
             var nvdec = new NvdecDevice(Gpu.MemoryManager);

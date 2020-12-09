@@ -54,7 +54,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 // Bad address. We can't add a texture with a invalid address
                 // to the cache.
-                if (info.Address == MemoryManager.BadAddress)
+                if (info.Address == MemoryManager.PteUnmapped)
                 {
                     return null;
                 }

@@ -472,7 +472,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong address = _context.MemoryManager.Translate(copyTexture.Address.Pack());
 
-            if (address == MemoryManager.BadAddress)
+            if (address == MemoryManager.PteUnmapped)
             {
                 return null;
             }
@@ -533,7 +533,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong address = _context.MemoryManager.Translate(colorState.Address.Pack());
 
-            if (address == MemoryManager.BadAddress)
+            if (address == MemoryManager.PteUnmapped)
             {
                 return null;
             }
@@ -618,7 +618,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong address = _context.MemoryManager.Translate(dsState.Address.Pack());
 
-            if (address == MemoryManager.BadAddress)
+            if (address == MemoryManager.PteUnmapped)
             {
                 return null;
             }
@@ -983,7 +983,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong address = _context.MemoryManager.Translate(cbp.DstAddress.Pack());
 
-            if (address == MemoryManager.BadAddress)
+            if (address == MemoryManager.PteUnmapped)
             {
                 return null;
             }
