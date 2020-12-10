@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Ryujinx.Common;
 using System;
 using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Common.Logging;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
 {
@@ -27,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
 
         public NvMemoryAllocator()
         {
-            _tree.Add(PageSize, PageSize + AddressSpaceSize);
+            _tree.Add(PageSize, AddressSpaceSize);
             LinkedListNode<ulong> node = _list.AddFirst(PageSize);
             _dictionary[PageSize] = node;
         }
@@ -44,6 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
         {
             lock (_tree)
             {
+                Logger.Debug?.Print(LogClass.ServiceNv, $"Allocating range from 0x{va:X} to 0x{(va + size):X}.");
                 if (referenceAddress != InvalidAddress)
                 {
                     ulong endAddress = va + size;
@@ -57,6 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
 
                             // Overwrite existing block with its new smaller range.
                             _tree.Add(referenceAddress, leftEndAddress);
+                            Logger.Debug?.Print(LogClass.ServiceNv, $"Created smaller address range from 0x{referenceAddress:X} to 0x{leftEndAddress:X}.");
                         }
                         else
                         {
@@ -68,6 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                         // If leftover space, create a right node.
                         if (rightSize > 0)
                         {
+                            Logger.Debug?.Print(LogClass.ServiceNv, $"Created smaller address range from 0x{endAddress:X} to 0x{referenceEndAddress:X}.");
                             _tree.Add(endAddress, referenceEndAddress);
 
                             LinkedListNode<ulong> node = _list.AddAfter(_dictionary[referenceAddress], endAddress);
@@ -94,6 +98,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
         {
             lock (_tree)
             {
+                Logger.Debug?.Print(LogClass.ServiceNv, $"Deallocating address range from 0x{va:X} to 0x{(va + size):X}.");
+
                 ulong freeAddressStartPosition = _tree.Floor(va);
                 if (freeAddressStartPosition != InvalidAddress)
                 {
@@ -155,6 +161,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                             break;
                         }
                     }
+
+                    Logger.Debug?.Print(LogClass.ServiceNv, $"Deallocation resulted in new free range from 0x{expandedStart:X} to 0x{expandedEnd:X}.");
+
                     _tree.Add(expandedStart, expandedEnd);
                     LinkedListNode<ulong> nodePtr = _list.AddAfter(node, expandedStart);
                     _dictionary[expandedStart] = nodePtr;
@@ -176,6 +185,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
             // when 0 is returned it's considered a mapping error.
             lock (_tree)
             {
+                Logger.Debug?.Print(LogClass.ServiceNv, $"Searching for a free address @ 0x{start:X} of size 0x{size:X}.");
                 ulong address = start;
 
                 if (alignment == 0)
@@ -186,18 +196,21 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                 alignment = (alignment + PageMask) & ~PageMask;
                 if (address < AddressSpaceSize)
                 {
-                    bool completedFirstPass = false;
+                    bool reachedEndOfAddresses = false;
                     ulong targetAddress;
                     if(start == DefaultStart)
                     {
+                        Logger.Debug?.Print(LogClass.ServiceNv, $"Target address set to start of the last available range: 0x{_list.Last.Value:X}.");
                         targetAddress = _list.Last.Value;
                     }
                     else
                     {
                         targetAddress = _tree.Floor(address);
-                        if(targetAddress == InvalidAddress)
+                        Logger.Debug?.Print(LogClass.ServiceNv, $"Target address set to floor of 0x{address:X}; resulted in 0x{targetAddress:X}.");
+                        if (targetAddress == InvalidAddress)
                         {
                             targetAddress = _tree.Ceiling(address);
+                            Logger.Debug?.Print(LogClass.ServiceNv, $"Target address was invalid, set to ceiling of 0x{address:X}; resulted in 0x{targetAddress:X}");
                         }
                     }
                     while (address < AddressSpaceSize)
@@ -208,27 +221,32 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                             {
                                 if (address + size <= _tree.Get(targetAddress))
                                 {
+                                    Logger.Debug?.Print(LogClass.ServiceNv, $"Found a suitable free address range from 0x{targetAddress:X} to 0x{_tree.Get(targetAddress):X} for 0x{address:X}.");
                                     freeAddressStartPosition = targetAddress;
                                     return address;
                                 }
                                 else
                                 {
+                                    Logger.Debug?.Print(LogClass.ServiceNv, "Address requirements exceeded the available space in the target range.");
                                     LinkedListNode<ulong> nextPtr = _dictionary[targetAddress];
                                     if (nextPtr.Next != null)
                                     {
                                         targetAddress = nextPtr.Next.Value;
+                                        Logger.Debug?.Print(LogClass.ServiceNv, $"Moved search to successor range starting at 0x{targetAddress:X}.");
                                     }
                                     else
                                     {
-                                        if (completedFirstPass)
+                                        if (reachedEndOfAddresses)
                                         {
+                                            Logger.Debug?.Print(LogClass.ServiceNv, "Exiting loop, a full pass has already been completed w/ no suitable free address range.");
                                             break;
                                         }
                                         else
                                         {
-                                            completedFirstPass = true;
+                                            reachedEndOfAddresses = true;
                                             address = start;
                                             targetAddress = _tree.Floor(address);
+                                            Logger.Debug?.Print(LogClass.ServiceNv, $"Reached the end of the available free ranges, restarting loop @ 0x{targetAddress:X} for 0x{address:X}.");
                                         }
                                     }
                                 }
@@ -243,6 +261,16 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                                 {
                                     address = (address - remainder) + alignment;
                                 }
+
+                                Logger.Debug?.Print(LogClass.ServiceNv, $"Reset and aligned address to {address:X}.");
+
+                                if (address + size > AddressSpaceSize && !reachedEndOfAddresses)
+                                {
+                                    reachedEndOfAddresses = true;
+                                    address = start;
+                                    targetAddress = _tree.Floor(address);
+                                    Logger.Debug?.Print(LogClass.ServiceNv, $"Address requirements exceeded the capacity of available address space, restarting loop @ 0x{targetAddress:X} for 0x{address:X}.");
+                                }
                             }
                         }
                         else
@@ -251,6 +279,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
                         }
                     }
                 }
+                Logger.Debug?.Print(LogClass.ServiceNv, $"No suitable address range found; returning: 0x{InvalidAddress:X}.");
                 freeAddressStartPosition = InvalidAddress;
             }
 
