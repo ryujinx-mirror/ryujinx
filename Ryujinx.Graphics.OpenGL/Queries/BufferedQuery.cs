@@ -44,14 +44,17 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             GL.BeginQuery(_type, Query);
         }
 
-        public unsafe void End()
+        public unsafe void End(bool withResult)
         {
             GL.EndQuery(_type);
 
-            GL.BindBuffer(BufferTarget.QueryBuffer, _buffer);
+            if (withResult)
+            {
+                GL.BindBuffer(BufferTarget.QueryBuffer, _buffer);
 
-            Marshal.WriteInt64(_bufferMap, -1L);
-            GL.GetQueryObject(Query, GetQueryObjectParam.QueryResult, (long*)0);
+                Marshal.WriteInt64(_bufferMap, -1L);
+                GL.GetQueryObject(Query, GetQueryObjectParam.QueryResult, (long*)0);
+            }
         }
 
         public bool TryGetResult(out long result)

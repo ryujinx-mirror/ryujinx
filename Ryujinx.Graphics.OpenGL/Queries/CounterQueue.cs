@@ -107,13 +107,14 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
                 if (draws > 0)
                 {
-                    _current.Complete();
+                    _current.Complete(true);
                     _events.Enqueue(_current);
 
                     _current.OnResult += resultHandler;
                 }
                 else
                 {
+                    _current.Complete(false);
                     _current.Dispose();
                     resultHandler(_current, 0);
                 }

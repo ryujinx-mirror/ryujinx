@@ -41,9 +41,9 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             ClearCounter = true;
         }
 
-        internal void Complete()
+        internal void Complete(bool withResult)
         {
-            _counter.End();
+            _counter.End(withResult);
         }
 
         internal bool TryConsume(ref ulong result, bool block, AutoResetEvent wakeSignal = null)
