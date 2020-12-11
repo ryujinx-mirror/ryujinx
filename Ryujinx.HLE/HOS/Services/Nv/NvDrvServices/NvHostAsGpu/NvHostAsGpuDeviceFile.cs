@@ -223,8 +223,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                         long virtualAddress = arguments.Offset + arguments.BufferOffset;
 
                         physicalAddress += arguments.BufferOffset;
+                        addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)virtualAddress, (ulong)arguments.MappingSize);
 
-                        if ((long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)virtualAddress, (ulong)arguments.MappingSize) < 0)
+                        if (virtualAddress < 0)
                         {
                             string message = string.Format(mapErrorMsg, virtualAddress, arguments.MappingSize, pageSize);
 
@@ -265,7 +266,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 {
                     if (addressSpaceContext.ValidateFixedBuffer(arguments.Offset, size, pageSize))
                     {
-                        arguments.Offset = (long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)arguments.Offset, (ulong)size);
+                        addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)arguments.Offset, (ulong)size);
                     }
                     else
                     {
@@ -283,7 +284,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                     {
                         _memoryAllocator.AllocateRange(va, (ulong)size, freeAddressStartPosition);
                     }
-                    arguments.Offset = (long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, va, (ulong)size);
+                    
+                    addressSpaceContext.Gmm.Map((ulong)physicalAddress, va, (ulong)size);
+                    arguments.Offset = (long)va;
                 }
 
                 if (arguments.Offset < 0)
@@ -332,12 +335,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                     return NvInternalResult.InvalidInput;
                 }
 
-                long result = (long)gmm.Map(
+                long shiftedGpuOffset = (long)((ulong)arguments[index].GpuOffset << 16);
+
+                gmm.Map(
                     ((ulong)arguments[index].MapOffset << 16) + (ulong)map.Address,
-                     (ulong)arguments[index].GpuOffset << 16,
+                     (ulong)shiftedGpuOffset,
                      (ulong)arguments[index].Pages     << 16);
 
-                if (result < 0)
+                if (shiftedGpuOffset < 0)
                 {
                     Logger.Warning?.Print(LogClass.ServiceNv,
                         $"Page 0x{arguments[index].GpuOffset:x16} size 0x{arguments[index].Pages:x16} not allocated!");

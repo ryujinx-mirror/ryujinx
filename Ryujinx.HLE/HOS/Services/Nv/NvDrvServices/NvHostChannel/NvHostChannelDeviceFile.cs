@@ -253,7 +253,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                         if (va != NvMemoryAllocator.PteUnmapped && va <= uint.MaxValue && (va + (uint)map.Size) <= uint.MaxValue)
                         {
                             _memoryAllocator.AllocateRange(va, (uint)map.Size, freeAddressStartPosition);
-                            map.DmaMapAddress = (long)gmm.Map((ulong)map.Address, va, (uint)map.Size);
+                            gmm.Map((ulong)map.Address, va, (uint)map.Size);
+                            map.DmaMapAddress = (long)va;
                         }
                         else
                         {
