@@ -115,16 +115,14 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         }
 
         [Command(130)]
-        // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, buffer<nn::account::nas::NasUserBaseForApplication, 0x1a>, buffer<bytes, 6>)
+        // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, nn::account::nas::NasUserBaseForApplication, buffer<bytes, 6>)
         public ResultCode GetNintendoAccountUserResourceCacheForApplication(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
 
             context.ResponseData.Write(NetworkServiceAccountId);
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0L);
-
-            // TODO: determine and fill the two output IPC buffers.
+            // TODO: determine and fill the output IPC buffer.
 
             return ResultCode.Success;
         }
