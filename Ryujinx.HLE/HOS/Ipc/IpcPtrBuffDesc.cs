@@ -30,6 +30,11 @@ namespace Ryujinx.HLE.HOS.Ipc
             Size = (ushort)(word0 >> 16);
         }
 
+        public IpcPtrBuffDesc WithSize(long size)
+        {
+            return new IpcPtrBuffDesc(Position, Index, size);
+        }
+
         public uint GetWord0()
         {
             uint word0;

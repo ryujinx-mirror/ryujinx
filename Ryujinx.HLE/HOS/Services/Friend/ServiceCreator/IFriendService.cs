@@ -221,6 +221,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             bool   unknownBool = context.RequestData.ReadBoolean();
             UserId userId      = context.RequestData.ReadStruct<UserId>();
 
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x40L);
+
             long bufferPosition  = context.Request.RecvListBuff[0].Position;
 
             if (userId.IsNull)

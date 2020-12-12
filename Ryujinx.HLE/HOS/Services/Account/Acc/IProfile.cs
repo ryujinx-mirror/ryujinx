@@ -24,6 +24,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAcc);
 
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x80L);
+
             long position = context.Request.ReceiveBuff[0].Position;
 
             MemoryHelper.FillWithZeros(context.Memory, position, 0x80);

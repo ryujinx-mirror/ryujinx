@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -245,6 +246,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             byte type = context.RequestData.ReadByte();
 
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf<ClockSnapshot>());
+
             ResultCode result = _timeManager.StandardUserSystemClock.GetClockContext(context.Thread, out SystemClockContext userContext);
 
             if (result == ResultCode.Success)
@@ -270,6 +273,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode GetClockSnapshotFromSystemClockContext(ServiceCtx context)
         {
             byte type = context.RequestData.ReadByte();
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf<ClockSnapshot>());
 
             context.RequestData.BaseStream.Position += 7;
 
@@ -413,17 +418,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         private void WriteClockSnapshotFromBuffer(ServiceCtx context, IpcRecvListBuffDesc ipcDesc, ClockSnapshot clockSnapshot)
         {
-            Debug.Assert(ipcDesc.Size == Marshal.SizeOf<ClockSnapshot>());
-
-            MemoryStream memory = new MemoryStream((int)ipcDesc.Size);
-
-            using (BinaryWriter bufferWriter = new BinaryWriter(memory))
-            {
-                bufferWriter.WriteStruct(clockSnapshot);
-            }
-
-            context.Memory.Write((ulong)ipcDesc.Position, memory.ToArray());
-            memory.Dispose();
+            MemoryHelper.Write(context.Memory, ipcDesc.Position, clockSnapshot);
         }
     }
 }

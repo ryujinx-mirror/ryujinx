@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -48,21 +49,17 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
                 Result = 0
             };
 
-            WriteDeliveryCacheProgressImpl(context, context.Request.RecvListBuff[0], deliveryCacheProgress);
+            long dcpSize = WriteDeliveryCacheProgressImpl(context, context.Request.RecvListBuff[0], deliveryCacheProgress);
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(dcpSize);
 
             Logger.Stub?.PrintStub(LogClass.ServiceBcat);
 
             return ResultCode.Success;
         }
 
-        private void WriteDeliveryCacheProgressImpl(ServiceCtx context, IpcRecvListBuffDesc ipcDesc, DeliveryCacheProgressImpl deliveryCacheProgress)
+        private long WriteDeliveryCacheProgressImpl(ServiceCtx context, IpcRecvListBuffDesc ipcDesc, DeliveryCacheProgressImpl deliveryCacheProgress)
         {
-            using (MemoryStream memory = new MemoryStream((int)ipcDesc.Size))
-            using (BinaryWriter bufferWriter = new BinaryWriter(memory))
-            {
-                bufferWriter.WriteStruct(deliveryCacheProgress);
-                context.Memory.Write((ulong)ipcDesc.Position, memory.ToArray());
-            }
+            return MemoryHelper.Write(context.Memory, ipcDesc.Position, deliveryCacheProgress);
         }
     }
 }

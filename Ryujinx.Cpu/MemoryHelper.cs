@@ -37,7 +37,7 @@ namespace Ryujinx.Cpu
             }
         }
 
-        public unsafe static void Write<T>(IVirtualMemoryManager memory, long position, T value) where T : struct
+        public unsafe static long Write<T>(IVirtualMemoryManager memory, long position, T value) where T : struct
         {
             long size = Marshal.SizeOf<T>();
 
@@ -49,6 +49,8 @@ namespace Ryujinx.Cpu
             }
 
             memory.Write((ulong)position, data);
+
+            return size;
         }
 
         public static string ReadAsciiString(IVirtualMemoryManager memory, long position, long maxSize = -1)
