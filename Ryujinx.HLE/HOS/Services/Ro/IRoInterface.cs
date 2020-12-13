@@ -187,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidNro;
             }
 
-            int totalSize = nro.Text.Length + nro.Ro.Length + nro.Data.Length + nro.BssSize;
+            uint totalSize = (uint)nro.Text.Length + (uint)nro.Ro.Length + (uint)nro.Data.Length + nro.BssSize;
 
             // Apply patches
             context.Device.FileSystem.ModLoader.ApplyNroPatches(nro);

@@ -7,18 +7,18 @@ namespace Ryujinx.HLE.Loaders.Executables
     class NroExecutable : Nro, IExecutable
     {
         public byte[] Program { get; }
-        public Span<byte> Text => Program.AsSpan().Slice(TextOffset, (int)Header.NroSegments[0].Size);
-        public Span<byte> Ro   => Program.AsSpan().Slice(RoOffset,   (int)Header.NroSegments[1].Size);
-        public Span<byte> Data => Program.AsSpan().Slice(DataOffset, (int)Header.NroSegments[2].Size);
+        public Span<byte> Text => Program.AsSpan().Slice((int)TextOffset, (int)Header.NroSegments[0].Size);
+        public Span<byte> Ro   => Program.AsSpan().Slice((int)RoOffset,   (int)Header.NroSegments[1].Size);
+        public Span<byte> Data => Program.AsSpan().Slice((int)DataOffset, (int)Header.NroSegments[2].Size);
 
-        public int TextOffset => (int)Header.NroSegments[0].FileOffset;
-        public int RoOffset   => (int)Header.NroSegments[1].FileOffset;
-        public int DataOffset => (int)Header.NroSegments[2].FileOffset;
-        public int BssOffset  => DataOffset + Data.Length;     
-        public int BssSize    => (int)Header.BssSize;
+        public uint TextOffset => Header.NroSegments[0].FileOffset;
+        public uint RoOffset   => Header.NroSegments[1].FileOffset;
+        public uint DataOffset => Header.NroSegments[2].FileOffset;
+        public uint BssOffset  => DataOffset + (uint)Data.Length;
+        public uint BssSize    => Header.BssSize;
 
-        public int Mod0Offset => Start.Mod0Offset;
-        public int FileSize   => (int)Header.Size;
+        public uint Mod0Offset => (uint)Start.Mod0Offset;
+        public uint FileSize   => Header.Size;
 
         public ulong SourceAddress { get; private set; }
         public ulong BssAddress    { get; private set; }

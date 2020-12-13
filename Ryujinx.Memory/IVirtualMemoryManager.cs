@@ -13,6 +13,18 @@ namespace Ryujinx.Memory
         void Write<T>(ulong va, T value) where T : unmanaged;
         void Write(ulong va, ReadOnlySpan<byte> data);
 
+        void Fill(ulong va, ulong size, byte value)
+        {
+            const int MaxChunkSize = 1 << 30;
+
+            for (ulong subOffset = 0; subOffset < size; subOffset += MaxChunkSize)
+            {
+                int copySize = (int)Math.Min(MaxChunkSize, size - subOffset);
+
+                GetWritableRegion(va + subOffset, copySize).Memory.Span.Fill(0);
+            }
+        }
+
         ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false);
         WritableRegion GetWritableRegion(ulong va, int size);
         ref T GetRef<T>(ulong va) where T : unmanaged;

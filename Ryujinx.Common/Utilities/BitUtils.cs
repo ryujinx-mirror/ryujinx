@@ -4,6 +4,11 @@ namespace Ryujinx.Common
     {
         private static readonly byte[] ClzNibbleTbl = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+        public static uint AlignUp(uint value, int size)
+        {
+            return (uint)AlignUp((int)value, size);
+        }
+
         public static int AlignUp(int value, int size)
         {
             return (value + (size - 1)) & -size;
@@ -17,6 +22,11 @@ namespace Ryujinx.Common
         public static long AlignUp(long value, int size)
         {
             return (value + (size - 1)) & -(long)size;
+        }
+
+        public static uint AlignDown(uint value, int size)
+        {
+            return (uint)AlignDown((int)value, size);
         }
 
         public static int AlignDown(int value, int size)

@@ -1072,7 +1072,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private bool InvalidAccessHandler(ulong va)
         {
-            KernelStatic.GetCurrentThread().PrintGuestStackTrace();
+            KernelStatic.GetCurrentThread()?.PrintGuestStackTrace();
 
             Logger.Error?.Print(LogClass.Cpu, $"Invalid memory access at virtual address 0x{va:X16}.");
 
