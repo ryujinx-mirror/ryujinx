@@ -48,6 +48,18 @@ namespace ARMeilleure.Instructions
                 Operand exValuePtr = context.Add(arg0, Const((long)NativeContext.GetExclusiveValueOffset()));
 
                 context.Store(exAddrPtr, context.BitwiseAnd(address, Const(address.Type, GetExclusiveAddressMask())));
+
+                // Make sure the unused higher bits of the value are cleared.
+                if (size < 3)
+                {
+                    context.Store(exValuePtr, Const(0UL));
+                }
+                if (size < 4)
+                {
+                    context.Store(context.Add(exValuePtr, Const(exValuePtr.Type, 8L)), Const(0UL));
+                }
+
+                // Store the new exclusive value.
                 context.Store(exValuePtr, value);
 
                 return value;
@@ -74,6 +86,11 @@ namespace ARMeilleure.Instructions
 
             if (exclusive)
             {
+                // We overwrite one of the register (Rs),
+                // keep a copy of the values to ensure we are working with the correct values.
+                address = context.Copy(address);
+                value = context.Copy(value);
+
                 void SetRs(Operand value)
                 {
                     if (a32)
@@ -98,7 +115,7 @@ namespace ARMeilleure.Instructions
 
                 Operand lblExit = Label();
 
-                SetRs(exFailed);
+                SetRs(Const(1));
 
                 context.BranchIfTrue(lblExit, exFailed);
 
