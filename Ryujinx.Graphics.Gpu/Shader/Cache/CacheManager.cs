@@ -1,9 +1,7 @@
 ﻿using Ryujinx.Common;
-using Ryujinx.Common.Configuration;
 using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.Graphics.Gpu.Shader.Cache
 {
@@ -30,6 +28,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// Version of the guest cache shader (to increment when guest cache structure change).
         /// </summary>
         private const ulong GuestCacheVersion = 1759;
+
+        public bool IsReadOnly => _guestProgramCache.IsReadOnly || _hostProgramCache.IsReadOnly;
 
         /// <summary>
         /// Create a new cache manager instance

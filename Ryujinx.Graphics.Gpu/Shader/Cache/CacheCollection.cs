@@ -116,6 +116,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// </summary>
         private ZipArchive _cacheArchive;
 
+        public bool IsReadOnly { get; }
+
         /// <summary>
         /// Immutable copy of the hash table.
         /// </summary>
@@ -167,6 +169,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             _hashType = hashType;
             _version = version;
             _hashTable = new HashSet<Hash128>();
+            IsReadOnly = CacheHelper.IsArchiveReadOnly(GetArchivePath());
 
             Load();
 
@@ -230,6 +233,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <param name="entries">Entries to remove from the manifest</param>
         public void RemoveManifestEntriesAsync(HashSet<Hash128> entries)
         {
+            if (IsReadOnly)
+            {
+                Logger.Warning?.Print(LogClass.Gpu, "Trying to remove manifest entries on a read-only cache, ignoring.");
+
+                return;
+            }
+
             _fileWriterWorkerQueue.Add(new CacheFileOperationTask
             {
                 Type = CacheFileOperation.RemoveManifestEntries,
@@ -307,6 +317,20 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             }
 
             string archivePath = GetArchivePath();
+
+            if (IsReadOnly)
+            {
+                Logger.Warning?.Print(LogClass.Gpu, $"Cache collection archive in read-only, archiving task skipped.");
+
+                return;
+            }
+
+            if (CacheHelper.IsArchiveReadOnly(archivePath))
+            {
+                Logger.Warning?.Print(LogClass.Gpu, $"Cache collection archive in use, archiving task skipped.");
+
+                return;
+            }
 
             // Open the zip in read/write.
             _cacheArchive = ZipFile.Open(archivePath, ZipArchiveMode.Update);
@@ -446,6 +470,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <param name="value">The value to cache</param>
         public void AddValue(ref Hash128 keyHash, byte[] value)
         {
+            if (IsReadOnly)
+            {
+                Logger.Warning?.Print(LogClass.Gpu, "Trying to add {keyHash} on a read-only cache, ignoring.");
+
+                return;
+            }
+
             Debug.Assert(value != null);
 
             bool isAlreadyPresent;
@@ -488,6 +519,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <param name="value">The value to cache</param>
         public void ReplaceValue(ref Hash128 keyHash, byte[] value)
         {
+            if (IsReadOnly)
+            {
+                Logger.Warning?.Print(LogClass.Gpu, "Trying to replace {keyHash} on a read-only cache, ignoring.");
+
+                return;
+            }
+
             Debug.Assert(value != null);
 
             // Only queue file change operations

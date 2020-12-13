@@ -61,7 +61,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 _cacheManager = new CacheManager(CacheGraphicsApi.OpenGL, CacheHashType.XxHash128, "glsl", GraphicsConfig.TitleId, ShaderCodeGenVersion);
 
-                HashSet<Hash128> invalidEntries = new HashSet<Hash128>();
+                bool isReadOnly = _cacheManager.IsReadOnly;
+
+                HashSet<Hash128> invalidEntries = null;
+
+                if (isReadOnly)
+                {
+                    Logger.Warning?.Print(LogClass.Gpu, "Loading shader cache in read-only mode (cache in use by another program!)");
+                }
+                else
+                {
+                    invalidEntries = new HashSet<Hash128>();
+                }
 
                 ReadOnlySpan<Hash128> guestProgramList = _cacheManager.GetGuestProgramList();
 
@@ -84,7 +95,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                         Logger.Error?.Print(LogClass.Gpu, $"Ignoring orphan shader hash {key} in cache (is the cache incomplete?)");
 
                         // Should not happen, but if someone messed with the cache it's better to catch it.
-                        invalidEntries.Add(key);
+                        invalidEntries?.Add(key);
 
                         continue;
                     }
@@ -141,15 +152,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             // As the host program was invalidated, save the new entry in the cache.
                             hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
 
-                            if (hasHostCache)
+                            if (!isReadOnly)
                             {
-                                _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                            }
-                            else
-                            {
-                                Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
+                                if (hasHostCache)
+                                {
+                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
+                                }
+                                else
+                                {
+                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
 
-                                _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                }
                             }
                         }
 
@@ -270,15 +284,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             // As the host program was invalidated, save the new entry in the cache.
                             hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
 
-                            if (hasHostCache)
+                            if (!isReadOnly)
                             {
-                                _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                            }
-                            else
-                            {
-                                Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
+                                if (hasHostCache)
+                                {
+                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
+                                }
+                                else
+                                {
+                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
 
-                                _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                }
                             }
                         }
 
@@ -286,10 +303,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     }
                 }
 
-                // Remove entries that are broken in the cache
-                _cacheManager.RemoveManifestEntries(invalidEntries);
-                _cacheManager.FlushToArchive();
-                _cacheManager.Synchronize();
+                if (!isReadOnly)
+                {
+                    // Remove entries that are broken in the cache
+                    _cacheManager.RemoveManifestEntries(invalidEntries);
+                    _cacheManager.FlushToArchive();
+                    _cacheManager.Synchronize();
+                }
 
                 Logger.Info?.Print(LogClass.Gpu, "Shader cache loaded.");
             }
@@ -343,12 +363,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 sharedMemorySize);
 
             bool isShaderCacheEnabled = _cacheManager != null;
+            bool isShaderCacheReadOnly = false;
 
             Hash128 programCodeHash = default;
             GuestShaderCacheEntry[] shaderCacheEntries = null;
 
             if (isShaderCacheEnabled)
             {
+                isShaderCacheReadOnly = _cacheManager.IsReadOnly;
+
                 // Compute hash and prepare data for shader disk cache comparison.
                 shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(_context.MemoryManager, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries);
@@ -378,7 +401,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 if (isShaderCacheEnabled)
                 {
                     _cpProgramsDiskCache.Add(programCodeHash, cpShader);
-                    _cacheManager.SaveProgram(ref programCodeHash, CacheHelper.CreateGuestProgramDump(shaderCacheEntries), hostProgramBinary);
+
+                    if (!isShaderCacheReadOnly)
+                    {
+                        _cacheManager.SaveProgram(ref programCodeHash, CacheHelper.CreateGuestProgramDump(shaderCacheEntries), hostProgramBinary);
+                    }
                 }
             }
 
@@ -447,12 +474,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
             shaderContexts[4] = DecodeGraphicsShader(state, counts, flags, ShaderStage.Fragment, addresses.Fragment);
 
             bool isShaderCacheEnabled = _cacheManager != null;
+            bool isShaderCacheReadOnly = false;
 
             Hash128 programCodeHash = default;
             GuestShaderCacheEntry[] shaderCacheEntries = null;
 
             if (isShaderCacheEnabled)
             {
+                isShaderCacheReadOnly = _cacheManager.IsReadOnly;
+
                 // Compute hash and prepare data for shader disk cache comparison.
                 shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(_context.MemoryManager, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries, tfd);
@@ -504,7 +534,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 if (isShaderCacheEnabled)
                 {
                     _gpProgramsDiskCache.Add(programCodeHash, gpShaders);
-                    _cacheManager.SaveProgram(ref programCodeHash, CacheHelper.CreateGuestProgramDump(shaderCacheEntries, tfd), hostProgramBinary);
+
+                    if (!isShaderCacheReadOnly)
+                    {
+                        _cacheManager.SaveProgram(ref programCodeHash, CacheHelper.CreateGuestProgramDump(shaderCacheEntries, tfd), hostProgramBinary);
+                    }
                 }
             }
 

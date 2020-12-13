@@ -146,7 +146,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             string guestBaseCacheDirectory = CacheHelper.GenerateCachePath(baseCacheDirectory, CacheGraphicsApi.Guest, "", "program");
             string hostBaseCacheDirectory = CacheHelper.GenerateCachePath(baseCacheDirectory, graphicsApi, shaderProvider, "host");
 
-            if (CacheHelper.TryReadManifestHeader(CacheHelper.GetManifestPath(guestBaseCacheDirectory), out CacheManifestHeader header))
+            string guestArchivePath = CacheHelper.GetArchivePath(guestBaseCacheDirectory);
+            string hostArchivePath = CacheHelper.GetArchivePath(hostBaseCacheDirectory);
+
+            bool isReadOnly = CacheHelper.IsArchiveReadOnly(guestArchivePath) || CacheHelper.IsArchiveReadOnly(hostArchivePath);
+
+            if (!isReadOnly && CacheHelper.TryReadManifestHeader(CacheHelper.GetManifestPath(guestBaseCacheDirectory), out CacheManifestHeader header))
             {
                 if (NeedHashRecompute(header.Version, out ulong newVersion))
                 {

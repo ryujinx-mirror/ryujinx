@@ -496,5 +496,27 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 }
             }
         }
+
+        public static bool IsArchiveReadOnly(string archivePath)
+        {
+            FileInfo info = new FileInfo(archivePath);
+
+            if (!info.Exists)
+            {
+                return false;
+            }
+
+            try
+            {
+                using (FileStream stream = info.Open(FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    return false;
+                }
+            }
+            catch (IOException)
+            {
+                return true;
+            }
+        }
     }
 }
