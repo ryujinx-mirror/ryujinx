@@ -820,6 +820,18 @@ namespace ARMeilleure.Instructions
             });
         }
 
+        public static void EmitVectorTernaryOpF32(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+
+            Intrinsic inst = (op.Size & 1) != 0 ? inst64 : inst32;
+
+            EmitVectorTernaryOpSimd32(context, (d, n, m) =>
+            {
+                return context.AddIntrinsic(inst, d, n, m);
+            });
+        }
+
         public static void EmitScalarUnaryOpSimd32(ArmEmitterContext context, Func1I scalarFunc)
         {
             OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;

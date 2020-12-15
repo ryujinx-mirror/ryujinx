@@ -252,6 +252,23 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vfma_V(ArmEmitterContext context) // Fused.
+        {
+            if (Optimizations.FastFP && Optimizations.UseFma)
+            {
+                // Vectors contain elements that are 32-bits in length always. The only thing that will change is the number of elements in a vector. 
+                // The 64-bit variant will never be used.
+                EmitVectorTernaryOpF32(context, Intrinsic.X86Vfmadd231ps, Intrinsic.X86Vfmadd231pd);
+            }
+            else
+            {
+                EmitVectorTernaryOpF32(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), op1, op2, op3);
+                });
+            }
+        }
+
         public static void Vfma_S(ArmEmitterContext context) // Fused.
         {
             if (Optimizations.FastFP && Optimizations.UseSse2)

@@ -293,6 +293,52 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Nzcv);
         }
 
+        [Test, Pairwise, Description("VFMA.F<size> <Vd>, <Vn>, <Vm>")]
+        public void Vfma([Values(0u, 1u)] uint rd,
+                         [Values(0u, 1u)] uint rn,
+                         [Values(0u, 1u)] uint rm,
+                         [Values(0u, 1u)] uint Q,
+                         [ValueSource("_2S_F_")] ulong z,
+                         [ValueSource("_2S_F_")] ulong a,
+                         [ValueSource("_2S_F_")] ulong b )
+        {
+            uint opcode = 0xf2000c10;
+            
+            V128 v0;
+            V128 v1;
+            V128 v2;
+
+            uint c = (uint) BitConverter.SingleToInt32Bits(z);
+            uint d = (uint) BitConverter.SingleToInt32Bits(a);
+            uint e = (uint) BitConverter.SingleToInt32Bits(b);
+            if (Q == 0)
+            {
+                opcode |= (((rm & 0x1) << 5) | (rm & 0x1e) >> 1);
+                opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
+                opcode |= (((rn & 0x1) << 7) | (rn & 0x1e) >> 15);
+
+                v0 = MakeVectorE0E1(c, c);
+                v1 = MakeVectorE0E1(d, c);
+                v2 = MakeVectorE0E1(e, c);
+            }
+            else
+            {
+                rd = rn = rm = 0; // Needed, as these values cannot be odd values if Q == 1.
+                opcode |= (((rm & 0x10) << 1) | (rm & 0xf) << 0);
+                opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
+                opcode |= (((rn & 0x10) << 3) | (rn & 0xf) << 16);
+
+                v0 = MakeVectorE0E1E2E3(c, c, d, e);
+                v1 = MakeVectorE0E1E2E3(d, c, e, c);
+                v2 = MakeVectorE0E1E2E3(e, c, d, c);
+            }
+
+            opcode |= ((Q & 1)  << 6);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            CompareAgainstUnicorn();
+        }
+        
         [Test, Pairwise, Description("VFNMA.F<size> <Vd>, <Vn>, <Vm>")]
         public void Vfnma([Values(0u, 1u)] uint rd,
                           [Values(0u, 1u)] uint rn,
