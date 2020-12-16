@@ -342,6 +342,21 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        // VRINTX (floating-point).
+        public static void Vrintx_S(ArmEmitterContext context)
+        {
+            OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;
+
+            bool doubleSize = (op.Size & 1) == 1;
+            string methodName = doubleSize ? nameof(SoftFallback.Round) : nameof(SoftFallback.RoundF);
+
+            EmitScalarUnaryOpF32(context, (op1) =>
+            {
+                MethodInfo info = typeof(SoftFallback).GetMethod(methodName);
+                return context.Call(info, op1);
+            });
+        }
+
         private static Operand EmitFPConvert(ArmEmitterContext context, Operand value, OperandType type, bool signed)
         {
             Debug.Assert(value.Type == OperandType.I32 || value.Type == OperandType.I64);
