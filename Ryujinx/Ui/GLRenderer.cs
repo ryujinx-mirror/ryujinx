@@ -5,16 +5,16 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
-using Ryujinx.Configuration;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Configuration;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.Motion;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Ryujinx.Motion;
 
 namespace Ryujinx.Ui
 {
@@ -219,7 +219,6 @@ namespace Ryujinx.Ui
             {
                 parent.Present();
 
-
                 string titleNameSection = string.IsNullOrWhiteSpace(_device.Application.TitleName) ? string.Empty
                     : $" - {_device.Application.TitleName}";
 
@@ -419,6 +418,7 @@ namespace Ryujinx.Ui
                     StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                         _device.EnableDeviceVsync,
                         dockedMode,
+                        ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
                         $"Game: {_device.Statistics.GetGameFrameRate():00.00} FPS",
                         $"FIFO: {_device.Statistics.GetFifoPercent():0.00} %",
                         $"GPU:  {_renderer.GpuVendor}"));
@@ -632,16 +632,18 @@ namespace Ryujinx.Ui
             // OpenTK always captures mouse events, even if out of focus, so check if window is focused.
             if (_isFocused && _mousePressed)
             {
+                float aspectWidth = SwitchPanelHeight * ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat();
+
                 int screenWidth  = AllocatedWidth;
                 int screenHeight = AllocatedHeight;
 
-                if (AllocatedWidth > (AllocatedHeight * SwitchPanelWidth) / SwitchPanelHeight)
+                if (AllocatedWidth > AllocatedHeight * aspectWidth / SwitchPanelHeight)
                 {
-                    screenWidth = (AllocatedHeight * SwitchPanelWidth) / SwitchPanelHeight;
+                    screenWidth = (int)(AllocatedHeight * aspectWidth) / SwitchPanelHeight;
                 }
                 else
                 {
-                    screenHeight = (AllocatedWidth * SwitchPanelHeight) / SwitchPanelWidth;
+                    screenHeight = (AllocatedWidth * SwitchPanelHeight) / (int)aspectWidth;
                 }
 
                 int startX = (AllocatedWidth  - screenWidth)  >> 1;
@@ -659,7 +661,7 @@ namespace Ryujinx.Ui
                     int screenMouseX = (int)_mouseX - startX;
                     int screenMouseY = (int)_mouseY - startY;
 
-                    int mX = (screenMouseX * SwitchPanelWidth) / screenWidth;
+                    int mX = (screenMouseX * (int)aspectWidth)  / screenWidth;
                     int mY = (screenMouseY * SwitchPanelHeight) / screenHeight;
 
                     TouchPoint currentPoint = new TouchPoint

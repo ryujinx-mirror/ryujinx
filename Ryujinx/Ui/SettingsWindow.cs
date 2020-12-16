@@ -71,6 +71,7 @@ namespace Ryujinx.Ui
         [GUI] Entry           _addGameDirBox;
         [GUI] Entry           _graphicsShadersDumpPath;
         [GUI] ComboBoxText    _anisotropy;
+        [GUI] ComboBoxText    _aspectRatio;
         [GUI] ComboBoxText    _resScaleCombo;
         [GUI] Entry           _resScaleText;
         [GUI] ToggleButton    _configureController1;
@@ -249,6 +250,7 @@ namespace Ryujinx.Ui
             _systemRegionSelect.SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
             _resScaleCombo.SetActiveId(ConfigurationState.Instance.Graphics.ResScale.Value.ToString());
             _anisotropy.SetActiveId(ConfigurationState.Instance.Graphics.MaxAnisotropy.Value.ToString());
+            _aspectRatio.SetActiveId(((int)ConfigurationState.Instance.Graphics.AspectRatio.Value).ToString());
 
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
             _resScaleText.Buffer.Text            = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
@@ -408,6 +410,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Ui.GameDirs.Value                      = gameDirs;
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value     = (int)_fsLogSpinAdjustment.Value;
             ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId, CultureInfo.InvariantCulture);
+            ConfigurationState.Instance.Graphics.AspectRatio.Value             = Enum.Parse<AspectRatio>(_aspectRatio.ActiveId);
             ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
             ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
 
@@ -422,7 +425,7 @@ namespace Ryujinx.Ui
         }
 
         //Events
-        private void TimeZoneEntry_FocusOut(Object sender, FocusOutEventArgs e)
+        private void TimeZoneEntry_FocusOut(object sender, FocusOutEventArgs e)
         {
             if (!_validTzRegions.Contains(_systemTimeZoneEntry.Text))
             {
@@ -439,7 +442,7 @@ namespace Ryujinx.Ui
                    ((string)compl.Model.GetValue(iter, 0)).Substring(3).StartsWith(key); // offset
         }
 
-        private void SystemTimeSpin_ValueChanged(Object sender, EventArgs e)
+        private void SystemTimeSpin_ValueChanged(object sender, EventArgs e)
         {
             int year   = _systemTimeYearSpin.ValueAsInt;
             int month  = _systemTimeMonthSpin.ValueAsInt;

@@ -279,6 +279,11 @@ namespace Ryujinx.Configuration
             public ReactiveObject<float> MaxAnisotropy { get; private set; }
 
             /// <summary>
+            /// Aspect Ratio applied to the renderer window.
+            /// </summary>
+            public ReactiveObject<AspectRatio> AspectRatio { get; private set; }
+
+            /// <summary>
             /// Resolution Scale. An integer scale applied to applicable render targets. Values 1-4, or -1 to use a custom floating point scale instead.
             /// </summary>
             public ReactiveObject<int> ResScale { get; private set; }
@@ -308,6 +313,7 @@ namespace Ryujinx.Configuration
                 ResScale          = new ReactiveObject<int>();
                 ResScaleCustom    = new ReactiveObject<float>();
                 MaxAnisotropy     = new ReactiveObject<float>();
+                AspectRatio       = new ReactiveObject<AspectRatio>();
                 ShadersDumpPath   = new ReactiveObject<string>();
                 EnableVsync       = new ReactiveObject<bool>();
                 EnableShaderCache = new ReactiveObject<bool>();
@@ -388,6 +394,7 @@ namespace Ryujinx.Configuration
                 ResScale                  = Graphics.ResScale,
                 ResScaleCustom            = Graphics.ResScaleCustom,
                 MaxAnisotropy             = Graphics.MaxAnisotropy,
+                AspectRatio               = Graphics.AspectRatio,
                 GraphicsShadersDumpPath   = Graphics.ShadersDumpPath,
                 LoggingEnableDebug        = Logger.EnableDebug,
                 LoggingEnableStub         = Logger.EnableStub,
@@ -449,6 +456,7 @@ namespace Ryujinx.Configuration
             Graphics.ResScale.Value                = 1;
             Graphics.ResScaleCustom.Value          = 1.0f;
             Graphics.MaxAnisotropy.Value           = -1.0f;
+            Graphics.AspectRatio.Value             = AspectRatio.Fixed16x9;
             Graphics.ShadersDumpPath.Value         = "";
             Logger.EnableDebug.Value               = false;
             Logger.EnableStub.Value                = true;
@@ -457,7 +465,7 @@ namespace Ryujinx.Configuration
             Logger.EnableError.Value               = true;
             Logger.EnableGuest.Value               = true;
             Logger.EnableFsAccessLog.Value         = false;
-            Logger.FilteredClasses.Value           = new LogClass[] { };
+            Logger.FilteredClasses.Value           = Array.Empty<LogClass>();
             Logger.GraphicsDebugLevel.Value        = GraphicsDebugLevel.None;
             Logger.EnableFileLog.Value             = true;
             System.Language.Value                  = Language.AmericanEnglish;
@@ -753,6 +761,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 18)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 18.");
+
+                configurationFileFormat.AspectRatio = AspectRatio.Fixed16x9;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -760,6 +777,7 @@ namespace Ryujinx.Configuration
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
             Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;
+            Graphics.AspectRatio.Value             = configurationFileFormat.AspectRatio;
             Graphics.ShadersDumpPath.Value         = configurationFileFormat.GraphicsShadersDumpPath;
             Logger.EnableDebug.Value               = configurationFileFormat.LoggingEnableDebug;
             Logger.EnableStub.Value                = configurationFileFormat.LoggingEnableStub;

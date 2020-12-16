@@ -72,6 +72,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem   _pathToggle;
         [GUI] CheckMenuItem   _fileSizeToggle;
         [GUI] Label           _dockedMode;
+        [GUI] Label           _aspectRatio;
         [GUI] Label           _gameStatus;
         [GUI] TreeView        _gameTable;
         [GUI] TreeSelection   _gameTableSelection;
@@ -666,11 +667,12 @@ namespace Ryujinx.Ui
 
         public static void UpdateGraphicsConfig()
         {
-            int resScale = ConfigurationState.Instance.Graphics.ResScale;
+            int   resScale       = ConfigurationState.Instance.Graphics.ResScale;
             float resScaleCustom = ConfigurationState.Instance.Graphics.ResScaleCustom;
-            Graphics.Gpu.GraphicsConfig.ResScale = (resScale == -1) ? resScaleCustom : resScale;
-            Graphics.Gpu.GraphicsConfig.MaxAnisotropy = ConfigurationState.Instance.Graphics.MaxAnisotropy;
-            Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
+
+            Graphics.Gpu.GraphicsConfig.ResScale          = (resScale == -1) ? resScaleCustom : resScale;
+            Graphics.Gpu.GraphicsConfig.MaxAnisotropy     = ConfigurationState.Instance.Graphics.MaxAnisotropy;
+            Graphics.Gpu.GraphicsConfig.ShadersDumpPath   = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             Graphics.Gpu.GraphicsConfig.EnableShaderCache = ConfigurationState.Instance.Graphics.EnableShaderCache;
         }
 
@@ -806,10 +808,11 @@ namespace Ryujinx.Ui
         {
             Application.Invoke(delegate
             {
-                _gameStatus.Text = args.GameStatus;
-                _fifoStatus.Text = args.FifoStatus;
-                _gpuName.Text    = args.GpuName;
-                _dockedMode.Text = args.DockedMode;
+                _gameStatus.Text  = args.GameStatus;
+                _fifoStatus.Text  = args.FifoStatus;
+                _gpuName.Text     = args.GpuName;
+                _dockedMode.Text  = args.DockedMode;
+                _aspectRatio.Text = args.AspectRatio;
 
                 if (args.VSyncEnabled)
                 {
@@ -866,6 +869,13 @@ namespace Ryujinx.Ui
         private void DockedMode_Clicked(object sender, ButtonReleaseEventArgs args)
         {
             ConfigurationState.Instance.System.EnableDockedMode.Value = !ConfigurationState.Instance.System.EnableDockedMode.Value;
+        }
+
+        private void AspectRatio_Clicked(object sender, ButtonReleaseEventArgs args)
+        {
+            AspectRatio aspectRatio = ConfigurationState.Instance.Graphics.AspectRatio.Value;
+
+            ConfigurationState.Instance.Graphics.AspectRatio.Value = ((int)aspectRatio + 1) > Enum.GetNames(typeof(AspectRatio)).Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
         }
 
         private void Row_Clicked(object sender, ButtonReleaseEventArgs args)

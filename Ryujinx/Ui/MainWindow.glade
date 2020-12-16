@@ -562,12 +562,20 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_gameStatus">
+                      <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
+                        <property name="margin_left">0</property>
+                        <signal name="button-release-event" handler="AspectRatio_Clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkLabel" id="_aspectRatio">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="margin_left">5</property>
+                            <property name="margin_right">5</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -587,7 +595,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="_fifoStatus">
+                      <object class="GtkLabel" id="_gameStatus">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="halign">start</property>
@@ -612,6 +620,31 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkLabel" id="_fifoStatus">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparator">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">9</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkLabel" id="_gpuName">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -621,7 +654,7 @@
                       <packing>
                         <property name="expand">True</property>
                         <property name="fill">True</property>
-                        <property name="position">8</property>
+                        <property name="position">10</property>
                       </packing>
                     </child>
                   </object>

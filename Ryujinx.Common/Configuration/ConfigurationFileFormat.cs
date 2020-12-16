@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 17;
+        public const int CurrentVersion = 18;
 
         public int Version { get; set; }
 
@@ -32,6 +32,11 @@ namespace Ryujinx.Configuration
         /// Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.
         /// </summary>
         public float MaxAnisotropy { get; set; }
+
+        /// <summary>
+        /// Aspect Ratio applied to the renderer window.
+        /// </summary>
+        public AspectRatio AspectRatio { get; set; }
 
         /// <summary>
         /// Dumps shaders in this local directory

@@ -1,8 +1,9 @@
 {
-  "version": 17,
+  "version": 18,
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
+  "aspect_ratio": "Fixed16x9",
   "graphics_shaders_dump_path": "",
   "logging_enable_debug": false,
   "logging_enable_stub": true,

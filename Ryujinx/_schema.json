@@ -941,6 +941,21 @@
         16
       ]
     },
+    "aspect_ratio": {
+      "$id": "#/properties/aspect_ratio",
+      "type": "string",
+      "title": "Aspect Ratio applied to the renderer window.",
+      "description": "Aspect Ratio applied to the renderer window.",
+      "default": "Fixed16x9",
+      "examples": [
+        "Fixed4x3",
+        "Fixed16x9",
+        "Fixed16x10",
+        "Fixed21x9",
+        "Fixed32x9",
+        "Stretched"
+      ]
+    },
     "graphics_shaders_dump_path": {
       "$id": "#/properties/graphics_shaders_dump_path",
       "type": "string",
