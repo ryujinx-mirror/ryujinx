@@ -278,13 +278,21 @@ namespace Ryujinx.HLE.HOS
                 State.DockedMode = e.NewValue;
                 PerformanceState.PerformanceMode = State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
-                AppletState.EnqueueMessage(MessageInfo.OperationModeChanged);
-                AppletState.EnqueueMessage(MessageInfo.PerformanceModeChanged);
+                AppletState.Messages.Enqueue(MessageInfo.OperationModeChanged);
+                AppletState.Messages.Enqueue(MessageInfo.PerformanceModeChanged);
+                AppletState.MessageEvent.ReadableEvent.Signal();
+
                 SignalDisplayResolutionChange();
 
                 // Reconfigure controllers
                 Device.Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
             }
+        }
+
+        public void SimulateWakeUpMessage()
+        {
+            AppletState.Messages.Enqueue(MessageInfo.Resume);
+            AppletState.MessageEvent.ReadableEvent.Signal();
         }
 
         public void SignalDisplayResolutionChange()

@@ -138,6 +138,16 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="SimulateWakeUpMessage">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Simulate a Wake-up Message</property>
+                        <property name="label" translatable="yes">Simulate Wake-up Message</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="Simulate_WakeUp_Message_Pressed" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>

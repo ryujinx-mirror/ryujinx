@@ -46,9 +46,23 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // ReceiveMessage() -> nn::am::AppletMessage
         public ResultCode ReceiveMessage(ServiceCtx context)
         {
-            if (!context.Device.System.AppletState.TryDequeueMessage(out MessageInfo message))
+            if (!context.Device.System.AppletState.Messages.TryDequeue(out MessageInfo message))
             {
                 return ResultCode.NoMessages;
+            }
+
+            KEvent messageEvent = context.Device.System.AppletState.MessageEvent;
+
+            // NOTE: Service checks if current states are different than the stored ones.
+            //       Since we don't support any states for now, it's fine to check if there is still messages available.
+
+            if (context.Device.System.AppletState.Messages.IsEmpty)
+            {
+                messageEvent.ReadableEvent.Clear();
+            }
+            else
+            {
+                messageEvent.ReadableEvent.Signal();
             }
 
             context.ResponseData.Write((int)message);

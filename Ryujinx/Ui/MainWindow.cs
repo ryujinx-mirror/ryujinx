@@ -1205,6 +1205,11 @@ namespace Ryujinx.Ui
             settingsWin.Show();
         }
 
+        private void Simulate_WakeUp_Message_Pressed(object sender, EventArgs args)
+        {
+            _emulationContext.System.SimulateWakeUpMessage();
+        }
+
         private void Update_Pressed(object sender, EventArgs args)
         {
             if (Updater.CanUpdate(true))
