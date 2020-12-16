@@ -77,7 +77,6 @@ namespace ARMeilleure.Translation
 
             Operand address = context.Load(OperandType.I64, context.Add(nativeContextPtr, Const((long)NativeContext.GetCallAddressOffset())));
 
-            address = context.BitwiseOr(address, Const(address.Type, 1)); // Set call flag.
             Operand functionAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
             EmitCall(context, functionAddr, tailCall);
 

@@ -40,6 +40,8 @@ namespace Ryujinx.Cpu
 
         public MemoryTracking Tracking { get; }
 
+        internal event Action<ulong, ulong> UnmapEvent;
+
         /// <summary>
         /// Creates a new instance of the memory manager.
         /// </summary>
@@ -100,6 +102,14 @@ namespace Ryujinx.Cpu
         /// <param name="size">Size of the range to be unmapped</param>
         public void Unmap(ulong va, ulong size)
         {
+            // If size is 0, there's nothing to unmap, just exit early.
+            if (size == 0)
+            {
+                return;
+            }
+
+            UnmapEvent?.Invoke(va, size);
+
             ulong remainingSize = size;
             ulong oVa = va;
             while (remainingSize != 0)

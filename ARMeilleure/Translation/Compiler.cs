@@ -2,13 +2,13 @@ using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.Translation.Cache;
+using ARMeilleure.Translation.PTC;
 using System;
 using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation
 {
-    using PTC;
-
     static class Compiler
     {
         public static T Compile<T>(

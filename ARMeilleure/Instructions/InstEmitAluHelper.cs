@@ -119,15 +119,12 @@ namespace ARMeilleure.Instructions
             if (IsThumb(context.CurrOp))
             {
                 bool isReturn = IsA32Return(context);
-
                 if (!isReturn)
                 {
                     context.StoreToContext();
                 }
 
-                Operand addr = context.BitwiseOr(value, Const(1));
-
-                InstEmitFlowHelper.EmitVirtualJump(context, addr, isReturn);
+                InstEmitFlowHelper.EmitVirtualJump(context, value, isReturn);
             }
             else
             {

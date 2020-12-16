@@ -1,3 +1,4 @@
+using ARMeilleure.Translation.Cache;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,25 +9,53 @@ namespace ARMeilleure.Translation.PTC
     [Serializable]
     class PtcJumpTable
     {
-        private readonly List<KeyValuePair<long, DirectHostAddress>>   _jumpTable;
-        private readonly List<KeyValuePair<long, IndirectHostAddress>> _dynamicTable;
+        [Serializable]
+        private struct TableEntry<TAddress>
+        {
+            public int EntryIndex;
+            public long GuestAddress;
+            public TAddress HostAddress;
+
+            public TableEntry(int entryIndex, long guestAddress, TAddress hostAddress)
+            {
+                EntryIndex = entryIndex;
+                GuestAddress = guestAddress;
+                HostAddress = hostAddress;
+            }
+        }
+
+        private enum DirectHostAddress
+        {
+            CallStub,
+            TailCallStub,
+            Host
+        }
+
+        private enum IndirectHostAddress
+        {
+            CallStub,
+            TailCallStub
+        }
+
+        private readonly List<TableEntry<DirectHostAddress>> _jumpTable;
+        private readonly List<TableEntry<IndirectHostAddress>> _dynamicTable;
 
         private readonly List<ulong> _targets;
-        private readonly Dictionary<ulong, LinkedList<int>> _dependants;
-
-        public int TableEnd    => _jumpTable.Count;
-        public int DynTableEnd => _dynamicTable.Count;
+        private readonly Dictionary<ulong, List<int>> _dependants;
+        private readonly Dictionary<ulong, List<int>> _owners;
 
         public List<ulong> Targets => _targets;
-        public Dictionary<ulong, LinkedList<int>> Dependants => _dependants;
+        public Dictionary<ulong, List<int>> Dependants => _dependants;
+        public Dictionary<ulong, List<int>> Owners => _owners;
 
         public PtcJumpTable()
         {
-            _jumpTable    = new List<KeyValuePair<long, DirectHostAddress>>();
-            _dynamicTable = new List<KeyValuePair<long, IndirectHostAddress>>();
+            _jumpTable = new List<TableEntry<DirectHostAddress>>();
+            _dynamicTable = new List<TableEntry<IndirectHostAddress>>();
 
-            _targets    = new List<ulong>();
-            _dependants = new Dictionary<ulong, LinkedList<int>>();
+            _targets = new List<ulong>();
+            _dependants = new Dictionary<ulong, List<int>>();
+            _owners = new Dictionary<ulong, List<int>>();
         }
 
         public void Initialize(JumpTable jumpTable)
@@ -42,7 +71,14 @@ namespace ARMeilleure.Translation.PTC
 
             foreach (var item in jumpTable.Dependants)
             {
-                _dependants.Add(item.Key, new LinkedList<int>(item.Value));
+                _dependants.Add(item.Key, new List<int>(item.Value));
+            }
+
+            _owners.Clear();
+
+            foreach (var item in jumpTable.Owners)
+            {
+                _owners.Add(item.Key, new List<int>(item.Value));
             }
         }
 
@@ -53,20 +89,17 @@ namespace ARMeilleure.Translation.PTC
 
             _targets.Clear();
             _dependants.Clear();
+            _owners.Clear();
         }
 
         public void WriteJumpTable(JumpTable jumpTable, ConcurrentDictionary<ulong, TranslatedFunction> funcs)
         {
-            jumpTable.ExpandIfNeededJumpTable(TableEnd);
-
-            int entry = 0;
+            // Writes internal state to jump table in-memory, after PTC was loaded.
 
             foreach (var item in _jumpTable)
             {
-                entry += 1;
-
-                long guestAddress = item.Key;
-                DirectHostAddress directHostAddress = item.Value;
+                long guestAddress = item.GuestAddress;
+                DirectHostAddress directHostAddress = item.HostAddress;
 
                 long hostAddress;
 
@@ -94,6 +127,11 @@ namespace ARMeilleure.Translation.PTC
                     throw new InvalidOperationException(nameof(directHostAddress));
                 }
 
+                int entry = item.EntryIndex;
+
+                jumpTable.Table.SetEntry(entry);
+                jumpTable.ExpandIfNeededJumpTable(entry);
+
                 IntPtr addr = jumpTable.GetEntryAddressJumpTable(entry);
 
                 Marshal.WriteInt64(addr, 0, guestAddress);
@@ -103,21 +141,17 @@ namespace ARMeilleure.Translation.PTC
 
         public void WriteDynamicTable(JumpTable jumpTable)
         {
+            // Writes internal state to jump table in-memory, after PTC was loaded.
+
             if (JumpTable.DynamicTableElems > 1)
             {
                 throw new NotSupportedException();
             }
 
-            jumpTable.ExpandIfNeededDynamicTable(DynTableEnd);
-
-            int entry = 0;
-
             foreach (var item in _dynamicTable)
             {
-                entry += 1;
-
-                long guestAddress = item.Key;
-                IndirectHostAddress indirectHostAddress = item.Value;
+                long guestAddress = item.GuestAddress;
+                IndirectHostAddress indirectHostAddress = item.HostAddress;
 
                 long hostAddress;
 
@@ -134,6 +168,11 @@ namespace ARMeilleure.Translation.PTC
                     throw new InvalidOperationException(nameof(indirectHostAddress));
                 }
 
+                int entry = item.EntryIndex;
+
+                jumpTable.DynTable.SetEntry(entry);
+                jumpTable.ExpandIfNeededDynamicTable(entry);
+
                 IntPtr addr = jumpTable.GetEntryAddressDynamicTable(entry);
 
                 Marshal.WriteInt64(addr, 0, guestAddress);
@@ -143,14 +182,18 @@ namespace ARMeilleure.Translation.PTC
 
         public void ReadJumpTable(JumpTable jumpTable)
         {
+            // Reads in-memory jump table state and store internally for PTC serialization.
+
             _jumpTable.Clear();
 
-            for (int entry = 1; entry <= jumpTable.TableEnd; entry++)
+            IEnumerable<int> entries = jumpTable.Table.GetEntries();
+
+            foreach (int entry in entries)
             {
                 IntPtr addr = jumpTable.GetEntryAddressJumpTable(entry);
 
                 long guestAddress = Marshal.ReadInt64(addr, 0);
-                long hostAddress  = Marshal.ReadInt64(addr, 8);
+                long hostAddress = Marshal.ReadInt64(addr, 8);
 
                 DirectHostAddress directHostAddress;
 
@@ -167,12 +210,14 @@ namespace ARMeilleure.Translation.PTC
                     directHostAddress = DirectHostAddress.Host;
                 }
 
-                _jumpTable.Add(new KeyValuePair<long, DirectHostAddress>(guestAddress, directHostAddress));
+                _jumpTable.Add(new TableEntry<DirectHostAddress>(entry, guestAddress, directHostAddress));
             }
         }
 
         public void ReadDynamicTable(JumpTable jumpTable)
         {
+            // Reads in-memory jump table state and store internally for PTC serialization.
+
             if (JumpTable.DynamicTableElems > 1)
             {
                 throw new NotSupportedException();
@@ -180,12 +225,14 @@ namespace ARMeilleure.Translation.PTC
 
             _dynamicTable.Clear();
 
-            for (int entry = 1; entry <= jumpTable.DynTableEnd; entry++)
+            IEnumerable<int> entries = jumpTable.DynTable.GetEntries();
+
+            foreach (int entry in entries)
             {
                 IntPtr addr = jumpTable.GetEntryAddressDynamicTable(entry);
 
                 long guestAddress = Marshal.ReadInt64(addr, 0);
-                long hostAddress  = Marshal.ReadInt64(addr, 8);
+                long hostAddress = Marshal.ReadInt64(addr, 8);
 
                 IndirectHostAddress indirectHostAddress;
 
@@ -202,21 +249,8 @@ namespace ARMeilleure.Translation.PTC
                     throw new InvalidOperationException($"({nameof(hostAddress)} = 0x{hostAddress:X16})");
                 }
 
-                _dynamicTable.Add(new KeyValuePair<long, IndirectHostAddress>(guestAddress, indirectHostAddress));
+                _dynamicTable.Add(new TableEntry<IndirectHostAddress>(entry, guestAddress, indirectHostAddress));
             }
-        }
-
-        private enum DirectHostAddress
-        {
-            CallStub,
-            TailCallStub,
-            Host
-        }
-
-        private enum IndirectHostAddress
-        {
-            CallStub,
-            TailCallStub
         }
     }
 }

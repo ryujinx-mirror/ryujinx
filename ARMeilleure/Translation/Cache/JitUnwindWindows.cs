@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace ARMeilleure.Translation
+namespace ARMeilleure.Translation.Cache
 {
     static class JitUnwindWindows
     {
@@ -59,7 +59,7 @@ namespace ARMeilleure.Translation
 
         private unsafe static UnwindInfo* _unwindInfo;
 
-        public static void InstallFunctionTableHandler(IntPtr codeCachePointer, uint codeCacheLength)
+        public static void InstallFunctionTableHandler(IntPtr codeCachePointer, uint codeCacheLength, IntPtr workBufferPtr)
         {
             ulong codeCachePtr = (ulong)codeCachePointer.ToInt64();
 
@@ -69,9 +69,9 @@ namespace ARMeilleure.Translation
 
             unsafe
             {
-                _runtimeFunction = (RuntimeFunction*)codeCachePointer;
+                _runtimeFunction = (RuntimeFunction*)workBufferPtr;
 
-                _unwindInfo = (UnwindInfo*)(codeCachePointer + _sizeOfRuntimeFunction);
+                _unwindInfo = (UnwindInfo*)(workBufferPtr + _sizeOfRuntimeFunction);
 
                 _getRuntimeFunctionCallback = new GetRuntimeFunctionCallback(FunctionTableHandler);
 
@@ -94,7 +94,7 @@ namespace ARMeilleure.Translation
         {
             int offset = (int)((long)controlPc - context.ToInt64());
 
-            if (!JitCache.TryFind(offset, out JitCacheEntry funcEntry))
+            if (!JitCache.TryFind(offset, out CacheEntry funcEntry))
             {
                 return null; // Not found.
             }

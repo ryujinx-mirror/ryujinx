@@ -23,16 +23,16 @@ namespace ARMeilleure.Instructions
         }
 
         [ThreadStatic]
-        private static ThreadContext _context;
+        private static ThreadContext Context;
 
         public static void RegisterThread(ExecutionContext context, IMemoryManager memory, Translator translator)
         {
-            _context = new ThreadContext(context, memory, translator);
+            Context = new ThreadContext(context, memory, translator);
         }
 
         public static void UnregisterThread()
         {
-            _context = null;
+            Context = null;
         }
 
         public static void Break(ulong address, int imm)
@@ -231,14 +231,24 @@ namespace ARMeilleure.Instructions
 
         public static ulong GetFunctionAddress(ulong address)
         {
-            TranslatedFunction function = _context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
+            return GetFunctionAddressWithHint(address, true);
+        }
+
+        public static ulong GetFunctionAddressWithoutRejit(ulong address)
+        {
+            return GetFunctionAddressWithHint(address, false);
+        }
+
+        private static ulong GetFunctionAddressWithHint(ulong address, bool hintRejit)
+        {
+            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode, hintRejit);
 
             return (ulong)function.FuncPtr.ToInt64();
         }
 
         public static ulong GetIndirectFunctionAddress(ulong address, ulong entryAddress)
         {
-            TranslatedFunction function = _context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
+            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode, hintRejit: true);
 
             ulong ptr = (ulong)function.FuncPtr.ToInt64();
 
@@ -266,12 +276,12 @@ namespace ARMeilleure.Instructions
 
         public static ExecutionContext GetContext()
         {
-            return _context.Context;
+            return Context.Context;
         }
 
         public static IMemoryManager GetMemoryManager()
         {
-            return _context.Memory;
+            return Context.Memory;
         }
     }
 }

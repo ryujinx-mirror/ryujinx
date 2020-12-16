@@ -2,6 +2,7 @@ using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Unwinding;
 using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Memory;
+using ARMeilleure.Translation.Cache;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
@@ -21,7 +22,7 @@ namespace ARMeilleure.Translation.PTC
     {
         private const string HeaderMagic = "PTChd";
 
-        private const int InternalVersion = 1801; //! To be incremented manually for each change to the ARMeilleure project.
+        private const int InternalVersion = 1519; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -433,9 +434,9 @@ namespace ARMeilleure.Translation.PTC
 
                     UnwindInfo unwindInfo = ReadUnwindInfo(unwindInfosReader);
 
-                    TranslatedFunction func = FastTranslate(code, unwindInfo, infoEntry.HighCq);
+                    TranslatedFunction func = FastTranslate(code, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
 
-                    funcs.AddOrUpdate((ulong)infoEntry.Address, func, (key, oldFunc) => func.HighCq && !oldFunc.HighCq ? func : oldFunc);
+                    funcs.AddOrUpdate(infoEntry.Address, func, (key, oldFunc) => func.HighCq && !oldFunc.HighCq ? func : oldFunc);
                 }
             }
 
@@ -457,7 +458,8 @@ namespace ARMeilleure.Translation.PTC
         {
             InfoEntry infoEntry = new InfoEntry();
 
-            infoEntry.Address = infosReader.ReadInt64();
+            infoEntry.Address = infosReader.ReadUInt64();
+            infoEntry.GuestSize = infosReader.ReadUInt64();
             infoEntry.HighCq = infosReader.ReadBoolean();
             infoEntry.CodeLen = infosReader.ReadInt32();
             infoEntry.RelocEntriesCount = infosReader.ReadInt32();
@@ -541,7 +543,7 @@ namespace ARMeilleure.Translation.PTC
             return new UnwindInfo(pushEntries, prologueSize);
         }
 
-        private static TranslatedFunction FastTranslate(byte[] code, UnwindInfo unwindInfo, bool highCq)
+        private static TranslatedFunction FastTranslate(byte[] code, ulong guestSize, UnwindInfo unwindInfo, bool highCq)
         {
             CompiledFunction cFunc = new CompiledFunction(code, unwindInfo);
 
@@ -549,7 +551,7 @@ namespace ARMeilleure.Translation.PTC
 
             GuestFunction gFunc = Marshal.GetDelegateForFunctionPointer<GuestFunction>(codePtr);
 
-            TranslatedFunction tFunc = new TranslatedFunction(gFunc, highCq);
+            TranslatedFunction tFunc = new TranslatedFunction(gFunc, guestSize, highCq);
 
             return tFunc;
         }
@@ -632,12 +634,13 @@ namespace ARMeilleure.Translation.PTC
             Logger.Info?.Print(LogClass.Ptc, $"{funcsCount + _translateCount} of {ProfiledFuncsCount} functions to translate - {_rejitCount} functions rejited");
         }
 
-        internal static void WriteInfoCodeReloc(long address, bool highCq, PtcInfo ptcInfo)
+        internal static void WriteInfoCodeReloc(ulong address, ulong guestSize, bool highCq, PtcInfo ptcInfo)
         {
             lock (_lock)
             {
                 // WriteInfo.
-                _infosWriter.Write((long)address); // InfoEntry.Address
+                _infosWriter.Write((ulong)address); // InfoEntry.Address
+                _infosWriter.Write((ulong)guestSize); // InfoEntry.GuestSize
                 _infosWriter.Write((bool)highCq); // InfoEntry.HighCq
                 _infosWriter.Write((int)ptcInfo.CodeStream.Length); // InfoEntry.CodeLen
                 _infosWriter.Write((int)ptcInfo.RelocEntriesCount); // InfoEntry.RelocEntriesCount
@@ -673,9 +676,10 @@ namespace ARMeilleure.Translation.PTC
 
         private struct InfoEntry
         {
-            public const int Stride = 17; // Bytes.
+            public const int Stride = 25; // Bytes.
 
-            public long Address;
+            public ulong Address;
+            public ulong GuestSize;
             public bool HighCq;
             public int CodeLen;
             public int RelocEntriesCount;

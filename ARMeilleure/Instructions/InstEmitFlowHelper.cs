@@ -2,8 +2,8 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
+using ARMeilleure.Translation.Cache;
 using ARMeilleure.Translation.PTC;
-using System;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
@@ -12,8 +12,6 @@ namespace ARMeilleure.Instructions
 {
     static class InstEmitFlowHelper
     {
-        public const ulong CallFlag = 1;
-
         public static void EmitCondBranch(ArmEmitterContext context, Operand target, Condition cond)
         {
             if (cond != Condition.Al)
@@ -144,7 +142,7 @@ namespace ARMeilleure.Instructions
 
         public static void EmitCall(ArmEmitterContext context, ulong immediate)
         {
-            bool isRecursive = immediate == (ulong)context.BaseAddress;
+            bool isRecursive = immediate == context.EntryAddress;
 
             EmitJumpTableBranch(context, Const(immediate), isRecursive);
         }
@@ -176,7 +174,7 @@ namespace ARMeilleure.Instructions
                 Operand lblContinue = context.GetLabel(nextAddr.Value);
 
                 // We need to clear out the call flag for the return address before comparing it.
-                context.BranchIf(lblContinue, context.BitwiseAnd(returnAddress, Const(~CallFlag)), nextAddr, Comparison.Equal, BasicBlockFrequency.Cold);
+                context.BranchIf(lblContinue, returnAddress, nextAddr, Comparison.Equal, BasicBlockFrequency.Cold);
 
                 context.Return(returnAddress);
             }
@@ -209,9 +207,9 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void EmitTailContinue(ArmEmitterContext context, Operand address, bool allowRejit = false)
+        public static void EmitTailContinue(ArmEmitterContext context, Operand address, bool allowRejit)
         {
-            // Left option here as it may be useful if we need to return to managed rather than tail call in future. 
+            // Left option here as it may be useful if we need to return to managed rather than tail call in future.
             // (eg. for debug)
             bool useTailContinue = true;
 
@@ -225,12 +223,9 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    if (allowRejit)
-                    {
-                        address = context.BitwiseOr(address, Const(CallFlag));
-                    }
-
-                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
+                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(allowRejit
+                        ? nameof(NativeInterface.GetFunctionAddress)
+                        : nameof(NativeInterface.GetFunctionAddressWithoutRejit)), address);
 
                     EmitNativeCall(context, fallbackAddr, true);
                 }
@@ -251,7 +246,6 @@ namespace ARMeilleure.Instructions
 
         private static void EmitBranchFallback(ArmEmitterContext context, Operand address, bool isJump)
         {
-            address = context.BitwiseOr(address, Const(address.Type, (long)CallFlag)); // Set call flag.
             Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
 
             EmitNativeCall(context, fallbackAddr, isJump);
@@ -270,9 +264,9 @@ namespace ARMeilleure.Instructions
                 Operand gotResult = context.CompareAndSwap(tableAddress, Const(0L), address);
 
                 // Is the address ours? (either taken via CompareAndSwap (0), or what was already here)
-                context.BranchIfFalse(entrySkipLabel, 
+                context.BranchIfFalse(entrySkipLabel,
                     context.BitwiseOr(
-                        context.ICompareEqual(gotResult, address), 
+                        context.ICompareEqual(gotResult, address),
                         context.ICompareEqual(gotResult, Const(0L)))
                 );
 
@@ -281,7 +275,7 @@ namespace ARMeilleure.Instructions
                 Operand targetFunction = context.Load(OperandType.I64, targetFunctionPtr);
 
                 // Call the function.
-                // We pass in the entry address as the guest address, as the entry may need to be updated by the 
+                // We pass in the entry address as the guest address, as the entry may need to be updated by the
                 // indirect call stub.
                 EmitNativeCallWithGuestAddress(context, targetFunction, tableAddress, isJump);
 
@@ -295,7 +289,7 @@ namespace ARMeilleure.Instructions
                 {
                     // If this is the last entry, avoid emitting the additional label and add.
                     EmitTableEntry(fallbackLabel);
-                } 
+                }
                 else
                 {
                     Operand nextLabel = Label();
@@ -323,10 +317,10 @@ namespace ARMeilleure.Instructions
                 address = context.ZeroExtend32(OperandType.I64, address);
             }
 
-            // TODO: Constant folding. Indirect calls are slower in the best case and emit more code so we want to 
+            // TODO: Constant folding. Indirect calls are slower in the best case and emit more code so we want to
             // avoid them when possible.
             bool isConst = address.Kind == OperandKind.Constant;
-            long constAddr = (long)address.Value;
+            ulong constAddr = address.Value;
 
             if (!context.HighCq)
             {
@@ -337,7 +331,7 @@ namespace ARMeilleure.Instructions
             else if (!isConst)
             {
                 // Virtual branch/call - store first used addresses on a small table for fast lookup.
-                int entry = context.JumpTable.ReserveDynamicEntry(isJump);
+                int entry = context.JumpTable.ReserveDynamicEntry(context.EntryAddress, isJump);
 
                 int jumpOffset = entry * JumpTable.JumpTableStride * JumpTable.DynamicTableElems;
 
@@ -357,7 +351,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                int entry = context.JumpTable.ReserveTableEntry(context.BaseAddress & (~3L), constAddr, isJump);
+                int entry = context.JumpTable.ReserveTableEntry(context.EntryAddress, constAddr, isJump);
 
                 int jumpOffset = entry * JumpTable.JumpTableStride + 8; // Offset directly to the host address.
 
