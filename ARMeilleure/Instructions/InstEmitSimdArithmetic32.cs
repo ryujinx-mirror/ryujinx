@@ -252,28 +252,14 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void Vfma_V(ArmEmitterContext context) // Fused.
+        public static void Vfma_S(ArmEmitterContext context) // Fused.
         {
             if (Optimizations.FastFP && Optimizations.UseFma)
             {
-                // Vectors contain elements that are 32-bits in length always. The only thing that will change is the number of elements in a vector. 
-                // The 64-bit variant will never be used.
-                EmitVectorTernaryOpF32(context, Intrinsic.X86Vfmadd231ps, Intrinsic.X86Vfmadd231pd);
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Vfmadd231ss, Intrinsic.X86Vfmadd231sd);
             }
-            else
+            else if (Optimizations.FastFP && Optimizations.UseSse2)
             {
-                EmitVectorTernaryOpF32(context, (op1, op2, op3) =>
-                {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), op1, op2, op3);
-                });
-            }
-        }
-
-        public static void Vfma_S(ArmEmitterContext context) // Fused.
-        {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
-            {
-                // TODO: Use FMA instruction set.
                 EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Addss, Intrinsic.X86Addsd);
             }
             else
@@ -285,11 +271,29 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vfma_V(ArmEmitterContext context) // Fused.
+        {
+            if (Optimizations.FastFP && Optimizations.UseFma)
+            {
+                EmitVectorTernaryOpF32(context, Intrinsic.X86Vfmadd231ps);
+            }
+            else
+            {
+                EmitVectorTernaryOpF32(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCallDefaultFpscr(context, nameof(SoftFloat32.FPMulAddFpscr), op1, op2, op3);
+                });
+            }
+        }
+
         public static void Vfms_S(ArmEmitterContext context) // Fused.
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseFma)
             {
-                // TODO: Use FMA instruction set.
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Vfnmadd231ss, Intrinsic.X86Vfnmadd231sd);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
                 EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Subss, Intrinsic.X86Subsd);
             }
             else
@@ -301,17 +305,36 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vfms_V(ArmEmitterContext context) // Fused.
+        {
+            if (Optimizations.FastFP && Optimizations.UseFma)
+            {
+                EmitVectorTernaryOpF32(context, Intrinsic.X86Vfnmadd231ps);
+            }
+            else
+            {
+                EmitVectorTernaryOpF32(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCallDefaultFpscr(context, nameof(SoftFloat32.FPMulSubFpscr), op1, op2, op3);
+                });
+            }
+        }
+
         public static void Vfnma_S(ArmEmitterContext context) // Fused.
         {
             if (Optimizations.FastFP && Optimizations.UseFma)
             {
                 EmitScalarTernaryOpF32(context, Intrinsic.X86Vfnmsub231ss, Intrinsic.X86Vfnmsub231sd);
             }
+            else if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Subss, Intrinsic.X86Subsd, isNegD: true);
+            }
             else
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), context.Negate(op1), context.Negate(op2), op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPNegMulAdd), op1, op2, op3);
                 });
             }
         }
@@ -322,11 +345,15 @@ namespace ARMeilleure.Instructions
             {
                 EmitScalarTernaryOpF32(context, Intrinsic.X86Vfmsub231ss, Intrinsic.X86Vfmsub231sd);
             }
+            else if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Addss, Intrinsic.X86Addsd, isNegD: true);
+            }
             else
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMulAdd), context.Negate(op1), op2, op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPNegMulSub), op1, op2, op3);
                 });
             }
         }
@@ -422,36 +449,21 @@ namespace ARMeilleure.Instructions
 
             if (Optimizations.FastFP && Optimizations.UseSse2)
             {
-                EmitScalarTernaryOpSimd32(context, (d, n, m) =>
-                {
-                    if ((op.Size & 1) == 0)
-                    {
-                        Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                        res = context.AddIntrinsic(Intrinsic.X86Addss, d, res);
-                        Operand mask = X86GetScalar(context, -0f);
-                        return context.AddIntrinsic(Intrinsic.X86Xorps, mask, res);
-                    }
-                    else
-                    {
-                        Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                        res = context.AddIntrinsic(Intrinsic.X86Addsd, d, res);
-                        Operand mask = X86GetScalar(context, -0d);
-                        return context.AddIntrinsic(Intrinsic.X86Xorpd, mask, res);
-                    }
-                });
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Subss, Intrinsic.X86Subsd, isNegD: true);
             }
             else if (Optimizations.FastFP)
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return context.Negate(context.Add(op1, context.Multiply(op2, op3)));
+                    return context.Subtract(context.Negate(op1), context.Multiply(op2, op3));
                 });
             }
             else
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPNegMulAdd), op1, op2, op3);
+                    Operand res = EmitSoftFloatCall(context, nameof(SoftFloat32.FPMul), op2, op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPSub), context.Negate(op1), res);
                 });
             }
         }
@@ -462,24 +474,7 @@ namespace ARMeilleure.Instructions
 
             if (Optimizations.FastFP && Optimizations.UseSse2)
             {
-                EmitScalarTernaryOpSimd32(context, (d, n, m) =>
-                {
-                    if ((op.Size & 1) == 0)
-                    {
-                        Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                        Operand mask = X86GetScalar(context, -0f);
-                        d = context.AddIntrinsic(Intrinsic.X86Xorps, mask, d);
-                        return context.AddIntrinsic(Intrinsic.X86Addss, d, res);
-
-                    }
-                    else
-                    {
-                        Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                        Operand mask = X86GetScalar(context, -0d);
-                        d = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, res);
-                        return context.AddIntrinsic(Intrinsic.X86Addsd, d, res);
-                    }
-                });
+                EmitScalarTernaryOpF32(context, Intrinsic.X86Mulss, Intrinsic.X86Mulsd, Intrinsic.X86Addss, Intrinsic.X86Addsd, isNegD: true);
             }
             else if (Optimizations.FastFP)
             {
@@ -492,7 +487,8 @@ namespace ARMeilleure.Instructions
             {
                 EmitScalarTernaryOpF32(context, (op1, op2, op3) =>
                 {
-                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPNegMulSub), op1, op2, op3);
+                    Operand res = EmitSoftFloatCall(context, nameof(SoftFloat32.FPMul), op2, op3);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd), context.Negate(op1), res);
                 });
             }
         }

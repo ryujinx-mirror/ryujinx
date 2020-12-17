@@ -591,7 +591,7 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, res);
         }
 
-        public static void EmitDiv(ArmEmitterContext context, bool unsigned)
+        private static void EmitDiv(ArmEmitterContext context, bool unsigned)
         {
             Operand n = GetAluN(context);
             Operand m = GetAluM(context);

@@ -22,41 +22,45 @@ namespace Ryujinx.Tests.Cpu
                                 0x80000000u, 0xFFFFFFFFu };
         }
 
-        private static IEnumerable<uint> _1S_F_()
+        private static IEnumerable<ulong> _1S_F_()
         {
-            yield return 0xFF7FFFFFu; // -Max Normal    (float.MinValue)
-            yield return 0x80800000u; // -Min Normal
-            yield return 0x807FFFFFu; // -Max Subnormal
-            yield return 0x80000001u; // -Min Subnormal (-float.Epsilon)
-            yield return 0x7F7FFFFFu; // +Max Normal    (float.MaxValue)
-            yield return 0x00800000u; // +Min Normal
-            yield return 0x007FFFFFu; // +Max Subnormal
-            yield return 0x00000001u; // +Min Subnormal (float.Epsilon)
+            yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
+            yield return 0x0000000080800000ul; // -Min Normal
+            yield return 0x00000000807FFFFFul; // -Max Subnormal
+            yield return 0x0000000080000001ul; // -Min Subnormal (-float.Epsilon)
+            yield return 0x000000007F7FFFFFul; // +Max Normal    (float.MaxValue)
+            yield return 0x0000000000800000ul; // +Min Normal
+            yield return 0x00000000007FFFFFul; // +Max Subnormal
+            yield return 0x0000000000000001ul; // +Min Subnormal (float.Epsilon)
 
             if (!NoZeros)
             {
-                yield return 0x80000000u; // -Zero
-                yield return 0x00000000u; // +Zero
+                yield return 0x0000000080000000ul; // -Zero
+                yield return 0x0000000000000000ul; // +Zero
             }
 
             if (!NoInfs)
             {
-                yield return 0xFF800000u; // -Infinity
-                yield return 0x7F800000u; // +Infinity
+                yield return 0x00000000FF800000ul; // -Infinity
+                yield return 0x000000007F800000ul; // +Infinity
             }
 
             if (!NoNaNs)
             {
-                yield return 0xFFC00000u; // -QNaN (all zeros payload) (float.NaN)
-                yield return 0xFFBFFFFFu; // -SNaN (all ones  payload)
-                yield return 0x7FC00000u; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
-                yield return 0x7FBFFFFFu; // +SNaN (all ones  payload)
+                yield return 0x00000000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
+                yield return 0x00000000FFBFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x000000007FC00000ul; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
+                yield return 0x000000007FBFFFFFul; // +SNaN (all ones  payload)
             }
 
             for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                yield return GenNormalS();
-                yield return GenSubnormalS();
+                ulong grbg = TestContext.CurrentContext.Random.NextUInt();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
+
+                yield return (grbg << 32) | rnd1;
+                yield return (grbg << 32) | rnd2;
             }
         }
 
@@ -93,8 +97,11 @@ namespace Ryujinx.Tests.Cpu
 
             for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                yield return GenNormalD();
-                yield return GenSubnormalD();
+                ulong rnd1 = GenNormalD();
+                ulong rnd2 = GenSubnormalD();
+
+                yield return rnd1;
+                yield return rnd2;
             }
         }
 #endregion
@@ -109,10 +116,10 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VCVT.<dt>.F32 <Sd>, <Sm>")]
         public void Vcvt_F32_I32([Values(0u, 1u, 2u, 3u)] uint rd,
                                  [Values(0u, 1u, 2u, 3u)] uint rm,
-                                 [ValueSource(nameof(_1S_F_))] uint s0,
-                                 [ValueSource(nameof(_1S_F_))] uint s1,
-                                 [ValueSource(nameof(_1S_F_))] uint s2,
-                                 [ValueSource(nameof(_1S_F_))] uint s3,
+                                 [ValueSource(nameof(_1S_F_))] ulong s0,
+                                 [ValueSource(nameof(_1S_F_))] ulong s1,
+                                 [ValueSource(nameof(_1S_F_))] ulong s2,
+                                 [ValueSource(nameof(_1S_F_))] ulong s3,
                                  [Values] bool unsigned) // <U32, S32>
         {
             uint opcode = 0xeebc0ac0u; // VCVT.U32.F32 S0, S0
@@ -125,7 +132,7 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rd & 0x1e) << 11) | ((rd & 0x1) << 22);
             opcode |= ((rm & 0x1e) >> 1) | ((rm & 0x1) << 5);
 
-            V128 v0 = MakeVectorE0E1E2E3(s0, s1, s2, s3);
+            V128 v0 = MakeVectorE0E1E2E3((uint)s0, (uint)s1, (uint)s2, (uint)s3);
 
             SingleOpcode(opcode, v0: v0);
 

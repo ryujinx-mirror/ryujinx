@@ -22,6 +22,59 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _Vfma_Vfms_Vfnma_Vfnms_S_F32_()
+        {
+            return new uint[]
+            {
+                0xEEA00A00u, // VFMA. F32 S0, S0, S0
+                0xEEA00A40u, // VFMS. F32 S0, S0, S0
+                0xEE900A40u, // VFNMA.F32 S0, S0, S0
+                0xEE900A00u  // VFNMS.F32 S0, S0, S0
+            };
+        }
+
+        private static uint[] _Vfma_Vfms_Vfnma_Vfnms_S_F64_()
+        {
+            return new uint[]
+            {
+                0xEEA00B00u, // VFMA. F64 D0, D0, D0
+                0xEEA00B40u, // VFMS. F64 D0, D0, D0
+                0xEE900B40u, // VFNMA.F64 D0, D0, D0
+                0xEE900B00u  // VFNMS.F64 D0, D0, D0
+            };
+        }
+
+        private static uint[] _Vfma_Vfms_V_F32_()
+        {
+            return new uint[]
+            {
+                0xF2000C10u, // VFMA.F32 D0, D0, D0
+                0xF2200C10u  // VFMS.F32 D0, D0, D0
+            };
+        }
+
+        private static uint[] _Vmla_Vmls_Vnmla_Vnmls_S_F32_()
+        {
+            return new uint[]
+            {
+                0xEE000A00u, // VMLA. F32 S0, S0, S0
+                0xEE000A40u, // VMLS. F32 S0, S0, S0
+                0xEE100A40u, // VNMLA.F32 S0, S0, S0
+                0xEE100A00u  // VNMLS.F32 S0, S0, S0
+            };
+        }
+
+        private static uint[] _Vmla_Vmls_Vnmla_Vnmls_S_F64_()
+        {
+            return new uint[]
+            {
+                0xEE000B00u, // VMLA. F64 D0, D0, D0
+                0xEE000B40u, // VMLS. F64 D0, D0, D0
+                0xEE100B40u, // VNMLA.F64 D0, D0, D0
+                0xEE100B00u  // VNMLS.F64 D0, D0, D0
+            };
+        }
+
         private static uint[] _Vp_Add_Max_Min_F_()
         {
             return new uint[]
@@ -184,8 +237,8 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 2;
 
         private static readonly bool NoZeros = false;
-        private static readonly bool NoInfs  = true;
-        private static readonly bool NoNaNs  = true;
+        private static readonly bool NoInfs  = false;
+        private static readonly bool NoNaNs  = false;
 
         [Explicit]
         [Test, Pairwise, Description("VADD.f32 V0, V0, V0")]
@@ -293,119 +346,115 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Nzcv);
         }
 
-        [Test, Pairwise, Description("VFMA.F<size> <Vd>, <Vn>, <Vm>")]
-        public void Vfma([Values(0u, 1u)] uint rd,
-                         [Values(0u, 1u)] uint rn,
-                         [Values(0u, 1u)] uint rm,
-                         [Values(0u, 1u)] uint Q,
-                         [ValueSource("_2S_F_")] ulong z,
-                         [ValueSource("_2S_F_")] ulong a,
-                         [ValueSource("_2S_F_")] ulong b )
+        [Test, Pairwise] [Explicit] // Fused.
+        public void Vfma_Vfms_Vfnma_Vfnms_S_F32([ValueSource(nameof(_Vfma_Vfms_Vfnma_Vfnms_S_F32_))] uint opcode,
+                                                [Values(0u, 1u, 2u, 3u)] uint rd,
+                                                [Values(0u, 1u, 2u, 3u)] uint rn,
+                                                [Values(0u, 1u, 2u, 3u)] uint rm,
+                                                [ValueSource(nameof(_1S_F_))] ulong s0,
+                                                [ValueSource(nameof(_1S_F_))] ulong s1,
+                                                [ValueSource(nameof(_1S_F_))] ulong s2,
+                                                [ValueSource(nameof(_1S_F_))] ulong s3)
         {
-            uint opcode = 0xf2000c10;
-            
-            V128 v0;
-            V128 v1;
-            V128 v2;
+            opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
+            opcode |= (((rn & 0x1) << 7)  | (rn & 0x1e) << 15);
+            opcode |= (((rm & 0x1) << 5)  | (rm & 0x1e) >> 1);
 
-            uint c = (uint) BitConverter.SingleToInt32Bits(z);
-            uint d = (uint) BitConverter.SingleToInt32Bits(a);
-            uint e = (uint) BitConverter.SingleToInt32Bits(b);
-            if (Q == 0)
-            {
-                opcode |= (((rm & 0x1) << 5) | (rm & 0x1e) >> 1);
-                opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
-                opcode |= (((rn & 0x1) << 7) | (rn & 0x1e) >> 15);
+            V128 v0 = MakeVectorE0E1E2E3((uint)s0, (uint)s1, (uint)s2, (uint)s3);
 
-                v0 = MakeVectorE0E1(c, c);
-                v1 = MakeVectorE0E1(d, c);
-                v2 = MakeVectorE0E1(e, c);
-            }
-            else
-            {
-                rd = rn = rm = 0; // Needed, as these values cannot be odd values if Q == 1.
-                opcode |= (((rm & 0x10) << 1) | (rm & 0xf) << 0);
-                opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
-                opcode |= (((rn & 0x10) << 3) | (rn & 0xf) << 16);
+            SingleOpcode(opcode, v0: v0);
 
-                v0 = MakeVectorE0E1E2E3(c, c, d, e);
-                v1 = MakeVectorE0E1E2E3(d, c, e, c);
-                v2 = MakeVectorE0E1E2E3(e, c, d, c);
-            }
-
-            opcode |= ((Q & 1)  << 6);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-            CompareAgainstUnicorn();
-        }
-        
-        [Test, Pairwise, Description("VFNMA.F<size> <Vd>, <Vn>, <Vm>")]
-        public void Vfnma([Values(0u, 1u)] uint rd,
-                          [Values(0u, 1u)] uint rn,
-                          [Values(0u, 1u)] uint rm,
-                          [Values(2u, 3u)] uint size,
-                          [ValueSource("_2S_F_")] ulong z,
-                          [ValueSource("_2S_F_")] ulong a,
-                          [ValueSource("_2S_F_")] ulong b)
-        {
-            uint opcode = 0xe900840;
-
-            if (size == 2)
-            {
-                opcode |= (((rm & 0x1) << 5) | (rm & 0x1e) >> 1);
-                opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
-                opcode |= (((rn & 0x1) << 7) | (rn & 0x1e) >> 15);
-
-            }
-            else
-            {
-                opcode |= (((rm & 0x10) << 1) | (rm & 0xf) << 0);
-                opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
-                opcode |= (((rn & 0x10) << 3) | (rn & 0xf) << 16);
-            }
-
-            opcode |= ((size & 3) << 8);
-
-            V128 v0 = MakeVectorE0E1(z, z);
-            V128 v1 = MakeVectorE0E1(a, z);
-            V128 v2 = MakeVectorE0E1(b, z);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("VFNMS.F<size> <Vd>, <Vn>, <Vm>")]
-        public void Vfnms([Values(0u, 1u)] uint rd,
-                          [Values(0u, 1u)] uint rn,
-                          [Values(0u, 1u)] uint rm,
-                          [Values(2u, 3u)] uint size,
-                          [ValueSource("_2S_F_")] ulong z,
-                          [ValueSource("_2S_F_")] ulong a,
-                          [ValueSource("_2S_F_")] ulong b)
+        [Test, Pairwise] [Explicit] // Fused.
+        public void Vfma_Vfms_Vfnma_Vfnms_S_F64([ValueSource(nameof(_Vfma_Vfms_Vfnma_Vfnms_S_F64_))] uint opcode,
+                                                [Values(0u, 1u)] uint rd,
+                                                [Values(0u, 1u)] uint rn,
+                                                [Values(0u, 1u)] uint rm,
+                                                [ValueSource(nameof(_1D_F_))] ulong d0,
+                                                [ValueSource(nameof(_1D_F_))] ulong d1)
         {
-            uint opcode = 0xee900a00;
+            opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
+            opcode |= (((rn & 0x10) << 3)  | (rn & 0xf) << 16);
+            opcode |= (((rm & 0x10) << 1)  | (rm & 0xf) << 0);
 
-            if (size == 2)
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit] // Fused.
+        public void Vfma_Vfms_V_F32([ValueSource(nameof(_Vfma_Vfms_V_F32_))] uint opcode,
+                                    [Values(0u, 1u, 2u, 3u)] uint rd,
+                                    [Values(0u, 1u, 2u, 3u)] uint rn,
+                                    [Values(0u, 1u, 2u, 3u)] uint rm,
+                                    [ValueSource(nameof(_2S_F_))] ulong d0,
+                                    [ValueSource(nameof(_2S_F_))] ulong d1,
+                                    [ValueSource(nameof(_2S_F_))] ulong d2,
+                                    [ValueSource(nameof(_2S_F_))] ulong d3,
+                                    [Values] bool q)
+        {
+            if (q)
             {
-                opcode |= (((rm & 0x1) << 5)  | (rm & 0x1e) >> 1);
-                opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
-                opcode |= (((rn & 0x1) << 7)  | (rn & 0x1e) >> 15);
-               
-            }
-            else
-            {
-                opcode |= (((rm & 0x10) << 1)  | (rm & 0xf) << 0);
-                opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
-                opcode |= (((rn & 0x10) << 3)  | (rn & 0xf) << 16);
+                opcode |= 1 << 6;
+
+                rd >>= 1; rd <<= 1;
+                rn >>= 1; rn <<= 1;
+                rm >>= 1; rm <<= 1;
             }
 
-            opcode |= ((size & 3) << 8);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
 
-            V128 v0 = MakeVectorE0E1(z, z);
-            V128 v1 = MakeVectorE0E1(a, z);
-            V128 v2 = MakeVectorE0E1(b, z);
+            V128 v0 = MakeVectorE0E1(d0, d1);
+            V128 v1 = MakeVectorE0E1(d2, d3);
 
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void Vmla_Vmls_Vnmla_Vnmls_S_F32([ValueSource(nameof(_Vmla_Vmls_Vnmla_Vnmls_S_F32_))] uint opcode,
+                                                [Values(0u, 1u, 2u, 3u)] uint rd,
+                                                [Values(0u, 1u, 2u, 3u)] uint rn,
+                                                [Values(0u, 1u, 2u, 3u)] uint rm,
+                                                [ValueSource(nameof(_1S_F_))] ulong s0,
+                                                [ValueSource(nameof(_1S_F_))] ulong s1,
+                                                [ValueSource(nameof(_1S_F_))] ulong s2,
+                                                [ValueSource(nameof(_1S_F_))] ulong s3)
+        {
+            opcode |= (((rd & 0x1) << 22) | (rd & 0x1e) << 11);
+            opcode |= (((rn & 0x1) << 7)  | (rn & 0x1e) << 15);
+            opcode |= (((rm & 0x1) << 5)  | (rm & 0x1e) >> 1);
+
+            V128 v0 = MakeVectorE0E1E2E3((uint)s0, (uint)s1, (uint)s2, (uint)s3);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void Vmla_Vmls_Vnmla_Vnmls_S_F64([ValueSource(nameof(_Vmla_Vmls_Vnmla_Vnmls_S_F64_))] uint opcode,
+                                                [Values(0u, 1u)] uint rd,
+                                                [Values(0u, 1u)] uint rn,
+                                                [Values(0u, 1u)] uint rm,
+                                                [ValueSource(nameof(_1D_F_))] ulong d0,
+                                                [ValueSource(nameof(_1D_F_))] ulong d1)
+        {
+            opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
+            opcode |= (((rn & 0x10) << 3)  | (rn & 0xf) << 16);
+            opcode |= (((rm & 0x10) << 1)  | (rm & 0xf) << 0);
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
+
             CompareAgainstUnicorn();
         }
 

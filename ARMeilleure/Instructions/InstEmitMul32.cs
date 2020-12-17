@@ -329,7 +329,7 @@ namespace ARMeilleure.Instructions
             EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
         }
 
-        public static void EmitMlal(ArmEmitterContext context, bool signed)
+        private static void EmitMlal(ArmEmitterContext context, bool signed)
         {
             OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
 
