@@ -14,7 +14,7 @@ namespace ARMeilleure.Translation.Cache
         // The jump table is a block of (guestAddress, hostAddress) function mappings.
         // Each entry corresponds to one branch in a JIT compiled function. The entries are
         // reserved specifically for each call.
-        // The _dependants dictionary can be used to update the hostAddress for any functions that change.
+        // The Dependants dictionary can be used to update the hostAddress for any functions that change.
 
         public const int JumpTableStride = 16; // 8 byte guest address, 8 byte host address.
 
@@ -42,7 +42,7 @@ namespace ARMeilleure.Translation.Cache
         private const int DynamicTableSize = 1048576;
         private const int DynamicTableByteSize = DynamicTableSize * DynamicTableStride;
 
-        private const int DynamicEntryTag = 1 << 31;
+        public const int DynamicEntryTag = 1 << 31;
 
         private readonly ReservedRegion _jumpRegion;
         private readonly ReservedRegion _dynamicRegion;
@@ -87,14 +87,14 @@ namespace ARMeilleure.Translation.Cache
                 }
             }
 
-            foreach (var item in ptcJumpTable.Dependants)
+            foreach (var kv in ptcJumpTable.Dependants)
             {
-                Dependants.TryAdd(item.Key, new List<int>(item.Value));
+                Dependants.TryAdd(kv.Key, new List<int>(kv.Value));
             }
 
-            foreach (var item in ptcJumpTable.Owners)
+            foreach (var kv in ptcJumpTable.Owners)
             {
-                Owners.TryAdd(item.Key, new List<int>(item.Value));
+                Owners.TryAdd(kv.Key, new List<int>(kv.Value));
             }
         }
 
@@ -182,29 +182,14 @@ namespace ARMeilleure.Translation.Cache
         // For future use.
         public void RemoveFunctionEntries(ulong guestAddress)
         {
-            if (Owners.TryRemove(guestAddress, out List<int> list))
+            Targets.TryRemove(guestAddress, out _);
+            Dependants.TryRemove(guestAddress, out _);
+
+            if (Owners.TryRemove(guestAddress, out List<int> entries))
             {
-                for (int i = 0; i < list.Count; i++)
+                foreach (int entry in entries)
                 {
-                    int entry = list[i];
-
-                    bool isDynamic = (entry & DynamicEntryTag) != 0;
-
-                    entry &= ~DynamicEntryTag;
-
-                    if (isDynamic)
-                    {
-                        IntPtr addr = GetEntryAddressDynamicTable(entry);
-
-                        for (int j = 0; j < DynamicTableElems; j++)
-                        {
-                            Marshal.WriteInt64(addr + j * JumpTableStride, 0, 0L);
-                            Marshal.WriteInt64(addr + j * JumpTableStride, 8, 0L);
-                        }
-
-                        DynTable.FreeEntry(entry);
-                    }
-                    else
+                    if ((entry & DynamicEntryTag) == 0)
                     {
                         IntPtr addr = GetEntryAddressJumpTable(entry);
 
@@ -212,6 +197,18 @@ namespace ARMeilleure.Translation.Cache
                         Marshal.WriteInt64(addr, 8, 0L);
 
                         Table.FreeEntry(entry);
+                    }
+                    else
+                    {
+                        IntPtr addr = GetEntryAddressDynamicTable(entry & ~DynamicEntryTag);
+
+                        for (int j = 0; j < DynamicTableElems; j++)
+                        {
+                            Marshal.WriteInt64(addr + j * JumpTableStride, 0, 0L);
+                            Marshal.WriteInt64(addr + j * JumpTableStride, 8, 0L);
+                        }
+
+                        DynTable.FreeEntry(entry & ~DynamicEntryTag);
                     }
                 }
             }
@@ -257,6 +254,20 @@ namespace ARMeilleure.Translation.Cache
             Debug.Assert(DynTable.EntryIsValid(entry));
 
             return _dynamicRegion.Pointer + entry * DynamicTableStride;
+        }
+
+        public bool CheckEntryFromAddressJumpTable(IntPtr entryAddress)
+        {
+            int entry = Math.DivRem((int)((ulong)entryAddress - (ulong)_jumpRegion.Pointer), JumpTableStride, out int rem);
+
+            return rem == 0 && Table.EntryIsValid(entry);
+        }
+
+        public bool CheckEntryFromAddressDynamicTable(IntPtr entryAddress)
+        {
+            int entry = Math.DivRem((int)((ulong)entryAddress - (ulong)_dynamicRegion.Pointer), DynamicTableStride, out int rem);
+
+            return rem == 0 && DynTable.EntryIsValid(entry);
         }
 
         public void Dispose()

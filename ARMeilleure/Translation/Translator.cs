@@ -31,10 +31,11 @@ namespace ARMeilleure.Translation
         private readonly ReaderWriterLock _backgroundTranslatorLock;
 
         private JumpTable _jumpTable;
+        internal JumpTable JumpTable => _jumpTable;
 
         private volatile int _threadCount;
 
-        // FIXME: Remove this once the init logic of the emulator will be redone
+        // FIXME: Remove this once the init logic of the emulator will be redone.
         public static ManualResetEvent IsReadyForTranslation = new ManualResetEvent(false);
 
         public Translator(IJitMemoryAllocator allocator, IMemoryManager memory)
@@ -100,7 +101,7 @@ namespace ARMeilleure.Translation
 
                 if (Ptc.State == PtcState.Enabled)
                 {
-                    Ptc.LoadTranslations(_funcs, _memory.PageTablePointer, _jumpTable);
+                    Ptc.LoadTranslations(_funcs, _memory, _jumpTable);
                     Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable);
                 }
 

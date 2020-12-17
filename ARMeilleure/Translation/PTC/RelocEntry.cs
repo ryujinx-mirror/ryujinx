@@ -2,6 +2,8 @@ namespace ARMeilleure.Translation.PTC
 {
     struct RelocEntry
     {
+        public const int Stride = 8; // Bytes.
+
         public int Position;
         public int Index;
 

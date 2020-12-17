@@ -4,7 +4,7 @@ using System.IO;
 
 namespace ARMeilleure.Translation.PTC
 {
-    sealed class PtcInfo : IDisposable
+    class PtcInfo : IDisposable
     {
         private readonly BinaryWriter _relocWriter;
         private readonly BinaryWriter _unwindInfoWriter;

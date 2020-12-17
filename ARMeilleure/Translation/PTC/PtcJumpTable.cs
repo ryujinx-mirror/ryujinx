@@ -2,15 +2,15 @@ using ARMeilleure.Translation.Cache;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation.PTC
 {
-    [Serializable]
     class PtcJumpTable
     {
-        [Serializable]
-        private struct TableEntry<TAddress>
+        public struct TableEntry<TAddress>
         {
             public int EntryIndex;
             public long GuestAddress;
@@ -24,62 +24,250 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private enum DirectHostAddress
+        public enum DirectHostAddress
         {
-            CallStub,
-            TailCallStub,
-            Host
+            CallStub = 0,
+            TailCallStub = 1,
+            Host = 2
         }
 
-        private enum IndirectHostAddress
+        public enum IndirectHostAddress
         {
-            CallStub,
-            TailCallStub
+            CallStub = 0,
+            TailCallStub = 1
         }
 
         private readonly List<TableEntry<DirectHostAddress>> _jumpTable;
         private readonly List<TableEntry<IndirectHostAddress>> _dynamicTable;
 
-        private readonly List<ulong> _targets;
-        private readonly Dictionary<ulong, List<int>> _dependants;
-        private readonly Dictionary<ulong, List<int>> _owners;
-
-        public List<ulong> Targets => _targets;
-        public Dictionary<ulong, List<int>> Dependants => _dependants;
-        public Dictionary<ulong, List<int>> Owners => _owners;
+        public List<ulong> Targets { get; }
+        public Dictionary<ulong, List<int>> Dependants { get; }
+        public Dictionary<ulong, List<int>> Owners { get; }
 
         public PtcJumpTable()
         {
             _jumpTable = new List<TableEntry<DirectHostAddress>>();
             _dynamicTable = new List<TableEntry<IndirectHostAddress>>();
 
-            _targets = new List<ulong>();
-            _dependants = new Dictionary<ulong, List<int>>();
-            _owners = new Dictionary<ulong, List<int>>();
+            Targets = new List<ulong>();
+            Dependants = new Dictionary<ulong, List<int>>();
+            Owners = new Dictionary<ulong, List<int>>();
+        }
+
+        public PtcJumpTable(
+            List<TableEntry<DirectHostAddress>> jumpTable, List<TableEntry<IndirectHostAddress>> dynamicTable,
+            List<ulong> targets, Dictionary<ulong, List<int>> dependants, Dictionary<ulong, List<int>> owners)
+        {
+            _jumpTable = jumpTable;
+            _dynamicTable = dynamicTable;
+
+            Targets = targets;
+            Dependants = dependants;
+            Owners = owners;
+        }
+
+        public static PtcJumpTable Deserialize(MemoryStream stream)
+        {
+            using (BinaryReader reader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                var jumpTable = new List<TableEntry<DirectHostAddress>>();
+
+                int jumpTableCount = reader.ReadInt32();
+
+                for (int i = 0; i < jumpTableCount; i++)
+                {
+                    int entryIndex = reader.ReadInt32();
+                    long guestAddress = reader.ReadInt64();
+                    DirectHostAddress hostAddress = (DirectHostAddress)reader.ReadInt32();
+
+                    jumpTable.Add(new TableEntry<DirectHostAddress>(entryIndex, guestAddress, hostAddress));
+                }
+
+                var dynamicTable = new List<TableEntry<IndirectHostAddress>>();
+
+                int dynamicTableCount = reader.ReadInt32();
+
+                for (int i = 0; i < dynamicTableCount; i++)
+                {
+                    int entryIndex = reader.ReadInt32();
+                    long guestAddress = reader.ReadInt64();
+                    IndirectHostAddress hostAddress = (IndirectHostAddress)reader.ReadInt32();
+
+                    dynamicTable.Add(new TableEntry<IndirectHostAddress>(entryIndex, guestAddress, hostAddress));
+                }
+
+                var targets = new List<ulong>();
+
+                int targetsCount = reader.ReadInt32();
+
+                for (int i = 0; i < targetsCount; i++)
+                {
+                    ulong address = reader.ReadUInt64();
+
+                    targets.Add(address);
+                }
+
+                var dependants = new Dictionary<ulong, List<int>>();
+
+                int dependantsCount = reader.ReadInt32();
+
+                for (int i = 0; i < dependantsCount; i++)
+                {
+                    ulong address = reader.ReadUInt64();
+
+                    var entries = new List<int>();
+
+                    int entriesCount = reader.ReadInt32();
+
+                    for (int j = 0; j < entriesCount; j++)
+                    {
+                        int entry = reader.ReadInt32();
+
+                        entries.Add(entry);
+                    }
+
+                    dependants.Add(address, entries);
+                }
+
+                var owners = new Dictionary<ulong, List<int>>();
+
+                int ownersCount = reader.ReadInt32();
+
+                for (int i = 0; i < ownersCount; i++)
+                {
+                    ulong address = reader.ReadUInt64();
+
+                    var entries = new List<int>();
+
+                    int entriesCount = reader.ReadInt32();
+
+                    for (int j = 0; j < entriesCount; j++)
+                    {
+                        int entry = reader.ReadInt32();
+
+                        entries.Add(entry);
+                    }
+
+                    owners.Add(address, entries);
+                }
+
+                return new PtcJumpTable(jumpTable, dynamicTable, targets, dependants, owners);
+            }
+        }
+
+        public static void Serialize(MemoryStream stream, PtcJumpTable ptcJumpTable)
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                writer.Write((int)ptcJumpTable._jumpTable.Count);
+
+                foreach (var tableEntry in ptcJumpTable._jumpTable)
+                {
+                    writer.Write((int)tableEntry.EntryIndex);
+                    writer.Write((long)tableEntry.GuestAddress);
+                    writer.Write((int)tableEntry.HostAddress);
+                }
+
+                writer.Write((int)ptcJumpTable._dynamicTable.Count);
+
+                foreach (var tableEntry in ptcJumpTable._dynamicTable)
+                {
+                    writer.Write((int)tableEntry.EntryIndex);
+                    writer.Write((long)tableEntry.GuestAddress);
+                    writer.Write((int)tableEntry.HostAddress);
+                }
+
+                writer.Write((int)ptcJumpTable.Targets.Count);
+
+                foreach (ulong address in ptcJumpTable.Targets)
+                {
+                    writer.Write((ulong)address);
+                }
+
+                writer.Write((int)ptcJumpTable.Dependants.Count);
+
+                foreach (var kv in ptcJumpTable.Dependants)
+                {
+                    writer.Write((ulong)kv.Key); // address
+
+                    writer.Write((int)kv.Value.Count);
+
+                    foreach (int entry in kv.Value)
+                    {
+                        writer.Write((int)entry);
+                    }
+                }
+
+                writer.Write((int)ptcJumpTable.Owners.Count);
+
+                foreach (var kv in ptcJumpTable.Owners)
+                {
+                    writer.Write((ulong)kv.Key); // address
+
+                    writer.Write((int)kv.Value.Count);
+
+                    foreach (int entry in kv.Value)
+                    {
+                        writer.Write((int)entry);
+                    }
+                }
+            }
         }
 
         public void Initialize(JumpTable jumpTable)
         {
-            _targets.Clear();
+            Targets.Clear();
 
             foreach (ulong guestAddress in jumpTable.Targets.Keys)
             {
-                _targets.Add(guestAddress);
+                Targets.Add(guestAddress);
             }
 
-            _dependants.Clear();
+            Dependants.Clear();
 
-            foreach (var item in jumpTable.Dependants)
+            foreach (var kv in jumpTable.Dependants)
             {
-                _dependants.Add(item.Key, new List<int>(item.Value));
+                Dependants.Add(kv.Key, new List<int>(kv.Value));
             }
 
-            _owners.Clear();
+            Owners.Clear();
 
-            foreach (var item in jumpTable.Owners)
+            foreach (var kv in jumpTable.Owners)
             {
-                _owners.Add(item.Key, new List<int>(item.Value));
+                Owners.Add(kv.Key, new List<int>(kv.Value));
             }
+        }
+
+        // For future use.
+        public void Clean(ulong guestAddress)
+        {
+            if (Owners.TryGetValue(guestAddress, out List<int> entries))
+            {
+                foreach (int entry in entries)
+                {
+                    if ((entry & JumpTable.DynamicEntryTag) == 0)
+                    {
+                        int removed = _jumpTable.RemoveAll(tableEntry => tableEntry.EntryIndex == entry);
+
+                        Debug.Assert(removed == 1);
+                    }
+                    else
+                    {
+                        if (JumpTable.DynamicTableElems > 1)
+                        {
+                            throw new NotSupportedException();
+                        }
+
+                        int removed = _dynamicTable.RemoveAll(tableEntry => tableEntry.EntryIndex == (entry & ~JumpTable.DynamicEntryTag));
+
+                        Debug.Assert(removed == 1);
+                    }
+                }
+            }
+
+            Targets.Remove(guestAddress);
+            Dependants.Remove(guestAddress);
+            Owners.Remove(guestAddress);
         }
 
         public void Clear()
@@ -87,19 +275,19 @@ namespace ARMeilleure.Translation.PTC
             _jumpTable.Clear();
             _dynamicTable.Clear();
 
-            _targets.Clear();
-            _dependants.Clear();
-            _owners.Clear();
+            Targets.Clear();
+            Dependants.Clear();
+            Owners.Clear();
         }
 
         public void WriteJumpTable(JumpTable jumpTable, ConcurrentDictionary<ulong, TranslatedFunction> funcs)
         {
-            // Writes internal state to jump table in-memory, after PTC was loaded.
+            // Writes internal state to jump table in-memory, after PtcJumpTable was deserialized.
 
-            foreach (var item in _jumpTable)
+            foreach (var tableEntry in _jumpTable)
             {
-                long guestAddress = item.GuestAddress;
-                DirectHostAddress directHostAddress = item.HostAddress;
+                long guestAddress = tableEntry.GuestAddress;
+                DirectHostAddress directHostAddress = tableEntry.HostAddress;
 
                 long hostAddress;
 
@@ -119,7 +307,12 @@ namespace ARMeilleure.Translation.PTC
                     }
                     else
                     {
-                        throw new KeyNotFoundException($"({nameof(guestAddress)} = 0x{(ulong)guestAddress:X16})");
+                        if (!PtcProfiler.ProfiledFuncs.TryGetValue((ulong)guestAddress, out var value) || !value.highCq)
+                        {
+                            throw new KeyNotFoundException($"({nameof(guestAddress)} = 0x{(ulong)guestAddress:X16})");
+                        }
+
+                        hostAddress = 0L;
                     }
                 }
                 else
@@ -127,7 +320,7 @@ namespace ARMeilleure.Translation.PTC
                     throw new InvalidOperationException(nameof(directHostAddress));
                 }
 
-                int entry = item.EntryIndex;
+                int entry = tableEntry.EntryIndex;
 
                 jumpTable.Table.SetEntry(entry);
                 jumpTable.ExpandIfNeededJumpTable(entry);
@@ -141,17 +334,17 @@ namespace ARMeilleure.Translation.PTC
 
         public void WriteDynamicTable(JumpTable jumpTable)
         {
-            // Writes internal state to jump table in-memory, after PTC was loaded.
+            // Writes internal state to jump table in-memory, after PtcJumpTable was deserialized.
 
             if (JumpTable.DynamicTableElems > 1)
             {
                 throw new NotSupportedException();
             }
 
-            foreach (var item in _dynamicTable)
+            foreach (var tableEntry in _dynamicTable)
             {
-                long guestAddress = item.GuestAddress;
-                IndirectHostAddress indirectHostAddress = item.HostAddress;
+                long guestAddress = tableEntry.GuestAddress;
+                IndirectHostAddress indirectHostAddress = tableEntry.HostAddress;
 
                 long hostAddress;
 
@@ -168,7 +361,7 @@ namespace ARMeilleure.Translation.PTC
                     throw new InvalidOperationException(nameof(indirectHostAddress));
                 }
 
-                int entry = item.EntryIndex;
+                int entry = tableEntry.EntryIndex;
 
                 jumpTable.DynTable.SetEntry(entry);
                 jumpTable.ExpandIfNeededDynamicTable(entry);
@@ -182,7 +375,7 @@ namespace ARMeilleure.Translation.PTC
 
         public void ReadJumpTable(JumpTable jumpTable)
         {
-            // Reads in-memory jump table state and store internally for PTC serialization.
+            // Reads in-memory jump table state and store internally for PtcJumpTable serialization.
 
             _jumpTable.Clear();
 
@@ -216,7 +409,7 @@ namespace ARMeilleure.Translation.PTC
 
         public void ReadDynamicTable(JumpTable jumpTable)
         {
-            // Reads in-memory jump table state and store internally for PTC serialization.
+            // Reads in-memory jump table state and store internally for PtcJumpTable serialization.
 
             if (JumpTable.DynamicTableElems > 1)
             {

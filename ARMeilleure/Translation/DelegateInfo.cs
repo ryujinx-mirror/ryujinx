@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation
 {
-    sealed class DelegateInfo
+    class DelegateInfo
     {
         private readonly Delegate _dlg; // Ensure that this delegate will not be garbage collected.
 

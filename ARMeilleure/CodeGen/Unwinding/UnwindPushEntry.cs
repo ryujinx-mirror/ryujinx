@@ -2,6 +2,8 @@ namespace ARMeilleure.CodeGen.Unwinding
 {
     struct UnwindPushEntry
     {
+        public const int Stride = 16; // Bytes.
+
         public UnwindPseudoOp PseudoOp { get; }
         public int PrologOffset { get; }
         public int RegIndex { get; }

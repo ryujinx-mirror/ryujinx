@@ -1,10 +1,11 @@
 using ARMeilleure.State;
+using Ryujinx.Common.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Threading;
 
@@ -12,11 +13,13 @@ namespace ARMeilleure.Translation.PTC
 {
     public static class PtcProfiler
     {
+        private const string HeaderMagic = "Phd";
+
+        private const uint InternalVersion = 1713; //! Not to be incremented manually for each change to the ARMeilleure project.
+
         private const int SaveInterval = 30; // Seconds.
 
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
-
-        private static readonly BinaryFormatter _binaryFormatter;
 
         private static readonly System.Timers.Timer _timer;
 
@@ -26,17 +29,15 @@ namespace ARMeilleure.Translation.PTC
 
         private static bool _disposed;
 
-        internal static Dictionary<ulong, (ExecutionMode mode, bool highCq)> ProfiledFuncs { get; private set; } //! Not to be modified.
+        internal static Dictionary<ulong, (ExecutionMode mode, bool highCq)> ProfiledFuncs { get; private set; }
 
         internal static bool Enabled { get; private set; }
 
         public static ulong StaticCodeStart { internal get; set; }
-        public static int   StaticCodeSize  { internal get; set; }
+        public static ulong StaticCodeSize  { internal get; set; }
 
         static PtcProfiler()
         {
-            _binaryFormatter = new BinaryFormatter();
-
             _timer = new System.Timers.Timer((double)SaveInterval * 1000d);
             _timer.Elapsed += PreSave;
 
@@ -55,11 +56,11 @@ namespace ARMeilleure.Translation.PTC
         {
             if (IsAddressInStaticCodeRange(address))
             {
+                Debug.Assert(!highCq);
+
                 lock (_lock)
                 {
-                    Debug.Assert(!highCq && !ProfiledFuncs.ContainsKey(address));
-
-                    ProfiledFuncs.TryAdd(address, (mode, highCq));
+                    ProfiledFuncs.TryAdd(address, (mode, highCq: false));
                 }
             }
         }
@@ -68,18 +69,35 @@ namespace ARMeilleure.Translation.PTC
         {
             if (IsAddressInStaticCodeRange(address))
             {
+                Debug.Assert(highCq);
+
                 lock (_lock)
                 {
-                    Debug.Assert(highCq && ProfiledFuncs.ContainsKey(address));
+                    Debug.Assert(ProfiledFuncs.ContainsKey(address));
 
-                    ProfiledFuncs[address] = (mode, highCq);
+                    ProfiledFuncs[address] = (mode, highCq: true);
                 }
             }
         }
 
         internal static bool IsAddressInStaticCodeRange(ulong address)
         {
-            return address >= StaticCodeStart && address < StaticCodeStart + (ulong)StaticCodeSize;
+            return address >= StaticCodeStart && address < StaticCodeStart + StaticCodeSize;
+        }
+
+        internal static Dictionary<ulong, (ExecutionMode mode, bool highCq)> GetProfiledFuncsToTranslate(ConcurrentDictionary<ulong, TranslatedFunction> funcs)
+        {
+            var profiledFuncsToTranslate = new Dictionary<ulong, (ExecutionMode mode, bool highCq)>(ProfiledFuncs);
+
+            foreach (ulong address in profiledFuncsToTranslate.Keys)
+            {
+                if (funcs.ContainsKey(address))
+                {
+                    profiledFuncsToTranslate.Remove(address);
+                }
+            }
+
+            return profiledFuncsToTranslate;
         }
 
         internal static void ClearEntries()
@@ -97,21 +115,21 @@ namespace ARMeilleure.Translation.PTC
 
             if (fileInfoActual.Exists && fileInfoActual.Length != 0L)
             {
-                if (!Load(fileNameActual))
+                if (!Load(fileNameActual, false))
                 {
                     if (fileInfoBackup.Exists && fileInfoBackup.Length != 0L)
                     {
-                        Load(fileNameBackup);
+                        Load(fileNameBackup, true);
                     }
                 }
             }
             else if (fileInfoBackup.Exists && fileInfoBackup.Length != 0L)
             {
-                Load(fileNameBackup);
+                Load(fileNameBackup, true);
             }
         }
 
-        private static bool Load(string fileName)
+        private static bool Load(string fileName, bool isBackup)
         {
             using (FileStream compressedStream = new FileStream(fileName, FileMode.Open))
             using (DeflateStream deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress, true))
@@ -147,9 +165,25 @@ namespace ARMeilleure.Translation.PTC
 
                 stream.Seek((long)hashSize, SeekOrigin.Begin);
 
+                Header header = ReadHeader(stream);
+
+                if (header.Magic != HeaderMagic)
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
+                if (header.InfoFileVersion != InternalVersion)
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
                 try
                 {
-                    ProfiledFuncs = (Dictionary<ulong, (ExecutionMode, bool)>)_binaryFormatter.Deserialize(stream);
+                    ProfiledFuncs = Deserialize(stream);
                 }
                 catch
                 {
@@ -159,14 +193,54 @@ namespace ARMeilleure.Translation.PTC
 
                     return false;
                 }
-
-                return true;
             }
+
+            long fileSize = new FileInfo(fileName).Length;
+
+            Logger.Info?.Print(LogClass.Ptc, $"{(isBackup ? "Loaded Backup Profiling Info" : "Loaded Profiling Info")} (size: {fileSize} bytes, profiled functions: {ProfiledFuncs.Count}).");
+
+            return true;
         }
 
         private static bool CompareHash(ReadOnlySpan<byte> currentHash, ReadOnlySpan<byte> expectedHash)
         {
             return currentHash.SequenceEqual(expectedHash);
+        }
+
+        private static Header ReadHeader(MemoryStream stream)
+        {
+            using (BinaryReader headerReader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                Header header = new Header();
+
+                header.Magic = headerReader.ReadString();
+
+                header.InfoFileVersion = headerReader.ReadUInt32();
+
+                return header;
+            }
+        }
+
+        private static Dictionary<ulong, (ExecutionMode, bool)> Deserialize(MemoryStream stream)
+        {
+            using (BinaryReader reader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                var profiledFuncs = new Dictionary<ulong, (ExecutionMode, bool)>();
+
+                int profiledFuncsCount = reader.ReadInt32();
+
+                for (int i = 0; i < profiledFuncsCount; i++)
+                {
+                    ulong address = reader.ReadUInt64();
+
+                    ExecutionMode mode = (ExecutionMode)reader.ReadInt32();
+                    bool highCq = reader.ReadBoolean();
+
+                    profiledFuncs.Add(address, (mode, highCq));
+                }
+
+                return profiledFuncs;
+            }
         }
 
         private static void InvalidateCompressedStream(FileStream compressedStream)
@@ -195,6 +269,8 @@ namespace ARMeilleure.Translation.PTC
 
         private static void Save(string fileName)
         {
+            int profiledFuncsCount;
+
             using (MemoryStream stream = new MemoryStream())
             using (MD5 md5 = MD5.Create())
             {
@@ -202,9 +278,13 @@ namespace ARMeilleure.Translation.PTC
 
                 stream.Seek((long)hashSize, SeekOrigin.Begin);
 
+                WriteHeader(stream);
+
                 lock (_lock)
                 {
-                    _binaryFormatter.Serialize(stream, ProfiledFuncs);
+                    Serialize(stream, ProfiledFuncs);
+
+                    profiledFuncsCount = ProfiledFuncs.Count;
                 }
 
                 stream.Seek((long)hashSize, SeekOrigin.Begin);
@@ -231,6 +311,43 @@ namespace ARMeilleure.Translation.PTC
                     }
                 }
             }
+
+            long fileSize = new FileInfo(fileName).Length;
+
+            Logger.Info?.Print(LogClass.Ptc, $"Saved Profiling Info (size: {fileSize} bytes, profiled functions: {profiledFuncsCount}).");
+        }
+
+        private static void WriteHeader(MemoryStream stream)
+        {
+            using (BinaryWriter headerWriter = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                headerWriter.Write((string)HeaderMagic); // Header.Magic
+
+                headerWriter.Write((uint)InternalVersion); // Header.InfoFileVersion
+            }
+        }
+
+        private static void Serialize(MemoryStream stream, Dictionary<ulong, (ExecutionMode mode, bool highCq)> profiledFuncs)
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
+            {
+                writer.Write((int)profiledFuncs.Count);
+
+                foreach (var kv in profiledFuncs)
+                {
+                    writer.Write((ulong)kv.Key); // address
+
+                    writer.Write((int)kv.Value.mode);
+                    writer.Write((bool)kv.Value.highCq);
+                }
+            }
+        }
+
+        private struct Header
+        {
+            public string Magic;
+
+            public uint InfoFileVersion;
         }
 
         internal static void Start()
