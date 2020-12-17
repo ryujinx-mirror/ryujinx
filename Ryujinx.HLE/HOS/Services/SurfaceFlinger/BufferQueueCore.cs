@@ -46,6 +46,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public const int BufferHistoryArraySize = 8;
 
+        public event Action BufferQueued;
+
         public BufferQueueCore(Switch device, long pid)
         {
             Slots                    = new BufferSlotArray();
@@ -195,6 +197,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public void WaitIsAllocatingEvent()
         {
             WaitForLock();
+        }
+
+        public void SignalQueueEvent()
+        {
+            BufferQueued?.Invoke();
         }
 
         private void WaitForLock()

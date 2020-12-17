@@ -66,6 +66,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private readonly AutoResetEvent _event;
         private readonly GPFifoProcessor _processor;
 
+        private bool _interrupt;
+
         /// <summary>
         /// Creates a new instance of the GPU General Purpose FIFO device.
         /// </summary>
@@ -163,7 +165,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <returns>True if commands were received, false if wait timed out</returns>
         public bool WaitForCommands()
         {
-            return _event.WaitOne(8) && !_commandBufferQueue.IsEmpty;
+            return !_commandBufferQueue.IsEmpty || (_event.WaitOne(8) && !_commandBufferQueue.IsEmpty);
         }
 
         /// <summary>
@@ -171,13 +173,23 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// </summary>
         public void DispatchCalls()
         {
-            while (_ibEnable && _commandBufferQueue.TryDequeue(out CommandBuffer entry))
+            while (_ibEnable && !_interrupt && _commandBufferQueue.TryDequeue(out CommandBuffer entry))
             {
                 _currentCommandBuffer = entry;
                 _currentCommandBuffer.Fetch(_context);
 
                 _processor.Process(_currentCommandBuffer.Words);
             }
+
+            _interrupt = false;
+        }
+
+        /// <summary>
+        /// Interrupts command processing. This will break out of the DispatchCalls loop.
+        /// </summary>
+        public void Interrupt()
+        {
+            _interrupt = true;
         }
 
         /// <summary>

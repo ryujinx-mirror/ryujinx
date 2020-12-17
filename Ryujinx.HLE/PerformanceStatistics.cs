@@ -16,12 +16,12 @@ namespace Ryujinx.HLE
         private double[] _previousFrameTime;
 
         private double[] _averagePercent;
-        private double[] _accumulatedPercent;
+        private double[] _accumulatedActiveTime;
         private double[] _percentLastEndTime;
         private double[] _percentStartTime;
 
-        private long[] _framesRendered;
-        private long[] _percentCount;
+        private long[]   _framesRendered;
+        private double[] _percentTime;
 
         private object[] _frameLock;
         private object[] _percentLock;
@@ -36,13 +36,13 @@ namespace Ryujinx.HLE
             _accumulatedFrameTime = new double[1];
             _previousFrameTime    = new double[1];
 
-            _averagePercent     = new double[1];
-            _accumulatedPercent = new double[1];
-            _percentLastEndTime = new double[1];
-            _percentStartTime   = new double[1];
+            _averagePercent        = new double[1];
+            _accumulatedActiveTime = new double[1];
+            _percentLastEndTime    = new double[1];
+            _percentStartTime      = new double[1];
 
             _framesRendered = new long[1];
-            _percentCount   = new long[1];
+            _percentTime    = new double[1];
 
             _frameLock   = new object[] { new object() };
             _percentLock = new object[] { new object() };
@@ -91,16 +91,16 @@ namespace Ryujinx.HLE
 
             lock (_percentLock[percentType])
             {
-                if (_percentCount[percentType] > 0)
+                if (_percentTime[percentType] > 0)
                 {
-                    percent = _accumulatedPercent[percentType] / _percentCount[percentType];
+                    percent = (_accumulatedActiveTime[percentType] / _percentTime[percentType]) * 100;
                 }
 
                 _averagePercent[percentType] = percent;
 
-                _percentCount[percentType] = 0;
+                _percentTime[percentType] = 0;
 
-                _accumulatedPercent[percentType] = 0;
+                _accumulatedActiveTime[percentType] = 0;
             }
         }
 
@@ -138,13 +138,11 @@ namespace Ryujinx.HLE
             double elapsedTime = currentTime - _percentLastEndTime[percentType];
             double elapsedActiveTime = currentTime - _percentStartTime[percentType];
 
-            double percentActive = (elapsedActiveTime / elapsedTime) * 100;
-
             lock (_percentLock[percentType])
             {
-                _accumulatedPercent[percentType] += percentActive;
+                _accumulatedActiveTime[percentType] += elapsedActiveTime;
 
-                _percentCount[percentType]++;
+                _percentTime[percentType] += elapsedTime;
             }
 
             _percentLastEndTime[percentType] = currentTime;

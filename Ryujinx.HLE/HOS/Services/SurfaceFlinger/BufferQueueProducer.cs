@@ -486,6 +486,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Monitor.PulseAll(_callbackLock);
             }
 
+            Core.SignalQueueEvent();
+
             return Status.Success;
         }
 

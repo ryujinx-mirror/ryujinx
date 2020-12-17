@@ -66,6 +66,13 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return false;
         }
 
+        public void RegisterCallback(GpuContext gpuContext, Action callback)
+        {
+            ref NvFence fence = ref NvFences[FenceCount - 1];
+
+            gpuContext.Synchronization.RegisterCallbackOnSyncpoint(fence.Id, fence.Value, callback);
+        }
+
         public uint GetFlattenedSize()
         {
             return (uint)Unsafe.SizeOf<AndroidFence>();

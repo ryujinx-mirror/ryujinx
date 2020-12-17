@@ -404,16 +404,19 @@ namespace Ryujinx.Ui
                     _device.Statistics.RecordFifoEnd();
                 }
 
-                string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? "Docked" : "Handheld";
-                float scale = Graphics.Gpu.GraphicsConfig.ResScale;
-                if (scale != 1)
+                while (_device.ConsumeFrameAvailable())
                 {
-                    dockedMode += $" ({scale}x)";
+                    _device.PresentFrame(SwapBuffers);
                 }
 
                 if (_ticks >= _ticksPerFrame)
                 {
-                    _device.PresentFrame(SwapBuffers);
+                    string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? "Docked" : "Handheld";
+                    float scale = Graphics.Gpu.GraphicsConfig.ResScale;
+                    if (scale != 1)
+                    {
+                        dockedMode += $" ({scale}x)";
+                    }
 
                     StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                         _device.EnableDeviceVsync,

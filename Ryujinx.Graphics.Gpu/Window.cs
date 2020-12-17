@@ -2,6 +2,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
 {
@@ -68,6 +69,8 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         private readonly ConcurrentQueue<PresentationTexture> _frameQueue;
+
+        private int _framesAvailable;
 
         /// <summary>
         /// Creates a new instance of the GPU presentation window.
@@ -156,6 +159,30 @@ namespace Ryujinx.Graphics.Gpu
 
                 pt.ReleaseCallback(pt.UserObj);
             }
+        }
+
+        /// <summary>
+        /// Indicate that a frame on the queue is ready to be acquired.
+        /// </summary>
+        public void SignalFrameReady()
+        {
+            Interlocked.Increment(ref _framesAvailable);
+        }
+
+        /// <summary>
+        /// Determine if any frames are available, and decrement the available count if there are.
+        /// </summary>
+        /// <returns>True if a frame is available, false otherwise</returns>
+        public bool ConsumeFrameAvailable()
+        {
+            if (Interlocked.CompareExchange(ref _framesAvailable, 0, 0) != 0)
+            {
+                Interlocked.Decrement(ref _framesAvailable);
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
