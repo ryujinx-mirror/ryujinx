@@ -85,15 +85,17 @@ namespace ARMeilleure.Translation.PTC
             return address >= StaticCodeStart && address < StaticCodeStart + StaticCodeSize;
         }
 
-        internal static Dictionary<ulong, (ExecutionMode mode, bool highCq)> GetProfiledFuncsToTranslate(ConcurrentDictionary<ulong, TranslatedFunction> funcs)
+        internal static ConcurrentQueue<(ulong address, ExecutionMode mode, bool highCq)> GetProfiledFuncsToTranslate(ConcurrentDictionary<ulong, TranslatedFunction> funcs)
         {
-            var profiledFuncsToTranslate = new Dictionary<ulong, (ExecutionMode mode, bool highCq)>(ProfiledFuncs);
+            var profiledFuncsToTranslate = new ConcurrentQueue<(ulong address, ExecutionMode mode, bool highCq)>();
 
-            foreach (ulong address in profiledFuncsToTranslate.Keys)
+            foreach (var profiledFunc in ProfiledFuncs)
             {
-                if (funcs.ContainsKey(address))
+                ulong address = profiledFunc.Key;
+
+                if (!funcs.ContainsKey(address))
                 {
-                    profiledFuncsToTranslate.Remove(address);
+                    profiledFuncsToTranslate.Enqueue((address, profiledFunc.Value.mode, profiledFunc.Value.highCq));
                 }
             }
 

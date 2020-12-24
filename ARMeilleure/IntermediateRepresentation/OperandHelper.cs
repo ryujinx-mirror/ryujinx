@@ -90,10 +90,16 @@ namespace ARMeilleure.IntermediateRepresentation
             ThreadStaticPool<MemoryOperand>.PreparePool(highCq ? 1 : 0);
         }
 
-        public static void ResetOperandPool(bool highCq)
+        public static void ReturnOperandPool(bool highCq)
         {
             ThreadStaticPool<Operand>.ReturnPool(highCq ? 1 : 0);
             ThreadStaticPool<MemoryOperand>.ReturnPool(highCq ? 1 : 0);
+        }
+
+        public static void ResetOperandPools()
+        {
+            ThreadStaticPool<Operand>.ResetPools();
+            ThreadStaticPool<MemoryOperand>.ResetPools();
         }
     }
 }

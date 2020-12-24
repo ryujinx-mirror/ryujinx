@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ARMeilleure.Common
+﻿namespace ARMeilleure.Common
 {
     static class BitMapPool
     {
@@ -8,6 +6,7 @@ namespace ARMeilleure.Common
         {
             BitMap result = ThreadStaticPool<BitMap>.Instance.Allocate();
             result.Reset(initialCapacity);
+
             return result;
         }
 

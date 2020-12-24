@@ -148,6 +148,8 @@ namespace ARMeilleure.Translation
 
                 ClearJitCache();
 
+                ResetPools();
+
                 _jumpTable.Dispose();
                 _jumpTable = null;
             }
@@ -249,10 +251,16 @@ namespace ARMeilleure.Translation
                 }
             }
 
-            ResetOperandPool(highCq);
-            ResetOperationPool(highCq);
+            ReturnOperandPool(highCq);
+            ReturnOperationPool(highCq);
 
             return new TranslatedFunction(func, funcSize, highCq);
+        }
+
+        internal static void ResetPools()
+        {
+            ResetOperandPools();
+            ResetOperationPools();
         }
 
         private struct Range

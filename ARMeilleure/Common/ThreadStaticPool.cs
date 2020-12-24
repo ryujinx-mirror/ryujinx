@@ -5,12 +5,13 @@ using System.Threading;
 
 namespace ARMeilleure.Common
 {
-    internal class ThreadStaticPool<T> where T : class, new()
+    class ThreadStaticPool<T> where T : class, new()
     {
         private const int PoolSizeIncrement = 200;
 
         [ThreadStatic]
         private static ThreadStaticPool<T> _instance;
+
         public static ThreadStaticPool<T> Instance
         {
             get
@@ -19,6 +20,7 @@ namespace ARMeilleure.Common
                 {
                     PreparePool(0); // So that we can still use a pool when blindly initializing one.
                 }
+
                 return _instance;
             }
         }
@@ -33,9 +35,10 @@ namespace ARMeilleure.Common
         public static void PreparePool(int groupId)
         {
             // Prepare the pool for this thread, ideally using an existing one from the specified group.
+
             if (_instance == null)
             {
-                Stack<ThreadStaticPool<T>> pools = GetPools(groupId);
+                var pools = GetPools(groupId);
                 lock (pools)
                 {
                     _instance = (pools.Count != 0) ? pools.Pop() : new ThreadStaticPool<T>(PoolSizeIncrement * 2);
@@ -46,13 +49,27 @@ namespace ARMeilleure.Common
         public static void ReturnPool(int groupId)
         {
             // Reset and return the pool for this thread to the specified group.
-            Stack<ThreadStaticPool<T>> pools = GetPools(groupId);
+
+            var pools = GetPools(groupId);
             lock (pools)
             {
                 _instance.Clear();
                 pools.Push(_instance);
+
                 _instance = null;
             }
+        }
+
+        public static void ResetPools()
+        {
+            // Resets any static references to the pools used by threads for each group, allowing them to be garbage collected.
+
+            foreach (var pools in _pools.Values)
+            {
+                pools.Clear();
+            }
+
+            _pools.Clear();
         }
 
         private T[] _pool;
@@ -74,10 +91,12 @@ namespace ARMeilleure.Common
         public T Allocate()
         {
             int index = Interlocked.Increment(ref _poolUsed);
+
             if (index >= _poolSize)
             {
                 IncreaseSize();
             }
+
             return _pool[index];
         }
 

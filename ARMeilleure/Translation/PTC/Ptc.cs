@@ -8,13 +8,13 @@ using Ryujinx.Common.Logging;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ARMeilleure.Translation.PTC
 {
@@ -664,34 +664,49 @@ namespace ARMeilleure.Translation.PTC
 
             ThreadPool.QueueUserWorkItem(TranslationLogger, profiledFuncsToTranslate.Count);
 
+            void TranslateFuncs()
+            {
+                while (profiledFuncsToTranslate.TryDequeue(out var item))
+                {
+                    ulong address = item.address;
+
+                    Debug.Assert(PtcProfiler.IsAddressInStaticCodeRange(address));
+
+                    TranslatedFunction func = Translator.Translate(memory, jumpTable, address, item.mode, item.highCq);
+
+                    bool isAddressUnique = funcs.TryAdd(address, func);
+
+                    Debug.Assert(isAddressUnique, $"The address 0x{address:X16} is not unique.");
+
+                    Interlocked.Increment(ref _translateCount);
+
+                    if (State != PtcState.Enabled)
+                    {
+                        break;
+                    }
+                }
+            }
+
             int maxDegreeOfParallelism = (Environment.ProcessorCount * 3) / 4;
 
-            Parallel.ForEach(profiledFuncsToTranslate, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, (item, state) =>
+            List<Thread> threads = new List<Thread>();
+
+            for (int i = 0; i < maxDegreeOfParallelism; i++)
             {
-                ulong address = item.Key;
+                Thread thread = new Thread(TranslateFuncs);
+                thread.IsBackground = true;
 
-                Debug.Assert(PtcProfiler.IsAddressInStaticCodeRange(address));
+                threads.Add(thread);
+            }
 
-                TranslatedFunction func = Translator.Translate(memory, jumpTable, address, item.Value.mode, item.Value.highCq);
+            threads.ForEach((thread) => thread.Start());
+            threads.ForEach((thread) => thread.Join());
 
-                bool isAddressUnique = funcs.TryAdd(address, func);
-
-                Debug.Assert(isAddressUnique, $"The address 0x{address:X16} is not unique.");
-
-                if (func.HighCq)
-                {
-                    jumpTable.RegisterFunction(address, func);
-                }
-
-                Interlocked.Increment(ref _translateCount);
-
-                if (State != PtcState.Enabled)
-                {
-                    state.Stop();
-                }
-            });
+            threads.Clear();
 
             _loggerEvent.Set();
+
+            Translator.ResetPools();
 
             PtcJumpTable.Initialize(jumpTable);
 

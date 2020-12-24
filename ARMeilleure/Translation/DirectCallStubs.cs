@@ -34,6 +34,8 @@ namespace ARMeilleure.Translation
                 _indirectCallStubPtr     = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateIndirectCallStub(false));
                 _indirectTailCallStubPtr = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateIndirectCallStub(true));
 
+                Translator.ResetPools();
+
                 _initialized = true;
             }
         }
