@@ -22,7 +22,7 @@ namespace ARMeilleure.Translation.PTC
     {
         private const string HeaderMagic = "PTChd";
 
-        private const int InternalVersion = 1775; //! To be incremented manually for each change to the ARMeilleure project.
+        private const int InternalVersion = 1814; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -677,6 +677,11 @@ namespace ARMeilleure.Translation.PTC
                     bool isAddressUnique = funcs.TryAdd(address, func);
 
                     Debug.Assert(isAddressUnique, $"The address 0x{address:X16} is not unique.");
+
+                    if (func.HighCq)
+                    {
+                        jumpTable.RegisterFunction(address, func);
+                    }
 
                     Interlocked.Increment(ref _translateCount);
 
