@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
+using Ryujinx.HLE.Loaders.Npdm;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -381,66 +382,87 @@ namespace Ryujinx.HLE.HOS
             return true;
         }
 
-        internal bool ApplyExefsMods(ulong titleId, List<NsoExecutable> nsos)
+        public struct ModLoadResult
         {
+            public BitVector32 Stubs;
+            public BitVector32 Replaces;
+            public Npdm Npdm;
+
+            public bool Modified => (Stubs.Data | Replaces.Data) != 0;
+        }
+
+        internal ModLoadResult ApplyExefsMods(ulong titleId, NsoExecutable[] nsos)
+        {
+            ModLoadResult modLoadResult = new ModLoadResult
+            {
+                Stubs = new BitVector32(),
+                Replaces = new BitVector32()
+            };
+
             if (!AppMods.TryGetValue(titleId, out ModCache mods) || mods.ExefsDirs.Count == 0)
             {
-                return false;
+                return modLoadResult;
             }
 
-            bool replaced = false;
 
-            if (nsos.Count > 32)
+            if (nsos.Length != ApplicationLoader.ExeFsPrefixes.Length)
             {
-                throw new ArgumentOutOfRangeException("NSO Count is more than 32");
+                throw new ArgumentOutOfRangeException("NSO Count is incorrect");
             }
 
             var exeMods = mods.ExefsDirs;
 
-            BitVector32 stubs = new BitVector32();
-            BitVector32 repls = new BitVector32();
-
             foreach (var mod in exeMods)
             {
-                for (int i = 0; i < nsos.Count; ++i)
+                for (int i = 0; i < ApplicationLoader.ExeFsPrefixes.Length; ++i)
                 {
-                    var nso = nsos[i];
-                    var nsoName = nso.Name;
+                    var nsoName = ApplicationLoader.ExeFsPrefixes[i];
 
                     FileInfo nsoFile = new FileInfo(Path.Combine(mod.Path.FullName, nsoName));
                     if (nsoFile.Exists)
                     {
-                        if (repls[1 << i])
+                        if (modLoadResult.Replaces[1 << i])
                         {
                             Logger.Warning?.Print(LogClass.ModLoader, $"Multiple replacements to '{nsoName}'");
+
                             continue;
                         }
 
-                        repls[1 << i] = true;
+                        modLoadResult.Replaces[1 << i] = true;
 
                         nsos[i] = new NsoExecutable(nsoFile.OpenRead().AsStorage(), nsoName);
                         Logger.Info?.Print(LogClass.ModLoader, $"NSO '{nsoName}' replaced");
+                    }
 
-                        replaced = true;
+                    modLoadResult.Stubs[1 << i] |= File.Exists(Path.Combine(mod.Path.FullName, nsoName + StubExtension));
+                }
+
+                FileInfo npdmFile = new FileInfo(Path.Combine(mod.Path.FullName, "main.npdm"));
+                if(npdmFile.Exists)
+                {
+                    if(modLoadResult.Npdm != null)
+                    {
+                        Logger.Warning?.Print(LogClass.ModLoader, "Multiple replacements to 'main.npdm'");
 
                         continue;
                     }
 
-                    stubs[1 << i] |= File.Exists(Path.Combine(mod.Path.FullName, nsoName + StubExtension));
+                    modLoadResult.Npdm = new Npdm(npdmFile.OpenRead());
+                    
+                    Logger.Info?.Print(LogClass.ModLoader, $"main.npdm replaced");
                 }
             }
 
-            for (int i = nsos.Count - 1; i >= 0; --i)
+            for (int i = ApplicationLoader.ExeFsPrefixes.Length - 1; i >= 0; --i)
             {
-                if (stubs[1 << i] && !repls[1 << i]) // Prioritizes replacements over stubs
+                if (modLoadResult.Stubs[1 << i] && !modLoadResult.Replaces[1 << i]) // Prioritizes replacements over stubs
                 {
                     Logger.Info?.Print(LogClass.ModLoader, $"    NSO '{nsos[i].Name}' stubbed");
-                    nsos.RemoveAt(i);
-                    replaced = true;
+                    nsos[i] = null;
                 }
             }
 
-            return replaced;
+            return modLoadResult;
         }
 
         internal void ApplyNroPatches(NroExecutable nro)
