@@ -57,7 +57,7 @@ Ryujinx system files are stored in the `Ryujinx` folder. This folder is located 
 
  - **Audio**
 
-   Audio output is entirely supported, audio input (microphone) isn't supported. We use C# wrappers for [OpenAL](https://openal.org/downloads/oalinst.zip) (installation needed), and [libsoundio](http://libsound.io/) as the fallback.
+   Audio output is entirely supported, audio input (microphone) isn't supported. We use C# wrappers for [OpenAL](https://openal-soft.org/), and [libsoundio](http://libsound.io/) as the fallback.
 
 - **CPU**
 
