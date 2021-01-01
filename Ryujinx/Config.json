@@ -23,7 +23,7 @@
   "check_updates_on_start": true,
   "enable_vsync": true,
   "enable_shader_cache": true,
-  "enable_ptc": false,
+  "enable_ptc": true,
   "enable_fs_integrity_checks": true,
   "fs_global_access_log_mode": 0,
   "audio_backend": "OpenAl",

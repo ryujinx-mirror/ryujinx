@@ -1215,7 +1215,7 @@
       "type": "boolean",
       "title": "Enable Profiled Persistent Translation Cache",
       "description": "Enables or disables profiled translation cache persistency",
-      "default": false,
+      "default": true,
       "examples": [
         true,
         false

@@ -477,7 +477,7 @@ namespace Ryujinx.Configuration
             CheckUpdatesOnStart.Value              = true;
             Graphics.EnableVsync.Value             = true;
             Graphics.EnableShaderCache.Value       = true;
-            System.EnablePtc.Value                 = false;
+            System.EnablePtc.Value                 = true;
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
             System.AudioBackend.Value              = AudioBackend.OpenAl;
@@ -683,7 +683,7 @@ namespace Ryujinx.Configuration
             {
                 Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 8.");
 
-                configurationFileFormat.EnablePtc = false;
+                configurationFileFormat.EnablePtc = true;
 
                 configurationFileUpdated = true;
             }
