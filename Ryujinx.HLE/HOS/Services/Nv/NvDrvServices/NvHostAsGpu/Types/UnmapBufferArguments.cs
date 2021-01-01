@@ -3,7 +3,7 @@
     struct UnmapBufferArguments
     {
 #pragma warning disable CS0649
-        public long Offset;
+        public ulong Offset;
 #pragma warning restore CS0649
     }
 }

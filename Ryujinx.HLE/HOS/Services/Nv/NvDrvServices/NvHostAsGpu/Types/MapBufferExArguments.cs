@@ -9,8 +9,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         public int               Kind;
         public int               NvMapHandle;
         public int               PageSize;
-        public long              BufferOffset;
-        public long              MappingSize;
-        public long              Offset;
+        public ulong             BufferOffset;
+        public ulong             MappingSize;
+        public ulong             Offset;
     }
 }

@@ -9,6 +9,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         public uint              PageSize;
         public AddressSpaceFlags Flags;
         public uint              Padding;
-        public long              Offset;
+        public ulong             Offset;
     }
 }

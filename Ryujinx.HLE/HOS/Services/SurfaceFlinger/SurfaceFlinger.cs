@@ -308,11 +308,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 nvMapHandle = item.GraphicBuffer.Object.Buffer.NvMapId;
             }
 
-            int bufferOffset = item.GraphicBuffer.Object.Buffer.Surfaces[0].Offset;
+            ulong bufferOffset = (ulong)item.GraphicBuffer.Object.Buffer.Surfaces[0].Offset;
 
             NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(layer.Owner, nvMapHandle);
 
-            ulong frameBufferAddress = (ulong)(map.Address + bufferOffset);
+            ulong frameBufferAddress = map.Address + bufferOffset;
 
             Format format = ConvertColorFormat(item.GraphicBuffer.Object.Buffer.Surfaces[0].ColorFormat);
 

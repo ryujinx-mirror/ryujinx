@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
                 int size = BitUtils.AlignUp(map.Size, (int)MemoryManager.PageSize);
 
-                long address = arguments.Address;
+                ulong address = arguments.Address;
 
                 if (address == 0)
                 {

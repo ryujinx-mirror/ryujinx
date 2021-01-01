@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                 {
                     NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(Owner, commandBuffer.Mem);
 
-                    var data = _memory.GetSpan((ulong)map.Address + commandBuffer.Offset, commandBuffer.WordsCount * 4);
+                    var data = _memory.GetSpan(map.Address + commandBuffer.Offset, commandBuffer.WordsCount * 4);
 
                     _device.Host1x.Submit(MemoryMarshal.Cast<byte, int>(data));
                 }
@@ -253,12 +253,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                         if (va != NvMemoryAllocator.PteUnmapped && va <= uint.MaxValue && (va + (uint)map.Size) <= uint.MaxValue)
                         {
                             _memoryAllocator.AllocateRange(va, (uint)map.Size, freeAddressStartPosition);
-                            gmm.Map((ulong)map.Address, va, (uint)map.Size);
-                            map.DmaMapAddress = (long)va;
+                            gmm.Map(map.Address, va, (uint)map.Size);
+                            map.DmaMapAddress = va;
                         }
                         else
                         {
-                            map.DmaMapAddress = unchecked((long)NvMemoryAllocator.PteUnmapped);
+                            map.DmaMapAddress = NvMemoryAllocator.PteUnmapped;
                         }
                     }
 

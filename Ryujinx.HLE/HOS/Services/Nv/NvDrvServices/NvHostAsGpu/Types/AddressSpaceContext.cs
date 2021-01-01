@@ -12,22 +12,22 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             public ulong Start { get; private set; }
             public ulong End   { get; private set; }
 
-            public Range(long position, long size)
+            public Range(ulong position, ulong size)
             {
-                Start = (ulong)position;
-                End   = (ulong)size + Start;
+                Start = position;
+                End   = size + Start;
             }
         }
 
         private class MappedMemory : Range
         {
-            public long PhysicalAddress { get; private set; }
-            public bool VaAllocated     { get; private set; }
+            public ulong PhysicalAddress { get; private set; }
+            public bool  VaAllocated     { get; private set; }
 
             public MappedMemory(
-                long position,
-                long size,
-                long physicalAddress,
+                ulong position,
+                ulong size,
+                ulong physicalAddress,
                 bool vaAllocated) : base(position, size)
             {
                 PhysicalAddress = physicalAddress;
@@ -35,8 +35,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             }
         }
 
-        private SortedList<long, Range> _maps;
-        private SortedList<long, Range> _reservations;
+        private SortedList<ulong, Range> _maps;
+        private SortedList<ulong, Range> _reservations;
 
         public MemoryManager Gmm { get; }
 
@@ -44,22 +44,22 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         {
             Gmm = context.Device.Gpu.MemoryManager;
 
-            _maps         = new SortedList<long, Range>();
-            _reservations = new SortedList<long, Range>();
+            _maps         = new SortedList<ulong, Range>();
+            _reservations = new SortedList<ulong, Range>();
         }
 
-        public bool ValidateFixedBuffer(long position, long size, ulong alignment)
+        public bool ValidateFixedBuffer(ulong position, ulong size, ulong alignment)
         {
-            long mapEnd = position + size;
+            ulong mapEnd = position + size;
 
             // Check if size is valid (0 is also not allowed).
-            if ((ulong)mapEnd <= (ulong)position)
+            if (mapEnd <= position)
             {
                 return false;
             }
 
             // Check if address is aligned.
-            if ((position & (long)(alignment - 1)) != 0)
+            if ((position & (alignment - 1)) != 0)
             {
                 return false;
             }
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             // Check for overlap with already mapped buffers.
             Range map = BinarySearchLt(_maps, mapEnd);
 
-            if (map != null && map.End > (ulong)position)
+            if (map != null && map.End > position)
             {
                 return false;
             }
@@ -82,15 +82,15 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         }
 
         public void AddMap(
-            long position,
-            long size,
-            long physicalAddress,
+            ulong position,
+            ulong size,
+            ulong physicalAddress,
             bool vaAllocated)
         {
             _maps.Add(position, new MappedMemory(position, size, physicalAddress, vaAllocated));
         }
 
-        public bool RemoveMap(long position, out long size)
+        public bool RemoveMap(ulong position, out ulong size)
         {
             size = 0;
 
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
 
                 if (map.VaAllocated)
                 {
-                    size = (long)(map.End - map.Start);
+                    size = (map.End - map.Start);
                 }
 
                 return true;
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             return false;
         }
 
-        public bool TryGetMapPhysicalAddress(long position, out long physicalAddress)
+        public bool TryGetMapPhysicalAddress(ulong position, out ulong physicalAddress)
         {
             Range map = BinarySearch(_maps, position);
 
@@ -125,17 +125,17 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             return false;
         }
 
-        public void AddReservation(long position, long size)
+        public void AddReservation(ulong position, ulong size)
         {
             _reservations.Add(position, new Range(position, size));
         }
 
-        public bool RemoveReservation(long position)
+        public bool RemoveReservation(ulong position)
         {
             return _reservations.Remove(position);
         }
 
-        private Range BinarySearch(SortedList<long, Range> lst, long position)
+        private Range BinarySearch(SortedList<ulong, Range> lst, ulong position)
         {
             int left  = 0;
             int right = lst.Count - 1;
@@ -148,12 +148,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
 
                 Range rg = lst.Values[middle];
 
-                if ((ulong)position >= rg.Start && (ulong)position < rg.End)
+                if (position >= rg.Start && position < rg.End)
                 {
                     return rg;
                 }
 
-                if ((ulong)position < rg.Start)
+                if (position < rg.Start)
                 {
                     right = middle - 1;
                 }
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             return null;
         }
 
-        private Range BinarySearchLt(SortedList<long, Range> lst, long position)
+        private Range BinarySearchLt(SortedList<ulong, Range> lst, ulong position)
         {
             Range ltRg = null;
 
@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
 
                 Range rg = lst.Values[middle];
 
-                if ((ulong)position < rg.Start)
+                if (position < rg.Start)
                 {
                     right = middle - 1;
                 }
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
                 {
                     left = middle + 1;
 
-                    if ((ulong)position > rg.Start)
+                    if (position > rg.Start)
                     {
                         ltRg = rg;
                     }
