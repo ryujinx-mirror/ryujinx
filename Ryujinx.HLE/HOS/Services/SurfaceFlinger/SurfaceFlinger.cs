@@ -345,14 +345,22 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             TextureCallbackInformation textureCallbackInformation = new TextureCallbackInformation
             {
                 Layer = layer,
-                Item  = item,
+                Item  = item
             };
 
-            item.Fence.RegisterCallback(_device.Gpu, () => 
+            if (item.Fence.FenceCount == 0)
             {
                 _device.Gpu.Window.SignalFrameReady();
                 _device.Gpu.GPFifo.Interrupt();
-            });
+            }
+            else
+            {
+                item.Fence.RegisterCallback(_device.Gpu, () =>
+                {
+                    _device.Gpu.Window.SignalFrameReady();
+                    _device.Gpu.GPFifo.Interrupt();
+                });
+            }
 
             _device.Gpu.Window.EnqueueFrameThreadSafe(
                 frameBufferAddress,
