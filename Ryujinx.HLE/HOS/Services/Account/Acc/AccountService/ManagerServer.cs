@@ -1,31 +1,24 @@
-using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
-using Ryujinx.HLE.HOS.Services.Arp;
-using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ryujinx.HLE.HOS.Services.Account.Acc
+namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 {
-    class IManagerForApplication : IpcService
+    class ManagerServer
     {
         // TODO: Determine where and how NetworkServiceAccountId is set.
         private const long NetworkServiceAccountId = 0xcafe;
 
-        private UserId                    _userId;
-        private ApplicationLaunchProperty _applicationLaunchProperty;
+        private UserId _userId;
 
-        public IManagerForApplication(UserId userId, ApplicationLaunchProperty applicationLaunchProperty)
+        public ManagerServer(UserId userId)
         {
-            _userId                    = userId;
-            _applicationLaunchProperty = applicationLaunchProperty;
+            _userId = userId;
         }
 
-        [Command(0)]
-        // CheckAvailability()
         public ResultCode CheckAvailability(ServiceCtx context)
         {
             // NOTE: This opens the file at "su/baas/USERID_IN_UUID_STRING.dat" where USERID_IN_UUID_STRING is formatted as "%08x-%04x-%04x-%02x%02x-%08x%04x".
@@ -37,8 +30,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [Command(1)]
-        // GetAccountId() -> nn::account::NetworkServiceAccountId
         public ResultCode GetAccountId(ServiceCtx context)
         {
             // NOTE: This opens the file at "su/baas/USERID_IN_UUID_STRING.dat" (where USERID_IN_UUID_STRING is formatted
@@ -52,16 +43,14 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [Command(2)]
-        // EnsureIdTokenCacheAsync() -> object<nn::account::detail::IAsyncContext>
-        public ResultCode EnsureIdTokenCacheAsync(ServiceCtx context)
+        public ResultCode EnsureIdTokenCacheAsync(ServiceCtx context, out IAsyncContext asyncContext)
         {
             KEvent         asyncEvent     = new KEvent(context.Device.System.KernelContext);
             AsyncExecution asyncExecution = new AsyncExecution(asyncEvent);
 
             asyncExecution.Initialize(1000, EnsureIdTokenCacheAsyncImpl);
 
-            MakeObject(context, new IAsyncContext(asyncExecution));
+            asyncContext = new IAsyncContext(asyncExecution);
 
             // return ResultCode.NullObject if the IAsyncContext pointer is null. Doesn't occur in our case.
 
@@ -82,8 +71,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             await Task.CompletedTask;
         }
 
-        [Command(3)]
-        // LoadIdTokenCache() -> (u32 id_token_cache_size, buffer<bytes, 6>)
         public ResultCode LoadIdTokenCache(ServiceCtx context)
         {
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
@@ -114,8 +101,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [Command(130)]
-        // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, nn::account::nas::NasUserBaseForApplication, buffer<bytes, 6>)
         public ResultCode GetNintendoAccountUserResourceCacheForApplication(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAcc, new { NetworkServiceAccountId });
@@ -127,8 +112,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [Command(160)] // 5.0.0+
-        // StoreOpenContext()
         public ResultCode StoreOpenContext(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAcc);
