@@ -438,9 +438,9 @@ namespace Ryujinx.HLE.HOS
                 }
 
                 FileInfo npdmFile = new FileInfo(Path.Combine(mod.Path.FullName, "main.npdm"));
-                if(npdmFile.Exists)
+                if (npdmFile.Exists)
                 {
-                    if(modLoadResult.Npdm != null)
+                    if (modLoadResult.Npdm != null)
                     {
                         Logger.Warning?.Print(LogClass.ModLoader, "Multiple replacements to 'main.npdm'");
 

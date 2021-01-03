@@ -481,11 +481,11 @@ namespace Ryujinx.HLE.HOS
 
             NsoExecutable[] nsos = new NsoExecutable[ExeFsPrefixes.Length];
 
-            for(int i = 0; i < nsos.Length; i++)
+            for (int i = 0; i < nsos.Length; i++)
             {
                 string name = ExeFsPrefixes[i];
 
-                if (!codeFs.FileExists(name))
+                if (!codeFs.FileExists($"/{name}"))
                 {
                     continue; // file doesn't exist, skip
                 }
