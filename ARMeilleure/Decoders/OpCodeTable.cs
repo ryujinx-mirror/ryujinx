@@ -413,6 +413,8 @@ namespace ARMeilleure.Decoders
             SetA64("0x001110101xxxxx000111xxxxxxxxxx", InstName.Orr_V,           InstEmit.Orr_V,           OpCodeSimdReg.Create);
             SetA64("0x00111100000xxx0xx101xxxxxxxxxx", InstName.Orr_Vi,          InstEmit.Orr_Vi,          OpCodeSimdImm.Create);
             SetA64("0x00111100000xxx10x101xxxxxxxxxx", InstName.Orr_Vi,          InstEmit.Orr_Vi,          OpCodeSimdImm.Create);
+            SetA64("0x001110001xxxxx111000xxxxxxxxxx", InstName.Pmull_V,         InstEmit.Pmull_V,         OpCodeSimdReg.Create);
+            SetA64("0x001110111xxxxx111000xxxxxxxxxx", InstName.Pmull_V,         InstEmit.Pmull_V,         OpCodeSimdReg.Create);
             SetA64("0x101110<<1xxxxx010000xxxxxxxxxx", InstName.Raddhn_V,        InstEmit.Raddhn_V,        OpCodeSimdReg.Create);
             SetA64("0x10111001100000010110xxxxxxxxxx", InstName.Rbit_V,          InstEmit.Rbit_V,          OpCodeSimd.Create);
             SetA64("0x00111000100000000110xxxxxxxxxx", InstName.Rev16_V,         InstEmit.Rev16_V,         OpCodeSimd.Create);
@@ -886,7 +888,7 @@ namespace ARMeilleure.Decoders
             SetA32("111100110x00xxxxxxxx1101xxx1xxxx", InstName.Vmul,     InstEmit32.Vmul_V,   OpCode32SimdReg.Create);
             SetA32("1111001x1x<<xxxxxxx01010x1x0xxxx", InstName.Vmull,    InstEmit32.Vmull_1,  OpCode32SimdRegElemLong.Create);
             SetA32("1111001x1x<<xxxxxxx01100x0x0xxxx", InstName.Vmull,    InstEmit32.Vmull_I,  OpCode32SimdRegLong.Create);
-            SetA32("111100101x00xxxxxxx01110x0x0xxxx", InstName.Vmull,    InstEmit32.Vmull_I,  OpCode32SimdRegLong.Create); // Polynomial
+            SetA32("111100101xx0xxxxxxx01110x0x0xxxx", InstName.Vmull,    InstEmit32.Vmull_I,  OpCode32SimdRegLong.Create); // P8/P64
             SetA32("111100111x110000xxxx01011xx0xxxx", InstName.Vmvn,     InstEmit32.Vmvn_I,   OpCode32SimdBinary.Create);
             SetA32("1111001x1x000xxxxxxx0xx00x11xxxx", InstName.Vmvn,     InstEmit32.Vmvn_II,  OpCode32SimdImm.Create); // D/Q vector I32.
             SetA32("1111001x1x000xxxxxxx10x00x11xxxx", InstName.Vmvn,     InstEmit32.Vmvn_II,  OpCode32SimdImm.Create);

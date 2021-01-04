@@ -296,6 +296,7 @@ namespace ARMeilleure.Instructions
         Orn_V,
         Orr_V,
         Orr_Vi,
+        Pmull_V,
         Raddhn_V,
         Rbit_V,
         Rev16_V,

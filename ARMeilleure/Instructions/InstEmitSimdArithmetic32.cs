@@ -920,7 +920,19 @@ namespace ARMeilleure.Instructions
 
             if (op.Polynomial)
             {
-                EmitVectorBinaryLongOpI32(context, (op1, op2) => EmitPolynomialMultiply(context, op1, op2, 8 << op.Size), false);
+                if (op.Size == 0) // P8
+                {
+                    EmitVectorBinaryLongOpI32(context, (op1, op2) => EmitPolynomialMultiply(context, op1, op2, 8 << op.Size), false);
+                }
+                else /* if (op.Size == 2) // P64 */
+                {
+                    Operand ne = context.VectorExtract(OperandType.I64, GetVec(op.Qn), op.Vn & 1);
+                    Operand me = context.VectorExtract(OperandType.I64, GetVec(op.Qm), op.Vm & 1);
+
+                    Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.PolynomialMult64_128)), ne, me);
+
+                    context.Copy(GetVecA32(op.Qd), res);
+                }
             }
             else
             {
@@ -1365,28 +1377,6 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorBinaryOpSimd32(context, genericEmit);
             }
-        }
-
-        private static Operand EmitPolynomialMultiply(ArmEmitterContext context, Operand op1, Operand op2, int eSize)
-        {
-            Debug.Assert(eSize <= 32);
-
-            Operand result = eSize == 32 ? Const(0L) : Const(0);
-
-            if (eSize == 32)
-            {
-                op1 = context.ZeroExtend32(OperandType.I64, op1);
-                op2 = context.ZeroExtend32(OperandType.I64, op2);
-            }
-
-            for (int i = 0; i < eSize; i++)
-            {
-                Operand mask = context.BitwiseAnd(op1, Const(op1.Type, 1L << i));
-
-                result = context.BitwiseExclusiveOr(result, context.Multiply(op2, mask));
-            }
-
-            return result;
         }
     }
 }

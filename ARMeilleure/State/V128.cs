@@ -189,6 +189,11 @@ namespace ARMeilleure.State
         /// </remarks>
         public static V128 operator <<(V128 x, int shift)
         {
+            if (shift == 0)
+            {
+                return new V128(x._e0, x._e1);
+            }
+
             ulong shiftOut = x._e0 >> (64 - shift);
 
             return new V128(x._e0 << shift, (x._e1 << shift) | shiftOut);
@@ -205,6 +210,11 @@ namespace ARMeilleure.State
         /// </remarks>
         public static V128 operator >>(V128 x, int shift)
         {
+            if (shift == 0)
+            {
+                return new V128(x._e0, x._e1);
+            }
+
             ulong shiftOut = x._e1 & ((1UL << shift) - 1);
 
             return new V128((x._e0 >> shift) | (shiftOut << (64 - shift)), x._e1 >> shift);

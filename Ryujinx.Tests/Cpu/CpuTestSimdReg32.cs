@@ -100,6 +100,13 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Types)"
+        private static ulong[] _8B1D_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
+                                 0x8080808080808080ul, 0x7FFFFFFFFFFFFFFFul,
+                                 0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
         private static ulong[] _8B4H2S1D_()
         {
             return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
@@ -526,6 +533,36 @@ namespace Ryujinx.Tests.Cpu
             V128 v2 = MakeVectorE0E1(b, z);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VMULL.<P8, P64> <Qd>, <Dn>, <Dm>")]
+        public void Vmull_I_P8_P64([Values(0u, 1u)] uint rd,
+                                   [Values(0u, 1u)] uint rn,
+                                   [Values(0u, 1u)] uint rm,
+                                   [ValueSource(nameof(_8B1D_))] [Random(RndCnt)] ulong d0,
+                                   [ValueSource(nameof(_8B1D_))] [Random(RndCnt)] ulong d1,
+                                   [Values(0u/*, 2u*/)] uint size) // <P8, P64>
+        {
+            /*if (size == 2u)
+            {
+                Assert.Ignore("Ryujinx.Tests.Unicorn.UnicornException : Invalid instruction (UC_ERR_INSN_INVALID)");
+            }*/
+
+            uint opcode = 0xf2800e00u; // VMULL.P8 Q0, D0, D0
+
+            rd >>= 1; rd <<= 1;
+
+            opcode |= (((rd & 0x10) << 18) | (rd & 0xf) << 12);
+            opcode |= (((rn & 0x10) << 3)  | (rn & 0xf) << 16);
+            opcode |= (((rm & 0x10) << 1)  | (rm & 0xf) << 0);
+
+            opcode |= (size & 0x3) << 20;
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
 
             CompareAgainstUnicorn();
         }
