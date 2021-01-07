@@ -4,7 +4,7 @@
     <a href="https://ci.appveyor.com/project/gdkchan/ryujinx?branch=master" target="_blank">
         <img src="https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s/branch/master?svg=true">
     </a>
-    <a href="https://discord.gg/N2FmfVc">
+    <a href="https://discord.gg/Ryujinx">
         <img src="https://img.shields.io/discord/410208534861447168.svg">
     </a>
 </h1>
@@ -16,7 +16,7 @@
 </p>
 
 <h5 align="center">
-    As of November 2020, Ryujinx has been tested to go past menus to in-game on approximately 1,900 commercial titles. Of those, over 1,000 are considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
+    As of January 2021, Ryujinx has been tested on over 3,000 commercial titles: ~2,300 boot past menus and into gameplay, with approximately 1,350 of those being considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
 </h5>
 
 ## Usage
@@ -62,11 +62,11 @@ Ryujinx system files are stored in the `Ryujinx` folder. This folder is located 
 - **CPU**
 
   The CPU emulator, ARMeilleure, emulates an ARMv8 CPU and currently has support for most 64-bit ARMv8 and some of the ARMv7 (and older) instructions, including partial 32-bit support. It translates the ARM code to a custom IR, performs a few optimizations, and turns that into x86 code.  
-  Ryujinx also features an optional Profiled Persistent Translation Cache, which essentially caches translated functions so that they do not need to be translated every time the game loads. The net result is a significant reduction in load times (the amount of time between launching a game and arriving at the title screen) for nearly every game. NOTE: this feature is disabled by default and must be enabled in the Options menu > System tab. You must launch the game at least twice to the title screen or beyond before performance improvements are unlocked on the third launch! These improvements are permanent and do not require any extra launches going forward.
+  Ryujinx also features an optional Profiled Persistent Translation Cache, which essentially caches translated functions so that they do not need to be translated every time the game loads. The net result is a significant reduction in load times (the amount of time between launching a game and arriving at the title screen) for nearly every game. NOTE: this feature is now enabled by default in the Options menu > System tab. You must launch the game at least twice to the title screen or beyond before performance improvements are unlocked on the third launch! These improvements are permanent and do not require any extra launches going forward.
 
 - **GPU**
 
-  The GPU emulator emulates the Switch's Maxwell GPU using the OpenGL API (version 4.4 minimum) through a custom build of OpenTK. There are currently two graphics enhancements available to the end user in Ryujinx: resolution scaling and anisotropic filtering. These can both be adjusted in the GUI.
+  The GPU emulator emulates the Switch's Maxwell GPU using the OpenGL API (version 4.4 minimum) through a custom build of OpenTK. There are currently four graphics enhancements available to the end user in Ryujinx: disk shader caching, resolution scaling, aspect ratio adjustment and anisotropic filtering. These enhancements can be adjusted or toggled as desired in the GUI.
 
 - **Input**
 
@@ -87,17 +87,17 @@ Ryujinx system files are stored in the `Ryujinx` folder. This folder is located 
 
 You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues).
 
-Don't hesitate to open a new issue if a game isn't already on there.
+Don't hesitate to open a new issue if a game isn't already on there!
 
 ## Help
 
-If you are having problems launching homebrew or a particular game marked status-playable or status-ingame in our compatibility list, you can contact us through our [Discord server](https://discord.gg/N2FmfVc). We'll take note of whatever is causing the app/game to not work, put it on the watch list and fix it at a later date.
+If you are having problems launching homebrew or a particular game marked status-playable or status-ingame in our compatibility list, you can contact us through our [Discord server](https://discord.gg/Ryujinx). We'll take note of whatever is causing the app/game to not work, put it on the watch list and fix it at a later date.
 
-If you need help with setting up Ryujinx, you can ask questions in the #support channel of our [Discord server](https://discord.gg/N2FmfVc).
+If you need help with setting up Ryujinx, you can ask questions in the #support channel of our [Discord server](https://discord.gg/Ryujinx).
 
 ## Contact
 
-If you have contributions, need support, have suggestions, or just want to get in touch with the team, join our [Discord server](https://discord.gg/N2FmfVc)!
+If you have contributions, need support, have suggestions, or just want to get in touch with the team, join our [Discord server](https://discord.gg/Ryujinx)!
 
 If you'd like to donate, please take a look at our [Patreon](https://www.patreon.com/ryujinx).
 
