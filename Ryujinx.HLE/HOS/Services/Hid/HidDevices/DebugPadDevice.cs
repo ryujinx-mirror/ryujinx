@@ -19,6 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             DebugPadEntry previousEntry = debugPad.Entries[previousIndex];
 
             currentEntry.SampleTimestamp = previousEntry.SampleTimestamp + 1;
+            currentEntry.SampleTimestamp2 = previousEntry.SampleTimestamp2 + 1;
         }
     }
 }
