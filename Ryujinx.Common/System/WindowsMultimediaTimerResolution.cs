@@ -17,14 +17,14 @@ namespace Ryujinx.Common.System
             public uint wPeriodMax;
         };
 
-        [DllImport("winmm.dll", SetLastError = true)]
-        private static extern uint timeGetDevCaps(ref TimeCaps timeCaps, uint sizeTimeCaps);
+        [DllImport("winmm.dll", EntryPoint = "timeGetDevCaps", SetLastError = true)]
+        private static extern uint TimeGetDevCaps(ref TimeCaps timeCaps, uint sizeTimeCaps);
 
-        [DllImport("winmm.dll")]
-        private static extern uint timeBeginPeriod(uint uMilliseconds);
+        [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+        private static extern uint TimeBeginPeriod(uint uMilliseconds);
 
-        [DllImport("winmm.dll")]
-        private static extern uint timeEndPeriod(uint uMilliseconds);
+        [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+        private static extern uint TimeEndPeriod(uint uMilliseconds);
 
         private uint _targetResolutionInMilliseconds;
         private bool _isActive;
@@ -45,7 +45,7 @@ namespace Ryujinx.Common.System
         {
             TimeCaps timeCaps = default;
 
-            uint result = timeGetDevCaps(ref timeCaps, (uint)Unsafe.SizeOf<TimeCaps>());
+            uint result = TimeGetDevCaps(ref timeCaps, (uint)Unsafe.SizeOf<TimeCaps>());
 
             if (result != 0)
             {
@@ -66,7 +66,7 @@ namespace Ryujinx.Common.System
 
         private void Activate()
         {
-            uint result = timeBeginPeriod(_targetResolutionInMilliseconds);
+            uint result = TimeBeginPeriod(_targetResolutionInMilliseconds);
 
             if (result != 0)
             {
@@ -82,7 +82,7 @@ namespace Ryujinx.Common.System
         {
             if (_isActive)
             {
-                uint result = timeEndPeriod(_targetResolutionInMilliseconds);
+                uint result = TimeEndPeriod(_targetResolutionInMilliseconds);
 
                 if (result != 0)
                 {
@@ -98,6 +98,7 @@ namespace Ryujinx.Common.System
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)

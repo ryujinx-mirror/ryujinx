@@ -11,7 +11,8 @@ using Ryujinx.Configuration;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.Motion;
+using Ryujinx.Modules.Motion;
+using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -73,9 +74,9 @@ namespace Ryujinx.Ui
 
             _device = device;
 
-            this.Initialized  += GLRenderer_Initialized;
-            this.Destroyed    += GLRenderer_Destroyed;
-            this.ShuttingDown += GLRenderer_ShuttingDown;
+            Initialized  += GLRenderer_Initialized;
+            Destroyed    += GLRenderer_Destroyed;
+            ShuttingDown += GLRenderer_ShuttingDown;
 
             Initialize();
 
@@ -89,7 +90,7 @@ namespace Ryujinx.Ui
                           | EventMask.KeyPressMask
                           | EventMask.KeyReleaseMask));
 
-            this.Shown += Renderer_Shown;
+            Shown += Renderer_Shown;
 
             _dsuClient = new Client();
 

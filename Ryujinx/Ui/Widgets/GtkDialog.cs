@@ -1,0 +1,82 @@
+using Gtk;
+using Ryujinx.Common.Logging;
+
+namespace Ryujinx.Ui.Widgets
+{
+    internal class GtkDialog : MessageDialog
+    {
+        private static bool _isChoiceDialogOpen;
+
+        private GtkDialog(string title, string mainText, string secondaryText, MessageType messageType = MessageType.Other, ButtonsType buttonsType = ButtonsType.Ok) 
+            : base(null, DialogFlags.Modal, messageType, buttonsType, null)
+        {
+            Title              = title;
+            Text               = mainText;
+            SecondaryText      = secondaryText;
+            WindowPosition     = WindowPosition.Center;
+            SecondaryUseMarkup = true;
+
+            Response += GtkDialog_Response;
+
+            SetSizeRequest(200, 20);
+        }
+
+        private void GtkDialog_Response(object sender, ResponseArgs args)
+        {
+            Dispose();
+        }
+
+        internal static void CreateInfoDialog(string mainText, string secondaryText)
+        {
+            new GtkDialog("Ryujinx - Info", mainText, secondaryText, MessageType.Info).Run();
+        }
+
+        internal static void CreateUpdaterInfoDialog(string mainText, string secondaryText)
+        {
+            new GtkDialog("Ryujinx - Updater", mainText, secondaryText, MessageType.Info).Run();
+        }
+
+        internal static MessageDialog CreateWaitingDialog(string mainText, string secondaryText)
+        {
+            return new GtkDialog("Ryujinx - Waiting", mainText, secondaryText, MessageType.Info, ButtonsType.None);
+        }
+
+        internal static void CreateWarningDialog(string mainText, string secondaryText)
+        {
+            new GtkDialog("Ryujinx - Warning", mainText, secondaryText, MessageType.Warning).Run();
+        }
+
+        internal static void CreateErrorDialog(string errorMessage)
+        {
+            Logger.Error?.Print(LogClass.Application, errorMessage);
+
+            new GtkDialog("Ryujinx - Error", "Ryujinx has encountered an error", errorMessage, MessageType.Error).Run();
+        }
+
+        internal static MessageDialog CreateConfirmationDialog(string mainText, string secondaryText = "")
+        {
+            return new GtkDialog("Ryujinx - Confirmation", mainText, secondaryText, MessageType.Question, ButtonsType.YesNo);
+        }
+
+        internal static bool CreateChoiceDialog(string title, string mainText, string secondaryText)
+        {
+            if (_isChoiceDialogOpen)
+            {
+                return false;
+            }
+
+            _isChoiceDialogOpen = true;
+
+            ResponseType response = (ResponseType)new GtkDialog(title, mainText, secondaryText, MessageType.Question, ButtonsType.YesNo).Run();
+
+            _isChoiceDialogOpen = false;
+
+            return response == ResponseType.Yes;
+        }
+
+        internal static bool CreateExitDialog()
+        {
+            return CreateChoiceDialog("Ryujinx - Exit", "Are you sure you want to stop emulation?", "All unsaved data will be lost!");
+        }
+    }
+}

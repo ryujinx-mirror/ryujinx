@@ -3,10 +3,12 @@ using Gtk;
 using OpenTK;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.System;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Configuration;
+using Ryujinx.Modules;
 using Ryujinx.Ui;
-using Ryujinx.Ui.Diagnostic;
+using Ryujinx.Ui.Widgets;
 using System;
 using System.IO;
 using System.Reflection;
@@ -22,10 +24,11 @@ namespace Ryujinx
 
         static void Main(string[] args)
         {
-            // Parse Arguments
-            string launchPath = null;
-            string baseDirPath = null;
-            bool startFullscreen = false;
+            // Parse Arguments.
+            string launchPathArg      = null;
+            string baseDirPathArg     = null;
+            bool   startFullscreenArg = false;
+
             for (int i = 0; i < args.Length; ++i)
             {
                 string arg = args[i];
@@ -35,28 +38,28 @@ namespace Ryujinx
                     if (i + 1 >= args.Length)
                     {
                         Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
+
                         continue;
                     }
 
-                    baseDirPath = args[++i];
+                    baseDirPathArg = args[++i];
                 }
                 else if (arg == "-f" || arg == "--fullscreen")
                 {
-                    startFullscreen = true;
+                    startFullscreenArg = true;
                 }
-                else if (launchPath == null)
+                else if (launchPathArg == null)
                 {
-                    launchPath = arg;
+                    launchPathArg = arg;
                 }
             }
 
-            // Delete backup files after updating
+            // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);
 
             Toolkit.Init(new ToolkitOptions
             {
-                Backend = PlatformBackend.PreferNative,
-                EnableHighResolution = true
+                Backend = PlatformBackend.PreferNative
             });
 
             Version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
@@ -66,27 +69,27 @@ namespace Ryujinx
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
             Environment.SetEnvironmentVariable("Path", $"{Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin")};{systemPath}");
 
-            // Hook unhandled exception and process exit events
-            GLib.ExceptionManager.UnhandledException += (GLib.UnhandledExceptionArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            // Hook unhandled exception and process exit events.
+            GLib.ExceptionManager.UnhandledException   += (GLib.UnhandledExceptionArgs e)                => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
             AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
-            AppDomain.CurrentDomain.ProcessExit += (object sender, EventArgs e) => ProgramExit();
+            AppDomain.CurrentDomain.ProcessExit        += (object sender, EventArgs e)                   => Exit();
 
-            // Setup base data directory
-            AppDataManager.Initialize(baseDirPath);
+            // Setup base data directory.
+            AppDataManager.Initialize(baseDirPathArg);
 
-            // Initialize the configuration
+            // Initialize the configuration.
             ConfigurationState.Initialize();
 
-            // Initialize the logger system
+            // Initialize the logger system.
             LoggerModule.Initialize();
 
-            // Initialize Discord integration
+            // Initialize Discord integration.
             DiscordIntegrationModule.Initialize();
 
             string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
-            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
+            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath,            "Config.json");
 
-            // Now load the configuration as the other subsystems are now registered
+            // Now load the configuration as the other subsystems are now registered.
             if (File.Exists(localConfigurationPath))
             {
                 ConfigurationPath = localConfigurationPath;
@@ -105,35 +108,42 @@ namespace Ryujinx
             }
             else
             {
-                // No configuration, we load the default values and save it on disk
+                // No configuration, we load the default values and save it on disk.
                 ConfigurationPath = appDataConfigurationPath;
 
                 ConfigurationState.Instance.LoadDefault();
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(appDataConfigurationPath);
             }
 
-            if (startFullscreen)
+            if (startFullscreenArg)
             {
                 ConfigurationState.Instance.Ui.StartFullscreen.Value = true;
             }
 
+            // Logging system informations.
             PrintSystemInfo();
 
+            // Initialize Gtk.
             Application.Init();
 
+            // Check if keys exists.
             bool hasGlobalProdKeys = File.Exists(Path.Combine(AppDataManager.KeysDirPath, "prod.keys"));
             bool hasAltProdKeys    = !AppDataManager.IsCustomBasePath && File.Exists(Path.Combine(AppDataManager.KeysDirPathAlt, "prod.keys"));
-            if (!hasGlobalProdKeys && !hasAltProdKeys && !Migration.IsMigrationNeeded())
+            if (!hasGlobalProdKeys && !hasAltProdKeys)
             {
                 UserErrorDialog.CreateUserErrorDialog(UserError.NoKeys);
             }
 
+            // Force dedicated GPU if we can.
+            ForceDedicatedGpu.Nvidia();
+
+            // Show the main window UI.
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
 
-            if (launchPath != null)
+            if (launchPathArg != null)
             {
-                mainWindow.LoadApplication(launchPath);
+                mainWindow.LoadApplication(launchPathArg);
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
@@ -147,7 +157,6 @@ namespace Ryujinx
         private static void PrintSystemInfo()
         {
             Logger.Notice.Print(LogClass.Application, $"Ryujinx Version: {Version}");
-
             Logger.Notice.Print(LogClass.Application, $"Operating System: {SystemInfo.Instance.OsDescription}");
             Logger.Notice.Print(LogClass.Application, $"CPU: {SystemInfo.Instance.CpuName}");
             Logger.Notice.Print(LogClass.Application, $"Total RAM: {SystemInfo.Instance.RamSizeInMB}");
@@ -161,25 +170,30 @@ namespace Ryujinx
             }
         }
 
-        private static void ProcessUnhandledException(Exception e, bool isTerminating)
+        private static void ProcessUnhandledException(Exception ex, bool isTerminating)
         {
             Ptc.Close();
             PtcProfiler.Stop();
 
-            string message = $"Unhandled exception caught: {e}";
+            string message = $"Unhandled exception caught: {ex}";
 
             Logger.Error?.PrintMsg(LogClass.Application, message);
 
-            if (Logger.Error == null) Logger.Notice.PrintMsg(LogClass.Application, message);
+            if (Logger.Error == null)
+            {
+                Logger.Notice.PrintMsg(LogClass.Application, message);
+            }
 
             if (isTerminating)
             {
-                ProgramExit();
+                Exit();
             }
         }
 
-        private static void ProgramExit()
+        public static void Exit()
         {
+            DiscordIntegrationModule.Exit();
+
             Ptc.Dispose();
             PtcProfiler.Dispose();
 

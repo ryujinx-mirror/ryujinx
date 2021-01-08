@@ -55,53 +55,51 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Ui\AboutWindow.glade" />
-    <None Remove="Ui\assets\JoyConLeft.svg" />
-    <None Remove="Ui\assets\JoyConPair.svg" />
-    <None Remove="Ui\assets\JoyConRight.svg" />
-    <None Remove="Ui\assets\ProCon.svg" />
-    <None Remove="Ui\assets\NCAIcon.png" />
-    <None Remove="Ui\assets\NROIcon.png" />
-    <None Remove="Ui\assets\NSOIcon.png" />
-    <None Remove="Ui\assets\NSPIcon.png" />
-    <None Remove="Ui\assets\XCIIcon.png" />
-    <None Remove="Ui\assets\DiscordLogo.png" />
-    <None Remove="Ui\assets\GitHubLogo.png" />
-    <None Remove="Ui\assets\PatreonLogo.png" />
-    <None Remove="Ui\assets\Icon.png" />
-    <None Remove="Ui\assets\TwitterLogo.png" />
-    <None Remove="Ui\ControllerWindow.glade" />
-    <None Remove="Ui\DlcWindow.glade" />
     <None Remove="Ui\MainWindow.glade" />
-    <None Remove="Ui\ProfileDialog.glade" />
-    <None Remove="Ui\SettingsWindow.glade" />
-    <None Remove="Ui\TitleUpdateWindow.glade" />
-    <None Remove="Ui\UpdateDialog.glade" />
+    <None Remove="Ui\Resources\Controller_JoyConLeft.svg" />
+    <None Remove="Ui\Resources\Controller_JoyConPair.svg" />
+    <None Remove="Ui\Resources\Controller_JoyConRight.svg" />
+    <None Remove="Ui\Resources\Controller_ProCon.svg" />
+    <None Remove="Ui\Resources\Icon_NCA.png" />
+    <None Remove="Ui\Resources\Icon_NRO.png" />
+    <None Remove="Ui\Resources\Icon_NSO.png" />
+    <None Remove="Ui\Resources\Icon_NSP.png" />
+    <None Remove="Ui\Resources\Icon_XCI.png" />
+    <None Remove="Ui\Resources\Logo_Discord.png" />
+    <None Remove="Ui\Resources\Logo_GitHub.png" />
+    <None Remove="Ui\Resources\Logo_Patreon.png" />
+    <None Remove="Ui\Resources\Logo_Ryujinx.png" />
+    <None Remove="Ui\Resources\Logo_Twitter.png" />
+    <None Remove="Ui\Widgets\ProfileDialog.glade" />
+    <None Remove="Ui\Windows\ControllerWindow.glade" />
+    <None Remove="Ui\Windows\DlcWindow.glade" />
+    <None Remove="Ui\Windows\SettingsWindow.glade" />
+    <None Remove="Ui\Windows\TitleUpdateWindow.glade" />
+    <None Remove="Modules\Updater\UpdateDialog.glade" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Ui\AboutWindow.glade" />
-    <EmbeddedResource Include="Ui\assets\JoyConLeft.svg" />
-    <EmbeddedResource Include="Ui\assets\JoyConPair.svg" />
-    <EmbeddedResource Include="Ui\assets\JoyConRight.svg" />
-    <EmbeddedResource Include="Ui\assets\ProCon.svg" />
-    <EmbeddedResource Include="Ui\assets\NCAIcon.png" />
-    <EmbeddedResource Include="Ui\assets\NROIcon.png" />
-    <EmbeddedResource Include="Ui\assets\NSOIcon.png" />
-    <EmbeddedResource Include="Ui\assets\NSPIcon.png" />
-    <EmbeddedResource Include="Ui\assets\XCIIcon.png" />
-    <EmbeddedResource Include="Ui\assets\DiscordLogo.png" />
-    <EmbeddedResource Include="Ui\assets\GitHubLogo.png" />
-    <EmbeddedResource Include="Ui\assets\PatreonLogo.png" />
-    <EmbeddedResource Include="Ui\assets\Icon.png" />
-    <EmbeddedResource Include="Ui\assets\TwitterLogo.png" />
-    <EmbeddedResource Include="Ui\ControllerWindow.glade" />
     <EmbeddedResource Include="Ui\MainWindow.glade" />
-    <EmbeddedResource Include="Ui\ProfileDialog.glade" />
-    <EmbeddedResource Include="Ui\SettingsWindow.glade" />
-    <EmbeddedResource Include="Ui\DlcWindow.glade" />
-    <EmbeddedResource Include="Ui\TitleUpdateWindow.glade" />
-    <EmbeddedResource Include="Updater\UpdateDialog.glade" />
+    <EmbeddedResource Include="Ui\Resources\Controller_JoyConLeft.svg" />
+    <EmbeddedResource Include="Ui\Resources\Controller_JoyConPair.svg" />
+    <EmbeddedResource Include="Ui\Resources\Controller_JoyConRight.svg" />
+    <EmbeddedResource Include="Ui\Resources\Controller_ProCon.svg" />
+    <EmbeddedResource Include="Ui\Resources\Icon_NCA.png" />
+    <EmbeddedResource Include="Ui\Resources\Icon_NRO.png" />
+    <EmbeddedResource Include="Ui\Resources\Icon_NSO.png" />
+    <EmbeddedResource Include="Ui\Resources\Icon_NSP.png" />
+    <EmbeddedResource Include="Ui\Resources\Icon_XCI.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_Discord.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_GitHub.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_Patreon.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_Ryujinx.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_Twitter.png" />
+    <EmbeddedResource Include="Ui\Widgets\ProfileDialog.glade" />
+    <EmbeddedResource Include="Ui\Windows\ControllerWindow.glade" />
+    <EmbeddedResource Include="Ui\Windows\DlcWindow.glade" />
+    <EmbeddedResource Include="Ui\Windows\SettingsWindow.glade" />
+    <EmbeddedResource Include="Ui\Windows\TitleUpdateWindow.glade" />
+    <EmbeddedResource Include="Modules\Updater\UpdateDialog.glade" />
   </ItemGroup>
 
 </Project>
