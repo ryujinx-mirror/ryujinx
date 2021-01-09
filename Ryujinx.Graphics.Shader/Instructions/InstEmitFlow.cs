@@ -146,6 +146,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
+                // TODO: Support CC here aswell (condition).
                 foreach (KeyValuePair<OpCodePush, int> kv in op.Targets)
                 {
                     OpCodePush pushOp = kv.Key;
@@ -176,9 +177,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand pred = Register(op.Predicate);
 
-            if (op is OpCodeBranch opBranch && opBranch.Condition != Condition.Always)
+            if (op is OpCodeConditional opCond && opCond.Condition != Condition.Always)
             {
-                Operand cond = GetCondition(context, opBranch.Condition);
+                Operand cond = GetCondition(context, opCond.Condition);
 
                 if (op.Predicate.IsPT)
                 {

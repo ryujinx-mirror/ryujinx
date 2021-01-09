@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeBranchPop : OpCode
+    class OpCodeBranchPop : OpCodeConditional
     {
         public Dictionary<OpCodePush, int> Targets { get; }
 

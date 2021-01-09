@@ -2,10 +2,8 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeBranch : OpCode
+    class OpCodeBranch : OpCodeConditional
     {
-        public Condition Condition { get; }
-
         public int Offset { get; }
 
         public bool PushTarget { get; protected set; }
@@ -14,8 +12,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public OpCodeBranch(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
-            Condition = (Condition)(opCode & 0x1f);
-
             Offset = ((int)(opCode >> 20) << 8) >> 8;
 
             PushTarget = false;
