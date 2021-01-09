@@ -129,11 +129,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Frees memory that was previously allocated by a map or reserved.
+        /// Unmaps a given range of pages at the specified GPU virtual memory region.
         /// </summary>
-        /// <param name="va">GPU virtual address to free</param>
-        /// <param name="size">Size in bytes of the region being freed</param>
-        public void Free(ulong va, ulong size)
+        /// <param name="va">GPU virtual address to unmap</param>
+        /// <param name="size">Size in bytes of the region being unmapped</param>
+        public void Unmap(ulong va, ulong size)
         {
             lock (_pageTable)
             {
