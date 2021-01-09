@@ -86,6 +86,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return (ResultCode)_applet.GetResult();
         }
 
+        [Command(60)]
+        // PresetLibraryAppletGpuTimeSliceZero()
+        public ResultCode PresetLibraryAppletGpuTimeSliceZero(ServiceCtx context)
+        {
+            // NOTE: This call reset two internal fields to 0 and one internal field to "true".
+            //       It seems to be used only with software keyboard inline.
+            //       Since we doesn't support applets for now, it's fine to stub it.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [Command(100)]
         // PushInData(object<nn::am::service::IStorage>)
         public ResultCode PushInData(ServiceCtx context)
@@ -151,7 +164,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
                     throw new InvalidOperationException("Out of handles!");
                 }
             }
-
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_normalOutDataEventHandle);
 
