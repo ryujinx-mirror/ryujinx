@@ -23,7 +23,7 @@ namespace Ryujinx.Modules
         private readonly string     _buildUrl;
         private          bool       _restartQuery;
 
-        public UpdateDialog(MainWindow mainWindow, Version newVersion, string buildUrl) : this(new Builder("Ryujinx..Modules.Updater.UpdateDialog.glade"), mainWindow, newVersion, buildUrl) { }
+        public UpdateDialog(MainWindow mainWindow, Version newVersion, string buildUrl) : this(new Builder("Ryujinx.Modules.Updater.UpdateDialog.glade"), mainWindow, newVersion, buildUrl) { }
 
         private UpdateDialog(Builder builder, MainWindow mainWindow, Version newVersion, string buildUrl) : base(builder.GetObject("UpdateDialog").Handle)
         {
