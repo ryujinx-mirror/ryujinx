@@ -126,6 +126,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             _finished = true;
+
+            _context.AdvanceSequence();
         }
     }
 }
