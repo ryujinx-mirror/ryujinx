@@ -1,3 +1,4 @@
+using LibHac.Ns;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
 using System;
@@ -6,17 +7,16 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 {
     class IParentalControlService : IpcService
     {
-        private int   _permissionFlag;
-        private ulong _titleId;
-        private bool  _freeCommunicationEnabled;
-        private int[] _ratingAge;
+        private int                      _permissionFlag;
+        private ulong                    _titleId;
+        private ParentalControlFlagValue _parentalControlFlag;
+        private int[]                    _ratingAge;
 
         // TODO: Find where they are set.
-        private bool  _restrictionEnabled                  = false;
-        private bool  _featuresRestriction                 = false;
-        private bool  _stereoVisionRestrictionConfigurable = true;
-
-        private bool  _stereoVisionRestriction             = false;
+        private bool _restrictionEnabled                  = false;
+        private bool _featuresRestriction                 = false;
+        private bool _stereoVisionRestrictionConfigurable = true;
+        private bool _stereoVisionRestriction             = false;
 
         public IParentalControlService(ServiceCtx context, bool withInitialize, int permissionFlag)
         {
@@ -50,8 +50,8 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                         _titleId = titleId;
 
                         // TODO: Call nn::arp::GetApplicationControlProperty here when implemented, if it return ResultCode.Success we assign fields.
-                        _ratingAge                = Array.ConvertAll(context.Device.Application.ControlData.Value.RatingAge.ToArray(), Convert.ToInt32);
-                        _freeCommunicationEnabled = context.Device.Application.ControlData.Value.ParentalControl == LibHac.Ns.ParentalControlFlagValue.FreeCommunication;
+                        _ratingAge           = Array.ConvertAll(context.Device.Application.ControlData.Value.RatingAge.ToArray(), Convert.ToInt32);
+                        _parentalControlFlag = context.Device.Application.ControlData.Value.ParentalControl;
                     }
                 }
 
@@ -77,12 +77,15 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // CheckFreeCommunicationPermission()
         public ResultCode CheckFreeCommunicationPermission(ServiceCtx context)
         {
-            // TODO: This checks some extra internal fields which are to be determined.
-
-            if (!_freeCommunicationEnabled && _restrictionEnabled)
+            if (_parentalControlFlag == ParentalControlFlagValue.FreeCommunication && _restrictionEnabled)
             {
+                // TODO: It seems to checks if an entry exists in the FreeCommunicationApplicationList using the TitleId.
+                //       Then it returns FreeCommunicationDisabled if the entry doesn't exist.
+
                 return ResultCode.FreeCommunicationDisabled;
             }
+
+            // NOTE: This sets an internal field to true. Usage have to be determined.
 
             Logger.Stub?.PrintStub(LogClass.ServicePctl);
 
@@ -94,6 +97,23 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         public ResultCode ConfirmStereoVisionPermission(ServiceCtx context)
         {
             return IsStereoVisionPermittedImpl();
+        }
+
+        [Command(1018)]
+        // IsFreeCommunicationAvailable()
+        public ResultCode IsFreeCommunicationAvailable(ServiceCtx context)
+        {
+            if (_parentalControlFlag == ParentalControlFlagValue.FreeCommunication && _restrictionEnabled)
+            {
+                // TODO: It seems to checks if an entry exists in the FreeCommunicationApplicationList using the TitleId.
+                //       Then it returns FreeCommunicationDisabled if the entry doesn't exist.
+
+                return ResultCode.FreeCommunicationDisabled;
+            }
+
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+
+            return ResultCode.Success;
         }
 
         [Command(1031)]
