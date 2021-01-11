@@ -62,6 +62,7 @@ namespace Ryujinx.Ui
         [GUI] Box             _footerBox;
         [GUI] Box             _statusBar;
         [GUI] MenuItem        _stopEmulation;
+        [GUI] MenuItem        _simulateWakeUpMessage;
         [GUI] MenuItem        _fullScreen;
         [GUI] CheckMenuItem   _startFullScreen;
         [GUI] CheckMenuItem   _favToggle;
@@ -140,7 +141,8 @@ namespace Ryujinx.Ui
                 _startFullScreen.Active = true;
             }
 
-            _stopEmulation.Sensitive = false;
+            _stopEmulation.Sensitive         = false;
+            _simulateWakeUpMessage.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
@@ -527,8 +529,9 @@ namespace Ryujinx.Ui
                 windowThread.Start();
 #endif
 
-                _gameLoaded              = true;
-                _stopEmulation.Sensitive = true;
+                _gameLoaded                      = true;
+                _stopEmulation.Sensitive         = true;
+                _simulateWakeUpMessage.Sensitive = true;
 
                 _firmwareInstallFile.Sensitive      = false;
                 _firmwareInstallDirectory.Sensitive = false;
@@ -622,6 +625,7 @@ namespace Ryujinx.Ui
                 Task.Run(HandleRelaunch);
 
                 _stopEmulation.Sensitive            = false;
+                _simulateWakeUpMessage.Sensitive    = false;
                 _firmwareInstallFile.Sensitive      = true;
                 _firmwareInstallDirectory.Sensitive = true;
             });
