@@ -269,7 +269,10 @@ namespace Ryujinx.HLE.FileSystem
                 {
                     Ticket ticket = new Ticket(ticketFile.AsStream());
 
-                    KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(KeySet)));
+                    if (ticket.TitleKeyType == TitleKeyType.Common)
+                    {
+                        KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(KeySet)));
+                    }
                 }
             }
         }
