@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -236,6 +237,24 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             }
 
             return null;
+        }
+
+        [Command(2450)]
+        // GetIndirectLayerImageMap(s64 width, s64 height, u64 handle, nn::applet::AppletResourceUserId, pid) -> (s64, s64, buffer<bytes, 0x46>)
+        public ResultCode GetIndirectLayerImageMap(ServiceCtx context)
+        {
+            // The size of the layer buffer should be an aligned multiple of width * height
+            // because it was created using GetIndirectLayerImageRequiredMemoryInfo as a guide.
+
+            long layerBuffPosition = context.Request.ReceiveBuff[0].Position;
+            long layerBuffSize     = context.Request.ReceiveBuff[0].Size;
+
+            // Fill the layer with zeros.
+            context.Memory.Fill((ulong)layerBuffPosition, (ulong)layerBuffSize, 0x00);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceVi);
+
+            return ResultCode.Success;
         }
 
         [Command(2460)]
