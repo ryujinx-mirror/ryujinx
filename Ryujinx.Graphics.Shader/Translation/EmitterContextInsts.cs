@@ -406,9 +406,39 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.CompareEqual, Local(), a, b);
         }
 
+        public static Operand ICompareGreater(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareGreater, Local(), a, b);
+        }
+
+        public static Operand ICompareGreaterOrEqual(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareGreaterOrEqual, Local(), a, b);
+        }
+
+        public static Operand ICompareGreaterOrEqualUnsigned(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareGreaterOrEqualU32, Local(), a, b);
+        }
+
+        public static Operand ICompareGreaterUnsigned(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareGreaterU32, Local(), a, b);
+        }
+
         public static Operand ICompareLess(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.CompareLess, Local(), a, b);
+        }
+
+        public static Operand ICompareLessOrEqual(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareLessOrEqual, Local(), a, b);
+        }
+
+        public static Operand ICompareLessOrEqualUnsigned(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.CompareLessOrEqualU32, Local(), a, b);
         }
 
         public static Operand ICompareLessUnsigned(this EmitterContext context, Operand a, Operand b)

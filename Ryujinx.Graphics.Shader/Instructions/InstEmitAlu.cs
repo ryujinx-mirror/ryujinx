@@ -119,17 +119,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand res = context.IAdd(srcA, srcB);
 
-            bool isSubtraction = negateA || negateB;
-
             if (op.Extended)
             {
-                // Add carry, or subtract borrow.
-                res = context.IAdd(res, isSubtraction
-                    ? context.BitwiseNot(GetCF())
-                    : context.BitwiseAnd(GetCF(), Const(1)));
+                res = context.IAdd(res, context.BitwiseAnd(GetCF(), Const(1)));
             }
 
-            SetIaddFlags(context, res, srcA, srcB, op.SetCondCode, op.Extended, isSubtraction);
+            SetIaddFlags(context, res, srcA, srcB, op.SetCondCode, op.Extended);
 
             context.Copy(GetDest(context), res);
         }
@@ -317,9 +312,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand res = context.IAdd(srcA, srcB);
 
-            context.Copy(GetDest(context), res);
+            SetIaddFlags(context, res, srcA, srcB, op.SetCondCode, false);
 
-            // TODO: CC, X
+            context.Copy(GetDest(context), res);
         }
 
         public static void Iset(EmitterContext context)
@@ -334,7 +329,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand srcA = GetSrcA(context);
             Operand srcB = GetSrcB(context);
 
-            Operand res = GetIntComparison(context, cmpOp, srcA, srcB, isSigned);
+            Operand res = GetIntComparison(context, cmpOp, srcA, srcB, isSigned, op.Extended);
 
             Operand pred = GetPredicate39(context);
 
@@ -356,8 +351,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 SetZnFlags(context, res, op.SetCondCode, op.Extended);
             }
-
-            // TODO: X
         }
 
         public static void Isetp(EmitterContext context)
@@ -371,7 +364,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand srcA = GetSrcA(context);
             Operand srcB = GetSrcB(context);
 
-            Operand p0Res = GetIntComparison(context, cmpOp, srcA, srcB, isSigned);
+            Operand p0Res = GetIntComparison(context, cmpOp, srcA, srcB, isSigned, op.Extended);
 
             Operand p1Res = context.BitwiseNot(p0Res);
 
@@ -804,6 +797,84 @@ namespace Ryujinx.Graphics.Shader.Instructions
             IntegerCondition cond,
             Operand          srcA,
             Operand          srcB,
+            bool             isSigned,
+            bool             extended)
+        {
+            return extended
+                ? GetIntComparisonExtended(context, cond, srcA, srcB, isSigned)
+                : GetIntComparison        (context, cond, srcA, srcB, isSigned);
+        }
+
+        private static Operand GetIntComparisonExtended(
+            EmitterContext   context,
+            IntegerCondition cond,
+            Operand          srcA,
+            Operand          srcB,
+            bool             isSigned)
+        {
+            Operand res;
+
+            if (cond == IntegerCondition.Always)
+            {
+                res = Const(IrConsts.True);
+            }
+            else if (cond == IntegerCondition.Never)
+            {
+                res = Const(IrConsts.False);
+            }
+            else
+            {
+                res = context.ISubtract(srcA, srcB);
+                res = context.IAdd(res, context.BitwiseNot(GetCF()));
+
+                switch (cond)
+                {
+                    case Decoders.IntegerCondition.Equal: // r = xh == yh && xl == yl
+                        res = context.BitwiseAnd(context.ICompareEqual(srcA, srcB), GetZF());
+                        break;
+                    case Decoders.IntegerCondition.Less: // r = xh < yh || (xh == yh && xl < yl)
+                        Operand notC = context.BitwiseNot(GetCF());
+                        Operand prevLt = context.BitwiseAnd(context.ICompareEqual(srcA, srcB), notC);
+                        res = isSigned
+                            ? context.BitwiseOr(context.ICompareLess(srcA, srcB), prevLt)
+                            : context.BitwiseOr(context.ICompareLessUnsigned(srcA, srcB), prevLt);
+                        break;
+                    case Decoders.IntegerCondition.LessOrEqual: // r = xh < yh || (xh == yh && xl <= yl)
+                        Operand zOrNotC = context.BitwiseOr(GetZF(), context.BitwiseNot(GetCF()));
+                        Operand prevLe = context.BitwiseAnd(context.ICompareEqual(srcA, srcB), zOrNotC);
+                        res = isSigned
+                            ? context.BitwiseOr(context.ICompareLess(srcA, srcB), prevLe)
+                            : context.BitwiseOr(context.ICompareLessUnsigned(srcA, srcB), prevLe);
+                        break;
+                    case Decoders.IntegerCondition.Greater: // r = xh > yh || (xh == yh && xl > yl)
+                        Operand notZAndC = context.BitwiseAnd(context.BitwiseNot(GetZF()), GetCF());
+                        Operand prevGt = context.BitwiseAnd(context.ICompareEqual(srcA, srcB), notZAndC);
+                        res = isSigned
+                            ? context.BitwiseOr(context.ICompareGreater(srcA, srcB), prevGt)
+                            : context.BitwiseOr(context.ICompareGreaterUnsigned(srcA, srcB), prevGt);
+                        break;
+                    case Decoders.IntegerCondition.GreaterOrEqual: // r = xh > yh || (xh == yh && xl >= yl)
+                        Operand prevGe = context.BitwiseAnd(context.ICompareEqual(srcA, srcB), GetCF());
+                        res = isSigned
+                            ? context.BitwiseOr(context.ICompareGreater(srcA, srcB), prevGe)
+                            : context.BitwiseOr(context.ICompareGreaterUnsigned(srcA, srcB), prevGe);
+                        break;
+                    case Decoders.IntegerCondition.NotEqual: // r = xh != yh || xl != yl
+                        context.BitwiseOr(context.ICompareNotEqual(srcA, srcB), context.BitwiseNot(GetZF()));
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unexpected condition \"{cond}\".");
+                }
+            }
+
+            return res;
+        }
+
+        private static Operand GetIntComparison(
+            EmitterContext   context,
+            IntegerCondition cond,
+            Operand          srcA,
+            Operand          srcB,
             bool             isSigned)
         {
             Operand res;
@@ -879,20 +950,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand        srcA,
             Operand        srcB,
             bool           setCC,
-            bool           extended,
-            bool           isSubtraction = false)
+            bool           extended)
         {
             if (!setCC)
             {
                 return;
             }
 
-            if (!extended || isSubtraction)
-            {
-                // C = d < a
-                context.Copy(GetCF(), context.ICompareLessUnsigned(res, srcA));
-            }
-            else
+            if (extended)
             {
                 // C = (d == a && CIn) || d < a
                 Operand tempC0 = context.ICompareEqual       (res, srcA);
@@ -901,6 +966,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 tempC0 = context.BitwiseAnd(tempC0, GetCF());
 
                 context.Copy(GetCF(), context.BitwiseOr(tempC0, tempC1));
+            }
+            else
+            {
+                // C = d < a
+                context.Copy(GetCF(), context.ICompareLessUnsigned(res, srcA));
             }
 
             // V = (d ^ a) & ~(a ^ b) < 0
