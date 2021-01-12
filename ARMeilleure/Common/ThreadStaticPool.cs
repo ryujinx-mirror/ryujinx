@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace ARMeilleure.Common
 {
     class ThreadStaticPool<T> where T : class, new()
     {
-        private const int PoolSizeIncrement = 200;
+        private const int ChunkSizeLimit = 1000; // even
+        private const int PoolSizeIncrement = 200; // > 0
 
         [ThreadStatic]
         private static ThreadStaticPool<T> _instance;
@@ -25,11 +25,11 @@ namespace ARMeilleure.Common
             }
         }
 
-        private static ConcurrentDictionary<int, Stack<ThreadStaticPool<T>>> _pools = new ConcurrentDictionary<int, Stack<ThreadStaticPool<T>>>();
+        private static ConcurrentDictionary<int, Stack<ThreadStaticPool<T>>> _pools = new();
 
         private static Stack<ThreadStaticPool<T>> GetPools(int groupId)
         {
-            return _pools.GetOrAdd(groupId, x => new Stack<ThreadStaticPool<T>>());
+            return _pools.GetOrAdd(groupId, (groupId) => new());
         }
 
         public static void PreparePool(int groupId)
@@ -41,19 +41,20 @@ namespace ARMeilleure.Common
                 var pools = GetPools(groupId);
                 lock (pools)
                 {
-                    _instance = (pools.Count != 0) ? pools.Pop() : new ThreadStaticPool<T>(PoolSizeIncrement * 2);
+                    _instance = (pools.Count != 0) ? pools.Pop() : new();
                 }
             }
         }
 
         public static void ReturnPool(int groupId)
         {
-            // Reset and return the pool for this thread to the specified group.
+            // Reset, limit if necessary, and return the pool for this thread to the specified group.
 
             var pools = GetPools(groupId);
             lock (pools)
             {
                 _instance.Clear();
+                _instance.ChunkSizeLimiter();
                 pools.Push(_instance);
 
                 _instance = null;
@@ -66,58 +67,75 @@ namespace ARMeilleure.Common
 
             foreach (var pools in _pools.Values)
             {
+                foreach (var instance in pools)
+                {
+                    instance.Dispose();
+                }
+
                 pools.Clear();
             }
 
             _pools.Clear();
         }
 
-        private T[] _pool;
-        private int _poolUsed = -1;
-        private int _poolSize;
+        private List<T[]> _pool;
+        private int _chunkIndex = -1;
+        private int _poolIndex = -1;
 
-        public ThreadStaticPool(int initialSize)
+        private ThreadStaticPool()
         {
-            _pool = new T[initialSize];
+            _pool = new(ChunkSizeLimit * 2);
 
-            for (int i = 0; i < initialSize; i++)
-            {
-                _pool[i] = new T();
-            }
-
-            _poolSize = initialSize;
+            AddChunkIfNeeded();
         }
 
         public T Allocate()
         {
-            int index = Interlocked.Increment(ref _poolUsed);
-
-            if (index >= _poolSize)
+            if (++_poolIndex >= PoolSizeIncrement)
             {
-                IncreaseSize();
+                AddChunkIfNeeded();
+
+                _poolIndex = 0;
             }
 
-            return _pool[index];
+            return _pool[_chunkIndex][_poolIndex];
         }
 
-        private void IncreaseSize()
+        private void AddChunkIfNeeded()
         {
-            _poolSize += PoolSizeIncrement;
-
-            T[] newArray = new T[_poolSize];
-            Array.Copy(_pool, 0, newArray, 0, _pool.Length);
-
-            for (int i = _pool.Length; i < _poolSize; i++)
+            if (++_chunkIndex >= _pool.Count)
             {
-                newArray[i] = new T();
-            }
+                T[] pool = new T[PoolSizeIncrement];
 
-            Interlocked.Exchange(ref _pool, newArray);
+                for (int i = 0; i < PoolSizeIncrement; i++)
+                {
+                    pool[i] = new T();
+                }
+
+                _pool.Add(pool);
+            }
         }
 
         public void Clear()
         {
-            _poolUsed = -1;
+            _chunkIndex = 0;
+            _poolIndex = -1;
+        }
+
+        private void ChunkSizeLimiter()
+        {
+            if (_pool.Count >= ChunkSizeLimit)
+            {
+                int newChunkSize = ChunkSizeLimit / 2;
+
+                _pool.RemoveRange(newChunkSize, _pool.Count - newChunkSize);
+                _pool.Capacity = ChunkSizeLimit * 2;
+            }
+        }
+
+        private void Dispose()
+        {
+            _pool.Clear();
         }
     }
 }

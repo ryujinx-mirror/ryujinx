@@ -201,14 +201,13 @@ namespace ARMeilleure.Translation
         {
             ArmEmitterContext context = new ArmEmitterContext(memory, jumpTable, address, highCq, Aarch32Mode.User);
 
-            PrepareOperandPool(highCq);
-            PrepareOperationPool(highCq);
-
             Logger.StartPass(PassName.Decoding);
 
             Block[] blocks = Decoder.Decode(memory, address, mode, highCq, singleBlock: false);
 
             Logger.EndPass(PassName.Decoding);
+
+            PreparePool(highCq);
 
             Logger.StartPass(PassName.Translation);
 
@@ -240,21 +239,31 @@ namespace ARMeilleure.Translation
             if (Ptc.State == PtcState.Disabled)
             {
                 func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
+
+                ReturnPool(highCq);
             }
-            else
+            else using (PtcInfo ptcInfo = new PtcInfo())
             {
-                using (PtcInfo ptcInfo = new PtcInfo())
-                {
-                    func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options, ptcInfo);
+                func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options, ptcInfo);
 
-                    Ptc.WriteInfoCodeReloc(address, funcSize, highCq, ptcInfo);
-                }
+                ReturnPool(highCq);
+
+                Ptc.WriteInfoCodeRelocUnwindInfo(address, funcSize, highCq, ptcInfo);
             }
-
-            ReturnOperandPool(highCq);
-            ReturnOperationPool(highCq);
 
             return new TranslatedFunction(func, funcSize, highCq);
+        }
+
+        internal static void PreparePool(bool highCq)
+        {
+            PrepareOperandPool(highCq);
+            PrepareOperationPool(highCq);
+        }
+
+        internal static void ReturnPool(bool highCq)
+        {
+            ReturnOperandPool(highCq);
+            ReturnOperationPool(highCq);
         }
 
         internal static void ResetPools()
