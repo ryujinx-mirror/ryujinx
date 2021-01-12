@@ -6,6 +6,27 @@ namespace Ryujinx.Graphics.OpenGL
 {
     static class Buffer
     {
+        public static void Clear(BufferHandle destination, int offset, int size, uint value)
+        {
+            GL.BindBuffer(BufferTarget.CopyWriteBuffer, destination.ToInt32());
+
+            unsafe
+            {
+                uint* valueArr = stackalloc uint[1];
+
+                valueArr[0] = value;
+
+                GL.ClearBufferSubData(
+                    BufferTarget.CopyWriteBuffer,
+                    PixelInternalFormat.Rgba8ui,
+                    (IntPtr)offset,
+                    (IntPtr)size,
+                    PixelFormat.RgbaInteger,
+                    PixelType.UnsignedByte,
+                    (IntPtr)valueArr);
+            }
+        }
+
         public static BufferHandle Create()
         {
             return Handle.FromInt32<BufferHandle>(GL.GenBuffer());

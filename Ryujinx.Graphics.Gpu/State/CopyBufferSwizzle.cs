@@ -10,6 +10,42 @@ namespace Ryujinx.Graphics.Gpu.State
 #pragma warning restore CS0649
 
         /// <summary>
+        /// Unpacks the source for the buffer destination vector X component.
+        /// </summary>
+        /// <returns>Destination component</returns>
+        public BufferSwizzleComponent UnpackDstX()
+        {
+            return (BufferSwizzleComponent)(Swizzle & 7);
+        }
+
+        /// <summary>
+        /// Unpacks the source for the buffer destination vector Y component.
+        /// </summary>
+        /// <returns>Destination component</returns>
+        public BufferSwizzleComponent UnpackDstY()
+        {
+            return (BufferSwizzleComponent)((Swizzle >> 4) & 7);
+        }
+
+        /// <summary>
+        /// Unpacks the source for the buffer destination vector Z component.
+        /// </summary>
+        /// <returns>Destination component</returns>
+        public BufferSwizzleComponent UnpackDstZ()
+        {
+            return (BufferSwizzleComponent)((Swizzle >> 8) & 7);
+        }
+
+        /// <summary>
+        /// Unpacks the source for the buffer destination vector W component.
+        /// </summary>
+        /// <returns>Destination component</returns>
+        public BufferSwizzleComponent UnpackDstW()
+        {
+            return (BufferSwizzleComponent)((Swizzle >> 12) & 7);
+        }
+
+        /// <summary>
         /// Unpacks the size of each vector component of the copy.
         /// </summary>
         /// <returns>Vector component size</returns>

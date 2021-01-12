@@ -23,6 +23,8 @@ namespace Ryujinx.Graphics.Gpu.State
         TfBufferState                   = 0xe0,
         CopyBufferParams                = 0x100,
         TfState                         = 0x1c0,
+        CopyBufferConstA                = 0x1c0,
+        CopyBufferConstB                = 0x1c1,
         CopyBufferSwizzle               = 0x1c2,
         CopyBufferDstTexture            = 0x1c3,
         CopyBufferSrcTexture            = 0x1ca,

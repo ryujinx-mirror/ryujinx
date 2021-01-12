@@ -822,6 +822,28 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Clears a buffer at a given address with the specified value.
+        /// </summary>
+        /// <remarks>
+        /// Both the address and size must be aligned to 4 bytes.
+        /// </remarks>
+        /// <param name="gpuVa">GPU virtual address of the region to clear</param>
+        /// <param name="size">Number of bytes to clear</param>
+        /// <param name="value">Value to be written into the buffer</param>
+        public void ClearBuffer(GpuVa gpuVa, ulong size, uint value)
+        {
+            ulong address = TranslateAndCreateBuffer(gpuVa.Pack(), size);
+
+            Buffer buffer = GetBuffer(address, size);
+
+            int offset = (int)(address - buffer.Address);
+
+            _context.Renderer.Pipeline.ClearBuffer(buffer.Handle, offset, (int)size, value);
+
+            buffer.Flush(address, size);
+        }
+
+        /// <summary>
         /// Gets a buffer sub-range for a given memory range.
         /// </summary>
         /// <param name="address">Start address of the memory range</param>

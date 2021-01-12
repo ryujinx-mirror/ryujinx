@@ -9,6 +9,8 @@ namespace Ryujinx.Graphics.GAL
 
         void BeginTransformFeedback(PrimitiveTopology topology);
 
+        void ClearBuffer(BufferHandle destination, int offset, int size, uint value);
+
         void ClearRenderTargetColor(int index, uint componentMask, ColorF color);
 
         void ClearRenderTargetDepthStencil(
