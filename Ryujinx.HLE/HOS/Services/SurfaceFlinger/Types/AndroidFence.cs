@@ -70,7 +70,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             ref NvFence fence = ref NvFences[FenceCount - 1];
 
-            gpuContext.Synchronization.RegisterCallbackOnSyncpoint(fence.Id, fence.Value, callback);
+            if (fence.IsValid())
+            {
+                gpuContext.Synchronization.RegisterCallbackOnSyncpoint(fence.Id, fence.Value, callback);
+            }
+            else
+            {
+                callback();
+            }
         }
 
         public uint GetFlattenedSize()
