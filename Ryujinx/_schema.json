@@ -1199,6 +1199,17 @@
         false
       ]
     },
+    "show_confirm_exit": {
+      "$id": "#/properties/show_confirm_exit",
+      "type": "boolean",
+      "title": "Show \"Confirm Exit\" Dialog",
+      "description": "Check to shows the \"Confirm Exit\" dialog when closing Ryujinx.",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "enable_vsync": {
       "$id": "#/properties/enable_vsync",
       "type": "boolean",

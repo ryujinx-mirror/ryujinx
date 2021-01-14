@@ -1,5 +1,5 @@
 {
-  "version": 18,
+  "version": 20,
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
@@ -21,6 +21,7 @@
   "docked_mode": false,
   "enable_discord_integration": true,
   "check_updates_on_start": true,
+  "show_confirm_exit": true,
   "enable_vsync": true,
   "enable_shader_cache": true,
   "enable_ptc": true,

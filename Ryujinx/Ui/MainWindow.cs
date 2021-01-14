@@ -907,7 +907,7 @@ namespace Ryujinx.Ui
 
         private void Exit_Pressed(object sender, EventArgs args)
         {
-            if (!_gameLoaded || GtkDialog.CreateExitDialog())
+            if (!_gameLoaded || !ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
             {
                 End();
             }
@@ -915,7 +915,7 @@ namespace Ryujinx.Ui
 
         private void Window_Close(object sender, DeleteEventArgs args)
         {
-            if (!_gameLoaded || GtkDialog.CreateExitDialog())
+            if (!_gameLoaded || !ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
             {
                 End();
             }

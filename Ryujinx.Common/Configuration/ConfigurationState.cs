@@ -360,6 +360,11 @@ namespace Ryujinx.Configuration
         /// </summary>
         public ReactiveObject<bool> CheckUpdatesOnStart { get; private set; }
 
+        /// <summary>
+        /// Show "Confirm Exit" Dialog
+        /// </summary>
+        public ReactiveObject<bool> ShowConfirmExit { get; private set; }
+
         private ConfigurationState()
         {
             Ui                       = new UiSection();
@@ -369,6 +374,7 @@ namespace Ryujinx.Configuration
             Hid                      = new HidSection();
             EnableDiscordIntegration = new ReactiveObject<bool>();
             CheckUpdatesOnStart      = new ReactiveObject<bool>();
+            ShowConfirmExit          = new ReactiveObject<bool>();
         }
 
         public ConfigurationFileFormat ToFileFormat()
@@ -413,6 +419,7 @@ namespace Ryujinx.Configuration
                 DockedMode                = System.EnableDockedMode,
                 EnableDiscordIntegration  = EnableDiscordIntegration,
                 CheckUpdatesOnStart       = CheckUpdatesOnStart,
+                ShowConfirmExit           = ShowConfirmExit,
                 EnableVsync               = Graphics.EnableVsync,
                 EnableShaderCache         = Graphics.EnableShaderCache,
                 EnablePtc                 = System.EnablePtc,
@@ -475,6 +482,7 @@ namespace Ryujinx.Configuration
             System.EnableDockedMode.Value          = false;
             EnableDiscordIntegration.Value         = true;
             CheckUpdatesOnStart.Value              = true;
+            ShowConfirmExit.Value                  = true;
             Graphics.EnableVsync.Value             = true;
             Graphics.EnableShaderCache.Value       = true;
             System.EnablePtc.Value                 = true;
@@ -770,6 +778,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 20)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 20.");
+
+                configurationFileFormat.ShowConfirmExit = true;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -796,6 +813,7 @@ namespace Ryujinx.Configuration
             System.EnableDockedMode.Value          = configurationFileFormat.DockedMode;
             EnableDiscordIntegration.Value         = configurationFileFormat.EnableDiscordIntegration;
             CheckUpdatesOnStart.Value              = configurationFileFormat.CheckUpdatesOnStart;
+            ShowConfirmExit.Value                  = configurationFileFormat.ShowConfirmExit;
             Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
             System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
