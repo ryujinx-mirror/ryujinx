@@ -459,7 +459,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case LogicalOperation.ExclusiveOr: res = context.BitwiseExclusiveOr(srcA, srcB); break;
             }
 
-            EmitLopPredWrite(context, op, res);
+            EmitLopPredWrite(context, op, res, (ConditionalOperation)context.CurrOp.RawOpCode.Extract(44, 2));
 
             Operand dest = GetDest(context);
 
@@ -486,7 +486,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (regVariant)
             {
-                EmitLopPredWrite(context, op, res);
+                EmitLopPredWrite(context, op, res, (ConditionalOperation)context.CurrOp.RawOpCode.Extract(36, 2));
             }
 
             Operand dest = GetDest(context);
@@ -917,21 +917,21 @@ namespace Ryujinx.Graphics.Shader.Instructions
             return res;
         }
 
-        private static void EmitLopPredWrite(EmitterContext context, IOpCodeLop op, Operand result)
+        private static void EmitLopPredWrite(EmitterContext context, IOpCodeLop op, Operand result, ConditionalOperation condOp)
         {
             if (op is OpCodeLop opLop && !opLop.Predicate48.IsPT)
             {
                 Operand pRes;
 
-                if (opLop.CondOp == ConditionalOperation.False)
+                if (condOp == ConditionalOperation.False)
                 {
                     pRes = Const(IrConsts.False);
                 }
-                else if (opLop.CondOp == ConditionalOperation.True)
+                else if (condOp == ConditionalOperation.True)
                 {
                     pRes = Const(IrConsts.True);
                 }
-                else if (opLop.CondOp == ConditionalOperation.Zero)
+                else if (condOp == ConditionalOperation.Zero)
                 {
                     pRes = context.ICompareEqual(result, Const(0));
                 }
