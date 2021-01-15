@@ -514,7 +514,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 flags |= TextureSearchFlags.WithUpscale;
             }
 
-            Texture texture = FindOrCreateTexture(info, flags, sizeHint);
+            Texture texture = FindOrCreateTexture(info, flags, 0, sizeHint);
 
             texture.SynchronizeMemory();
 
@@ -598,7 +598,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 target,
                 formatInfo);
 
-            Texture texture = FindOrCreateTexture(info, TextureSearchFlags.WithUpscale, sizeHint);
+            int layerSize = !isLinear ? colorState.LayerSize * 4 : 0;
+
+            Texture texture = FindOrCreateTexture(info, TextureSearchFlags.WithUpscale, layerSize, sizeHint);
 
             texture.SynchronizeMemory();
 
@@ -648,7 +650,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 target,
                 formatInfo);
 
-            Texture texture = FindOrCreateTexture(info, TextureSearchFlags.WithUpscale, sizeHint);
+            Texture texture = FindOrCreateTexture(info, TextureSearchFlags.WithUpscale, dsState.LayerSize * 4, sizeHint);
 
             texture.SynchronizeMemory();
 
@@ -660,9 +662,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="info">Texture information of the texture to be found or created</param>
         /// <param name="flags">The texture search flags, defines texture comparison rules</param>
+        /// <param name="layerSize">Size in bytes of a single texture layer</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(TextureInfo info, TextureSearchFlags flags = TextureSearchFlags.None, Size? sizeHint = null)
+        public Texture FindOrCreateTexture(TextureInfo info, TextureSearchFlags flags = TextureSearchFlags.None, int layerSize = 0, Size? sizeHint = null)
         {
             bool isSamplerTexture = (flags & TextureSearchFlags.ForSampler) != 0;
 
@@ -722,34 +725,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // Calculate texture sizes, used to find all overlapping textures.
-            SizeInfo sizeInfo;
-
-            if (info.Target == Target.TextureBuffer)
-            {
-                sizeInfo = new SizeInfo(info.Width * info.FormatInfo.BytesPerPixel);
-            }
-            else if (info.IsLinear)
-            {
-                sizeInfo = SizeCalculator.GetLinearTextureSize(
-                    info.Stride,
-                    info.Height,
-                    info.FormatInfo.BlockHeight);
-            }
-            else
-            {
-                sizeInfo = SizeCalculator.GetBlockLinearTextureSize(
-                    info.Width,
-                    info.Height,
-                    info.GetDepth(),
-                    info.Levels,
-                    info.GetLayers(),
-                    info.FormatInfo.BlockWidth,
-                    info.FormatInfo.BlockHeight,
-                    info.FormatInfo.BytesPerPixel,
-                    info.GobBlocksInY,
-                    info.GobBlocksInZ,
-                    info.GobBlocksInTileX);
-            }
+            SizeInfo sizeInfo = info.CalculateSizeInfo(layerSize);
 
             // Find view compatible matches.
             ulong size = (ulong)sizeInfo.TotalSize;

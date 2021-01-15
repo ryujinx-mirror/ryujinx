@@ -20,7 +20,8 @@ namespace Ryujinx.Graphics.Texture
             int bytesPerPixel,
             int gobBlocksInY,
             int gobBlocksInZ,
-            int gobBlocksInTileX)
+            int gobBlocksInTileX,
+            int gpuLayerSize = 0)
         {
             bool is3D = depth > 1;
 
@@ -94,14 +95,29 @@ namespace Ryujinx.Graphics.Texture
                 layerSize += totalBlocksOfGobsInZ * totalBlocksOfGobsInY * robSize;
             }
 
-            layerSize = AlignLayerSize(
-                layerSize,
-                height,
-                depth,
-                blockHeight,
-                gobBlocksInY,
-                gobBlocksInZ,
-                gobBlocksInTileX);
+            if (layers > 1)
+            {
+                layerSize = AlignLayerSize(
+                    layerSize,
+                    height,
+                    depth,
+                    blockHeight,
+                    gobBlocksInY,
+                    gobBlocksInZ,
+                    gobBlocksInTileX);
+            }
+
+            int totalSize;
+
+            if (layerSize < gpuLayerSize)
+            {
+                totalSize = (layers - 1) * gpuLayerSize + layerSize;
+                layerSize = gpuLayerSize;
+            }
+            else
+            {
+                totalSize = layerSize * layers;
+            }
 
             if (!is3D)
             {
@@ -116,8 +132,6 @@ namespace Ryujinx.Graphics.Texture
                     }
                 }
             }
-
-            int totalSize = layerSize * layers;
 
             return new SizeInfo(mipOffsets, allOffsets, levels, layerSize, totalSize);
         }
