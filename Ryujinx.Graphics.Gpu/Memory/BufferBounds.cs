@@ -1,3 +1,5 @@
+using Ryujinx.Graphics.Shader;
+
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     /// <summary>
@@ -16,14 +18,21 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public ulong Size { get; }
 
         /// <summary>
+        /// Buffer usage flags.
+        /// </summary>
+        public BufferUsageFlags Flags { get; }
+
+        /// <summary>
         /// Creates a new buffer region.
         /// </summary>
         /// <param name="address">Region address</param>
         /// <param name="size">Region size</param>
-        public BufferBounds(ulong address, ulong size)
+        /// <param name="flags">Buffer usage flags</param>
+        public BufferBounds(ulong address, ulong size, BufferUsageFlags flags = BufferUsageFlags.None)
         {
             Address = address;
             Size = size;
+            Flags = flags;
         }
     }
 }

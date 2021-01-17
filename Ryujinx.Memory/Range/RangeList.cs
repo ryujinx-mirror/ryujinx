@@ -12,16 +12,16 @@ namespace Ryujinx.Memory.Range
     {
         private const int ArrayGrowthSize = 32;
 
-        private readonly List<T> _items;
+        protected readonly List<T> Items;
 
-        public int Count => _items.Count;
+        public int Count => Items.Count;
 
         /// <summary>
         /// Creates a new range list.
         /// </summary>
         public RangeList()
         {
-            _items = new List<T>();
+            Items = new List<T>();
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Ryujinx.Memory.Range
                 index = ~index;
             }
 
-            _items.Insert(index, item);
+            Items.Insert(index, item);
         }
 
         /// <summary>
@@ -51,21 +51,21 @@ namespace Ryujinx.Memory.Range
 
             if (index >= 0)
             {
-                while (index > 0 && _items[index - 1].Address == item.Address)
+                while (index > 0 && Items[index - 1].Address == item.Address)
                 {
                     index--;
                 }
 
-                while (index < _items.Count)
+                while (index < Items.Count)
                 {
-                    if (_items[index].Equals(item))
+                    if (Items[index].Equals(item))
                     {
-                        _items.RemoveAt(index);
+                        Items.RemoveAt(index);
 
                         return true;
                     }
 
-                    if (_items[index].Address > item.Address)
+                    if (Items[index].Address > item.Address)
                     {
                         break;
                     }
@@ -110,7 +110,7 @@ namespace Ryujinx.Memory.Range
                 return default(T);
             }
 
-            return _items[index];
+            return Items[index];
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Ryujinx.Memory.Range
 
             ulong endAddress = address + size;
 
-            foreach (T item in _items)
+            foreach (T item in Items)
             {
                 if (item.Address >= endAddress)
                 {
@@ -196,7 +196,7 @@ namespace Ryujinx.Memory.Range
 
             if (index >= 0)
             {
-                while (index > 0 && _items[index - 1].OverlapsWith(address, size))
+                while (index > 0 && Items[index - 1].OverlapsWith(address, size))
                 {
                     index--;
                 }
@@ -208,9 +208,9 @@ namespace Ryujinx.Memory.Range
                         Array.Resize(ref output, outputIndex + ArrayGrowthSize);
                     }
 
-                    output[outputIndex++] = _items[index++];
+                    output[outputIndex++] = Items[index++];
                 }
-                while (index < _items.Count && _items[index].OverlapsWith(address, size));
+                while (index < Items.Count && Items[index].OverlapsWith(address, size));
             }
 
             return outputIndex;
@@ -230,14 +230,14 @@ namespace Ryujinx.Memory.Range
 
             if (index >= 0)
             {
-                while (index > 0 && _items[index - 1].Address == address)
+                while (index > 0 && Items[index - 1].Address == address)
                 {
                     index--;
                 }
 
-                while (index < _items.Count)
+                while (index < Items.Count)
                 {
-                    T overlap = _items[index++];
+                    T overlap = Items[index++];
 
                     if (overlap.Address != address)
                     {
@@ -264,7 +264,7 @@ namespace Ryujinx.Memory.Range
         private int BinarySearch(ulong address)
         {
             int left  = 0;
-            int right = _items.Count - 1;
+            int right = Items.Count - 1;
 
             while (left <= right)
             {
@@ -272,7 +272,7 @@ namespace Ryujinx.Memory.Range
 
                 int middle = left + (range >> 1);
 
-                T item = _items[middle];
+                T item = Items[middle];
 
                 if (item.Address == address)
                 {
@@ -301,7 +301,7 @@ namespace Ryujinx.Memory.Range
         private int BinarySearch(ulong address, ulong size)
         {
             int left  = 0;
-            int right = _items.Count - 1;
+            int right = Items.Count - 1;
 
             while (left <= right)
             {
@@ -309,7 +309,7 @@ namespace Ryujinx.Memory.Range
 
                 int middle = left + (range >> 1);
 
-                T item = _items[middle];
+                T item = Items[middle];
 
                 if (item.OverlapsWith(address, size))
                 {
@@ -331,12 +331,12 @@ namespace Ryujinx.Memory.Range
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _items.GetEnumerator();
+            return Items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _items.GetEnumerator();
+            return Items.GetEnumerator();
         }
     }
 }

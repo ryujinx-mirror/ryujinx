@@ -61,6 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="va">GPU virtual address where the data is located</param>
         /// <param name="size">Size of the data</param>
+        /// <param name="tracked">True if read tracking is triggered on the span</param>
         /// <returns>The span of the data at the specified memory location</returns>
         public ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false)
         {

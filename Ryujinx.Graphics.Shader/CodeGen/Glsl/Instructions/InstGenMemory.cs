@@ -298,6 +298,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string src = TypeConversion.ReinterpretCast(context, src3, srcType, VariableType.U32);
 
+            SetStorageWriteFlag(context, src1, context.Config.Stage);
             string sb = GetStorageBufferAccessor(indexExpr, offsetExpr, context.Config.Stage);
 
             return $"{sb} = {src}";
@@ -626,6 +627,32 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             else
             {
                 return $"textureSize({samplerName}, {lodExpr}){GetMask(texOp.Index)}";
+            }
+        }
+
+        private static void SetStorageWriteFlag(CodeGenContext context, IAstNode indexExpr, ShaderStage stage)
+        {
+            // Attempt to find a BufferDescriptor with the given index.
+            // If it cannot be resolved or is not constant, assume that the slot expression could potentially index any of them,
+            // and set the flag on all storage buffers.
+
+            int index = -1;
+
+            if (indexExpr is AstOperand operand && operand.Type == OperandType.Constant)
+            {
+                index = context.SBufferDescriptors.FindIndex(buffer => buffer.Slot == operand.Value);
+            }
+
+            if (index != -1)
+            {
+                context.SBufferDescriptors[index] = context.SBufferDescriptors[index].SetFlag(BufferUsageFlags.Write);
+            }
+            else
+            {
+                for (int i = 0; i < context.SBufferDescriptors.Count; i++)
+                {
+                    context.SBufferDescriptors[i] = context.SBufferDescriptors[i].SetFlag(BufferUsageFlags.Write);
+                }
             }
         }
 

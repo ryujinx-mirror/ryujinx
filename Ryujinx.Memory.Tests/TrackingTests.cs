@@ -421,5 +421,68 @@ namespace Ryujinx.Memory.Tests
 
             Assert.AreEqual((0, 0), _tracking.GetRegionCounts());
         }
+
+        [Test]
+        public void ReadAndWriteProtection()
+        {
+            MemoryPermission protection = MemoryPermission.ReadAndWrite;
+
+            _memoryManager.OnProtect += (va, size, newProtection) =>
+            {
+                Assert.AreEqual((0, PageSize), (va, size)); // Should protect the exact region all the operations use.
+                protection = newProtection;
+            };
+
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+
+            // After creating the handle, there is no protection yet.
+            Assert.AreEqual(MemoryPermission.ReadAndWrite, protection);
+
+            bool dirtyInitial = handle.Dirty;
+            Assert.True(dirtyInitial); // Handle starts dirty.
+
+            handle.Reprotect();
+
+            // After a reprotect, there is write protection, which will set a dirty flag when any write happens.
+            Assert.AreEqual(MemoryPermission.Read, protection);
+
+            (ulong address, ulong size)? readTrackingTriggered = null;
+            handle.RegisterAction((address, size) =>
+            {
+                readTrackingTriggered = (address, size);
+            });
+
+            // Registering an action adds read/write protection.
+            Assert.AreEqual(MemoryPermission.None, protection);
+
+            bool dirtyAfterReprotect = handle.Dirty;
+            Assert.False(dirtyAfterReprotect); // Handle is no longer dirty.
+
+            // First we should read, which will trigger the action. This _should not_ remove write protection on the memory.
+
+            _tracking.VirtualMemoryEvent(0, 4, false);
+
+            bool dirtyAfterRead = handle.Dirty;
+            Assert.False(dirtyAfterRead); // Not dirtied, as this was a read.
+
+            Assert.AreEqual(readTrackingTriggered, (0UL, 4UL)); // Read action was triggered.
+
+            Assert.AreEqual(MemoryPermission.Read, protection); // Write protection is still present.
+
+            readTrackingTriggered = null;
+
+            // Now, perform a write.
+
+            _tracking.VirtualMemoryEvent(0, 4, true);
+
+            bool dirtyAfterWriteAfterRead = handle.Dirty;
+            Assert.True(dirtyAfterWriteAfterRead); // Should be dirty.
+
+            Assert.AreEqual(MemoryPermission.ReadAndWrite, protection); // All protection is now be removed from the memory.
+
+            Assert.IsNull(readTrackingTriggered); // Read tracking was removed when the action fired, as it can only fire once.
+
+            handle.Dispose();
+        }
     }
 }

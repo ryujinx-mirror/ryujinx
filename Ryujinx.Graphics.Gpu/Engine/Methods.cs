@@ -61,6 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             context.MemoryManager.MemoryUnmapped += _counterCache.MemoryUnmappedHandler;
             context.MemoryManager.MemoryUnmapped += TextureManager.MemoryUnmappedHandler;
+            context.MemoryManager.MemoryUnmapped += BufferManager.MemoryUnmappedHandler;
         }
 
         /// <summary>
@@ -333,7 +334,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     SbDescriptor sbDescriptor = _context.PhysicalMemory.Read<SbDescriptor>(sbDescAddress);
 
-                    BufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
+                    BufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size, sb.Flags);
                 }
             }
         }

@@ -26,6 +26,8 @@ namespace Ryujinx.Graphics.OpenGL
         private TextureCopy _backgroundTextureCopy;
         internal TextureCopy TextureCopy => BackgroundContextWorker.InBackground ? _backgroundTextureCopy : _textureCopy;
 
+        private Sync _sync;
+
         internal ResourcePool ResourcePool { get; }
 
         public string GpuVendor { get; private set; }
@@ -39,6 +41,7 @@ namespace Ryujinx.Graphics.OpenGL
             _window = new Window(this);
             _textureCopy = new TextureCopy(this);
             _backgroundTextureCopy = new TextureCopy(this);
+            _sync = new Sync();
             ResourcePool = new ResourcePool();
         }
 
@@ -108,6 +111,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void PreFrame()
         {
+            _sync.Cleanup();
             ResourcePool.Tick();
         }
 
@@ -164,6 +168,7 @@ namespace Ryujinx.Graphics.OpenGL
             _pipeline.Dispose();
             _window.Dispose();
             _counters.Dispose();
+            _sync.Dispose();
         }
 
         public IProgram LoadProgramBinary(byte[] programBinary)
@@ -178,6 +183,16 @@ namespace Ryujinx.Graphics.OpenGL
             program.Dispose();
 
             return null;
+        }
+
+        public void CreateSync(ulong id)
+        {
+            _sync.Create(id);
+        }
+
+        public void WaitSync(ulong id)
+        {
+            _sync.Wait(id);
         }
     }
 }

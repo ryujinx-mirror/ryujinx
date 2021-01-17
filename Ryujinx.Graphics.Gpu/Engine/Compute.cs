@@ -97,7 +97,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 SbDescriptor sbDescriptor = _context.PhysicalMemory.Read<SbDescriptor>(sbDescAddress);
 
-                BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
+                BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size, sb.Flags);
             }
 
             BufferManager.SetComputeStorageBufferBindings(info.SBuffers);

@@ -123,6 +123,17 @@ namespace Ryujinx.Memory.Tracking
             }
         }
 
+        public void RegisterAction(ulong address, ulong size, RegionSignal action)
+        {
+            int startHandle = (int)((address - Address) / Granularity);
+            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
+
+            for (int i = startHandle; i <= lastHandle; i++)
+            {
+                _handles[i].RegisterAction(action);
+            }
+        }
+
         public void Dispose()
         {
             foreach (var handle in _handles)

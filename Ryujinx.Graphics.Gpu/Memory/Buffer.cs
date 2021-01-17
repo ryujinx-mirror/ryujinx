@@ -1,6 +1,7 @@
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Memory.Range;
+using Ryujinx.Memory.Tracking;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -34,12 +35,28 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public ulong EndAddress => Address + Size;
 
+        /// <summary>
+        /// Ranges of the buffer that have been modified on the GPU.
+        /// Ranges defined here cannot be updated from CPU until a CPU waiting sync point is reached.
+        /// Then, write tracking will signal, wait for GPU sync (generated at the syncpoint) and flush these regions.
+        /// </summary>
+        /// <remarks>
+        /// This is null until at least one modification occurs.
+        /// </remarks>
+        private BufferModifiedRangeList _modifiedRanges = null;
+
         private CpuMultiRegionHandle _memoryTrackingGranular;
+
         private CpuRegionHandle _memoryTracking;
+
+        private readonly RegionSignal _externalFlushDelegate;
+        private readonly Action<ulong, ulong> _loadDelegate;
         private readonly Action<ulong, ulong> _modifiedDelegate;
+
         private int _sequenceNumber;
 
         private bool _useGranular;
+        private bool _syncActionRegistered;
 
         /// <summary>
         /// Creates a new instance of the buffer.
@@ -66,6 +83,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 _memoryTracking = context.PhysicalMemory.BeginTracking(address, size);
             }
 
+            _externalFlushDelegate = new RegionSignal(ExternalFlush);
+            _loadDelegate = new Action<ulong, ulong>(LoadRegion);
             _modifiedDelegate = new Action<ulong, ulong>(RegionModified);
         }
 
@@ -116,10 +135,129 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 if (_memoryTracking.Dirty && _context.SequenceNumber != _sequenceNumber)
                 {
                     _memoryTracking.Reprotect();
-                    _context.Renderer.SetBufferData(Handle, 0, _context.PhysicalMemory.GetSpan(Address, (int)Size));
+
+                    if (_modifiedRanges != null)
+                    {
+                        _modifiedRanges.ExcludeModifiedRegions(Address, Size, _loadDelegate);
+                    }
+                    else
+                    {
+                        _context.Renderer.SetBufferData(Handle, 0, _context.PhysicalMemory.GetSpan(Address, (int)Size));
+                    }
+                    
                     _sequenceNumber = _context.SequenceNumber;
                 }
             }
+        }
+
+        /// <summary>
+        /// Ensure that the modified range list exists.
+        /// </summary>
+        private void EnsureRangeList()
+        {
+            if (_modifiedRanges == null)
+            {
+                _modifiedRanges = new BufferModifiedRangeList(_context);
+            }
+        }
+
+        /// <summary>
+        /// Signal that the given region of the buffer has been modified.
+        /// </summary>
+        /// <param name="address">The start address of the modified region</param>
+        /// <param name="size">The size of the modified region</param>
+        public void SignalModified(ulong address, ulong size)
+        {
+            EnsureRangeList();
+
+            _modifiedRanges.SignalModified(address, size);
+
+            if (!_syncActionRegistered)
+            {
+                _context.RegisterSyncAction(SyncAction);
+                _syncActionRegistered = true;
+            }
+        }
+
+        /// <summary>
+        /// Indicate that mofifications in a given region of this buffer have been overwritten.
+        /// </summary>
+        /// <param name="address">The start address of the region</param>
+        /// <param name="size">The size of the region</param>
+        public void ClearModified(ulong address, ulong size)
+        {
+            if (_modifiedRanges != null)
+            {
+                _modifiedRanges.Clear(address, size);
+            }
+        }
+
+        /// <summary>
+        /// Action to be performed when a syncpoint is reached after modification.
+        /// This will register read/write tracking to flush the buffer from GPU when its memory is used.
+        /// </summary>
+        private void SyncAction()
+        {
+            _syncActionRegistered = false;
+
+            if (_useGranular)
+            {
+                _modifiedRanges.GetRanges(Address, Size, (address, size) =>
+                {
+                    _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
+                    SynchronizeMemory(address, size);
+                });
+            }
+            else
+            {
+                _memoryTracking.RegisterAction(_externalFlushDelegate);
+                SynchronizeMemory(Address, Size);
+            }
+        }
+
+        /// <summary>
+        /// Inherit modified ranges from another buffer.
+        /// </summary>
+        /// <param name="from">The buffer to inherit from</param>
+        public void InheritModifiedRanges(Buffer from)
+        {
+            if (from._modifiedRanges != null)
+            {
+                if (from._syncActionRegistered && !_syncActionRegistered)
+                {
+                    _context.RegisterSyncAction(SyncAction);
+                    _syncActionRegistered = true;
+                }
+
+                EnsureRangeList();
+                _modifiedRanges.InheritRanges(from._modifiedRanges, (ulong address, ulong size) =>
+                {
+                    if (_useGranular)
+                    {
+                        _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
+                    }
+                    else
+                    {
+                        _memoryTracking.RegisterAction(_externalFlushDelegate);
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Determine if a given region of the buffer has been modified, and must be flushed.
+        /// </summary>
+        /// <param name="address">The start address of the region</param>
+        /// <param name="size">The size of the region</param>
+        /// <returns></returns>
+        public bool IsModified(ulong address, ulong size)
+        {
+            if (_modifiedRanges != null)
+            {
+                return _modifiedRanges.HasRange(address, size);
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -141,6 +279,23 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 mSize = maxSize;
             }
 
+            if (_modifiedRanges != null)
+            {
+                _modifiedRanges.ExcludeModifiedRegions(mAddress, mSize, _loadDelegate);
+            }
+            else
+            {
+                LoadRegion(mAddress, mSize);
+            }
+        }
+
+        /// <summary>
+        /// Load a region of the buffer from memory.
+        /// </summary>
+        /// <param name="mAddress">Start address of the modified region</param>
+        /// <param name="mSize">Size of the modified region</param>
+        private void LoadRegion(ulong mAddress, ulong mSize)
+        {
             int offset = (int)(mAddress - Address);
 
             _context.Renderer.SetBufferData(Handle, offset, _context.PhysicalMemory.GetSpan(mAddress, (int)mSize));
@@ -173,14 +328,61 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Align a given address and size region to page boundaries.
+        /// </summary>
+        /// <param name="address">The start address of the region</param>
+        /// <param name="size">The size of the region</param>
+        /// <returns>The page aligned address and size</returns>
+        private static (ulong address, ulong size) PageAlign(ulong address, ulong size)
+        {
+            ulong pageMask = MemoryManager.PageMask;
+            ulong rA = address & ~pageMask;
+            ulong rS = ((address + size + pageMask) & ~pageMask) - rA;
+            return (rA, rS);
+        }
+
+        /// <summary>
+        /// Flush modified ranges of the buffer from another thread.
+        /// This will flush all modifications made before the active SyncNumber was set, and may block to wait for GPU sync.
+        /// </summary>
+        /// <param name="address">Address of the memory action</param>
+        /// <param name="size">Size in bytes</param>
+        public void ExternalFlush(ulong address, ulong size)
+        {
+            _context.Renderer.BackgroundContextAction(() =>
+            {
+                var ranges = _modifiedRanges;
+
+                if (ranges != null)
+                {
+                    (address, size) = PageAlign(address, size);
+                    ranges.WaitForAndGetRanges(address, size, Flush);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Called when part of the memory for this buffer has been unmapped.
+        /// Calls are from non-GPU threads.
+        /// </summary>
+        /// <param name="address">Start address of the unmapped region</param>
+        /// <param name="size">Size of the unmapped region</param>
+        public void Unmapped(ulong address, ulong size)
+        {
+            _modifiedRanges?.Clear(address, size);
+        }
+
+        /// <summary>
         /// Disposes the host buffer.
         /// </summary>
         public void Dispose()
         {
-            _context.Renderer.DeleteBuffer(Handle);
+            _modifiedRanges?.Clear();
 
             _memoryTrackingGranular?.Dispose();
             _memoryTracking?.Dispose();
+
+            _context.Renderer.DeleteBuffer(Handle);
         }
     }
 }

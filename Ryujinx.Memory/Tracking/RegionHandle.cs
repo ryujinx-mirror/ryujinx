@@ -24,6 +24,7 @@ namespace Ryujinx.Memory.Tracking
         private readonly MemoryTracking _tracking;
 
         internal MemoryPermission RequiredPermission => _preAction != null ? MemoryPermission.None : (Dirty ? MemoryPermission.ReadAndWrite : MemoryPermission.Read);
+        internal RegionSignal PreAction => _preAction;
 
         /// <summary>
         /// Create a new region handle. The handle is registered with the given tracking object,

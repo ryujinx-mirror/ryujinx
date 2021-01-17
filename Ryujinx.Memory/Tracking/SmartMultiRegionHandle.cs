@@ -41,6 +41,17 @@ namespace Ryujinx.Memory.Tracking
             Dirty = true;
         }
 
+        public void RegisterAction(RegionSignal action)
+        {
+            foreach (var handle in _handles)
+            {
+                if (handle != null)
+                {
+                    handle?.RegisterAction((address, size) => action(handle.Address, handle.Size));
+                }
+            }
+        }
+
         public void QueryModified(Action<ulong, ulong> modifiedAction)
         {
             if (!Dirty)
@@ -66,14 +77,23 @@ namespace Ryujinx.Memory.Tracking
             ulong size = HandlesToBytes(splitIndex - handleIndex);
 
             // First, the target handle must be removed. Its data can still be used to determine the new handles.
+            RegionSignal signal = handle.PreAction;
             handle.Dispose();
 
             RegionHandle splitLow = _tracking.BeginTracking(address, size);
             splitLow.Parent = this;
+            if (signal != null)
+            {
+                splitLow.RegisterAction(signal);
+            }
             _handles[handleIndex] = splitLow;
 
             RegionHandle splitHigh = _tracking.BeginTracking(address + size, handle.Size - size);
             splitHigh.Parent = this;
+            if (signal != null)
+            {
+                splitHigh.RegisterAction(signal);
+            }
             _handles[splitIndex] = splitHigh;
         }
 

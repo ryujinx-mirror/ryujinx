@@ -22,12 +22,12 @@ namespace Ryujinx.Memory.Tracking
 
         public override void Signal(ulong address, ulong size, bool write)
         {
-            _tracking.ProtectVirtualRegion(this, MemoryPermission.ReadAndWrite); // Remove our protection immedately.
-
             foreach (var handle in Handles)
             {
                 handle.Signal(address, size, write);
             }
+
+            UpdateProtection();
         }
 
         /// <summary>

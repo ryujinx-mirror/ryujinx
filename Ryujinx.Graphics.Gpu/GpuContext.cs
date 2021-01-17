@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
@@ -59,6 +60,18 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         internal int SequenceNumber { get; private set; }
 
+        /// <summary>
+        /// Internal sync number, used to denote points at which host synchronization can be requested.
+        /// </summary>
+        internal ulong SyncNumber { get; private set; }
+
+        /// <summary>
+        /// Actions to be performed when a CPU waiting sync point is triggered.
+        /// If there are more than 0 items when this happens, a host sync object will be generated for the given <see cref="SyncNumber"/>,
+        /// and the SyncNumber will be incremented.
+        /// </summary>
+        internal List<Action> SyncActions { get; }
+
         private readonly Lazy<Capabilities> _caps;
 
         /// <summary>
@@ -87,6 +100,8 @@ namespace Ryujinx.Graphics.Gpu
             _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
 
             HostInitalized = new ManualResetEvent(false);
+
+            SyncActions = new List<Action>();
         }
 
         /// <summary>
@@ -116,6 +131,37 @@ namespace Ryujinx.Graphics.Gpu
         public void SetVmm(Cpu.MemoryManager cpuMemory)
         {
             PhysicalMemory = new PhysicalMemory(cpuMemory);
+        }
+
+        /// <summary>
+        /// Registers an action to be performed the next time a syncpoint is incremented.
+        /// This will also ensure a host sync object is created, and <see cref="SyncNumber"/> is incremented.
+        /// </summary>
+        /// <param name="action">The action to be performed on sync object creation</param>
+        public void RegisterSyncAction(Action action)
+        {
+            SyncActions.Add(action);
+        }
+
+        /// <summary>
+        /// Creates a host sync object if there are any pending sync actions. The actions will then be called.
+        /// If no actions are present, a host sync object is not created.
+        /// </summary>
+        public void CreateHostSyncIfNeeded()
+        {
+            if (SyncActions.Count > 0)
+            {
+                Renderer.CreateSync(SyncNumber);
+
+                SyncNumber++;
+
+                foreach (Action action in SyncActions)
+                {
+                    action();
+                }
+
+                SyncActions.Clear();
+            }
         }
 
         /// <summary>

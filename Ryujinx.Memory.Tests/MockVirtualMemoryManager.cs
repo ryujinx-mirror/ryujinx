@@ -6,6 +6,8 @@ namespace Ryujinx.Memory.Tests
     {
         public bool NoMappings;
 
+        public event Action<ulong, ulong, MemoryPermission> OnProtect;
+
         public MockVirtualMemoryManager(ulong size, int pageSize)
         {
         }
@@ -82,6 +84,7 @@ namespace Ryujinx.Memory.Tests
 
         public void TrackingReprotect(ulong va, ulong size, MemoryPermission protection)
         {
+            OnProtect?.Invoke(va, size, protection);
         }
     }
 }
