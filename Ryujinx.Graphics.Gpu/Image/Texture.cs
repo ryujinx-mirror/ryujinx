@@ -1,7 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Texture.Astc;
 using Ryujinx.Memory.Range;
@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Represents a cached GPU texture.
     /// </summary>
-    class Texture : IRange, IDisposable
+    class Texture : IMultiRangeItem, IDisposable
     {
         // How many updates we need before switching to the byte-by-byte comparison
         // modification check method.
@@ -95,21 +95,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         public event Action<Texture> Disposed;
 
         /// <summary>
-        /// Start address of the texture in guest memory.
+        /// Physical memory ranges where the texture data is located.
         /// </summary>
-        public ulong Address => Info.Address;
-
-        /// <summary>
-        /// End address of the texture in guest memory.
-        /// </summary>
-        public ulong EndAddress => Info.Address + Size;
+        public MultiRange Range { get; private set; }
 
         /// <summary>
         /// Texture size in bytes.
         /// </summary>
         public ulong Size => (ulong)_sizeInfo.TotalSize;
 
-        private CpuRegionHandle _memoryTracking;
+        private GpuRegionHandle _memoryTracking;
 
         private int _referenceCount;
 
@@ -119,6 +114,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="context">GPU context that the texture belongs to</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
+        /// <param name="range">Physical memory ranges where the texture data is located</param>
         /// <param name="firstLayer">The first layer of the texture, or 0 if the texture has no parent</param>
         /// <param name="firstLevel">The first mipmap level of the texture, or 0 if the texture has no parent</param>
         /// <param name="scaleFactor">The floating point scale factor to initialize with</param>
@@ -127,12 +123,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             GpuContext       context,
             TextureInfo      info,
             SizeInfo         sizeInfo,
+            MultiRange       range,
             int              firstLayer,
             int              firstLevel,
             float            scaleFactor,
             TextureScaleMode scaleMode)
         {
-            InitializeTexture(context, info, sizeInfo);
+            InitializeTexture(context, info, sizeInfo, range);
 
             _firstLayer = firstLayer;
             _firstLevel = firstLevel;
@@ -149,13 +146,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="context">GPU context that the texture belongs to</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
+        /// <param name="range">Physical memory ranges where the texture data is located</param>
         /// <param name="scaleMode">The scale mode to initialize with. If scaled, the texture's data is loaded immediately and scaled up</param>
-        public Texture(GpuContext context, TextureInfo info, SizeInfo sizeInfo, TextureScaleMode scaleMode)
+        public Texture(GpuContext context, TextureInfo info, SizeInfo sizeInfo, MultiRange range, TextureScaleMode scaleMode)
         {
             ScaleFactor = 1f; // Texture is first loaded at scale 1x.
             ScaleMode = scaleMode;
 
-            InitializeTexture(context, info, sizeInfo);
+            InitializeTexture(context, info, sizeInfo, range);
         }
 
         /// <summary>
@@ -166,10 +164,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="context">GPU context that the texture belongs to</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
-        private void InitializeTexture(GpuContext context, TextureInfo info, SizeInfo sizeInfo)
+        /// <param name="range">Physical memory ranges where the texture data is located</param>
+        private void InitializeTexture(GpuContext context, TextureInfo info, SizeInfo sizeInfo, MultiRange range)
         {
             _context  = context;
             _sizeInfo = sizeInfo;
+            Range     = range;
 
             SetInfo(info);
 
@@ -186,7 +186,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="withData">True if the texture is to be initialized with data</param>
         public void InitializeData(bool isView, bool withData = false)
         {
-            _memoryTracking = _context.PhysicalMemory.BeginTracking(Address, Size);
+            _memoryTracking = _context.PhysicalMemory.BeginTracking(Range);
 
             if (withData)
             {
@@ -229,15 +229,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="info">Child texture information</param>
         /// <param name="sizeInfo">Child texture size information</param>
+        /// <param name="range">Physical memory ranges where the texture data is located</param>
         /// <param name="firstLayer">Start layer of the child texture on the parent texture</param>
         /// <param name="firstLevel">Start mipmap level of the child texture on the parent texture</param>
         /// <returns>The child texture</returns>
-        public Texture CreateView(TextureInfo info, SizeInfo sizeInfo, int firstLayer, int firstLevel)
+        public Texture CreateView(TextureInfo info, SizeInfo sizeInfo, MultiRange range, int firstLayer, int firstLevel)
         {
             Texture texture = new Texture(
                 _context,
                 info,
                 sizeInfo,
+                range,
                 _firstLayer + firstLayer,
                 _firstLevel + firstLevel,
                 ScaleFactor,
@@ -367,7 +369,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             ChangedSize = true;
 
             SetInfo(new TextureInfo(
-                Info.Address,
+                Info.GpuAddress,
                 width,
                 height,
                 depthOrLayers,
@@ -554,7 +556,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _memoryTracking?.Reprotect();
 
-            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, (int)Size);
+            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Range);
 
             IsModified = false;
 
@@ -586,6 +588,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             _hasData = true;
         }
 
+        /// <summary>
+        /// Uploads new texture data to the host GPU.
+        /// </summary>
+        /// <param name="data">New data</param>
         public void SetData(ReadOnlySpan<byte> data)
         {
             BlacklistScale();
@@ -653,7 +659,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     string texInfo = $"{Info.Target} {Info.FormatInfo.Format} {Info.Width}x{Info.Height}x{Info.DepthOrLayers} levels {Info.Levels}";
 
-                    Logger.Debug?.Print(LogClass.Gpu, $"Invalid ASTC texture at 0x{Info.Address:X} ({texInfo}).");
+                    Logger.Debug?.Print(LogClass.Gpu, $"Invalid ASTC texture at 0x{Info.GpuAddress:X} ({texInfo}).");
                 }
 
                 data = decoded;
@@ -689,14 +695,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (tracked)
             {
-                _context.PhysicalMemory.Write(Address, GetTextureDataFromGpu(tracked));
+                _context.PhysicalMemory.Write(Range, GetTextureDataFromGpu(tracked));
             }
             else
             {
-                _context.PhysicalMemory.WriteUntracked(Address, GetTextureDataFromGpu(tracked));
+                _context.PhysicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(tracked));
             }
         }
-
 
         /// <summary>
         /// Flushes the texture data, to be called from an external thread.
@@ -725,7 +730,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     texture = _flushHostTexture = GetScaledHostTexture(1f, _flushHostTexture);
                 }
 
-                _context.PhysicalMemory.WriteUntracked(Address, GetTextureDataFromGpu(false, texture));
+                _context.PhysicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(false, texture));
             });
         }
 
@@ -847,25 +852,23 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return TextureMatchQuality.NoMatch;
             }
 
-            return Info.Address == info.Address && Info.Levels == info.Levels ? matchQuality : TextureMatchQuality.NoMatch;
+            return Info.Levels == info.Levels ? matchQuality : TextureMatchQuality.NoMatch;
         }
 
         /// <summary>
         /// Check if it's possible to create a view, with the given parameters, from this texture.
         /// </summary>
         /// <param name="info">Texture view information</param>
-        /// <param name="size">Texture view size</param>
+        /// <param name="range">Texture view physical memory ranges</param>
         /// <param name="firstLayer">Texture view initial layer on this texture</param>
         /// <param name="firstLevel">Texture view first mipmap level on this texture</param>
         /// <returns>The level of compatiblilty a view with the given parameters created from this texture has</returns>
-        public TextureViewCompatibility IsViewCompatible(
-            TextureInfo info,
-            ulong       size,
-            out int     firstLayer,
-            out int     firstLevel)
+        public TextureViewCompatibility IsViewCompatible(TextureInfo info, MultiRange range, out int firstLayer, out int firstLevel)
         {
+            int offset = Range.FindOffset(range);
+
             // Out of range.
-            if (info.Address < Address || info.Address + size > EndAddress)
+            if (offset < 0)
             {
                 firstLayer = 0;
                 firstLevel = 0;
@@ -873,9 +876,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return TextureViewCompatibility.Incompatible;
             }
 
-            int offset = (int)(info.Address - Address);
-
-            if (!_sizeInfo.FindView(offset, (int)size, out firstLayer, out firstLevel))
+            if (!_sizeInfo.FindView(offset, out firstLayer, out firstLevel))
             {
                 return TextureViewCompatibility.Incompatible;
             }
@@ -1046,17 +1047,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if the texture overlaps with a memory range.
-        /// </summary>
-        /// <param name="address">Start address of the range</param>
-        /// <param name="size">Size of the range</param>
-        /// <returns>True if the texture overlaps with the range, false otherwise</returns>
-        public bool OverlapsWith(ulong address, ulong size)
-        {
-            return Address < address + size && address < EndAddress;
-        }
-
-        /// <summary>
         /// Determine if any of our child textures are compaible as views of the given texture.
         /// </summary>
         /// <param name="texture">The texture to check against</param>
@@ -1070,7 +1060,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             foreach (Texture view in _views)
             {
-                if (texture.IsViewCompatible(view.Info, view.Size, out int _, out int _) != TextureViewCompatibility.Incompatible)
+                if (texture.IsViewCompatible(view.Info, view.Range, out _, out _) != TextureViewCompatibility.Incompatible)
                 {
                     return true;
                 }
@@ -1153,7 +1143,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             IsModified = false; // We shouldn't flush this texture, as its memory is no longer mapped.
 
-            CpuRegionHandle tracking = _memoryTracking;
+            var tracking = _memoryTracking;
             tracking?.Reprotect();
             tracking?.RegisterAction(null);
         }

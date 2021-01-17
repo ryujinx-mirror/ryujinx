@@ -303,7 +303,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accomodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
-                    _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Address, texture.Size, _isCompute);
+                    _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, _isCompute);
                 }
 
                 Sampler sampler = _samplerPool.Get(samplerId);
@@ -354,7 +354,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accomodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
-                    _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Address, texture.Size, _isCompute);
+                    _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, _isCompute);
                 }
 
                 if (_imageState[stageIndex][index].Texture != hostTexture || _rebind)

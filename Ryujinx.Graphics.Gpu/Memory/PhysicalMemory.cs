@@ -1,6 +1,7 @@
 using Ryujinx.Cpu;
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Memory;
+using Ryujinx.Memory.Range;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -39,6 +40,37 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets a span of data from the application process.
+        /// </summary>
+        /// <param name="range">Ranges of physical memory where the data is located</param>
+        /// <param name="tracked">True if read tracking is triggered on the span</param>
+        /// <returns>A read only span of the data at the specified memory location</returns>
+        public ReadOnlySpan<byte> GetSpan(MultiRange range, bool tracked = false)
+        {
+            if (range.Count == 1)
+            {
+                var singleRange = range.GetSubRange(0);
+                return _cpuMemory.GetSpan(singleRange.Address, (int)singleRange.Size, tracked);
+            }
+            else
+            {
+                Span<byte> data = new byte[range.GetSize()];
+
+                int offset = 0;
+
+                for (int i = 0; i < range.Count; i++)
+                {
+                    var currentRange = range.GetSubRange(i);
+                    int size = (int)currentRange.Size;
+                    _cpuMemory.GetSpan(currentRange.Address, size, tracked).CopyTo(data.Slice(offset, size));
+                    offset += size;
+                }
+
+                return data;
+            }
+        }
+
+        /// <summary>
         /// Gets a writable region from the application process.
         /// </summary>
         /// <param name="address">Start address of the range</param>
@@ -71,6 +103,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Writes data to the application process.
+        /// </summary>
+        /// <param name="range">Ranges of physical memory where the data is located</param>
+        /// <param name="data">Data to be written</param>
+        public void Write(MultiRange range, ReadOnlySpan<byte> data)
+        {
+            WriteImpl(range, data, _cpuMemory.Write);
+        }
+
+        /// <summary>
         /// Writes data to the application process, without any tracking.
         /// </summary>
         /// <param name="address">Address to write into</param>
@@ -78,6 +120,45 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public void WriteUntracked(ulong address, ReadOnlySpan<byte> data)
         {
             _cpuMemory.WriteUntracked(address, data);
+        }
+
+        /// <summary>
+        /// Writes data to the application process, without any tracking.
+        /// </summary>
+        /// <param name="range">Ranges of physical memory where the data is located</param>
+        /// <param name="data">Data to be written</param>
+        public void WriteUntracked(MultiRange range, ReadOnlySpan<byte> data)
+        {
+            WriteImpl(range, data, _cpuMemory.WriteUntracked);
+        }
+
+        private delegate void WriteCallback(ulong address, ReadOnlySpan<byte> data);
+
+        /// <summary>
+        /// Writes data to the application process, using the supplied callback method.
+        /// </summary>
+        /// <param name="range">Ranges of physical memory where the data is located</param>
+        /// <param name="data">Data to be written</param>
+        /// <param name="writeCallback">Callback method that will perform the write</param>
+        private void WriteImpl(MultiRange range, ReadOnlySpan<byte> data, WriteCallback writeCallback)
+        {
+            if (range.Count == 1)
+            {
+                var singleRange = range.GetSubRange(0);
+                writeCallback(singleRange.Address, data);
+            }
+            else
+            {
+                int offset = 0;
+
+                for (int i = 0; i < range.Count; i++)
+                {
+                    var currentRange = range.GetSubRange(i);
+                    int size = (int)currentRange.Size;
+                    writeCallback(currentRange.Address, data.Slice(offset, size));
+                    offset += size;
+                }
+            }
         }
 
         /// <summary>
@@ -89,6 +170,24 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public CpuRegionHandle BeginTracking(ulong address, ulong size)
         {
             return _cpuMemory.BeginTracking(address, size);
+        }
+
+        /// <summary>
+        /// Obtains a memory tracking handle for the given virtual region. This should be disposed when finished with.
+        /// </summary>
+        /// <param name="range">Ranges of physical memory where the data is located</param>
+        /// <returns>The memory tracking handle</returns>
+        public GpuRegionHandle BeginTracking(MultiRange range)
+        {
+            var cpuRegionHandles = new CpuRegionHandle[range.Count];
+
+            for (int i = 0; i < range.Count; i++)
+            {
+                var currentRange = range.GetSubRange(i);
+                cpuRegionHandles[i] = _cpuMemory.BeginTracking(currentRange.Address, currentRange.Size);
+            }
+
+            return new GpuRegionHandle(cpuRegionHandles);
         }
 
         /// <summary>

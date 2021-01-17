@@ -4,16 +4,16 @@ namespace Ryujinx.Memory
 {
     public sealed class WritableRegion : IDisposable
     {
-        private readonly IVirtualMemoryManager _mm;
+        private readonly IWritableBlock _block;
         private readonly ulong _va;
 
-        private bool NeedsWriteback => _mm != null;
+        private bool NeedsWriteback => _block != null;
 
         public Memory<byte> Memory { get; }
 
-        public WritableRegion(IVirtualMemoryManager mm, ulong va, Memory<byte> memory)
+        public WritableRegion(IWritableBlock block, ulong va, Memory<byte> memory)
         {
-            _mm = mm;
+            _block = block;
             _va = va;
             Memory = memory;
         }
@@ -22,7 +22,7 @@ namespace Ryujinx.Memory
         {
             if (NeedsWriteback)
             {
-                _mm.Write(_va, Memory.Span);
+                _block.Write(_va, Memory.Span);
             }
         }
     }

@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Texture
             return _mipOffsets[level];
         }
 
-        public bool FindView(int offset, int size, out int firstLayer, out int firstLevel)
+        public bool FindView(int offset, out int firstLayer, out int firstLevel)
         {
             int index = Array.BinarySearch(_allOffsets, offset);
 

@@ -1,5 +1,4 @@
-﻿using Ryujinx.Common;
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -9,7 +8,7 @@ namespace Ryujinx.Memory
     /// Represents a address space manager.
     /// Supports virtual memory region mapping, address translation and read/write access to mapped regions.
     /// </summary>
-    public sealed class AddressSpaceManager : IVirtualMemoryManager
+    public sealed class AddressSpaceManager : IVirtualMemoryManager, IWritableBlock
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;
