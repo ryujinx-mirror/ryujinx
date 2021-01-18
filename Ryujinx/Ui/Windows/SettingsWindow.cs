@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
@@ -91,6 +92,8 @@ namespace Ryujinx.Ui.Windows
 
         private SettingsWindow(MainWindow parent, Builder builder, VirtualFileSystem virtualFileSystem, HLE.FileSystem.Content.ContentManager contentManager) : base(builder.GetObject("_settingsWin").Handle)
         {
+            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+
             _parent = parent;
 
             builder.Autoconnect(this);

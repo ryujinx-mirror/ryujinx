@@ -22,6 +22,7 @@ using Ryujinx.Ui.Windows;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,6 +111,7 @@ namespace Ryujinx.Ui
             DefaultWidth  = monitorWidth  < 1280 ? monitorWidth  : 1280;
             DefaultHeight = monitorHeight < 760  ? monitorHeight : 760;
 
+            Icon  = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
             Title = $"Ryujinx {Program.Version}";
 
             // Hide emulation context status bar.

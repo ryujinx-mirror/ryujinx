@@ -20,6 +20,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
@@ -85,6 +86,7 @@ namespace Ryujinx.Ui.Widgets
                 using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
                 {
                     Title          = "Ryujinx",
+                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png"),
                     Text           = $"There is no savedata for {titleName} [{titleId:x16}]",
                     SecondaryText  = "Would you like to create savedata for this game?",
                     WindowPosition = WindowPosition.Center
@@ -194,6 +196,7 @@ namespace Ryujinx.Ui.Widgets
                         _dialog = new MessageDialog(null, DialogFlags.DestroyWithParent, MessageType.Info, ButtonsType.Cancel, null)
                         {
                             Title          = "Ryujinx - NCA Section Extractor",
+                            Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png"),
                             SecondaryText  = $"Extracting {ncaSectionType} section from {System.IO.Path.GetFileName(_titleFilePath)}...",
                             WindowPosition = WindowPosition.Center
                         };
@@ -310,6 +313,7 @@ namespace Ryujinx.Ui.Widgets
                                     MessageDialog dialog = new MessageDialog(null, DialogFlags.DestroyWithParent, MessageType.Info, ButtonsType.Ok, null)
                                     {
                                         Title          = "Ryujinx - NCA Section Extractor",
+                                        Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png"),
                                         SecondaryText  = "Extraction has completed successfully.",
                                         WindowPosition = WindowPosition.Center
                                     };

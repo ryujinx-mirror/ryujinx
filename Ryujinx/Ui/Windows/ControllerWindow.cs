@@ -94,6 +94,8 @@ namespace Ryujinx.Ui.Windows
 
         private ControllerWindow(Builder builder, PlayerIndex controllerId) : base(builder.GetObject("_controllerWin").Handle)
         {
+            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+
             builder.Autoconnect(this);
 
             _playerIndex = controllerId;

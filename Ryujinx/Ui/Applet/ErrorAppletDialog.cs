@@ -1,4 +1,5 @@
 ﻿using Gtk;
+using System.Reflection;
 
 namespace Ryujinx.Ui.Applet
 {
@@ -6,6 +7,8 @@ namespace Ryujinx.Ui.Applet
     {
         public ErrorAppletDialog(Window parentWindow, DialogFlags dialogFlags, MessageType messageType, string[] buttons) : base(parentWindow, dialogFlags, messageType, ButtonsType.None, null)
         {
+            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+
             int responseId = 0;
 
             if (buttons != null)
