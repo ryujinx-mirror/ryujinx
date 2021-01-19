@@ -136,7 +136,7 @@ namespace Ryujinx.Memory
         /// <exception cref="InvalidMemoryRegionException">Throw when <paramref name="srcOffset"/>, <paramref name="dstOffset"/> or <paramref name="size"/> is out of range</exception>
         public void Copy(ulong dstOffset, ulong srcOffset, ulong size)
         {
-            const int MaxChunkSize = 1 << 30;
+            const int MaxChunkSize = 1 << 24;
 
             for (ulong offset = 0; offset < size; offset += MaxChunkSize)
             {
@@ -155,7 +155,7 @@ namespace Ryujinx.Memory
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
         public void ZeroFill(ulong offset, ulong size)
         {
-            const int MaxChunkSize = 1 << 30;
+            const int MaxChunkSize = 1 << 24;
 
             for (ulong subOffset = 0; subOffset < size; subOffset += MaxChunkSize)
             {

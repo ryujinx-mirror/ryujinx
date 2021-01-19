@@ -15,7 +15,7 @@ namespace Ryujinx.Memory
 
         void Fill(ulong va, ulong size, byte value)
         {
-            const int MaxChunkSize = 1 << 30;
+            const int MaxChunkSize = 1 << 24;
 
             for (ulong subOffset = 0; subOffset < size; subOffset += MaxChunkSize)
             {
