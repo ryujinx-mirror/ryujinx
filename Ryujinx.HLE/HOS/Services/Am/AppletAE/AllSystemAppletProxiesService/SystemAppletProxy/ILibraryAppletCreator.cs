@@ -26,7 +26,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             long size = context.RequestData.ReadInt64();
 
+            if (size <= 0)
+            {
+                return ResultCode.ObjectInvalid;
+            }
+
             MakeObject(context, new IStorage(new byte[size]));
+
+            // NOTE: Returns ResultCode.MemoryAllocationFailed if IStorage is null, it doesn't occur in our case.
 
             return ResultCode.Success;
         }
@@ -35,20 +42,44 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateTransferMemoryStorage(b8, u64, handle<copy>) -> object<nn::am::service::IStorage>
         public ResultCode CreateTransferMemoryStorage(ServiceCtx context)
         {
-            bool unknown = context.RequestData.ReadBoolean();
-            long size    = context.RequestData.ReadInt64();
-            int  handle  = context.Request.HandleDesc.ToCopy[0];
+            bool isReadOnly = context.RequestData.ReadBoolean();
+            long size       = context.RequestData.ReadInt64();
+            int  handle     = context.Request.HandleDesc.ToCopy[0];
 
             KTransferMemory transferMem = context.Process.HandleTable.GetObject<KTransferMemory>(handle);
 
-            if (transferMem == null)
+            if (size <= 0)
             {
-                Logger.Warning?.Print(LogClass.ServiceAm, $"Invalid TransferMemory Handle: {handle:X}");
-
-                return ResultCode.Success; // TODO: Find correct error code
+                return ResultCode.ObjectInvalid;
             }
 
-            var data = new byte[transferMem.Size];
+            byte[] data = new byte[transferMem.Size];
+
+            transferMem.Creator.CpuMemory.Read(transferMem.Address, data);
+
+            context.Device.System.KernelContext.Syscall.CloseHandle(handle);
+
+            MakeObject(context, new IStorage(data, isReadOnly));
+
+            return ResultCode.Success;
+        }
+
+        [Command(12)] // 2.0.0+
+        // CreateHandleStorage(u64, handle<copy>) -> object<nn::am::service::IStorage>
+        public ResultCode CreateHandleStorage(ServiceCtx context)
+        {
+            long size   = context.RequestData.ReadInt64();
+            int  handle = context.Request.HandleDesc.ToCopy[0];
+
+            KTransferMemory transferMem = context.Process.HandleTable.GetObject<KTransferMemory>(handle);
+
+            if (size <= 0)
+            {
+                return ResultCode.ObjectInvalid;
+            }
+
+            byte[] data = new byte[transferMem.Size];
+
             transferMem.Creator.CpuMemory.Read(transferMem.Address, data);
 
             context.Device.System.KernelContext.Syscall.CloseHandle(handle);

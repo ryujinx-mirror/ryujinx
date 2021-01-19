@@ -24,6 +24,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // Write(u64, buffer<bytes, 0x21>)
         public ResultCode Write(ServiceCtx context)
         {
+            if (_storage.IsReadOnly)
+            {
+                return ResultCode.ObjectInvalid;
+            }
+
             long writePosition = context.RequestData.ReadInt64();
 
             if (writePosition > _storage.Data.Length)
