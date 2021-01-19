@@ -223,7 +223,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 layerSize = sizeInfo.LayerSize;
 
-                if (minLod != 0)
+                if (minLod != 0 && minLod < levels)
                 {
                     // If the base level is not zero, we additionally add the mip level offset
                     // to the address, this allows the texture manager to find the base level from the
