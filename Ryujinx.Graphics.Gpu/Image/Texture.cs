@@ -646,7 +646,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // - BC4/BC5 is not supported on 3D textures.
             if (!_context.Capabilities.SupportsAstcCompression && Info.FormatInfo.Format.IsAstc())
             {
-                if (!AstcDecoder.TryDecodeToRgba8(
+                if (!AstcDecoder.TryDecodeToRgba8P(
                     data.ToArray(),
                     Info.FormatInfo.BlockWidth,
                     Info.FormatInfo.BlockHeight,
