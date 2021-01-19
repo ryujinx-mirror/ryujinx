@@ -347,19 +347,17 @@ namespace ARMeilleure.Instructions
 
         public static void Faddp_S(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
             if (Optimizations.FastFP && Optimizations.UseSse3)
             {
-                if (sizeF == 0)
+                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+                if ((op.Size & 1) == 0)
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Haddps, GetVec(op.Rn), GetVec(op.Rn));
 
                     context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
                 }
-                else /* if (sizeF == 1) */
+                else /* if ((op.Size & 1) == 1) */
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Haddpd, GetVec(op.Rn), GetVec(op.Rn));
 
@@ -368,14 +366,10 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
-
-                Operand ne0 = context.VectorExtract(type, GetVec(op.Rn), 0);
-                Operand ne1 = context.VectorExtract(type, GetVec(op.Rn), 1);
-
-                Operand res = EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd), ne0, ne1);
-
-                context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+                EmitScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd), op1, op2);
+                });
             }
         }
 
@@ -552,6 +546,24 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fmaxnmp_S(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2ScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: true, scalar: true, op1, op2);
+                });
+            }
+            else
+            {
+                EmitScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMaxNum), op1, op2);
+                });
+            }
+        }
+
         public static void Fmaxnmp_V(ArmEmitterContext context)
         {
             if (Optimizations.FastFP && Optimizations.UseSse41)
@@ -702,6 +714,24 @@ namespace ARMeilleure.Instructions
             else
             {
                 EmitVectorBinaryOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMinNum), op1, op2);
+                });
+            }
+        }
+
+        public static void Fminnmp_S(ArmEmitterContext context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2ScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41MaxMinNumOpF(context, isMaxNum: false, scalar: true, op1, op2);
+                });
+            }
+            else
+            {
+                EmitScalarPairwiseOpF(context, (op1, op2) =>
                 {
                     return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMinNum), op1, op2);
                 });

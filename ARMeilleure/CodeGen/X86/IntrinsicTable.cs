@@ -119,6 +119,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Popcnt,       new IntrinsicInfo(X86Instruction.Popcnt,       IntrinsicType.PopCount));
             Add(Intrinsic.X86Por,          new IntrinsicInfo(X86Instruction.Por,          IntrinsicType.Binary));
             Add(Intrinsic.X86Pshufb,       new IntrinsicInfo(X86Instruction.Pshufb,       IntrinsicType.Binary));
+            Add(Intrinsic.X86Pshufd,       new IntrinsicInfo(X86Instruction.Pshufd,       IntrinsicType.BinaryImm));
             Add(Intrinsic.X86Pslld,        new IntrinsicInfo(X86Instruction.Pslld,        IntrinsicType.Binary));
             Add(Intrinsic.X86Pslldq,       new IntrinsicInfo(X86Instruction.Pslldq,       IntrinsicType.Binary));
             Add(Intrinsic.X86Psllq,        new IntrinsicInfo(X86Instruction.Psllq,        IntrinsicType.Binary));

@@ -108,6 +108,7 @@ namespace ARMeilleure.IntermediateRepresentation
         X86Popcnt,
         X86Por,
         X86Pshufb,
+        X86Pshufd,
         X86Pslld,
         X86Pslldq,
         X86Psllq,

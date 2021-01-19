@@ -1118,6 +1118,49 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
         }
 
+        public static void EmitScalarPairwiseOpF(ArmEmitterContext context, Func2I emit)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            OperandType type = (op.Size & 1) != 0 ? OperandType.FP64 : OperandType.FP32;
+
+            Operand ne0 = context.VectorExtract(type, GetVec(op.Rn), 0);
+            Operand ne1 = context.VectorExtract(type, GetVec(op.Rn), 1);
+
+            Operand res = context.VectorInsert(context.VectorZero(), emit(ne0, ne1), 0);
+
+            context.Copy(GetVec(op.Rd), res);
+        }
+
+        public static void EmitSse2ScalarPairwiseOpF(ArmEmitterContext context, Func2I emit)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            Operand n = GetVec(op.Rn);
+
+            Operand op0, op1;
+
+            if ((op.Size & 1) == 0)
+            {
+                const int sm0 = 2 << 6 | 2 << 4 | 2 << 2 | 0 << 0;
+                const int sm1 = 2 << 6 | 2 << 4 | 2 << 2 | 1 << 0;
+
+                Operand zeroN = context.VectorZeroUpper64(n);
+
+                op0 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(sm0));
+                op1 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(sm1));
+            }
+            else /* if ((op.Size & 1) == 1) */
+            {
+                Operand zero = context.VectorZero();
+
+                op0 = context.AddIntrinsic(Intrinsic.X86Movlhps, n, zero);
+                op1 = context.AddIntrinsic(Intrinsic.X86Movhlps, zero, n);
+            }
+
+            context.Copy(GetVec(op.Rd), emit(op0, op1));
+        }
+
         public static void EmitVectorPairwiseOpF(ArmEmitterContext context, Func2I emit)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
