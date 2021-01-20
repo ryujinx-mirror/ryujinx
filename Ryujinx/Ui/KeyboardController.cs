@@ -47,7 +47,7 @@ namespace Ryujinx.Ui
             if (keyboard[(Key)_config.LeftJoycon.ButtonL])     buttons |= ControllerKeys.L;
             if (keyboard[(Key)_config.LeftJoycon.ButtonZl])    buttons |= ControllerKeys.Zl;
             if (keyboard[(Key)_config.LeftJoycon.ButtonSl])    buttons |= ControllerKeys.SlLeft;
-            if (keyboard[(Key)_config.LeftJoycon.ButtonSr])    buttons |= ControllerKeys.SlRight;
+            if (keyboard[(Key)_config.LeftJoycon.ButtonSr])    buttons |= ControllerKeys.SrLeft;
             
             if (keyboard[(Key)_config.RightJoycon.StickButton]) buttons |= ControllerKeys.RStick;
             if (keyboard[(Key)_config.RightJoycon.ButtonA])     buttons |= ControllerKeys.A;
@@ -57,7 +57,7 @@ namespace Ryujinx.Ui
             if (keyboard[(Key)_config.RightJoycon.ButtonPlus])  buttons |= ControllerKeys.Plus;
             if (keyboard[(Key)_config.RightJoycon.ButtonR])     buttons |= ControllerKeys.R;
             if (keyboard[(Key)_config.RightJoycon.ButtonZr])    buttons |= ControllerKeys.Zr;
-            if (keyboard[(Key)_config.RightJoycon.ButtonSl])    buttons |= ControllerKeys.SrLeft;
+            if (keyboard[(Key)_config.RightJoycon.ButtonSl])    buttons |= ControllerKeys.SlRight;
             if (keyboard[(Key)_config.RightJoycon.ButtonSr])    buttons |= ControllerKeys.SrRight;
 
             return buttons;
