@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateTransferMemoryStorage(b8, u64, handle<copy>) -> object<nn::am::service::IStorage>
         public ResultCode CreateTransferMemoryStorage(ServiceCtx context)
         {
-            bool isReadOnly = (context.RequestData.ReadInt64() & 1) != 0;
+            bool isReadOnly = (context.RequestData.ReadInt64() & 1) == 0;
             long size       = context.RequestData.ReadInt64();
             int  handle     = context.Request.HandleDesc.ToCopy[0];
 
