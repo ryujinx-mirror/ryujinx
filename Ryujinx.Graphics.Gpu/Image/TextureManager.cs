@@ -685,13 +685,27 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Texture overlap = _textureOverlaps[index];
 
-                bool rangeMatches = range != null ? overlap.Range.Equals(range.Value) : overlap.Info.GpuAddress == info.GpuAddress;
-                if (!rangeMatches)
-                {
-                    continue;
-                }
-
                 TextureMatchQuality matchQuality = overlap.IsExactMatch(info, flags);
+
+                if (matchQuality != TextureMatchQuality.NoMatch)
+                {
+                    // If the parameters match, we need to make sure the texture is mapped to the same memory regions.
+
+                    // If a range of memory was supplied, just check if the ranges match.
+                    if (range != null && !overlap.Range.Equals(range.Value))
+                    {
+                        continue;
+                    }
+
+                    // If no range was supplied, we can check if the GPU virtual address match. If they do,
+                    // we know the textures are located at the same memory region.
+                    // If they don't, it may still be mapped to the same physical region, so we
+                    // do a more expensive check to tell if they are mapped into the same physical regions.
+                    if (overlap.Info.GpuAddress != info.GpuAddress && !_context.MemoryManager.CompareRange(overlap.Range, info.GpuAddress))
+                    {
+                        continue;
+                    }
+                }
 
                 if (matchQuality == TextureMatchQuality.Perfect)
                 {
