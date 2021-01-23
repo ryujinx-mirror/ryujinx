@@ -183,11 +183,10 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         {
             int i = namePosition;
 
-            char c = name[i];
+            char c;
 
-            while (c != '\0' && !char.IsDigit(c) && c != ',' && c != '-' && c != '+')
+            while ((c = name[i]) != '\0' && !char.IsDigit(c) && c != ',' && c != '-' && c != '+')
             {
-                c = name[i];
                 i++;
             }
 
