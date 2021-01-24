@@ -591,7 +591,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 if (bounds.Address != 0)
                 {
-                    sRanges[bindingInfo.Binding] = GetBufferRange(bounds.Address, bounds.Size, bounds.Flags.HasFlag(BufferUsageFlags.Write));
+                    // The storage buffer size is not reliable (it might be lower than the actual size),
+                    // so we bind the entire buffer to allow otherwise out of range accesses to work.
+                    sRanges[bindingInfo.Binding] = GetBufferRangeTillEnd(
+                        bounds.Address,
+                        bounds.Size,
+                        bounds.Flags.HasFlag(BufferUsageFlags.Write));
                 }
             }
 
@@ -764,7 +769,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     if (bounds.Address != 0)
                     {
-                        ranges[bindingInfo.Binding] = GetBufferRange(bounds.Address, bounds.Size, bounds.Flags.HasFlag(BufferUsageFlags.Write));
+                        ranges[bindingInfo.Binding] = isStorage
+                            ? GetBufferRangeTillEnd(bounds.Address, bounds.Size, bounds.Flags.HasFlag(BufferUsageFlags.Write))
+                            : GetBufferRange(bounds.Address, bounds.Size, bounds.Flags.HasFlag(BufferUsageFlags.Write));
                     }
                 }
             }
@@ -893,6 +900,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _context.Renderer.Pipeline.ClearBuffer(buffer.Handle, offset, (int)size, value);
 
             buffer.SignalModified(address, size);
+        }
+
+        /// <summary>
+        /// Gets a buffer sub-range starting at a given memory address.
+        /// </summary>
+        /// <param name="address">Start address of the memory range</param>
+        /// <param name="size">Size in bytes of the memory range</param>
+        /// <param name="write">Whether the buffer will be written to by this use</param>
+        /// <returns>The buffer sub-range starting at the given memory address</returns>
+        private BufferRange GetBufferRangeTillEnd(ulong address, ulong size, bool write = false)
+        {
+            return GetBuffer(address, size, write).GetRange(address);
         }
 
         /// <summary>

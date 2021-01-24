@@ -89,6 +89,21 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets a sub-range from the buffer, from a start address till the end of the buffer.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to bind and use sub-ranges of the buffer on the host API.
+        /// </remarks>
+        /// <param name="address">Start address of the sub-range, must be greater than or equal to the buffer address</param>
+        /// <returns>The buffer sub-range</returns>
+        public BufferRange GetRange(ulong address)
+        {
+            ulong offset = address - Address;
+
+            return new BufferRange(Handle, (int)offset, (int)(Size - offset));
+        }
+
+        /// <summary>
         /// Gets a sub-range from the buffer.
         /// </summary>
         /// <remarks>
