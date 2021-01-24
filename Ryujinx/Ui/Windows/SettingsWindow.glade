@@ -1299,6 +1299,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
+                                        <property name="tooltip-text" translatable="yes">Change System Time</property>
                                         <property name="halign">end</property>
                                         <property name="label" translatable="yes">System Time:</property>
                                       </object>
@@ -1509,7 +1510,7 @@
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Change System Region</property>
+                                    <property name="tooltip-text" translatable="yes">Change Audio Backend</property>
                                     <property name="halign">end</property>
                                     <property name="margin-right">5</property>
                                     <property name="label" translatable="yes">Audio Backend: </property>
