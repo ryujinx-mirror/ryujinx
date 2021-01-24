@@ -210,6 +210,11 @@ namespace ARMeilleure.Instructions
 
         public static Operand X86GetElements(ArmEmitterContext context, long e1, long e0)
         {
+            return X86GetElements(context, (ulong)e1, (ulong)e0);
+        }
+
+        public static Operand X86GetElements(ArmEmitterContext context, ulong e1, ulong e0)
+        {
             Operand vector0 = context.VectorCreateScalar(Const(e0));
             Operand vector1 = context.VectorCreateScalar(Const(e1));
 
