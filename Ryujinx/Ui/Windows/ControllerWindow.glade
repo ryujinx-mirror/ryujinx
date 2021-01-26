@@ -48,8 +48,8 @@
     <property name="title" translatable="yes">Ryujinx - Controller Settings</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
-    <property name="default_width">1100</property>
-    <property name="default_height">600</property>
+    <property name="default_width">1150</property>
+    <property name="default_height">690</property>
     <child type="titlebar">
       <placeholder/>
     </child>
