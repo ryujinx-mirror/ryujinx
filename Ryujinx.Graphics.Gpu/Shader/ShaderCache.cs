@@ -759,7 +759,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 byte[] code = _context.MemoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
 
-                _dumper.Dump(code, compute: false, out string fullPath, out string codePath);
+                _dumper.Dump(code, translatorContext.Stage == ShaderStage.Compute, out string fullPath, out string codePath);
 
                 ShaderProgram program = translatorContext.Translate(out ShaderProgramInfo shaderProgramInfo);
 
