@@ -144,9 +144,10 @@ namespace ARMeilleure.Decoders
             SetA64("101100100xxxxxxxxxxxxxxxxxxxxxxx", InstName.Orr,             InstEmit.Orr,             OpCodeAluImm.Create);
             SetA64("00101010xx0xxxxx0xxxxxxxxxxxxxxx", InstName.Orr,             InstEmit.Orr,             OpCodeAluRs.Create);
             SetA64("10101010xx0xxxxxxxxxxxxxxxxxxxxx", InstName.Orr,             InstEmit.Orr,             OpCodeAluRs.Create);
-            SetA64("1111100110xxxxxxxxxxxxxxxxxxxxxx", InstName.Pfrm,            InstEmit.Pfrm,            OpCodeMemImm.Create);
-            SetA64("11111000100xxxxxxxxx00xxxxxxxxxx", InstName.Pfrm,            InstEmit.Pfrm,            OpCodeMemImm.Create);
-            SetA64("11011000xxxxxxxxxxxxxxxxxxxxxxxx", InstName.Pfrm,            InstEmit.Pfrm,            OpCodeMemLit.Create);
+            SetA64("1111100110xxxxxxxxxxxxxxxxxxxxxx", InstName.Prfm,            InstEmit.Prfm,            OpCodeMemImm.Create); // immediate
+            SetA64("11111000100xxxxxxxxx00xxxxxxxxxx", InstName.Prfm,            InstEmit.Prfm,            OpCodeMemImm.Create); // prfum (unscaled offset)
+            SetA64("11011000xxxxxxxxxxxxxxxxxxxxxxxx", InstName.Prfm,            InstEmit.Prfm,            OpCodeMemLit.Create); // literal
+            SetA64("11111000101xxxxxxxxx10xxxxxxxxxx", InstName.Prfm,            InstEmit.Prfm,            OpCodeMemReg.Create); // register
             SetA64("x101101011000000000000xxxxxxxxxx", InstName.Rbit,            InstEmit.Rbit,            OpCodeAlu.Create);
             SetA64("1101011001011111000000xxxxx00000", InstName.Ret,             InstEmit.Ret,             OpCodeBReg.Create);
             SetA64("x101101011000000000001xxxxxxxxxx", InstName.Rev16,           InstEmit.Rev16,           OpCodeAlu.Create);

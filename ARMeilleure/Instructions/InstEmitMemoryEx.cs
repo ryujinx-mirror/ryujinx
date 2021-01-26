@@ -102,7 +102,7 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void Pfrm(ArmEmitterContext context)
+        public static void Prfm(ArmEmitterContext context)
         {
             // Memory Prefetch, execute as no-op.
         }

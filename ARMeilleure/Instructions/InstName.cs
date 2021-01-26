@@ -68,7 +68,7 @@ namespace ARMeilleure.Instructions
         Nop,
         Orn,
         Orr,
-        Pfrm,
+        Prfm,
         Rbit,
         Ret,
         Rev16,
