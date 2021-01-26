@@ -653,6 +653,15 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public SystemVersion VerifyFirmwarePackage(string firmwarePackage)
         {
+            _virtualFileSystem.Reload();
+
+            // LibHac.NcaHeader's DecryptHeader doesn't check if HeaderKey is empty and throws InvalidDataException instead
+            // So, we check it early for a better user experience.
+            if (_virtualFileSystem.KeySet.HeaderKey.IsEmpty())
+            {
+                throw new MissingKeyException("HeaderKey is empty. Cannot decrypt NCA headers.");
+            }
+
             Dictionary<ulong, List<(NcaContentType type, string path)>> updateNcas = new Dictionary<ulong, List<(NcaContentType, string)>>();
 
             if (Directory.Exists(firmwarePackage))
