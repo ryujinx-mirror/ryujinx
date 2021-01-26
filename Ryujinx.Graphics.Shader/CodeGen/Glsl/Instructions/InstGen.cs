@@ -42,12 +42,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                 for (int argIndex = 0; argIndex < arity; argIndex++)
                 {
+                    // For shared memory access, the second argument is unused and should be ignored.
+                    // It is there to make both storage and shared access have the same number of arguments.
+                    if (argIndex == 1 && (inst & Instruction.MrMask) == Instruction.MrShared)
+                    {
+                        continue;
+                    }
+
                     if (argIndex != 0)
                     {
                         args += ", ";
                     }
-
-                    VariableType dstType = GetSrcVarType(inst, argIndex);
 
                     if (argIndex == 0 && atomic)
                     {
@@ -60,12 +65,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                             default: throw new InvalidOperationException($"Invalid memory region \"{memRegion}\".");
                         }
-
-                        // We use the first 2 operands above.
-                        argIndex++;
                     }
                     else
                     {
+                        VariableType dstType = GetSrcVarType(inst, argIndex);
+
                         args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
                     }
                 }

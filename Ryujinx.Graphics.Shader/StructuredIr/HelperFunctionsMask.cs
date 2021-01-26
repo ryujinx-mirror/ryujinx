@@ -5,12 +5,14 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     [Flags]
     enum HelperFunctionsMask
     {
-        MultiplyHighS32 = 1 << 0,
-        MultiplyHighU32 = 1 << 1,
-        Shuffle         = 1 << 2,
-        ShuffleDown     = 1 << 3,
-        ShuffleUp       = 1 << 4,
-        ShuffleXor      = 1 << 5,
-        SwizzleAdd      = 1 << 6
+        AtomicMinMaxS32Shared  = 1 << 0,
+        AtomicMinMaxS32Storage = 1 << 1,
+        MultiplyHighS32        = 1 << 2,
+        MultiplyHighU32        = 1 << 3,
+        Shuffle                = 1 << 4,
+        ShuffleDown            = 1 << 5,
+        ShuffleUp              = 1 << 6,
+        ShuffleXor             = 1 << 7,
+        SwizzleAdd             = 1 << 8
     }
 }

@@ -16,9 +16,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.AtomicAdd,                InstType.AtomicBinary,   "atomicAdd");
             Add(Instruction.AtomicAnd,                InstType.AtomicBinary,   "atomicAnd");
             Add(Instruction.AtomicCompareAndSwap,     InstType.AtomicTernary,  "atomicCompSwap");
-            Add(Instruction.AtomicMaxS32,             InstType.AtomicBinary,   "atomicMax");
+            Add(Instruction.AtomicMaxS32,             InstType.CallTernary,    HelperFunctionNames.AtomicMaxS32);
             Add(Instruction.AtomicMaxU32,             InstType.AtomicBinary,   "atomicMax");
-            Add(Instruction.AtomicMinS32,             InstType.AtomicBinary,   "atomicMin");
+            Add(Instruction.AtomicMinS32,             InstType.CallTernary,    HelperFunctionNames.AtomicMinS32);
             Add(Instruction.AtomicMinU32,             InstType.AtomicBinary,   "atomicMin");
             Add(Instruction.AtomicOr,                 InstType.AtomicBinary,   "atomicOr");
             Add(Instruction.AtomicSwap,               InstType.AtomicBinary,   "atomicExchange");

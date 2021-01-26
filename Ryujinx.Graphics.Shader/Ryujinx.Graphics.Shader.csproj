@@ -9,6 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\AtomicMinMaxS32Shared.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\AtomicMinMaxS32Storage.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\MultiplyHighS32.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\MultiplyHighU32.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\Shuffle.glsl" />

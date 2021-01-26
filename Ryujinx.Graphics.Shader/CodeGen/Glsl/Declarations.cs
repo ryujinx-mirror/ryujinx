@@ -157,6 +157,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
             }
 
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.AtomicMinMaxS32Shared) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/AtomicMinMaxS32Shared.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.AtomicMinMaxS32Storage) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/AtomicMinMaxS32Storage.glsl");
+            }
+
             if ((info.HelperFunctionsMask & HelperFunctionsMask.MultiplyHighS32) != 0)
             {
                 AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/MultiplyHighS32.glsl");
@@ -523,7 +533,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             string code = EmbeddedResources.ReadAllText(filename);
 
-            context.AppendLine(code.Replace("\t", CodeGenContext.Tab));
+            code = code.Replace("\t", CodeGenContext.Tab);
+            code = code.Replace("$SHARED_MEM$", DefaultNames.SharedMemoryName);
+            code = code.Replace("$STORAGE_MEM$", OperandManager.GetShaderStagePrefix(context.Config.Stage) + "_" + DefaultNames.StorageNamePrefix);
+
+            context.AppendLine(code);
             context.AppendLine();
         }
     }
