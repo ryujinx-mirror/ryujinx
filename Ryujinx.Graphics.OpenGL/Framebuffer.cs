@@ -2,6 +2,7 @@ using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -29,21 +30,27 @@ namespace Ryujinx.Graphics.OpenGL
             return Handle;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AttachColor(int index, TextureView color)
         {
+            if (_colors[index] == color)
+            {
+                return;
+            }
+
             FramebufferAttachment attachment = FramebufferAttachment.ColorAttachment0 + index;
 
             if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Amd ||
                 HwCapabilities.Vendor == HwCapabilities.GpuVendor.Intel)
             {
                 GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.GetIncompatibleFormatViewHandle() ?? 0, 0);
-
-                _colors[index] = color;
             }
             else
             {
                 GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.Handle ?? 0, 0);
             }
+
+            _colors[index] = color;
         }
 
         public void AttachDepthStencil(TextureView depthStencil)

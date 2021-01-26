@@ -1,6 +1,8 @@
+using System;
+
 namespace Ryujinx.Graphics.GAL
 {
-    public struct VertexAttribDescriptor
+    public struct VertexAttribDescriptor : IEquatable<VertexAttribDescriptor>
     {
         public int BufferIndex { get; }
         public int Offset      { get; }
@@ -15,6 +17,24 @@ namespace Ryujinx.Graphics.GAL
             Offset      = offset;
             IsZero      = isZero;
             Format      = format;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is VertexAttribDescriptor other && Equals(other);
+        }
+
+        public bool Equals(VertexAttribDescriptor other)
+        {
+            return BufferIndex == other.BufferIndex &&
+                   Offset      == other.Offset &&
+                   IsZero      == other.IsZero &&
+                   Format      == other.Format;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(BufferIndex, Offset, IsZero, Format);
         }
     }
 }

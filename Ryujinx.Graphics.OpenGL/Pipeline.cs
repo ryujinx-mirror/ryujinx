@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private readonly uint[] _componentMasks;
 
-        private bool _scissor0Enable = false;
+        private uint _scissorEnables;
 
         private bool _tfEnabled;
         private TransformFeedbackPrimitiveType _tfTopology;
@@ -883,25 +883,27 @@ namespace Ryujinx.Graphics.OpenGL
             ((Sampler)sampler).Bind(binding);
         }
 
-        public void SetScissorEnable(int index, bool enable)
+        public void SetScissor(int index, bool enable, int x, int y, int width, int height)
         {
-            if (enable)
+            uint mask = 1u << index;
+
+            if (!enable)
             {
+                if ((_scissorEnables & mask) != 0)
+                {
+                    _scissorEnables &= ~mask;
+                    GL.Disable(IndexedEnableCap.ScissorTest, index);
+                }
+
+                return;
+            }
+
+            if ((_scissorEnables & mask) == 0)
+            {
+                _scissorEnables |= mask;
                 GL.Enable(IndexedEnableCap.ScissorTest, index);
             }
-            else
-            {
-                GL.Disable(IndexedEnableCap.ScissorTest, index);
-            }
 
-            if (index == 0)
-            {
-                _scissor0Enable = enable;
-            }
-        }
-
-        public void SetScissor(int index, int x, int y, int width, int height)
-        {
             GL.ScissorIndexed(index, x, y, width, height);
         }
 
@@ -1241,7 +1243,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void RestoreScissor0Enable()
         {
-            if (_scissor0Enable)
+            if ((_scissorEnables & 1u) != 0)
             {
                 GL.Enable(IndexedEnableCap.ScissorTest, 0);
             }

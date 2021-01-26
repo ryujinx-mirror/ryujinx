@@ -1,6 +1,7 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -15,6 +16,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         private int _vertexAttribsCount;
         private int _vertexBuffersCount;
+
+        private uint _vertexAttribsInUse;
+        private uint _vertexBuffersInUse;
 
         public VertexArray()
         {
@@ -31,30 +35,30 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void SetVertexBuffers(ReadOnlySpan<VertexBufferDescriptor> vertexBuffers)
         {
-            int bindingIndex = 0;
-
-            for (int index = 0; index < vertexBuffers.Length; index++)
+            int bindingIndex;
+            for (bindingIndex = 0; bindingIndex < vertexBuffers.Length; bindingIndex++)
             {
-                VertexBufferDescriptor vb = vertexBuffers[index];
+                VertexBufferDescriptor vb = vertexBuffers[bindingIndex];
 
                 if (vb.Buffer.Handle != BufferHandle.Null)
                 {
                     GL.BindVertexBuffer(bindingIndex, vb.Buffer.Handle.ToInt32(), (IntPtr)vb.Buffer.Offset, vb.Stride);
-
                     GL.VertexBindingDivisor(bindingIndex, vb.Divisor);
+                    _vertexBuffersInUse |= 1u << bindingIndex;
                 }
                 else
                 {
-                    GL.BindVertexBuffer(bindingIndex, 0, IntPtr.Zero, 0);
+                    if ((_vertexBuffersInUse & (1u << bindingIndex)) != 0)
+                    {
+                        GL.BindVertexBuffer(bindingIndex, 0, IntPtr.Zero, 0);
+                        _vertexBuffersInUse &= ~(1u << bindingIndex);
+                    }
                 }
 
-                _vertexBuffers[index] = vb;
-
-                bindingIndex++;
+                _vertexBuffers[bindingIndex] = vb;
             }
 
             _vertexBuffersCount = bindingIndex;
-
             _needsAttribsUpdate = true;
         }
 
@@ -66,17 +70,22 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 VertexAttribDescriptor attrib = vertexAttribs[index];
 
+                if (attrib.Equals(_vertexAttribs[index]))
+                {
+                    continue;
+                }
+
                 FormatInfo fmtInfo = FormatTable.GetFormatInfo(attrib.Format);
 
                 if (attrib.IsZero)
                 {
                     // Disabling the attribute causes the shader to read a constant value.
                     // The value is configurable, but by default is a vector of (0, 0, 0, 1).
-                    GL.DisableVertexAttribArray(index);
+                    DisableVertexAttrib(index);
                 }
                 else
                 {
-                    GL.EnableVertexAttribArray(index);
+                    EnableVertexAttrib(index);
                 }
 
                 int offset = attrib.Offset;
@@ -107,7 +116,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             for (; index < Constants.MaxVertexAttribs; index++)
             {
-                GL.DisableVertexAttribArray(index);
+                DisableVertexAttrib(index);
             }
         }
 
@@ -122,27 +131,52 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 VertexAttribDescriptor attrib = _vertexAttribs[attribIndex];
 
-                if ((uint)attrib.BufferIndex >= _vertexBuffersCount)
+                if (!attrib.IsZero)
                 {
-                    GL.DisableVertexAttribArray(attribIndex);
+                    if ((uint)attrib.BufferIndex >= _vertexBuffersCount)
+                    {
+                        DisableVertexAttrib(attribIndex);
+                        continue;
+                    }
 
-                    continue;
-                }
+                    if (_vertexBuffers[attrib.BufferIndex].Buffer.Handle == BufferHandle.Null)
+                    {
+                        DisableVertexAttrib(attribIndex);
+                        continue;
+                    }
 
-                if (_vertexBuffers[attrib.BufferIndex].Buffer.Handle == BufferHandle.Null)
-                {
-                    GL.DisableVertexAttribArray(attribIndex);
-
-                    continue;
-                }
-
-                if (_needsAttribsUpdate && !attrib.IsZero)
-                {
-                    GL.EnableVertexAttribArray(attribIndex);
+                    if (_needsAttribsUpdate)
+                    {
+                        EnableVertexAttrib(attribIndex);
+                    }
                 }
             }
 
             _needsAttribsUpdate = false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void EnableVertexAttrib(int index)
+        {
+            uint mask = 1u << index;
+
+            if ((_vertexAttribsInUse & mask) == 0)
+            {
+                _vertexAttribsInUse |= mask;
+                GL.EnableVertexAttribArray(index);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void DisableVertexAttrib(int index)
+        {
+            uint mask = 1u << index;
+
+            if ((_vertexAttribsInUse & mask) != 0)
+            {
+                _vertexAttribsInUse &= ~mask;
+                GL.DisableVertexAttribArray(index);
+            }
         }
 
         public void Dispose()
