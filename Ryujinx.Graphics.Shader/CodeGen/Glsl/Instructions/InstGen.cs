@@ -44,7 +44,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     // For shared memory access, the second argument is unused and should be ignored.
                     // It is there to make both storage and shared access have the same number of arguments.
-                    if (argIndex == 1 && (inst & Instruction.MrMask) == Instruction.MrShared)
+                    // For storage, both inputs are consumed when the argument index is 0, so we should skip it here.
+                    if (argIndex == 1 && (atomic || (inst & Instruction.MrMask) == Instruction.MrShared))
                     {
                         continue;
                     }
