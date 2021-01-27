@@ -37,8 +37,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 switch (dstType)
                 {
-                    case VariableType.S32: return $"floatBitsToInt({expr})";
-                    case VariableType.U32: return $"floatBitsToUint({expr})";
+                    case VariableType.Bool: return $"(floatBitsToInt({expr}) != 0)";
+                    case VariableType.S32:  return $"floatBitsToInt({expr})";
+                    case VariableType.U32:  return $"floatBitsToUint({expr})";
                 }
             }
             else if (dstType == VariableType.F32)
