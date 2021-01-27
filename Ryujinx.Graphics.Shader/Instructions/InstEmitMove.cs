@@ -118,25 +118,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand srcB = op.IsBImmediate ? Const(op.ImmediateB) : Register(op.Rb);
             Operand srcC = op.IsCImmediate ? Const(op.ImmediateC) : Register(op.Rc);
 
-            Operand res = null;
-
-            switch (op.ShuffleType)
+            (Operand res, Operand valid) = op.ShuffleType switch
             {
-                case ShuffleType.Indexed:
-                    res = context.Shuffle(srcA, srcB, srcC);
-                    break;
-                case ShuffleType.Up:
-                    res = context.ShuffleUp(srcA, srcB, srcC);
-                    break;
-                case ShuffleType.Down:
-                    res = context.ShuffleDown(srcA, srcB, srcC);
-                    break;
-                case ShuffleType.Butterfly:
-                    res = context.ShuffleXor(srcA, srcB, srcC);
-                    break;
-            }
+                ShuffleType.Indexed   => context.Shuffle(srcA, srcB, srcC),
+                ShuffleType.Up        => context.ShuffleUp(srcA, srcB, srcC),
+                ShuffleType.Down      => context.ShuffleDown(srcA, srcB, srcC),
+                ShuffleType.Butterfly => context.ShuffleXor(srcA, srcB, srcC),
+                _                     => (null, null)
+            };
 
             context.Copy(GetDest(context), res);
+            context.Copy(pred, valid);
         }
     }
 }

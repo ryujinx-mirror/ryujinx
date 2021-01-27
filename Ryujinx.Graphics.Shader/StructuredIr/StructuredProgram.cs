@@ -77,6 +77,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             bool isCall = inst == Instruction.Call;
 
             int sourcesCount = operation.SourcesCount;
+            int outDestsCount = operation.DestsCount != 0 ? operation.DestsCount - 1 : 0;
 
             List<Operand> callOutOperands = new List<Operand>();
 
@@ -93,7 +94,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 sourcesCount += callOutOperands.Count;
             }
 
-            IAstNode[] sources = new IAstNode[sourcesCount];
+            IAstNode[] sources = new IAstNode[sourcesCount + outDestsCount];
 
             for (int index = 0; index < operation.SourcesCount; index++)
             {
@@ -108,6 +109,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
 
                 callOutOperands.Clear();
+            }
+
+            for (int index = 0; index < outDestsCount; index++)
+            {
+                AstOperand oper = context.GetOperandDef(operation.GetDest(1 + index));
+
+                oper.VarType = InstructionInfo.GetSrcVarType(inst, sourcesCount + index);
+
+                sources[sourcesCount + index] = oper;
             }
 
             AstTextureOperation GetAstTextureOperation(TextureOperation texOp)

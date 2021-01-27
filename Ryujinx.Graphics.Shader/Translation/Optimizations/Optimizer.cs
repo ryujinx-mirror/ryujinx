@@ -64,7 +64,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             else if ((operation.Inst == Instruction.PackHalf2x16 && PropagatePack(operation)) ||
                                      (operation.Inst == Instruction.ShuffleXor   && MatchDdxOrDdy(operation)))
                             {
-                                if (operation.Dest.UseOps.Count == 0)
+                                if (DestHasNoUses(operation))
                                 {
                                     RemoveNode(block, node);
                                 }
@@ -260,6 +260,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                     if (src.UseOps.Remove(node) && src.UseOps.Count == 0)
                     {
+                        Debug.Assert(src.AsgOp != null);
                         nodes.Enqueue(src.AsgOp);
                     }
                 }
@@ -268,7 +269,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool IsUnused(INode node)
         {
-            return !HasSideEffects(node) && DestIsLocalVar(node) && node.Dest.UseOps.Count == 0;
+            return !HasSideEffects(node) && DestIsLocalVar(node) && DestHasNoUses(node);
         }
 
         private static bool HasSideEffects(INode node)
@@ -298,7 +299,33 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool DestIsLocalVar(INode node)
         {
-            return node.Dest != null && node.Dest.Type == OperandType.LocalVariable;
+            if (node.DestsCount == 0)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < node.DestsCount; index++)
+            {
+                if (node.GetDest(index).Type != OperandType.LocalVariable)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool DestHasNoUses(INode node)
+        {
+            for (int index = 0; index < node.DestsCount; index++)
+            {
+                if (node.GetDest(index).UseOps.Count != 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -116,13 +116,18 @@ namespace Ryujinx.Graphics.Shader.Translation
                             operation.SetSource(index, RenameLocal(operation.GetSource(index)));
                         }
 
-                        if (operation.Dest != null && operation.Dest.Type == OperandType.Register)
+                        for (int index = 0; index < operation.DestsCount; index++)
                         {
-                            Operand local = Local();
+                            Operand dest = operation.GetDest(index);
 
-                            localDefs[GetKeyFromRegister(operation.Dest.GetRegister())] = local;
+                            if (dest.Type == OperandType.Register)
+                            {
+                                Operand local = Local();
 
-                            operation.Dest = local;
+                                localDefs[GetKeyFromRegister(dest.GetRegister())] = local;
+
+                                operation.SetDest(index, local);
+                            }
                         }
                     }
 
@@ -185,9 +190,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     return operand;
                 }
 
-                LinkedListNode<INode> node = block.Operations.First;
-
-                while (node != null)
+                for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
                 {
                     if (node.Value is Operation operation)
                     {
@@ -196,8 +199,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                             operation.SetSource(index, RenameGlobal(operation.GetSource(index)));
                         }
                     }
-
-                    node = node.Next;
                 }
             }
         }

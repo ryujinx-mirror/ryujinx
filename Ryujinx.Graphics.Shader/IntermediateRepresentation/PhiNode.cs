@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
@@ -11,6 +12,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             get => _dest;
             set => _dest = AssignDest(value);
         }
+
+        public int DestsCount => _dest != null ? 1 : 0;
 
         private HashSet<BasicBlock> _blocks;
 
@@ -62,6 +65,16 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
                 _sources.Add(new PhiSource(block, operand));
             }
+        }
+
+        public Operand GetDest(int index)
+        {
+            if (index != 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            return _dest;
         }
 
         public Operand GetSource(int index)

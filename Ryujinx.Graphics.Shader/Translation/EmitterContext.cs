@@ -37,6 +37,17 @@ namespace Ryujinx.Graphics.Shader.Translation
             return dest;
         }
 
+        public (Operand, Operand) Add(Instruction inst, (Operand, Operand) dest, params Operand[] sources)
+        {
+            Operand[] dests = new[] { dest.Item1, dest.Item2 };
+
+            Operation operation = new Operation(inst, 0, dests, sources);
+
+            Add(operation);
+
+            return dest;
+        }
+
         public void Add(Operation operation)
         {
             _operations.Add(operation);

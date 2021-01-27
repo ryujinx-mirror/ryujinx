@@ -588,24 +588,24 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.ShiftRightU32, Local(), a, b);
         }
 
-        public static Operand Shuffle(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static (Operand, Operand) Shuffle(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.Shuffle, Local(), a, b, c);
+            return context.Add(Instruction.Shuffle, (Local(), Local()), a, b, c);
         }
 
-        public static Operand ShuffleDown(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static (Operand, Operand) ShuffleDown(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.ShuffleDown, Local(), a, b, c);
+            return context.Add(Instruction.ShuffleDown, (Local(), Local()), a, b, c);
         }
 
-        public static Operand ShuffleUp(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static (Operand, Operand) ShuffleUp(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.ShuffleUp, Local(), a, b, c);
+            return context.Add(Instruction.ShuffleUp, (Local(), Local()), a, b, c);
         }
 
-        public static Operand ShuffleXor(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static (Operand, Operand) ShuffleXor(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.ShuffleXor, Local(), a, b, c);
+            return context.Add(Instruction.ShuffleXor, (Local(), Local()), a, b, c);
         }
 
         public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b, Operand c)

@@ -88,13 +88,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.LoopContinue,             InstType.OpNullary,      "continue");
             Add(Instruction.PackDouble2x32,           InstType.Special);
             Add(Instruction.PackHalf2x16,             InstType.Special);
-            Add(Instruction.ShiftLeft,                InstType.OpBinary,       "<<",              3);
-            Add(Instruction.ShiftRightS32,            InstType.OpBinary,       ">>",              3);
-            Add(Instruction.ShiftRightU32,            InstType.OpBinary,       ">>",              3);
-            Add(Instruction.Shuffle,                  InstType.CallTernary,    HelperFunctionNames.Shuffle);
-            Add(Instruction.ShuffleDown,              InstType.CallTernary,    HelperFunctionNames.ShuffleDown);
-            Add(Instruction.ShuffleUp,                InstType.CallTernary,    HelperFunctionNames.ShuffleUp);
-            Add(Instruction.ShuffleXor,               InstType.CallTernary,    HelperFunctionNames.ShuffleXor);
             Add(Instruction.Maximum,                  InstType.CallBinary,     "max");
             Add(Instruction.MaximumU32,               InstType.CallBinary,     "max");
             Add(Instruction.MemoryBarrier,            InstType.CallNullary,    "memoryBarrier");
@@ -107,6 +100,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ReciprocalSquareRoot,     InstType.CallUnary,      "inversesqrt");
             Add(Instruction.Return,                   InstType.OpNullary,      "return");
             Add(Instruction.Round,                    InstType.CallUnary,      "roundEven");
+            Add(Instruction.ShiftLeft,                InstType.OpBinary,       "<<",              3);
+            Add(Instruction.ShiftRightS32,            InstType.OpBinary,       ">>",              3);
+            Add(Instruction.ShiftRightU32,            InstType.OpBinary,       ">>",              3);
+            Add(Instruction.Shuffle,                  InstType.CallQuaternary, HelperFunctionNames.Shuffle);
+            Add(Instruction.ShuffleDown,              InstType.CallQuaternary, HelperFunctionNames.ShuffleDown);
+            Add(Instruction.ShuffleUp,                InstType.CallQuaternary, HelperFunctionNames.ShuffleUp);
+            Add(Instruction.ShuffleXor,               InstType.CallQuaternary, HelperFunctionNames.ShuffleXor);
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
             Add(Instruction.StoreLocal,               InstType.Special);
