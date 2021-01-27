@@ -1475,9 +1475,11 @@ namespace ARMeilleure.Instructions
 
             int sizeF = op.Size & 1;
 
-            if (Optimizations.FastFP && Optimizations.UseSse && sizeF == 0)
+            if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                EmitScalarUnaryOpF(context, Intrinsic.X86Rcpss, 0);
+                Operand res = EmitSse41FP32RoundExp8(context, context.AddIntrinsic(Intrinsic.X86Rcpss, GetVec(op.Rn)), scalar: true);
+
+                context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
             }
             else
             {
@@ -1494,9 +1496,16 @@ namespace ARMeilleure.Instructions
 
             int sizeF = op.Size & 1;
 
-            if (Optimizations.FastFP && Optimizations.UseSse && sizeF == 0)
+            if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                EmitVectorUnaryOpF(context, Intrinsic.X86Rcpps, 0);
+                Operand res = EmitSse41FP32RoundExp8(context, context.AddIntrinsic(Intrinsic.X86Rcpps, GetVec(op.Rn)), scalar: false);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
             }
             else
             {
@@ -1652,7 +1661,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitScalarRoundOpF(context, FPRoundingMode.TowardsMinusInfinity);
+                EmitSse41ScalarRoundOpF(context, FPRoundingMode.TowardsMinusInfinity);
             }
             else
             {
@@ -1667,7 +1676,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitVectorRoundOpF(context, FPRoundingMode.TowardsMinusInfinity);
+                EmitSse41VectorRoundOpF(context, FPRoundingMode.TowardsMinusInfinity);
             }
             else
             {
@@ -1682,7 +1691,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitScalarRoundOpF(context, FPRoundingMode.ToNearest);
+                EmitSse41ScalarRoundOpF(context, FPRoundingMode.ToNearest);
             }
             else
             {
@@ -1697,7 +1706,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitVectorRoundOpF(context, FPRoundingMode.ToNearest);
+                EmitSse41VectorRoundOpF(context, FPRoundingMode.ToNearest);
             }
             else
             {
@@ -1712,7 +1721,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitScalarRoundOpF(context, FPRoundingMode.TowardsPlusInfinity);
+                EmitSse41ScalarRoundOpF(context, FPRoundingMode.TowardsPlusInfinity);
             }
             else
             {
@@ -1727,7 +1736,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitVectorRoundOpF(context, FPRoundingMode.TowardsPlusInfinity);
+                EmitSse41VectorRoundOpF(context, FPRoundingMode.TowardsPlusInfinity);
             }
             else
             {
@@ -1778,7 +1787,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitScalarRoundOpF(context, FPRoundingMode.TowardsZero);
+                EmitSse41ScalarRoundOpF(context, FPRoundingMode.TowardsZero);
             }
             else
             {
@@ -1793,7 +1802,7 @@ namespace ARMeilleure.Instructions
         {
             if (Optimizations.UseSse41)
             {
-                EmitVectorRoundOpF(context, FPRoundingMode.TowardsZero);
+                EmitSse41VectorRoundOpF(context, FPRoundingMode.TowardsZero);
             }
             else
             {
@@ -1810,9 +1819,11 @@ namespace ARMeilleure.Instructions
 
             int sizeF = op.Size & 1;
 
-            if (Optimizations.FastFP && Optimizations.UseSse && sizeF == 0)
+            if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                EmitScalarUnaryOpF(context, Intrinsic.X86Rsqrtss, 0);
+                Operand res = EmitSse41FP32RoundExp8(context, context.AddIntrinsic(Intrinsic.X86Rsqrtss, GetVec(op.Rn)), scalar: true);
+
+                context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
             }
             else
             {
@@ -1829,9 +1840,16 @@ namespace ARMeilleure.Instructions
 
             int sizeF = op.Size & 1;
 
-            if (Optimizations.FastFP && Optimizations.UseSse && sizeF == 0)
+            if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                EmitVectorUnaryOpF(context, Intrinsic.X86Rsqrtps, 0);
+                Operand res = EmitSse41FP32RoundExp8(context, context.AddIntrinsic(Intrinsic.X86Rsqrtps, GetVec(op.Rn)), scalar: false);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
             }
             else
             {
@@ -3498,7 +3516,7 @@ namespace ARMeilleure.Instructions
             return context.ConditionalSelect(cmp, op1, op2);
         }
 
-        private static void EmitScalarRoundOpF(ArmEmitterContext context, FPRoundingMode roundMode)
+        private static void EmitSse41ScalarRoundOpF(ArmEmitterContext context, FPRoundingMode roundMode)
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
@@ -3520,7 +3538,7 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
-        private static void EmitVectorRoundOpF(ArmEmitterContext context, FPRoundingMode roundMode)
+        private static void EmitSse41VectorRoundOpF(ArmEmitterContext context, FPRoundingMode roundMode)
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
@@ -3536,6 +3554,35 @@ namespace ARMeilleure.Instructions
             }
 
             context.Copy(GetVec(op.Rd), res);
+        }
+
+        private static Operand EmitSse41FP32RoundExp8(ArmEmitterContext context, Operand value, bool scalar)
+        {
+            Operand roundMask;
+            Operand truncMask;
+            Operand expMask;
+
+            if (scalar)
+            {
+                roundMask = X86GetScalar(context, 0x4000);
+                truncMask = X86GetScalar(context, unchecked((int)0xFFFF8000));
+                expMask = X86GetScalar(context, 0x7F800000);
+            }
+            else
+            {
+                roundMask = X86GetAllElements(context, 0x4000);
+                truncMask = X86GetAllElements(context, unchecked((int)0xFFFF8000));
+                expMask = X86GetAllElements(context, 0x7F800000);
+            }
+
+            Operand oValue = value;
+            Operand masked = context.AddIntrinsic(Intrinsic.X86Pand, value, expMask);
+            Operand isNaNInf = context.AddIntrinsic(Intrinsic.X86Pcmpeqw, masked, expMask);
+
+            value = context.AddIntrinsic(Intrinsic.X86Paddw, value, roundMask);
+            value = context.AddIntrinsic(Intrinsic.X86Pand, value, truncMask);
+
+            return context.AddIntrinsic(Intrinsic.X86Blendvps, value, oValue, isNaNInf);
         }
 
         public static void EmitSse2VectorIsNaNOpF(
