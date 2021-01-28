@@ -479,7 +479,7 @@ namespace Ryujinx.Configuration
             System.Region.Value                    = Region.USA;
             System.TimeZone.Value                  = "UTC";
             System.SystemTimeOffset.Value          = 0;
-            System.EnableDockedMode.Value          = false;
+            System.EnableDockedMode.Value          = true;
             EnableDiscordIntegration.Value         = true;
             CheckUpdatesOnStart.Value              = true;
             ShowConfirmExit.Value                  = true;

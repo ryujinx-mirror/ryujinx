@@ -18,7 +18,7 @@
   "system_region": "USA",
   "system_time_zone": "UTC",
   "system_time_offset": 0,
-  "docked_mode": false,
+  "docked_mode": true,
   "enable_discord_integration": true,
   "check_updates_on_start": true,
   "show_confirm_exit": true,

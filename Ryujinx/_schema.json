@@ -1171,7 +1171,7 @@
       "type": "boolean",
       "title": "Enable Docked Mode",
       "description": "Enables or disables Docked Mode",
-      "default": false,
+      "default": true,
       "examples": [
         true,
         false
