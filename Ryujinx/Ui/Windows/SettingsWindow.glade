@@ -1458,7 +1458,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="_ptcToggle">
-                                    <property name="label" translatable="yes">Enable Profiled Persistent Translation Cache</property>
+                                    <property name="label" translatable="yes">Enable PPTC (Profiled Persistent Translation Cache)</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
