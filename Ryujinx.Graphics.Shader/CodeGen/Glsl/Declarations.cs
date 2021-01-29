@@ -26,26 +26,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine("#extension GL_ARB_compute_shader : enable");
             }
 
+            if (context.Config.GpPassthrough)
+            {
+                context.AppendLine("#extension GL_NV_geometry_shader_passthrough : enable");
+            }
+
             context.AppendLine("#pragma optionNV(fastmath off)");
 
             context.AppendLine();
 
             context.AppendLine($"const int {DefaultNames.UndefinedName} = 0;");
             context.AppendLine();
-
-            if (context.Config.Stage == ShaderStage.Geometry)
-            {
-                string inPrimitive = context.Config.GpuAccessor.QueryPrimitiveTopology().ToGlslString();
-
-                context.AppendLine($"layout ({inPrimitive}) in;");
-
-                string outPrimitive = context.Config.OutputTopology.ToGlslString();
-
-                int maxOutputVertices = context.Config.MaxOutputVertices;
-
-                context.AppendLine($"layout ({outPrimitive}, max_vertices = {maxOutputVertices}) out;");
-                context.AppendLine();
-            }
 
             if (context.Config.Stage == ShaderStage.Compute)
             {
@@ -109,6 +100,33 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.Stage != ShaderStage.Compute)
             {
+                if (context.Config.Stage == ShaderStage.Geometry)
+                {
+                    string inPrimitive = context.Config.GpuAccessor.QueryPrimitiveTopology().ToGlslString();
+
+                    context.AppendLine($"layout ({inPrimitive}) in;");
+
+                    if (context.Config.GpPassthrough)
+                    {
+                        context.AppendLine($"layout (passthrough) in gl_PerVertex");
+                        context.EnterScope();
+                        context.AppendLine("vec4 gl_Position;");
+                        context.AppendLine("float gl_PointSize;");
+                        context.AppendLine("float gl_ClipDistance[];");
+                        context.LeaveScope(";");
+                    }
+                    else
+                    {
+                        string outPrimitive = context.Config.OutputTopology.ToGlslString();
+
+                        int maxOutputVertices = context.Config.MaxOutputVertices;
+
+                        context.AppendLine($"layout ({outPrimitive}, max_vertices = {maxOutputVertices}) out;");
+                    }
+
+                    context.AppendLine();
+                }
+
                 if (info.IAttributes.Count != 0)
                 {
                     DeclareInputAttributes(context, info);
@@ -432,6 +450,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     };
                 }
 
+                string pass = context.Config.GpPassthrough ? "passthrough, " : string.Empty;
+
                 string name = $"{DefaultNames.IAttributePrefix}{attr}";
 
                 if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
@@ -440,12 +460,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     {
                         char swzMask = "xyzw"[c];
 
-                        context.AppendLine($"layout (location = {attr}, component = {c}) {iq}in float {name}_{swzMask}{suffix};");
+                        context.AppendLine($"layout ({pass}location = {attr}, component = {c}) {iq}in float {name}_{swzMask}{suffix};");
                     }
                 }
                 else
                 {
-                    context.AppendLine($"layout (location = {attr}) {iq}in vec4 {name}{suffix};");
+                    context.AppendLine($"layout ({pass}location = {attr}) {iq}in vec4 {name}{suffix};");
                 }
             }
         }

@@ -69,7 +69,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 // compiler may eliminate them.
                 // (Not needed for fragment shader as it is the last stage).
                 if (context.Config.Stage != ShaderStage.Compute &&
-                    context.Config.Stage != ShaderStage.Fragment)
+                    context.Config.Stage != ShaderStage.Fragment &&
+                    !context.Config.GpPassthrough)
                 {
                     for (int attr = 0; attr < Declarations.MaxAttributes; attr++)
                     {

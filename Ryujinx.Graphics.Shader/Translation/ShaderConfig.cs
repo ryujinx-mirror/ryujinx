@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         public ShaderStage Stage { get; }
 
+        public bool GpPassthrough { get; }
+
         public OutputTopology OutputTopology { get; }
 
         public int MaxOutputVertices { get; }
@@ -33,6 +35,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public ShaderConfig(IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
             Stage                  = ShaderStage.Compute;
+            GpPassthrough          = false;
             OutputTopology         = OutputTopology.PointList;
             MaxOutputVertices      = 0;
             LocalMemorySize        = 0;
@@ -51,6 +54,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
             Stage                  = header.Stage;
+            GpPassthrough          = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
             OutputTopology         = header.OutputTopology;
             MaxOutputVertices      = header.MaxOutputVertexCount;
             LocalMemorySize        = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;

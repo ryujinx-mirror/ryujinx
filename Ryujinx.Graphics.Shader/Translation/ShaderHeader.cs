@@ -81,6 +81,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int SassVersion { get; }
 
+        public bool GpPassthrough { get; }
+
         public bool DoesLoadOrStore { get; }
         public bool DoesFp64        { get; }
 
@@ -135,6 +137,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             DoesGlobalStore = commonWord0.Extract(16);
 
             SassVersion = commonWord0.Extract(17, 4);
+
+            GpPassthrough = commonWord0.Extract(24);
 
             DoesLoadOrStore = commonWord0.Extract(26);
             DoesFp64        = commonWord0.Extract(27);
