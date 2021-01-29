@@ -1,4 +1,6 @@
 using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -247,6 +249,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// Check if two descriptors are equal.
+        /// </summary>
+        /// <param name="other">The descriptor to compare against</param>
+        /// <returns>True if they are equal, false otherwise</returns>
+        public bool Equals(ref TextureDescriptor other)
+        {
+            return Unsafe.As<TextureDescriptor, Vector256<byte>>(ref this).Equals(Unsafe.As<TextureDescriptor, Vector256<byte>>(ref other));
         }
     }
 }

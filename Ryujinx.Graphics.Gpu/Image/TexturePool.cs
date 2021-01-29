@@ -1,6 +1,5 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Texture pool.
     /// </summary>
-    class TexturePool : Pool<Texture>
+    class TexturePool : Pool<Texture, TextureDescriptor>
     {
         private int _sequenceNumber;
 
@@ -65,6 +64,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                 texture.IncrementReferenceCount();
 
                 Items[id] = texture;
+
+                DescriptorCache[id] = descriptor;
             }
             else
             {
@@ -92,16 +93,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Gets the texture descriptor from a given texture ID.
-        /// </summary>
-        /// <param name="id">ID of the texture. This is effectively a zero-based index</param>
-        /// <returns>The texture descriptor</returns>
-        public TextureDescriptor GetDescriptor(int id)
-        {
-            return Context.PhysicalMemory.Read<TextureDescriptor>(Address + (ulong)id * DescriptorSize);
-        }
-
-        /// <summary>
         /// Implementation of the texture pool range invalidation.
         /// </summary>
         /// <param name="address">Start address of the range of the texture pool</param>
@@ -122,8 +113,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     // If the descriptors are the same, the texture is the same,
                     // we don't need to remove as it was not modified. Just continue.
-                    if (texture.Info.GpuAddress == descriptor.UnpackAddress() &&
-                        texture.IsExactMatch(GetInfo(descriptor, out _), TextureSearchFlags.Strict) != TextureMatchQuality.NoMatch)
+                    if (descriptor.Equals(ref DescriptorCache[id]))
                     {
                         continue;
                     }

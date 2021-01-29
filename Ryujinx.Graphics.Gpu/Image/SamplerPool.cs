@@ -3,7 +3,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Sampler pool.
     /// </summary>
-    class SamplerPool : Pool<Sampler>
+    class SamplerPool : Pool<Sampler, SamplerDescriptor>
     {
         private int _sequenceNumber;
 
@@ -38,11 +38,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (sampler == null)
             {
-                SamplerDescriptor descriptor = Context.PhysicalMemory.Read<SamplerDescriptor>(Address + (ulong)id * DescriptorSize);
+                SamplerDescriptor descriptor = GetDescriptor(id);
 
                 sampler = new Sampler(Context, descriptor);
 
                 Items[id] = sampler;
+
+                DescriptorCache[id] = descriptor;
             }
 
             return sampler;
@@ -65,6 +67,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (sampler != null)
                 {
+                    SamplerDescriptor descriptor = GetDescriptor(id);
+
+                    // If the descriptors are the same, the sampler is still valid.
+                    if (descriptor.Equals(ref DescriptorCache[id]))
+                    {
+                        continue;
+                    }
+
                     sampler.Dispose();
 
                     Items[id] = null;

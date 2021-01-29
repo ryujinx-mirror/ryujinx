@@ -8,14 +8,16 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Represents a pool of GPU resources, such as samplers or textures.
     /// </summary>
-    /// <typeparam name="T">Type of the GPU resource</typeparam>
-    abstract class Pool<T> : IDisposable
+    /// <typeparam name="T1">Type of the GPU resource</typeparam>
+    /// <typeparam name="T2">Type of the descriptor</typeparam>
+    abstract class Pool<T1, T2> : IDisposable where T2 : unmanaged
     {
         protected const int DescriptorSize = 0x20;
 
         protected GpuContext Context;
 
-        protected T[] Items;
+        protected T1[] Items;
+        protected T2[] DescriptorCache;
 
         /// <summary>
         /// The maximum ID value of resources on the pool (inclusive).
@@ -47,7 +49,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             ulong size = (ulong)(uint)count * DescriptorSize;
 
-            Items = new T[count];
+            Items = new T1[count];
+            DescriptorCache = new T2[count];
 
             Address = address;
             Size    = size;
@@ -56,12 +59,23 @@ namespace Ryujinx.Graphics.Gpu.Image
             _modifiedDelegate = RegionModified;
         }
 
+
+        /// <summary>
+        /// Gets the descriptor for a given ID.
+        /// </summary>
+        /// <param name="id">ID of the descriptor. This is effectively a zero-based index</param>
+        /// <returns>The descriptor</returns>
+        public T2 GetDescriptor(int id)
+        {
+            return Context.PhysicalMemory.Read<T2>(Address + (ulong)id * DescriptorSize);
+        }
+
         /// <summary>
         /// Gets the GPU resource with the given ID.
         /// </summary>
         /// <param name="id">ID of the resource. This is effectively a zero-based index</param>
         /// <returns>The GPU resource with the given ID</returns>
-        public abstract T Get(int id);
+        public abstract T1 Get(int id);
 
         /// <summary>
         /// Synchronizes host memory with guest memory.
@@ -97,7 +111,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         protected abstract void InvalidateRangeImpl(ulong address, ulong size);
 
-        protected abstract void Delete(T item);
+        protected abstract void Delete(T1 item);
 
         /// <summary>
         /// Performs the disposal of all resources stored on the pool.
