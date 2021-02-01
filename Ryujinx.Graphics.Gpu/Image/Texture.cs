@@ -723,6 +723,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return; // Flushing this format is not supported, as it may have been converted to another host format.
                 }
 
+                if (Info.Target == Target.Texture2DMultisample ||
+                    Info.Target == Target.Texture2DMultisampleArray)
+                {
+                    return; // Flushing multisample textures is not supported, the host does not allow getting their data.
+                }
+
                 ITexture texture = HostTexture;
                 if (ScaleFactor != 1f)
                 {
