@@ -299,21 +299,23 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         var fru = frus[funcId.Value];
 
-                        Operand[] regs = new Operand[fru.InArguments.Length];
+                        Operand[] inRegs = new Operand[fru.InArguments.Length];
 
                         for (int i = 0; i < fru.InArguments.Length; i++)
                         {
-                            regs[i] = OperandHelper.Register(fru.InArguments[i]);
+                            inRegs[i] = OperandHelper.Register(fru.InArguments[i]);
                         }
 
-                        operation.AppendOperands(regs);
+                        operation.AppendSources(inRegs);
+
+                        Operand[] outRegs = new Operand[1 + fru.OutArguments.Length];
 
                         for (int i = 0; i < fru.OutArguments.Length; i++)
                         {
-                            Operation callOutArgOp = new Operation(Instruction.CallOutArgument, OperandHelper.Register(fru.OutArguments[i]));
-
-                            node = block.Operations.AddAfter(node, callOutArgOp);
+                            outRegs[1 + i] = OperandHelper.Register(fru.OutArguments[i]);
                         }
+
+                        operation.AppendDests(outRegs);
                     }
                 }
             }

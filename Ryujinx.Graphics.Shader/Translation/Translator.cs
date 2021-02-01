@@ -88,7 +88,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                     RegisterUsage.FixupCalls(cfg.Blocks, frus);
 
                     Dominance.FindDominators(cfg);
-
                     Dominance.FindDominanceFrontiers(cfg.Blocks);
 
                     Ssa.Rename(cfg.Blocks);

@@ -289,7 +289,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     case Instruction.AtomicSwap:
                     case Instruction.AtomicXor:
                     case Instruction.Call:
-                    case Instruction.CallOutArgument:
                         return true;
                 }
             }
@@ -306,7 +305,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             for (int index = 0; index < node.DestsCount; index++)
             {
-                if (node.GetDest(index).Type != OperandType.LocalVariable)
+                Operand dest = node.GetDest(index);
+
+                if (dest != null && dest.Type != OperandType.LocalVariable)
                 {
                     return false;
                 }
@@ -319,7 +320,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             for (int index = 0; index < node.DestsCount; index++)
             {
-                if (node.GetDest(index).UseOps.Count != 0)
+                Operand dest = node.GetDest(index);
+
+                if (dest != null && dest.UseOps.Count != 0)
                 {
                     return false;
                 }

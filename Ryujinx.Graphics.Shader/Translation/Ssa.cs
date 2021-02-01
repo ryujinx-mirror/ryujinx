@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         {
                             Operand dest = operation.GetDest(index);
 
-                            if (dest.Type == OperandType.Register)
+                            if (dest != null && dest.Type == OperandType.Register)
                             {
                                 Operand local = Local();
 

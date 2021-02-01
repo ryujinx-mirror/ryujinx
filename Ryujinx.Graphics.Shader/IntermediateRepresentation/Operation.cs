@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
@@ -96,7 +97,27 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Index = index;
         }
 
-        public void AppendOperands(params Operand[] operands)
+        public void AppendDests(Operand[] operands)
+        {
+            int startIndex = _dests.Length;
+
+            Array.Resize(ref _dests, startIndex + operands.Length);
+
+            for (int index = 0; index < operands.Length; index++)
+            {
+                Operand dest = operands[index];
+
+                if (dest != null && dest.Type == OperandType.LocalVariable)
+                {
+                    Debug.Assert(dest.AsgOp == null);
+                    dest.AsgOp = this;
+                }
+
+                _dests[startIndex + index] = dest;
+            }
+        }
+
+        public void AppendSources(Operand[] operands)
         {
             int startIndex = _sources.Length;
 
