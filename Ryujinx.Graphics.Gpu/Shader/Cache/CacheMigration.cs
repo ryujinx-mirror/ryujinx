@@ -103,7 +103,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
                         ReadOnlySpan<GuestShaderCacheEntry> cachedShaderEntries = GuestShaderCacheEntry.Parse(ref guestProgramReadOnlySpan, out GuestShaderCacheHeader fileHeader);
 
-                        TransformFeedbackDescriptor[] tfd = CacheHelper.ReadTransformationFeedbackInformations(ref guestProgramReadOnlySpan, fileHeader);
+                        TransformFeedbackDescriptor[] tfd = CacheHelper.ReadTransformFeedbackInformation(ref guestProgramReadOnlySpan, fileHeader);
 
                         Hash128 newHash = CacheHelper.ComputeGuestHashFromCache(cachedShaderEntries, tfd);
 

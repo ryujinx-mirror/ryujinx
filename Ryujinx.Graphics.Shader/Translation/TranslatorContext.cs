@@ -10,16 +10,12 @@ namespace Ryujinx.Graphics.Shader.Translation
     public class TranslatorContext
     {
         private readonly Block[][] _cfg;
-        private readonly Block[][] _cfgA;
         private ShaderConfig _config;
-        private ShaderConfig _configA;
 
         public ulong Address { get; }
-        public ulong AddressA { get; }
 
         public ShaderStage Stage => _config.Stage;
         public int Size => _config.Size;
-        public int SizeA => _configA != null ? _configA.Size : 0;
 
         public HashSet<int> TextureHandlesForCache => _config.TextureHandlesForCache;
 
@@ -27,22 +23,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         internal TranslatorContext(ulong address, Block[][] cfg, ShaderConfig config)
         {
-            Address    = address;
-            AddressA   = 0;
-            _config    = config;
-            _configA   = null;
-            _cfg       = cfg;
-            _cfgA      = null;
-        }
-
-        internal TranslatorContext(ulong addressA, ulong addressB, Block[][] cfgA, Block[][] cfgB, ShaderConfig configA, ShaderConfig configB)
-        {
-            Address  = addressB;
-            AddressA = addressA;
-            _config  = configB;
-            _configA = configA;
-            _cfg     = cfgB;
-            _cfgA    = cfgA;
+            Address = address;
+            _config = config;
+            _cfg    = cfg;
         }
 
         private static bool IsUserAttribute(Operand operand)
@@ -141,20 +124,19 @@ namespace Ryujinx.Graphics.Shader.Translation
             return output;
         }
 
-        public ShaderProgram Translate(out ShaderProgramInfo shaderProgramInfo)
+        public ShaderProgram Translate(out ShaderProgramInfo shaderProgramInfo, TranslatorContext other = null)
         {
             FunctionCode[] code = EmitShader(_cfg, _config);
 
-            if (_configA != null)
+            if (other != null)
             {
-                FunctionCode[] codeA = EmitShader(_cfgA, _configA);
+                _config.SetUsedFeature(other._config.UsedFeatures);
+                TextureHandlesForCache.UnionWith(other.TextureHandlesForCache);
 
-                _config.SetUsedFeature(_configA.UsedFeatures);
-
-                code = Combine(codeA, code);
+                code = Combine(EmitShader(other._cfg, other._config), code);
             }
 
-            return Translator.Translate(code, _config, out shaderProgramInfo, SizeA);
+            return Translator.Translate(code, _config, out shaderProgramInfo);
         }
     }
 }
