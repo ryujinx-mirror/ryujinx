@@ -514,19 +514,50 @@ namespace ARMeilleure.CodeGen.X86
             Operand src1 = operation.GetSource(0);
             Operand src2 = operation.GetSource(1);
 
-            ValidateBinOp(dest, src1, src2);
-
             if (dest.Type.IsInteger())
             {
-                context.Assembler.Add(dest, src2, dest.Type);
+                // If Destination and Source 1 Operands are the same, perform a standard add as there are no benefits to using LEA.
+                if (dest.Kind == src1.Kind && dest.Value == src1.Value)
+                {
+                    ValidateBinOp(dest, src1, src2);
+
+                    context.Assembler.Add(dest, src2, dest.Type);
+                }
+                else
+                {
+                    EnsureSameType(dest, src1, src2);
+
+                    int offset;
+                    Operand index;
+
+                    if (src2.Kind == OperandKind.Constant)
+                    {
+                        offset = src2.AsInt32();
+                        index = null;
+                    }
+                    else
+                    {
+                        offset = 0;
+                        index = src2;
+                    }
+
+                    MemoryOperand memOp = MemoryOp(dest.Type, src1, index, Multiplier.x1, offset);
+
+                    context.Assembler.Lea(dest, memOp, dest.Type);
+                }
             }
-            else if (dest.Type == OperandType.FP32)
+            else 
             {
-                context.Assembler.Addss(dest, src1, src2);
-            }
-            else /* if (dest.Type == OperandType.FP64) */
-            {
-                context.Assembler.Addsd(dest, src1, src2);
+                ValidateBinOp(dest, src1, src2);
+
+                if (dest.Type == OperandType.FP32)
+                {
+                    context.Assembler.Addss(dest, src1, src2);
+                }
+                else /* if (dest.Type == OperandType.FP64) */
+                {
+                    context.Assembler.Addsd(dest, src1, src2);
+                }
             }
         }
 

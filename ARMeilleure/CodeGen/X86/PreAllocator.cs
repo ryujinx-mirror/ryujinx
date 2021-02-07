@@ -1273,6 +1273,7 @@ namespace ARMeilleure.CodeGen.X86
             switch (operation.Instruction)
             {
                 case Instruction.Add:
+                    return !HardwareCapabilities.SupportsVexEncoding && !operation.Destination.Type.IsInteger();
                 case Instruction.Multiply:
                 case Instruction.Subtract:
                     return !HardwareCapabilities.SupportsVexEncoding || operation.Destination.Type.IsInteger();
