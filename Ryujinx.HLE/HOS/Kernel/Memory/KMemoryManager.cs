@@ -1506,15 +1506,33 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 {
                     KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
-                    serverAddress = currentProcess.MemoryManager.GetDramAddressFromVa(serverAddress);
+                    while (size > 0)
+                    {
+                        ulong copySize = Math.Min(PageSize - (serverAddress & (PageSize - 1)), PageSize - (clientAddress & (PageSize - 1)));
 
-                    if (toServer)
-                    {
-                        _context.Memory.Copy(serverAddress, GetDramAddressFromVa(clientAddress), size);
-                    }
-                    else
-                    {
-                        _context.Memory.Copy(GetDramAddressFromVa(clientAddress), serverAddress, size);
+                        if (copySize > size)
+                        {
+                            copySize = size;
+                        }
+
+                        ulong serverDramAddr = currentProcess.MemoryManager.GetDramAddressFromVa(serverAddress);
+                        ulong clientDramAddr = GetDramAddressFromVa(clientAddress);
+
+                        if (serverDramAddr != clientDramAddr)
+                        {
+                            if (toServer)
+                            {
+                                _context.Memory.Copy(serverDramAddr, clientDramAddr, copySize);
+                            }
+                            else
+                            {
+                                _context.Memory.Copy(clientDramAddr, serverDramAddr, copySize);
+                            }
+                        }
+
+                        serverAddress += copySize;
+                        clientAddress += copySize;
+                        size -= copySize;
                     }
 
                     return KernelResult.Success;
