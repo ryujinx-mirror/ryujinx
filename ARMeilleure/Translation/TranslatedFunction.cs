@@ -33,5 +33,10 @@ namespace ARMeilleure.Translation
         {
             return !HighCq && Interlocked.Increment(ref _callCount) == MinCallsForRejit;
         }
+
+        public void ResetCallCount()
+        {
+            Interlocked.Exchange(ref _callCount, 0);
+        }
     }
 }

@@ -390,33 +390,10 @@ namespace ARMeilleure.Translation
 
         public void InvalidateJitCacheRegion(ulong address, ulong size)
         {
-            static bool OverlapsWith(ulong funcAddress, ulong funcSize, ulong address, ulong size)
-            {
-                return funcAddress < address + size && address < funcAddress + funcSize;
-            }
+            // If rejit is running, stop it as it may be trying to rejit a function on the invalidated region.
+            ClearRejitQueue(allowRequeue: true);
 
-            // Make a copy of all overlapping functions, as we can't otherwise
-            // remove elements from the collection we are iterating.
-            // Doing that before clearing the rejit queue is fine, even
-            // if a function is translated after this, it would only replace
-            // a existing function, as rejit is only triggered on functions
-            // that were already executed before.
-            var toDelete = _funcs.Where(x => OverlapsWith(x.Key, x.Value.GuestSize, address, size)).ToArray();
-
-            if (toDelete.Length != 0)
-            {
-                // If rejit is running, stop it as it may be trying to rejit the functions we are
-                // supposed to remove.
-                ClearRejitQueue();
-            }
-
-            foreach (var kv in toDelete)
-            {
-                if (_funcs.TryRemove(kv.Key, out TranslatedFunction func))
-                {
-                    EnqueueForDeletion(kv.Key, func);
-                }
-            }
+            // TODO: Completely remove functions overlapping the specified range from the cache.
         }
 
         private void EnqueueForDeletion(ulong guestAddress, TranslatedFunction func)
@@ -427,7 +404,7 @@ namespace ARMeilleure.Translation
         private void ClearJitCache()
         {
             // Ensure no attempt will be made to compile new functions due to rejit.
-            ClearRejitQueue();
+            ClearRejitQueue(allowRequeue: false);
 
             foreach (var kv in _funcs)
             {
@@ -442,10 +419,25 @@ namespace ARMeilleure.Translation
             }
         }
 
-        private void ClearRejitQueue()
+        private void ClearRejitQueue(bool allowRequeue)
         {
             _backgroundTranslatorLock.AcquireWriterLock(Timeout.Infinite);
-            _backgroundStack.Clear();
+
+            if (allowRequeue)
+            {
+                while (_backgroundStack.TryPop(out var request))
+                {
+                    if (_funcs.TryGetValue(request.Address, out var func))
+                    {
+                        func.ResetCallCount();
+                    }
+                }
+            }
+            else
+            {
+                _backgroundStack.Clear();
+            }
+
             _backgroundTranslatorLock.ReleaseWriterLock();
         }
     }
