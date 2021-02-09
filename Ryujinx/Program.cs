@@ -89,30 +89,32 @@ namespace Ryujinx
             string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
             string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath,            "Config.json");
 
-            // Now load the configuration as the other subsystems are now registered.
-            if (File.Exists(localConfigurationPath))
+            // Now load the configuration as the other subsystems are now registered
+            ConfigurationPath = File.Exists(localConfigurationPath)
+                ? localConfigurationPath
+                : File.Exists(appDataConfigurationPath)
+                    ? appDataConfigurationPath
+                    : null;
+
+            if (ConfigurationPath == null)
             {
-                ConfigurationPath = localConfigurationPath;
-
-                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(localConfigurationPath);
-
-                ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
-            }
-            else if (File.Exists(appDataConfigurationPath))
-            {
-                ConfigurationPath = appDataConfigurationPath;
-
-                ConfigurationFileFormat configurationFileFormat = ConfigurationFileFormat.Load(appDataConfigurationPath);
-
-                ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
-            }
-            else
-            {
-                // No configuration, we load the default values and save it on disk.
+                // No configuration, we load the default values and save it to disk
                 ConfigurationPath = appDataConfigurationPath;
 
                 ConfigurationState.Instance.LoadDefault();
-                ConfigurationState.Instance.ToFileFormat().SaveConfig(appDataConfigurationPath);
+                ConfigurationState.Instance.ToFileFormat().SaveConfig(ConfigurationPath);
+            }
+            else
+            {
+                if (ConfigurationFileFormat.TryLoad(ConfigurationPath, out ConfigurationFileFormat configurationFileFormat))
+                {
+                    ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
+                }
+                else
+                {
+                    ConfigurationState.Instance.LoadDefault();
+                    Logger.Warning?.PrintMsg(LogClass.Application, $"Failed to load config! Loading the default config instead.\nFailed config location {ConfigurationPath}");
+                }
             }
 
             if (startFullscreenArg)
@@ -120,7 +122,7 @@ namespace Ryujinx
                 ConfigurationState.Instance.Ui.StartFullscreen.Value = true;
             }
 
-            // Logging system informations.
+            // Logging system information.
             PrintSystemInfo();
 
             // Initialize Gtk.

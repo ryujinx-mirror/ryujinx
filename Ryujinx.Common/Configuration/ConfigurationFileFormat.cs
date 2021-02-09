@@ -227,9 +227,20 @@ namespace Ryujinx.Configuration
         /// Loads a configuration file from disk
         /// </summary>
         /// <param name="path">The path to the JSON configuration file</param>
-        public static ConfigurationFileFormat Load(string path)
+        public static bool TryLoad(string path, out ConfigurationFileFormat configurationFileFormat)
         {
-            return JsonHelper.DeserializeFromFile<ConfigurationFileFormat>(path);
+            try
+            {
+                configurationFileFormat = JsonHelper.DeserializeFromFile<ConfigurationFileFormat>(path);
+
+                return true;
+            }
+            catch
+            {
+                configurationFileFormat = null;
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -238,7 +249,8 @@ namespace Ryujinx.Configuration
         /// <param name="path">The path to the JSON configuration file</param>
         public void SaveConfig(string path)
         {
-            File.WriteAllText(path, JsonHelper.Serialize(this, true));
+            using FileStream fileStream = File.Create(path, 4096, FileOptions.WriteThrough);
+            JsonHelper.Serialize(fileStream, this, true);
         }
     }
 }
