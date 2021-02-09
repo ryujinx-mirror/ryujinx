@@ -220,6 +220,18 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
+       [Command(60)]
+        // IsUserSystemClockAutomaticCorrectionEnabled() -> bool
+        public ResultCode IsUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
+        {
+            // NOTE: When set to true, is automatically synced with the internet.
+            context.ResponseData.Write(true);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceSet, "Stubbed");
+
+            return ResultCode.Success;
+        }
+
         public byte[] GetFirmwareData(Switch device)
         {
             long   titleId     = 0x0100000000000809;
