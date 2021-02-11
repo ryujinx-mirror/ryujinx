@@ -254,9 +254,9 @@ namespace Ryujinx.Ui.Windows
             _controllerImage.Pixbuf = _controllerType.ActiveId switch
             {
                 "ProController" => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_ProCon.svg", 400, 400),
-                "JoyconLeft"    => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConLeft.svg", 400, 400),
-                "JoyconRight"   => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConRight.svg", 400, 400),
-                _               => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConPair.svg", 400, 400),
+                "JoyconLeft"    => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConLeft.svg", 400, 500),
+                "JoyconRight"   => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConRight.svg", 400, 500),
+                _               => new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Controller_JoyConPair.svg", 400, 500),
             };
         }
 
