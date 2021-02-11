@@ -87,6 +87,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             return rv;
         }
 
+        [SkipLocalsInit]
         public static void Iwht4x416Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             /* 4-point reversible, orthonormal inverse Walsh-Hadamard in 3.5 adds,
@@ -142,6 +143,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Iwht4x41Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i;
@@ -209,6 +211,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[3] = WrapLow(DctConstRoundShift(s0 + s1 - s3));
         }
 
+        [SkipLocalsInit]
         public static void Idct4(ReadOnlySpan<int> input, Span<int> output)
         {
             Span<short> step = stackalloc short[4];
@@ -231,6 +234,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[3] = WrapLow(step[0] - step[3]);
         }
 
+        [SkipLocalsInit]
         public static void Idct4x416Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -359,6 +363,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[7] = WrapLow(-x1);
         }
 
+        [SkipLocalsInit]
         public static void Idct8(ReadOnlySpan<int> input, Span<int> output)
         {
             Span<short> step1 = stackalloc short[8];
@@ -416,6 +421,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[7] = WrapLow(step1[0] - step1[7]);
         }
 
+        [SkipLocalsInit]
         public static void Idct8x864Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -449,6 +455,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct8x812Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -456,6 +463,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[8];
             Span<int> tempOut = stackalloc int[8];
+
+            output.Fill(0);
 
             // First transform rows
             // Only first 4 row has non-zero coefs
@@ -671,6 +680,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[15] = WrapLow(-x1);
         }
 
+        [SkipLocalsInit]
         public static void Idct16(ReadOnlySpan<int> input, Span<int> output)
         {
             Span<short> step1 = stackalloc short[16];
@@ -838,6 +848,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[15] = WrapLow(step2[0] - step2[15]);
         }
 
+        [SkipLocalsInit]
         public static void Idct16x16256Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -870,6 +881,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct16x1638Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -877,6 +889,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[16];
             Span<int> tempOut = stackalloc int[16];
+
+            output.Fill(0);
 
             // First transform rows. Since all non-zero dct coefficients are in
             // upper-left 8x8 area, we only need to calculate first 8 rows here.
@@ -903,6 +917,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct16x1610Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -910,6 +925,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[16];
             Span<int> tempOut = stackalloc int[16];
+
+            output.Fill(0);
 
             // First transform rows. Since all non-zero dct coefficients are in
             // upper-left 4x4 area, we only need to calculate first 4 rows here.
@@ -955,6 +972,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct32(ReadOnlySpan<int> input, Span<int> output)
         {
             Span<short> step1 = stackalloc short[32];
@@ -1324,6 +1342,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[31] = WrapLow(step1[0] - step1[31]);
         }
 
+        [SkipLocalsInit]
         public static void Idct32x321024Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -1370,6 +1389,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct32x32135Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -1377,6 +1397,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[32];
             Span<int> tempOut = stackalloc int[32];
+
+            output.Fill(0);
 
             // Rows
             // Only upper-left 16x16 has non-zero coeff
@@ -1403,6 +1425,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void Idct32x3234Add(ReadOnlySpan<int> input, Span<byte> dest, int stride)
         {
             int i, j;
@@ -1410,6 +1433,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[32];
             Span<int> tempOut = stackalloc int[32];
+
+            output.Fill(0);
 
             // Rows
             // Only upper-left 8x8 has non-zero coeff
@@ -1456,6 +1481,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIwht4x416Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             /* 4-point reversible, orthonormal inverse Walsh-Hadamard in 3.5 adds,
@@ -1511,6 +1537,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIwht4x41Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i;
@@ -1584,6 +1611,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[3] = HighbdWrapLow(DctConstRoundShift(s0 + s1 - s3), bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct4(ReadOnlySpan<int> input, Span<int> output, int bd)
         {
             Span<int> step = stackalloc int[4];
@@ -1613,6 +1641,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[3] = HighbdWrapLow(step[0] - step[3], bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct4x416Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -1748,6 +1777,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[7] = HighbdWrapLow(-x1, bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct8(ReadOnlySpan<int> input, Span<int> output, int bd)
         {
             Span<int> step1 = stackalloc int[8];
@@ -1803,6 +1833,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[7] = HighbdWrapLow(step1[0] - step1[7], bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct8x864Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -1835,6 +1866,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct8x812Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -1842,6 +1874,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[8];
             Span<int> tempOut = stackalloc int[8];
+
+            output.Fill(0);
 
             // First transform rows
             // Only first 4 row has non-zero coefs
@@ -2062,6 +2096,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[15] = HighbdWrapLow(-x1, bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct16(ReadOnlySpan<int> input, Span<int> output, int bd)
         {
             Span<int> step1 = stackalloc int[16];
@@ -2236,6 +2271,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[15] = HighbdWrapLow(step2[0] - step2[15], bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct16x16256Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2268,6 +2304,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct16x1638Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2275,6 +2312,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[16];
             Span<int> tempOut = stackalloc int[16];
+
+            output.Fill(0);
 
             // First transform rows. Since all non-zero dct coefficients are in
             // upper-left 8x8 area, we only need to calculate first 8 rows here.
@@ -2303,6 +2342,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct16x1610Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2310,6 +2350,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[16];
             Span<int> tempOut = stackalloc int[16];
+
+            output.Fill(0);
 
             // First transform rows. Since all non-zero dct coefficients are in
             // upper-left 4x4 area, we only need to calculate first 4 rows here.
@@ -2355,6 +2397,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct32(ReadOnlySpan<int> input, Span<int> output, int bd)
         {
             Span<int> step1 = stackalloc int[32];
@@ -2539,7 +2582,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             step2[8] = step1[8];
             step2[15] = step1[15];
             temp1 = -step1[9] * (long)CosPi8_64 + step1[14] * (long)CosPi24_64;
-            temp2 =  step1[9] * (long)CosPi24_64 + step1[14] * (long)CosPi8_64;
+            temp2 = step1[9] * (long)CosPi24_64 + step1[14] * (long)CosPi8_64;
             step2[9] = HighbdWrapLow(DctConstRoundShift(temp1), bd);
             step2[14] = HighbdWrapLow(DctConstRoundShift(temp2), bd);
             temp1 = -step1[10] * (long)CosPi24_64 - step1[13] * (long)CosPi8_64;
@@ -2731,6 +2774,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             output[31] = HighbdWrapLow(step1[0] - step1[31], bd);
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct32x321024Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2777,6 +2821,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct32x32135Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2784,6 +2829,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[32];
             Span<int> tempOut = stackalloc int[32];
+
+            output.Fill(0);
 
             // Rows
             // Only upper-left 16x16 has non-zero coeff
@@ -2812,6 +2859,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
         }
 
+        [SkipLocalsInit]
         public static void HighbdIdct32x3234Add(ReadOnlySpan<int> input, Span<ushort> dest, int stride, int bd)
         {
             int i, j;
@@ -2819,6 +2867,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Span<int> outptr = output;
             Span<int> tempIn = stackalloc int[32];
             Span<int> tempOut = stackalloc int[32];
+
+            output.Fill(0);
 
             // Rows
             // Only upper-left 8x8 has non-zero coeff

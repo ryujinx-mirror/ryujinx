@@ -127,9 +127,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
             MBs = MbRows * MbCols;
         }
 
-        public void AllocTileWorkerData(MemoryAllocator allocator, int tileCols, int tileRows)
+        public void AllocTileWorkerData(MemoryAllocator allocator, int tileCols, int tileRows, int maxThreads)
         {
-            TileWorkerData = allocator.Allocate<TileWorkerData>(tileCols * tileRows);
+            TileWorkerData = allocator.Allocate<TileWorkerData>(tileCols * tileRows + (maxThreads > 1 ? maxThreads : 0));
         }
 
         public void FreeTileWorkerData(MemoryAllocator allocator)

@@ -92,7 +92,14 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
             cm.Mb.SetupBlockPlanes(1, 1);
 
-            cm.AllocTileWorkerData(_allocator, 1 << pictureInfo.Log2TileCols, 1 << pictureInfo.Log2TileRows);
+            int tileCols = 1 << pictureInfo.Log2TileCols;
+            int tileRows = 1 << pictureInfo.Log2TileRows;
+
+            // Video usually have only 4 columns, so more threads won't make a difference for those.
+            // Try to not take all CPU cores for video decoding.
+            int maxThreads = Math.Min(4, Environment.ProcessorCount / 2);
+
+            cm.AllocTileWorkerData(_allocator, tileCols, tileRows, maxThreads);
             cm.AllocContextBuffers(_allocator, output.Width, output.Height);
             cm.InitContextBuffers();
             cm.SetupSegmentationDequant();
@@ -104,7 +111,14 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             {
                 try
                 {
-                    DecodeFrame.DecodeTiles(ref cm, new ArrayPtr<byte>(dataPtr, bitstream.Length));
+                    if (maxThreads > 1 && tileRows == 1 && tileCols > 1)
+                    {
+                        DecodeFrame.DecodeTilesMt(ref cm, new ArrayPtr<byte>(dataPtr, bitstream.Length), maxThreads);
+                    }
+                    else
+                    {
+                        DecodeFrame.DecodeTiles(ref cm, new ArrayPtr<byte>(dataPtr, bitstream.Length));
+                    }
                 }
                 catch (InternalErrorException)
                 {
