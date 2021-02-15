@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 20;
+        public const int CurrentVersion = 22;
 
         public int Version { get; set; }
 
@@ -132,6 +132,11 @@ namespace Ryujinx.Configuration
         /// Show "Confirm Exit" Dialog
         /// </summary>
         public bool ShowConfirmExit { get; set; }
+
+        /// <summary>
+        /// Hide Cursor on Idle
+        /// </summary>
+        public bool HideCursorOnIdle { get; set; }
 
         /// <summary>
         /// Enables or disables Vertical Sync

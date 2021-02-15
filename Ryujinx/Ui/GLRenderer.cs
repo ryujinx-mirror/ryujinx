@@ -42,6 +42,8 @@ namespace Ryujinx.Ui
         private double _mouseY;
         private bool   _mousePressed;
 
+        private DateTime _lastCursorMoveTime = DateTime.Now;
+
         private bool _toggleFullscreen;
         private bool _toggleDockedMode;
 
@@ -62,6 +64,8 @@ namespace Ryujinx.Ui
         private GraphicsDebugLevel _glLogLevel;
 
         private readonly ManualResetEvent _exitEvent;
+        
+        private Gdk.Cursor _invisibleCursor = new Gdk.Cursor (Gdk.Display.Default, Gdk.CursorType.BlankCursor);
 
         public GlRenderer(Switch device, GraphicsDebugLevel glLogLevel)
             : base (GetGraphicsMode(),
@@ -304,7 +308,35 @@ namespace Ryujinx.Ui
                 _mouseY = evnt.Y;
             }
 
+            ResetCursorIdle();
+
             return false;
+        }
+
+        private void ResetCursorIdle()
+        {
+           if (ConfigurationState.Instance.HideCursorOnIdle)
+           {
+               _lastCursorMoveTime = DateTime.Now;
+           }
+
+           if (Window.Cursor != null)
+           {
+               Window.Cursor = null;
+           }
+        }
+
+        private void HideCursorIdle()
+        {
+           if (ConfigurationState.Instance.HideCursorOnIdle)
+           {
+               TimeSpan elapsedTime = DateTime.Now.Subtract(_lastCursorMoveTime);
+
+               if (elapsedTime.TotalSeconds > 8)
+               {
+                   Gtk.Application.Invoke(delegate { Window.Cursor = _invisibleCursor; });
+               }
+           }
         }
 
         protected override void OnGetPreferredHeight(out int minimumHeight, out int naturalHeight)
@@ -484,6 +516,8 @@ namespace Ryujinx.Ui
             List<SixAxisInput> motionInputs  = new List<SixAxisInput>(NpadDevices.MaxControllers);
 
             MotionDevice motionDevice = new MotionDevice(_dsuClient);
+
+            HideCursorIdle();
 
             foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
             {

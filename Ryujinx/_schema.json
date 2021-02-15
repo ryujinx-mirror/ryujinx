@@ -1210,6 +1210,17 @@
         false
       ]
     },
+      "hide_cursor_on_idle": {
+      "$id": "#/properties/hide_cursor_on_idle",
+      "type": "boolean",
+      "title": "Hide Cursor On Idle",
+      "description": "Hides the cursor after being idle for 5 seconds",
+      "default": false,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "enable_vsync": {
       "$id": "#/properties/enable_vsync",
       "type": "boolean",

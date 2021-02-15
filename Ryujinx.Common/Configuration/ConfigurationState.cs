@@ -365,6 +365,11 @@ namespace Ryujinx.Configuration
         /// </summary>
         public ReactiveObject<bool> ShowConfirmExit { get; private set; }
 
+        /// <summary>
+        /// Hide Cursor on Idle
+        /// </summary>
+        public ReactiveObject<bool> HideCursorOnIdle { get; private set; }
+
         private ConfigurationState()
         {
             Ui                       = new UiSection();
@@ -375,6 +380,7 @@ namespace Ryujinx.Configuration
             EnableDiscordIntegration = new ReactiveObject<bool>();
             CheckUpdatesOnStart      = new ReactiveObject<bool>();
             ShowConfirmExit          = new ReactiveObject<bool>();
+            HideCursorOnIdle         = new ReactiveObject<bool>();
         }
 
         public ConfigurationFileFormat ToFileFormat()
@@ -420,6 +426,7 @@ namespace Ryujinx.Configuration
                 EnableDiscordIntegration  = EnableDiscordIntegration,
                 CheckUpdatesOnStart       = CheckUpdatesOnStart,
                 ShowConfirmExit           = ShowConfirmExit,
+                HideCursorOnIdle          = HideCursorOnIdle,
                 EnableVsync               = Graphics.EnableVsync,
                 EnableShaderCache         = Graphics.EnableShaderCache,
                 EnablePtc                 = System.EnablePtc,
@@ -483,6 +490,7 @@ namespace Ryujinx.Configuration
             EnableDiscordIntegration.Value         = true;
             CheckUpdatesOnStart.Value              = true;
             ShowConfirmExit.Value                  = true;
+            HideCursorOnIdle.Value                 = false;
             Graphics.EnableVsync.Value             = true;
             Graphics.EnableShaderCache.Value       = true;
             System.EnablePtc.Value                 = true;
@@ -787,6 +795,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 22)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 22.");
+
+                configurationFileFormat.HideCursorOnIdle = false;
+
+                configurationFileUpdated = true;
+            }
+
             List<InputConfig> inputConfig = new List<InputConfig>();
             inputConfig.AddRange(configurationFileFormat.ControllerConfig);
             inputConfig.AddRange(configurationFileFormat.KeyboardConfig);
@@ -814,6 +831,7 @@ namespace Ryujinx.Configuration
             EnableDiscordIntegration.Value         = configurationFileFormat.EnableDiscordIntegration;
             CheckUpdatesOnStart.Value              = configurationFileFormat.CheckUpdatesOnStart;
             ShowConfirmExit.Value                  = configurationFileFormat.ShowConfirmExit;
+            HideCursorOnIdle.Value                 = configurationFileFormat.HideCursorOnIdle;
             Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
             System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
