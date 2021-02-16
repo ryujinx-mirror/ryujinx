@@ -19,19 +19,8 @@ namespace ARMeilleure.Instructions
 
                 if (size == 4)
                 {
-                    Operand isUnalignedAddr = InstEmitMemoryHelper.EmitAddressCheck(context, address, size);
-
-                    Operand lblFastPath = Label();
-
-                    context.BranchIfFalse(lblFastPath, isUnalignedAddr);
-
-                    // The call is not expected to return (it should throw).
-                    context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);
-
-                    context.MarkLabel(lblFastPath);
-
                     // Only 128-bit CAS is guaranteed to have a atomic load.
-                    Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: false);
+                    Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: false, 4);
 
                     Operand zero = context.VectorZero();
 
@@ -119,20 +108,8 @@ namespace ARMeilleure.Instructions
 
                 context.BranchIfTrue(lblExit, exFailed);
 
-                // STEP 2: We have exclusive access, make sure that the address is valid.
-                Operand isUnalignedAddr = InstEmitMemoryHelper.EmitAddressCheck(context, address, size);
-
-                Operand lblFastPath = Label();
-
-                context.BranchIfFalse(lblFastPath, isUnalignedAddr);
-
-                // The call is not expected to return (it should throw).
-                context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.ThrowInvalidMemoryAccess)), address);
-
-                // STEP 3: We have exclusive access and the address is valid, attempt the store using CAS.
-                context.MarkLabel(lblFastPath);
-
-                Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: true);
+                // STEP 2: We have exclusive access and the address is valid, attempt the store using CAS.
+                Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: true, size);
 
                 Operand exValuePtr = context.Add(arg0, Const((long)NativeContext.GetExclusiveValueOffset()));
                 Operand exValue = size switch
@@ -151,7 +128,7 @@ namespace ARMeilleure.Instructions
                     _ => context.CompareAndSwap(physAddr, exValue, value)
                 };
 
-                // STEP 4: Check if we succeeded by comparing expected and in-memory values.
+                // STEP 3: Check if we succeeded by comparing expected and in-memory values.
                 Operand storeFailed;
 
                 if (size == 4)
