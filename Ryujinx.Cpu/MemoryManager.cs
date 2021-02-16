@@ -561,7 +561,7 @@ namespace Ryujinx.Cpu
             long tag = protection switch
             {
                 MemoryPermission.None => 0L,
-                MemoryPermission.Read => 2L << PointerTagBit,
+                MemoryPermission.Write => 2L << PointerTagBit,
                 _ => 3L << PointerTagBit
             };
 
@@ -631,7 +631,7 @@ namespace Ryujinx.Cpu
             // tracking using host guard pages in future, but also supporting platforms where this is not possible.
 
             // Write tag includes read protection, since we don't have any read actions that aren't performed before write too.
-            long tag = (write ? 3L : 2L) << PointerTagBit;
+            long tag = (write ? 3L : 1L) << PointerTagBit;
 
             ulong endVa = (va + size + PageMask) & ~(ulong)PageMask;
 

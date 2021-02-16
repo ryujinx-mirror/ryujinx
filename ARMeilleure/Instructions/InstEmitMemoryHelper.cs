@@ -334,14 +334,14 @@ namespace ARMeilleure.Instructions
             {
                 if (write)
                 {
-                    pte = context.ShiftLeft(pte, Const(1));
                     context.BranchIf(lblSlowPath, pte, Const(0L), Comparison.LessOrEqual);
-                    pte = context.ShiftRightUI(pte, Const(1));
+                    pte = context.BitwiseAnd(pte, Const(0xffffffffffffUL)); // Ignore any software protection bits. (they are still used by C# memory access)
                 }
                 else
                 {
+                    pte = context.ShiftLeft(pte, Const(1));
                     context.BranchIf(lblSlowPath, pte, Const(0L), Comparison.LessOrEqual);
-                    pte = context.BitwiseAnd(pte, Const(0xffffffffffffUL)); // Ignore any software protection bits. (they are still used by C# memory access)
+                    pte = context.ShiftRightUI(pte, Const(1));
                 }
             }
             else
