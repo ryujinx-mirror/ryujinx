@@ -30,7 +30,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetFirmwareVersion2(ServiceCtx context)
         {
             long replyPos  = context.Request.RecvListBuff[0].Position;
-            long replySize = context.Request.RecvListBuff[0].Size;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x100L);
 
             byte[] firmwareData = GetFirmwareData(context.Device);
 
