@@ -27,7 +27,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         public ResultCode GetClientId(ServiceCtx context)
         {
             long position = context.Request.RecvListBuff[0].Position;
-            long size     = context.Request.RecvListBuff[0].Size;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(4);
 
             context.Memory.Write((ulong)position, _generalServiceDetail.ClientId);
 
