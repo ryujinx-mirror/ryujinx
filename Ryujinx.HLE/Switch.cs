@@ -1,5 +1,6 @@
 using LibHac.FsSystem;
 using Ryujinx.Audio;
+using Ryujinx.Common;
 using Ryujinx.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
@@ -127,6 +128,10 @@ namespace Ryujinx.HLE
             System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
 
             ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
+            ConfigurationState.Instance.System.IgnoreMissingServices.Event += (object _, ReactiveEventArgs<bool> args) =>
+            {
+                ServiceConfiguration.IgnoreMissingServices = args.NewValue;
+            };
 
             // Configure controllers
             Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
