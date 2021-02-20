@@ -4,6 +4,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Configuration;
+using Ryujinx.Ui.Input;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
@@ -584,73 +585,6 @@ namespace Ryujinx.Ui.Windows
             return null;
         }
 
-        private static bool IsAnyKeyPressed(out Key pressedKey, int index)
-        {
-            KeyboardState keyboardState = KeyboardController.GetKeyboardState(index);
-
-            foreach (Key key in Enum.GetValues(typeof(Key)))
-            {
-                if (keyboardState.IsKeyDown((OpenTK.Input.Key)key))
-                {
-                    pressedKey = key;
-
-                    return true;
-                }
-            }
-
-            pressedKey = Key.Unbound;
-
-            return false;
-        }
-
-        private static bool IsAnyButtonPressed(out ControllerInputId pressedButton, int index, double triggerThreshold)
-        {
-            JoystickState        joystickState        = Joystick.GetState(index);
-            JoystickCapabilities joystickCapabilities = Joystick.GetCapabilities(index);
-
-            //Buttons
-            for (int i = 0; i != joystickCapabilities.ButtonCount; i++)
-            {
-                if (joystickState.IsButtonDown(i))
-                {
-                    Enum.TryParse($"Button{i}", out pressedButton);
-                                        return true;
-                }
-            }
-
-            //Axis
-            for (int i = 0; i != joystickCapabilities.AxisCount; i++)
-            {
-                if (joystickState.GetAxis(i) > 0.5f && joystickState.GetAxis(i) > triggerThreshold)
-                {
-                    Enum.TryParse($"Axis{i}", out pressedButton);
-
-                    return true;
-                }
-            }
-
-            //Hats
-            for (int i = 0; i != joystickCapabilities.HatCount; i++)
-            {
-                JoystickHatState hatState = joystickState.GetHat((JoystickHat)i);
-                string           pos      = null;
-
-                if (hatState.IsUp)    pos = "Up";
-                if (hatState.IsDown)  pos = "Down";
-                if (hatState.IsLeft)  pos = "Left";
-                if (hatState.IsRight) pos = "Right";
-                if (pos == null)      continue;
-
-                Enum.TryParse($"Hat{i}{pos}", out pressedButton);
-
-                return true;
-            }
-
-            pressedButton = ControllerInputId.Unbound;
-
-            return false;
-        }
-
         private string GetProfileBasePath()
         {
             string path = AppDataManager.ProfilesDirPath;
@@ -690,6 +624,31 @@ namespace Ryujinx.Ui.Windows
             _refreshInputDevicesButton.SetStateFlags(StateFlags.Normal, true);
         }
 
+        private ButtonAssigner CreateButtonAssigner()
+        {
+            int index = int.Parse(_inputDevice.ActiveId.Split("/")[1]);
+
+            ButtonAssigner assigner;
+
+            if (_inputDevice.ActiveId.StartsWith("keyboard"))
+            {
+                assigner = new KeyboardKeyAssigner(index);
+            }
+            else if (_inputDevice.ActiveId.StartsWith("controller"))
+            {
+                // TODO: triggerThresold is passed but not used by JoystickButtonAssigner. Should it be used for key binding?.
+                // Note that, like left and right sticks, ZL and ZR triggers are treated as axis.
+                // The problem is then how to decide which axis should use triggerThresold.
+                assigner = new JoystickButtonAssigner(index, _controllerTriggerThreshold.Value);
+            }
+            else
+            {
+                throw new Exception("Controller not supported");
+            }
+            
+            return assigner;
+        }
+
         private void Button_Pressed(object sender, EventArgs args)
         {
             if (_isWaitingForInput)
@@ -697,67 +656,41 @@ namespace Ryujinx.Ui.Windows
                 return;
             }
 
+            ButtonAssigner assigner = CreateButtonAssigner();
+
             _isWaitingForInput = true;
 
             Thread inputThread = new Thread(() =>
             {
-                Button button = (ToggleButton)sender;
+                assigner.Init();
 
-                if (_inputDevice.ActiveId.StartsWith("keyboard"))
+                while (true)
                 {
-                    Key pressedKey;
+                    Thread.Sleep(10);
+                    assigner.ReadInput();
 
-                    int index = int.Parse(_inputDevice.ActiveId.Split("/")[1]);
-                    while (!IsAnyKeyPressed(out pressedKey, index))
+                    if (assigner.HasAnyButtonPressed() || assigner.ShouldCancel())
                     {
-                        if (Mouse.GetState().IsAnyButtonDown || Keyboard.GetState().IsKeyDown(OpenTK.Input.Key.Escape))
-                        {
-                            Application.Invoke(delegate
-                            {
-                                button.SetStateFlags(StateFlags.Normal, true);
-                            });
-
-                            _isWaitingForInput = false;
-
-                            return;
-                        }
+                        break;
                     }
-
-                    Application.Invoke(delegate
-                    {
-                        button.Label = pressedKey.ToString();
-                        button.SetStateFlags(StateFlags.Normal, true);
-                    });
-                }
-                else if (_inputDevice.ActiveId.StartsWith("controller"))
-                {
-                    ControllerInputId pressedButton;
-
-                    int index = int.Parse(_inputDevice.ActiveId.Split("/")[1]);
-                    while (!IsAnyButtonPressed(out pressedButton, index, _controllerTriggerThreshold.Value))
-                    {
-                        if (Mouse.GetState().IsAnyButtonDown || Keyboard.GetState().IsAnyKeyDown)
-                        {
-                            Application.Invoke(delegate
-                            {
-                                button.SetStateFlags(StateFlags.Normal, true);
-                            });
-
-                            _isWaitingForInput = false;
-
-                            return;
-                        }
-                    }
-
-                    Application.Invoke(delegate
-                    {
-                        button.Label = pressedButton.ToString();
-                        button.SetStateFlags(StateFlags.Normal, true);
-                    });
                 }
 
-                _isWaitingForInput = false;
+                string pressedButton = assigner.GetPressedButton();
+
+                ToggleButton button = (ToggleButton) sender;
+
+                Application.Invoke(delegate
+                {
+                    if (pressedButton != "")
+                    {
+                        button.Label = pressedButton;
+                    }
+                    
+                    button.Active = false;
+                    _isWaitingForInput = false;   
+                });
             });
+
             inputThread.Name = "GUI.InputThread";
             inputThread.IsBackground = true;
             inputThread.Start();
