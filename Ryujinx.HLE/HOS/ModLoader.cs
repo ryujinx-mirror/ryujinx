@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS
             public List<Mod<DirectoryInfo>> NroPatches { get; }
             public List<Mod<DirectoryInfo>> KipPatches { get; }
 
-            public HashSet<string> SearchedDirs { get; }
+            internal bool Initialized { get; set; }
 
             public PatchCache()
             {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS
                 NroPatches = new List<Mod<DirectoryInfo>>();
                 KipPatches = new List<Mod<DirectoryInfo>>();
 
-                SearchedDirs = new HashSet<string>();
+                Initialized = false;
             }
         }
 
@@ -140,9 +140,9 @@ namespace Ryujinx.HLE.HOS
         }
 
         // Static Query Methods
-        public static void QueryPatchDirs(PatchCache cache, DirectoryInfo patchDir, DirectoryInfo searchDir)
+        public static void QueryPatchDirs(PatchCache cache, DirectoryInfo patchDir)
         {
-            if (!patchDir.Exists || cache.SearchedDirs.Contains(searchDir.FullName)) return;
+            if (cache.Initialized || !patchDir.Exists) return;
 
             var patches = cache.KipPatches;
             string type = null;
@@ -216,7 +216,7 @@ namespace Ryujinx.HLE.HOS
         {
             if (!contentsDir.Exists) return;
 
-            Logger.Info?.Print(LogClass.ModLoader, $"Searching mods for Title {titleId:X16}");
+            Logger.Info?.Print(LogClass.ModLoader, $"Searching mods for {((titleId & 0x1000) != 0 ? "DLC" : "Title")} {titleId:X16}");
 
             var titleDir = FindTitleDir(contentsDir, $"{titleId:x16}");
 
@@ -226,26 +226,29 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        public static void CollectMods(ModCache mods, PatchCache patches, ulong? titleId, params string[] searchDirPaths)
+        // Assumes searchDirPaths don't overlap
+        public static void CollectMods(Dictionary<ulong, ModCache> modCaches, PatchCache patches, params string[] searchDirPaths)
         {
             static bool IsPatchesDir(string name) => StrEquals(AmsNsoPatchDir, name) ||
                                                      StrEquals(AmsNroPatchDir, name) ||
                                                      StrEquals(AmsKipPatchDir, name);
 
-            static bool TryQuery(ModCache mods, PatchCache patches, ulong? titleId, DirectoryInfo dir, DirectoryInfo searchDir)
-            {
-                if (StrEquals(AmsContentsDir, dir.Name))
-                {
-                    if (titleId.HasValue)
-                    {
-                        QueryContentsDir(mods, dir, (ulong)titleId);
+            static bool IsContentsDir(string name) => StrEquals(AmsContentsDir, name);
 
-                        return true;
-                    }
-                }
-                else if (IsPatchesDir(dir.Name))
+            static bool TryQuery(DirectoryInfo searchDir, PatchCache patches, Dictionary<ulong, ModCache> modCaches)
+            {
+                if (IsContentsDir(searchDir.Name))
                 {
-                    QueryPatchDirs(patches, dir, searchDir);
+                    foreach (var (titleId, cache) in modCaches)
+                    {
+                        QueryContentsDir(cache, searchDir, titleId);
+                    }
+
+                    return true;
+                }
+                else if (IsPatchesDir(searchDir.Name))
+                {
+                    QueryPatchDirs(patches, searchDir);
 
                     return true;
                 }
@@ -255,34 +258,35 @@ namespace Ryujinx.HLE.HOS
 
             foreach (var path in searchDirPaths)
             {
-                var dir = new DirectoryInfo(path);
-                if (!dir.Exists)
+                var searchDir = new DirectoryInfo(path);
+                if (!searchDir.Exists)
                 {
-                    Logger.Warning?.Print(LogClass.ModLoader, $"Mod Search Dir '{dir.FullName}' doesn't exist");
+                    Logger.Warning?.Print(LogClass.ModLoader, $"Mod Search Dir '{searchDir.FullName}' doesn't exist");
                     continue;
                 }
 
-                if (!TryQuery(mods, patches, titleId, dir, dir))
+                if (!TryQuery(searchDir, patches, modCaches))
                 {
-                    foreach (var subdir in dir.EnumerateDirectories())
+                    foreach (var subdir in searchDir.EnumerateDirectories())
                     {
-                        TryQuery(mods, patches, titleId, subdir, dir);
+                        TryQuery(subdir, patches, modCaches);
                     }
                 }
-
-                patches.SearchedDirs.Add(dir.FullName);
             }
+
+            patches.Initialized = true;
         }
 
-        public void CollectMods(ulong titleId, params string[] searchDirPaths)
+        public void CollectMods(IEnumerable<ulong> titles, params string[] searchDirPaths)
         {
-            if (!AppMods.TryGetValue(titleId, out ModCache mods))
+            Clear();
+
+            foreach (ulong titleId in titles)
             {
-                mods = new ModCache();
-                AppMods[titleId] = mods;
+                AppMods[titleId] = new ModCache();
             }
 
-            CollectMods(mods, Patches, titleId, searchDirPaths);
+            CollectMods(AppMods, Patches, searchDirPaths);
         }
 
         internal IStorage ApplyRomFsMods(ulong titleId, IStorage baseStorage)
@@ -448,7 +452,7 @@ namespace Ryujinx.HLE.HOS
                     }
 
                     modLoadResult.Npdm = new Npdm(npdmFile.OpenRead());
-                    
+
                     Logger.Info?.Print(LogClass.ModLoader, $"main.npdm replaced");
                 }
             }

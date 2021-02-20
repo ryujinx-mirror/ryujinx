@@ -72,9 +72,6 @@ namespace Ryujinx.HLE.HOS
             _fileSystem     = fileSystem;
 
             _controlData = new BlitStruct<ApplicationControlProperty>(1);
-
-            // Clear Mods cache
-            _fileSystem.ModLoader.Clear();
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -88,7 +85,7 @@ namespace Ryujinx.HLE.HOS
 
             Npdm metaData = ReadNpdm(codeFs);
 
-            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.ModLoader.GetModsBasePath());
+            _fileSystem.ModLoader.CollectMods(new[] { TitleId }, _fileSystem.ModLoader.GetModsBasePath());
 
             if (TitleId != 0)
             {
@@ -377,7 +374,7 @@ namespace Ryujinx.HLE.HOS
 
             Npdm metaData = ReadNpdm(codeFs);
 
-            _fileSystem.ModLoader.CollectMods(TitleId, _fileSystem.ModLoader.GetModsBasePath());
+            _fileSystem.ModLoader.CollectMods(_contentManager.GetAocTitleIds().Prepend(TitleId), _fileSystem.ModLoader.GetModsBasePath());
 
             if (controlNca != null)
             {

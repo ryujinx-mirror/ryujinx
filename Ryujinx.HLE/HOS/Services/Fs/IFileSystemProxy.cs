@@ -400,7 +400,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             {
                 Logger.Info?.Print(LogClass.Loader, $"Opened AddOnContent Data TitleID={titleId:X16}");
 
-                MakeObject(context, new FileSystemProxy.IStorage(aocStorage));
+                MakeObject(context, new FileSystemProxy.IStorage(context.Device.FileSystem.ModLoader.ApplyRomFsMods((ulong)titleId, aocStorage)));
 
                 return ResultCode.Success;
             }
