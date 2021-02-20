@@ -570,7 +570,10 @@ namespace Ryujinx.Ui.Windows
         {
             ((ToggleButton)sender).SetStateFlags(StateFlags.Normal, true);
 
-            new ControllerWindow(playerIndex).Show();
+            ControllerWindow controllerWindow = new ControllerWindow(playerIndex);
+
+            controllerWindow.SetSizeRequest((int)(controllerWindow.DefaultWidth * Program.WindowScaleFactor), (int)(controllerWindow.DefaultHeight * Program.WindowScaleFactor));
+            controllerWindow.Show();
         }
 
         private void SaveToggle_Activated(object sender, EventArgs args)

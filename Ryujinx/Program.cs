@@ -18,12 +18,14 @@ namespace Ryujinx
 {
     class Program
     {
+        public static double WindowScaleFactor { get; private set; }
+
         public static string Version { get; private set; }
 
         public static string ConfigurationPath { get; set; }
 
         static void Main(string[] args)
-        {
+        { 
             // Parse Arguments.
             string launchPathArg      = null;
             string baseDirPathArg     = null;
@@ -53,6 +55,10 @@ namespace Ryujinx
                     launchPathArg = arg;
                 }
             }
+
+            // Make process DPI aware for proper window sizing on high-res screens.
+            ForceDpiAware.Windows();
+            WindowScaleFactor = ForceDpiAware.GetWindowScaleFactor();
 
             // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);
