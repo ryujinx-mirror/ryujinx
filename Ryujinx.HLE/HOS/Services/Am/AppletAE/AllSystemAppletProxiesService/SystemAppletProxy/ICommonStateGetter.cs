@@ -13,8 +13,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private Lbl.LblControllerServer _lblControllerServer;
 
         private bool _vrModeEnabled;
-        private int _messageEventHandle;
-        private int _displayResolutionChangedEventHandle;
+        private bool _lcdBacklighOffEnabled;
+        private int  _messageEventHandle;
+        private int  _displayResolutionChangedEventHandle;
 
         public ICommonStateGetter(ServiceCtx context)
         {
@@ -126,6 +127,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             bool vrModeEnabled = context.RequestData.ReadBoolean();
 
             UpdateVrMode(vrModeEnabled);
+
+            return ResultCode.Success;
+        }
+
+        [Command(52)] // 4.0.0+
+        // SetLcdBacklighOffEnabled(b8)
+        public ResultCode SetLcdBacklighOffEnabled(ServiceCtx context)
+        {
+            // NOTE: Service sets a private field here, maybe this field is used somewhere else to turned off the backlight.
+            //       Since we don't support backlight, it's fine to do nothing.
+
+            _lcdBacklighOffEnabled = context.RequestData.ReadBoolean();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }
