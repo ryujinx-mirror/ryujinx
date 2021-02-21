@@ -236,6 +236,15 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                                 }
                             }
                         }
+                        else if (node is Operation operation && operation.Instruction == Instruction.Copy)
+                        {
+                            Operation fillOp = Operation(Instruction.Fill, node.Destination, Const(info.SpillOffset));
+
+                            block.Operations.AddBefore(node, fillOp);
+                            block.Operations.Remove(node);
+
+                            node = fillOp;
+                        }
                         else
                         {
                             Operand temp = info.Temp;
