@@ -814,6 +814,7 @@ namespace ARMeilleure.Decoders
             SetA32("111100111x11xx01xxxx0x100xx0xxxx", InstName.Vclt,     InstEmit32.Vclt_Z,   OpCode32SimdCmpZ.Create);
             SetA32("<<<<11101x11010xxxxx101x01x0xxxx", InstName.Vcmp,     InstEmit32.Vcmp,     OpCode32SimdS.Create);
             SetA32("<<<<11101x11010xxxxx101x11x0xxxx", InstName.Vcmpe,    InstEmit32.Vcmpe,    OpCode32SimdS.Create);
+            SetA32("111100111x110000xxxx01010xx0xxxx", InstName.Vcnt,     InstEmit32.Vcnt,     OpCode32SimdCmpZ.Create);
             SetA32("<<<<11101x110111xxxx101x11x0xxxx", InstName.Vcvt,     InstEmit32.Vcvt_FD,  OpCode32SimdS.Create); // FP 32 and 64, scalar.
             SetA32("<<<<11101x11110xxxxx101x11x0xxxx", InstName.Vcvt,     InstEmit32.Vcvt_FI,  OpCode32SimdCvtFI.Create); // FP32 to int.
             SetA32("<<<<11101x111000xxxx101xx1x0xxxx", InstName.Vcvt,     InstEmit32.Vcvt_FI,  OpCode32SimdCvtFI.Create); // Int to FP32.

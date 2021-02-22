@@ -289,7 +289,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    de = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.CountSetBits8)), ne);
+                    de = EmitCountSetBits8(context, ne);
                 }
 
                 res = EmitVectorInsert(context, res, de, index, 0);

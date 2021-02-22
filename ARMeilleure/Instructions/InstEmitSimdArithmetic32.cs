@@ -135,6 +135,34 @@ namespace ARMeilleure.Instructions
             EmitVectorBinaryWideOpI32(context, (op1, op2) => context.Add(op1, op2), !op.U);
         }
 
+        public static void Vcnt(ArmEmitterContext context)
+        {
+            OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
+
+            Operand res = GetVecA32(op.Qd);
+
+            int elems = op.GetBytesCount();
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand de;
+                Operand me = EmitVectorExtractZx32(context, op.Qm, op.Im + index, op.Size);
+
+                if (Optimizations.UsePopCnt)
+                {
+                    de = context.AddIntrinsicInt(Intrinsic.X86Popcnt, me);
+                }
+                else
+                {
+                    de = EmitCountSetBits8(context, me);
+                }
+
+                res = EmitVectorInsert(context, res, de, op.Id + index, op.Size);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
         public static void Vdup(ArmEmitterContext context)
         {
             OpCode32SimdDupGP op = (OpCode32SimdDupGP)context.CurrOp;

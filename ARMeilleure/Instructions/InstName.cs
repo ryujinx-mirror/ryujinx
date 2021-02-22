@@ -567,6 +567,7 @@ namespace ARMeilleure.Instructions
         Vclt,
         Vcmp,
         Vcmpe,
+        Vcnt,
         Vcvt,
         Vdiv,
         Vdup,

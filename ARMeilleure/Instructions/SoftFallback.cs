@@ -846,14 +846,6 @@ namespace ARMeilleure.Instructions
 
             return (ulong)count;
         }
-
-        public static ulong CountSetBits8(ulong value) // "size" is 8 (SIMD&FP Inst.).
-        {
-            value = ((value >> 1) & 0x55ul) + (value & 0x55ul);
-            value = ((value >> 2) & 0x33ul) + (value & 0x33ul);
-
-            return (value >> 4) + (value & 0x0ful);
-        }
 #endregion
 
 #region "Table"

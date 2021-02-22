@@ -234,6 +234,18 @@ namespace ARMeilleure.Instructions
             throw new ArgumentException($"Invalid rounding mode \"{roundMode}\".");
         }
 
+        public static Operand EmitCountSetBits8(ArmEmitterContext context, Operand op) // "size" is 8 (SIMD&FP Inst.).
+        {
+            Debug.Assert(op.Type == OperandType.I32 || op.Type == OperandType.I64);
+
+            Operand op0 = context.Subtract(op, context.BitwiseAnd(context.ShiftRightUI(op, Const(1)), Const(op.Type, 0x55L)));
+
+            Operand c1 = Const(op.Type, 0x33L);
+            Operand op1 = context.Add(context.BitwiseAnd(context.ShiftRightUI(op0, Const(2)), c1), context.BitwiseAnd(op0, c1));
+
+            return context.BitwiseAnd(context.Add(op1, context.ShiftRightUI(op1, Const(4))), Const(op.Type, 0x0fL));
+        }
+
         public static void EmitScalarUnaryOpF(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;

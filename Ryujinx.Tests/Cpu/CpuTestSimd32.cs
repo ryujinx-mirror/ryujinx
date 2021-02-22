@@ -154,6 +154,15 @@ namespace Ryujinx.Tests.Cpu
                 yield return rnd2;
             }
         }
+
+        private static IEnumerable<ulong> _GenPopCnt8B_()
+        {
+            for (ulong cnt = 0ul; cnt <= 255ul; cnt++)
+            {
+                yield return (cnt << 56) | (cnt << 48) | (cnt << 40) | (cnt << 32) |
+                             (cnt << 24) | (cnt << 16) | (cnt << 08) | cnt;
+            }
+        }
 #endregion
 
         private const int RndCnt = 2;
@@ -214,6 +223,34 @@ namespace Ryujinx.Tests.Cpu
             V128 v1 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VCNT.8 D0, D0 | VCNT.8 Q0, Q0")]
+        public void Vcnt([Values(0u, 1u)] uint rd,
+                         [Values(0u, 1u)] uint rm,
+                         [ValueSource(nameof(_GenPopCnt8B_))] [Random(RndCnt)] ulong d0,
+                         [Values] bool q)
+        {
+            ulong d1 = ~d0; // It's expensive to have a second generator.
+
+            uint opcode = 0xf3b00500u; // VCNT.8 D0, D0
+
+            if (q)
+            {
+                opcode |= 1u << 6;
+
+                rd &= ~1u;
+                rm &= ~1u;
+            }
+
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
 
             CompareAgainstUnicorn();
         }
