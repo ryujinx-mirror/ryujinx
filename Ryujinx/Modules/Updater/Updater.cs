@@ -7,11 +7,13 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Modules
@@ -23,11 +25,13 @@ namespace Ryujinx.Modules
         private static readonly string HomeDir          = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string UpdateDir        = Path.Combine(Path.GetTempPath(), "Ryujinx", "update");
         private static readonly string UpdatePublishDir = Path.Combine(UpdateDir, "publish");
+        private static readonly int    ConnectionCount  = 4;
 
         private static string _jobId;
         private static string _buildVer;
         private static string _platformExt;
         private static string _buildUrl;
+        private static long   _buildSize;
         
         private const string AppveyorApiUrl = "https://ci.appveyor.com/api";
 
@@ -38,18 +42,30 @@ namespace Ryujinx.Modules
             Running = true;
             mainWindow.UpdateMenuItem.Sensitive = false;
 
+            int artifactIndex = -1;
+
             // Detect current platform
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                _platformExt = "osx_x64.zip";
+                _platformExt  = "osx_x64.zip";
+                artifactIndex = 1;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _platformExt = "win_x64.zip";
+                _platformExt  = "win_x64.zip";
+                artifactIndex = 2;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                _platformExt = "linux_x64.tar.gz";
+                _platformExt  = "linux_x64.tar.gz";
+                artifactIndex = 0;
+            }
+
+            if (artifactIndex == -1)
+            {
+                GtkDialog.CreateErrorDialog("Your platform is not supported!");
+
+                return;
             }
 
             Version newVersion;
@@ -72,6 +88,7 @@ namespace Ryujinx.Modules
             {
                 using (WebClient jsonClient = new WebClient())
                 {
+                    // Fetch latest build information
                     string  fetchedJson = await jsonClient.DownloadStringTaskAsync($"{AppveyorApiUrl}/projects/gdkchan/ryujinx/branch/master");
                     JObject jsonRoot    = JObject.Parse(fetchedJson);
                     JToken  buildToken  = jsonRoot["build"];
@@ -125,12 +142,32 @@ namespace Ryujinx.Modules
                 return;
             }
 
+            // Fetch build size information to learn chunk sizes.
+            using (WebClient buildSizeClient = new WebClient()) 
+            { 
+                try
+                {
+                    buildSizeClient.Headers.Add("Range", "bytes=0-0");
+                    await buildSizeClient.DownloadDataTaskAsync(new Uri(_buildUrl));
+
+                    string contentRange = buildSizeClient.ResponseHeaders["Content-Range"];
+                    _buildSize = long.Parse(contentRange.Substring(contentRange.IndexOf('/') + 1));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning?.Print(LogClass.Application, ex.Message);
+                    Logger.Warning?.Print(LogClass.Application, "Couldn't determine build size for update, will use single-threaded updater");
+
+                    _buildSize = -1;
+                }
+            }
+
             // Show a message asking the user if they want to update
             UpdateDialog updateDialog = new UpdateDialog(mainWindow, newVersion, _buildUrl);
             updateDialog.Show();
         }
 
-        public static async Task UpdateRyujinx(UpdateDialog updateDialog, string downloadUrl)
+        public static void UpdateRyujinx(UpdateDialog updateDialog, string downloadUrl)
         {
             // Empty update dir, although it shouldn't ever have anything inside it
             if (Directory.Exists(UpdateDir))
@@ -147,6 +184,126 @@ namespace Ryujinx.Modules
             updateDialog.ProgressBar.Value    = 0;
             updateDialog.ProgressBar.MaxValue = 100;
 
+            if (_buildSize >= 0)
+            {
+                DoUpdateWithMultipleThreads(updateDialog, downloadUrl, updateFile);
+            }
+            else
+            {
+                DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+            }
+        }
+
+        private static void DoUpdateWithMultipleThreads(UpdateDialog updateDialog, string downloadUrl, string updateFile)
+        {
+            // Multi-Threaded Updater
+            long chunkSize = _buildSize / ConnectionCount;
+            long remainderChunk = _buildSize % ConnectionCount;
+
+            int completedRequests = 0;
+            int totalProgressPercentage = 0;
+            int[] progressPercentage = new int[ConnectionCount];
+
+            List<byte[]> list = new List<byte[]>(ConnectionCount);
+            List<WebClient> webClients = new List<WebClient>(ConnectionCount);
+
+            for (int i = 0; i < ConnectionCount; i++)
+            {
+                list.Add(new byte[0]);
+            }
+
+            for (int i = 0; i < ConnectionCount; i++)
+            {
+                using (WebClient client = new WebClient())
+                {
+                    webClients.Add(client);
+
+                    if (i == ConnectionCount - 1)
+                    {
+                        client.Headers.Add("Range", $"bytes={chunkSize * i}-{(chunkSize * (i + 1) - 1) + remainderChunk}");
+                    }
+                    else
+                    {
+                        client.Headers.Add("Range", $"bytes={chunkSize * i}-{chunkSize * (i + 1) - 1}");
+                    }
+
+                    client.DownloadProgressChanged += (_, args) =>
+                    {
+                        int index = (int)args.UserState;
+
+                        Interlocked.Add(ref totalProgressPercentage, -1 * progressPercentage[index]);
+                        Interlocked.Exchange(ref progressPercentage[index], args.ProgressPercentage);
+                        Interlocked.Add(ref totalProgressPercentage, args.ProgressPercentage);
+
+                        updateDialog.ProgressBar.Value = totalProgressPercentage / ConnectionCount;
+                    };
+
+                    client.DownloadDataCompleted += (_, args) =>
+                    {
+                        int index = (int)args.UserState;
+
+                        if (args.Cancelled)
+                        {
+                            webClients[index].Dispose();
+
+                            return;
+                        }
+
+                        list[index] = args.Result;
+                        Interlocked.Increment(ref completedRequests);
+
+                        if (Interlocked.Equals(completedRequests, ConnectionCount))
+                        {
+                            byte[] mergedFileBytes = new byte[_buildSize];
+                            for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < ConnectionCount; connectionIndex++)
+                            {
+                                Array.Copy(list[connectionIndex], 0, mergedFileBytes, destinationOffset, list[connectionIndex].Length);
+                                destinationOffset += list[connectionIndex].Length;
+                            }
+
+                            File.WriteAllBytes(updateFile, mergedFileBytes);
+
+                            try
+                            {
+                                InstallUpdate(updateDialog, updateFile);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Warning?.Print(LogClass.Application, e.Message);
+                                Logger.Warning?.Print(LogClass.Application, $"Multi-Threaded update failed, falling back to single-threaded updater.");
+
+                                DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+
+                                return;
+                            }
+                        }
+                    };
+
+                    try
+                    {
+                        client.DownloadDataAsync(new Uri(downloadUrl), i);
+                    }
+                    catch (WebException ex)
+                    {
+                        Logger.Warning?.Print(LogClass.Application, ex.Message);
+                        Logger.Warning?.Print(LogClass.Application, $"Multi-Threaded update failed, falling back to single-threaded updater.");
+                        
+                        for (int j = 0; j < webClients.Count; j++)
+                        {
+                            webClients[j].CancelAsync();
+                        }
+
+                        DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        private static void DoUpdateWithSingleThread(UpdateDialog updateDialog, string downloadUrl, string updateFile)
+        {
+            // Single-Threaded Updater
             using (WebClient client = new WebClient())
             {
                 client.DownloadProgressChanged += (_, args) =>
@@ -154,9 +311,18 @@ namespace Ryujinx.Modules
                     updateDialog.ProgressBar.Value = args.ProgressPercentage;
                 };
 
-                await client.DownloadFileTaskAsync(downloadUrl, updateFile);
-            }
+                client.DownloadDataCompleted += (_, args) =>
+                {
+                    File.WriteAllBytes(updateFile, args.Result);
+                    InstallUpdate(updateDialog, updateFile);
+                };
 
+                client.DownloadDataAsync(new Uri(downloadUrl));
+            }
+        }
+        
+        private static async void InstallUpdate(UpdateDialog updateDialog, string updateFile)
+        {
             // Extract Update
             updateDialog.MainText.Text     = "Extracting Update...";
             updateDialog.ProgressBar.Value = 0;

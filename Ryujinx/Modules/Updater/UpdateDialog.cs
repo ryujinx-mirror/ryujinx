@@ -73,7 +73,7 @@ namespace Ryujinx.Modules
                 SecondaryText.Text = "";
                 _restartQuery      = true;
 
-                _ = Updater.UpdateRyujinx(this, _buildUrl);
+                Updater.UpdateRyujinx(this, _buildUrl);
             }
         }
 
