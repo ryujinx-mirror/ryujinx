@@ -29,10 +29,16 @@ namespace ARMeilleure.Translation
             {
                 if (_initialized) return;
 
+                Translator.PreparePool();
+
                 _directCallStubPtr       = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateDirectCallStub(false));
                 _directTailCallStubPtr   = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateDirectCallStub(true));
                 _indirectCallStubPtr     = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateIndirectCallStub(false));
                 _indirectTailCallStubPtr = Marshal.GetFunctionPointerForDelegate<GuestFunction>(GenerateIndirectCallStub(true));
+
+                Translator.ResetPool();
+
+                Translator.DisposePools();
 
                 _initialized = true;
             }

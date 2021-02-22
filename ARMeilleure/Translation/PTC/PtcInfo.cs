@@ -9,7 +9,8 @@ namespace ARMeilleure.Translation.PTC
         private readonly BinaryWriter _relocWriter;
         private readonly BinaryWriter _unwindInfoWriter;
 
-        public MemoryStream CodeStream       { get; }
+        public byte[] Code { get; set; }
+
         public MemoryStream RelocStream      { get; }
         public MemoryStream UnwindInfoStream { get; }
 
@@ -17,7 +18,6 @@ namespace ARMeilleure.Translation.PTC
 
         public PtcInfo()
         {
-            CodeStream       = new MemoryStream();
             RelocStream      = new MemoryStream();
             UnwindInfoStream = new MemoryStream();
 
@@ -25,11 +25,6 @@ namespace ARMeilleure.Translation.PTC
             _unwindInfoWriter = new BinaryWriter(UnwindInfoStream, EncodingCache.UTF8NoBOM, true);
 
             RelocEntriesCount = 0;
-        }
-
-        public void WriteCode(MemoryStream codeStream)
-        {
-            codeStream.WriteTo(CodeStream);
         }
 
         public void WriteRelocEntry(RelocEntry relocEntry)
@@ -60,7 +55,6 @@ namespace ARMeilleure.Translation.PTC
             _relocWriter.Dispose();
             _unwindInfoWriter.Dispose();
 
-            CodeStream.Dispose();
             RelocStream.Dispose();
             UnwindInfoStream.Dispose();
         }

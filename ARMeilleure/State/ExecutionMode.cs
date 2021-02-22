@@ -1,6 +1,6 @@
 namespace ARMeilleure.State
 {
-    enum ExecutionMode
+    enum ExecutionMode : int
     {
         Aarch32Arm = 0,
         Aarch32Thumb = 1,

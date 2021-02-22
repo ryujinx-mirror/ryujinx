@@ -4,16 +4,6 @@ namespace ARMeilleure.IntermediateRepresentation
 {
     static class OperandHelper
     {
-        private static MemoryOperand MemoryOperand()
-        {
-            return ThreadStaticPool<MemoryOperand>.Instance.Allocate();
-        }
-
-        private static Operand Operand()
-        {
-            return ThreadStaticPool<Operand>.Instance.Allocate();
-        }
-
         public static Operand Const(OperandType type, long value)
         {
             return type == OperandType.I32 ? Operand().With((int)value) : Operand().With(value);
@@ -84,22 +74,34 @@ namespace ARMeilleure.IntermediateRepresentation
             return MemoryOperand().With(type, baseAddress, index, scale, displacement);
         }
 
-        public static void PrepareOperandPool(bool highCq)
+        #region "ThreadStaticPool"
+        public static void PrepareOperandPool(int groupId = 0)
         {
-            ThreadStaticPool<Operand>.PreparePool(highCq ? 1 : 0);
-            ThreadStaticPool<MemoryOperand>.PreparePool(highCq ? 1 : 0);
+            ThreadStaticPool<Operand>.PreparePool(groupId, ChunkSizeLimit.Large);
+            ThreadStaticPool<MemoryOperand>.PreparePool(groupId, ChunkSizeLimit.Small);
         }
 
-        public static void ReturnOperandPool(bool highCq)
+        private static Operand Operand()
         {
-            ThreadStaticPool<Operand>.ReturnPool(highCq ? 1 : 0);
-            ThreadStaticPool<MemoryOperand>.ReturnPool(highCq ? 1 : 0);
+            return ThreadStaticPool<Operand>.Instance.Allocate();
         }
 
-        public static void ResetOperandPools()
+        private static MemoryOperand MemoryOperand()
         {
-            ThreadStaticPool<Operand>.ResetPools();
-            ThreadStaticPool<MemoryOperand>.ResetPools();
+            return ThreadStaticPool<MemoryOperand>.Instance.Allocate();
         }
+
+        public static void ResetOperandPool(int groupId = 0)
+        {
+            ThreadStaticPool<MemoryOperand>.ResetPool(groupId);
+            ThreadStaticPool<Operand>.ResetPool(groupId);
+        }
+
+        public static void DisposeOperandPools()
+        {
+            ThreadStaticPool<Operand>.DisposePools();
+            ThreadStaticPool<MemoryOperand>.DisposePools();
+        }
+        #endregion
     }
 }

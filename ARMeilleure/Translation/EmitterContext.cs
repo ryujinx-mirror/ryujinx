@@ -1,6 +1,7 @@
 using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
+using ARMeilleure.Translation.PTC;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,8 +10,6 @@ using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.Translation
 {
-    using PTC;
-
     class EmitterContext
     {
         private readonly Dictionary<Operand, BasicBlock> _irLabels;

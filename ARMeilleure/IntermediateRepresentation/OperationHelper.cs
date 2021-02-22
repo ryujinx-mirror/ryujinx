@@ -4,11 +4,6 @@ namespace ARMeilleure.IntermediateRepresentation
 {
     static class OperationHelper
     {
-        public static Operation Operation()
-        {
-            return ThreadStaticPool<Operation>.Instance.Allocate();
-        }
-
         public static Operation Operation(Instruction instruction, Operand destination)
         {
             return Operation().With(instruction, destination);
@@ -46,19 +41,26 @@ namespace ARMeilleure.IntermediateRepresentation
             return Operation().With(instruction, destinations, sources);
         }
 
-        public static void PrepareOperationPool(bool highCq)
+        #region "ThreadStaticPool"
+        public static void PrepareOperationPool(int groupId = 0)
         {
-            ThreadStaticPool<Operation>.PreparePool(highCq ? 1 : 0);
+            ThreadStaticPool<Operation>.PreparePool(groupId, ChunkSizeLimit.Medium);
         }
 
-        public static void ReturnOperationPool(bool highCq)
+        private static Operation Operation()
         {
-            ThreadStaticPool<Operation>.ReturnPool(highCq ? 1 : 0);
+            return ThreadStaticPool<Operation>.Instance.Allocate();
         }
 
-        public static void ResetOperationPools()
+        public static void ResetOperationPool(int groupId = 0)
         {
-            ThreadStaticPool<Operation>.ResetPools();
+            ThreadStaticPool<Operation>.ResetPool(groupId);
         }
+
+        public static void DisposeOperationPools()
+        {
+            ThreadStaticPool<Operation>.DisposePools();
+        }
+        #endregion
     }
 }

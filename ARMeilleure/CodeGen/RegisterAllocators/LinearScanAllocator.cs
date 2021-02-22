@@ -50,6 +50,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 StackAlloc = stackAlloc;
                 Masks      = masks;
 
+                BitMapPool.PrepareBitMapPool();
+
                 Active   = BitMapPool.Allocate(intervalsCount);
                 Inactive = BitMapPool.Allocate(intervalsCount);
             }
@@ -73,7 +75,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             public void Dispose()
             {
-                BitMapPool.Release();
+                BitMapPool.ResetBitMapPool();
             }
         }
 
@@ -84,7 +86,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         {
             NumberLocals(cfg);
 
-            AllocationContext context = new AllocationContext(stackAlloc, regMasks, _intervals.Count);
+            using AllocationContext context = new AllocationContext(stackAlloc, regMasks, _intervals.Count);
 
             BuildIntervals(cfg, context);
 
@@ -127,14 +129,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             InsertSplitCopies();
             InsertSplitCopiesAtEdges(cfg);
 
-            AllocationResult result = new AllocationResult(
-                context.IntUsedRegisters,
-                context.VecUsedRegisters,
-                context.StackAlloc.TotalSize);
-
-            context.Dispose();
-
-            return result;
+            return new AllocationResult(context.IntUsedRegisters, context.VecUsedRegisters, context.StackAlloc.TotalSize);
         }
 
         private void AllocateInterval(AllocationContext context, LiveInterval current, int cIndex)

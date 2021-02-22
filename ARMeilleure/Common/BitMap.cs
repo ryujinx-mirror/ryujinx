@@ -35,7 +35,7 @@ namespace ARMeilleure.Common
             }
         }
 
-        public void Reset(int initialCapacity)
+        public BitMap Reset(int initialCapacity)
         {
             int count = (initialCapacity + IntMask) / IntSize;
 
@@ -50,6 +50,8 @@ namespace ARMeilleure.Common
             {
                 _masks.Add(0);
             }
+
+            return this;
         }
 
         public bool Set(int bit)

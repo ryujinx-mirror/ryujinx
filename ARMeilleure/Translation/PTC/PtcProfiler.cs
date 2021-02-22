@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
+
+using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
 {
@@ -29,7 +32,9 @@ namespace ARMeilleure.Translation.PTC
 
         private static bool _disposed;
 
-        internal static Dictionary<ulong, (ExecutionMode mode, bool highCq)> ProfiledFuncs { get; private set; }
+        private static byte[] _lastHash;
+
+        internal static Dictionary<ulong, FuncProfile> ProfiledFuncs { get; private set; }
 
         internal static bool Enabled { get; private set; }
 
@@ -47,7 +52,7 @@ namespace ARMeilleure.Translation.PTC
 
             _disposed = false;
 
-            ProfiledFuncs = new Dictionary<ulong, (ExecutionMode, bool)>();
+            ProfiledFuncs = new Dictionary<ulong, FuncProfile>();
 
             Enabled = false;
         }
@@ -60,7 +65,7 @@ namespace ARMeilleure.Translation.PTC
 
                 lock (_lock)
                 {
-                    ProfiledFuncs.TryAdd(address, (mode, highCq: false));
+                    ProfiledFuncs.TryAdd(address, new FuncProfile(mode, highCq: false));
                 }
             }
         }
@@ -75,7 +80,7 @@ namespace ARMeilleure.Translation.PTC
                 {
                     Debug.Assert(ProfiledFuncs.ContainsKey(address));
 
-                    ProfiledFuncs[address] = (mode, highCq: true);
+                    ProfiledFuncs[address] = new FuncProfile(mode, highCq: true);
                 }
             }
         }
@@ -95,7 +100,7 @@ namespace ARMeilleure.Translation.PTC
 
                 if (!funcs.ContainsKey(address))
                 {
-                    profiledFuncsToTranslate.Enqueue((address, profiledFunc.Value.mode, profiledFunc.Value.highCq));
+                    profiledFuncsToTranslate.Enqueue((address, profiledFunc.Value.Mode, profiledFunc.Value.HighCq));
                 }
             }
 
@@ -105,12 +110,15 @@ namespace ARMeilleure.Translation.PTC
         internal static void ClearEntries()
         {
             ProfiledFuncs.Clear();
+            ProfiledFuncs.TrimExcess();
         }
 
         internal static void PreLoad()
         {
-            string fileNameActual = String.Concat(Ptc.CachePathActual, ".info");
-            string fileNameBackup = String.Concat(Ptc.CachePathBackup, ".info");
+            _lastHash = Array.Empty<byte>();
+
+            string fileNameActual = string.Concat(Ptc.CachePathActual, ".info");
+            string fileNameBackup = string.Concat(Ptc.CachePathBackup, ".info");
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
             FileInfo fileInfoBackup = new FileInfo(fileNameBackup);
@@ -138,8 +146,6 @@ namespace ARMeilleure.Translation.PTC
             using (MemoryStream stream = new MemoryStream())
             using (MD5 md5 = MD5.Create())
             {
-                int hashSize = md5.HashSize / 8;
-
                 try
                 {
                     deflateStream.CopyTo(stream);
@@ -150,6 +156,8 @@ namespace ARMeilleure.Translation.PTC
 
                     return false;
                 }
+
+                int hashSize = md5.HashSize / 8;
 
                 stream.Seek(0L, SeekOrigin.Begin);
 
@@ -189,12 +197,14 @@ namespace ARMeilleure.Translation.PTC
                 }
                 catch
                 {
-                    ProfiledFuncs = new Dictionary<ulong, (ExecutionMode, bool)>();
+                    ProfiledFuncs = new Dictionary<ulong, FuncProfile>();
 
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
+
+                _lastHash = expectedHash;
             }
 
             long fileSize = new FileInfo(fileName).Length;
@@ -209,7 +219,7 @@ namespace ARMeilleure.Translation.PTC
             return currentHash.SequenceEqual(expectedHash);
         }
 
-        private static Header ReadHeader(MemoryStream stream)
+        private static Header ReadHeader(Stream stream)
         {
             using (BinaryReader headerReader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
             {
@@ -223,26 +233,9 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static Dictionary<ulong, (ExecutionMode, bool)> Deserialize(MemoryStream stream)
+        private static Dictionary<ulong, FuncProfile> Deserialize(Stream stream)
         {
-            using (BinaryReader reader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
-            {
-                var profiledFuncs = new Dictionary<ulong, (ExecutionMode, bool)>();
-
-                int profiledFuncsCount = reader.ReadInt32();
-
-                for (int i = 0; i < profiledFuncsCount; i++)
-                {
-                    ulong address = reader.ReadUInt64();
-
-                    ExecutionMode mode = (ExecutionMode)reader.ReadInt32();
-                    bool highCq = reader.ReadBoolean();
-
-                    profiledFuncs.Add(address, (mode, highCq));
-                }
-
-                return profiledFuncs;
-            }
+            return DeserializeDictionary<ulong, FuncProfile>(stream, (stream) => DeserializeStructure<FuncProfile>(stream));
         }
 
         private static void InvalidateCompressedStream(FileStream compressedStream)
@@ -254,8 +247,8 @@ namespace ARMeilleure.Translation.PTC
         {
             _waitEvent.Reset();
 
-            string fileNameActual = String.Concat(Ptc.CachePathActual, ".info");
-            string fileNameBackup = String.Concat(Ptc.CachePathBackup, ".info");
+            string fileNameActual = string.Concat(Ptc.CachePathActual, ".info");
+            string fileNameBackup = string.Concat(Ptc.CachePathBackup, ".info");
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
 
@@ -295,16 +288,25 @@ namespace ARMeilleure.Translation.PTC
                 stream.Seek(0L, SeekOrigin.Begin);
                 stream.Write(hash, 0, hashSize);
 
+                if (CompareHash(hash, _lastHash))
+                {
+                    return;
+                }
+
                 using (FileStream compressedStream = new FileStream(fileName, FileMode.OpenOrCreate))
                 using (DeflateStream deflateStream = new DeflateStream(compressedStream, SaveCompressionLevel, true))
                 {
                     try
                     {
                         stream.WriteTo(deflateStream);
+
+                        _lastHash = hash;
                     }
                     catch
                     {
                         compressedStream.Position = 0L;
+
+                        _lastHash = Array.Empty<byte>();
                     }
 
                     if (compressedStream.Position < compressedStream.Length)
@@ -316,10 +318,13 @@ namespace ARMeilleure.Translation.PTC
 
             long fileSize = new FileInfo(fileName).Length;
 
-            Logger.Info?.Print(LogClass.Ptc, $"Saved Profiling Info (size: {fileSize} bytes, profiled functions: {profiledFuncsCount}).");
+            if (fileSize != 0L)
+            {
+                Logger.Info?.Print(LogClass.Ptc, $"Saved Profiling Info (size: {fileSize} bytes, profiled functions: {profiledFuncsCount}).");
+            }
         }
 
-        private static void WriteHeader(MemoryStream stream)
+        private static void WriteHeader(Stream stream)
         {
             using (BinaryWriter headerWriter = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
             {
@@ -329,20 +334,9 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static void Serialize(MemoryStream stream, Dictionary<ulong, (ExecutionMode mode, bool highCq)> profiledFuncs)
+        private static void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
         {
-            using (BinaryWriter writer = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
-            {
-                writer.Write((int)profiledFuncs.Count);
-
-                foreach (var kv in profiledFuncs)
-                {
-                    writer.Write((ulong)kv.Key); // address
-
-                    writer.Write((int)kv.Value.mode);
-                    writer.Write((bool)kv.Value.highCq);
-                }
-            }
+            SerializeDictionary(stream, profiledFuncs, (stream, structure) => SerializeStructure(stream, structure));
         }
 
         private struct Header
@@ -350,6 +344,19 @@ namespace ARMeilleure.Translation.PTC
             public string Magic;
 
             public uint InfoFileVersion;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 5*/)]
+        internal struct FuncProfile
+        {
+            public ExecutionMode Mode;
+            public bool HighCq;
+
+            public FuncProfile(ExecutionMode mode, bool highCq)
+            {
+                Mode = mode;
+                HighCq = highCq;
+            }
         }
 
         internal static void Start()

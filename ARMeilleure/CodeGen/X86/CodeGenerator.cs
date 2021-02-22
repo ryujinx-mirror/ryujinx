@@ -190,6 +190,11 @@ namespace ARMeilleure.CodeGen.X86
 
                 byte[] code = context.GetCode();
 
+                if (ptcInfo != null)
+                {
+                    ptcInfo.Code = code;
+                }
+
                 Logger.EndPass(PassName.CodeGeneration);
 
                 return new CompiledFunction(code, unwindInfo);

@@ -40,8 +40,6 @@ namespace Ryujinx.Memory
             }
 
             Size = size;
-
-            GC.AddMemoryPressure((long)Size);
         }
 
         /// <summary>
@@ -283,8 +281,6 @@ namespace Ryujinx.Memory
             if (ptr != IntPtr.Zero)
             {
                 MemoryManagement.Free(ptr);
-
-                GC.RemoveMemoryPressure((long)Size);
             }
         }
 
