@@ -1235,7 +1235,7 @@
     "enable_ptc": {
       "$id": "#/properties/enable_ptc",
       "type": "boolean",
-      "title": "Enable Profiled Persistent Translation Cache",
+      "title": "Enable PPTC (Profiled Persistent Translation Cache)",
       "description": "Enables or disables profiled translation cache persistency",
       "default": true,
       "examples": [

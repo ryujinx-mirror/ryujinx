@@ -961,7 +961,7 @@ namespace ARMeilleure.CodeGen.X86
 
                         WriteInt32((int)imm);
                     }
-                    else if (dest != null && dest.Kind == OperandKind.Register && info.OpRImm64 != BadOp)
+                    else if (dest?.Kind == OperandKind.Register && info.OpRImm64 != BadOp)
                     {
                         int? index = source.PtcIndex;
 

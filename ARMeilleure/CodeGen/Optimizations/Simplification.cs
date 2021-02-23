@@ -12,6 +12,12 @@ namespace ARMeilleure.CodeGen.Optimizations
             switch (operation.Instruction)
             {
                 case Instruction.Add:
+                    if (operation.GetSource(0).Relocatable ||
+                        operation.GetSource(1).Relocatable)
+                    {
+                        break;
+                    }
+
                     TryEliminateBinaryOpComutative(operation, 0);
                     break;
 

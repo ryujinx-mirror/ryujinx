@@ -14,7 +14,7 @@ namespace ARMeilleure.CodeGen.Optimizations
                 return;
             }
 
-            if (!AreAllSourcesConstantAndCFEnabled(operation))
+            if (!AreAllSourcesConstant(operation))
             {
                 return;
             }
@@ -24,6 +24,12 @@ namespace ARMeilleure.CodeGen.Optimizations
             switch (operation.Instruction)
             {
                 case Instruction.Add:
+                    if (operation.GetSource(0).Relocatable ||
+                        operation.GetSource(1).Relocatable)
+                    {
+                        break;
+                    }
+
                     if (type == OperandType.I32)
                     {
                         EvaluateBinaryI32(operation, (x, y) => x + y);
@@ -252,13 +258,13 @@ namespace ARMeilleure.CodeGen.Optimizations
             }
         }
 
-        private static bool AreAllSourcesConstantAndCFEnabled(Operation operation)
+        private static bool AreAllSourcesConstant(Operation operation)
         {
             for (int index = 0; index < operation.SourcesCount; index++)
             {
                 Operand srcOp = operation.GetSource(index);
 
-                if (srcOp.Kind != OperandKind.Constant || srcOp.Relocatable)
+                if (srcOp.Kind != OperandKind.Constant)
                 {
                     return false;
                 }
