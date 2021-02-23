@@ -1131,7 +1131,10 @@ namespace Ryujinx.Ui
         {
             if (Updater.CanUpdate(true))
             {
-                _ = Updater.BeginParse(this, true);
+                Updater.BeginParse(this, true).ContinueWith(task =>
+                {
+                    Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 

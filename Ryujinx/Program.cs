@@ -156,7 +156,10 @@ namespace Ryujinx
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
             {
-                _ = Updater.BeginParse(mainWindow, false);
+                Updater.BeginParse(mainWindow, false).ContinueWith(task =>
+                {
+                    Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
 
             Application.Run();

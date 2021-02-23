@@ -9,6 +9,7 @@ using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -34,6 +35,9 @@ namespace Ryujinx.Modules
         private static long   _buildSize;
         
         private const string AppveyorApiUrl = "https://ci.appveyor.com/api";
+
+        // On Windows, GtkSharp.Dependencies adds these extra dirs that must be cleaned during updates.
+        private static readonly string[] WindowsDependencyDirs = new string[] { "bin", "etc", "lib", "share" };
 
         public static async Task BeginParse(MainWindow mainWindow, bool showVersionUpToDate)
         {
@@ -402,32 +406,29 @@ namespace Ryujinx.Modules
             // Delete downloaded zip
             File.Delete(updateFile);
 
-            string[] allFiles = Directory.GetFiles(HomeDir, "*", SearchOption.AllDirectories);
+            List<string> allFiles = EnumerateFilesToDelete().ToList();
 
             updateDialog.MainText.Text        = "Renaming Old Files...";
             updateDialog.ProgressBar.Value    = 0;
-            updateDialog.ProgressBar.MaxValue = allFiles.Length;
+            updateDialog.ProgressBar.MaxValue = allFiles.Count;
 
             // Replace old files
             await Task.Run(() =>
             {
                 foreach (string file in allFiles)
                 {
-                    if (!Path.GetExtension(file).Equals(".log"))
+                    try
                     {
-                        try
-                        {
-                            File.Move(file, file + ".ryuold");
+                        File.Move(file, file + ".ryuold");
 
-                            Application.Invoke(delegate
-                            {
-                                updateDialog.ProgressBar.Value++;
-                            });
-                        }
-                        catch
+                        Application.Invoke(delegate
                         {
-                            Logger.Warning?.Print(LogClass.Application, "Updater wasn't able to rename file: " + file);
-                        }
+                            updateDialog.ProgressBar.Value++;
+                        });
+                    }
+                    catch
+                    {
+                        Logger.Warning?.Print(LogClass.Application, "Updater wasn't able to rename file: " + file);
                     }
                 }
 
@@ -487,6 +488,26 @@ namespace Ryujinx.Modules
             return true;
         }
 
+        // NOTE: This method should always reflect the latest build layout.
+        private static IEnumerable<string> EnumerateFilesToDelete()
+        {
+            var files = Directory.EnumerateFiles(HomeDir); // All files directly in base dir.
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                foreach (string dir in WindowsDependencyDirs)
+                {
+                    string dirPath = Path.Combine(HomeDir, dir);
+                    if (Directory.Exists(dirPath))
+                    {
+                        files = files.Concat(Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories));
+                    }
+                }
+            }
+
+            return files;
+        }
+
         private static void MoveAllFilesOver(string root, string dest, UpdateDialog dialog)
         {
             foreach (string directory in Directory.GetDirectories(root))
@@ -514,7 +535,7 @@ namespace Ryujinx.Modules
 
         public static void CleanupUpdate()
         {
-            foreach (string file in Directory.GetFiles(HomeDir, "*", SearchOption.AllDirectories))
+            foreach (string file in EnumerateFilesToDelete())
             {
                 if (Path.GetExtension(file).EndsWith(".ryuold"))
                 {
