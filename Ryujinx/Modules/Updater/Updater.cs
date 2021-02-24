@@ -2,6 +2,7 @@ using Gtk;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
+using Mono.Unix;
 using Newtonsoft.Json.Linq;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
@@ -325,6 +326,17 @@ namespace Ryujinx.Modules
             }
         }
         
+        private static void SetUnixPermissions()
+        {
+            string ryuBin = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx");
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                UnixFileInfo unixFileInfo = new UnixFileInfo(ryuBin);
+                unixFileInfo.FileAccessPermissions |= FileAccessPermissions.UserExecute;
+            }
+        }
+
         private static async void InstallUpdate(UpdateDialog updateDialog, string updateFile)
         {
             // Extract Update
@@ -443,6 +455,8 @@ namespace Ryujinx.Modules
             });
 
             Directory.Delete(UpdateDir, true);
+
+            SetUnixPermissions();
 
             updateDialog.MainText.Text      = "Update Complete!";
             updateDialog.SecondaryText.Text = "Do you want to restart Ryujinx now?";

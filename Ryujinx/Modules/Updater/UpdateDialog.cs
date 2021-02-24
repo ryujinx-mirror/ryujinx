@@ -42,7 +42,7 @@ namespace Ryujinx.Modules
             YesButton.Clicked += YesButton_Clicked;
             NoButton.Clicked  += NoButton_Clicked;
         }
-        
+
         private void YesButton_Clicked(object sender, EventArgs args)
         {
             if (_restartQuery)
@@ -50,12 +50,6 @@ namespace Ryujinx.Modules
                 string ryuName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Ryujinx.exe" : "Ryujinx";
                 string ryuExe  = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ryuName);
                 string ryuArg  = string.Join(" ", Environment.GetCommandLineArgs().AsEnumerable().Skip(1).ToArray());
-
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    UnixFileInfo unixFileInfo = new UnixFileInfo(ryuExe);
-                    unixFileInfo.FileAccessPermissions |= FileAccessPermissions.UserExecute;
-                }
 
                 Process.Start(ryuExe, ryuArg);
 
