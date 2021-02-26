@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.SoundIo\Ryujinx.Audio.Backends.SoundIo.csproj" />
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
     <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
@@ -38,9 +39,9 @@
     <None Update="THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <ContentWithTargetPath Include="..\Ryujinx.Audio.Renderer\LICENSE.txt">
+    <ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>LICENSE-Ryujinx.Audio.Renderer.txt</TargetPath>
+      <TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
 

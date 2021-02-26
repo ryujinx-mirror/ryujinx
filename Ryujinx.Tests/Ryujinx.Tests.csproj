@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ryujinx.Audio.Renderer\Ryujinx.Audio.Renderer.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
     <ProjectReference Include="..\Ryujinx.Cpu\Ryujinx.Cpu.csproj" />
     <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
     <ProjectReference Include="..\Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj" />

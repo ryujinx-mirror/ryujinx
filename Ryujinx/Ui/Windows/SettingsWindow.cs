@@ -1,5 +1,7 @@
 using Gtk;
 using Ryujinx.Audio;
+using Ryujinx.Audio.Backends.OpenAL;
+using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Configuration;
@@ -324,8 +326,8 @@ namespace Ryujinx.Ui.Windows
 
             Task.Run(() =>
             {
-                openAlIsSupported  = OpenALAudioOut.IsSupported;
-                soundIoIsSupported = SoundIoAudioOut.IsSupported;
+                openAlIsSupported  = OpenALHardwareDeviceDriver.IsSupported;
+                soundIoIsSupported = SoundIoHardwareDeviceDriver.IsSupported;
             });
 
             // This function runs whenever the dropdown is opened

@@ -6,26 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.NetStandard" Version="1.0.5.32" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ContentWithTargetPath Include="Native\libsoundio\libs\libsoundio.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libsoundio.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="Native\libsoundio\libs\libsoundio.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libsoundio.dylib</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="Native\libsoundio\libs\libsoundio.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libsoundio.so</TargetPath>
-    </ContentWithTargetPath>
+    <ProjectReference Include="..\Ryujinx.Cpu\Ryujinx.Cpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
   </ItemGroup>
 
 </Project>

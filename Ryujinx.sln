@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Tests.Unicorn", "Ry
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.HLE", "Ryujinx.HLE\Ryujinx.HLE.csproj", "{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio", "Ryujinx.Audio\Ryujinx.Audio.csproj", "{5C1D818E-682A-46A5-9D54-30006E26C270}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.ShaderTools", "Ryujinx.ShaderTools\Ryujinx.ShaderTools.csproj", "{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Common", "Ryujinx.Common\Ryujinx.Common.csproj", "{5FD4E4F6-8928-4B3C-BE07-28A675C17226}"
@@ -31,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Shader", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Nvdec", "Ryujinx.Graphics.Nvdec\Ryujinx.Graphics.Nvdec.csproj", "{85A0FA56-DC01-4A42-8808-70DAC76BD66D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Renderer", "Ryujinx.Audio.Renderer\Ryujinx.Audio.Renderer.csproj", "{806ACF6D-90B0-45D0-A1AC-5F220F3B3985}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio", "Ryujinx.Audio\Ryujinx.Audio.csproj", "{806ACF6D-90B0-45D0-A1AC-5F220F3B3985}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{36F870C1-3E5F-485F-B426-F0645AF78751}"
 	ProjectSection(SolutionItems) = preProject
@@ -57,6 +55,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Nvdec.H264
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Video", "Ryujinx.Graphics.Video\Ryujinx.Graphics.Video.csproj", "{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Backends.OpenAL", "Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj", "{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Backends.SoundIo", "Ryujinx.Audio.Backends.SoundIo\Ryujinx.Audio.Backends.SoundIo.csproj", "{716364DE-B988-41A6-BAB4-327964266ECC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,10 +81,6 @@ Global
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C1D818E-682A-46A5-9D54-30006E26C270}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C1D818E-682A-46A5-9D54-30006E26C270}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C1D818E-682A-46A5-9D54-30006E26C270}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C1D818E-682A-46A5-9D54-30006E26C270}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -159,6 +157,14 @@ Global
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{716364DE-B988-41A6-BAB4-327964266ECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{716364DE-B988-41A6-BAB4-327964266ECC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{716364DE-B988-41A6-BAB4-327964266ECC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{716364DE-B988-41A6-BAB4-327964266ECC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTK.NetStandard" Version="1.0.5.32" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
+    <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ContentWithTargetPath Include="SoundIo\Native\libsoundio\libs\libsoundio.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>libsoundio.dll</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="SoundIo\Native\libsoundio\libs\libsoundio.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>libsoundio.dylib</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="SoundIo\Native\libsoundio\libs\libsoundio.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>libsoundio.so</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+
+</Project>
