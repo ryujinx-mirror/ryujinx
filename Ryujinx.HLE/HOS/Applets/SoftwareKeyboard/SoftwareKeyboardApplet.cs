@@ -50,6 +50,7 @@ namespace Ryujinx.HLE.HOS.Applets
         private bool     _okPressed = false;
         private Encoding _encoding  = Encoding.Unicode;
         private long     _lastTextSetMillis = 0;
+        private bool     _lastWasHidden = false;
 
         public event EventHandler AppletStateChanged;
 
@@ -350,12 +351,12 @@ namespace Ryujinx.HLE.HOS.Applets
                         // The Calc request tells the Applet to enter the main input handling loop, which will end
                         // with either a text being submitted or a cancel request from the user.
 
-                        // NOTE: Some Calc requests happen early in the process and are not meant to be shown. This possibly
+                        // NOTE: Some Calc requests happen early in the application and are not meant to be shown. This possibly
                         // happens because the game has complete control over when the inline keyboard is drawn, but here it
                         // would cause a dialog to pop in the emulator, which is inconvenient. An algorithm is applied to
                         // decide whether it is a dummy Calc or not, but regardless of the result, the dummy Calc appears to
                         // never happen twice, so the keyboard will always show if it has already been shown before.
-                        bool forceShowKeyboard = _alreadyShown;
+                        bool shouldShowKeyboard = _alreadyShown;
                         _alreadyShown = true;
 
                         // Read the Calc data.
@@ -379,7 +380,7 @@ namespace Ryujinx.HLE.HOS.Applets
                             // input dialog may show, but it is better than a soft lock.
                             if (_keyboardBackgroundCalc.Appear.ShouldBeHidden == 0)
                             {
-                                forceShowKeyboard = true;
+                                shouldShowKeyboard = true;
                             }
                         }
                         // Send an initialization finished signal.
@@ -387,10 +388,10 @@ namespace Ryujinx.HLE.HOS.Applets
                         SetInlineState(state);
                         _interactiveSession.Push(InlineResponses.FinishedInitialize(state));
                         // Start a task with the GUI handler to get user's input.
-                        new Task(() => { GetInputTextAndSend(forceShowKeyboard, state); }).Start();
+                        new Task(() => { GetInputTextAndSend(shouldShowKeyboard, state); }).Start();
                         break;
                     case InlineKeyboardRequest.Finalize:
-                        // The calling process wants to close the keyboard applet and will wait for a state change.
+                        // The calling application wants to close the keyboard applet and will wait for a state change.
                         _backgroundState = InlineKeyboardState.Uninitialized;
                         AppletStateChanged?.Invoke(this, null);
                         break;
@@ -403,7 +404,7 @@ namespace Ryujinx.HLE.HOS.Applets
             }
         }
 
-        private void GetInputTextAndSend(bool forceShowKeyboard, InlineKeyboardState oldState)
+        private void GetInputTextAndSend(bool shouldShowKeyboard, InlineKeyboardState oldState)
         {
             bool submit = true;
 
@@ -422,27 +423,32 @@ namespace Ryujinx.HLE.HOS.Applets
             SetInlineState(newState);
             ChangedString("", newState);
 
-            if (inputElapsedMillis < DebounceTimeMillis)
+            if (!_lastWasHidden && (inputElapsedMillis < DebounceTimeMillis))
             {
                 // A repeated Calc request has been received without player interaction, after the input has been
                 // sent. This behavior happens in some games, so instead of showing another dialog, just apply a
                 // time-based debouncing algorithm and repeat the last submission, either a value or a cancel.
+                // It is also possible that the first Calc request was hidden by accident, in this case use the
+                // debouncing as an oportunity to properly ask for input.
                 inputText = _textValue;
                 submit = _textValue != null;
+                _lastWasHidden = false;
 
                 Logger.Warning?.Print(LogClass.Application, "Debouncing repeated keyboard request");
             }
-            else if (!forceShowKeyboard)
+            else if (!shouldShowKeyboard)
             {
                 // Submit the default text to avoid soft locking if the keyboard was ignored by
                 // accident. It's better to change the name than being locked out of the game.
                 inputText = DefaultText;
+                _lastWasHidden = true;
 
                 Logger.Debug?.Print(LogClass.Application, "Received a dummy Calc, keyboard will not be shown");
             }
             else if (_device.UiHandler == null)
             {
                 Logger.Warning?.Print(LogClass.Application, "GUI Handler is not set. Falling back to default");
+                _lastWasHidden = false;
             }
             else
             {
@@ -461,6 +467,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
                 submit = _device.UiHandler.DisplayInputDialog(args, out inputText);
                 inputText = submit ? inputText : null;
+                _lastWasHidden = false;
             }
 
             // The 'Complete' state indicates the Calc request has been fulfilled by the applet.
