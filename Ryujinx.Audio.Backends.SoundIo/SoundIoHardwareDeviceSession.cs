@@ -3,7 +3,7 @@ using Ryujinx.Audio.Common;
 using Ryujinx.Memory;
 using SoundIOSharp;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -11,10 +11,8 @@ namespace Ryujinx.Audio.Backends.SoundIo
 {
     class SoundIoHardwareDeviceSession : HardwareDeviceSessionOutputBase
     {
-        private object _lock = new object();
-
         private SoundIoHardwareDeviceDriver _driver;
-        private Queue<SoundIoAudioBuffer> _queuedBuffers;
+        private ConcurrentQueue<SoundIoAudioBuffer> _queuedBuffers;
         private SoundIOOutStream _outputStream;
         private DynamicRingBuffer _ringBuffer;
         private ulong _playedSampleCount;
@@ -24,7 +22,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
         {
             _driver = driver;
             _updateRequiredEvent = _driver.GetUpdateRequiredEvent();
-            _queuedBuffers = new Queue<SoundIoAudioBuffer>();
+            _queuedBuffers = new ConcurrentQueue<SoundIoAudioBuffer>();
             _ringBuffer = new DynamicRingBuffer();
 
             SetupOutputStream();
@@ -42,10 +40,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override ulong GetPlayedSampleCount()
         {
-            lock (_lock)
-            {
-                return _playedSampleCount;
-            }
+            return Interlocked.Read(ref _playedSampleCount);
         }
 
         public override float GetVolume()
@@ -57,19 +52,11 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override void QueueBuffer(AudioBuffer buffer)
         {
-            lock (_lock)
-            {
-                SoundIoAudioBuffer driverBuffer = new SoundIoAudioBuffer
-                {
-                    DriverIdentifier = buffer.DataPointer,
-                    SampleCount      = GetSampleCount(buffer),
-                    SamplePlayed     = 0,
-                };
+            SoundIoAudioBuffer driverBuffer = new SoundIoAudioBuffer(buffer.DataPointer, GetSampleCount(buffer));
 
-                _ringBuffer.Write(buffer.Data, 0, buffer.Data.Length);
+            _ringBuffer.Write(buffer.Data, 0, buffer.Data.Length);
 
-                _queuedBuffers.Enqueue(driverBuffer);
-            }
+            _queuedBuffers.Enqueue(driverBuffer);
         }
 
         public override void SetVolume(float volume)
@@ -96,15 +83,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override bool WasBufferFullyConsumed(AudioBuffer buffer)
         {
-            lock (_lock)
+            if (!_queuedBuffers.TryPeek(out SoundIoAudioBuffer driverBuffer))
             {
-                if (!_queuedBuffers.TryPeek(out SoundIoAudioBuffer driverBuffer))
-                {
-                    return true;
-                }
-
-                return driverBuffer.DriverIdentifier != buffer.DataPointer;
+                return true;
             }
+
+            return driverBuffer.DriverIdentifier != buffer.DataPointer;
         }
 
         private unsafe void Update(int minFrameCount, int maxFrameCount)
@@ -413,20 +397,20 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
             while (availaibleSampleCount > 0 && _queuedBuffers.TryPeek(out SoundIoAudioBuffer driverBuffer))
             {
-                ulong sampleStillNeeded = driverBuffer.SampleCount - driverBuffer.SamplePlayed;
+                ulong sampleStillNeeded = driverBuffer.SampleCount - Interlocked.Read(ref driverBuffer.SamplePlayed);
                 ulong playedAudioBufferSampleCount = Math.Min(sampleStillNeeded, availaibleSampleCount);
 
-                driverBuffer.SamplePlayed += playedAudioBufferSampleCount;
+                Interlocked.Add(ref driverBuffer.SamplePlayed, playedAudioBufferSampleCount);
                 availaibleSampleCount -= playedAudioBufferSampleCount;
 
-                if (driverBuffer.SamplePlayed == driverBuffer.SampleCount)
+                if (Interlocked.Read(ref driverBuffer.SamplePlayed) == driverBuffer.SampleCount)
                 {
                     _queuedBuffers.TryDequeue(out _);
 
                     needUpdate = true;
                 }
 
-                _playedSampleCount += playedAudioBufferSampleCount;
+                Interlocked.Add(ref _playedSampleCount, playedAudioBufferSampleCount);
             }
 
             // Notify the output if needed.
@@ -440,15 +424,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
         {
             if (disposing)
             {
-                lock (_lock)
-                {
-                    PrepareToClose();
-                    Stop();
+                PrepareToClose();
+                Stop();
 
-                    _outputStream.Dispose();
+                _outputStream.Dispose();
 
-                    _driver.Unregister(this);
-                }
+                _driver.Unregister(this);
             }
         }
 
