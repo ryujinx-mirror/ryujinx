@@ -24,6 +24,22 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         configuration: [Debug, Release]
+        include:
+        - os: ubuntu-latest
+          OS_NAME: Linux x64
+          DOTNET_RUNTIME_IDENTIFIER: linux-x64
+          RELEASE_ZIP_OS_NAME: linux_x64.tar.gz
+
+        - os: macOS-latest
+          OS_NAME: MacOS x64
+          DOTNET_RUNTIME_IDENTIFIER: osx-x64
+          RELEASE_ZIP_OS_NAME: osx_x64
+
+        - os: windows-latest
+          OS_NAME: Windows x64
+          DOTNET_RUNTIME_IDENTIFIER: win-x64
+          RELEASE_ZIP_OS_NAME: win_x64
+
       fail-fast: false
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
@@ -33,9 +49,32 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.x
+      - name: Get git short hash
+        id: git_short_hash
+        run: echo "::set-output name=result::$(git rev-parse --short HEAD)"
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
-        run: dotnet build -c "${{ matrix.configuration }}"
+        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="1.0.0" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
       - name: Test
         run: dotnet test -c "${{ matrix.configuration }}"
+      - name: Publish
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.0.0" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
+        if: github.event_name == 'pull_request'
+      - name: Packing artifacts (Normal)
+        run: |
+          mkdir output
+          7z a "./output/ryujinx-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}.zip" ./publish
+        if: github.event_name == 'pull_request' && matrix.os != 'ubuntu-latest'
+      - name: Packing artifacts (Linux only)
+        run: |
+          mkdir output
+          7z a "ryujinx-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}.tar" ./publish
+          7z a "./output/ryujinx-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}.tar.gz" "ryujinx-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}.tar"
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest'
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Output ${{ matrix.OS_NAME }} (${{ matrix.configuration }})
+          path: output
+        if: github.event_name == 'pull_request'
