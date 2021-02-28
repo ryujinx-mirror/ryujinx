@@ -107,7 +107,7 @@ namespace Ryujinx.Modules
                     {
                         if (showVersionUpToDate)
                         {
-                            GtkDialog.CreateUpdaterInfoDialog("You are already using the most updated version of Ryujinx!", "");
+                            GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
                         }
 
                         return;
@@ -138,7 +138,7 @@ namespace Ryujinx.Modules
             {
                 if (showVersionUpToDate)
                 {
-                    GtkDialog.CreateUpdaterInfoDialog("You are already using the most updated version of Ryujinx!", "");
+                    GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
                 }
 
                 Running = false;
@@ -440,7 +440,7 @@ namespace Ryujinx.Modules
                     }
                     catch
                     {
-                        Logger.Warning?.Print(LogClass.Application, "Updater wasn't able to rename file: " + file);
+                        Logger.Warning?.Print(LogClass.Application, "Updater was unable to rename file: " + file);
                     }
                 }
 
