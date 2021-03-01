@@ -684,7 +684,7 @@ namespace Ryujinx.Cpu
             // Write tag includes read protection, since we don't have any read actions that aren't performed before write too.
             long tag = (write ? 3L : 1L) << PointerTagBit;
 
-            int pages = GetPagesCount(va, (uint)size, out va);
+            int pages = GetPagesCount(va, (uint)size, out _);
             ulong pageStart = va >> PageBits;
 
             for (int page = 0; page < pages; page++)
