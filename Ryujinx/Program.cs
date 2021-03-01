@@ -168,9 +168,7 @@ namespace Ryujinx
         private static void PrintSystemInfo()
         {
             Logger.Notice.Print(LogClass.Application, $"Ryujinx Version: {Version}");
-            Logger.Notice.Print(LogClass.Application, $"Operating System: {SystemInfo.Instance.OsDescription}");
-            Logger.Notice.Print(LogClass.Application, $"CPU: {SystemInfo.Instance.CpuName}");
-            Logger.Notice.Print(LogClass.Application, $"Total RAM: {SystemInfo.Instance.RamSizeInMB}");
+            SystemInfo.Gather().Print();
 
             var enabledLogs = Logger.GetEnabledLevels();
             Logger.Notice.Print(LogClass.Application, $"Logs Enabled: {(enabledLogs.Count == 0 ? "<None>" : string.Join(", ", enabledLogs))}");

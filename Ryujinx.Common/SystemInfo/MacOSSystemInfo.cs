@@ -8,10 +8,27 @@ using Ryujinx.Common.Logging;
 namespace Ryujinx.Common.SystemInfo
 {
     [SupportedOSPlatform("macos")]
-    internal class MacOSSystemInfo : SystemInfo
+    class MacOSSystemInfo : SystemInfo
     {
-        public override string CpuName { get; }
-        public override ulong RamSize { get; }
+        internal MacOSSystemInfo()
+        {
+            string cpuName = GetCpuidCpuName();
+
+            if (cpuName == null && sysctlbyname("machdep.cpu.brand_string", out cpuName) != 0)
+            {
+                cpuName = "Unknown";
+            }
+
+            ulong totalRAM = 0;
+
+            if (sysctlbyname("hw.memsize", ref totalRAM) != 0)  // Bytes
+            {
+                totalRAM = 0;
+            };
+
+            CpuName = $"{cpuName} ; {LogicalCoreCount} logical";
+            RamTotal = totalRAM;
+        }
 
         [DllImport("libSystem.dylib", CharSet = CharSet.Ansi, SetLastError = true)]
         private static extern int sysctlbyname(string name, IntPtr oldValue, ref ulong oldSize, IntPtr newValue, ulong newValueSize);
@@ -20,7 +37,11 @@ namespace Ryujinx.Common.SystemInfo
         {
             if (sysctlbyname(name, oldValue, ref oldSize, IntPtr.Zero, 0) == -1)
             {
-                return Marshal.GetLastWin32Error();
+                int err = Marshal.GetLastWin32Error();
+
+                Logger.Error?.Print(LogClass.Application, $"Cannot retrieve '{name}'. Error Code {err}");
+
+                return err;
             }
 
             return 0;
@@ -63,37 +84,6 @@ namespace Ryujinx.Common.SystemInfo
             }
 
             return res;
-        }
-
-        public MacOSSystemInfo()
-        {
-            ulong ramSize = 0;
-
-            int res = sysctlbyname("hw.memsize", ref ramSize);
-
-            if (res == 0)
-            {
-                RamSize = ramSize;
-            }
-            else
-            {
-                Logger.Error?.Print(LogClass.Application, $"Cannot get memory size, sysctlbyname error: {res}");
-
-                RamSize = 0;
-            }
-
-            res = sysctlbyname("machdep.cpu.brand_string", out string cpuName);
-
-            if (res == 0)
-            {
-                CpuName = cpuName;
-            }
-            else
-            {
-                Logger.Error?.Print(LogClass.Application, $"Cannot get CPU name, sysctlbyname error: {res}");
-
-                CpuName = "Unknown";
-            }
         }
     }
 }
