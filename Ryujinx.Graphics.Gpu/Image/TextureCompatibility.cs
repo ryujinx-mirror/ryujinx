@@ -215,7 +215,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="lhs">Texture information of the texture view</param>
         /// <param name="rhs">Texture information of the texture view to match against</param>
         /// <param name="level">Mipmap level of the texture view in relation to this texture</param>
-        /// <returns>True if the sizes are compatible, false otherwise</returns>
+        /// <returns>The view compatibility level of the view sizes</returns>
         public static TextureViewCompatibility ViewSizeMatches(TextureInfo lhs, TextureInfo rhs, int level)
         {
             Size size = GetAlignedSize(lhs, level);
@@ -233,6 +233,27 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             return (size.Width  == otherSize.Width &&
                     size.Height == otherSize.Height) ? result : TextureViewCompatibility.Incompatible;
+        }
+
+        /// <summary>
+        /// Checks if the potential child texture fits within the level and layer bounds of the parent.
+        /// </summary>
+        /// <param name="parent">Texture information for the parent</param>
+        /// <param name="child">Texture information for the child</param>
+        /// <param name="layer">Base layer of the child texture</param>
+        /// <param name="level">Base level of the child texture</param>
+        /// <returns>Full compatiblity if the child's layer and level count fit within the parent, incompatible otherwise</returns>
+        public static TextureViewCompatibility ViewSubImagesInBounds(TextureInfo parent, TextureInfo child, int layer, int level)
+        {
+            if (level + child.Levels <= parent.Levels &&
+                layer + child.GetSlices() <= parent.GetSlices())
+            {
+                return TextureViewCompatibility.Full;
+            }
+            else
+            {
+                return TextureViewCompatibility.Incompatible;
+            }
         }
 
         /// <summary>
@@ -382,10 +403,22 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="lhs">Texture information of the texture view</param>
         /// <param name="rhs">Texture information of the texture view</param>
-        /// <returns>True if the formats are compatible, false otherwise</returns>
-        public static bool ViewFormatCompatible(TextureInfo lhs, TextureInfo rhs)
+        /// <returns>The view compatibility level of the texture formats</returns>
+        public static TextureViewCompatibility ViewFormatCompatible(TextureInfo lhs, TextureInfo rhs)
         {
-            return FormatCompatible(lhs.FormatInfo, rhs.FormatInfo);
+            if (FormatCompatible(lhs.FormatInfo, rhs.FormatInfo))
+            {
+                if (lhs.FormatInfo.IsCompressed != rhs.FormatInfo.IsCompressed)
+                {
+                    return TextureViewCompatibility.CopyOnly;
+                }
+                else
+                {
+                    return TextureViewCompatibility.Full;
+                }
+            }
+
+            return TextureViewCompatibility.Incompatible;
         }
 
         /// <summary>

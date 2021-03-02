@@ -10,8 +10,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private readonly TextureStorage _parent;
 
-        private TextureView _emulatedViewParent;
-
         private TextureView _incompatibleFormatView;
 
         public int FirstLayer { get; private set; }
@@ -96,37 +94,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)
         {
-            if (Info.IsCompressed == info.IsCompressed)
-            {
-                firstLayer += FirstLayer;
-                firstLevel += FirstLevel;
+            firstLayer += FirstLayer;
+            firstLevel += FirstLevel;
 
-                return _parent.CreateView(info, firstLayer, firstLevel);
-            }
-            else
-            {
-                // TODO: Most graphics APIs doesn't support creating a texture view from a compressed format
-                // with a non-compressed format (or vice-versa), however NVN seems to support it.
-                // So we emulate that here with a texture copy (see the first CopyTo overload).
-                // However right now it only does a single copy right after the view is created,
-                // so it doesn't work for all cases.
-                TextureView emulatedView = (TextureView)_renderer.CreateTexture(info, ScaleFactor);
-
-                _renderer.TextureCopy.CopyUnscaled(
-                    this,
-                    emulatedView,
-                    0,
-                    firstLayer,
-                    0,
-                    firstLevel);
-
-                emulatedView._emulatedViewParent = this;
-
-                emulatedView.FirstLayer = firstLayer;
-                emulatedView.FirstLevel = firstLevel;
-
-                return emulatedView;
-            }
+            return _parent.CreateView(info, firstLayer, firstLevel);
         }
 
         public int GetIncompatibleFormatViewHandle()
@@ -163,17 +134,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
             TextureView destinationView = (TextureView)destination;
 
             _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
+        }
 
-            if (destinationView._emulatedViewParent != null)
-            {
-                _renderer.TextureCopy.CopyUnscaled(
-                    this,
-                    destinationView._emulatedViewParent,
-                    0,
-                    destinationView.FirstLayer,
-                    0,
-                    destinationView.FirstLevel);
-            }
+        public void CopyTo(ITexture destination, int srcLayer, int dstLayer, int srcLevel, int dstLevel)
+        {
+             TextureView destinationView = (TextureView)destination;
+
+            _renderer.TextureCopy.CopyUnscaled(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
         }
 
         public void CopyTo(ITexture destination, Extents2D srcRegion, Extents2D dstRegion, bool linearFilter)
@@ -304,6 +271,20 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 fixed (byte* ptr = data)
                 {
                     ReadFrom((IntPtr)ptr, data.Length);
+                }
+            }
+        }
+
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level)
+        {
+            unsafe
+            {
+                fixed (byte* ptr = data)
+                {
+                    int width = Math.Max(Info.Width >> level, 1);
+                    int height = Math.Max(Info.Height >> level, 1);
+
+                    ReadFrom2D((IntPtr)ptr, layer, level, width, height);
                 }
             }
         }

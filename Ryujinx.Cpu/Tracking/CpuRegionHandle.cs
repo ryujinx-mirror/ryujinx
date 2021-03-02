@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Memory.Tracking;
+using System;
 
 namespace Ryujinx.Cpu.Tracking
 {
@@ -18,6 +19,9 @@ namespace Ryujinx.Cpu.Tracking
 
         public void Dispose() => _impl.Dispose();
         public void RegisterAction(RegionSignal action) => _impl.RegisterAction(action);
-        public void Reprotect() => _impl.Reprotect();
+        public void RegisterDirtyEvent(Action action) => _impl.RegisterDirtyEvent(action);
+        public void Reprotect(bool asDirty = false) => _impl.Reprotect(asDirty);
+
+        public bool OverlapsWith(ulong address, ulong size) => _impl.OverlapsWith(address, size);
     }
 }

@@ -115,29 +115,50 @@ namespace Ryujinx.Graphics.OpenGL.Image
             TextureCreateInfo srcInfo = src.Info;
             TextureCreateInfo dstInfo = dst.Info;
 
+            int srcDepth = srcInfo.GetDepthOrLayers();
+            int srcLevels = srcInfo.Levels;
+
+            int dstDepth = dstInfo.GetDepthOrLayers();
+            int dstLevels = dstInfo.Levels;
+
+            if (dstInfo.Target == Target.Texture3D)
+            {
+                dstDepth = Math.Max(1, dstDepth >> dstLevel);
+            }
+
+            int depth = Math.Min(srcDepth, dstDepth);
+            int levels = Math.Min(srcLevels, dstLevels);
+
+            CopyUnscaled(src, dst, srcLayer, dstLayer, srcLevel, dstLevel, depth, levels);
+        }
+
+        public void CopyUnscaled(
+            ITextureInfo src,
+            ITextureInfo dst,
+            int srcLayer,
+            int dstLayer,
+            int srcLevel,
+            int dstLevel,
+            int depth,
+            int levels)
+        {
+            TextureCreateInfo srcInfo = src.Info;
+            TextureCreateInfo dstInfo = dst.Info;
+
             int srcHandle = src.Handle;
             int dstHandle = dst.Handle;
 
             int srcWidth = srcInfo.Width;
             int srcHeight = srcInfo.Height;
-            int srcDepth = srcInfo.GetDepthOrLayers();
-            int srcLevels = srcInfo.Levels;
 
             int dstWidth = dstInfo.Width;
             int dstHeight = dstInfo.Height;
-            int dstDepth = dstInfo.GetDepthOrLayers();
-            int dstLevels = dstInfo.Levels;
 
             srcWidth = Math.Max(1, srcWidth >> srcLevel);
             srcHeight = Math.Max(1, srcHeight >> srcLevel);
 
             dstWidth = Math.Max(1, dstWidth >> dstLevel);
             dstHeight = Math.Max(1, dstHeight >> dstLevel);
-
-            if (dstInfo.Target == Target.Texture3D)
-            {
-                dstDepth = Math.Max(1, dstDepth >> dstLevel);
-            }
 
             int blockWidth = 1;
             int blockHeight = 1;
@@ -166,8 +187,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             int width = Math.Min(srcWidth, dstWidth);
             int height = Math.Min(srcHeight, dstHeight);
-            int depth = Math.Min(srcDepth, dstDepth);
-            int levels = Math.Min(srcLevels, dstLevels);
 
             for (int level = 0; level < levels; level++)
             {

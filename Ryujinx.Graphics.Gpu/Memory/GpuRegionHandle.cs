@@ -49,11 +49,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
-        public void Reprotect()
+        public void Reprotect(bool asDirty = false)
         {
             foreach (var regionHandle in _cpuRegionHandles)
             {
-                regionHandle.Reprotect();
+                regionHandle.Reprotect(asDirty);
             }
         }
     }

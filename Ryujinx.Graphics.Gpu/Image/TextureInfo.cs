@@ -233,6 +233,31 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets the number of 2D slices of the texture.
+        /// Returns 6 for cubemap textures, layer faces for cubemap array textures, and DepthOrLayers for everything else.
+        /// </summary>
+        /// <returns>The number of texture slices</returns>
+        public int GetSlices()
+        {
+            if (Target == Target.Texture3D || Target == Target.Texture2DArray || Target == Target.Texture2DMultisampleArray)
+            {
+                return DepthOrLayers;
+            }
+            else if (Target == Target.CubemapArray)
+            {
+                return DepthOrLayers * 6;
+            }
+            else if (Target == Target.Cubemap)
+            {
+                return 6;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+
+        /// <summary>
         /// Calculates the size information from the texture information.
         /// </summary>
         /// <param name="layerSize">Optional size of each texture layer in bytes</param>
