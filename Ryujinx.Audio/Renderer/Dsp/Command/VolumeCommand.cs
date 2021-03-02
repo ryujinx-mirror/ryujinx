@@ -19,6 +19,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
@@ -89,6 +90,26 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
         }
 
+        private void ProcessVolumeAdvSimd(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
+        {
+            Vector128<float> volumeVec = Vector128.Create(Volume);
+
+            ReadOnlySpan<Vector128<float>> inputVec = MemoryMarshal.Cast<float, Vector128<float>>(inputBuffer);
+            Span<Vector128<float>> outputVec = MemoryMarshal.Cast<float, Vector128<float>>(outputBuffer);
+
+            int sisdStart = inputVec.Length * 4;
+
+            for (int i = 0; i < inputVec.Length; i++)
+            {
+                outputVec[i] = AdvSimd.Ceiling(AdvSimd.Multiply(inputVec[i], volumeVec));
+            }
+
+            for (int i = sisdStart; i < inputBuffer.Length; i++)
+            {
+                outputBuffer[i] = FloatingPointHelper.MultiplyRoundUp(inputBuffer[i], Volume);
+            }
+        }
+
         private void ProcessVolume(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
         {
             if (Avx.IsSupported)
@@ -98,6 +119,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             else if (Sse41.IsSupported)
             {
                 ProcessVolumeSse41(outputBuffer, inputBuffer);
+            }
+            else if (AdvSimd.IsSupported)
+            {
+                ProcessVolumeAdvSimd(outputBuffer, inputBuffer);
             }
             else
             {

@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 using static Ryujinx.Audio.Renderer.Parameter.VoiceInParameter;
 
@@ -320,6 +321,24 @@ namespace Ryujinx.Audio.Renderer.Dsp
             }
         }
 
+        private static void ToFloatAdvSimd(Span<float> output, ReadOnlySpan<int> input, int sampleCount)
+        {
+            ReadOnlySpan<Vector128<int>> inputVec = MemoryMarshal.Cast<int, Vector128<int>>(input);
+            Span<Vector128<float>> outputVec = MemoryMarshal.Cast<float, Vector128<float>>(output);
+
+            int sisdStart = inputVec.Length * 4;
+
+            for (int i = 0; i < inputVec.Length; i++)
+            {
+                outputVec[i] = AdvSimd.ConvertToSingle(inputVec[i]);
+            }
+
+            for (int i = sisdStart; i < sampleCount; i++)
+            {
+                output[i] = input[i];
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ToFloatSlow(Span<float> output, ReadOnlySpan<int> input, int sampleCount)
         {
@@ -338,6 +357,10 @@ namespace Ryujinx.Audio.Renderer.Dsp
             else if (Sse2.IsSupported)
             {
                 ToFloatSse2(output, input, sampleCount);
+            }
+            else if (AdvSimd.IsSupported)
+            {
+                ToFloatAdvSimd(output, input, sampleCount);
             }
             else
             {
@@ -372,7 +395,25 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             for (int i = 0; i < inputVec.Length; i++)
             {
-                outputVec[i] = Avx.ConvertToVector128Int32(inputVec[i]);
+                outputVec[i] = Sse2.ConvertToVector128Int32(inputVec[i]);
+            }
+
+            for (int i = sisdStart; i < sampleCount; i++)
+            {
+                output[i] = (int)input[i];
+            }
+        }
+
+        public static void ToIntAdvSimd(Span<int> output, ReadOnlySpan<float> input, int sampleCount)
+        {
+            ReadOnlySpan<Vector128<float>> inputVec = MemoryMarshal.Cast<float, Vector128<float>>(input);
+            Span<Vector128<int>> outputVec = MemoryMarshal.Cast<int, Vector128<int>>(output);
+
+            int sisdStart = inputVec.Length * 4;
+
+            for (int i = 0; i < inputVec.Length; i++)
+            {
+                outputVec[i] = AdvSimd.ConvertToInt32RoundToZero(inputVec[i]);
             }
 
             for (int i = sisdStart; i < sampleCount; i++)
@@ -399,6 +440,10 @@ namespace Ryujinx.Audio.Renderer.Dsp
             else if (Sse2.IsSupported)
             {
                 ToIntSse2(output, input, sampleCount);
+            }
+            else if (AdvSimd.IsSupported)
+            {
+                ToIntAdvSimd(output, input, sampleCount);
             }
             else
             {
