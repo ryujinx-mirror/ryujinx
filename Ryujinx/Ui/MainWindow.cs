@@ -92,10 +92,14 @@ namespace Ryujinx.Ui
         [GUI] Label           _gpuName;
         [GUI] Label           _progressLabel;
         [GUI] Label           _firmwareVersionLabel;
-        [GUI] LevelBar        _progressBar;
+        [GUI] ProgressBar     _progressBar;
         [GUI] Box             _viewBox;
         [GUI] Label           _vSyncStatus;
         [GUI] Box             _listStatusBox;
+        [GUI] Label           _loadingStatusLabel;
+        [GUI] ProgressBar     _loadingStatusBar;
+
+        private string        _loadingStatusTitle = "";
 
 #pragma warning restore CS0649, IDE0044, CS0169
 
@@ -333,6 +337,48 @@ namespace Ryujinx.Ui
             _emulationContext.Initialize();
         }
 
+        private void SetupProgressUiHandlers()
+        {
+            Ptc.PtcTranslationStateChanged -= PtcStatusChanged;
+            Ptc.PtcTranslationStateChanged += PtcStatusChanged;
+
+            Ptc.PtcTranslationProgressChanged -= LoadingProgressChanged;
+            Ptc.PtcTranslationProgressChanged += LoadingProgressChanged;
+
+            _emulationContext.Gpu.ShaderCacheStateChanged -= ShaderCacheStatusChanged;
+            _emulationContext.Gpu.ShaderCacheStateChanged += ShaderCacheStatusChanged;
+
+            _emulationContext.Gpu.ShaderCacheProgressChanged -= LoadingProgressChanged;
+            _emulationContext.Gpu.ShaderCacheProgressChanged += LoadingProgressChanged;
+        }
+
+        private void ShaderCacheStatusChanged(bool state)
+        {
+            _loadingStatusTitle = "Shaders";
+            Application.Invoke(delegate
+            {
+                _loadingStatusBar.Visible = _loadingStatusLabel.Visible = state;
+            });
+        }
+
+        private void PtcStatusChanged(bool state)
+        {
+            _loadingStatusTitle = "PTC";
+            Application.Invoke(delegate
+            {
+                _loadingStatusBar.Visible = _loadingStatusLabel.Visible = state;
+            });
+        }
+
+        private void LoadingProgressChanged(int value, int total)
+        {
+            Application.Invoke(delegate
+            {
+                _loadingStatusBar.Fraction = (double)value / total;
+                _loadingStatusLabel.Text = $"{_loadingStatusTitle} : {value}/{total}";
+            });
+        }
+
         public void UpdateGameTable()
         {
             if (_updatingGameTable || _gameLoaded)
@@ -530,6 +576,8 @@ namespace Ryujinx.Ui
                 _currentEmulatedGamePath = path;
 
                 _deviceExitStatus.Reset();
+
+                SetupProgressUiHandlers();
 
                 Translator.IsReadyForTranslation.Reset();
 #if MACOS_BUILD
@@ -775,7 +823,7 @@ namespace Ryujinx.Ui
                     barValue = (float)args.NumAppsLoaded / args.NumAppsFound;
                 }
 
-                _progressBar.Value = barValue;
+                _progressBar.Fraction = barValue;
 
                 // Reset the vertical scrollbar to the top when titles finish loading
                 if (args.NumAppsLoaded == args.NumAppsFound)

@@ -80,6 +80,26 @@ namespace Ryujinx.Graphics.Gpu
         internal Capabilities Capabilities => _caps.Value;
 
         /// <summary>
+        /// Signaled when shader cache begins and ends loading.
+        /// Signals true when loading has started, false when ended.
+        /// </summary>
+        public event Action<bool> ShaderCacheStateChanged
+        {
+            add => Methods.ShaderCache.ShaderCacheStateChanged += value;
+            remove => Methods.ShaderCache.ShaderCacheStateChanged -= value;
+        }
+
+        /// <summary>
+        /// Signaled while shader cache is loading to indicate current progress.
+        /// Provides current and total number of shaders loaded.
+        /// </summary>
+        public event Action<int, int> ShaderCacheProgressChanged
+        {
+            add => Methods.ShaderCache.ShaderCacheProgressChanged += value;
+            remove => Methods.ShaderCache.ShaderCacheProgressChanged -= value;
+        }
+
+        /// <summary>
         /// Creates a new instance of the GPU emulation context.
         /// </summary>
         /// <param name="renderer">Host renderer</param>

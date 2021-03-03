@@ -70,6 +70,10 @@ namespace ARMeilleure.Translation.PTC
 
         internal static PtcState State { get; private set; }
 
+        // Progress update events
+        public static event Action<bool> PtcTranslationStateChanged;
+        public static event Action<int, int> PtcTranslationProgressChanged;
+
         static Ptc()
         {
             InitializeMemoryStreams();
@@ -772,6 +776,8 @@ namespace ARMeilleure.Translation.PTC
 
             ThreadPool.QueueUserWorkItem(TranslationLogger, profiledFuncsToTranslate.Count);
 
+            PtcTranslationStateChanged?.Invoke(true);
+
             void TranslateFuncs()
             {
                 while (profiledFuncsToTranslate.TryDequeue(out var item))
@@ -820,6 +826,7 @@ namespace ARMeilleure.Translation.PTC
             threads.Clear();
 
             _loggerEvent.Set();
+            PtcTranslationStateChanged?.Invoke(false);
 
             PtcJumpTable.Initialize(jumpTable);
 
@@ -833,15 +840,15 @@ namespace ARMeilleure.Translation.PTC
 
         private static void TranslationLogger(object state)
         {
-            const int refreshRate = 1; // Seconds.
+            const int refreshRate = 100; // ms
 
             int profiledFuncsToTranslateCount = (int)state;
 
             do
             {
-                Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {profiledFuncsToTranslateCount} functions translated");
+                PtcTranslationProgressChanged?.Invoke(_translateCount, profiledFuncsToTranslateCount);
             }
-            while (!_loggerEvent.WaitOne(refreshRate * 1000));
+            while (!_loggerEvent.WaitOne(refreshRate));
 
             Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {profiledFuncsToTranslateCount} functions translated");
         }
