@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // SetStandardSteadyClockInternalOffset(nn::TimeSpanType internal_offset)
         public ResultCode SetStandardSteadyClockInternalOffset(ServiceCtx context)
         {
-            if ((_permissions & TimePermissions.BypassUninitialized) == 0)
+            if ((_permissions & TimePermissions.SteadyClockWritableMask) == 0)
             {
                 return ResultCode.PermissionDenied;
             }
