@@ -2,6 +2,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Texture;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -12,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     class TexturePool : Pool<Texture, TextureDescriptor>
     {
         private int _sequenceNumber;
+        private readonly ConcurrentQueue<Texture> _dereferenceQueue = new ConcurrentQueue<Texture>();
 
         /// <summary>
         /// Intrusive linked list node used on the texture pool cache.
@@ -53,6 +55,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 TextureInfo info = GetInfo(descriptor, out int layerSize);
 
+                ProcessDereferenceQueue();
+
                 texture = Context.Methods.TextureManager.FindOrCreateTexture(TextureSearchFlags.ForSampler, info, layerSize);
 
                 // If this happens, then the texture address is invalid, we can't add it to the cache.
@@ -61,7 +65,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return null;
                 }
 
-                texture.IncrementReferenceCount();
+                texture.IncrementReferenceCount(this, id);
 
                 Items[id] = texture;
 
@@ -93,12 +97,47 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Forcibly remove a texture from this pool's items.
+        /// If deferred, the dereference will be queued to occur on the render thread.
+        /// </summary>
+        /// <param name="texture">The texture being removed</param>
+        /// <param name="id">The ID of the texture in this pool</param>
+        /// <param name="deferred">If true, queue the dereference to happen on the render thread, otherwise dereference immediately</param>
+        public void ForceRemove(Texture texture, int id, bool deferred)
+        {
+            Items[id] = null;
+
+            if (deferred)
+            {
+                _dereferenceQueue.Enqueue(texture);
+            }
+            else
+            {
+                texture.DecrementReferenceCount();
+            }
+        }
+
+        /// <summary>
+        /// Process the dereference queue, decrementing the reference count for each texture in it.
+        /// This is used to ensure that texture disposal happens on the render thread.
+        /// </summary>
+        private void ProcessDereferenceQueue()
+        {
+            while (_dereferenceQueue.TryDequeue(out Texture toRemove))
+            {
+                toRemove.DecrementReferenceCount();
+            }
+        }
+
+        /// <summary>
         /// Implementation of the texture pool range invalidation.
         /// </summary>
         /// <param name="address">Start address of the range of the texture pool</param>
         /// <param name="size">Size of the range being invalidated</param>
         protected override void InvalidateRangeImpl(ulong address, ulong size)
         {
+            ProcessDereferenceQueue();
+
             ulong endAddress = address + size;
 
             for (; address < endAddress; address += DescriptorSize)
@@ -118,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         continue;
                     }
 
-                    texture.DecrementReferenceCount();
+                    texture.DecrementReferenceCount(this, id);
 
                     Items[id] = null;
                 }
@@ -342,7 +381,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="item">The texture to be deleted</param>
         protected override void Delete(Texture item)
         {
-            item?.DecrementReferenceCount();
+            item?.DecrementReferenceCount(this);
+        }
+
+        public override void Dispose()
+        {
+            ProcessDereferenceQueue();
+
+            base.Dispose();
         }
     }
 }

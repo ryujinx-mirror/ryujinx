@@ -74,6 +74,14 @@ namespace Ryujinx.Memory.Tracking
                 for (int i = 0; i < count; i++)
                 {
                     VirtualRegion region = results[i];
+
+                    // If the region has been fully remapped, signal that it has been mapped again.
+                    bool remapped = _memoryManager.IsRangeMapped(region.Address, region.Size);
+                    if (remapped)
+                    {
+                        region.SignalMappingChanged(true);
+                    }
+
                     region.RecalculatePhysicalChildren();
                     region.UpdateProtection();
                 }
@@ -99,6 +107,7 @@ namespace Ryujinx.Memory.Tracking
                 for (int i = 0; i < count; i++)
                 {
                     VirtualRegion region = results[i];
+                    region.SignalMappingChanged(false);
                     region.RecalculatePhysicalChildren();
                 }
             }

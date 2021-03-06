@@ -21,6 +21,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         // This method uses much more memory so we want to avoid it if possible.
         private const int ByteComparisonSwitchThreshold = 4;
 
+        private struct TexturePoolOwner
+        {
+            public TexturePool Pool;
+            public int ID;
+        }
+
         private GpuContext _context;
 
         private SizeInfo _sizeInfo;
@@ -64,7 +70,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Set when a texture has been changed size. This indicates that it may need to be
         /// changed again when obtained as a sampler.
         /// </summary>
-        public bool ChangedSize { get; internal set; }
+        public bool ChangedSize { get; private set; }
+
+        /// <summary>
+        /// Set when a texture's GPU VA has ever been partially or fully unmapped. 
+        /// This indicates that the range must be fully checked when matching the texture.
+        /// </summary>
+        public bool ChangedMapping { get; private set; }
 
         private int _depth;
         private int _layers;
@@ -121,6 +133,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool IsView => _viewStorage != this;
 
         private int _referenceCount;
+        private List<TexturePoolOwner> _poolOwners;
 
         /// <summary>
         /// Constructs a new instance of the cached GPU texture.
@@ -190,6 +203,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             _viewStorage = this;
 
             _views = new List<Texture>();
+            _poolOwners = new List<TexturePoolOwner>();
         }
 
         /// <summary>
@@ -1219,6 +1233,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Increments the reference count and records the given texture pool and ID as a pool owner.
+        /// </summary>
+        /// <param name="pool">The texture pool this texture has been added to</param>
+        /// <param name="id">The ID of the reference to this texture in the pool</param>
+        public void IncrementReferenceCount(TexturePool pool, int id)
+        {
+            lock (_poolOwners)
+            {
+                _poolOwners.Add(new TexturePoolOwner { Pool = pool, ID = id });
+            }
+            _referenceCount++;
+        }
+
+        /// <summary>
         /// Decrements the texture reference count.
         /// When the reference count hits zero, the texture may be deleted and can't be used anymore.
         /// </summary>
@@ -1242,6 +1270,48 @@ namespace Ryujinx.Graphics.Gpu.Image
             DeleteIfNotUsed();
 
             return newRefCount <= 0;
+        }
+
+        /// <summary>
+        /// Decrements the texture reference count, also removing an associated pool owner reference.
+        /// When the reference count hits zero, the texture may be deleted and can't be used anymore.
+        /// </summary>
+        /// <param name="pool">The texture pool this texture is being removed from</param>
+        /// <param name="id">The ID of the reference to this texture in the pool</param>
+        /// <returns>True if the texture is now referenceless, false otherwise</returns>
+        public bool DecrementReferenceCount(TexturePool pool, int id = -1)
+        {
+            lock (_poolOwners)
+            {
+                int references = _poolOwners.RemoveAll(entry => entry.Pool == pool && entry.ID == id || id == -1);
+
+                if (references == 0)
+                {
+                    // This reference has already been removed.
+                    return _referenceCount <= 0;
+                }
+
+                Debug.Assert(references == 1);
+            }
+
+            return DecrementReferenceCount();
+        }
+
+        /// <summary>
+        /// Forcibly remove this texture from all pools that reference it.
+        /// </summary>
+        /// <param name="deferred">Indicates if the removal is being done from another thread.</param>
+        public void RemoveFromPools(bool deferred)
+        {
+            lock (_poolOwners)
+            {
+                foreach (var owner in _poolOwners)
+                {
+                    owner.Pool.ForceRemove(this, owner.ID, deferred);
+                }
+
+                _poolOwners.Clear();
+            }
         }
 
         /// <summary>
@@ -1282,7 +1352,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void Unmapped()
         {
+            ChangedMapping = true;
+
             IsModified = false; // We shouldn't flush this texture, as its memory is no longer mapped.
+
+            RemoveFromPools(true);
         }
 
         /// <summary>

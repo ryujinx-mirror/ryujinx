@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Performs the disposal of all resources stored on the pool.
         /// It's an error to try using the pool after disposal.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (Items != null)
             {

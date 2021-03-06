@@ -67,6 +67,18 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
+        /// Signal that this region has been mapped or unmapped.
+        /// </summary>
+        /// <param name="mapped">True if the region has been mapped, false if unmapped</param>
+        public void SignalMappingChanged(bool mapped)
+        {
+            foreach (RegionHandle handle in Handles)
+            {
+                handle.SignalMappingChanged(mapped);
+            }
+        }
+
+        /// <summary>
         /// Gets the strictest permission that the child handles demand. Assumes that the tracking lock has been obtained.
         /// </summary>
         /// <returns>Protection level that this region demands</returns>

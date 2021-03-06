@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Range
 {
@@ -72,6 +73,53 @@ namespace Ryujinx.Memory.Range
             {
                 MinAddress = 0UL;
                 MaxAddress = 0UL;
+            }
+        }
+
+        /// <summary>
+        /// Gets a slice of the multi-range.
+        /// </summary>
+        /// <param name="offset">Offset of the slice into the multi-range in bytes</param>
+        /// <param name="size">Size of the slice in bytes</param>
+        /// <returns>A new multi-range representing the given slice of this one</returns>
+        public MultiRange GetSlice(ulong offset, ulong size)
+        {
+            if (HasSingleRange)
+            {
+                if (_singleRange.Size - offset < size)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(size));
+                }
+
+                return new MultiRange(_singleRange.Address + offset, size);
+            }
+            else
+            {
+                var ranges = new List<MemoryRange>();
+
+                foreach (MemoryRange range in _ranges)
+                {
+                    if ((long)offset <= 0)
+                    {
+                        ranges.Add(new MemoryRange(range.Address, Math.Min(size, range.Size)));
+                        size -= range.Size;
+                    }
+                    else if (offset < range.Size)
+                    {
+                        ulong sliceSize = Math.Min(size, range.Size - offset);
+                        ranges.Add(new MemoryRange(range.Address + offset, sliceSize));
+                        size -= sliceSize;
+                    }
+
+                    if ((long)size <= 0)
+                    {
+                        break;
+                    }
+
+                    offset -= range.Size;
+                }
+
+                return new MultiRange(ranges.ToArray());
             }
         }
 

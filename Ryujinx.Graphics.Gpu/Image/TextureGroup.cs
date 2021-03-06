@@ -122,6 +122,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 bool dirty = false;
                 bool anyModified = false;
+                bool anyUnmapped = false;
 
                 for (int i = 0; i < regionCount; i++)
                 {
@@ -130,6 +131,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     bool modified = group.Modified;
                     bool handleDirty = false;
                     bool handleModified = false;
+                    bool handleUnmapped = false;
 
                     foreach (CpuRegionHandle handle in group.Handles)
                     {
@@ -140,6 +142,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         }
                         else
                         {
+                            handleUnmapped |= handle.Unmapped;
                             handleModified |= modified;
                         }
                     }
@@ -159,18 +162,20 @@ namespace Ryujinx.Graphics.Gpu.Image
                         dirty |= handleDirty;
                     }
 
+                    anyUnmapped |= handleUnmapped;
+
                     if (group.NeedsCopy)
                     {
                         // The texture we copied from is still being written to. Copy from it again the next time this texture is used.
                         texture.SignalGroupDirty();
                     }
 
-                    _loadNeeded[baseHandle + i] = handleDirty;
+                    _loadNeeded[baseHandle + i] = handleDirty && !handleUnmapped;
                 }
 
                 if (dirty)
                 {
-                    if (_handles.Length > 1 && (anyModified || split))
+                    if (anyUnmapped || (_handles.Length > 1 && (anyModified || split)))
                     {
                         // Partial texture invalidation. Only update the layers/levels with dirty flags of the storage.
 
@@ -194,8 +199,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="regionCount">The number of handles to synchronize</param>
         private void SynchronizePartial(int baseHandle, int regionCount)
         {
-            ReadOnlySpan<byte> fullData = _context.PhysicalMemory.GetSpan(Storage.Range);
-
             for (int i = 0; i < regionCount; i++)
             {
                 if (_loadNeeded[baseHandle + i])
@@ -212,7 +215,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                             int endOffset = (offsetIndex + 1 == _allOffsets.Length) ? (int)Storage.Size : _allOffsets[offsetIndex + 1];
                             int size = endOffset - offset;
 
-                            ReadOnlySpan<byte> data = fullData.Slice(offset, size);
+                            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
 
                             data = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel, true);
 

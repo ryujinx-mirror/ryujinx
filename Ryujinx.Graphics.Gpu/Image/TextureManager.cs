@@ -715,7 +715,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // we know the textures are located at the same memory region.
                     // If they don't, it may still be mapped to the same physical region, so we
                     // do a more expensive check to tell if they are mapped into the same physical regions.
-                    if (overlap.Info.GpuAddress != info.GpuAddress && !_context.MemoryManager.CompareRange(overlap.Range, info.GpuAddress))
+                    // If the GPU VA for the texture has ever been unmapped, then the range must be checked regardless.
+                    if ((overlap.Info.GpuAddress != info.GpuAddress || overlap.ChangedMapping) && 
+                        !_context.MemoryManager.CompareRange(overlap.Range, info.GpuAddress))
                     {
                         continue;
                     }

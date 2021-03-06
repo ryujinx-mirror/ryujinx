@@ -8,6 +8,7 @@ namespace Ryujinx.Cpu.Tracking
         private readonly RegionHandle _impl;
 
         public bool Dirty => _impl.Dirty;
+        public bool Unmapped => _impl.Unmapped;
         public ulong Address => _impl.Address;
         public ulong Size => _impl.Size;
         public ulong EndAddress => _impl.EndAddress;

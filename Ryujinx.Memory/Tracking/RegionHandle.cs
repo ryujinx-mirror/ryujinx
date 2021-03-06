@@ -12,6 +12,7 @@ namespace Ryujinx.Memory.Tracking
     public class RegionHandle : IRegionHandle, IRange
     {
         public bool Dirty { get; private set; }
+        public bool Unmapped { get; private set; }
 
         public ulong Address { get; }
         public ulong Size { get; }
@@ -37,10 +38,11 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="tracking">Tracking object for the target memory block</param>
         /// <param name="address">Virtual address of the region to track</param>
         /// <param name="size">Size of the region to track</param>
-        /// <param name="dirty">Initial value of the dirty flag</param>
-        internal RegionHandle(MemoryTracking tracking, ulong address, ulong size, bool dirty = true)
+        /// <param name="mapped">True if the region handle starts mapped</param>
+        internal RegionHandle(MemoryTracking tracking, ulong address, ulong size, bool mapped = true)
         {
-            Dirty = dirty;
+            Dirty = mapped;
+            Unmapped = !mapped;
             Address = address;
             Size = size;
             EndAddress = address + size;
@@ -126,6 +128,23 @@ namespace Ryujinx.Memory.Tracking
         internal void AddChild(VirtualRegion region)
         {
             _regions.Add(region);
+        }
+
+        /// <summary>
+        /// Signal that this handle has been mapped or unmapped.
+        /// </summary>
+        /// <param name="mapped">True if the handle has been mapped, false if unmapped</param>
+        internal void SignalMappingChanged(bool mapped)
+        {
+            if (Unmapped == mapped)
+            {
+                Unmapped = !mapped;
+
+                if (Unmapped)
+                {
+                    Dirty = false;
+                }
+            }
         }
 
         /// <summary>
