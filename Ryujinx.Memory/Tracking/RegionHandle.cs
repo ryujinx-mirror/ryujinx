@@ -159,7 +159,7 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
-        /// Dispose the handle. Within the tracking lock, this removes references from virtual and physical regions.
+        /// Dispose the handle. Within the tracking lock, this removes references from virtual regions.
         /// </summary>
         public void Dispose()
         {

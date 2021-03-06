@@ -256,12 +256,12 @@ namespace Ryujinx.Memory.Tests
             const int pageCount = 32;
             const int overlapStart = 16;
 
-            Assert.AreEqual((0, 0), _tracking.GetRegionCounts());
+            Assert.AreEqual(0, _tracking.GetRegionCount());
 
             IMultiRegionHandle handleLow = GetGranular(smart, 0, PageSize * pageCount, PageSize);
             PreparePages(handleLow, pageCount);
 
-            Assert.AreEqual((pageCount, pageCount), _tracking.GetRegionCounts());
+            Assert.AreEqual(pageCount, _tracking.GetRegionCount());
 
             IMultiRegionHandle handleHigh = GetGranular(smart, PageSize * overlapStart, PageSize * pageCount, PageSize);
             PreparePages(handleHigh, pageCount, PageSize * overlapStart);
@@ -269,15 +269,15 @@ namespace Ryujinx.Memory.Tests
             // Combined pages (and assuming overlapStart <= pageCount) should be pageCount after overlapStart.
             int totalPages = overlapStart + pageCount;
 
-            Assert.AreEqual((totalPages, totalPages), _tracking.GetRegionCounts());
+            Assert.AreEqual(totalPages, _tracking.GetRegionCount());
 
             handleLow.Dispose(); // After disposing one, the pages for the other remain.
 
-            Assert.AreEqual((pageCount, pageCount), _tracking.GetRegionCounts());
+            Assert.AreEqual(pageCount, _tracking.GetRegionCount());
 
             handleHigh.Dispose(); // After disposing the other, there are no pages left.
 
-            Assert.AreEqual((0, 0), _tracking.GetRegionCounts());
+            Assert.AreEqual(0, _tracking.GetRegionCount());
         }
     }
 }

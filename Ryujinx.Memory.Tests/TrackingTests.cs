@@ -32,17 +32,12 @@ namespace Ryujinx.Memory.Tests
             _memoryBlock.Dispose();
         }
 
-        private bool TestSingleWrite(RegionHandle handle, ulong address, ulong size, bool physical = false)
+        private bool TestSingleWrite(RegionHandle handle, ulong address, ulong size)
         {
             handle.Reprotect();
-            if (physical)
-            {
-                _tracking.PhysicalMemoryEvent(address, true);
-            }
-            else
-            {
-                _tracking.VirtualMemoryEvent(address, size, true);
-            }
+
+            _tracking.VirtualMemoryEvent(address, size, true);
+
             return handle.Dirty;
         }
 
@@ -97,9 +92,6 @@ namespace Ryujinx.Memory.Tests
 
             bool dirtyAfterDispose = TestSingleWrite(handle, 0, 4);
             Assert.False(dirtyAfterDispose); // Handle cannot be triggered when disposed
-
-            bool dirtyAfterDispose2 = TestSingleWrite(handle, 0, 4, true);
-            Assert.False(dirtyAfterDispose2);
         }
 
         [Test]
@@ -363,33 +355,6 @@ namespace Ryujinx.Memory.Tests
         }
 
         [Test]
-        public void PhysicalMemoryMapping()
-        {
-            // Tracking is done in the virtual space usually, but we also support tracking on physical regions.
-            // The physical regions that make up a virtual region are determined when the region is created,
-            // or when a mapping changes.
-
-            // These tests verify that the region cannot be signalled after unmapping, and can after remapping.
-
-            RegionHandle handle = _tracking.BeginTracking(PageSize, PageSize);
-
-            Assert.True(handle.Dirty);
-
-            bool trackedWriteTriggers = TestSingleWrite(handle, PageSize, 1, true);
-            Assert.True(trackedWriteTriggers);
-
-            _memoryManager.NoMappings = true;
-            _tracking.Unmap(PageSize, PageSize);
-            bool unmappedWriteTriggers = TestSingleWrite(handle, PageSize, 1, true);
-            Assert.False(unmappedWriteTriggers);
-
-            _memoryManager.NoMappings = false;
-            _tracking.Map(PageSize, PageSize, PageSize);
-            bool remappedWriteTriggers = TestSingleWrite(handle, PageSize, 1, true);
-            Assert.True(remappedWriteTriggers);
-        }
-
-        [Test]
         public void DisposeHandles()
         {
             // Ensure that disposed handles correctly remove their virtual and physical regions.
@@ -397,11 +362,11 @@ namespace Ryujinx.Memory.Tests
             RegionHandle handle = _tracking.BeginTracking(0, PageSize);
             handle.Reprotect();
 
-            Assert.AreEqual((1, 1), _tracking.GetRegionCounts());
+            Assert.AreEqual(1, _tracking.GetRegionCount());
 
             handle.Dispose();
 
-            Assert.AreEqual((0, 0), _tracking.GetRegionCounts());
+            Assert.AreEqual(0, _tracking.GetRegionCount());
 
             // Two handles, small entirely contains big.
             // We expect there to be three regions after creating both, one for the small region and two covering the big one around it.
@@ -410,16 +375,16 @@ namespace Ryujinx.Memory.Tests
             RegionHandle handleSmall = _tracking.BeginTracking(PageSize, PageSize);
             RegionHandle handleBig = _tracking.BeginTracking(0, PageSize * 4);
 
-            Assert.AreEqual((3, 3), _tracking.GetRegionCounts());
+            Assert.AreEqual(3, _tracking.GetRegionCount());
 
             // After disposing the big region, only the small one will remain.
             handleBig.Dispose();
 
-            Assert.AreEqual((1, 1), _tracking.GetRegionCounts());
+            Assert.AreEqual(1, _tracking.GetRegionCount());
 
             handleSmall.Dispose();
 
-            Assert.AreEqual((0, 0), _tracking.GetRegionCounts());
+            Assert.AreEqual(0, _tracking.GetRegionCount());
         }
 
         [Test]

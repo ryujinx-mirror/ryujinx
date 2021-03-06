@@ -13,11 +13,9 @@ namespace Ryujinx.Memory.Tracking
 
         // Only use these from within the lock.
         private readonly NonOverlappingRangeList<VirtualRegion> _virtualRegions;
-        private readonly NonOverlappingRangeList<PhysicalRegion> _physicalRegions;
 
         // Only use these from within the lock.
         private readonly VirtualRegion[] _virtualResults = new VirtualRegion[10];
-        private readonly PhysicalRegion[] _physicalResults = new PhysicalRegion[10];
 
         private readonly int _pageSize;
 
@@ -43,7 +41,6 @@ namespace Ryujinx.Memory.Tracking
             _pageSize = pageSize;
 
             _virtualRegions = new NonOverlappingRangeList<VirtualRegion>();
-            _physicalRegions = new NonOverlappingRangeList<PhysicalRegion>();
         }
 
         private (ulong address, ulong size) PageAlign(ulong address, ulong size)
@@ -82,7 +79,6 @@ namespace Ryujinx.Memory.Tracking
                         region.SignalMappingChanged(true);
                     }
 
-                    region.RecalculatePhysicalChildren();
                     region.UpdateProtection();
                 }
             }
@@ -90,14 +86,14 @@ namespace Ryujinx.Memory.Tracking
 
         /// <summary>
         /// Indicate that a virtual region has been unmapped.
-        /// Should be called after the unmapping is complete.
+        /// Should be called before the unmapping is complete.
         /// </summary>
         /// <param name="va">Virtual memory address</param>
         /// <param name="size">Size to be unmapped</param>
         public void Unmap(ulong va, ulong size)
         {
             // An unmapping may mean we need to re-evaluate each VirtualRegion's affected area.
-            // Find all handles that overlap with the range, we need to recalculate their physical regions
+            // Find all handles that overlap with the range, we need to notify them that the region was unmapped.
 
             lock (TrackingLock)
             {
@@ -107,8 +103,8 @@ namespace Ryujinx.Memory.Tracking
                 for (int i = 0; i < count; i++)
                 {
                     VirtualRegion region = results[i];
+
                     region.SignalMappingChanged(false);
-                    region.RecalculatePhysicalChildren();
                 }
             }
         }
@@ -128,46 +124,12 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
-        /// Get a list of physical regions that a virtual region covers.
-        /// Note that this becomes outdated if the virtual or physical regions are unmapped or remapped.
-        /// </summary>
-        /// <param name="va">Virtual memory address</param>
-        /// <param name="size">Size of the virtual region</param>
-        /// <returns>A list of physical regions the virtual region covers</returns>
-        internal List<PhysicalRegion> GetPhysicalRegionsForVirtual(ulong va, ulong size)
-        {
-            List<PhysicalRegion> result = new List<PhysicalRegion>();
-
-            // Get a list of physical regions for this virtual region, from our injected virtual mapping function.
-            (ulong Address, ulong Size)[] physicalRegions = _memoryManager.GetPhysicalRegions(va, size);
-
-            if (physicalRegions != null)
-            {
-                foreach (var region in physicalRegions)
-                {
-                    _physicalRegions.GetOrAddRegions(result, region.Address, region.Size, (pa, size) => new PhysicalRegion(this, pa, size));
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Remove a virtual region from the range list. This assumes that the lock has been acquired.
         /// </summary>
         /// <param name="region">Region to remove</param>
         internal void RemoveVirtual(VirtualRegion region)
         {
             _virtualRegions.Remove(region);
-        }
-
-        /// <summary>
-        /// Remove a physical region from the range list. This assumes that the lock has been acquired.
-        /// </summary>
-        /// <param name="region">Region to remove</param>
-        internal void RemovePhysical(PhysicalRegion region)
-        {
-            _physicalRegions.Remove(region);
         }
 
         /// <summary>
@@ -217,38 +179,6 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
-        /// Signal that a physical memory event happened at the given location.
-        /// </summary>
-        /// <param name="address">Physical address accessed</param>
-        /// <param name="write">Whether the region was written to or read</param>
-        /// <returns>True if the event triggered any tracking regions, false otherwise</returns>
-        public bool PhysicalMemoryEvent(ulong address, bool write)
-        {
-            // Look up the physical region using the region list.
-            // Signal up the chain to relevant handles.
-
-            lock (TrackingLock)
-            {
-                var results = _physicalResults;
-                int count = _physicalRegions.FindOverlapsNonOverlapping(address, 1, ref results); // TODO: get/use the actual access size?
-
-                if (count == 0)
-                {
-                    _block.Reprotect(address & ~(ulong)(_pageSize - 1), (ulong)_pageSize, MemoryPermission.ReadAndWrite);
-                    return false; // We can't handle this - unprotect and return.
-                }
-
-                for (int i = 0; i < count; i++)
-                {
-                    PhysicalRegion region = results[i];
-                    region.Signal(address, 1, write);
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Signal that a virtual memory event happened at the given location (one byte).
         /// </summary>
         /// <param name="address">Virtual address accessed</param>
@@ -293,19 +223,6 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
-        /// Reprotect a given physical region, if enabled. This is protected on the memory block provided during initialization.
-        /// </summary>
-        /// <param name="region">Region to reprotect</param>
-        /// <param name="permission">Memory permission to protect with</param>
-        internal void ProtectPhysicalRegion(PhysicalRegion region, MemoryPermission permission)
-        {
-            if (EnablePhysicalProtection)
-            {
-                _block.Reprotect(region.Address, region.Size, permission);
-            }
-        }
-
-        /// <summary>
         /// Reprotect a given virtual region. The virtual memory manager will handle this.
         /// </summary>
         /// <param name="region">Region to reprotect</param>
@@ -316,15 +233,15 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
-        /// Returns the number of virtual and physical regions currently being tracked.
+        /// Returns the number of virtual regions currently being tracked.
         /// Useful for tests and metrics.
         /// </summary>
-        /// <returns>The number of virtual regions, and the number of physical regions</returns>
-        public (int VirtualCount, int PhysicalCount) GetRegionCounts()
+        /// <returns>The number of virtual regions</returns>
+        public int GetRegionCount()
         {
             lock (TrackingLock)
             {
-                return (_virtualRegions.Count, _physicalRegions.Count);
+                return _virtualRegions.Count;
             }
         }
     }

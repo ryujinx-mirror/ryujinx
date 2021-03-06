@@ -115,9 +115,9 @@ namespace Ryujinx.Cpu
             AssertValidAddressAndSize(va, size);
 
             UnmapEvent?.Invoke(va, size);
+            Tracking.Unmap(va, size);
 
             ulong remainingSize = size;
-            ulong oVa = va;
             while (remainingSize != 0)
             {
                 _pageTable.Write((va / PageSize) * PteSize, 0UL);
@@ -125,7 +125,6 @@ namespace Ryujinx.Cpu
                 va += PageSize;
                 remainingSize -= PageSize;
             }
-            Tracking.Unmap(oVa, size);
         }
 
         /// <summary>
