@@ -154,6 +154,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Unpack the width of a buffer texture.
+        /// </summary>
+        /// <returns>The texture width</returns>
+        public int UnpackBufferTextureWidth()
+        {
+            return (int)((Word4 & 0xffff) | (Word3 << 16)) + 1;
+        }
+
+        /// <summary>
         /// Unpacks the texture sRGB format flag.
         /// </summary>
         /// <returns>True if the texture is sRGB, false otherwise</returns>

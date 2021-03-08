@@ -172,8 +172,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture information</returns>
         private TextureInfo GetInfo(TextureDescriptor descriptor, out int layerSize)
         {
-            int width         = descriptor.UnpackWidth();
-            int height        = descriptor.UnpackHeight();
             int depthOrLayers = descriptor.UnpackDepth();
             int levels        = descriptor.UnpackLevels();
 
@@ -189,6 +187,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             bool isLinear = descriptorType == TextureDescriptorType.Linear;
 
             Target target = descriptor.UnpackTextureTarget().Convert((samplesInX | samplesInY) != 1);
+
+            int width = target == Target.TextureBuffer ? descriptor.UnpackBufferTextureWidth() : descriptor.UnpackWidth();
+            int height = descriptor.UnpackHeight();
 
             // We use 2D targets for 1D textures as that makes texture cache
             // management easier. We don't know the target for render target

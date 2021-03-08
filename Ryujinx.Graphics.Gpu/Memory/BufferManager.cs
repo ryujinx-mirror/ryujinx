@@ -1,9 +1,11 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Memory.Range;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -31,6 +33,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private IndexBuffer _indexBuffer;
         private VertexBuffer[] _vertexBuffers;
         private BufferBounds[] _transformFeedbackBuffers;
+        private List<BufferTextureBinding> _bufferTextures;
 
         /// <summary>
         /// Holds shader stage buffer state and binding information.
@@ -138,6 +141,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 _gpStorageBuffers[index] = new BuffersPerStage(Constants.TotalGpStorageBuffers);
                 _gpUniformBuffers[index] = new BuffersPerStage(Constants.TotalGpUniformBuffers);
             }
+
+            _bufferTextures = new List<BufferTextureBinding>();
         }
 
         /// <summary>
@@ -620,8 +625,37 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             _context.Renderer.Pipeline.SetUniformBuffers(uRanges);
 
+            CommitBufferTextureBindings();
+
             // Force rebind after doing compute work.
             _rebind = true;
+        }
+
+        /// <summary>
+        /// Commit any queued buffer texture bindings.
+        /// </summary>
+        private void CommitBufferTextureBindings()
+        {
+            if (_bufferTextures.Count > 0)
+            {
+                foreach (var binding in _bufferTextures)
+                {
+                    binding.Texture.SetStorage(GetBufferRange(binding.Address, binding.Size, binding.BindingInfo.Flags.HasFlag(TextureUsageFlags.ImageStore)));
+
+                    // The texture must be rebound to use the new storage if it was updated.
+
+                    if (binding.IsImage)
+                    {
+                        _context.Renderer.Pipeline.SetImage(binding.BindingInfo.Binding, binding.Texture, binding.Format);
+                    }
+                    else
+                    {
+                        _context.Renderer.Pipeline.SetTexture(binding.BindingInfo.Binding, binding.Texture);
+                    }
+                }
+
+                _bufferTextures.Clear();
+            }
         }
 
         /// <summary>
@@ -743,6 +777,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 UpdateBuffers(_gpUniformBuffers);
             }
 
+            CommitBufferTextureBindings();
+
             _rebind = false;
         }
 
@@ -813,31 +849,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Sets the buffer storage of a buffer texture.
+        /// Sets the buffer storage of a buffer texture. This will be bound when the buffer manager commits bindings.
         /// </summary>
         /// <param name="texture">Buffer texture</param>
         /// <param name="address">Address of the buffer in memory</param>
         /// <param name="size">Size of the buffer in bytes</param>
-        /// <param name="compute">Indicates if the buffer texture belongs to the compute or graphics pipeline</param>
-        public void SetBufferTextureStorage(ITexture texture, ulong address, ulong size, bool compute)
+        /// <param name="bindingInfo">Binding info for the buffer texture</param>
+        /// <param name="format">Format of the buffer texture</param>
+        /// <param name="isImage">Whether the binding is for an image or a sampler</param>
+        public void SetBufferTextureStorage(ITexture texture, ulong address, ulong size, TextureBindingInfo bindingInfo, Format format, bool isImage)
         {
             CreateBuffer(address, size);
 
-            if (_rebind)
-            {
-                // We probably had to modify existing buffers to create the texture buffer,
-                // so rebind everything to ensure we're using the new buffers for all bound resources.
-                if (compute)
-                {
-                    CommitComputeBindings();
-                }
-                else
-                {
-                    CommitGraphicsBindings();
-                }
-            }
-
-            texture.SetStorage(GetBufferRange(address, size));
+            _bufferTextures.Add(new BufferTextureBinding(texture, address, size, bindingInfo, format, isImage));
         }
 
         /// <summary>

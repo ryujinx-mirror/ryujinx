@@ -30,6 +30,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         internal ResourcePool ResourcePool { get; }
 
+        internal int BufferCount { get; private set; }
+
         public string GpuVendor { get; private set; }
         public string GpuRenderer { get; private set; }
         public string GpuVersion { get; private set; }
@@ -52,6 +54,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         public BufferHandle CreateBuffer(int size)
         {
+            BufferCount++;
+
             return Buffer.Create(size);
         }
 
@@ -69,7 +73,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (info.Target == Target.TextureBuffer)
             {
-                return new TextureBuffer(info);
+                return new TextureBuffer(this, info);
             }
             else
             {
