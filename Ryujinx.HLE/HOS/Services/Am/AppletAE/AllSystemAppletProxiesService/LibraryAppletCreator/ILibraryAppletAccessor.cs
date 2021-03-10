@@ -1,14 +1,17 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.LibraryAppletCreator
 {
-    class ILibraryAppletAccessor : IpcService
+    class ILibraryAppletAccessor : IpcService, IDisposable
     {
+        private KernelContext _kernelContext;
+
         private IApplet _applet;
 
         private AppletSession _normalSession;
@@ -24,6 +27,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
         public ILibraryAppletAccessor(AppletId appletId, Horizon system)
         {
+            _kernelContext = system.KernelContext;
+
             _stateChangedEvent       = new KEvent(system.KernelContext);
             _normalOutDataEvent      = new KEvent(system.KernelContext);
             _interactiveOutDataEvent = new KEvent(system.KernelContext);
@@ -222,6 +227,24 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { indirectLayerConsumerHandle });
 
             return ResultCode.Success;
+        }
+
+        public void Dispose()
+        {
+            if (_stateChangedEventHandle != 0)
+            {
+                _kernelContext.Syscall.CloseHandle(_stateChangedEventHandle);
+            }
+
+            if (_normalOutDataEventHandle != 0)
+            {
+                _kernelContext.Syscall.CloseHandle(_normalOutDataEventHandle);
+            }
+
+            if (_interactiveOutDataEventHandle != 0)
+            {
+                _kernelContext.Syscall.CloseHandle(_interactiveOutDataEventHandle);
+            }
         }
     }
 }
