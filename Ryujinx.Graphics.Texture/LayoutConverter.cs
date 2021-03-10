@@ -256,7 +256,7 @@ namespace Ryujinx.Graphics.Texture
             int h = BitUtils.DivRoundUp(height, blockHeight);
 
             int outStride = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
-            int lineSize = w * bytesPerPixel;
+            int lineSize = Math.Min(stride, outStride);
 
             Span<byte> output = new byte[h * outStride];
 
