@@ -4,7 +4,7 @@ namespace Ryujinx.Memory.Tests
 {
     class MockVirtualMemoryManager : IVirtualMemoryManager
     {
-        public bool NoMappings;
+        public bool NoMappings = false;
 
         public event Action<ulong, ulong, MemoryPermission> OnProtect;
 
