@@ -39,7 +39,7 @@ namespace Ryujinx.Audio.Renderer.Device
         /// The current active <see cref="VirtualDevice"/>.
         /// </summary>
         // TODO: make this configurable
-        public VirtualDevice ActiveDevice = VirtualDevice.Devices[1];
+        public VirtualDevice ActiveDevice = VirtualDevice.Devices[2];
 
         /// <summary>
         /// Get the associated <see cref="T:VirtualDeviceSession[]"/> from an AppletResourceId.
