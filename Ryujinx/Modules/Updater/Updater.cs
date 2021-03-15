@@ -4,6 +4,7 @@ using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
 using Mono.Unix;
 using Newtonsoft.Json.Linq;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
@@ -485,6 +486,16 @@ namespace Ryujinx.Modules
                 if (showWarnings)
                 {
                     GtkDialog.CreateWarningDialog("You are not connected to the Internet!", "Please verify that you have a working Internet connection!");
+                }
+
+                return false;
+            }
+
+            if (AppDataManager.Mode == AppDataManager.LaunchMode.Portable)
+            {
+                if (showWarnings)
+                {
+                    GtkDialog.CreateWarningDialog("You cannot update a portable version of Ryujinx!", "Please use a non-portable configuration to enable updates.");
                 }
 
                 return false;

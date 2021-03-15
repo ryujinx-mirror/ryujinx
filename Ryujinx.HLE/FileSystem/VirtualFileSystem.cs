@@ -227,9 +227,9 @@ namespace Ryujinx.HLE.FileSystem
             string titleKeyFile   = null;
             string consoleKeyFile = null;
 
-            if (!AppDataManager.IsCustomBasePath)
+            if (AppDataManager.Mode == AppDataManager.LaunchMode.UserProfile)
             {
-                LoadSetAtPath(AppDataManager.KeysDirPathAlt);
+                LoadSetAtPath(AppDataManager.KeysDirPathUser);
             }
 
             LoadSetAtPath(AppDataManager.KeysDirPath);

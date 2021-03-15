@@ -6,21 +6,28 @@ namespace Ryujinx.Common.Configuration
 {
     public static class AppDataManager
     {
-        private static readonly string _defaultBaseDirPath;
-
-        private const string DefaultBaseDir = "Ryujinx";
+        public const string DefaultBaseDir = "Ryujinx";
+        public const string DefaultPortableDir = "portable";
 
         // The following 3 are always part of Base Directory
         private const string GamesDir = "games";
         private const string ProfilesDir = "profiles";
         private const string KeysDir = "system";
 
-        public static bool IsCustomBasePath { get; private set; }
+        public enum LaunchMode
+        {
+            UserProfile,
+            Portable,
+            Custom
+        }
+
+        public static LaunchMode Mode { get; private set; }
+
         public static string BaseDirPath { get; private set; }
         public static string GamesDirPath { get; private set; }
         public static string ProfilesDirPath { get; private set; }
         public static string KeysDirPath { get; private set; }
-        public static string KeysDirPathAlt { get; }
+        public static string KeysDirPathUser { get; }
 
         public const string DefaultNandDir = "bis";
         public const string DefaultSdcardDir = "sdcard";
@@ -32,26 +39,39 @@ namespace Ryujinx.Common.Configuration
 
         static AppDataManager()
         {
-            _defaultBaseDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultBaseDir);
-            KeysDirPathAlt = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch");
+            KeysDirPathUser = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch");
         }
 
         public static void Initialize(string baseDirPath)
         {
-            BaseDirPath = _defaultBaseDirPath;
+            string userProfilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultBaseDir);
+            string portablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultPortableDir);
 
-            if (baseDirPath != null && baseDirPath != _defaultBaseDirPath)
+            if (Directory.Exists(portablePath))
+            {
+                BaseDirPath = portablePath;
+                Mode = LaunchMode.Portable;
+            }
+            else
+            {
+                BaseDirPath = userProfilePath;
+                Mode = LaunchMode.UserProfile;
+            }
+
+            if (baseDirPath != null && baseDirPath != userProfilePath)
             {
                 if (!Directory.Exists(baseDirPath))
                 {
-                    Logger.Error?.Print(LogClass.Application, $"Custom Data Directory '{baseDirPath}' does not exist. Using defaults...");
+                    Logger.Error?.Print(LogClass.Application, $"Custom Data Directory '{baseDirPath}' does not exist. Falling back to {Mode}...");
                 }
                 else
                 {
                     BaseDirPath = baseDirPath;
-                    IsCustomBasePath = true;
+                    Mode = LaunchMode.Custom;
                 }
             }
+
+            BaseDirPath = Path.GetFullPath(BaseDirPath); // convert relative paths
 
             SetupBasePaths();
         }
