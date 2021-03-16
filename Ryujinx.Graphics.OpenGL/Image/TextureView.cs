@@ -102,9 +102,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public int GetIncompatibleFormatViewHandle()
         {
-            // AMD and Intel has a bug where the view format is always ignored,
-            // it uses the parent format instead.
-            // As workaround we create a new texture with the correct
+            // AMD and Intel have a bug where the view format is always ignored;
+            // they use the parent format instead.
+            // As a workaround we create a new texture with the correct
             // format, and then do a copy after the draw.
             if (_parent.Info.Format != Format)
             {
