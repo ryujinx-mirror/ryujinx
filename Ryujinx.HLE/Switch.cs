@@ -2,6 +2,7 @@ using LibHac.FsSystem;
 using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
@@ -137,6 +138,10 @@ namespace Ryujinx.HLE
             // Configure controllers
             Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
             ConfigurationState.Instance.Hid.InputConfig.Event += Hid.RefreshInputConfigEvent;
+
+            Logger.Info?.Print(LogClass.Application, $"AudioBackend: {ConfigurationState.Instance.System.AudioBackend.Value}");
+            Logger.Info?.Print(LogClass.Application, $"IsDocked: {ConfigurationState.Instance.System.EnableDockedMode.Value}");
+            Logger.Info?.Print(LogClass.Application, $"Vsync: {ConfigurationState.Instance.Graphics.EnableVsync.Value}");
         }
 
         public static IntegrityCheckLevel GetIntegrityCheckLevel()

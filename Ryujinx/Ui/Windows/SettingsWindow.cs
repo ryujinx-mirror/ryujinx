@@ -4,6 +4,7 @@ using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Configuration.System;
 using Ryujinx.HLE.FileSystem;
@@ -433,7 +434,13 @@ namespace Ryujinx.Ui.Windows
 
             if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
             {
-                ConfigurationState.Instance.System.AudioBackend.Value = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
+                AudioBackend audioBackend = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
+                if (audioBackend != ConfigurationState.Instance.System.AudioBackend.Value)
+                { 
+                    ConfigurationState.Instance.System.AudioBackend.Value = audioBackend;
+
+                    Logger.Info?.Print(LogClass.Application, $"AudioBackend toggled to: {audioBackend}");
+                }
             }
 
             ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
