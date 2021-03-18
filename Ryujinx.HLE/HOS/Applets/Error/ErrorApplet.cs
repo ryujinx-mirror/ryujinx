@@ -8,6 +8,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -50,6 +51,12 @@ namespace Ryujinx.HLE.HOS.Applets.Error
                 case ErrorType.ErrorCommonArg:
                     {
                         ParseErrorCommonArg();
+
+                        break;
+                    }
+                case ErrorType.ApplicationErrorArg:
+                    {
+                        ParseApplicationErrorArg();
 
                         break;
                     }
@@ -160,6 +167,41 @@ namespace Ryujinx.HLE.HOS.Applets.Error
                 buttons = GetButtonsText(module, description, "FlvBtn");
 
                 _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Details: {module}-{description:0000}", "\n" + message, buttons);
+            }
+        }
+
+        private void ParseApplicationErrorArg()
+        {
+            ApplicationErrorArg applicationErrorArg = IApplet.ReadStruct<ApplicationErrorArg>(_errorStorage);
+
+            byte[] messageTextBuffer = new byte[0x800];
+            byte[] detailsTextBuffer = new byte[0x800];
+            unsafe
+            {
+                Marshal.Copy((IntPtr)applicationErrorArg.MessageText, messageTextBuffer, 0, 0x800);
+                Marshal.Copy((IntPtr)applicationErrorArg.DetailsText, detailsTextBuffer, 0, 0x800);
+            }
+
+            string messageText = Encoding.ASCII.GetString(messageTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());
+            string detailsText = Encoding.ASCII.GetString(detailsTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());
+
+            List<string> buttons = new List<string>();
+
+            // TODO: Handle the LanguageCode to return the translated "OK" and "Details".
+
+            if (detailsText.Trim() != "")
+            {
+                buttons.Add("Details");
+            }
+
+            buttons.Add("OK");
+
+            bool showDetails = _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber}", "\n" + messageText, buttons.ToArray());
+            if (showDetails)
+            {
+                buttons.RemoveAt(0);
+
+                _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber} (Details)", "\n" + detailsText, buttons.ToArray());
             }
         }
 
