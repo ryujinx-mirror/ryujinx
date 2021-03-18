@@ -259,11 +259,11 @@ namespace Ryujinx.Ui.Widgets
 
                         if (mainNca == null)
                         {
-                            Logger.Error?.Print(LogClass.Application, "Extraction failed. The main NCA was not present in the selected file.");
+                            Logger.Error?.Print(LogClass.Application, "Extraction failure. The main NCA is not present in the selected file.");
 
                             Gtk.Application.Invoke(delegate
                             {
-                                GtkDialog.CreateErrorDialog("Extraction failed. The main NCA was not present in the selected file.");
+                                GtkDialog.CreateErrorDialog("Extraction failure. The main NCA is not present in the selected file.");
                             });
 
                             return;
@@ -314,7 +314,7 @@ namespace Ryujinx.Ui.Widgets
                                     {
                                         Title          = "Ryujinx - NCA Section Extractor",
                                         Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png"),
-                                        SecondaryText  = "Extraction has completed successfully.",
+                                        SecondaryText  = "Extraction completed successfully.",
                                         WindowPosition = WindowPosition.Center
                                     };
 
@@ -572,7 +572,7 @@ namespace Ryujinx.Ui.Widgets
                     }
                     catch (Exception e)
                     {
-                        GtkDialog.CreateErrorDialog($"Error purging shader cache {directory.Name}: {e}");
+                        GtkDialog.CreateErrorDialog($"Error purging shader cache at {directory.Name}: {e}");
                     }
                 }
             }

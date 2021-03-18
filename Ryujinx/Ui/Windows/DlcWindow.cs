@@ -160,7 +160,7 @@ namespace Ryujinx.Ui.Windows
 
                         if (!containsDlc)
                         {
-                            GtkDialog.CreateErrorDialog("The specified file does not contain a DLC for the selected title!");
+                            GtkDialog.CreateErrorDialog("The specified file does not contain DLC for the selected title!");
                         }
                     }
                 }
