@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services
 {
-    abstract class IpcService : IIpcService
+    abstract class IpcService
     {
         public IReadOnlyDictionary<int, MethodInfo> Commands { get; }
 
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services
 
         public void CallMethod(ServiceCtx context)
         {
-            IIpcService service = this;
+            IpcService service = this;
 
             if (_isDomain)
             {
@@ -173,7 +173,7 @@ namespace Ryujinx.HLE.HOS.Services
         {
             int objId = context.Request.ObjectIds[index];
 
-            IIpcService obj = _parent.GetObject(objId);
+            IpcService obj = _parent.GetObject(objId);
 
             return obj is T t ? t : null;
         }
@@ -190,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Services
             return false;
         }
 
-        private int Add(IIpcService obj)
+        private int Add(IpcService obj)
         {
             return _domainObjects.Add(obj);
         }
@@ -207,9 +207,9 @@ namespace Ryujinx.HLE.HOS.Services
             return obj != null;
         }
 
-        private IIpcService GetObject(int id)
+        private IpcService GetObject(int id)
         {
-            return _domainObjects.GetData<IIpcService>(id);
+            return _domainObjects.GetData<IpcService>(id);
         }
 
         public void SetParent(IpcService parent)

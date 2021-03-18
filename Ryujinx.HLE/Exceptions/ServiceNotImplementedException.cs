@@ -14,15 +14,15 @@ namespace Ryujinx.HLE.Exceptions
     [Serializable]
     internal class ServiceNotImplementedException : Exception
     {
-        public IIpcService Service { get; }
+        public IpcService Service { get; }
         public ServiceCtx Context { get; }
         public IpcMessage Request { get; }
 
-        public ServiceNotImplementedException(IIpcService service, ServiceCtx context)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context)
             : this(service, context, "The service call is not implemented.")
         { }
 
-        public ServiceNotImplementedException(IIpcService service, ServiceCtx context, string message)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message)
             : base(message)
         {
             Service = service;
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.Exceptions
             Request = context.Request;
         }
 
-        public ServiceNotImplementedException(IIpcService service, ServiceCtx context, string message, Exception inner)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, Exception inner)
             : base(message, inner)
         {
             Service = service;
@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.Exceptions
                 var method   = frame.GetMethod();
                 var declType = method.DeclaringType;
 
-                if (typeof(IIpcService).IsAssignableFrom(declType))
+                if (typeof(IpcService).IsAssignableFrom(declType))
                 {
                     return (declType, method);
                 }
