@@ -95,7 +95,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="OptionsMenu">
+              <object class="GtkMenuItem" id="_optionMenu">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Options</property>
@@ -119,32 +119,6 @@
                         <property name="label" translatable="yes">Start Games in Fullscreen Mode</property>
                         <property name="use_underline">True</property>
                         <signal name="toggled" handler="StartFullScreen_Toggled" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="_stopEmulation">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Stop emulation of the current game and return to game selection</property>
-                        <property name="label" translatable="yes">Stop Emulation</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="StopEmulation_Pressed" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="_simulateWakeUpMessage">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Simulate a Wake-up Message</property>
-                        <property name="label" translatable="yes">Simulate Wake-up Message</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="Simulate_WakeUp_Message_Pressed" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -272,6 +246,56 @@
                         <property name="label" translatable="yes">Settings</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="Settings_Pressed" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="_actionMenu">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Actions</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkMenuItem" id="_stopEmulation">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Stop emulation of the current game and return to game selection</property>
+                        <property name="label" translatable="yes">Stop Emulation</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="StopEmulation_Pressed" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_simulateWakeUpMessage">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Simulate a Wake-up Message</property>
+                        <property name="label" translatable="yes">Simulate Wake-up Message</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="Simulate_WakeUp_Message_Pressed" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_scanAmiibo">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Scan an Amiibo</property>
+                        <property name="label" translatable="yes">Scan an Amiibo</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="Scan_Amiibo" swapped="no"/>
                       </object>
                     </child>
                   </object>

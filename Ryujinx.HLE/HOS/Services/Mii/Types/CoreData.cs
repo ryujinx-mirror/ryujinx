@@ -389,7 +389,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
             coreData.SetDefault();
 
-            if (gender == Types.Gender.All)
+            if (gender == Gender.All)
             {
                 gender = (Gender)utilImpl.GetRandom((int)gender);
             }
@@ -432,7 +432,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
             int axisY = 0;
 
-            if (gender == Types.Gender.Female && age == Age.Young)
+            if (gender == Gender.Female && age == Age.Young)
             {
                 axisY = utilImpl.GetRandom(3);
             }
@@ -466,8 +466,8 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
             // Eye
             coreData.EyeType = (EyeType)eyeTypeInfo.Values[utilImpl.GetRandom(eyeTypeInfo.ValuesCount)];
 
-            int eyeRotateKey1 = gender != Types.Gender.Male ? 4 : 2;
-            int eyeRotateKey2 = gender != Types.Gender.Male ? 3 : 4;
+            int eyeRotateKey1 = gender != Gender.Male ? 4 : 2;
+            int eyeRotateKey2 = gender != Gender.Male ? 3 : 4;
 
             byte eyeRotateOffset = (byte)(32 - EyeRotateTable[eyeRotateKey1] + eyeRotateKey2);
             byte eyeRotate       = (byte)(32 - EyeRotateTable[(int)coreData.EyeType]);
@@ -496,14 +496,14 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
             coreData.EyebrowY      = (byte)(axisY + eyebrowY);
 
             // Nose
-            int noseScale = gender == Types.Gender.Female ? 3 : 4;
+            int noseScale = gender == Gender.Female ? 3 : 4;
 
             coreData.NoseType  = (NoseType)noseTypeInfo.Values[utilImpl.GetRandom(noseTypeInfo.ValuesCount)];
             coreData.NoseScale = (byte)noseScale;
             coreData.NoseY     = (byte)(axisY + 9);
 
             // Mouth
-            int mouthColor = gender == Types.Gender.Female ? utilImpl.GetRandom(0, 4) : 0;
+            int mouthColor = gender == Gender.Female ? utilImpl.GetRandom(0, 4) : 0;
 
             coreData.MouthType   = (MouthType)mouthTypeInfo.Values[utilImpl.GetRandom(mouthTypeInfo.ValuesCount)];
             coreData.MouthColor  = (CommonColor)Helper.Ver3MouthColorTable[mouthColor];
@@ -515,7 +515,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
             coreData.BeardColor    = coreData.HairColor;
             coreData.MustacheScale = 4;
 
-            if (gender == Types.Gender.Male && age != Age.Young && utilImpl.GetRandom(10) < 2)
+            if (gender == Gender.Male && age != Age.Young && utilImpl.GetRandom(10) < 2)
             {
                 BeardAndMustacheFlag mustacheAndBeardFlag = (BeardAndMustacheFlag)utilImpl.GetRandom(3);
 

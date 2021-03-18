@@ -57,6 +57,9 @@ namespace Ryujinx.Ui
 
         private string _currentEmulatedGamePath = null;
 
+        private string _lastScannedAmiiboId = "";
+        private bool   _lastScannedAmiiboShowAll = false;
+
         public GlRenderer GlRendererWidget;
 
 #pragma warning disable CS0169, CS0649, IDE0044
@@ -66,8 +69,11 @@ namespace Ryujinx.Ui
         [GUI] MenuBar         _menuBar;
         [GUI] Box             _footerBox;
         [GUI] Box             _statusBar;
+        [GUI] MenuItem        _optionMenu;
+        [GUI] MenuItem        _actionMenu;
         [GUI] MenuItem        _stopEmulation;
         [GUI] MenuItem        _simulateWakeUpMessage;
+        [GUI] MenuItem        _scanAmiibo;
         [GUI] MenuItem        _fullScreen;
         [GUI] CheckMenuItem   _startFullScreen;
         [GUI] CheckMenuItem   _favToggle;
@@ -141,6 +147,8 @@ namespace Ryujinx.Ui
             _applicationLibrary.ApplicationAdded        += Application_Added;
             _applicationLibrary.ApplicationCountUpdated += ApplicationCount_Updated;
 
+            _actionMenu.StateChanged += ActionMenu_StateChanged;
+
             _gameTable.ButtonReleaseEvent += Row_Clicked;
             _fullScreen.Activated         += FullScreen_Toggled;
 
@@ -151,8 +159,7 @@ namespace Ryujinx.Ui
                 _startFullScreen.Active = true;
             }
 
-            _stopEmulation.Sensitive         = false;
-            _simulateWakeUpMessage.Sensitive = false;
+            _actionMenu.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
@@ -594,9 +601,10 @@ namespace Ryujinx.Ui
                 windowThread.Start();
 #endif
 
-                _gameLoaded                      = true;
-                _stopEmulation.Sensitive         = true;
-                _simulateWakeUpMessage.Sensitive = true;
+                _gameLoaded           = true;
+                _actionMenu.Sensitive = true;
+
+                _lastScannedAmiiboId = "";
 
                 _firmwareInstallFile.Sensitive      = false;
                 _firmwareInstallDirectory.Sensitive = false;
@@ -692,8 +700,7 @@ namespace Ryujinx.Ui
                 Task.Run(RefreshFirmwareLabel);
                 Task.Run(HandleRelaunch);
 
-                _stopEmulation.Sensitive            = false;
-                _simulateWakeUpMessage.Sensitive    = false;
+                _actionMenu.Sensitive               = false;
                 _firmwareInstallFile.Sensitive      = true;
                 _firmwareInstallDirectory.Sensitive = true;
             });
@@ -1176,6 +1183,44 @@ namespace Ryujinx.Ui
             if (_emulationContext != null)
             {
                 _emulationContext.System.SimulateWakeUpMessage();
+            }
+        }
+
+        private void ActionMenu_StateChanged(object o, StateChangedArgs args)
+        {
+            _scanAmiibo.Sensitive = _emulationContext != null && _emulationContext.System.SearchingForAmiibo(out int _);
+        }
+
+        private void Scan_Amiibo(object sender, EventArgs args)
+        {
+            if (_emulationContext.System.SearchingForAmiibo(out int deviceId))
+            {
+                AmiiboWindow amiiboWindow = new AmiiboWindow
+                {
+                    LastScannedAmiiboShowAll = _lastScannedAmiiboShowAll,
+                    LastScannedAmiiboId      = _lastScannedAmiiboId,
+                    DeviceId                 = deviceId,
+                    TitleId                  = _emulationContext.Application.TitleIdText.ToUpper()
+                };
+
+                amiiboWindow.DeleteEvent += AmiiboWindow_DeleteEvent;
+
+                amiiboWindow.Show();
+            }
+            else
+            {
+                GtkDialog.CreateInfoDialog($"Amiibo", "The game is currently not ready to receive Amiibo scan data. Ensure that you have an Amiibo-compatible game open and ready to receive Amiibo scan data.");
+            }
+        }
+
+        private void AmiiboWindow_DeleteEvent(object sender, DeleteEventArgs args)
+        {
+            if (((AmiiboWindow)sender).AmiiboId != "" && ((AmiiboWindow)sender).Response == ResponseType.Ok)
+            {
+                _lastScannedAmiiboId      = ((AmiiboWindow)sender).AmiiboId;
+                _lastScannedAmiiboShowAll = ((AmiiboWindow)sender).LastScannedAmiiboShowAll;
+
+                _emulationContext.System.ScanAmiibo(((AmiiboWindow)sender).DeviceId, ((AmiiboWindow)sender).AmiiboId, ((AmiiboWindow)sender).UseRandomUuid);
             }
         }
 

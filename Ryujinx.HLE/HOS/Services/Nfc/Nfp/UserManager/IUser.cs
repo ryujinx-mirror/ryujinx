@@ -1,4 +1,6 @@
-﻿using Ryujinx.HLE.Exceptions;
+﻿using Ryujinx.Common.Memory;
+using Ryujinx.Cpu;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -6,18 +8,25 @@ using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.UserManager;
 using System;
-using System.Collections.Generic;
+using System.Buffers.Binary;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
     class IUser : IpcService
     {
+        private ulong  _appletResourceUserId;
+        private ulong  _mcuVersionData;
+        private byte[] _mcuData;
+
         private State _state = State.NonInitialized;
 
         private KEvent _availabilityChangeEvent;
-        private int    _availabilityChangeEventHandle = 0;
 
-        private List<Device> _devices = new List<Device>();
+        private CancellationTokenSource _cancelTokenSource;
 
         public IUser() { }
 
@@ -25,32 +34,30 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
         public ResultCode Initialize(ServiceCtx context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            long mcuVersionData       = context.RequestData.ReadInt64();
+            _appletResourceUserId = context.RequestData.ReadUInt64();
+            _mcuVersionData       = context.RequestData.ReadUInt64();
 
             long inputPosition = context.Request.SendBuff[0].Position;
             long inputSize     = context.Request.SendBuff[0].Size;
 
-            byte[] unknownBuffer = new byte[inputSize];
+            _mcuData = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, unknownBuffer);
+            context.Memory.Read((ulong)inputPosition, _mcuData);
 
-            // NOTE: appletResourceUserId, mcuVersionData and the buffer are stored inside an internal struct.
-            //       The buffer seems to contains entries with a size of 0x40 bytes each.
-            //       Sadly, this internal struct doesn't seems to be used in retail.
+            // TODO: The mcuData buffer seems to contains entries with a size of 0x40 bytes each. Usage of the data needs to be determined.
 
-            // TODO: Add an instance of nn::nfc::server::Manager when it will be implemented.
-            //       Add an instance of nn::nfc::server::SaveData when it will be implemented.
-
-            // TODO: When we will be able to add multiple controllers add one entry by controller here.
-            Device device1 = new Device
+            // TODO: Handle this in a controller class directly.
+            //       Every functions which use the Handle call nn::hid::system::GetXcdHandleForNpadWithNfc().
+            NfpDevice devicePlayer1 = new NfpDevice
             {
                 NpadIdType = NpadIdType.Player1,
                 Handle     = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
-                State      = DeviceState.Initialized
+                State      = NfpDeviceState.Initialized
             };
 
-            _devices.Add(device1);
+            context.Device.System.NfpDevices.Add(devicePlayer1);
+
+            // TODO: It mounts 0x8000000000000020 save data and stores a random generate value inside. Usage of the data needs to be determined.
 
             _state = State.Initialized;
 
@@ -61,13 +68,18 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // Finalize()
         public ResultCode Finalize(ServiceCtx context)
         {
-            // TODO: Call StopDetection() and Unmount() when they will be implemented.
-            //       Remove the instance of nn::nfc::server::Manager when it will be implemented.
-            //       Remove the instance of nn::nfc::server::SaveData when it will be implemented.
+            if (_state == State.Initialized)
+            {
+                if (_cancelTokenSource != null)
+                {
+                    _cancelTokenSource.Cancel();
+                }
 
-            _devices.Clear();
+                // NOTE: All events are destroyed here.
+                context.Device.System.NfpDevices.Clear();
 
-            _state = State.NonInitialized;
+                _state = State.NonInitialized;
+            }
 
             return ResultCode.Success;
         }
@@ -78,23 +90,32 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             if (context.Request.RecvListBuff.Count == 0)
             {
-                return ResultCode.DevicesBufferIsNull;
+                return ResultCode.WrongArgument;
             }
 
             long outputPosition = context.Request.RecvListBuff[0].Position;
-            long outputSize     = context.Request.RecvListBuff[0].Size;
+            long outputSize      = context.Request.RecvListBuff[0].Size;
 
-            if (_devices.Count == 0)
+            if (context.Device.System.NfpDevices.Count == 0)
             {
                 return ResultCode.DeviceNotFound;
             }
 
-            for (int i = 0; i < _devices.Count; i++)
-            {
-                context.Memory.Write((ulong)(outputPosition + (i * sizeof(long))), (uint)_devices[i].Handle);
-            }
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
-            context.ResponseData.Write(_devices.Count);
+            if (CheckNfcIsEnabled() == ResultCode.Success)
+            {
+                for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+                {
+                    context.Memory.Write((ulong)(outputPosition + (i * sizeof(long))), (uint)context.Device.System.NfpDevices[i].Handle);
+                }
+
+                context.ResponseData.Write(context.Device.System.NfpDevices.Count);
+            }
+            else
+            {
+                context.ResponseData.Write(0);
+            }
 
             return ResultCode.Success;
         }
@@ -103,56 +124,376 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // StartDetection(bytes<8, 4>)
         public ResultCode StartDetection(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    context.Device.System.NfpDevices[i].State = NfpDeviceState.SearchingForTag;
+
+                    break;
+                }
+            }
+
+            _cancelTokenSource = new CancellationTokenSource();
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    if (_cancelTokenSource.Token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
+                        {
+                            context.Device.System.NfpDevices[i].SignalActivate();
+                            Thread.Sleep(50); // NOTE: Simulate amiibo scanning delay.
+                            context.Device.System.NfpDevices[i].SignalDeactivate();
+
+                            break;
+                        }
+                    }
+                }
+            }, _cancelTokenSource.Token);
+
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // StopDetection(bytes<8, 4>)
         public ResultCode StopDetection(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (_cancelTokenSource != null)
+            {
+                _cancelTokenSource.Cancel();
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    context.Device.System.NfpDevices[i].State = NfpDeviceState.Initialized;
+
+                    break;
+                }
+            }
+
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // Mount(bytes<8, 4>, u32, u32)
         public ResultCode Mount(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint                   deviceHandle = (uint)context.RequestData.ReadUInt64();
+            UserManager.DeviceType deviceType   = (UserManager.DeviceType)context.RequestData.ReadUInt32();
+            MountTarget            mountTarget  = (MountTarget)context.RequestData.ReadUInt32();
+
+            if (deviceType != 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            if (((uint)mountTarget & 3) == 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            // TODO: Found how the MountTarget is handled.
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
+                        {
+                            // NOTE: This mount the amiibo data, which isn't needed in our case.
+
+                            context.Device.System.NfpDevices[i].State = NfpDeviceState.TagMounted;
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(6)]
         // Unmount(bytes<8, 4>)
         public ResultCode Unmount(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        // NOTE: This mount the amiibo data, which isn't needed in our case.
+
+                        context.Device.System.NfpDevices[i].State = NfpDeviceState.TagFound;
+
+                        resultCode = ResultCode.Success;
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(7)]
         // OpenApplicationArea(bytes<8, 4>, u32)
         public ResultCode OpenApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            uint applicationAreaId = context.RequestData.ReadUInt32();
+
+            bool isOpened = false;
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            isOpened = VirtualAmiibo.OpenApplicationArea(context.Device.System.NfpDevices[i].AmiiboId, applicationAreaId);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            if (!isOpened)
+            {
+                resultCode = ResultCode.ApplicationAreaIsNull;
+            }
+
+            return resultCode;
         }
 
         [Command(8)]
         // GetApplicationArea(bytes<8, 4>) -> (u32, buffer<unknown, 6>)
         public ResultCode GetApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            long outputPosition = context.Request.ReceiveBuff[0].Position;
+            long outputSize     = context.Request.ReceiveBuff[0].Size;
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
+
+            uint size = 0;
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            byte[] applicationArea = VirtualAmiibo.GetApplicationArea(context.Device.System.NfpDevices[i].AmiiboId);
+
+                            context.Memory.Write((ulong)outputPosition, applicationArea);
+
+                            size = (uint)applicationArea.Length;
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+                }
+            }
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (size == 0)
+            {
+                return ResultCode.ApplicationAreaIsNull;
+            }
+
+            context.ResponseData.Write(size);
+
+            return ResultCode.Success;
         }
 
         [Command(9)]
         // SetApplicationArea(bytes<8, 4>, buffer<unknown, 5>)
         public ResultCode SetApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            long inputPosition = context.Request.SendBuff[0].Position;
+            long inputSize     = context.Request.SendBuff[0].Size;
+
+            byte[] applicationArea = new byte[inputSize];
+
+            context.Memory.Read((ulong)inputPosition, applicationArea);
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            VirtualAmiibo.SetApplicationArea(context.Device.System.NfpDevices[i].AmiiboId, applicationArea);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(10)]
         // Flush(bytes<8, 4>)
         public ResultCode Flush(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            // NOTE: Since we handle amiibo through VirtualAmiibo, we don't have to flush anything in our case.
+
+            return ResultCode.Success;
         }
 
         [Command(11)]
@@ -166,35 +507,328 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // CreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode CreateApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            uint applicationAreaId = context.RequestData.ReadUInt32();
+
+            long inputPosition = context.Request.SendBuff[0].Position;
+            long inputSize     = context.Request.SendBuff[0].Size;
+
+            byte[] applicationArea = new byte[inputSize];
+
+            context.Memory.Read((ulong)inputPosition, applicationArea);
+
+            bool isCreated = false;
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            isCreated = VirtualAmiibo.CreateApplicationArea(context.Device.System.NfpDevices[i].AmiiboId, applicationAreaId, applicationArea);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            if (!isCreated)
+            {
+                resultCode = ResultCode.ApplicationAreaIsNull;
+            }
+
+            return resultCode;
         }
 
         [Command(13)]
         // GetTagInfo(bytes<8, 4>) -> buffer<unknown<0x58>, 0x1a>
         public ResultCode GetTagInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (context.Request.RecvListBuff.Count == 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            long outputPosition = context.Request.RecvListBuff[0].Position;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(TagInfo)));
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(TagInfo)));
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted || context.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
+                        {
+                            byte[] Uuid = VirtualAmiibo.GenerateUuid(context.Device.System.NfpDevices[i].AmiiboId, context.Device.System.NfpDevices[i].UseRandomUuid);
+
+                            if (Uuid.Length > AmiiboConstants.UuidMaxLength)
+                            {
+                                throw new ArgumentOutOfRangeException();
+                            }
+
+                            TagInfo tagInfo = new TagInfo
+                            {
+                                UuidLength = (byte)Uuid.Length,
+                                Reserved1  = new Array21<byte>(),
+                                Protocol   = uint.MaxValue, // All Protocol
+                                TagType    = uint.MaxValue, // All Type
+                                Reserved2  = new Array6<byte>()
+                            };
+
+                            Uuid.CopyTo(tagInfo.Uuid.ToSpan());
+
+                            context.Memory.Write((ulong)outputPosition, tagInfo);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(14)]
         // GetRegisterInfo(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
         public ResultCode GetRegisterInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (context.Request.RecvListBuff.Count == 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            long outputPosition = context.Request.RecvListBuff[0].Position;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(RegisterInfo)));
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(RegisterInfo)));
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            RegisterInfo registerInfo = VirtualAmiibo.GetRegisterInfo(context.Device.System.NfpDevices[i].AmiiboId);
+
+                            context.Memory.Write((ulong)outputPosition, registerInfo);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(15)]
         // GetCommonInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetCommonInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (context.Request.RecvListBuff.Count == 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            long outputPosition = context.Request.RecvListBuff[0].Position;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(CommonInfo)));
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(CommonInfo)));
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            CommonInfo commonInfo = VirtualAmiibo.GetCommonInfo(context.Device.System.NfpDevices[i].AmiiboId);
+
+                            context.Memory.Write((ulong)outputPosition, commonInfo);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(16)]
         // GetModelInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetModelInfo(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            ResultCode resultCode = CheckNfcIsEnabled();
+
+            if (resultCode != ResultCode.Success)
+            {
+                return resultCode;
+            }
+
+            if (context.Request.RecvListBuff.Count == 0)
+            {
+                return ResultCode.WrongArgument;
+            }
+
+            long outputPosition = context.Request.RecvListBuff[0].Position;
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(ModelInfo)));
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(ModelInfo)));
+
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+
+            if (context.Device.System.NfpDevices.Count == 0)
+            {
+                return ResultCode.DeviceNotFound;
+            }
+
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
+            {
+                if (context.Device.System.NfpDevices[i].Handle == (PlayerIndex)deviceHandle)
+                {
+                    if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagRemoved)
+                    {
+                        resultCode = ResultCode.TagNotFound;
+                    }
+                    else
+                    {
+                        if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
+                        {
+                            ModelInfo modelInfo = new ModelInfo
+                            {
+                                Reserved = new Array57<byte>()
+                            };
+
+                            modelInfo.CharacterId      = BinaryPrimitives.ReverseEndianness(ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(0, 4), NumberStyles.HexNumber));
+                            modelInfo.CharacterVariant = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(4, 2), NumberStyles.HexNumber);
+                            modelInfo.Series           = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(12, 2), NumberStyles.HexNumber);
+                            modelInfo.ModelNumber      = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(8, 4), NumberStyles.HexNumber);
+                            modelInfo.Type             = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(6, 2), NumberStyles.HexNumber);
+
+                            context.Memory.Write((ulong)outputPosition, modelInfo);
+
+                            resultCode = ResultCode.Success;
+                        }
+                        else
+                        {
+                            resultCode = ResultCode.WrongDeviceState;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return resultCode;
         }
 
         [Command(17)]
@@ -203,21 +837,18 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
-            for (int i = 0; i < _devices.Count; i++)
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
             {
-                if ((uint)_devices[i].Handle == deviceHandle)
+                if ((uint)context.Device.System.NfpDevices[i].Handle == deviceHandle)
                 {
-                    if (_devices[i].ActivateEventHandle == 0)
-                    {
-                        _devices[i].ActivateEvent = new KEvent(context.Device.System.KernelContext);
+                    context.Device.System.NfpDevices[i].ActivateEvent = new KEvent(context.Device.System.KernelContext);
 
-                        if (context.Process.HandleTable.GenerateHandle(_devices[i].ActivateEvent.ReadableEvent, out _devices[i].ActivateEventHandle) != KernelResult.Success)
-                        {
-                            throw new InvalidOperationException("Out of handles!");
-                        }
+                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].ActivateEvent.ReadableEvent, out int activateEventHandle) != KernelResult.Success)
+                    {
+                        throw new InvalidOperationException("Out of handles!");
                     }
 
-                    context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_devices[i].ActivateEventHandle);
+                    context.Response.HandleDesc = IpcHandleDesc.MakeCopy(activateEventHandle);
 
                     return ResultCode.Success;
                 }
@@ -232,21 +863,18 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
-            for (int i = 0; i < _devices.Count; i++)
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
             {
-                if ((uint)_devices[i].Handle == deviceHandle)
+                if ((uint)context.Device.System.NfpDevices[i].Handle == deviceHandle)
                 {
-                    if (_devices[i].DeactivateEventHandle == 0)
-                    {
-                        _devices[i].DeactivateEvent = new KEvent(context.Device.System.KernelContext);
+                    context.Device.System.NfpDevices[i].DeactivateEvent = new KEvent(context.Device.System.KernelContext);
 
-                        if (context.Process.HandleTable.GenerateHandle(_devices[i].DeactivateEvent.ReadableEvent, out _devices[i].DeactivateEventHandle) != KernelResult.Success)
-                        {
-                            throw new InvalidOperationException("Out of handles!");
-                        }
+                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].DeactivateEvent.ReadableEvent, out int deactivateEventHandle) != KernelResult.Success)
+                    {
+                        throw new InvalidOperationException("Out of handles!");
                     }
 
-                    context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_devices[i].DeactivateEventHandle);
+                    context.Response.HandleDesc = IpcHandleDesc.MakeCopy(deactivateEventHandle);
 
                     return ResultCode.Success;
                 }
@@ -270,17 +898,22 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
-            for (int i = 0; i < _devices.Count; i++)
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
             {
-                if ((uint)_devices[i].Handle == deviceHandle)
+                if ((uint)context.Device.System.NfpDevices[i].Handle == deviceHandle)
                 {
-                    context.ResponseData.Write((uint)_devices[i].State);
+                    if (context.Device.System.NfpDevices[i].State > NfpDeviceState.Finalized)
+                    {
+                        throw new ArgumentOutOfRangeException();
+                    }
+                    
+                    context.ResponseData.Write((uint)context.Device.System.NfpDevices[i].State);
 
                     return ResultCode.Success;
                 }
             }
 
-            context.ResponseData.Write((uint)DeviceState.Unavailable);
+            context.ResponseData.Write((uint)NfpDeviceState.Unavailable);
 
             return ResultCode.DeviceNotFound;
         }
@@ -291,11 +924,11 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
-            for (int i = 0; i < _devices.Count; i++)
+            for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
             {
-                if ((uint)_devices[i].Handle == deviceHandle)
+                if ((uint)context.Device.System.NfpDevices[i].Handle == deviceHandle)
                 {
-                    context.ResponseData.Write((uint)HidUtils.GetNpadIdTypeFromIndex(_devices[i].Handle));
+                    context.ResponseData.Write((uint)HidUtils.GetNpadIdTypeFromIndex(context.Device.System.NfpDevices[i].Handle));
 
                     return ResultCode.Success;
                 }
@@ -305,27 +938,26 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         }
 
         [Command(22)]
-        // GetApplicationAreaSize(bytes<8, 4>) -> u32
+        // GetApplicationAreaSize() -> u32
         public ResultCode GetApplicationAreaSize(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            context.ResponseData.Write(AmiiboConstants.ApplicationAreaSize);
+
+            return ResultCode.Success;
         }
 
         [Command(23)] // 3.0.0+
         // AttachAvailabilityChangeEvent() -> handle<copy>
         public ResultCode AttachAvailabilityChangeEvent(ServiceCtx context)
         {
-            if (_availabilityChangeEventHandle == 0)
-            {
-                _availabilityChangeEvent = new KEvent(context.Device.System.KernelContext);
+            _availabilityChangeEvent = new KEvent(context.Device.System.KernelContext);
 
-                if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out _availabilityChangeEventHandle) != KernelResult.Success)
-                {
-                    throw new InvalidOperationException("Out of handles!");
-                }
+            if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out int availabilityChangeEventHandle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_availabilityChangeEventHandle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(availabilityChangeEventHandle);
 
             return ResultCode.Success;
         }
@@ -335,6 +967,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
+        }
+
+        private ResultCode CheckNfcIsEnabled()
+        {
+            // TODO: Call nn::settings::detail::GetNfcEnableFlag when it will be implemented.
+            return true ? ResultCode.Success : ResultCode.NfcDisabled;
         }
     }
 }

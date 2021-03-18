@@ -70,6 +70,7 @@
     <None Remove="Ui\Resources\Icon_NSO.png" />
     <None Remove="Ui\Resources\Icon_NSP.png" />
     <None Remove="Ui\Resources\Icon_XCI.png" />
+    <None Remove="Ui\Resources\Logo_Amiibo.png" />
     <None Remove="Ui\Resources\Logo_Discord.png" />
     <None Remove="Ui\Resources\Logo_GitHub.png" />
     <None Remove="Ui\Resources\Logo_Patreon.png" />
@@ -94,6 +95,7 @@
     <EmbeddedResource Include="Ui\Resources\Icon_NSO.png" />
     <EmbeddedResource Include="Ui\Resources\Icon_NSP.png" />
     <EmbeddedResource Include="Ui\Resources\Icon_XCI.png" />
+    <EmbeddedResource Include="Ui\Resources\Logo_Amiibo.png" />
     <EmbeddedResource Include="Ui\Resources\Logo_Discord.png" />
     <EmbeddedResource Include="Ui\Resources\Logo_GitHub.png" />
     <EmbeddedResource Include="Ui\Resources\Logo_Patreon.png" />

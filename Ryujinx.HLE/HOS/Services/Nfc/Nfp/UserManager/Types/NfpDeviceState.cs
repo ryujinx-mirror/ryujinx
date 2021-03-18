@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp.UserManager
 {
-    enum DeviceState
+    enum NfpDeviceState
     {
         Initialized     = 0,
         SearchingForTag = 1,
