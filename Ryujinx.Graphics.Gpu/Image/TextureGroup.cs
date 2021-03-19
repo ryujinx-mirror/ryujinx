@@ -16,9 +16,6 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class TextureGroup : IDisposable
     {
-        private const int StrideAlignment = 32;
-        private const int GobAlignment = 64;
-
         private delegate void HandlesCallbackDelegate(int baseHandle, int regionCount, bool split = false);
 
         /// <summary>

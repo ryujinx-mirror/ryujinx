@@ -69,5 +69,15 @@ namespace Ryujinx.Graphics.Gpu
         /// Maximum size of gl_ClipDistance array in shaders.
         /// </summary>
         public const int TotalClipDistances = 8;
+
+        /// <summary>
+        /// Byte alignment for texture stride.
+        /// </summary>
+        public const int StrideAlignment = 32;
+
+        /// <summary>
+        /// Byte alignment for block linear textures
+        /// </summary>
+        public const int GobAlignment = 64;
     }
 }

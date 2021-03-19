@@ -8,9 +8,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private const int StrideAlignment = 32;
-        private const int GobAlignment = 64;
-
         enum CopyFlags
         {
             SrcLinear = 1 << 7,
@@ -32,14 +29,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             if (linear)
             {
-                int alignWidth = StrideAlignment / bpp;
+                int alignWidth = Constants.StrideAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
                        stride / bpp == BitUtils.AlignUp(cbp.XCount, alignWidth);
             }
             else
             {
-                int alignWidth = GobAlignment / bpp;
+                int alignWidth = Constants.GobAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
                        tex.Width == BitUtils.AlignUp(cbp.XCount, alignWidth) &&

@@ -231,8 +231,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                 result = TextureViewCompatibility.CopyOnly;
             }
 
-            return (size.Width  == otherSize.Width &&
-                    size.Height == otherSize.Height) ? result : TextureViewCompatibility.Incompatible;
+            if (size.Width == otherSize.Width && size.Height == otherSize.Height)
+            {
+                return result;
+            }
+            else if (lhs.IsLinear && rhs.IsLinear)
+            {
+                // Copy between linear textures with matching stride.
+                int stride = BitUtils.AlignUp(Math.Max(1, lhs.Stride >> level), Constants.StrideAlignment);
+
+                return stride == rhs.Stride ? TextureViewCompatibility.CopyOnly : TextureViewCompatibility.Incompatible;
+            }
+            else
+            {
+                return TextureViewCompatibility.Incompatible;
+            }
         }
 
         /// <summary>
@@ -372,8 +385,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // For block linear textures, the stride is ignored.
             if (rhs.IsLinear)
             {
-                int width = Math.Max(1, lhs.Width >> level);
-                int stride = width * lhs.FormatInfo.BytesPerPixel;
+                int stride = Math.Max(1, lhs.Stride >> level);
                 stride = BitUtils.AlignUp(stride, 32);
 
                 return stride == rhs.Stride;

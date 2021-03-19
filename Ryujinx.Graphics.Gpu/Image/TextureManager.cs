@@ -429,7 +429,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // Discount square textures that aren't depth-stencil like. (excludes game textures, cubemap faces, most 3D texture LUT, texture atlas)
                 // Detect if the texture is possibly square. Widths may be aligned, so to remove the uncertainty we align both the width and height.
 
-                int widthAlignment = (info.IsLinear ? 32 : 64) / info.FormatInfo.BytesPerPixel;
+                int widthAlignment = (info.IsLinear ? Constants.StrideAlignment : Constants.GobAlignment) / info.FormatInfo.BytesPerPixel;
 
                 bool possiblySquare = BitUtils.AlignUp(info.Width, widthAlignment) == BitUtils.AlignUp(info.Height, widthAlignment);
 
@@ -976,8 +976,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (oInfo.Compatibility != TextureViewCompatibility.Full)
                     {
                         // Copy only compatibility, or target texture is already a view.
-
-                        ChangeSizeIfNeeded(overlapInfo, overlap, false, sizeHint); // Force a size match for copy
 
                         overlap.SynchronizeMemory();
                         texture.CreateCopyDependency(overlap, oInfo.FirstLayer, oInfo.FirstLevel, false);
