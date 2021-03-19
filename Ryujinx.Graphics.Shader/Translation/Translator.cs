@@ -36,6 +36,22 @@ namespace Ryujinx.Graphics.Shader.Translation
             return new TranslatorContext(address, cfg, config);
         }
 
+        private static void ScanForBindless(BasicBlock[] blocks, ShaderConfig config)
+        {
+            for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
+            {
+                // Right now the guest shader cache cannot handle bindless textures correctly.
+                for (LinkedListNode<INode> node = blocks[blkIndex].Operations.First; node != null; node = node.Next)
+                {
+                    if (node.Value is TextureOperation texOp && (texOp.Flags & TextureFlags.Bindless) != 0)
+                    {
+                        config.SetUsedFeature(FeatureFlags.Bindless);
+                        break;
+                    }
+                }
+            }
+        }
+
         internal static ShaderProgram Translate(FunctionCode[] functions, ShaderConfig config, out ShaderProgramInfo shaderProgramInfo)
         {
             var cfgs = new ControlFlowGraph[functions.Length];
@@ -74,6 +90,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     Dominance.FindDominators(cfg);
                     Dominance.FindDominanceFrontiers(cfg.Blocks);
+
+                    ScanForBindless(cfg.Blocks, config);
 
                     Ssa.Rename(cfg.Blocks);
 
