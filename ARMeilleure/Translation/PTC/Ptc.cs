@@ -52,13 +52,9 @@ namespace ARMeilleure.Translation.PTC
 
         private static readonly ManualResetEvent _waitEvent;
 
-        private static readonly AutoResetEvent _loggerEvent;
-
         private static readonly object _lock;
 
         private static bool _disposed;
-
-        private static volatile int _translateCount;
 
         internal static PtcJumpTable PtcJumpTable { get; private set; }
 
@@ -70,9 +66,10 @@ namespace ARMeilleure.Translation.PTC
 
         internal static PtcState State { get; private set; }
 
-        // Progress update events
-        public static event Action<bool> PtcTranslationStateChanged;
-        public static event Action<int, int> PtcTranslationProgressChanged;
+        // Progress reporting helpers
+        private static volatile int _translateCount;
+        private static volatile int _translateTotalCount;
+        public static event Action<PtcLoadingState, int, int> PtcStateChanged;
 
         static Ptc()
         {
@@ -81,8 +78,6 @@ namespace ARMeilleure.Translation.PTC
             _headerMagic = BinaryPrimitives.ReadUInt64LittleEndian(EncodingCache.UTF8NoBOM.GetBytes(HeaderMagicString).AsSpan());
 
             _waitEvent = new ManualResetEvent(true);
-
-            _loggerEvent = new AutoResetEvent(false);
 
             _lock = new object();
 
@@ -773,10 +768,20 @@ namespace ARMeilleure.Translation.PTC
             }
 
             _translateCount = 0;
+            _translateTotalCount = profiledFuncsToTranslate.Count;
 
-            ThreadPool.QueueUserWorkItem(TranslationLogger, profiledFuncsToTranslate.Count);
+            PtcStateChanged?.Invoke(PtcLoadingState.Start, _translateCount, _translateTotalCount);
 
-            PtcTranslationStateChanged?.Invoke(true);
+            using AutoResetEvent progressReportEvent = new AutoResetEvent(false);
+
+            Thread progressReportThread = new Thread(ReportProgress)
+            {
+                Name = "Ptc.ProgressReporter",
+                Priority = ThreadPriority.Lowest,
+                IsBackground = true
+            };
+
+            progressReportThread.Start(progressReportEvent);
 
             void TranslateFuncs()
             {
@@ -825,8 +830,12 @@ namespace ARMeilleure.Translation.PTC
 
             threads.Clear();
 
-            _loggerEvent.Set();
-            PtcTranslationStateChanged?.Invoke(false);
+            progressReportEvent.Set();
+            progressReportThread.Join();
+
+            PtcStateChanged?.Invoke(PtcLoadingState.Loaded, _translateCount, _translateTotalCount);
+
+            Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {_translateTotalCount} functions translated");
 
             PtcJumpTable.Initialize(jumpTable);
 
@@ -838,19 +847,25 @@ namespace ARMeilleure.Translation.PTC
             preSaveThread.Start();
         }
 
-        private static void TranslationLogger(object state)
+        private static void ReportProgress(object state)
         {
-            const int refreshRate = 100; // ms
+            const int refreshRate = 50; // ms
 
-            int profiledFuncsToTranslateCount = (int)state;
+            AutoResetEvent endEvent = (AutoResetEvent)state;
+
+            int count = 0;
 
             do
             {
-                PtcTranslationProgressChanged?.Invoke(_translateCount, profiledFuncsToTranslateCount);
-            }
-            while (!_loggerEvent.WaitOne(refreshRate));
+                int newCount = _translateCount;
 
-            Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {profiledFuncsToTranslateCount} functions translated");
+                if (count != newCount)
+                {
+                    PtcStateChanged?.Invoke(PtcLoadingState.Loading, newCount, _translateTotalCount);
+                    count = newCount;
+                }
+            }
+            while (!endEvent.WaitOne(refreshRate));
         }
 
         internal static void WriteInfoCodeRelocUnwindInfo(ulong address, ulong guestSize, bool highCq, PtcInfo ptcInfo)
@@ -967,8 +982,6 @@ namespace ARMeilleure.Translation.PTC
 
                 Wait();
                 _waitEvent.Dispose();
-
-                _loggerEvent.Dispose();
 
                 DisposeMemoryStreams();
             }

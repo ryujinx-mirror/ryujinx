@@ -38,10 +38,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private const ulong ShaderCodeGenVersion = 2088;
 
         // Progress reporting helpers
-        private int _shaderCount;
-        private readonly AutoResetEvent _progressReportEvent;
-        public event Action<bool> ShaderCacheStateChanged;
-        public event Action<int, int> ShaderCacheProgressChanged;
+        private volatile int _shaderCount;
+        private volatile int _totalShaderCount;
+        public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
 
         /// <summary>
         /// Creates a new instance of the shader cache.
@@ -57,8 +56,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _gpPrograms = new Dictionary<ShaderAddresses, List<ShaderBundle>>();
             _gpProgramsDiskCache = new Dictionary<Hash128, ShaderBundle>();
             _cpProgramsDiskCache = new Dictionary<Hash128, ShaderBundle>();
-
-            _progressReportEvent = new AutoResetEvent(false);
         }
 
         /// <summary>
@@ -85,11 +82,25 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 ReadOnlySpan<Hash128> guestProgramList = _cacheManager.GetGuestProgramList();
 
-                _progressReportEvent.Reset();
-                _shaderCount = 0;
+                using AutoResetEvent progressReportEvent = new AutoResetEvent(false);
 
-                ShaderCacheStateChanged?.Invoke(true);
-                ThreadPool.QueueUserWorkItem(ProgressLogger, guestProgramList.Length);
+                _shaderCount = 0;
+                _totalShaderCount = guestProgramList.Length;
+
+                ShaderCacheStateChanged?.Invoke(ShaderCacheState.Start, _shaderCount, _totalShaderCount);
+                Thread progressReportThread = null;
+
+                if (guestProgramList.Length > 0)
+                {
+                    progressReportThread = new Thread(ReportProgress)
+                    {
+                        Name = "ShaderCache.ProgressReporter",
+                        Priority = ThreadPriority.Lowest,
+                        IsBackground = true
+                    };
+
+                    progressReportThread.Start(progressReportEvent);
+                }
 
                 for (int programIndex = 0; programIndex < guestProgramList.Length; programIndex++)
                 {
@@ -318,7 +329,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                         _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
                     }
 
-                    _shaderCount = programIndex;
+                    _shaderCount = programIndex + 1;
                 }
 
                 if (!isReadOnly)
@@ -329,26 +340,37 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     _cacheManager.Synchronize();
                 }
 
-                _progressReportEvent.Set();
-                ShaderCacheStateChanged?.Invoke(false);
+                progressReportEvent.Set();
+                progressReportThread?.Join();
+
+                ShaderCacheStateChanged?.Invoke(ShaderCacheState.Loaded, _shaderCount, _totalShaderCount);
 
                 Logger.Info?.Print(LogClass.Gpu, $"Shader cache loaded {_shaderCount} entries.");
             }
         }
 
         /// <summary>
-        /// Raises ShaderCacheProgressChanged events periodically.
+        /// Raises ShaderCacheStateChanged events periodically.
         /// </summary>
-        private void ProgressLogger(object state)
+        private void ReportProgress(object state)
         {
-            const int refreshRate = 100; // ms
+            const int refreshRate = 50; // ms
 
-            int totalCount = (int)state;
+            AutoResetEvent endEvent = (AutoResetEvent)state;
+
+            int count = 0;
+
             do
             {
-                ShaderCacheProgressChanged?.Invoke(_shaderCount, totalCount);
+                int newCount = _shaderCount;
+
+                if (count != newCount)
+                {
+                    ShaderCacheStateChanged?.Invoke(ShaderCacheState.Loading, newCount, _totalShaderCount);
+                    count = newCount;
+                }
             }
-            while (!_progressReportEvent.WaitOne(refreshRate));
+            while (!endEvent.WaitOne(refreshRate));
         }
 
         /// <summary>
@@ -833,7 +855,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            _progressReportEvent?.Dispose();
             _cacheManager?.Dispose();
         }
     }

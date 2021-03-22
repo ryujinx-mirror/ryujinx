@@ -33,6 +33,9 @@ using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
+using PtcLoadingState = ARMeilleure.Translation.PTC.PtcLoadingState;
+using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
+
 namespace Ryujinx.Ui
 {
     public class MainWindow : Window
@@ -104,8 +107,6 @@ namespace Ryujinx.Ui
         [GUI] Box             _listStatusBox;
         [GUI] Label           _loadingStatusLabel;
         [GUI] ProgressBar     _loadingStatusBar;
-
-        private string        _loadingStatusTitle = "";
 
 #pragma warning restore CS0649, IDE0044, CS0169
 
@@ -346,43 +347,38 @@ namespace Ryujinx.Ui
 
         private void SetupProgressUiHandlers()
         {
-            Ptc.PtcTranslationStateChanged -= PtcStatusChanged;
-            Ptc.PtcTranslationStateChanged += PtcStatusChanged;
+            Ptc.PtcStateChanged -= ProgressHandler;
+            Ptc.PtcStateChanged += ProgressHandler;
 
-            Ptc.PtcTranslationProgressChanged -= LoadingProgressChanged;
-            Ptc.PtcTranslationProgressChanged += LoadingProgressChanged;
-
-            _emulationContext.Gpu.ShaderCacheStateChanged -= ShaderCacheStatusChanged;
-            _emulationContext.Gpu.ShaderCacheStateChanged += ShaderCacheStatusChanged;
-
-            _emulationContext.Gpu.ShaderCacheProgressChanged -= LoadingProgressChanged;
-            _emulationContext.Gpu.ShaderCacheProgressChanged += LoadingProgressChanged;
+            _emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
+            _emulationContext.Gpu.ShaderCacheStateChanged += ProgressHandler;
         }
 
-        private void ShaderCacheStatusChanged(bool state)
+        private void ProgressHandler<T>(T state, int current, int total) where T : Enum
         {
-            _loadingStatusTitle = "Shaders";
-            Application.Invoke(delegate
-            {
-                _loadingStatusBar.Visible = _loadingStatusLabel.Visible = state;
-            });
-        }
+            bool visible;
+            string label;
 
-        private void PtcStatusChanged(bool state)
-        {
-            _loadingStatusTitle = "PTC";
-            Application.Invoke(delegate
+            switch (state)
             {
-                _loadingStatusBar.Visible = _loadingStatusLabel.Visible = state;
-            });
-        }
+                case PtcLoadingState ptcState:
+                    visible = ptcState != PtcLoadingState.Loaded;
+                    label = $"PTC : {current}/{total}";
+                    break;
+                case ShaderCacheLoadingState shaderCacheState:
+                    visible = shaderCacheState != ShaderCacheLoadingState.Loaded;
+                    label = $"Shaders : {current}/{total}";
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown Progress Handler type {typeof(T)}");
+            }
 
-        private void LoadingProgressChanged(int value, int total)
-        {
             Application.Invoke(delegate
             {
-                _loadingStatusBar.Fraction = (double)value / total;
-                _loadingStatusLabel.Text = $"{_loadingStatusTitle} : {value}/{total}";
+                _loadingStatusLabel.Text = label;
+                _loadingStatusBar.Fraction = total > 0 ? (double)current / total : 0;
+                _loadingStatusBar.Visible = visible;
+                _loadingStatusLabel.Visible = visible;
             });
         }
 
@@ -463,6 +459,8 @@ namespace Ryujinx.Ui
                 InitializeSwitchInstance();
 
                 UpdateGraphicsConfig();
+
+                SetupProgressUiHandlers();
 
                 SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
 
@@ -583,8 +581,6 @@ namespace Ryujinx.Ui
                 _currentEmulatedGamePath = path;
 
                 _deviceExitStatus.Reset();
-
-                SetupProgressUiHandlers();
 
                 Translator.IsReadyForTranslation.Reset();
 #if MACOS_BUILD
