@@ -13,7 +13,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private Lbl.LblControllerServer _lblControllerServer;
 
         private bool _vrModeEnabled;
+#pragma warning disable CS0169
         private bool _lcdBacklighOffEnabled;
+        private bool _requestExitToLibraryAppletAtExecuteNextProgramEnabled;
+#pragma warning restore CS0169
         private int  _messageEventHandle;
         private int  _displayResolutionChangedEventHandle;
 
@@ -236,6 +239,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
         {
             return (ResultCode)_apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
+        }
+
+        [Command(900)] // 11.0.0+
+        // SetRequestExitToLibraryAppletAtExecuteNextProgramEnabled()
+        public ResultCode SetRequestExitToLibraryAppletAtExecuteNextProgramEnabled(ServiceCtx context)
+        {
+            // TODO : Find where the field is used.
+            _requestExitToLibraryAppletAtExecuteNextProgramEnabled = true;
+
+            return ResultCode.Success;
         }
     }
 }
