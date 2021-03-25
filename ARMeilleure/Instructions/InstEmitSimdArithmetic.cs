@@ -2642,22 +2642,27 @@ namespace ARMeilleure.Instructions
 
         public static void Sqadd_S(ArmEmitterContext context)
         {
-            EmitScalarSaturatingBinaryOpSx(context, SaturatingFlags.Add);
+            EmitScalarSaturatingBinaryOpSx(context, flags: SaturatingFlags.Add);
         }
 
         public static void Sqadd_V(ArmEmitterContext context)
         {
-            EmitVectorSaturatingBinaryOpSx(context, SaturatingFlags.Add);
+            EmitVectorSaturatingBinaryOpSx(context, flags: SaturatingFlags.Add);
         }
 
         public static void Sqdmulh_S(ArmEmitterContext context)
         {
-            EmitSaturatingBinaryOp(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: false), SaturatingFlags.ScalarSx);
+            EmitScalarSaturatingBinaryOpSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: false));
         }
 
         public static void Sqdmulh_V(ArmEmitterContext context)
         {
-            EmitSaturatingBinaryOp(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: false), SaturatingFlags.VectorSx);
+            EmitVectorSaturatingBinaryOpSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: false));
+        }
+
+        public static void Sqdmulh_Ve(ArmEmitterContext context)
+        {
+            EmitVectorSaturatingBinaryOpByElemSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: false));
         }
 
         public static void Sqneg_S(ArmEmitterContext context)
@@ -2672,22 +2677,27 @@ namespace ARMeilleure.Instructions
 
         public static void Sqrdmulh_S(ArmEmitterContext context)
         {
-            EmitSaturatingBinaryOp(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: true), SaturatingFlags.ScalarSx);
+            EmitScalarSaturatingBinaryOpSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: true));
         }
 
         public static void Sqrdmulh_V(ArmEmitterContext context)
         {
-            EmitSaturatingBinaryOp(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: true), SaturatingFlags.VectorSx);
+            EmitVectorSaturatingBinaryOpSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: true));
+        }
+
+        public static void Sqrdmulh_Ve(ArmEmitterContext context)
+        {
+            EmitVectorSaturatingBinaryOpByElemSx(context, (op1, op2) => EmitDoublingMultiplyHighHalf(context, op1, op2, round: true));
         }
 
         public static void Sqsub_S(ArmEmitterContext context)
         {
-            EmitScalarSaturatingBinaryOpSx(context, SaturatingFlags.Sub);
+            EmitScalarSaturatingBinaryOpSx(context, flags: SaturatingFlags.Sub);
         }
 
         public static void Sqsub_V(ArmEmitterContext context)
         {
-            EmitVectorSaturatingBinaryOpSx(context, SaturatingFlags.Sub);
+            EmitVectorSaturatingBinaryOpSx(context, flags: SaturatingFlags.Sub);
         }
 
         public static void Sqxtn_S(ArmEmitterContext context)
@@ -2850,12 +2860,12 @@ namespace ARMeilleure.Instructions
 
         public static void Suqadd_S(ArmEmitterContext context)
         {
-            EmitScalarSaturatingBinaryOpSx(context, SaturatingFlags.Accumulate);
+            EmitScalarSaturatingBinaryOpSx(context, flags: SaturatingFlags.Accumulate);
         }
 
         public static void Suqadd_V(ArmEmitterContext context)
         {
-            EmitVectorSaturatingBinaryOpSx(context, SaturatingFlags.Accumulate);
+            EmitVectorSaturatingBinaryOpSx(context, flags: SaturatingFlags.Accumulate);
         }
 
         public static void Uaba_V(ArmEmitterContext context)

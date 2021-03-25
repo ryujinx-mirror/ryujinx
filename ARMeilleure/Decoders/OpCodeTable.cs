@@ -485,12 +485,16 @@ namespace ARMeilleure.Decoders
             SetA64("01011110101xxxxx101101xxxxxxxxxx", InstName.Sqdmulh_S,       InstEmit.Sqdmulh_S,       OpCodeSimdReg.Create);
             SetA64("0x001110011xxxxx101101xxxxxxxxxx", InstName.Sqdmulh_V,       InstEmit.Sqdmulh_V,       OpCodeSimdReg.Create);
             SetA64("0x001110101xxxxx101101xxxxxxxxxx", InstName.Sqdmulh_V,       InstEmit.Sqdmulh_V,       OpCodeSimdReg.Create);
+            SetA64("0x00111101xxxxxx1100x0xxxxxxxxxx", InstName.Sqdmulh_Ve,      InstEmit.Sqdmulh_Ve,      OpCodeSimdRegElem.Create);
+            SetA64("0x00111110xxxxxx1100x0xxxxxxxxxx", InstName.Sqdmulh_Ve,      InstEmit.Sqdmulh_Ve,      OpCodeSimdRegElem.Create);
             SetA64("01111110xx100000011110xxxxxxxxxx", InstName.Sqneg_S,         InstEmit.Sqneg_S,         OpCodeSimd.Create);
             SetA64("0>101110<<100000011110xxxxxxxxxx", InstName.Sqneg_V,         InstEmit.Sqneg_V,         OpCodeSimd.Create);
             SetA64("01111110011xxxxx101101xxxxxxxxxx", InstName.Sqrdmulh_S,      InstEmit.Sqrdmulh_S,      OpCodeSimdReg.Create);
             SetA64("01111110101xxxxx101101xxxxxxxxxx", InstName.Sqrdmulh_S,      InstEmit.Sqrdmulh_S,      OpCodeSimdReg.Create);
             SetA64("0x101110011xxxxx101101xxxxxxxxxx", InstName.Sqrdmulh_V,      InstEmit.Sqrdmulh_V,      OpCodeSimdReg.Create);
             SetA64("0x101110101xxxxx101101xxxxxxxxxx", InstName.Sqrdmulh_V,      InstEmit.Sqrdmulh_V,      OpCodeSimdReg.Create);
+            SetA64("0x00111101xxxxxx1101x0xxxxxxxxxx", InstName.Sqrdmulh_Ve,     InstEmit.Sqrdmulh_Ve,     OpCodeSimdRegElem.Create);
+            SetA64("0x00111110xxxxxx1101x0xxxxxxxxxx", InstName.Sqrdmulh_Ve,     InstEmit.Sqrdmulh_Ve,     OpCodeSimdRegElem.Create);
             SetA64("0>001110<<1xxxxx010111xxxxxxxxxx", InstName.Sqrshl_V,        InstEmit.Sqrshl_V,        OpCodeSimdReg.Create);
             SetA64("0101111100>>>xxx100111xxxxxxxxxx", InstName.Sqrshrn_S,       InstEmit.Sqrshrn_S,       OpCodeSimdShImm.Create);
             SetA64("0x00111100>>>xxx100111xxxxxxxxxx", InstName.Sqrshrn_V,       InstEmit.Sqrshrn_V,       OpCodeSimdShImm.Create);
