@@ -426,6 +426,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             Hash128 programCodeHash = default;
             GuestShaderCacheEntry[] shaderCacheEntries = null;
 
+            // Current shader cache doesn't support bindless textures
+            if (shaderContexts[0].UsedFeatures.HasFlag(FeatureFlags.Bindless))
+            {
+                isShaderCacheEnabled = false;
+            }
+
             if (isShaderCacheEnabled)
             {
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
@@ -448,8 +454,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 // The shader isn't currently cached, translate it and compile it.
                 ShaderCodeHolder shader = TranslateShader(shaderContexts[0]);
 
-                bool isDiskShaderCacheIncompatible = shaderContexts[0].UsedFeatures.HasFlag(FeatureFlags.Bindless);
-
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
                 IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
@@ -458,7 +462,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 cpShader = new ShaderBundle(hostProgram, shader);
 
-                if (isShaderCacheEnabled && !isDiskShaderCacheIncompatible)
+                if (isShaderCacheEnabled)
                 {
                     _cpProgramsDiskCache.Add(programCodeHash, cpShader);
 
@@ -536,6 +540,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
             Hash128 programCodeHash = default;
             GuestShaderCacheEntry[] shaderCacheEntries = null;
 
+            // Current shader cache doesn't support bindless textures
+            for (int i = 0; i < shaderContexts.Length; i++)
+            {
+                if (shaderContexts[i] != null && shaderContexts[i].UsedFeatures.HasFlag(FeatureFlags.Bindless))
+                {
+                    isShaderCacheEnabled = false;
+                    break;
+                }
+            }
+
             if (isShaderCacheEnabled)
             {
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
@@ -564,17 +578,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 shaders[3] = TranslateShader(shaderContexts[4]);
                 shaders[4] = TranslateShader(shaderContexts[5]);
 
-                bool isDiskShaderCacheIncompatible = false;
-
-                for (int i = 0; i < shaderContexts.Length; i++)
-                {
-                    if (shaderContexts[i] != null && shaderContexts[i].UsedFeatures.HasFlag(FeatureFlags.Bindless))
-                    {
-                        isDiskShaderCacheIncompatible = true;
-                        break;
-                    }
-                }
-
                 List<IShader> hostShaders = new List<IShader>();
 
                 for (int stage = 0; stage < Constants.ShaderStages; stage++)
@@ -599,7 +602,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 gpShaders = new ShaderBundle(hostProgram, shaders);
 
-                if (isShaderCacheEnabled && !isDiskShaderCacheIncompatible)
+                if (isShaderCacheEnabled)
                 {
                     _gpProgramsDiskCache.Add(programCodeHash, gpShaders);
 

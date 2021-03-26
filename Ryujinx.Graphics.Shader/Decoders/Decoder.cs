@@ -9,8 +9,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class Decoder
     {
-        public static Block[][] Decode(IGpuAccessor gpuAccessor, ulong startAddress)
+        public static Block[][] Decode(IGpuAccessor gpuAccessor, ulong startAddress, out bool hasBindless)
         {
+            hasBindless = false;
+
             List<Block[]> funcs = new List<Block[]>();
 
             Queue<ulong> funcQueue = new Queue<ulong>();
@@ -84,7 +86,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         }
                     }
 
-                    FillBlock(gpuAccessor, currBlock, limitAddress, startAddress);
+                    FillBlock(gpuAccessor, currBlock, limitAddress, startAddress, out bool blockHasBindless);
+                    hasBindless |= blockHasBindless;
 
                     if (currBlock.OpCodes.Count != 0)
                     {
@@ -229,9 +232,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
             IGpuAccessor gpuAccessor,
             Block        block,
             ulong        limitAddress,
-            ulong        startAddress)
+            ulong        startAddress,
+            out bool     hasBindless)
         {
             ulong address = block.Address;
+            hasBindless = false;
 
             do
             {
@@ -271,6 +276,15 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 OpCode op = makeOp(emitter, opAddress, opCode);
+
+                // We check these patterns to figure out the presence of bindless access
+                hasBindless |= (op is OpCodeImage image && image.IsBindless) || 
+                    (op is OpCodeTxd txd && txd.IsBindless) ||
+                    (op is OpCodeTld4B) ||
+                    (emitter == InstEmit.TexB) ||
+                    (emitter == InstEmit.TldB) ||
+                    (emitter == InstEmit.TmmlB) ||
+                    (emitter == InstEmit.TxqB);
 
                 block.OpCodes.Add(op);
             }
