@@ -22,6 +22,7 @@ using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemA
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
+using Ryujinx.HLE.HOS.Services.Caps;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.UserManager;
 using Ryujinx.HLE.HOS.Services.Nv;
@@ -86,6 +87,7 @@ namespace Ryujinx.HLE.HOS
         internal SharedFontManager Font { get; private set; }
 
         internal ContentManager ContentManager { get; private set; }
+        internal CaptureManager CaptureManager { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
 
@@ -160,6 +162,7 @@ namespace Ryujinx.HLE.HOS
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
             ContentManager = contentManager;
+            CaptureManager = new CaptureManager(device);
 
             // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.

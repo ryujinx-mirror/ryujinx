@@ -11,12 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         // SetShimLibraryVersion(pid, u64, nn::applet::AppletResourceUserId)
         public ResultCode SetShimLibraryVersion(ServiceCtx context)
         {
-            ulong shimLibraryVersion   = context.RequestData.ReadUInt64();
-            ulong appletResourceUserId = context.RequestData.ReadUInt64();
-
-            Logger.Stub?.PrintStub(LogClass.ServiceCaps, new { shimLibraryVersion, appletResourceUserId });
-
-            return ResultCode.Success;
+            return context.Device.System.CaptureManager.SetShimLibraryVersion(context);
         }
     }
 }
