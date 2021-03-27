@@ -659,6 +659,7 @@ namespace Ryujinx.Ui
 
             _device.Hid.Npads.Update(gamepadInputs);
             _device.Hid.Npads.UpdateSixAxis(motionInputs);
+            _device.TamperMachine.UpdateInput(gamepadInputs);
 
             if(_isFocused)
             {

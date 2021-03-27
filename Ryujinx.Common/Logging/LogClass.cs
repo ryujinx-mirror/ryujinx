@@ -57,6 +57,7 @@ namespace Ryujinx.Common.Logging
         ServiceTime,
         ServiceVi,
         SurfaceFlinger,
+        TamperMachine,
         Vic
     }
 }

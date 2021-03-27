@@ -1,13 +1,14 @@
 using ARMeilleure.Translation.PTC;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
+using System;
+using System.Linq;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -124,12 +125,19 @@ namespace Ryujinx.HLE.HOS
             return true;
         }
 
-        public static bool LoadNsos(KernelContext context, Npdm metaData, byte[] arguments = null, params IExecutable[] executables)
+        public static bool LoadNsos(KernelContext context, out ProcessTamperInfo tamperInfo, Npdm metaData, byte[] arguments = null, params IExecutable[] executables)
         {
             ulong argsStart = 0;
             uint  argsSize  = 0;
             ulong codeStart = metaData.Is64Bit ? 0x8000000UL : 0x200000UL;
             uint  codeSize  = 0;
+
+            var buildIds = executables.Select(e => (e switch
+            {
+                NsoExecutable nso => BitConverter.ToString(nso.BuildId.Bytes.ToArray()),
+                NroExecutable nro => BitConverter.ToString(nro.Header.BuildId),
+                _ => ""
+            }).Replace("-", "").ToUpper());
 
             ulong[] nsoBase = new ulong[executables.Length];
 
@@ -202,6 +210,8 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed setting resource limit values.");
 
+                tamperInfo = null;
+
                 return false;
             }
 
@@ -212,6 +222,8 @@ namespace Ryujinx.HLE.HOS
             if (memoryRegion > MemoryRegion.NvServices)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
+
+                tamperInfo = null;
 
                 return false;
             }
@@ -229,6 +241,8 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
+                tamperInfo = null;
+
                 return false;
             }
 
@@ -242,6 +256,8 @@ namespace Ryujinx.HLE.HOS
                 {
                     Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
+                    tamperInfo = null;
+
                     return false;
                 }
             }
@@ -254,10 +270,17 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
 
+                tamperInfo = null;
+
                 return false;
             }
 
             context.Processes.TryAdd(process.Pid, process);
+
+            // Keep the build ids because the tamper machine uses them to know which process to associate a
+            // tamper to and also keep the starting address of each executable inside a process because some
+            // memory modifications are relative to this address.
+            tamperInfo = new ProcessTamperInfo(process, buildIds, nsoBase, process.MemoryManager.HeapRegionStart);
 
             return true;
         }

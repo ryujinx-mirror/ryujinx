@@ -13,6 +13,8 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
 using Ryujinx.HLE.Loaders.Npdm;
+using Ryujinx.HLE.HOS.Kernel.Process;
+using System.Globalization;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -20,9 +22,12 @@ namespace Ryujinx.HLE.HOS
     {
         private const string RomfsDir = "romfs";
         private const string ExefsDir = "exefs";
+        private const string CheatDir = "cheats";
         private const string RomfsContainer = "romfs.bin";
         private const string ExefsContainer = "exefs.nsp";
         private const string StubExtension = ".stub";
+        private const string CheatExtension = ".txt";
+        private const string DefaultCheatName = "<default>";
 
         private const string AmsContentsDir = "contents";
         private const string AmsNsoPatchDir = "exefs_patches";
@@ -41,6 +46,24 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
+        public struct Cheat
+        {
+            // Atmosphere identifies the executables with the first 8 bytes
+            // of the build id, which is equivalent to 16 hex digits.
+            public const int CheatIdSize = 16;
+
+            public readonly string Name;
+            public readonly FileInfo Path;
+            public readonly IEnumerable<String> Instructions;
+
+            public Cheat(string name, FileInfo path, IEnumerable<String> instructions)
+            {
+                Name = name;
+                Path = path;
+                Instructions = instructions;
+            }
+        }
+
         // Title dependent mods
         public class ModCache
         {
@@ -50,12 +73,15 @@ namespace Ryujinx.HLE.HOS
             public List<Mod<DirectoryInfo>> RomfsDirs { get; }
             public List<Mod<DirectoryInfo>> ExefsDirs { get; }
 
+            public List<Cheat> Cheats { get; }
+
             public ModCache()
             {
                 RomfsContainers = new List<Mod<FileInfo>>();
                 ExefsContainers = new List<Mod<FileInfo>>();
                 RomfsDirs = new List<Mod<DirectoryInfo>>();
                 ExefsDirs = new List<Mod<DirectoryInfo>>();
+                Cheats = new List<Cheat>();
             }
         }
 
@@ -192,19 +218,37 @@ namespace Ryujinx.HLE.HOS
                     mods.ExefsDirs.Add(mod = new Mod<DirectoryInfo>($"<{titleDir.Name} ExeFs>", modDir));
                     types.Append('E');
                 }
+                else if (StrEquals(CheatDir, modDir.Name))
+                {
+                    for (int i = 0; i < QueryCheatsDir(mods, modDir); i++)
+                    {
+                        types.Append('C');
+                    }
+                }
                 else
                 {
                     var romfs = new DirectoryInfo(Path.Combine(modDir.FullName, RomfsDir));
                     var exefs = new DirectoryInfo(Path.Combine(modDir.FullName, ExefsDir));
+                    var cheat = new DirectoryInfo(Path.Combine(modDir.FullName, CheatDir));
+
                     if (romfs.Exists)
                     {
                         mods.RomfsDirs.Add(mod = new Mod<DirectoryInfo>(modDir.Name, romfs));
                         types.Append('R');
                     }
+
                     if (exefs.Exists)
                     {
                         mods.ExefsDirs.Add(mod = new Mod<DirectoryInfo>(modDir.Name, exefs));
                         types.Append('E');
+                    }
+
+                    if (cheat.Exists)
+                    {
+                        for (int i = 0; i < QueryCheatsDir(mods, cheat); i++)
+                        {
+                            types.Append('C');
+                        }
                     }
                 }
 
@@ -224,6 +268,94 @@ namespace Ryujinx.HLE.HOS
             {
                 QueryTitleDir(mods, titleDir);
             }
+        }
+
+        private static int QueryCheatsDir(ModCache mods, DirectoryInfo cheatsDir)
+        {
+            if (!cheatsDir.Exists)
+            {
+                return 0;
+            }
+
+            int numMods = 0;
+
+            foreach (FileInfo file in cheatsDir.EnumerateFiles())
+            {
+                if (!StrEquals(CheatExtension, file.Extension))
+                {
+                    continue;
+                }
+
+                string cheatId = Path.GetFileNameWithoutExtension(file.Name);
+
+                if (cheatId.Length != Cheat.CheatIdSize)
+                {
+                    continue;
+                }
+
+                if (!ulong.TryParse(cheatId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _))
+                {
+                    continue;
+                }
+
+                // A cheat file can contain several cheats for the same executable, so the file must be parsed in
+                // order to properly enumerate them.
+                mods.Cheats.AddRange(GetCheatsInFile(file));
+            }
+
+            return numMods;
+        }
+
+        private static IEnumerable<Cheat> GetCheatsInFile(FileInfo cheatFile)
+        {
+            string cheatName = DefaultCheatName;
+            List<string> instructions = new List<string>();
+            List<Cheat> cheats = new List<Cheat>();
+
+            using (StreamReader cheatData = cheatFile.OpenText())
+            {
+                string line;
+                while ((line = cheatData.ReadLine()) != null)
+                {
+                    line = line.Trim();
+
+                    if (line.StartsWith('['))
+                    {
+                        // This line starts a new cheat section.
+                        if (!line.EndsWith(']') || line.Length < 3)
+                        {
+                            // Skip the entire file if there's any error while parsing the cheat file.
+
+                            Logger.Warning?.Print(LogClass.ModLoader, $"Ignoring cheat '{cheatFile.FullName}' because it is malformed");
+
+                            return new List<Cheat>();
+                        }
+
+                        // Add the previous section to the list.
+                        if (instructions.Count != 0)
+                        {
+                            cheats.Add(new Cheat($"<{cheatName} Cheat>", cheatFile, instructions));
+                        }
+
+                        // Start a new cheat section.
+                        cheatName = line.Substring(1, line.Length - 2);
+                        instructions = new List<string>();
+                    }
+                    else if (line.Length > 0)
+                    {
+                        // The line contains an instruction.
+                        instructions.Add(line);
+                    }
+                }
+
+                // Add the last section being processed.
+                if (instructions.Count != 0)
+                {
+                    cheats.Add(new Cheat($"<{cheatName} Cheat>", cheatFile, instructions));
+                }
+            }
+
+            return cheats;
         }
 
         // Assumes searchDirPaths don't overlap
@@ -408,7 +540,6 @@ namespace Ryujinx.HLE.HOS
                 return modLoadResult;
             }
 
-
             if (nsos.Length != ApplicationLoader.ExeFsPrefixes.Length)
             {
                 throw new ArgumentOutOfRangeException("NSO Count is incorrect");
@@ -492,6 +623,41 @@ namespace Ryujinx.HLE.HOS
             // NSO patches are created with offset 0 according to Atmosphere's patcher module
             // But `Program` doesn't contain the header which is 0x100 bytes. So, we adjust for that here
             return ApplyProgramPatches(nsoMods, 0x100, programs);
+        }
+
+        internal void LoadCheats(ulong titleId, ProcessTamperInfo tamperInfo, TamperMachine tamperMachine)
+        {
+            if (tamperInfo == null || tamperInfo.BuildIds == null || tamperInfo.CodeAddresses == null)
+            {
+                Logger.Error?.Print(LogClass.ModLoader, "Unable to install cheat because the associated process is invalid");
+            }
+
+            Logger.Info?.Print(LogClass.ModLoader, $"Build ids found for title {titleId:X16}:\n    {String.Join("\n    ", tamperInfo.BuildIds)}");
+
+            if (!AppMods.TryGetValue(titleId, out ModCache mods) || mods.Cheats.Count == 0)
+            {
+                return;
+            }
+
+            var cheats = mods.Cheats;
+            var processExes = tamperInfo.BuildIds.Zip(tamperInfo.CodeAddresses, (k, v) => new { k, v })
+                .ToDictionary(x => x.k.Substring(0, Math.Min(Cheat.CheatIdSize, x.k.Length)), x => x.v);
+
+            foreach (var cheat in cheats)
+            {
+                string cheatId = Path.GetFileNameWithoutExtension(cheat.Path.Name).ToUpper();
+
+                if (!processExes.TryGetValue(cheatId, out ulong exeAddress))
+                {
+                    Logger.Warning?.Print(LogClass.ModLoader, $"Skipping cheat '{cheat.Name}' because no executable matches its BuildId {cheatId} (check if the game title and version are correct)");
+
+                    continue;
+                }
+
+                Logger.Info?.Print(LogClass.ModLoader, $"Installing cheat '{cheat.Name}'");
+
+                tamperMachine.InstallAtmosphereCheat(cheat.Instructions, tamperInfo, exeAddress);
+            }
         }
 
         private static bool ApplyProgramPatches(IEnumerable<Mod<DirectoryInfo>> mods, int protectedOffset, params IExecutable[] programs)

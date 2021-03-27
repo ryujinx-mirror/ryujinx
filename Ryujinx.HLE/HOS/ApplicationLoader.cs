@@ -11,6 +11,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
 using System;
@@ -527,7 +528,9 @@ namespace Ryujinx.HLE.HOS
 
             Ptc.Initialize(TitleIdText, DisplayVersion, usePtc);
 
-            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: programs);
+            ProgramLoader.LoadNsos(_device.System.KernelContext, out ProcessTamperInfo tamperInfo, metaData, executables: programs);
+
+            _fileSystem.ModLoader.LoadCheats(TitleId, tamperInfo, _device.TamperMachine);
         }
 
         public void LoadProgram(string filePath)
@@ -626,7 +629,9 @@ namespace Ryujinx.HLE.HOS
             Graphics.Gpu.GraphicsConfig.TitleId = null;
             _device.Gpu.HostInitalized.Set();
 
-            ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, executables: executable);
+            ProgramLoader.LoadNsos(_device.System.KernelContext, out ProcessTamperInfo tamperInfo, metaData, executables: executable);
+
+            _fileSystem.ModLoader.LoadCheats(TitleId, tamperInfo, _device.TamperMachine);
         }
 
         private Npdm GetDefaultNpdm()
