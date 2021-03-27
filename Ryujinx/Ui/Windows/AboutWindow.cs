@@ -47,6 +47,11 @@ namespace Ryujinx.Ui.Windows
             OpenHelper.OpenUrl("https://ryujinx.org");
         }
 
+        private void AmiiboApiButton_Pressed(object sender, ButtonPressEventArgs args)
+        {
+            OpenHelper.OpenUrl("https://amiiboapi.com");
+        }
+
         private void PatreonButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenHelper.OpenUrl("https://www.patreon.com/ryujinx");

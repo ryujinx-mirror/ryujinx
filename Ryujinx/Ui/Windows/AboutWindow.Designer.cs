@@ -17,6 +17,8 @@ namespace Ryujinx.Ui.Windows
         private Label          _ryujinxLinkLabel;
         private Label          _versionLabel;
         private Label          _disclaimerLabel;
+        private EventBox       _amiiboApiLink;
+        private Label          _amiiboApiLinkLabel;
         private Box            _socialBox;
         private EventBox       _patreonEventBox;
         private Box            _patreonBox;
@@ -156,6 +158,26 @@ namespace Ryujinx.Ui.Windows
                 Attributes = new AttrList()
             };
             _disclaimerLabel.Attributes.Insert(new Pango.AttrScale(0.8f));
+
+            //
+            // _amiiboApiLink
+            //
+            _amiiboApiLink = new EventBox()
+            {
+                Margin = 5
+            };
+            _amiiboApiLink.ButtonPressEvent += AmiiboApiButton_Pressed;
+
+            //
+            // _amiiboApiLinkLabel
+            //
+            _amiiboApiLinkLabel = new Label("AmiiboAPI (www.amiiboapi.com) is used\nin our Amiibo emulation.")
+            {
+                TooltipText = "Click to open the AmiiboAPI website in your default browser.",
+                Justify     = Justification.Center,
+                Attributes  = new AttrList()
+            };
+            _amiiboApiLinkLabel.Attributes.Insert(new Pango.AttrScale(0.9f));
 
             //
             // _socialBox
@@ -418,6 +440,8 @@ namespace Ryujinx.Ui.Windows
 
             _logoBox.Add(_logoTextBox);
 
+            _amiiboApiLink.Add(_amiiboApiLinkLabel);
+
             _patreonBox.Add(_patreonLogo);
             _patreonBox.Add(_patreonLabel);
             _patreonEventBox.Add(_patreonBox);
@@ -442,6 +466,7 @@ namespace Ryujinx.Ui.Windows
             _leftBox.Add(_logoBox);
             _leftBox.Add(_versionLabel);
             _leftBox.Add(_disclaimerLabel);
+            _leftBox.Add(_amiiboApiLink);
             _leftBox.Add(_socialBox);
 
             _contributorsEventBox.Add(_contributorsLinkLabel);
