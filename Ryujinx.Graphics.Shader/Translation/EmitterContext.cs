@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForReturn()
         {
-            if (Config.Stage == ShaderStage.Fragment)
+            if (!IsNonMain && Config.Stage == ShaderStage.Fragment)
             {
                 if (Config.OmapDepth)
                 {

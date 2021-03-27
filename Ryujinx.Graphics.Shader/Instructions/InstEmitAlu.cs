@@ -276,12 +276,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 : context.IMaximumU32(srcA, srcB);
 
             Operand pred = GetPredicate39(context);
+            Operand res = context.ConditionalSelect(pred, resMin, resMax);
 
-            Operand dest = GetDest(context);
+            context.Copy(GetDest(context), res);
 
-            context.Copy(dest, context.ConditionalSelect(pred, resMin, resMax));
-
-            SetZnFlags(context, dest, op.SetCondCode);
+            SetZnFlags(context, res, op.SetCondCode);
 
             // TODO: X flags.
         }
@@ -461,11 +460,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             EmitLopPredWrite(context, op, res, (ConditionalOperation)context.CurrOp.RawOpCode.Extract(44, 2));
 
-            Operand dest = GetDest(context);
+            context.Copy(GetDest(context), res);
 
-            context.Copy(dest, res);
-
-            SetZnFlags(context, dest, op.SetCondCode, op.Extended);
+            SetZnFlags(context, res, op.SetCondCode, op.Extended);
         }
 
         public static void Lop3(EmitterContext context)
@@ -489,11 +486,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 EmitLopPredWrite(context, op, res, (ConditionalOperation)context.CurrOp.RawOpCode.Extract(36, 2));
             }
 
-            Operand dest = GetDest(context);
+            context.Copy(GetDest(context), res);
 
-            context.Copy(dest, res);
-
-            SetZnFlags(context, dest, op.SetCondCode, op.Extended);
+            SetZnFlags(context, res, op.SetCondCode, op.Extended);
         }
 
         public static void Popc(EmitterContext context)

@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 2088;
+        private const ulong ShaderCodeGenVersion = 2147;
 
         // Progress reporting helpers
         private volatile int _shaderCount;
