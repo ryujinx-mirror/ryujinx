@@ -84,6 +84,18 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return (ResultCode)_applet.Start(_normalSession.GetConsumer(), _interactiveSession.GetConsumer());
         }
 
+        [Command(20)]
+        // RequestExit()
+        public ResultCode RequestExit(ServiceCtx context)
+        {
+            // TODO: Since we don't support software Applet for now, we can just signals the changed state of the applet.
+            _stateChangedEvent.ReadableEvent.Signal();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [Command(30)]
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
