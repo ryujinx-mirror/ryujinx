@@ -13,11 +13,26 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
-        public int FragmentIsBgraUniform { get; }
-        public int FragmentRenderScaleUniform { get; }
-        public int ComputeRenderScaleUniform { get; }
+        public int FragmentIsBgraUniform { get; private set; }
+        public int FragmentRenderScaleUniform { get; private set; }
+        public int ComputeRenderScaleUniform { get; private set; }
 
-        public bool IsLinked { get; private set; }
+        public bool IsLinked
+        {
+            get
+            {
+                if (_status == ProgramLinkStatus.Incomplete)
+                {
+                    CheckProgramLink(true);
+                }
+
+                return _status == ProgramLinkStatus.Success;
+            }
+        }
+
+        private bool _initialized;
+        private ProgramLinkStatus _status = ProgramLinkStatus.Incomplete;
+        private IShader[] _shaders;
 
         public Program(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors)
         {
@@ -82,18 +97,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.LinkProgram(Handle);
 
-            for (int index = 0; index < shaders.Length; index++)
-            {
-                int shaderHandle = ((Shader)shaders[index]).Handle;
-
-                GL.DetachShader(Handle, shaderHandle);
-            }
-
-            CheckProgramLink();
-
-            FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
-            FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
-            ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
+            _shaders = shaders;
         }
 
         public Program(ReadOnlySpan<byte> code)
@@ -109,32 +113,60 @@ namespace Ryujinx.Graphics.OpenGL
                     GL.ProgramBinary(Handle, binaryFormat, (IntPtr)ptr, code.Length - 4);
                 }
             }
-
-            CheckProgramLink();
-
-            FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
-            FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
-            ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
         }
 
         public void Bind()
         {
+            if (!_initialized)
+            {
+                FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
+                FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
+                ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
+
+                _initialized = true;
+            }
+
             GL.UseProgram(Handle);
         }
 
-        private void CheckProgramLink()
+        public ProgramLinkStatus CheckProgramLink(bool blocking)
         {
+            if (!blocking && HwCapabilities.SupportsParallelShaderCompile)
+            {
+                GL.GetProgram(Handle, (GetProgramParameterName)ArbParallelShaderCompile.CompletionStatusArb, out int completed);
+
+                if (completed == 0)
+                {
+                    return ProgramLinkStatus.Incomplete;
+                }
+            }
+
             GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out int status);
+
+            if (_shaders != null)
+            {
+                for (int index = 0; index < _shaders.Length; index++)
+                {
+                    int shaderHandle = ((Shader)_shaders[index]).Handle;
+
+                    GL.DetachShader(Handle, shaderHandle);
+                }
+
+                _shaders = null;
+            }
 
             if (status == 0)
             {
                 // Use GL.GetProgramInfoLog(Handle), it may be too long to print on the log.
+                _status = ProgramLinkStatus.Failure;
                 Logger.Debug?.Print(LogClass.Gpu, "Shader linking failed.");
             }
             else
             {
-                IsLinked = true;
+                _status = ProgramLinkStatus.Success;
             }
+
+            return _status;
         }
 
         public byte[] GetBinary()
