@@ -4,7 +4,6 @@ using LibHac.FsSystem;
 using LibHac.Loader;
 using Ryujinx.Common.Logging;
 using System;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -68,33 +67,38 @@ namespace Ryujinx.HLE.Loaders.Executables
 
         private void PrintRoSectionInfo()
         {
-            byte[]        roBuffer      = Ro.ToArray();
-            string        rawTextBuffer = Encoding.ASCII.GetString(roBuffer, 0, (int)RoSize);
+            string        rawTextBuffer = Encoding.ASCII.GetString(Ro);
             StringBuilder stringBuilder = new StringBuilder();
 
-            int zero = BitConverter.ToInt32(roBuffer, 0);
+            string modulePath = null;
 
-            if (zero == 0)
+            if (BitConverter.ToInt32(Ro.Slice(0, 4)) == 0)
             {
-                int    length     = BitConverter.ToInt32(roBuffer, 4);
-                string modulePath = Encoding.UTF8.GetString(roBuffer, 8, length);
-
-                MatchCollection moduleMatches = Regex.Matches(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase);
-                if (moduleMatches.Count > 0)
+                int length = BitConverter.ToInt32(Ro.Slice(4, 4));
+                if (length > 0)
                 {
-                    modulePath = moduleMatches.First().Value;
+                    modulePath = Encoding.UTF8.GetString(Ro.Slice(8, length));
                 }
-
-                stringBuilder.AppendLine($"    Module: {modulePath}");
             }
 
-            MatchCollection fsSdkMatches = Regex.Matches(rawTextBuffer, @"sdk_version: ([0-9.]*)");
-            if (fsSdkMatches.Count != 0)
+            if (string.IsNullOrEmpty(modulePath))
             {
-                stringBuilder.AppendLine($"    FS SDK Version: {fsSdkMatches.First().Value.Replace("sdk_version: ", "")}");
+                Match moduleMatch = Regex.Match(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+                if (moduleMatch.Success)
+                {
+                    modulePath = moduleMatch.Value;
+                }
             }
 
-            MatchCollection sdkMwMatches = Regex.Matches(rawTextBuffer, @"SDK MW[ -~]*");
+            stringBuilder.AppendLine($"    Module: {modulePath}");
+
+            Match fsSdkMatch = Regex.Match(rawTextBuffer, @"sdk_version: ([0-9.]*)", RegexOptions.Compiled);
+            if (fsSdkMatch.Success)
+            {
+                stringBuilder.AppendLine($"    FS SDK Version: {fsSdkMatch.Value.Replace("sdk_version: ", "")}");
+            }
+
+            MatchCollection sdkMwMatches = Regex.Matches(rawTextBuffer, @"SDK MW[ -~]*", RegexOptions.Compiled);
             if (sdkMwMatches.Count != 0)
             {
                 string libHeader  = "    SDK Libraries: ";
