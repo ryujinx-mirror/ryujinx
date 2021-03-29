@@ -26,6 +26,9 @@ namespace Ryujinx.Graphics.OpenGL
                 Handle = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None)
             };
 
+            // Force commands to flush up to the syncpoint.
+            GL.ClientWaitSync(handle.Handle, ClientWaitSyncFlags.SyncFlushCommandsBit, 0);
+
             lock (Handles)
             {
                 Handles.Add(handle);
@@ -62,7 +65,7 @@ namespace Ryujinx.Graphics.OpenGL
                         return;
                     }
 
-                    WaitSyncStatus syncResult = GL.ClientWaitSync(result.Handle, ClientWaitSyncFlags.SyncFlushCommandsBit, 1000000000);
+                    WaitSyncStatus syncResult = GL.ClientWaitSync(result.Handle, ClientWaitSyncFlags.None, 1000000000);
                     
                     if (syncResult == WaitSyncStatus.TimeoutExpired)
                     {
@@ -86,7 +89,7 @@ namespace Ryujinx.Graphics.OpenGL
 
                 if (first == null) break;
 
-                WaitSyncStatus syncResult = GL.ClientWaitSync(first.Handle, ClientWaitSyncFlags.SyncFlushCommandsBit, 0);
+                WaitSyncStatus syncResult = GL.ClientWaitSync(first.Handle, ClientWaitSyncFlags.None, 0);
 
                 if (syncResult == WaitSyncStatus.AlreadySignaled)
                 {
