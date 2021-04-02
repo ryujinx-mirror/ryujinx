@@ -54,5 +54,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int GtMask = 0x200002c;
         public const int LeMask = 0x2000030;
         public const int LtMask = 0x2000034;
+
+        public const int ThreadKill = 0x2000038;
     }
 }

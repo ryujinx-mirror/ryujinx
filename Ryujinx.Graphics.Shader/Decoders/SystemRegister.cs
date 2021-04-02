@@ -4,6 +4,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         LaneId     = 0,
         YDirection = 0x12,
+        ThreadKill = 0x13,
         ThreadId   = 0x20,
         ThreadIdX  = 0x21,
         ThreadIdY  = 0x22,
