@@ -197,11 +197,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                         task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
                                         {
-                                            if (!isNewProgramValid)
-                                            {
-                                                return true;
-                                            }
-
                                             // As the host program was invalidated, save the new entry in the cache.
                                             hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
 
@@ -365,11 +360,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                         task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
                                         {
-                                            if (!isNewProgramValid)
-                                            {
-                                                return true;
-                                            }
-
                                             // As the host program was invalidated, save the new entry in the cache.
                                             hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
 
