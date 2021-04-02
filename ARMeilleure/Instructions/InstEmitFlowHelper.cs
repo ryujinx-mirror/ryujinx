@@ -147,10 +147,8 @@ namespace ARMeilleure.Instructions
             EmitJumpTableBranch(context, Const(immediate), isRecursive);
         }
 
-        private static void EmitNativeCall(ArmEmitterContext context, Operand nativeContextPtr, Operand funcAddr, bool isJump = false)
+        private static void EmitNativeCall(ArmEmitterContext context, Operand nativeContextPtr, Operand funcAddr, bool isJump)
         {
-            context.StoreToContext();
-
             if (isJump)
             {
                 context.Tailcall(funcAddr, nativeContextPtr);
@@ -180,22 +178,17 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        private static void EmitNativeCall(ArmEmitterContext context, Operand funcAddr, bool isJump = false)
+        private static void EmitNativeCall(ArmEmitterContext context, Operand funcAddr, bool isJump)
         {
             EmitNativeCall(context, context.LoadArgument(OperandType.I64, 0), funcAddr, isJump);
         }
 
         public static void EmitVirtualCall(ArmEmitterContext context, Operand target)
         {
-            EmitVirtualCallOrJump(context, target, isJump: false);
+            EmitJumpTableBranch(context, target, isJump: false);
         }
 
         public static void EmitVirtualJump(ArmEmitterContext context, Operand target, bool isReturn)
-        {
-            EmitVirtualCallOrJump(context, target, isJump: true, isReturn: isReturn);
-        }
-
-        private static void EmitVirtualCallOrJump(ArmEmitterContext context, Operand target, bool isJump, bool isReturn = false)
         {
             if (isReturn)
             {
@@ -203,7 +196,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitJumpTableBranch(context, target, isJump);
+                EmitJumpTableBranch(context, target, isJump: true);
             }
         }
 
@@ -219,15 +212,17 @@ namespace ARMeilleure.Instructions
                 {
                     // If we're doing a tail continue in HighCq, reserve a space in the jump table to avoid calling back
                     // to the translator. This will always try to get a HighCq version of our continue target as well.
-                    EmitJumpTableBranch(context, address, true);
+                    EmitJumpTableBranch(context, address, isJump: true);
                 }
                 else
                 {
+                    context.StoreToContext();
+
                     Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(allowRejit
                         ? nameof(NativeInterface.GetFunctionAddress)
                         : nameof(NativeInterface.GetFunctionAddressWithoutRejit)), address);
 
-                    EmitNativeCall(context, fallbackAddr, true);
+                    EmitNativeCall(context, fallbackAddr, isJump: true);
                 }
             }
             else
@@ -251,7 +246,7 @@ namespace ARMeilleure.Instructions
             EmitNativeCall(context, fallbackAddr, isJump);
         }
 
-        public static void EmitDynamicTableCall(ArmEmitterContext context, Operand tableAddress, Operand address, bool isJump)
+        private static void EmitDynamicTableCall(ArmEmitterContext context, Operand tableAddress, Operand address, bool isJump)
         {
             // Loop over elements of the dynamic table. Unrolled loop.
 
@@ -310,12 +305,14 @@ namespace ARMeilleure.Instructions
             context.MarkLabel(endLabel);
         }
 
-        public static void EmitJumpTableBranch(ArmEmitterContext context, Operand address, bool isJump = false)
+        private static void EmitJumpTableBranch(ArmEmitterContext context, Operand address, bool isJump)
         {
             if (address.Type == OperandType.I32)
             {
                 address = context.ZeroExtend32(OperandType.I64, address);
             }
+
+            context.StoreToContext();
 
             // TODO: Constant folding. Indirect calls are slower in the best case and emit more code so we want to
             // avoid them when possible.
