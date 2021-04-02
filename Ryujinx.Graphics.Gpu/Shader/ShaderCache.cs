@@ -110,6 +110,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 int programIndex = 0;
                 List<ShaderCompileTask> activeTasks = new List<ShaderCompileTask>();
 
+                AutoResetEvent taskDoneEvent = new AutoResetEvent(false);
+
                 // This thread dispatches tasks to do shader translation, and creates programs that OpenGL will link in the background.
                 // The program link status is checked in a non-blocking manner so that multiple shaders can be compiled at once.
                 
@@ -158,7 +160,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                 hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
                             }
 
-                            ShaderCompileTask task = new ShaderCompileTask();
+                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
                             activeTasks.Add(task);
 
                             task.OnCompiled(hostProgram, (bool isHostProgramValid, ShaderCompileTask task) =>
@@ -261,7 +263,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                 hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
                             }
 
-                            ShaderCompileTask task = new ShaderCompileTask();
+                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
                             activeTasks.Add(task);
 
                             GuestShaderCacheEntry[] entries = cachedShaderEntries.ToArray();
@@ -412,7 +414,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                     if (activeTasks.Count == maxTaskCount)
                     {
-                        Thread.Sleep(1);
+                        // Wait for a task to be done, or for 1ms.
+                        // Host shader compilation cannot signal when it is done, 
+                        // so the 1ms timeout is required to poll status.
+
+                        taskDoneEvent.WaitOne(1);
                     }
                 }
 

@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Graphics.GAL;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Graphics.Gpu.Shader
@@ -17,6 +18,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private IProgram _program;
 
         private ShaderCompileTaskCallback _action;
+        private AutoResetEvent _taskDoneEvent;
+
+        /// <summary>
+        /// Create a new shader compile task, with an event to signal whenever a subtask completes.
+        /// </summary>
+        /// <param name="taskDoneEvent">Event to signal when a subtask completes</param>
+        public ShaderCompileTask(AutoResetEvent taskDoneEvent)
+        {
+            _taskDoneEvent = taskDoneEvent;
+        }
 
         /// <summary>
         /// Check the completion status of the shader compile task, and run callbacks on step completion.
@@ -58,6 +69,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             _programsTask = task;
             _action = action;
+
+            task.ContinueWith(task => _taskDoneEvent.Set());
         }
 
         /// <summary>
