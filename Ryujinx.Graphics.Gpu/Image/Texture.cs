@@ -73,7 +73,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool ChangedSize { get; private set; }
 
         /// <summary>
-        /// Set when a texture's GPU VA has ever been partially or fully unmapped. 
+        /// Set when a texture's GPU VA has ever been partially or fully unmapped.
         /// This indicates that the range must be fully checked when matching the texture.
         /// </summary>
         public bool ChangedMapping { get; private set; }
@@ -628,7 +628,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Fully synchronizes guest and host memory. 
+        /// Fully synchronizes guest and host memory.
         /// This will replace the entire texture with the data present in guest memory.
         /// </summary>
         public void SynchronizeFull()
@@ -1127,7 +1127,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     TextureCreateInfo createInfo = TextureManager.GetCreateInfo(view.Info, _context.Capabilities, ScaleFactor);
 
-                    ITexture newView = parent.HostTexture.CreateView(createInfo, view.FirstLayer + firstLayer, view.FirstLevel + firstLevel); 
+                    ITexture newView = parent.HostTexture.CreateView(createInfo, view.FirstLayer + firstLayer, view.FirstLevel + firstLevel);
 
                     view.ReplaceView(parent, view.Info, newView, view.FirstLayer + firstLayer, view.FirstLevel + firstLevel);
                 }
@@ -1187,6 +1187,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 IsModified = true;
                 Group.SignalModifying(this, bound, !wasModified);
+            }
+
+            if (bound)
+            {
+                IncrementReferenceCount();
+            }
+            else
+            {
+                DecrementReferenceCount();
             }
         }
 
