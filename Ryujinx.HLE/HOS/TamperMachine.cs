@@ -13,6 +13,10 @@ namespace Ryujinx.HLE.HOS
 {
     public class TamperMachine
     {
+        // Atmosphere specifies a delay of 83 milliseconds between the execution of the last
+        // cheat and the re-execution of the first one.
+        private const int TamperMachineSleepMs = 1000 / 12;
+
         private Thread _tamperThread = null;
         private ConcurrentQueue<ITamperProgram> _programs = new ConcurrentQueue<ITamperProgram>();
         private long _pressedKeys = 0;
@@ -76,7 +80,7 @@ namespace Ryujinx.HLE.HOS
                 if (sleepCounter == 0)
                 {
                     sleepCounter = _programs.Count;
-                    Thread.Sleep(1);
+                    Thread.Sleep(TamperMachineSleepMs);
                 }
                 else
                 {
