@@ -15,8 +15,9 @@ namespace Ryujinx.Graphics.OpenGL
         }
 
         private ulong _firstHandle = 0;
+        private ClientWaitSyncFlags _syncFlags => HwCapabilities.RequiresSyncFlush ? ClientWaitSyncFlags.None : ClientWaitSyncFlags.SyncFlushCommandsBit;
 
-        private List<SyncHandle> Handles = new List<SyncHandle>();
+        private List<SyncHandle> _handles = new List<SyncHandle>();
 
         public void Create(ulong id)
         {
@@ -26,12 +27,16 @@ namespace Ryujinx.Graphics.OpenGL
                 Handle = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None)
             };
 
-            // Force commands to flush up to the syncpoint.
-            GL.ClientWaitSync(handle.Handle, ClientWaitSyncFlags.SyncFlushCommandsBit, 0);
 
-            lock (Handles)
+            if (HwCapabilities.RequiresSyncFlush)
             {
-                Handles.Add(handle);
+                // Force commands to flush up to the syncpoint.
+                GL.ClientWaitSync(handle.Handle, ClientWaitSyncFlags.SyncFlushCommandsBit, 0);
+            }
+
+            lock (_handles)
+            {
+                _handles.Add(handle);
             }
         }
 
@@ -39,14 +44,14 @@ namespace Ryujinx.Graphics.OpenGL
         {
             SyncHandle result = null;
 
-            lock (Handles)
+            lock (_handles)
             {
                 if ((long)(_firstHandle - id) > 0)
                 {
                     return; // The handle has already been signalled or deleted.
                 }
 
-                foreach (SyncHandle handle in Handles)
+                foreach (SyncHandle handle in _handles)
                 {
                     if (handle.ID == id)
                     {
@@ -65,7 +70,7 @@ namespace Ryujinx.Graphics.OpenGL
                         return;
                     }
 
-                    WaitSyncStatus syncResult = GL.ClientWaitSync(result.Handle, ClientWaitSyncFlags.None, 1000000000);
+                    WaitSyncStatus syncResult = GL.ClientWaitSync(result.Handle, _syncFlags, 1000000000);
                     
                     if (syncResult == WaitSyncStatus.TimeoutExpired)
                     {
@@ -82,24 +87,24 @@ namespace Ryujinx.Graphics.OpenGL
             while (true)
             {
                 SyncHandle first = null;
-                lock (Handles)
+                lock (_handles)
                 {
-                    first = Handles.FirstOrDefault();
+                    first = _handles.FirstOrDefault();
                 }
 
                 if (first == null) break;
 
-                WaitSyncStatus syncResult = GL.ClientWaitSync(first.Handle, ClientWaitSyncFlags.None, 0);
+                WaitSyncStatus syncResult = GL.ClientWaitSync(first.Handle, _syncFlags, 0);
 
                 if (syncResult == WaitSyncStatus.AlreadySignaled)
                 {
                     // Delete the sync object.
-                    lock (Handles)
+                    lock (_handles)
                     {
                         lock (first)
                         {
                             _firstHandle = first.ID + 1;
-                            Handles.RemoveAt(0);
+                            _handles.RemoveAt(0);
                             GL.DeleteSync(first.Handle);
                             first.Handle = IntPtr.Zero;
                         }
@@ -114,9 +119,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Dispose()
         {
-            lock (Handles)
+            lock (_handles)
             {
-                foreach (SyncHandle handle in Handles)
+                foreach (SyncHandle handle in _handles)
                 {
                     lock (handle)
                     {
@@ -125,7 +130,7 @@ namespace Ryujinx.Graphics.OpenGL
                     }
                 }
 
-                Handles.Clear();
+                _handles.Clear();
             }
         }
     }
