@@ -114,7 +114,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 // This thread dispatches tasks to do shader translation, and creates programs that OpenGL will link in the background.
                 // The program link status is checked in a non-blocking manner so that multiple shaders can be compiled at once.
-                
+
                 while (programIndex < guestProgramList.Length || activeTasks.Count > 0)
                 {
                     if (activeTasks.Count < maxTaskCount && programIndex < guestProgramList.Length)
@@ -168,29 +168,34 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                 ShaderProgram program = null;
                                 ShaderProgramInfo shaderProgramInfo = null;
 
-                                Task compileTask = Task.Run(() =>
+                                if (isHostProgramValid)
                                 {
                                     // Reconstruct code holder.
-                                    if (isHostProgramValid)
-                                    {
-                                        program = new ShaderProgram(entry.Header.Stage, "");
-                                        shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
-                                    }
-                                    else
+
+                                    program = new ShaderProgram(entry.Header.Stage, "");
+                                    shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
+
+                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+
+                                    _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
+
+                                    return true;
+                                }
+                                else
+                                {
+                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
+
+                                    Task compileTask = Task.Run(() =>
                                     {
                                         IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
 
                                         program = Translator.CreateContext(0, gpuAccessor, DefaultFlags | TranslationFlags.Compute).Translate(out shaderProgramInfo);
-                                    }
-                                });
+                                    });
 
-                                task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
-                                {
-                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
-
-                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
-                                    if (!isHostProgramValid)
+                                    task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
                                     {
+                                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+
                                         Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
 
                                         // Compile shader and create program as the shader program binary got invalidated.
@@ -222,18 +227,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                         });
 
                                         return false; // Not finished: still need to compile the host program.
-                                    }
-                                    else
-                                    {
-                                        _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
+                                    });
 
-                                        return true;
-                                    }
-                                });
-
-                                return false; // Not finished: translating the shaders.
+                                    return false; // Not finished: translating the program.
+                                }
                             });
-                            
+
                         }
                         else
                         {
@@ -394,7 +393,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                     }
                                 });
 
-                                return false; // Not finished: translating the shaders.
+                                return false; // Not finished: translating the program.
                             });
                         }
 
