@@ -232,7 +232,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                     return false; // Not finished: translating the program.
                                 }
                             });
-
                         }
                         else
                         {
