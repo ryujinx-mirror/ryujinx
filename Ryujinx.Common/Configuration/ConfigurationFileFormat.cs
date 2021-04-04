@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 22;
+        public const int CurrentVersion = 23;
 
         public int Version { get; set; }
 
@@ -172,6 +172,11 @@ namespace Ryujinx.Configuration
         /// The selected audio backend
         /// </summary>
         public AudioBackend AudioBackend { get; set; }
+
+        /// <summary>
+        /// Expands the RAM amount on the emulated system from 4GB to 6GB
+        /// </summary>
+        public bool ExpandRam { get; set; }
 
         /// <summary>
         /// Enable or disable ignoring missing services

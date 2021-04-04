@@ -51,6 +51,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] CheckButton     _shaderCacheToggle;
         [GUI] CheckButton     _ptcToggle;
         [GUI] CheckButton     _fsicToggle;
+        [GUI] CheckButton     _expandRamToggle;
         [GUI] CheckButton     _ignoreToggle;
         [GUI] CheckButton     _directKeyboardAccess;
         [GUI] ComboBoxText    _systemLanguageSelect;
@@ -212,6 +213,11 @@ namespace Ryujinx.Ui.Windows
             if (ConfigurationState.Instance.System.EnableFsIntegrityChecks)
             {
                 _fsicToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.ExpandRam)
+            {
+                _expandRamToggle.Click();
             }
 
             if (ConfigurationState.Instance.System.IgnoreMissingServices)
@@ -417,6 +423,7 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Graphics.EnableShaderCache.Value       = _shaderCacheToggle.Active;
             ConfigurationState.Instance.System.EnablePtc.Value                 = _ptcToggle.Active;
             ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;
+            ConfigurationState.Instance.System.ExpandRam.Value                 = _expandRamToggle.Active;
             ConfigurationState.Instance.System.IgnoreMissingServices.Value     = _ignoreToggle.Active;
             ConfigurationState.Instance.Hid.EnableKeyboard.Value               = _directKeyboardAccess.Active;
             ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
@@ -436,7 +443,7 @@ namespace Ryujinx.Ui.Windows
             {
                 AudioBackend audioBackend = (AudioBackend)_audioBackendStore.GetValue(activeIter, 1);
                 if (audioBackend != ConfigurationState.Instance.System.AudioBackend.Value)
-                { 
+                {
                     ConfigurationState.Instance.System.AudioBackend.Value = audioBackend;
 
                     Logger.Info?.Print(LogClass.Application, $"AudioBackend toggled to: {audioBackend}");

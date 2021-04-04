@@ -110,9 +110,13 @@ namespace Ryujinx.HLE.HOS
         internal LibHac.Horizon LibHacHorizonServer { get; private set; }
         internal HorizonClient LibHacHorizonClient { get; private set; }
 
-        public Horizon(Switch device, ContentManager contentManager)
+        public Horizon(Switch device, ContentManager contentManager, MemoryConfiguration memoryConfiguration)
         {
-            KernelContext = new KernelContext(device, device.Memory);
+            KernelContext = new KernelContext(
+                device,
+                device.Memory,
+                memoryConfiguration.ToKernelMemorySize(),
+                memoryConfiguration.ToKernelMemoryArrange());
 
             Device = device;
 

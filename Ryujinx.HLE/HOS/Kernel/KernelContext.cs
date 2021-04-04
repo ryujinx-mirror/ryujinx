@@ -51,7 +51,11 @@ namespace Ryujinx.HLE.HOS.Kernel
         private long _processId;
         private long _threadUid;
 
-        public KernelContext(Switch device, MemoryBlock memory)
+        public KernelContext(
+            Switch device,
+            MemoryBlock memory,
+            MemorySize memorySize,
+            MemoryArrange memoryArrange)
         {
             Device = device;
             Memory = memory;
@@ -64,9 +68,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             ResourceLimit = new KResourceLimit(this);
 
-            KernelInit.InitializeResourceLimit(ResourceLimit);
+            KernelInit.InitializeResourceLimit(ResourceLimit, memorySize);
 
-            MemoryRegions = KernelInit.GetMemoryRegions();
+            MemoryRegions = KernelInit.GetMemoryRegions(memorySize, memoryArrange);
 
             LargeMemoryBlockAllocator = new KMemoryBlockAllocator(KernelConstants.MemoryBlockAllocatorSize * 2);
             SmallMemoryBlockAllocator = new KMemoryBlockAllocator(KernelConstants.MemoryBlockAllocatorSize);

@@ -337,7 +337,17 @@ namespace Ryujinx.Ui
                 }
             }
 
-            _emulationContext = new HLE.Switch(_virtualFileSystem, _contentManager, _userChannelPersistence, renderer, deviceDriver)
+            var memoryConfiguration = ConfigurationState.Instance.System.ExpandRam.Value
+                ? HLE.MemoryConfiguration.MemoryConfiguration6GB
+                : HLE.MemoryConfiguration.MemoryConfiguration4GB;
+
+            _emulationContext = new HLE.Switch(
+                _virtualFileSystem,
+                _contentManager,
+                _userChannelPersistence,
+                renderer,
+                deviceDriver,
+                memoryConfiguration)
             {
                 UiHandler = _uiHandler
             };
@@ -664,7 +674,7 @@ namespace Ryujinx.Ui
 
                 GlRendererWidget.Exit();
 
-                if(GlRendererWidget.Window != Window && GlRendererWidget.Window != null)
+                if (GlRendererWidget.Window != Window && GlRendererWidget.Window != null)
                 {
                     GlRendererWidget.Window.Dispose();
                 }
@@ -1061,7 +1071,7 @@ namespace Ryujinx.Ui
                     if (responseInstallDialog == ResponseType.Yes)
                     {
                         Logger.Info?.Print(LogClass.Application, $"Installing firmware {firmwareVersion.VersionString}");
-                        
+
                         Thread thread = new Thread(() =>
                         {
                             Application.Invoke(delegate

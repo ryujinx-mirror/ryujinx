@@ -24,6 +24,8 @@ namespace Ryujinx.HLE
 {
     public class Switch : IDisposable
     {
+        private MemoryConfiguration _memoryConfiguration;
+
         public IHardwareDeviceDriver AudioDeviceDriver { get; private set; }
 
         internal MemoryBlock Memory { get; private set; }
@@ -52,7 +54,13 @@ namespace Ryujinx.HLE
 
         public bool EnableDeviceVsync { get; set; } = true;
 
-        public Switch(VirtualFileSystem fileSystem, ContentManager contentManager, UserChannelPersistence userChannelPersistence, IRenderer renderer, IHardwareDeviceDriver audioDeviceDriver)
+        public Switch(
+            VirtualFileSystem fileSystem,
+            ContentManager contentManager,
+            UserChannelPersistence userChannelPersistence,
+            IRenderer renderer,
+            IHardwareDeviceDriver audioDeviceDriver,
+            MemoryConfiguration memoryConfiguration)
         {
             if (renderer == null)
             {
@@ -71,9 +79,11 @@ namespace Ryujinx.HLE
 
             UserChannelPersistence = userChannelPersistence;
 
+            _memoryConfiguration = memoryConfiguration;
+
             AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(audioDeviceDriver);
 
-            Memory = new MemoryBlock(1UL << 32);
+            Memory = new MemoryBlock(memoryConfiguration.ToDramSize());
 
             Gpu = new GpuContext(renderer);
 
@@ -102,7 +112,7 @@ namespace Ryujinx.HLE
 
             FileSystem = fileSystem;
 
-            System = new Horizon(this, contentManager);
+            System = new Horizon(this, contentManager, memoryConfiguration);
             System.InitializeServices();
 
             Statistics = new PerformanceStatistics();
@@ -146,6 +156,7 @@ namespace Ryujinx.HLE
             Logger.Info?.Print(LogClass.Application, $"AudioBackend: {ConfigurationState.Instance.System.AudioBackend.Value}");
             Logger.Info?.Print(LogClass.Application, $"IsDocked: {ConfigurationState.Instance.System.EnableDockedMode.Value}");
             Logger.Info?.Print(LogClass.Application, $"Vsync: {ConfigurationState.Instance.Graphics.EnableVsync.Value}");
+            Logger.Info?.Print(LogClass.Application, $"MemoryConfiguration: {_memoryConfiguration}");
         }
 
         public static IntegrityCheckLevel GetIntegrityCheckLevel()
