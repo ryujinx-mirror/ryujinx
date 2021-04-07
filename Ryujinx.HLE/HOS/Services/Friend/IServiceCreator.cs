@@ -4,11 +4,11 @@ using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator;
 
 namespace Ryujinx.HLE.HOS.Services.Friend
 {
-    [Service("friend:a", FriendServicePermissionLevel.Admin)]
+    [Service("friend:a", FriendServicePermissionLevel.Administrator)]
     [Service("friend:m", FriendServicePermissionLevel.Manager)]
     [Service("friend:s", FriendServicePermissionLevel.System)]
     [Service("friend:u", FriendServicePermissionLevel.User)]
-    [Service("friend:v", FriendServicePermissionLevel.Overlay)]
+    [Service("friend:v", FriendServicePermissionLevel.Viewer)]
     class IServiceCreator : IpcService
     {
         private FriendServicePermissionLevel _permissionLevel;

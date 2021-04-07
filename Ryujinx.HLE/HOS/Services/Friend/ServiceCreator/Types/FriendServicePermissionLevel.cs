@@ -6,14 +6,14 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
     enum FriendServicePermissionLevel
     {
         UserMask    = 1,
-        OverlayMask = 2,
+        ViewerMask  = 2,
         ManagerMask = 4,
         SystemMask  = 8,
 
-        Admin   = -1,
-        User    = UserMask,
-        Overlay = UserMask | OverlayMask,
-        Manager = UserMask | OverlayMask | ManagerMask,
-        System  = UserMask | SystemMask
+        Administrator = -1,
+        User          = UserMask,
+        Viewer        = UserMask | ViewerMask,
+        Manager       = UserMask | ViewerMask | ManagerMask,
+        System        = UserMask | SystemMask
     }
 }

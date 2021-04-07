@@ -1,5 +1,4 @@
 ﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
-using Ryujinx.HLE.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
 {

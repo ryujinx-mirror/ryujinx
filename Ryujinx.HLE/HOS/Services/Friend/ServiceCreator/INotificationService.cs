@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         {
             lock (_lock)
             {
-                if ((_permissionLevel & FriendServicePermissionLevel.OverlayMask) != 0 && _userId == targetId)
+                if ((_permissionLevel & FriendServicePermissionLevel.ViewerMask) != 0 && _userId == targetId)
                 {
                     if (!_hasNewFriendRequest)
                     {
