@@ -49,9 +49,11 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.x
+      - name: Ensure NuGet Source
+        uses: fabriciomurta/ensure-nuget-source@v1
       - name: Get git short hash
         id: git_short_hash
-        run: echo "::set-output name=result::$(git rev-parse --short HEAD)"
+        run: echo "::set-output name=result::$(git rev-parse --short "${{ github.sha }}")"
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
