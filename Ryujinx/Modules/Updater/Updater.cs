@@ -491,16 +491,6 @@ namespace Ryujinx.Modules
                 return false;
             }
 
-            if (AppDataManager.Mode == AppDataManager.LaunchMode.Portable)
-            {
-                if (showWarnings)
-                {
-                    GtkDialog.CreateWarningDialog("You cannot update a portable version of Ryujinx!", "Please use a non-portable configuration to enable updates.");
-                }
-
-                return false;
-            }
-
             if (Program.Version.Contains("dirty"))
             {
                 if (showWarnings)
