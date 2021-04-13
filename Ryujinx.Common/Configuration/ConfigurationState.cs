@@ -155,16 +155,17 @@ namespace Ryujinx.Configuration
 
             public LoggerSection()
             {
-                EnableDebug        = new ReactiveObject<bool>();
-                EnableStub         = new ReactiveObject<bool>();
-                EnableInfo         = new ReactiveObject<bool>();
-                EnableWarn         = new ReactiveObject<bool>();
-                EnableError        = new ReactiveObject<bool>();
-                EnableGuest        = new ReactiveObject<bool>();
-                EnableFsAccessLog  = new ReactiveObject<bool>();
-                FilteredClasses    = new ReactiveObject<LogClass[]>();
-                EnableFileLog      = new ReactiveObject<bool>();
-                GraphicsDebugLevel = new ReactiveObject<GraphicsDebugLevel>();
+                EnableDebug         = new ReactiveObject<bool>();
+                EnableStub          = new ReactiveObject<bool>();
+                EnableInfo          = new ReactiveObject<bool>();
+                EnableWarn          = new ReactiveObject<bool>();
+                EnableError         = new ReactiveObject<bool>();
+                EnableGuest         = new ReactiveObject<bool>();
+                EnableFsAccessLog   = new ReactiveObject<bool>();
+                FilteredClasses     = new ReactiveObject<LogClass[]>();
+                EnableFileLog       = new ReactiveObject<bool>();
+                EnableFileLog.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableFileLog));
+                GraphicsDebugLevel  = new ReactiveObject<GraphicsDebugLevel>();
             }
         }
 
@@ -230,17 +231,24 @@ namespace Ryujinx.Configuration
 
             public SystemSection()
             {
-                Language                = new ReactiveObject<Language>();
-                Region                  = new ReactiveObject<Region>();
-                TimeZone                = new ReactiveObject<string>();
-                SystemTimeOffset        = new ReactiveObject<long>();
-                EnableDockedMode        = new ReactiveObject<bool>();
-                EnablePtc               = new ReactiveObject<bool>();
-                EnableFsIntegrityChecks = new ReactiveObject<bool>();
-                FsGlobalAccessLogMode   = new ReactiveObject<int>();
-                AudioBackend            = new ReactiveObject<AudioBackend>();
-                ExpandRam               = new ReactiveObject<bool>();
-                IgnoreMissingServices   = new ReactiveObject<bool>();
+                Language                      = new ReactiveObject<Language>();
+                Region                        = new ReactiveObject<Region>();
+                TimeZone                      = new ReactiveObject<string>();
+                SystemTimeOffset              = new ReactiveObject<long>();
+                EnableDockedMode              = new ReactiveObject<bool>();
+                EnableDockedMode.Event        += static (sender, e) => LogValueChange(sender, e, nameof(EnableDockedMode));
+                EnablePtc                     = new ReactiveObject<bool>();
+                EnablePtc.Event               += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc));
+                EnableFsIntegrityChecks       = new ReactiveObject<bool>();
+                EnableFsIntegrityChecks.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableFsIntegrityChecks));
+                FsGlobalAccessLogMode         = new ReactiveObject<int>();
+                FsGlobalAccessLogMode.Event   += static (sender, e) => LogValueChange(sender, e, nameof(FsGlobalAccessLogMode));
+                AudioBackend                  = new ReactiveObject<AudioBackend>();
+                AudioBackend.Event            += static (sender, e) => LogValueChange(sender, e, nameof(AudioBackend));
+                ExpandRam                     = new ReactiveObject<bool>();
+                ExpandRam.Event               += static (sender, e) => LogValueChange(sender, e, nameof(ExpandRam));
+                IgnoreMissingServices         = new ReactiveObject<bool>();
+                IgnoreMissingServices.Event   += static (sender, e) => LogValueChange(sender, e, nameof(IgnoreMissingServices));
             }
         }
 
@@ -316,13 +324,19 @@ namespace Ryujinx.Configuration
 
             public GraphicsSection()
             {
-                ResScale          = new ReactiveObject<int>();
-                ResScaleCustom    = new ReactiveObject<float>();
-                MaxAnisotropy     = new ReactiveObject<float>();
-                AspectRatio       = new ReactiveObject<AspectRatio>();
-                ShadersDumpPath   = new ReactiveObject<string>();
-                EnableVsync       = new ReactiveObject<bool>();
-                EnableShaderCache = new ReactiveObject<bool>();
+                ResScale                = new ReactiveObject<int>();
+                ResScale.Event          += static (sender, e) => LogValueChange(sender, e, nameof(ResScale));
+                ResScaleCustom          = new ReactiveObject<float>();
+                ResScaleCustom.Event    += static (sender, e) => LogValueChange(sender, e, nameof(ResScaleCustom));
+                MaxAnisotropy           = new ReactiveObject<float>();
+                MaxAnisotropy.Event     += static (sender, e) => LogValueChange(sender, e, nameof(MaxAnisotropy));
+                AspectRatio             = new ReactiveObject<AspectRatio>();
+                AspectRatio.Event       += static (sender, e) => LogValueChange(sender, e, nameof(AspectRatio));
+                ShadersDumpPath         = new ReactiveObject<string>();
+                EnableVsync             = new ReactiveObject<bool>();
+                EnableVsync.Event       += static (sender, e) => LogValueChange(sender, e, nameof(EnableVsync));
+                EnableShaderCache       = new ReactiveObject<bool>();
+                EnableShaderCache.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableShaderCache));
             }
         }
 
@@ -874,6 +888,11 @@ namespace Ryujinx.Configuration
 
                 Common.Logging.Logger.Notice.Print(LogClass.Application, $"Configuration file updated to version {ConfigurationFileFormat.CurrentVersion}");
             }
+        }
+
+        private static void LogValueChange<T>(object sender, ReactiveEventArgs<T> eventArgs, string valueName)
+        {
+            Common.Logging.Logger.Info?.Print(LogClass.Configuration, $"{valueName} set to: {eventArgs.NewValue}");
         }
 
         public static void Initialize()
