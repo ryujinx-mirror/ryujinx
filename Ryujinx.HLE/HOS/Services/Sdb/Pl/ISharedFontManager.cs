@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
 
         public ISharedFontManager(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // RequestLoad(u32)
         public ResultCode RequestLoad(ServiceCtx context)
         {
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // GetLoadState(u32) -> u32
         public ResultCode GetLoadState(ServiceCtx context)
         {
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetFontSize(u32) -> u32
         public ResultCode GetFontSize(ServiceCtx context)
         {
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             return ResultCode.Success;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // GetSharedMemoryAddressOffset(u32) -> u32
         public ResultCode GetSharedMemoryAddressOffset(ServiceCtx context)
         {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // GetSharedMemoryNativeHandle() -> handle<copy>
         public ResultCode GetSharedMemoryNativeHandle(ServiceCtx context)
         {
@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // GetSharedFontInOrderOfPriority(bytes<8, 1>) -> (u8, u32, buffer<unknown, 6>, buffer<unknown, 6>, buffer<unknown, 6>)
         public ResultCode GetSharedFontInOrderOfPriority(ServiceCtx context)
         {

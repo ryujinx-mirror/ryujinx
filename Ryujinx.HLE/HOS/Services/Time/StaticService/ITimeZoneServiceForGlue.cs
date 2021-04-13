@@ -19,14 +19,14 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             _inner                  = new ITimeZoneServiceForPsc(timeZoneContentManager.Manager, writePermission);
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetDeviceLocationName() -> nn::time::LocationName
         public ResultCode GetDeviceLocationName(ServiceCtx context)
         {
             return _inner.GetDeviceLocationName(context);
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // SetDeviceLocationName(nn::time::LocationName)
         public ResultCode SetDeviceLocationName(ServiceCtx context)
         {
@@ -40,14 +40,14 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return _timeZoneContentManager.SetDeviceLocationName(locationName);
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetTotalLocationNameCount() -> u32
         public ResultCode GetTotalLocationNameCount(ServiceCtx context)
         {
             return _inner.GetTotalLocationNameCount(context);
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // LoadLocationNameList(u32 index) -> (u32 outCount, buffer<nn::time::LocationName, 6>)
         public ResultCode LoadLocationNameList(ServiceCtx context)
         {
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return errorCode;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // LoadTimeZoneRule(nn::time::LocationName locationName) -> buffer<nn::time::TimeZoneRule, 0x16>
         public ResultCode LoadTimeZoneRule(ServiceCtx context)
         {
@@ -110,28 +110,28 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return resultCode;
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // ToCalendarTime(nn::time::PosixTime time, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public ResultCode ToCalendarTime(ServiceCtx context)
         {
             return _inner.ToCalendarTime(context);
         }
 
-        [Command(101)]
+        [CommandHipc(101)]
         // ToCalendarTimeWithMyRule(nn::time::PosixTime) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public ResultCode ToCalendarTimeWithMyRule(ServiceCtx context)
         {
             return _inner.ToCalendarTimeWithMyRule(context);
         }
 
-        [Command(201)]
+        [CommandHipc(201)]
         // ToPosixTime(nn::time::CalendarTime calendarTime, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public ResultCode ToPosixTime(ServiceCtx context)
         {
             return _inner.ToPosixTime(context);
         }
 
-        [Command(202)]
+        [CommandHipc(202)]
         // ToPosixTimeWithMyRule(nn::time::CalendarTime calendarTime) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public ResultCode ToPosixTimeWithMyRule(ServiceCtx context)
         {

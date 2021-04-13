@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             _databaseImpl = DatabaseImpl.Instance;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetDatabaseService(u32 mii_key_code) -> object<nn::mii::detail::IDatabaseService>
         public ResultCode GetDatabaseService(ServiceCtx context)
         {

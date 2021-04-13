@@ -2,11 +2,12 @@ namespace Ryujinx.HLE.HOS.Ipc
 {
     enum IpcMessageType
     {
-        Response           = 0,
-        CloseSession       = 2,
-        Request            = 4,
-        Control            = 5,
-        RequestWithContext = 6,
-        ControlWithContext = 7
+        HipcResponse           = 0,
+        HipcCloseSession       = 2,
+        HipcRequest            = 4,
+        HipcControl            = 5,
+        HipcRequestWithContext = 6,
+        HipcControlWithContext = 7,
+        TipcCloseSession       = 0xF
     }
 }

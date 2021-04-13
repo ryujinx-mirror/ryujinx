@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             _writePermission = writePermission;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetDeviceLocationName() -> nn::time::LocationName
         public ResultCode GetDeviceLocationName(ServiceCtx context)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // SetDeviceLocationName(nn::time::LocationName)
         public ResultCode SetDeviceLocationName(ServiceCtx context)
         {
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.NotImplemented;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetTotalLocationNameCount() -> u32
         public ResultCode GetTotalLocationNameCount(ServiceCtx context)
         {
@@ -62,21 +62,21 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // LoadLocationNameList(u32 index) -> (u32 outCount, buffer<nn::time::LocationName, 6>)
         public ResultCode LoadLocationNameList(ServiceCtx context)
         {
             return ResultCode.NotImplemented;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // LoadTimeZoneRule(nn::time::LocationName locationName) -> buffer<nn::time::TimeZoneRule, 0x16>
         public ResultCode LoadTimeZoneRule(ServiceCtx context)
         {
             return ResultCode.NotImplemented;
         }
 
-        [Command(5)] // 2.0.0+
+        [CommandHipc(5)] // 2.0.0+
         // GetTimeZoneRuleVersion() -> nn::time::TimeZoneRuleVersion
         public ResultCode GetTimeZoneRuleVersion(ServiceCtx context)
         {
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(6)] // 5.0.0+
+        [CommandHipc(6)] // 5.0.0+
         // GetDeviceLocationNameAndUpdatedTime() -> (nn::time::LocationName, nn::time::SteadyClockTimePoint)
         public ResultCode GetDeviceLocationNameAndUpdatedTime(ServiceCtx context)
         {
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(7)] // 9.0.0+
+        [CommandHipc(7)] // 9.0.0+
         // SetDeviceLocationNameWithTimeZoneRule(nn::time::LocationName locationName, buffer<nn::time::TimeZoneBinary, 0x21> timeZoneBinary)
         public ResultCode SetDeviceLocationNameWithTimeZoneRule(ServiceCtx context)
         {
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(8)] // 9.0.0+
+        [CommandHipc(8)] // 9.0.0+
         // ParseTimeZoneBinary(buffer<nn::time::TimeZoneBinary, 0x21> timeZoneBinary) -> buffer<nn::time::TimeZoneRule, 0x16>
         public ResultCode ParseTimeZoneBinary(ServiceCtx context)
         {
@@ -177,14 +177,14 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(20)] // 9.0.0+
+        [CommandHipc(20)] // 9.0.0+
         // GetDeviceLocationNameOperationEventReadableHandle() -> handle<copy>
         public ResultCode GetDeviceLocationNameOperationEventReadableHandle(ServiceCtx context)
         {
             return ResultCode.NotImplemented;
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // ToCalendarTime(nn::time::PosixTime time, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public ResultCode ToCalendarTime(ServiceCtx context)
         {
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return resultCode;
         }
 
-        [Command(101)]
+        [CommandHipc(101)]
         // ToCalendarTimeWithMyRule(nn::time::PosixTime) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public ResultCode ToCalendarTimeWithMyRule(ServiceCtx context)
         {
@@ -228,7 +228,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return resultCode;
         }
 
-        [Command(201)]
+        [CommandHipc(201)]
         // ToPosixTime(nn::time::CalendarTime calendarTime, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public ResultCode ToPosixTime(ServiceCtx context)
         {
@@ -261,7 +261,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return resultCode;
         }
 
-        [Command(202)]
+        [CommandHipc(202)]
         // ToPosixTimeWithMyRule(nn::time::CalendarTime calendarTime) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public ResultCode ToPosixTimeWithMyRule(ServiceCtx context)
         {

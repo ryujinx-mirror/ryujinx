@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _lblControllerServer    = new Lbl.LblControllerServer(context);
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetEventHandle() -> handle<copy>
         public ResultCode GetEventHandle(ServiceCtx context)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // ReceiveMessage() -> nn::am::AppletMessage
         public ResultCode ReceiveMessage(ServiceCtx context)
         {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // GetOperationMode() -> u8
         public ResultCode GetOperationMode(ServiceCtx context)
         {
@@ -87,14 +87,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(6)]
+        [CommandHipc(6)]
         // GetPerformanceMode() -> nn::apm::PerformanceMode
         public ResultCode GetPerformanceMode(ServiceCtx context)
         {
             return (ResultCode)_apmManagerServer.GetPerformanceMode(context);
         }
 
-        [Command(8)]
+        [CommandHipc(8)]
         // GetBootMode() -> u8
         public ResultCode GetBootMode(ServiceCtx context)
         {
@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(9)]
+        [CommandHipc(9)]
         // GetCurrentFocusState() -> u8
         public ResultCode GetCurrentFocusState(ServiceCtx context)
         {
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(50)] // 3.0.0+
+        [CommandHipc(50)] // 3.0.0+
         // IsVrModeEnabled() -> b8
         public ResultCode IsVrModeEnabled(ServiceCtx context)
         {
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(51)] // 3.0.0+
+        [CommandHipc(51)] // 3.0.0+
         // SetVrModeEnabled(b8)
         public ResultCode SetVrModeEnabled(ServiceCtx context)
         {
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(52)] // 4.0.0+
+        [CommandHipc(52)] // 4.0.0+
         // SetLcdBacklighOffEnabled(b8)
         public ResultCode SetLcdBacklighOffEnabled(ServiceCtx context)
         {
@@ -148,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(53)] // 7.0.0+
+        [CommandHipc(53)] // 7.0.0+
         // BeginVrModeEx()
         public ResultCode BeginVrModeEx(ServiceCtx context)
         {
@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(54)] // 7.0.0+
+        [CommandHipc(54)] // 7.0.0+
         // EndVrModeEx()
         public ResultCode EndVrModeEx(ServiceCtx context)
         {
@@ -187,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             // TODO: It signals an internal event of ICommonStateGetter. We have to determine where this event is used.
         }
 
-        [Command(60)] // 3.0.0+
+        [CommandHipc(60)] // 3.0.0+
         // GetDefaultDisplayResolution() -> (u32, u32)
         public ResultCode GetDefaultDisplayResolution(ServiceCtx context)
         {
@@ -197,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(61)] // 3.0.0+
+        [CommandHipc(61)] // 3.0.0+
         // GetDefaultDisplayResolutionChangeEvent() -> handle<copy>
         public ResultCode GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
         {
@@ -216,7 +216,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(66)] // 6.0.0+
+        [CommandHipc(66)] // 6.0.0+
         // SetCpuBoostMode(u32 cpu_boost_mode)
         public ResultCode SetCpuBoostMode(ServiceCtx context)
         {
@@ -234,14 +234,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(91)] // 7.0.0+
+        [CommandHipc(91)] // 7.0.0+
         // GetCurrentPerformanceConfiguration() -> nn::apm::PerformanceConfiguration
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
         {
             return (ResultCode)_apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
         }
 
-        [Command(900)] // 11.0.0+
+        [CommandHipc(900)] // 11.0.0+
         // SetRequestExitToLibraryAppletAtExecuteNextProgramEnabled()
         public ResultCode SetRequestExitToLibraryAppletAtExecuteNextProgramEnabled(ServiceCtx context)
         {

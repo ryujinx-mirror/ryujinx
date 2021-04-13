@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             _impl = impl;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // ListAudioOuts() -> (u32, buffer<bytes, 6>)
         public ResultCode ListAudioOuts(ServiceCtx context)
         {
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // OpenAudioOut(AudioOutInputConfiguration input_config, nn::applet::AppletResourceUserId, pid, handle<copy, process> process_handle, buffer<bytes, 5> name_in)
         // -> (AudioOutInputConfiguration output_config, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out)
         public ResultCode OpenAudioOut(ServiceCtx context)
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return resultCode;
         }
 
-        [Command(2)] // 3.0.0+
+        [CommandHipc(2)] // 3.0.0+
         // ListAudioOutsAuto() -> (u32, buffer<bytes, 0x22>)
         public ResultCode ListAudioOutsAuto(ServiceCtx context)
         {
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [Command(3)] // 3.0.0+
+        [CommandHipc(3)] // 3.0.0+
         // OpenAudioOut(AudioOutInputConfiguration input_config, nn::applet::AppletResourceUserId, pid, handle<copy, process> process_handle, buffer<bytes, 0x21> name_in)
         // -> (AudioOutInputConfiguration output_config, object<nn::audio::detail::IAudioOut>, buffer<bytes, 0x22> name_out)
         public ResultCode OpenAudioOutAuto(ServiceCtx context)

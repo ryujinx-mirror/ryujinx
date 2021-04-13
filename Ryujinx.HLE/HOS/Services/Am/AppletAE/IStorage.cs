@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             Data       = data;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Open() -> object<nn::am::service::IStorageAccessor>
         public ResultCode Open(ServiceCtx context)
         {

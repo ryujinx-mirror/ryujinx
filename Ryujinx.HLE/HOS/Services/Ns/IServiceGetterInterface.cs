@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     {
         public IServiceGetterInterface(ServiceCtx context) { }
 
-        [Command(7996)]
+        [CommandHipc(7996)]
         // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
         public ResultCode GetApplicationManagerInterface(ServiceCtx context)
         {
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(7989)]
+        [CommandHipc(7989)]
         // GetReadOnlyApplicationControlDataInterface() -> object<nn::ns::detail::IReadOnlyApplicationControlDataInterface>
         public ResultCode GetReadOnlyApplicationControlDataInterface(ServiceCtx context)
         {

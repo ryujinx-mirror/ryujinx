@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         //       In this case it is acceptable to stub all calls of the service.
         public ISslService(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateContext(nn::ssl::sf::SslVersion, u64, pid) -> object<nn::ssl::sf::ISslContext>
         public ResultCode CreateContext(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // SetInterfaceVersion(u32)
         public ResultCode SetInterfaceVersion(ServiceCtx context)
         {

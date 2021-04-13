@@ -5,7 +5,7 @@
     {
         public IShellInterface(ServiceCtx context) { }
 
-        [Command(6)]
+        [CommandHipc(6)]
         // GetApplicationPid() -> u64
         public ResultCode GetApplicationPid(ServiceCtx context)
         {

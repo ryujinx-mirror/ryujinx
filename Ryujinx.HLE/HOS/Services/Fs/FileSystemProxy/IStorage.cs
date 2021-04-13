@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             _baseStorage = baseStorage;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
         public ResultCode Read(ServiceCtx context)
         {
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // GetSize() -> u64 size
         public ResultCode GetSize(ServiceCtx context)
         {

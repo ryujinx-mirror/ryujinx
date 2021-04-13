@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             _addOnContentListChangedEvent = new KEvent(context.Device.System.KernelContext);
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // CountAddOnContent(pid) -> u32
         public ResultCode CountAddOnContent(ServiceCtx context)
         {
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return (uint)context.Device.System.ContentManager.GetAocCount();
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // ListAddOnContent(u32, u32, pid) -> (u32, buffer<u32>)
         public ResultCode ListAddOnContent(ServiceCtx context)
         {
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // GetAddOnContentBaseId(pid) -> u64
         public ResultCode GetAddonContentBaseId(ServiceCtx context)
         {
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return aocBaseId;
         }
 
-        [Command(7)]
+        [CommandHipc(7)]
         // PrepareAddOnContent(u32, pid)
         public ResultCode PrepareAddOnContent(ServiceCtx context)
         {
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(8)]
+        [CommandHipc(8)]
         // GetAddOnContentListChangedEvent() -> handle<copy>
         public ResultCode GetAddOnContentListChangedEvent(ServiceCtx context)
         {
@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         }
 
 
-        [Command(9)] // [10.0.0+]
+        [CommandHipc(9)] // [10.0.0+]
         // GetAddOnContentLostErrorCode() -> u64
         public ResultCode GetAddOnContentLostErrorCode(ServiceCtx context)
         {
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // CreateEcPurchasedEventManager() -> object<nn::ec::IPurchaseEventManager>
         public ResultCode CreateEcPurchasedEventManager(ServiceCtx context)
         {
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(101)]
+        [CommandHipc(101)]
         // CreatePermanentEcPurchasedEventManager() -> object<nn::ec::IPurchaseEventManager>
         public ResultCode CreatePermanentEcPurchasedEventManager(ServiceCtx context)
         {

@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             _isInitialized = true;
         }
 
-        [Command(10)]
+        [CommandHipc(10)]
         // GetSettingName() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingName(ServiceCtx context)
         {
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [Command(11)]
+        [CommandHipc(11)]
         // GetEnvironmentIdentifier() -> buffer<unknown<8>, 0x16>
         public ResultCode GetEnvironmentIdentifier(ServiceCtx context)
         {
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [Command(12)]
+        [CommandHipc(12)]
         // GetDeviceId() -> bytes<0x10, 1>
         public ResultCode GetDeviceId(ServiceCtx context)
         {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [Command(13)]
+        [CommandHipc(13)]
         // DeleteSettings(u32)
         public ResultCode DeleteSettings(ServiceCtx context)
         {
@@ -114,21 +114,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [Command(14)]
+        [CommandHipc(14)]
         // ImportSettings(u32, buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode ImportSettings(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(15)]
+        [CommandHipc(15)]
         // Unknown(bytes<1>)
         public ResultCode Unknown(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(20)]
+        [CommandHipc(20)]
         // Resolve(buffer<unknown<0x100>, 0x15>) -> buffer<unknown<0x100>, 0x16>
         public ResultCode Resolve(ServiceCtx context)
         {
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [Command(21)]
+        [CommandHipc(21)]
         // ResolveEx(buffer<unknown<0x100>, 0x15>) -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode ResolveEx(ServiceCtx context)
         {
@@ -162,56 +162,56 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [Command(30)]
+        [CommandHipc(30)]
         // GetNasServiceSetting(buffer<unknown<0x10>, 0x15>) -> buffer<unknown<0x108>, 0x16>
         public ResultCode GetNasServiceSetting(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(31)]
+        [CommandHipc(31)]
         // GetNasServiceSettingEx(buffer<unknown<0x10>, 0x15>) -> (u32, buffer<unknown<0x108>, 0x16>)
         public ResultCode GetNasServiceSettingEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(40)]
+        [CommandHipc(40)]
         // GetNasRequestFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasRequestFqdn(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(41)]
+        [CommandHipc(41)]
         // GetNasRequestFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasRequestFqdnEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(42)]
+        [CommandHipc(42)]
         // GetNasApiFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasApiFqdn(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(43)]
+        [CommandHipc(43)]
         // GetNasApiFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasApiFqdnEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(50)]
+        [CommandHipc(50)]
         // GetCurrentSetting() -> buffer<unknown<0x12bf0>, 0x16>
         public ResultCode GetCurrentSetting(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(60)]
+        [CommandHipc(60)]
         // ReadSaveDataFromFsForTest() -> buffer<unknown<0x12bf0>, 0x16>
         public ResultCode ReadSaveDataFromFsForTest(ServiceCtx context)
         {
@@ -228,7 +228,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [Command(61)]
+        [CommandHipc(61)]
         // WriteSaveDataToFsForTest(buffer<unknown<0x12bf0>, 0x15>)
         public ResultCode WriteSaveDataToFsForTest(ServiceCtx context)
         {
@@ -244,7 +244,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             }
         }
 
-        [Command(62)]
+        [CommandHipc(62)]
         // DeleteSaveDataOfFsForTest()
         public ResultCode DeleteSaveDataOfFsForTest(ServiceCtx context)
         {
@@ -260,11 +260,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             }
         }
 
-        [Command(63)]
+        [CommandHipc(63)]
         // IsChangeEnvironmentIdentifierDisabled() -> bytes<1>
         public ResultCode IsChangeEnvironmentIdentifierDisabled(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
     }
 }

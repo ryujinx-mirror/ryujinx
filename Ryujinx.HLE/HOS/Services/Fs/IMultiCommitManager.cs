@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseCommitManager = baseCommitManager;
         }
 
-        [Command(1)] // 6.0.0+
+        [CommandHipc(1)] // 6.0.0+
         // Add(object<nn::fssrv::sf::IFileSystem>)
         public ResultCode Add(ServiceCtx context)
         {
@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
-        [Command(2)] // 6.0.0+
+        [CommandHipc(2)] // 6.0.0+
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {

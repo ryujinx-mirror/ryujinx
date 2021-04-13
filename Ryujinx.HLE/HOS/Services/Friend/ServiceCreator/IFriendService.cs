@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             _permissionLevel = permissionLevel;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetCompletionEvent() -> handle<copy>
         public ResultCode GetCompletionEvent(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10100)]
+        [CommandHipc(10100)]
         // nn::friends::GetFriendListIds(int offset, nn::account::Uid userId, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid)
         // -> int outCount, array<nn::account::NetworkServiceAccountId, 0xa>
         public ResultCode GetFriendListIds(ServiceCtx context)
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10101)]
+        [CommandHipc(10101)]
         // nn::friends::GetFriendList(int offset, nn::account::Uid userId, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid)
         // -> int outCount, array<nn::friends::detail::FriendImpl, 0x6>
         public ResultCode GetFriendList(ServiceCtx context)
@@ -120,7 +120,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10400)]
+        [CommandHipc(10400)]
         // nn::friends::GetBlockedUserListIds(int offset, nn::account::Uid userId) -> (u32, buffer<nn::account::NetworkServiceAccountId, 0xa>)
         public ResultCode GetBlockedUserListIds(ServiceCtx context)
         {
@@ -139,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10600)]
+        [CommandHipc(10600)]
         // nn::friends::DeclareOpenOnlinePlaySession(nn::account::Uid userId)
         public ResultCode DeclareOpenOnlinePlaySession(ServiceCtx context)
         {
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10601)]
+        [CommandHipc(10601)]
         // nn::friends::DeclareCloseOnlinePlaySession(nn::account::Uid userId)
         public ResultCode DeclareCloseOnlinePlaySession(ServiceCtx context)
         {
@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10610)]
+        [CommandHipc(10610)]
         // nn::friends::UpdateUserPresence(nn::account::Uid, u64, pid, buffer<nn::friends::detail::UserPresenceImpl, 0x19>)
         public ResultCode UpdateUserPresence(ServiceCtx context)
         {
@@ -214,7 +214,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10700)]
+        [CommandHipc(10700)]
         // nn::friends::GetPlayHistoryRegistrationKey(b8 unknown, nn::account::Uid) -> buffer<nn::friends::PlayHistoryRegistrationKey, 0x1a>
         public ResultCode GetPlayHistoryRegistrationKey(ServiceCtx context)
         {
@@ -277,7 +277,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(10702)]
+        [CommandHipc(10702)]
         // nn::friends::AddPlayHistory(nn::account::Uid, u64, pid, buffer<nn::friends::PlayHistoryRegistrationKey, 0x19>, buffer<nn::friends::InAppScreenName, 0x19>, buffer<nn::friends::InAppScreenName, 0x19>)
         public ResultCode AddPlayHistory(ServiceCtx context)
         {

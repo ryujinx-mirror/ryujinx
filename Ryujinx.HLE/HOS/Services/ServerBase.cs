@@ -196,10 +196,10 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 BinaryReader reqReader = new BinaryReader(raw);
 
-                if (request.Type == IpcMessageType.Request ||
-                    request.Type == IpcMessageType.RequestWithContext)
+                if (request.Type == IpcMessageType.HipcRequest ||
+                    request.Type == IpcMessageType.HipcRequestWithContext)
                 {
-                    response.Type = IpcMessageType.Response;
+                    response.Type = IpcMessageType.HipcResponse;
 
                     using (MemoryStream resMs = new MemoryStream())
                     {
@@ -215,13 +215,13 @@ namespace Ryujinx.HLE.HOS.Services
                             reqReader,
                             resWriter);
 
-                        _sessions[serverSessionHandle].CallMethod(context);
+                        _sessions[serverSessionHandle].CallHipcMethod(context);
 
                         response.RawData = resMs.ToArray();
                     }
                 }
-                else if (request.Type == IpcMessageType.Control ||
-                         request.Type == IpcMessageType.ControlWithContext)
+                else if (request.Type == IpcMessageType.HipcControl ||
+                         request.Type == IpcMessageType.HipcControlWithContext)
                 {
                     uint magic = (uint)reqReader.ReadUInt64();
                     uint cmdId = (uint)reqReader.ReadUInt64();
@@ -254,7 +254,7 @@ namespace Ryujinx.HLE.HOS.Services
                         default: throw new NotImplementedException(cmdId.ToString());
                     }
                 }
-                else if (request.Type == IpcMessageType.CloseSession)
+                else if (request.Type == IpcMessageType.HipcCloseSession || request.Type == IpcMessageType.TipcCloseSession)
                 {
                     _context.Syscall.CloseHandle(serverSessionHandle);
                     _sessionHandles.Remove(serverSessionHandle);
@@ -265,6 +265,31 @@ namespace Ryujinx.HLE.HOS.Services
                     }
                     _sessions.Remove(serverSessionHandle);
                     shouldReply = false;
+                }
+                // If the type is past 0xF, we are using TIPC
+                else if (request.Type > IpcMessageType.TipcCloseSession)
+                {
+                    // Response type is always the same as request on TIPC.
+                    response.Type = request.Type;
+
+                    using (MemoryStream resMs = new MemoryStream())
+                    {
+                        BinaryWriter resWriter = new BinaryWriter(resMs);
+
+                        ServiceCtx context = new ServiceCtx(
+                            _context.Device,
+                            process,
+                            process.CpuMemory,
+                            thread,
+                            request,
+                            response,
+                            reqReader,
+                            resWriter);
+
+                        _sessions[serverSessionHandle].CallTipcMethod(context);
+
+                        response.RawData = resMs.ToArray();
+                    }
                 }
                 else
                 {
@@ -293,7 +318,7 @@ namespace Ryujinx.HLE.HOS.Services
 
         private static IpcMessage FillResponse(IpcMessage response, long result, byte[] data = null)
         {
-            response.Type = IpcMessageType.Response;
+            response.Type = IpcMessageType.HipcResponse;
 
             using (MemoryStream ms = new MemoryStream())
             {

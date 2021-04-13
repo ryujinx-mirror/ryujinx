@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             _applicationDisplayService = applicationDisplayService;
         }
 
-        [Command(2010)]
+        [CommandHipc(2010)]
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [Command(2011)]
+        [CommandHipc(2011)]
         // DestroyManagedLayer(u64)
         public ResultCode DestroyManagedLayer(ServiceCtx context)
         {
@@ -40,14 +40,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [Command(2012)] // 7.0.0+
+        [CommandHipc(2012)] // 7.0.0+
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
             return _applicationDisplayService.CreateStrayLayer(context);
         }
 
-        [Command(6000)]
+        [CommandHipc(6000)]
         // AddToLayerStack(u32, u64)
         public ResultCode AddToLayerStack(ServiceCtx context)
         {
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [Command(6002)]
+        [CommandHipc(6002)]
         // SetLayerVisibility(b8, u64)
         public ResultCode SetLayerVisibility(ServiceCtx context)
         {

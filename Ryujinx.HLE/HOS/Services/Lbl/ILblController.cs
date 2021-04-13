@@ -10,14 +10,14 @@
         internal abstract void DisableVrMode();
         protected abstract bool IsVrModeEnabled();
 
-        [Command(17)]
+        [CommandHipc(17)]
         // SetBrightnessReflectionDelayLevel(float, float)
         public ResultCode SetBrightnessReflectionDelayLevel(ServiceCtx context)
         {
             return ResultCode.Success;
         }
 
-        [Command(18)]
+        [CommandHipc(18)]
         // GetBrightnessReflectionDelayLevel(float) -> float
         public ResultCode GetBrightnessReflectionDelayLevel(ServiceCtx context)
         {
@@ -26,21 +26,21 @@
             return ResultCode.Success;
         }
 
-        [Command(21)]
+        [CommandHipc(21)]
         // SetCurrentAmbientLightSensorMapping(unknown<0xC>)
         public ResultCode SetCurrentAmbientLightSensorMapping(ServiceCtx context)
         {
             return ResultCode.Success;
         }
 
-        [Command(22)]
+        [CommandHipc(22)]
         // GetCurrentAmbientLightSensorMapping() -> unknown<0xC>
         public ResultCode GetCurrentAmbientLightSensorMapping(ServiceCtx context)
         {
             return ResultCode.Success;
         }
 
-        [Command(24)] // 3.0.0+
+        [CommandHipc(24)] // 3.0.0+
         // SetCurrentBrightnessSettingForVrMode(float)
         public ResultCode SetCurrentBrightnessSettingForVrMode(ServiceCtx context)
         {
@@ -51,7 +51,7 @@
             return ResultCode.Success;
         }
 
-        [Command(25)] // 3.0.0+
+        [CommandHipc(25)] // 3.0.0+
         // GetCurrentBrightnessSettingForVrMode() -> float
         public ResultCode GetCurrentBrightnessSettingForVrMode(ServiceCtx context)
         {
@@ -62,7 +62,7 @@
             return ResultCode.Success;
         }
 
-        [Command(26)] // 3.0.0+
+        [CommandHipc(26)] // 3.0.0+
         // EnableVrMode()
         public ResultCode EnableVrMode(ServiceCtx context)
         {
@@ -71,7 +71,7 @@
             return ResultCode.Success;
         }
 
-        [Command(27)] // 3.0.0+
+        [CommandHipc(27)] // 3.0.0+
         // DisableVrMode()
         public ResultCode DisableVrMode(ServiceCtx context)
         {
@@ -80,7 +80,7 @@
             return ResultCode.Success;
         }
 
-        [Command(28)] // 3.0.0+
+        [CommandHipc(28)] // 3.0.0+
         // IsVrModeEnabled() -> bool
         public ResultCode IsVrModeEnabled(ServiceCtx context)
         {

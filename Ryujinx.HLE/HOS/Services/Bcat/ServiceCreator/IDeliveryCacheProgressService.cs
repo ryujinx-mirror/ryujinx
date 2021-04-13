@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             _event = new KEvent(context.Device.System.KernelContext);
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetEvent() -> handle<copy>
         public ResultCode GetEvent(ServiceCtx context)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // GetImpl() -> buffer<nn::bcat::detail::DeliveryCacheProgressImpl, 0x1a>
         public ResultCode GetImpl(ServiceCtx context)
         {

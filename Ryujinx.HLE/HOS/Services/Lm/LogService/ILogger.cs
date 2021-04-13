@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Lm.LogService
     {
         public ILogger() { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Log(buffer<unknown, 0x21>)
         public ResultCode Log(ServiceCtx context)
         {

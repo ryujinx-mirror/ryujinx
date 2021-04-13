@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
     {
         public IActiveApplicationDeviceList() { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // ActivateVibrationDevice(nn::hid::VibrationDeviceHandle)
         public ResultCode ActivateVibrationDevice(ServiceCtx context)
         {

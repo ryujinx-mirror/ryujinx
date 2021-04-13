@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             _base = baseService;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateFileService() -> object<nn::bcat::detail::ipc::IDeliveryCacheFileService>
         public ResultCode CreateFileService(ServiceCtx context)
         {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // CreateDirectoryService() -> object<nn::bcat::detail::ipc::IDeliveryCacheDirectoryService>
         public ResultCode CreateDirectoryService(ServiceCtx context)
         {
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [Command(10)]
+        [CommandHipc(10)]
         // EnumerateDeliveryCacheDirectory() -> (u32, buffer<nn::bcat::DirectoryName, 6>)
         public ResultCode EnumerateDeliveryCacheDirectory(ServiceCtx context)
         {

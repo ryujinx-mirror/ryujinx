@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             _purchasedEvent = new KEvent(system.KernelContext);
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // SetDefaultDeliveryTarget(pid, buffer<bytes, 5> unknown)
         public ResultCode SetDefaultDeliveryTarget(ServiceCtx context)
         {
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetPurchasedEventReadableHandle() -> handle<copy, event>
         public ResultCode GetPurchasedEventReadableHandle(ServiceCtx context)
         {

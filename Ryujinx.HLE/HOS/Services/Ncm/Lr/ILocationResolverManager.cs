@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr
     {
         public ILocationResolverManager(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // OpenLocationResolver()
         public ResultCode OpenLocationResolver(ServiceCtx context)
         {

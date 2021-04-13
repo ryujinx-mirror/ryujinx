@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
             _rng = new RNGCryptoServiceProvider();
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetRandomBytes() -> buffer<unknown, 6>
         public ResultCode GetRandomBytes(ServiceCtx context)
         {

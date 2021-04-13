@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             GeneralServiceManager.Add(_generalServiceDetail);
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // GetClientId() -> buffer<nn::nifm::ClientId, 0x1a, 4>
         public ResultCode GetClientId(ServiceCtx context)
         {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // CreateRequest(u32 version) -> object<nn::nifm::detail::IRequest>
         public ResultCode CreateRequest(ServiceCtx context)
         {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // GetCurrentNetworkProfile() -> buffer<nn::nifm::detail::sf::NetworkProfileData, 0x1a, 0x17c>
         public ResultCode GetCurrentNetworkProfile(ServiceCtx context)
         {
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(12)]
+        [CommandHipc(12)]
         // GetCurrentIpAddress() -> nn::nifm::IpV4Address
         public ResultCode GetCurrentIpAddress(ServiceCtx context)
         {
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(15)]
+        [CommandHipc(15)]
         // GetCurrentIpConfigInfo() -> (nn::nifm::IpAddressSetting, nn::nifm::DnsSetting)
         public ResultCode GetCurrentIpConfigInfo(ServiceCtx context)
         {
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(18)]
+        [CommandHipc(18)]
         // GetInternetConnectionStatus() -> nn::nifm::detail::sf::InternetConnectionStatus
         public ResultCode GetInternetConnectionStatus(ServiceCtx context)
         {
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [Command(21)]
+        [CommandHipc(21)]
         // IsAnyInternetRequestAccepted(buffer<nn::nifm::ClientId, 0x19, 4>) -> bool
         public ResultCode IsAnyInternetRequestAccepted(ServiceCtx context)
         {

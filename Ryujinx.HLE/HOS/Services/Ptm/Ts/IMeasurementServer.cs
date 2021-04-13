@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Ts
 
         public IMeasurementServer(ServiceCtx context) { }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // GetTemperatureMilliC(Location location) -> u32
         public ResultCode GetTemperatureMilliC(ServiceCtx context)
         {

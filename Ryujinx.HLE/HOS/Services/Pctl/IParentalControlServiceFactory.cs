@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
             _permissionFlag = permissionFlag;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateService(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public ResultCode CreateService(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
             return ResultCode.Success;
         }
 
-        [Command(1)] // 4.0.0+
+        [CommandHipc(1)] // 4.0.0+
         // CreateServiceWithoutInitialize(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public ResultCode CreateServiceWithoutInitialize(ServiceCtx context)
         {

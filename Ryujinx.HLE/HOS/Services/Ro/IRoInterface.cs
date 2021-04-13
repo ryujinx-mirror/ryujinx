@@ -430,7 +430,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return ResultCode.InvalidProcess;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // LoadNro(u64, u64, u64, u64, u64, pid) -> u64
         public ResultCode LoadNro(ServiceCtx context)
         {
@@ -475,7 +475,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return result;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // UnloadNro(u64, u64, pid)
         public ResultCode UnloadNro(ServiceCtx context)
         {
@@ -499,7 +499,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return result;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // LoadNrr(u64, u64, u64, pid)
         public ResultCode LoadNrr(ServiceCtx context)
         {
@@ -532,7 +532,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return result;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // UnloadNrr(u64, u64, pid)
         public ResultCode UnloadNrr(ServiceCtx context)
         {
@@ -556,7 +556,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return result;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // Initialize(u64, pid, KObject)
         public ResultCode Initialize(ServiceCtx context)
         {

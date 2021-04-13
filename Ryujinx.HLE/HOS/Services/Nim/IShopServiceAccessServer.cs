@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.ShopServiceAccessServerInterface
     {
         public IShopServiceAccessServer() { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateAccessorInterface(u8) -> object<nn::ec::IShopServiceAccessor>
         public ResultCode CreateAccessorInterface(ServiceCtx context)
         {

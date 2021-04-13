@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _pid = pid;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Exit()
         public ResultCode Exit(ServiceCtx context)
         {
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // LockExit()
         public ResultCode LockExit(ServiceCtx context)
         {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // UnlockExit()
         public ResultCode UnlockExit(ServiceCtx context)
         {
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(3)] // 2.0.0+
+        [CommandHipc(3)] // 2.0.0+
         // EnterFatalSection()
         public ResultCode EnterFatalSection(ServiceCtx context)
         {
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(4)] // 2.0.0+
+        [CommandHipc(4)] // 2.0.0+
         // LeaveFatalSection()
         public ResultCode LeaveFatalSection(ServiceCtx context)
         {
@@ -101,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return result;
         }
 
-        [Command(9)]
+        [CommandHipc(9)]
         // GetLibraryAppletLaunchableEvent() -> handle<copy>
         public ResultCode GetLibraryAppletLaunchableEvent(ServiceCtx context)
         {
@@ -122,7 +122,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(10)]
+        [CommandHipc(10)]
         // SetScreenShotPermission(u32)
         public ResultCode SetScreenShotPermission(ServiceCtx context)
         {
@@ -135,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(11)]
+        [CommandHipc(11)]
         // SetOperationModeChangedNotification(b8)
         public ResultCode SetOperationModeChangedNotification(ServiceCtx context)
         {
@@ -148,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(12)]
+        [CommandHipc(12)]
         // SetPerformanceModeChangedNotification(b8)
         public ResultCode SetPerformanceModeChangedNotification(ServiceCtx context)
         {
@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(13)]
+        [CommandHipc(13)]
         // SetFocusHandlingMode(b8, b8, b8)
         public ResultCode SetFocusHandlingMode(ServiceCtx context)
         {
@@ -174,7 +174,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(14)]
+        [CommandHipc(14)]
         // SetRestartMessageEnabled(b8)
         public ResultCode SetRestartMessageEnabled(ServiceCtx context)
         {
@@ -187,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(16)] // 2.0.0+
+        [CommandHipc(16)] // 2.0.0+
         // SetOutOfFocusSuspendingEnabled(b8)
         public ResultCode SetOutOfFocusSuspendingEnabled(ServiceCtx context)
         {
@@ -200,7 +200,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(19)] // 3.0.0+
+        [CommandHipc(19)] // 3.0.0+
         // SetScreenShotImageOrientation(u32)
         public ResultCode SetScreenShotImageOrientation(ServiceCtx context)
         {
@@ -213,7 +213,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(40)]
+        [CommandHipc(40)]
         // CreateManagedDisplayLayer() -> u64
         public ResultCode CreateManagedDisplayLayer(ServiceCtx context)
         {
@@ -225,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(44)] // 10.0.0+
+        [CommandHipc(44)] // 10.0.0+
         // CreateManagedDisplaySeparableLayer() -> (u64, u64)
         public ResultCode CreateManagedDisplaySeparableLayer(ServiceCtx context)
         {
@@ -239,7 +239,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(50)]
+        [CommandHipc(50)]
         // SetHandlesRequestToDisplay(b8)
         public ResultCode SetHandlesRequestToDisplay(ServiceCtx context)
         {
@@ -252,7 +252,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(62)]
+        [CommandHipc(62)]
         // SetIdleTimeDetectionExtension(u32)
         public ResultCode SetIdleTimeDetectionExtension(ServiceCtx context)
         {
@@ -265,7 +265,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(63)]
+        [CommandHipc(63)]
         // GetIdleTimeDetectionExtension() -> u32
         public ResultCode GetIdleTimeDetectionExtension(ServiceCtx context)
         {
@@ -276,7 +276,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(68)]
+        [CommandHipc(68)]
         // SetAutoSleepDisabled(u8)
         public ResultCode SetAutoSleepDisabled(ServiceCtx context)
         {
@@ -287,7 +287,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(69)]
+        [CommandHipc(69)]
         // IsAutoSleepDisabled() -> u8
         public ResultCode IsAutoSleepDisabled(ServiceCtx context)
         {
@@ -296,7 +296,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(90)] // 6.0.0+
+        [CommandHipc(90)] // 6.0.0+
         // GetAccumulatedSuspendedTickValue() -> u64
         public ResultCode GetAccumulatedSuspendedTickValue(ServiceCtx context)
         {
@@ -305,7 +305,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(91)] // 6.0.0+
+        [CommandHipc(91)] // 6.0.0+
         // GetAccumulatedSuspendedTickChangedEvent() -> handle<copy>
         public ResultCode GetAccumulatedSuspendedTickChangedEvent(ServiceCtx context)
         {
@@ -326,7 +326,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [Command(100)] // 7.0.0+
+        [CommandHipc(100)] // 7.0.0+
         // SetAlbumImageTakenNotificationEnabled(u8)
         public ResultCode SetAlbumImageTakenNotificationEnabled(ServiceCtx context)
         {

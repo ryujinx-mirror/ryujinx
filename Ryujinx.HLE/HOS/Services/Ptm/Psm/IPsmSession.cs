@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
             _stateChangeEventHandle = -1;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // BindStateChangeEvent() -> KObject
         public ResultCode BindStateChangeEvent(ServiceCtx context)
         {
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // UnbindStateChangeEvent()
         public ResultCode UnbindStateChangeEvent(ServiceCtx context)
         {
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // SetChargerTypeChangeEventEnabled(u8)
         public ResultCode SetChargerTypeChangeEventEnabled(ServiceCtx context)
         {
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
             return ResultCode.Success;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // SetPowerSupplyChangeEventEnabled(u8)
         public ResultCode SetPowerSupplyChangeEventEnabled(ServiceCtx context)
         {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // SetBatteryVoltageStateChangeEventEnabled(u8)
         public ResultCode SetBatteryVoltageStateChangeEventEnabled(ServiceCtx context)
         {

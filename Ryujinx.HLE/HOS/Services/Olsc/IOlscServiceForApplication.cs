@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
 
         public IOlscServiceForApplication(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Initialize(pid)
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
             return ResultCode.Success;
         }
 
-        [Command(14)]
+        [CommandHipc(14)]
         // SetSaveDataBackupSettingEnabled(nn::account::Uid, bool)
         public ResultCode SetSaveDataBackupSettingEnabled(ServiceCtx context)
         {

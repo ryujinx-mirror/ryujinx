@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 
         public ISslContext(ServiceCtx context) { }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // CreateConnection() -> object<nn::ssl::sf::ISslConnection>
         public ResultCode CreateConnection(ServiceCtx context)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // ImportServerPki(nn::ssl::sf::CertificateFormat certificateFormat, buffer<bytes, 5> certificate) -> u64 certificateId
         public ResultCode ImportServerPki(ServiceCtx context)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // ImportClientPki(buffer<bytes, 5> certificate, buffer<bytes, 5> ascii_password) -> u64 certificateId
         public ResultCode ImportClientPki(ServiceCtx context)
         {

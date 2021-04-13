@@ -5,7 +5,7 @@
     {
         public IApplicationManagerInterface(ServiceCtx context) { }
 
-        [Command(400)]
+        [CommandHipc(400)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
         public ResultCode GetApplicationControlData(ServiceCtx context)
         {

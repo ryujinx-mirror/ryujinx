@@ -4,7 +4,7 @@
     {
         public IReadOnlyApplicationControlDataInterface(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
         public ResultCode GetApplicationControlData(ServiceCtx context)
         {

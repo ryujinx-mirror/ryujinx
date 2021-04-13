@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return ResultCode.Success;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // DecodeInterleaved(buffer<unknown, 5>) -> (u32, u32, buffer<unknown, 6>)
         public ResultCode DecodeInterleavedOriginal(ServiceCtx context)
         {
@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return result;
         }
 
-        [Command(4)] // 6.0.0+
+        [CommandHipc(4)] // 6.0.0+
         // DecodeInterleavedWithPerfOld(buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedWithPerfOld(ServiceCtx context)
         {
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return result;
         }
 
-        [Command(6)] // 6.0.0+
+        [CommandHipc(6)] // 6.0.0+
         // DecodeInterleavedOld(bool reset, buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedOld(ServiceCtx context)
         {
@@ -207,7 +207,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return result;
         }
 
-        [Command(8)] // 7.0.0+
+        [CommandHipc(8)] // 7.0.0+
         // DecodeInterleaved(bool reset, buffer<unknown, 0x45>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleaved(ServiceCtx context)
         {

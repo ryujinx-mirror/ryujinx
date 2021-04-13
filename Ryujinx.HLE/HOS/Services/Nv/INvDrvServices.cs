@@ -217,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             }
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Open(buffer<bytes, 5> path) -> (s32 fd, u32 error_code)
         public ResultCode Open(ServiceCtx context)
         {
@@ -245,7 +245,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // Ioctl(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args) -> (u32 error_code, buffer<bytes, 0x22> out_args)
         public ResultCode Ioctl(ServiceCtx context)
         {
@@ -286,7 +286,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // Close(s32 fd) -> u32 error_code
         public ResultCode Close(ServiceCtx context)
         {
@@ -311,7 +311,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // Initialize(u32 transfer_memory_size, handle<copy, process> current_process, handle<copy, transfer_memory> transfer_memory) -> u32 error_code
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -335,7 +335,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(4)]
+        [CommandHipc(4)]
         // QueryEvent(s32 fd, u32 event_id) -> (u32, handle<copy, event>)
         public ResultCode QueryEvent(ServiceCtx context)
         {
@@ -371,7 +371,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // MapSharedMemory(s32 fd, u32 argument, handle<copy, shared_memory>) -> u32 error_code
         public ResultCode MapSharedMemory(ServiceCtx context)
         {
@@ -396,7 +396,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(6)]
+        [CommandHipc(6)]
         // GetStatus() -> (unknown<0x20>, u32 error_code)
         public ResultCode GetStatus(ServiceCtx context)
         {
@@ -425,14 +425,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(7)]
+        [CommandHipc(7)]
         // ForceSetClientPid(u64) -> u32 error_code
         public ResultCode ForceSetClientPid(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(8)]
+        [CommandHipc(8)]
         // SetClientPID(u64, pid) -> u32 error_code
         public ResultCode SetClientPid(ServiceCtx context)
         {
@@ -443,7 +443,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(9)]
+        [CommandHipc(9)]
         // DumpGraphicsMemoryInfo()
         public ResultCode DumpGraphicsMemoryInfo(ServiceCtx context)
         {
@@ -452,14 +452,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(10)] // 3.0.0+
+        [CommandHipc(10)] // 3.0.0+
         // InitializeDevtools(u32, handle<copy>) -> u32 error_code;
         public ResultCode InitializeDevtools(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(11)] // 3.0.0+
+        [CommandHipc(11)] // 3.0.0+
         // Ioctl2(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args, buffer<bytes, 0x21> inline_in_buffer) -> (u32 error_code, buffer<bytes, 0x22> out_args)
         public ResultCode Ioctl2(ServiceCtx context)
         {
@@ -508,7 +508,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(12)] // 3.0.0+
+        [CommandHipc(12)] // 3.0.0+
         // Ioctl3(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args) -> (u32 error_code, buffer<bytes, 0x22> out_args,  buffer<bytes, 0x22> inline_out_buffer)
         public ResultCode Ioctl3(ServiceCtx context)
         {
@@ -558,7 +558,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(13)] // 3.0.0+
+        [CommandHipc(13)] // 3.0.0+
         // FinishInitialize(unknown<8>)
         public ResultCode FinishInitialize(ServiceCtx context)
         {

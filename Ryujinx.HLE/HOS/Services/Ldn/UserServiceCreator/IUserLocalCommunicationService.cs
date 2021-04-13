@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
             _networkInterface = new NetworkInterface(context.Device.System);
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetState() -> s32 state
         public ResultCode GetState(ServiceCtx context)
         {
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
             return result;
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // AttachStateChangeEvent() -> handle<copy>
         public ResultCode AttachStateChangeEvent(ServiceCtx context)
         {
@@ -60,21 +60,21 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
             return ResultCode.Success;
         }
 
-        [Command(400)]
+        [CommandHipc(400)]
         // InitializeOld(u64, pid)
         public ResultCode InitializeOld(ServiceCtx context)
         {
             return _networkInterface.Initialize(UnknownValue, 0, null, null);
         }
 
-        [Command(401)]
+        [CommandHipc(401)]
         // Finalize()
         public ResultCode Finalize(ServiceCtx context)
         {
             return _networkInterface.Finalize();
         }
 
-        [Command(402)] // 7.0.0+
+        [CommandHipc(402)] // 7.0.0+
         // Initialize(u64 ip_addresses, u64, pid)
         public ResultCode Initialize(ServiceCtx context)
         {

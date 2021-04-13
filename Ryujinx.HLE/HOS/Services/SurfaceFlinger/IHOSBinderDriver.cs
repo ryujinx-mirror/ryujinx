@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
     {
         public IHOSBinderDriver() { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // TransactParcel(s32, u32, u32, buffer<unknown, 5, 0>) -> buffer<unknown, 6, 0>
         public ResultCode TransactParcel(ServiceCtx context)
         {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return result;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // AdjustRefcount(s32, s32, s32)
         public ResultCode AdjustRefcount(ServiceCtx context)
         {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return AdjustRefcount(binderId, addVal, type);
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetNativeHandle(s32, s32) -> handle<copy>
         public ResultCode GetNativeHandle(ServiceCtx context)
         {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return ResultCode.Success;
         }
 
-        [Command(3)] // 3.0.0+
+        [CommandHipc(3)] // 3.0.0+
         // TransactParcelAuto(s32, u32, u32, buffer<unknown, 21, 0>) -> buffer<unknown, 22, 0>
         public ResultCode TransactParcelAuto(ServiceCtx context)
         {

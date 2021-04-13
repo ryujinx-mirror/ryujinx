@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             _automaticCorrectionEvent = 0;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetUserStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetUserStaticService(ServiceCtx context)
         {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(5)]
+        [CommandHipc(5)]
         // GetAdminStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetAdminStaticService(ServiceCtx context)
         {
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(6)]
+        [CommandHipc(6)]
         // GetRepairStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetRepairStaticService(ServiceCtx context)
         {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(9)]
+        [CommandHipc(9)]
         // GetManufactureStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetManufactureStaticService(ServiceCtx context)
         {
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(10)]
+        [CommandHipc(10)]
         // SetupStandardSteadyClock(nn::util::Uuid clock_source_id, nn::TimeSpanType setup_value,  nn::TimeSpanType internal_offset,  nn::TimeSpanType test_offset, bool is_rtc_reset_detected)
         public ResultCode SetupStandardSteadyClock(ServiceCtx context)
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(11)]
+        [CommandHipc(11)]
         // SetupStandardLocalSystemClock(nn::time::SystemClockContext context, nn::time::PosixTime posix_time)
         public ResultCode SetupStandardLocalSystemClock(ServiceCtx context)
         {
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(12)]
+        [CommandHipc(12)]
         // SetupStandardNetworkSystemClock(nn::time::SystemClockContext context, nn::TimeSpanType sufficient_accuracy)
         public ResultCode SetupStandardNetworkSystemClock(ServiceCtx context)
         {
@@ -97,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(13)]
+        [CommandHipc(13)]
         // SetupStandardUserSystemClock(bool automatic_correction_enabled, nn::time::SteadyClockTimePoint steady_clock_timepoint)
         public ResultCode SetupStandardUserSystemClock(ServiceCtx context)
         {
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(14)]
+        [CommandHipc(14)]
         // SetupTimeZoneManager(nn::time::LocationName location_name, nn::time::SteadyClockTimePoint timezone_update_timepoint, u32 total_location_name_count, nn::time::TimeZoneRuleVersion timezone_rule_version, buffer<nn::time::TimeZoneBinary, 0x21> timezone_binary)
         public ResultCode SetupTimeZoneManager(ServiceCtx context)
         {
@@ -135,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(15)]
+        [CommandHipc(15)]
         // SetupEphemeralNetworkSystemClock()
         public ResultCode SetupEphemeralNetworkSystemClock(ServiceCtx context)
         {
@@ -144,31 +144,31 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(50)]
+        [CommandHipc(50)]
         // Unknown50() -> handle<copy>
         public ResultCode Unknown50(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(51)]
+        [CommandHipc(51)]
         // Unknown51() -> handle<copy>
         public ResultCode Unknown51(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(52)]
+        [CommandHipc(52)]
         // Unknown52() -> handle<copy>
         public ResultCode Unknown52(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(60)]
+        [CommandHipc(60)]
         // GetStandardUserSystemClockAutomaticCorrectionEvent() -> handle<copy>
         public ResultCode GetStandardUserSystemClockAutomaticCorrectionEvent(ServiceCtx context)
         {
@@ -185,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // SetStandardSteadyClockRtcOffset(nn::TimeSpanType rtc_offset)
         public ResultCode SetStandardSteadyClockRtcOffset(ServiceCtx context)
         {
@@ -196,28 +196,28 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [Command(200)]
+        [CommandHipc(200)]
         // GetAlarmRegistrationEvent() -> handle<copy>
         public ResultCode GetAlarmRegistrationEvent(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(201)]
+        [CommandHipc(201)]
         // UpdateSteadyAlarms()
         public ResultCode UpdateSteadyAlarms(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
 
-        [Command(202)]
+        [CommandHipc(202)]
         // TryGetNextSteadyClockAlarmSnapshot() -> (bool, nn::time::SteadyClockAlarmSnapshot)
         public ResultCode TryGetNextSteadyClockAlarmSnapshot(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context);
+            throw new ServiceNotImplementedException(this, context, false);
         }
     }
 }

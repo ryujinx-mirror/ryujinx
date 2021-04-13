@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseReader = baseReader;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // ReadSaveDataInfo() -> (u64, buffer<unknown, 6>)
         public ResultCode ReadSaveDataInfo(ServiceCtx context)
         {

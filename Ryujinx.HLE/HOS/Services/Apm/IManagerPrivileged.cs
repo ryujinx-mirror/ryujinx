@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
     {
         public IManagerPrivileged(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // OpenSession() -> object<nn::apm::ISession>
         public ResultCode OpenSession(ServiceCtx context)
         {

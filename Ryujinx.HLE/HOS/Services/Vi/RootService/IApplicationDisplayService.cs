@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             _displays = new IdDictionary();
         }
 
-        [Command(100)]
+        [CommandHipc(100)]
         // GetRelayService() -> object<nns::hosbinder::IHOSBinderDriver>
         public ResultCode GetRelayService(ServiceCtx context)
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(101)]
+        [CommandHipc(101)]
         // GetSystemDisplayService() -> object<nn::visrv::sf::ISystemDisplayService>
         public ResultCode GetSystemDisplayService(ServiceCtx context)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(102)]
+        [CommandHipc(102)]
         // GetManagerDisplayService() -> object<nn::visrv::sf::IManagerDisplayService>
         public ResultCode GetManagerDisplayService(ServiceCtx context)
         {
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(103)] // 2.0.0+
+        [CommandHipc(103)] // 2.0.0+
         // GetIndirectDisplayTransactionService() -> object<nns::hosbinder::IHOSBinderDriver>
         public ResultCode GetIndirectDisplayTransactionService(ServiceCtx context)
         {
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(1000)]
+        [CommandHipc(1000)]
         // ListDisplays() -> (u64, buffer<nn::vi::DisplayInfo, 6>)
         public ResultCode ListDisplays(ServiceCtx context)
         {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(1010)]
+        [CommandHipc(1010)]
         // OpenDisplay(nn::vi::DisplayName) -> u64
         public ResultCode OpenDisplay(ServiceCtx context)
         {
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(1020)]
+        [CommandHipc(1020)]
         // CloseDisplay(u64)
         public ResultCode CloseDisplay(ServiceCtx context)
         {
@@ -101,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(1102)]
+        [CommandHipc(1102)]
         // GetDisplayResolution(u64) -> (u64, u64)
         public ResultCode GetDisplayResolution(ServiceCtx context)
         {
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2020)]
+        [CommandHipc(2020)]
         // OpenLayer(nn::vi::DisplayName, u64, nn::applet::AppletResourceUserId, pid) -> (u64, buffer<bytes, 6>)
         public ResultCode OpenLayer(ServiceCtx context)
         {
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2021)]
+        [CommandHipc(2021)]
         // CloseLayer(u64)
         public ResultCode CloseLayer(ServiceCtx context)
         {
@@ -152,7 +152,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2030)]
+        [CommandHipc(2030)]
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
@@ -182,7 +182,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2031)]
+        [CommandHipc(2031)]
         // DestroyStrayLayer(u64)
         public ResultCode DestroyStrayLayer(ServiceCtx context)
         {
@@ -193,7 +193,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2101)]
+        [CommandHipc(2101)]
         // SetLayerScalingMode(u32, u64)
         public ResultCode SetLayerScalingMode(ServiceCtx context)
         {
@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2102)] // 5.0.0+
+        [CommandHipc(2102)] // 5.0.0+
         // ConvertScalingMode(unknown) -> unknown
         public ResultCode ConvertScalingMode(ServiceCtx context)
         {
@@ -243,7 +243,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return null;
         }
 
-        [Command(2450)]
+        [CommandHipc(2450)]
         // GetIndirectLayerImageMap(s64 width, s64 height, u64 handle, nn::applet::AppletResourceUserId, pid) -> (s64, s64, buffer<bytes, 0x46>)
         public ResultCode GetIndirectLayerImageMap(ServiceCtx context)
         {
@@ -261,7 +261,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(2460)]
+        [CommandHipc(2460)]
         // GetIndirectLayerImageRequiredMemoryInfo(u64 width, u64 height) -> (u64 size, u64 alignment)
         public ResultCode GetIndirectLayerImageRequiredMemoryInfo(ServiceCtx context)
         {
@@ -308,7 +308,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [Command(5202)]
+        [CommandHipc(5202)]
         // GetDisplayVsyncEvent(u64) -> handle<copy>
         public ResultCode GetDisplayVSyncEvent(ServiceCtx context)
         {

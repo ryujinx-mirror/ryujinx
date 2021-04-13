@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             _operationEventReadableHandle = 0;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetCurrentTime() -> nn::time::PosixTime
         public ResultCode GetCurrentTime(ServiceCtx context)
         {
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // SetCurrentTime(nn::time::PosixTime)
         public ResultCode SetCurrentTime(ServiceCtx context)
         {
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return _clockCore.SetCurrentTime(context.Thread, posixTime);
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // GetClockContext() -> nn::time::SystemClockContext
         public ResultCode GetSystemClockContext(ServiceCtx context)
         {
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(3)]
+        [CommandHipc(3)]
         // SetClockContext(nn::time::SystemClockContext)
         public ResultCode SetSystemClockContext(ServiceCtx context)
         {
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [Command(4)] // 9.0.0+
+        [CommandHipc(4)] // 9.0.0+
         // GetOperationEventReadableHandle() -> handle<copy>
         public ResultCode GetOperationEventReadableHandle(ServiceCtx context)
         {

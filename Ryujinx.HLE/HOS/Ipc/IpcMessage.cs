@@ -82,14 +82,18 @@ namespace Ryujinx.HLE.HOS.Ipc
 
             long recvListPos = reader.BaseStream.Position + rawDataSize;
 
-            long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);
-
-            if (rawDataSize != 0)
+            // only HIPC have the padding requirements.
+            if (Type < IpcMessageType.TipcCloseSession)
             {
-                rawDataSize -= (int)pad0;
-            }
+                long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);
 
-            reader.BaseStream.Seek(pad0, SeekOrigin.Current);
+                if (rawDataSize != 0)
+                {
+                    rawDataSize -= (int)pad0;
+                }
+
+                reader.BaseStream.Seek(pad0, SeekOrigin.Current);
+            }
 
             int recvListCount = recvListFlags - 2;
 

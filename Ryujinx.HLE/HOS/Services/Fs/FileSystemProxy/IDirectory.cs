@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             _baseDirectory = directory;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
         public ResultCode Read(ServiceCtx context)
         {
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // GetEntryCount() -> u64
         public ResultCode GetEntryCount(ServiceCtx context)
         {

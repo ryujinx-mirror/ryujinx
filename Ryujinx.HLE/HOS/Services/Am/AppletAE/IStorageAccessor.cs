@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             _storage = storage;
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // GetSize() -> u64
         public ResultCode GetSize(ServiceCtx context)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             return ResultCode.Success;
         }
 
-        [Command(10)]
+        [CommandHipc(10)]
         // Write(u64, buffer<bytes, 0x21>)
         public ResultCode Write(ServiceCtx context)
         {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             return ResultCode.Success;
         }
 
-        [Command(11)]
+        [CommandHipc(11)]
         // Read(u64) -> buffer<bytes, 0x22>
         public ResultCode Read(ServiceCtx context)
         {

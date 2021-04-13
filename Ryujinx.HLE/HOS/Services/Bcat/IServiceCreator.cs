@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             context.Device.System.LibHacHorizonClient.Sm.GetService(out _base, serviceName).ThrowIfFailure();
         }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateBcatService(pid) -> object<nn::bcat::detail::ipc::IBcatService>
         public ResultCode CreateBcatService(ServiceCtx context)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [CommandHipc(1)]
         // CreateDeliveryCacheStorageService(pid) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public ResultCode CreateDeliveryCacheStorageService(ServiceCtx context)
         {
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             return (ResultCode)rc.Value;
         }
 
-        [Command(2)]
+        [CommandHipc(2)]
         // CreateDeliveryCacheStorageServiceWithApplicationId(nn::ApplicationId) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public ResultCode CreateDeliveryCacheStorageServiceWithApplicationId(ServiceCtx context)
         {

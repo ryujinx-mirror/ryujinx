@@ -5,7 +5,7 @@
     {
         public IUserManager(ServiceCtx context) { }
 
-        [Command(0)]
+        [CommandHipc(0)]
         // CreateUserInterface() -> object<nn::nfp::detail::IUser>
         public ResultCode GetUserInterface(ServiceCtx context)
         {
