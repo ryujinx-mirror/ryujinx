@@ -218,6 +218,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode CreateManagedDisplayLayer(ServiceCtx context)
         {
             context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long layerId);
+            context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
             context.ResponseData.Write(layerId);
 
@@ -228,9 +229,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateManagedDisplaySeparableLayer() -> (u64, u64)
         public ResultCode CreateManagedDisplaySeparableLayer(ServiceCtx context)
         {
-            // NOTE: first create the recoding layer and then the display one because right now Surface Flinger only use the last id.
-            context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long recordingLayerId);
             context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long displayLayerId);
+            context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long recordingLayerId);
+            context.Device.System.SurfaceFlinger.SetRenderLayer(displayLayerId);
 
             context.ResponseData.Write(displayLayerId);
             context.ResponseData.Write(recordingLayerId);

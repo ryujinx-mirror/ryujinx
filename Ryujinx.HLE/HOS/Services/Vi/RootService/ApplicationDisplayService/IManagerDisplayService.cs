@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             long pid = context.Device.System.AppletState.AppletResourceUserIds.GetData<long>((int)appletResourceUserId);
 
             context.Device.System.SurfaceFlinger.CreateLayer(pid, out long layerId);
+            context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
             context.ResponseData.Write(layerId);
 
