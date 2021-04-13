@@ -1,13 +1,13 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using System;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureStorage : ITextureInfo 
     {
         public int Handle { get; private set; }
+        public int StorageHandle => Handle;
         public float ScaleFactor { get; private set; }
 
         public TextureCreateInfo Info { get; }

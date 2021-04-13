@@ -205,22 +205,44 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     int copyWidth = sizeInBlocks ? BitUtils.DivRoundUp(width, blockWidth) : width;
                     int copyHeight = sizeInBlocks ? BitUtils.DivRoundUp(height, blockHeight) : height;
 
-                    GL.CopyImageSubData(
-                        srcHandle,
-                        srcInfo.Target.ConvertToImageTarget(),
-                        srcLevel + level,
-                        0,
-                        0,
-                        srcLayer,
-                        dstHandle,
-                        dstInfo.Target.ConvertToImageTarget(),
-                        dstLevel + level,
-                        0,
-                        0,
-                        dstLayer,
-                        copyWidth,
-                        copyHeight,
-                        depth);
+                    if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Intel)
+                    {
+                        GL.CopyImageSubData(
+                            src.StorageHandle,
+                            srcInfo.Target.ConvertToImageTarget(),
+                            src.FirstLevel + srcLevel + level,
+                            0,
+                            0,
+                            src.FirstLayer + srcLayer,
+                            dst.StorageHandle,
+                            dstInfo.Target.ConvertToImageTarget(),
+                            dst.FirstLevel + dstLevel + level,
+                            0,
+                            0,
+                            dst.FirstLayer + dstLayer,
+                            copyWidth,
+                            copyHeight,
+                            depth);
+                    }
+                    else
+                    {
+                        GL.CopyImageSubData(
+                            srcHandle,
+                            srcInfo.Target.ConvertToImageTarget(),
+                            srcLevel + level,
+                            0,
+                            0,
+                            srcLayer,
+                            dstHandle,
+                            dstInfo.Target.ConvertToImageTarget(),
+                            dstLevel + level,
+                            0,
+                            0,
+                            dstLayer,
+                            copyWidth,
+                            copyHeight,
+                            depth);
+                    }
                 }
 
                 width = Math.Max(1, width >> 1);

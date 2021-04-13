@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
-    class TextureBase : ITextureInfo
+    class TextureBase
     {
         public int Handle { get; protected set; }
 
