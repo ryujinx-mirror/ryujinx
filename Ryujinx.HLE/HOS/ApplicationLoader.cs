@@ -648,7 +648,7 @@ namespace Ryujinx.HLE.HOS
         {
             Logger.Info?.Print(LogClass.Application, "Ensuring required savedata exists.");
 
-            Uid user = _device.System.State.Account.LastOpenedUser.UserId.ToLibHacUid();
+            Uid user = _device.System.AccountManager.LastOpenedUser.UserId.ToLibHacUid();
 
             ref ApplicationControlProperty control = ref ControlData.Value;
 

@@ -1,23 +1,31 @@
-﻿using System.Collections.Concurrent;
+﻿using Ryujinx.Common;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
-    public class AccountUtils
+    public class AccountManager
     {
         private ConcurrentDictionary<string, UserProfile> _profiles;
 
-        internal UserProfile LastOpenedUser { get; private set; }
+        public UserProfile LastOpenedUser { get; private set; }
 
-        public AccountUtils()
+        public AccountManager()
         {
             _profiles = new ConcurrentDictionary<string, UserProfile>();
+
+            UserId defaultUserId    = new UserId("00000000000000010000000000000000");
+            byte[] defaultUserImage = EmbeddedResources.Read("Ryujinx.HLE/HOS/Services/Account/Acc/DefaultUserImage.jpg");
+
+            AddUser(defaultUserId, "Player", defaultUserImage);
+            
+            OpenUser(defaultUserId);
         }
 
-        public void AddUser(UserId userId, string name)
+        public void AddUser(UserId userId, string name, byte[] image)
         {
-            UserProfile profile = new UserProfile(userId, name);
+            UserProfile profile = new UserProfile(userId, name, image);
 
             _profiles.AddOrUpdate(userId.ToString(), profile, (key, old) => profile);
         }

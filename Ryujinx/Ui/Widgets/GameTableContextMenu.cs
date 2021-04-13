@@ -13,6 +13,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Ui.Helper;
 using Ryujinx.Ui.Windows;
 using System;
@@ -31,6 +32,7 @@ namespace Ryujinx.Ui.Widgets
     {
         private readonly MainWindow                             _parent;
         private readonly VirtualFileSystem                      _virtualFileSystem;
+        private readonly AccountManager                         _accountManager;
         private readonly BlitStruct<ApplicationControlProperty> _controlData;
 
         private readonly string _titleFilePath;
@@ -41,13 +43,14 @@ namespace Ryujinx.Ui.Widgets
         private MessageDialog _dialog;
         private bool          _cancel;
 
-        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, string titleFilePath, string titleName, string titleId, BlitStruct<ApplicationControlProperty> controlData)
+        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, AccountManager accountManager, string titleFilePath, string titleName, string titleId, BlitStruct<ApplicationControlProperty> controlData)
         {
             _parent = parent;
 
             InitializeComponent();
 
             _virtualFileSystem = virtualFileSystem;
+            _accountManager    = accountManager;
             _titleFilePath     = titleFilePath;
             _titleName         = titleName;
             _titleIdText       = titleId;
@@ -429,7 +432,7 @@ namespace Ryujinx.Ui.Widgets
         private void OpenSaveUserDir_Clicked(object sender, EventArgs args)
         {
             SaveDataFilter saveDataFilter = new SaveDataFilter();
-            saveDataFilter.SetUserId(new UserId(1, 0)); // TODO: Remove Hardcoded value.
+            saveDataFilter.SetUserId(new LibHac.Fs.UserId((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low));
 
             OpenSaveDir(saveDataFilter);
         }

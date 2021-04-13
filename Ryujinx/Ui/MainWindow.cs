@@ -3,7 +3,6 @@ using ARMeilleure.Translation.PTC;
 using Gtk;
 using LibHac.Common;
 using LibHac.Ns;
-using Ryujinx.Audio;
 using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SoundIo;
@@ -17,6 +16,7 @@ using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Modules;
 using Ryujinx.Ui.App;
 using Ryujinx.Ui.Applet;
@@ -42,6 +42,7 @@ namespace Ryujinx.Ui
     {
         private readonly VirtualFileSystem _virtualFileSystem;
         private readonly ContentManager    _contentManager;
+        private readonly AccountManager    _accountManager;
 
         private UserChannelPersistence _userChannelPersistence;
 
@@ -135,6 +136,7 @@ namespace Ryujinx.Ui
             // Instanciate HLE objects.
             _virtualFileSystem      = VirtualFileSystem.CreateInstance();
             _contentManager         = new ContentManager(_virtualFileSystem);
+            _accountManager         = new AccountManager();
             _userChannelPersistence = new UserChannelPersistence();
 
             // Instanciate GUI objects.
@@ -344,6 +346,7 @@ namespace Ryujinx.Ui
             _emulationContext = new HLE.Switch(
                 _virtualFileSystem,
                 _contentManager,
+                _accountManager,
                 _userChannelPersistence,
                 renderer,
                 deviceDriver,
@@ -942,7 +945,7 @@ namespace Ryujinx.Ui
 
             BlitStruct<ApplicationControlProperty> controlData = (BlitStruct<ApplicationControlProperty>)_tableStore.GetValue(treeIter, 10);
 
-            _ = new GameTableContextMenu(this, _virtualFileSystem, titleFilePath, titleName, titleId, controlData);
+            _ = new GameTableContextMenu(this, _virtualFileSystem, _accountManager, titleFilePath, titleName, titleId, controlData);
         }
 
         private void Load_Application_File(object sender, EventArgs args)

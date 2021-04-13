@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 
             if (byUserId)
             {
-                if (!context.Device.System.State.Account.TryGetUser(userId, out _))
+                if (!context.Device.System.AccountManager.TryGetUser(userId, out _))
                 {
                     return ResultCode.UserNotFound;
                 }

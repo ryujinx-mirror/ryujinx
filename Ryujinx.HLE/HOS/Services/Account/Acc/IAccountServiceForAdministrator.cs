@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         {
             UserId userId = context.RequestData.ReadStruct<UserId>();
 
-            if (!context.Device.System.State.Account.TryGetUser(userId, out UserProfile userProfile))
+            if (!context.Device.System.AccountManager.TryGetUser(userId, out UserProfile userProfile))
             {
                 Logger.Warning?.Print(LogClass.ServiceAcc, $"User 0x{userId} not found!");
 

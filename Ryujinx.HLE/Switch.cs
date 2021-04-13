@@ -13,6 +13,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
@@ -57,6 +58,7 @@ namespace Ryujinx.HLE
         public Switch(
             VirtualFileSystem fileSystem,
             ContentManager contentManager,
+            AccountManager accountManager,
             UserChannelPersistence userChannelPersistence,
             IRenderer renderer,
             IHardwareDeviceDriver audioDeviceDriver,
@@ -112,7 +114,7 @@ namespace Ryujinx.HLE
 
             FileSystem = fileSystem;
 
-            System = new Horizon(this, contentManager, memoryConfiguration);
+            System = new Horizon(this, contentManager, accountManager, memoryConfiguration);
             System.InitializeServices();
 
             Statistics = new PerformanceStatistics();

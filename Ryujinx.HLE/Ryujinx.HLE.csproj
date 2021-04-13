@@ -32,12 +32,12 @@
 
   <ItemGroup>
     <None Remove="Homebrew.npdm" />
-    <None Remove="RyujinxProfileImage.jpg" />
+    <None Remove="HOS\Services\Account\Acc\DefaultUserImage.jpg" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Homebrew.npdm" />
-    <EmbeddedResource Include="RyujinxProfileImage.jpg" />
+    <EmbeddedResource Include="HOS\Services\Account\Acc\DefaultUserImage.jpg" />
   </ItemGroup>
 
 </Project>

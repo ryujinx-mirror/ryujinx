@@ -18,6 +18,7 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Arp;
@@ -86,6 +87,7 @@ namespace Ryujinx.HLE.HOS
         internal KSharedMemory IirsSharedMem { get; private set; }
         internal SharedFontManager Font { get; private set; }
 
+        internal AccountManager AccountManager { get; private set; }
         internal ContentManager ContentManager { get; private set; }
         internal CaptureManager CaptureManager { get; private set; }
 
@@ -110,7 +112,7 @@ namespace Ryujinx.HLE.HOS
         internal LibHac.Horizon LibHacHorizonServer { get; private set; }
         internal HorizonClient LibHacHorizonClient { get; private set; }
 
-        public Horizon(Switch device, ContentManager contentManager, MemoryConfiguration memoryConfiguration)
+        public Horizon(Switch device, ContentManager contentManager, AccountManager accountManager, MemoryConfiguration memoryConfiguration)
         {
             KernelContext = new KernelContext(
                 device,
@@ -165,6 +167,7 @@ namespace Ryujinx.HLE.HOS
 
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
+            AccountManager = accountManager;
             ContentManager = contentManager;
             CaptureManager = new CaptureManager(device);
 

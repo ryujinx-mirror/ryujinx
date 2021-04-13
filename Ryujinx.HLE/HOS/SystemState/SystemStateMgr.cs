@@ -1,12 +1,9 @@
-using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System;
 
 namespace Ryujinx.HLE.HOS.SystemState
 {
     public class SystemStateMgr
     {
-        public static readonly UserId DefaultUserId = new UserId("00000000000000010000000000000000");
-
         internal static string[] LanguageCodes = new string[]
         {
             "ja",
@@ -46,15 +43,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public bool InstallContents { get; set; }
 
-        public AccountUtils Account { get; private set; }
-
         public SystemStateMgr()
         {
-            Account = new AccountUtils();
-
-            Account.AddUser(DefaultUserId, "Player");
-            Account.OpenUser(DefaultUserId);
-
             // TODO: Let user specify.
             DesiredKeyboardLayout = (long)KeyboardLayout.Default;
         }

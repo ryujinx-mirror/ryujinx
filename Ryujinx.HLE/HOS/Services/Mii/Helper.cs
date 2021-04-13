@@ -1,5 +1,4 @@
-﻿using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.Utilities;
+﻿using Ryujinx.HLE.Utilities;
 using System;
 using System.Buffers.Binary;
 
@@ -32,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         public static UInt128 GetDeviceId()
         {
             // FIXME: call set:sys GetMiiAuthorId
-            return SystemStateMgr.DefaultUserId.ToUInt128();
+            return new UInt128(0, 1);
         }
 
         public static ReadOnlySpan<byte> Ver3FacelineColorTable => new byte[] { 0, 1, 2, 3, 4, 5 };

@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 return ResultCode.InvalidArgument;
             }
 
-            if (context.Device.System.State.Account.TryGetUser(userId, out UserProfile profile))
+            if (context.Device.System.AccountManager.TryGetUser(userId, out UserProfile profile))
             {
                 profile.OnlinePlayState = AccountState.Open;
             }
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 return ResultCode.InvalidArgument;
             }
 
-            if (context.Device.System.State.Account.TryGetUser(userId, out UserProfile profile))
+            if (context.Device.System.AccountManager.TryGetUser(userId, out UserProfile profile))
             {
                 profile.OnlinePlayState = AccountState.Closed;
             }
