@@ -132,7 +132,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // Resolve(buffer<unknown<0x100>, 0x15>) -> buffer<unknown<0x100>, 0x16>
         public ResultCode Resolve(ServiceCtx context)
         {
-            (long outputPosition, long outputSize) = context.Request.GetBufferType0x22();
+            long outputPosition = context.Request.ReceiveBuff[0].Position;
+            long outputSize     = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
 
@@ -147,7 +148,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // ResolveEx(buffer<unknown<0x100>, 0x15>) -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode ResolveEx(ServiceCtx context)
         {
-            (long outputPosition, long outputSize) = context.Request.GetBufferType0x22();
+            long outputPosition = context.Request.ReceiveBuff[0].Position;
+            long outputSize     = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
 

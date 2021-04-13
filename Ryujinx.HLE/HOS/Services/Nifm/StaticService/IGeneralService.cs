@@ -2,8 +2,11 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Nifm.StaticService.GeneralService;
 using Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types;
+using Ryujinx.HLE.Utilities;
 using System;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 {
@@ -51,6 +54,38 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
+        [Command(5)]
+        // GetCurrentNetworkProfile() -> buffer<nn::nifm::detail::sf::NetworkProfileData, 0x1a, 0x17c>
+        public ResultCode GetCurrentNetworkProfile(ServiceCtx context)
+        {
+            long networkProfileDataPosition = context.Request.RecvListBuff[0].Position;
+
+            (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
+
+            if (interfaceProperties == null || unicastAddress == null)
+            {
+                return ResultCode.NoInternetConnection;
+            }
+
+            Logger.Info?.Print(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
+
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Unsafe.SizeOf<NetworkProfileData>());
+
+            NetworkProfileData networkProfile = new NetworkProfileData
+            {
+                Uuid = new UInt128(Guid.NewGuid().ToByteArray())
+            };
+
+            networkProfile.IpSettingData.IpAddressSetting = new IpAddressSetting(interfaceProperties, unicastAddress);
+            networkProfile.IpSettingData.DnsSetting       = new DnsSetting(interfaceProperties);
+
+            Encoding.ASCII.GetBytes("RyujinxNetwork").CopyTo(networkProfile.Name.ToSpan());
+
+            context.Memory.Write((ulong)networkProfileDataPosition, networkProfile);
+
+            return ResultCode.Success;
+        }
+
         [Command(12)]
         // GetCurrentIpAddress() -> nn::nifm::IpV4Address
         public ResultCode GetCurrentIpAddress(ServiceCtx context)
@@ -75,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
 
-            if (interfaceProperties == null)
+            if (interfaceProperties == null || unicastAddress == null)
             {
                 return ResultCode.NoInternetConnection;
             }
@@ -138,11 +173,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             foreach (NetworkInterface adapter in interfaces)
             {
                 // Ignore loopback and non IPv4 capable interface.
-                if (adapter.NetworkInterfaceType != NetworkInterfaceType.Loopback && adapter.Supports(NetworkInterfaceComponent.IPv4))
+                if (targetProperties == null && adapter.NetworkInterfaceType != NetworkInterfaceType.Loopback && adapter.Supports(NetworkInterfaceComponent.IPv4))
                 {
                     IPInterfaceProperties properties = adapter.GetIPProperties();
 
-                    if (properties.GatewayAddresses.Count > 0 && properties.DnsAddresses.Count > 1)
+                    if (properties.GatewayAddresses.Count > 0 && properties.DnsAddresses.Count > 0)
                     {
                         foreach (UnicastIPAddressInformation info in properties.UnicastAddresses)
                         {
@@ -155,12 +190,6 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                                 break;
                             }
                         }
-                    }
-
-                    // Found the target interface, stop here.
-                    if (targetProperties != null)
-                    {
-                        break;
                     }
                 }
             }

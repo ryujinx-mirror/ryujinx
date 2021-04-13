@@ -73,30 +73,19 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
                     return ResultCode.SettingsNotLoaded;
                 }
 
-                switch (address)
+                resolvedAddress = address switch
                 {
-                    case "e97b8a9d672e4ce4845ec6947cd66ef6-sb-api.accounts.nintendo.com": // dp1 environment
-                        resolvedAddress = "e97b8a9d672e4ce4845ec6947cd66ef6-sb.baas.nintendo.com";
-                        break;
-                    case "api.accounts.nintendo.com": // dp1 environment
-                        resolvedAddress = "e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com";
-                        break;
-                    case "e97b8a9d672e4ce4845ec6947cd66ef6-sb.accounts.nintendo.com": // lp1 environment
-                        resolvedAddress = "e97b8a9d672e4ce4845ec6947cd66ef6-sb.baas.nintendo.com";
-                        break;
-                    case "accounts.nintendo.com": // lp1 environment
-                        resolvedAddress = "e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com";
-                        break;
+                    "e97b8a9d672e4ce4845ec6947cd66ef6-sb-api.accounts.nintendo.com" => "e97b8a9d672e4ce4845ec6947cd66ef6-sb.baas.nintendo.com", // dp1 environment
+                    "api.accounts.nintendo.com"                                     => "e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com",    // dp1 environment
+                    "e97b8a9d672e4ce4845ec6947cd66ef6-sb.accounts.nintendo.com"     => "e97b8a9d672e4ce4845ec6947cd66ef6-sb.baas.nintendo.com", // lp1 environment
+                    "accounts.nintendo.com"                                         => "e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com",    // lp1 environment
                     /*
-                    // TODO: Determine fields of the struct.
-                    case "": // + 0xEB8 || + 0x2BE8
-                        resolvedAddress = ""; // + 0xEB8 + 0x300 || + 0x2BE8 + 0x300
-                        break;
+                        // TODO: Determine fields of the struct.
+                        this + 0xEB8  => this + 0xEB8 + 0x300
+                        this + 0x2BE8 => this + 0x2BE8 + 0x300
                     */
-                    default:
-                        resolvedAddress = address;
-                        break;
-                }
+                    _ => address,
+                };
             }
             else
             {
@@ -108,7 +97,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
 
         public ResultCode ResolveEx(ServiceCtx context, out ResultCode resultCode, out string resolvedAddress)
         {
-            (long inputPosition, long inputSize)  = context.Request.GetBufferType0x21();
+            long inputPosition = context.Request.SendBuff[0].Position;
+            long inputSize     = context.Request.SendBuff[0].Size;
 
             byte[] addressBuffer = new byte[inputSize];
 
