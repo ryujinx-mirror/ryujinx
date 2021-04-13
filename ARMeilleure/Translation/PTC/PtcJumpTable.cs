@@ -17,7 +17,7 @@ namespace ARMeilleure.Translation.PTC
         {
             public int EntryIndex;
             public long GuestAddress;
-            public TAddress HostAddress; // int
+            public TAddress HostAddress;
 
             public TableEntry(int entryIndex, long guestAddress, TAddress hostAddress)
             {

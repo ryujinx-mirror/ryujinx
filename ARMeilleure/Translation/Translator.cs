@@ -103,6 +103,7 @@ namespace ARMeilleure.Translation
 
                 if (Ptc.State == PtcState.Enabled)
                 {
+                    Debug.Assert(_funcs.Count == 0);
                     Ptc.LoadTranslations(_funcs, _memory, _jumpTable);
                     Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable);
                 }
