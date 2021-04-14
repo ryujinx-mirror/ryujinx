@@ -6,6 +6,8 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 {
     class ISslContext : IpcService
     {
+        private uint _connectionCount;
+
         private ulong _serverCertificateId;
         private ulong _clientCertificateId;
 
@@ -16,6 +18,19 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         public ResultCode CreateConnection(ServiceCtx context)
         {
             MakeObject(context, new ISslConnection());
+
+            _connectionCount++;
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(3)]
+        // GetConnectionCount() -> u32 count
+        public ResultCode GetConnectionCount(ServiceCtx context)
+        {
+            context.ResponseData.Write(_connectionCount);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceSsl, new { _connectionCount });
 
             return ResultCode.Success;
         }

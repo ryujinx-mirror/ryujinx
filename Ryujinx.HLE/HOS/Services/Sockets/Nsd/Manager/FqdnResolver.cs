@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
 
             context.Memory.Read((ulong)inputPosition, addressBuffer);
 
-            string address = Encoding.UTF8.GetString(addressBuffer);
+            string address = Encoding.UTF8.GetString(addressBuffer).TrimEnd('\0');
 
             resultCode = Resolve(context, address, out resolvedAddress);
 

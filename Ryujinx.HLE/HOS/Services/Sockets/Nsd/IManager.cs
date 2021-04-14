@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager;
@@ -135,9 +136,16 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             long outputPosition = context.Request.ReceiveBuff[0].Position;
             long outputSize     = context.Request.ReceiveBuff[0].Size;
 
-            ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
+            ResultCode result = _fqdnResolver.ResolveEx(context, out _, out string resolvedAddress);
 
-            byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress + '\0');
+            if (resolvedAddress.Length > outputSize)
+            {
+                return ResultCode.InvalidArgument;
+            }
+
+            byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress);
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
             context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
 
@@ -153,7 +161,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
 
-            byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress + '\0');
+            if (resolvedAddress.Length > outputSize)
+            {
+                return ResultCode.InvalidArgument;
+            }
+
+            byte[] resolvedAddressBuffer = Encoding.UTF8.GetBytes(resolvedAddress);
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
             context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
 

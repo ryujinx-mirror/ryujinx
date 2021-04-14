@@ -78,7 +78,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             long inputDataPosition = context.Request.SendBuff[0].Position;
             long inputDataSize     = context.Request.SendBuff[0].Size;
 
-            uint transferredSize = 0;
+            byte[] data = new byte[inputDataSize];
+
+            context.Memory.Read((ulong)inputDataPosition, data);
+
+            // NOTE: Tell the guest everything is transferred.
+            uint transferredSize = (uint)inputDataSize;
 
             context.ResponseData.Write(transferredSize);
 
