@@ -137,6 +137,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             // Should not happen, but if someone messed with the cache it's better to catch it.
                             invalidEntries?.Add(key);
 
+                            _shaderCount = ++programIndex;
+
                             continue;
                         }
 
