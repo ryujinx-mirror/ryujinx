@@ -6,7 +6,7 @@ namespace Ryujinx.Common.GraphicsDriver.NVAPI
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public unsafe struct NvapiUnicodeString
     {
-        public fixed byte Data[4096];
+        private fixed byte _data[4096];
 
         public NvapiUnicodeString(string text)
         {
@@ -15,7 +15,7 @@ namespace Ryujinx.Common.GraphicsDriver.NVAPI
 
         public string Get()
         {
-            fixed (byte* data = Data)
+            fixed (byte* data = _data)
             {
                 string text = Encoding.Unicode.GetString(data, 4096);
 
@@ -33,7 +33,7 @@ namespace Ryujinx.Common.GraphicsDriver.NVAPI
         {
             text += '\0';
             fixed (char* textPtr = text)
-            fixed (byte* data = Data)
+            fixed (byte* data = _data)
             {
                 int written = Encoding.Unicode.GetBytes(textPtr, text.Length, data, 4096);
             }
