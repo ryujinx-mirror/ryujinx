@@ -24,6 +24,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 {
     class IApplicationFunctions : IpcService
     {
+        private ulong _defaultSaveDataSize        = 200000000;
+        private ulong _defaultJournalSaveDataSize = 200000000;
+
         private KEvent _gpuErrorDetectedSystemEvent;
         private KEvent _friendInvitationStorageChannelEvent;
         private KEvent _notificationStorageChannelEvent;
@@ -167,6 +170,28 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
+        [CommandHipc(25)] // 3.0.0+
+        // ExtendSaveData(u8 save_data_type, nn::account::Uid, u64 save_size, u64 journal_size) -> u64 result_code
+        public ResultCode ExtendSaveData(ServiceCtx context)
+        {
+            SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
+            Uid          userId       = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
+            ulong        saveDataSize = context.RequestData.ReadUInt64();
+            ulong        journalSize  = context.RequestData.ReadUInt64();
+
+            // NOTE: Service calls nn::fs::ExtendApplicationSaveData.
+            //       Since LibHac currently doesn't support this method, we can stub it for now.
+
+            _defaultSaveDataSize        = saveDataSize;
+            _defaultJournalSaveDataSize = journalSize;
+
+            context.ResponseData.Write((uint)ResultCode.Success);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { saveDataType, userId, saveDataSize, journalSize });
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(26)] // 3.0.0+
         // GetSaveDataSize(u8 save_data_type, nn::account::Uid) -> (u64 save_size, u64 journal_size)
         public ResultCode GetSaveDataSize(ServiceCtx context)
@@ -178,8 +203,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             //       Then it calls nn::fs::GetSaveDataAvailableSize and nn::fs::GetSaveDataJournalSize to get the sizes.
             //       Since LibHac currently doesn't support the 2 last methods, we can hardcode the values to 200mb.
 
-            context.ResponseData.Write((long)200000000);
-            context.ResponseData.Write((long)200000000);
+            context.ResponseData.Write(_defaultSaveDataSize);
+            context.ResponseData.Write(_defaultJournalSaveDataSize);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { saveDataType, userId });
 
