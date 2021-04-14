@@ -1,22 +1,24 @@
 ﻿using ARMeilleure.Translation;
 using ARMeilleure.Translation.PTC;
 using Gdk;
-using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.Modules.Motion;
+using Ryujinx.Input;
+using Ryujinx.Input.HLE;
 using Ryujinx.Ui.Widgets;
+using SPB.Graphics;
+using SPB.Graphics.OpenGL;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+
+using Key = Ryujinx.Input.Key;
 
 namespace Ryujinx.Ui
 {
@@ -24,16 +26,12 @@ namespace Ryujinx.Ui
 
     public class GlRenderer : GLWidget
     {
-        static GlRenderer()
-        {
-            OpenTK.Graphics.GraphicsContext.ShareContexts = true;
-        }
-
         private const int SwitchPanelWidth  = 1280;
         private const int SwitchPanelHeight = 720;
         private const int TargetFps         = 60;
 
         public ManualResetEvent WaitEvent { get; set; }
+        public NpadManager NpadManager { get; }
 
         public static event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
@@ -58,9 +56,7 @@ namespace Ryujinx.Ui
 
         private Renderer _renderer;
 
-        private HotkeyButtons _prevHotkeyButtons;
-
-        private Client _dsuClient;
+        private KeyboardHotkeyState _prevHotkeyState;
 
         private GraphicsDebugLevel _glLogLevel;
 
@@ -71,14 +67,22 @@ namespace Ryujinx.Ui
         private static readonly Cursor _invisibleCursor = new Cursor(Display.Default, CursorType.BlankCursor);
         private long _lastCursorMoveTime;
         private bool _hideCursorOnIdle;
+        private InputManager _inputManager;
+        private IKeyboard _keyboardInterface;
 
-        public GlRenderer(Switch device, GraphicsDebugLevel glLogLevel)
+        public GlRenderer(Switch device, InputManager inputManager, GraphicsDebugLevel glLogLevel)
             : base (GetGraphicsMode(),
             3, 3,
             glLogLevel == GraphicsDebugLevel.None
-            ? GraphicsContextFlags.ForwardCompatible
-            : GraphicsContextFlags.ForwardCompatible | GraphicsContextFlags.Debug)
+            ? OpenGLContextFlags.Compat
+            : OpenGLContextFlags.Compat | OpenGLContextFlags.Debug)
         {
+            _inputManager = inputManager;
+            NpadManager = _inputManager.CreateNpadManager();
+            _keyboardInterface = (IKeyboard)_inputManager.KeyboardDriver.GetGamepad("0");
+
+            NpadManager.ReloadConfiguration(ConfigurationState.Instance.Hid.InputConfig.Value.ToList());
+
             WaitEvent = new ManualResetEvent(false);
 
             _device = device;
@@ -100,8 +104,6 @@ namespace Ryujinx.Ui
                           | EventMask.KeyReleaseMask));
 
             Shown += Renderer_Shown;
-
-            _dsuClient = new Client();
 
             _glLogLevel = glLogLevel;
 
@@ -130,15 +132,15 @@ namespace Ryujinx.Ui
             });
         }
 
-        private static GraphicsMode GetGraphicsMode()
+        private static FramebufferFormat GetGraphicsMode()
         {
-            return Environment.OSVersion.Platform == PlatformID.Unix ? new GraphicsMode(new ColorFormat(24)) : new GraphicsMode(new ColorFormat());
+            return Environment.OSVersion.Platform == PlatformID.Unix ? new FramebufferFormat(new ColorFormat(8, 8, 8, 0), 16, 0, ColorFormat.Zero, 0, 2, false) : FramebufferFormat.Default;
         }
 
         private void GLRenderer_ShuttingDown(object sender, EventArgs args)
         {
             _device.DisposeGpu();
-            _dsuClient?.Dispose();
+            NpadManager.Dispose();
         }
 
         private void Parent_FocusOutEvent(object o, Gtk.FocusOutEventArgs args)
@@ -155,7 +157,7 @@ namespace Ryujinx.Ui
         {
             ConfigurationState.Instance.HideCursorOnIdle.Event -= HideCursorStateChanged;
 
-            _dsuClient?.Dispose();
+            NpadManager.Dispose();
             Dispose();
         }
 
@@ -164,13 +166,13 @@ namespace Ryujinx.Ui
             _isFocused = this.ParentWindow.State.HasFlag(Gdk.WindowState.Focused);
         }
 
-        public void HandleScreenState(KeyboardState keyboard)
+        public void HandleScreenState(KeyboardStateSnapshot keyboard)
         {
-            bool toggleFullscreen =  keyboard.IsKeyDown(OpenTK.Input.Key.F11)
-                                || ((keyboard.IsKeyDown(OpenTK.Input.Key.AltLeft)
-                                ||   keyboard.IsKeyDown(OpenTK.Input.Key.AltRight))
-                                &&   keyboard.IsKeyDown(OpenTK.Input.Key.Enter))
-                                ||   keyboard.IsKeyDown(OpenTK.Input.Key.Escape);
+            bool toggleFullscreen =  keyboard.IsPressed(Key.F11)
+                                || ((keyboard.IsPressed(Key.AltLeft)
+                                ||   keyboard.IsPressed(Key.AltRight))
+                                &&   keyboard.IsPressed(Key.Enter))
+                                ||   keyboard.IsPressed(Key.Escape);
 
             bool fullScreenToggled = ParentWindow.State.HasFlag(Gdk.WindowState.Fullscreen);
 
@@ -185,7 +187,7 @@ namespace Ryujinx.Ui
                     }
                     else
                     {
-                        if (keyboard.IsKeyDown(OpenTK.Input.Key.Escape))
+                        if (keyboard.IsPressed(Key.Escape))
                         {
                             if (!ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
                             {
@@ -203,7 +205,7 @@ namespace Ryujinx.Ui
 
             _toggleFullscreen = toggleFullscreen;
 
-            bool toggleDockedMode = keyboard.IsKeyDown(OpenTK.Input.Key.F9);
+            bool toggleDockedMode = keyboard.IsPressed(Key.F9);
 
             if (toggleDockedMode != _toggleDockedMode)
             {
@@ -225,8 +227,8 @@ namespace Ryujinx.Ui
 
         private void GLRenderer_Initialized(object sender, EventArgs e)
         {
-            // Release the GL exclusivity that OpenTK gave us as we aren't going to use it in GTK Thread.
-            GraphicsContext.MakeCurrent(null);
+            // Release the GL exclusivity that SPB gave us as we aren't going to use it in GTK Thread.
+            OpenGLContext.MakeCurrent(null);
 
             WaitEvent.Set();
         }
@@ -244,8 +246,6 @@ namespace Ryujinx.Ui
 
         public void Start()
         {
-            IsRenderHandler = true;
-
             _chrono.Restart();
 
             _isActive = true;
@@ -389,7 +389,7 @@ namespace Ryujinx.Ui
 
         public void Exit()
         {
-            _dsuClient?.Dispose();
+            NpadManager?.Dispose();
 
             if (_isStopped)
             {
@@ -416,15 +416,17 @@ namespace Ryujinx.Ui
         public void Render()
         {
             // First take exclusivity on the OpenGL context.
-            _renderer.InitializeBackgroundContext(GraphicsContext);
+            _renderer.InitializeBackgroundContext(SPBOpenGLContext.CreateBackgroundContext(OpenGLContext));
+
             Gtk.Window parent = Toplevel as Gtk.Window;
             parent.Present();
-            GraphicsContext.MakeCurrent(WindowInfo);
+
+            OpenGLContext.MakeCurrent(NativeWindow);
 
             _device.Gpu.Renderer.Initialize(_glLogLevel);
 
             // Make sure the first frame is not transparent.
-            GL.ClearColor(OpenTK.Color.Black);
+            GL.ClearColor(0, 0, 0, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             SwapBuffers();
 
@@ -478,7 +480,7 @@ namespace Ryujinx.Ui
 
         public void SwapBuffers()
         {
-            OpenTK.Graphics.GraphicsContext.CurrentContext.SwapBuffers();
+            NativeWindow.SwapBuffers();
         }
 
         public void MainLoop()
@@ -510,13 +512,13 @@ namespace Ryujinx.Ui
             {
                 Gtk.Application.Invoke(delegate
                 {
-                    KeyboardState keyboard = OpenTK.Input.Keyboard.GetState();
+                    KeyboardStateSnapshot keyboard = _keyboardInterface.GetKeyboardStateSnapshot();
 
                     HandleScreenState(keyboard);
 
-                    if (keyboard.IsKeyDown(OpenTK.Input.Key.Delete))
+                    if (keyboard.IsPressed(Key.Delete))
                     {
-                        if (!ParentWindow.State.HasFlag(Gdk.WindowState.Fullscreen))
+                        if (!ParentWindow.State.HasFlag(WindowState.Fullscreen))
                         {
                             Ptc.Continue();
                         }
@@ -524,154 +526,19 @@ namespace Ryujinx.Ui
                 });
             }
 
-            List<GamepadInput> gamepadInputs = new List<GamepadInput>(NpadDevices.MaxControllers);
-            List<SixAxisInput> motionInputs  = new List<SixAxisInput>(NpadDevices.MaxControllers);
-
-            MotionDevice motionDevice = new MotionDevice(_dsuClient);
-
-            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
-            {
-                ControllerKeys   currentButton = 0;
-                JoystickPosition leftJoystick  = new JoystickPosition();
-                JoystickPosition rightJoystick = new JoystickPosition();
-                KeyboardInput?   hidKeyboard   = null;
-
-                int leftJoystickDx  = 0;
-                int leftJoystickDy  = 0;
-                int rightJoystickDx = 0;
-                int rightJoystickDy = 0;
-
-                if (inputConfig.EnableMotion)
-                {
-                    motionDevice.RegisterController(inputConfig.PlayerIndex);
-                }
-
-                if (inputConfig is KeyboardConfig keyboardConfig)
-                {
-                    if (_isFocused)
-                    {
-                        // Keyboard Input
-                        KeyboardController keyboardController = new KeyboardController(keyboardConfig);
-
-                        currentButton = keyboardController.GetButtons();
-
-                        (leftJoystickDx,  leftJoystickDy)  = keyboardController.GetLeftStick();
-                        (rightJoystickDx, rightJoystickDy) = keyboardController.GetRightStick();
-
-                        leftJoystick = new JoystickPosition
-                        {
-                            Dx = leftJoystickDx,
-                            Dy = leftJoystickDy
-                        };
-
-                        rightJoystick = new JoystickPosition
-                        {
-                            Dx = rightJoystickDx,
-                            Dy = rightJoystickDy
-                        };
-
-                        if (ConfigurationState.Instance.Hid.EnableKeyboard)
-                        {
-                            hidKeyboard = keyboardController.GetKeysDown();
-                        }
-
-                        if (!hidKeyboard.HasValue)
-                        {
-                            hidKeyboard = new KeyboardInput
-                            {
-                                Modifier = 0,
-                                Keys     = new int[0x8]
-                            };
-                        }
-
-                        if (ConfigurationState.Instance.Hid.EnableKeyboard)
-                        {
-                            _device.Hid.Keyboard.Update(hidKeyboard.Value);
-                        }
-                    }
-                }
-                else if (inputConfig is Common.Configuration.Hid.ControllerConfig controllerConfig)
-                {
-                    // Controller Input
-                    JoystickController joystickController = new JoystickController(controllerConfig);
-
-                    currentButton |= joystickController.GetButtons();
-
-                    (leftJoystickDx,  leftJoystickDy)  = joystickController.GetLeftStick();
-                    (rightJoystickDx, rightJoystickDy) = joystickController.GetRightStick();
-
-                    leftJoystick = new JoystickPosition
-                    {
-                        Dx = controllerConfig.LeftJoycon.InvertStickX ? -leftJoystickDx : leftJoystickDx,
-                        Dy = controllerConfig.LeftJoycon.InvertStickY ? -leftJoystickDy : leftJoystickDy
-                    };
-
-                    rightJoystick = new JoystickPosition
-                    {
-                        Dx = controllerConfig.RightJoycon.InvertStickX ? -rightJoystickDx : rightJoystickDx,
-                        Dy = controllerConfig.RightJoycon.InvertStickY ? -rightJoystickDy : rightJoystickDy
-                    };
-                }
-
-                currentButton |= _device.Hid.UpdateStickButtons(leftJoystick, rightJoystick);
-
-                motionDevice.Poll(inputConfig, inputConfig.Slot);
-
-                SixAxisInput sixAxisInput = new SixAxisInput()
-                {
-                    PlayerId      = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
-                    Accelerometer = motionDevice.Accelerometer,
-                    Gyroscope     = motionDevice.Gyroscope,
-                    Rotation      = motionDevice.Rotation,
-                    Orientation   = motionDevice.Orientation
-                };
-
-                motionInputs.Add(sixAxisInput);
-
-                gamepadInputs.Add(new GamepadInput
-                {
-                    PlayerId = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
-                    Buttons  = currentButton,
-                    LStick   = leftJoystick,
-                    RStick   = rightJoystick
-                });
-
-                if (inputConfig.ControllerType == Common.Configuration.Hid.ControllerType.JoyconPair)
-                {
-                    if (!inputConfig.MirrorInput)
-                    {
-                        motionDevice.Poll(inputConfig, inputConfig.AltSlot);
-
-                        sixAxisInput = new SixAxisInput()
-                        {
-                            PlayerId      = (HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex,
-                            Accelerometer = motionDevice.Accelerometer,
-                            Gyroscope     = motionDevice.Gyroscope,
-                            Rotation      = motionDevice.Rotation,
-                            Orientation   = motionDevice.Orientation
-                        };
-                    }
-
-                    motionInputs.Add(sixAxisInput);
-                }
-            }
-
-            _device.Hid.Npads.Update(gamepadInputs);
-            _device.Hid.Npads.UpdateSixAxis(motionInputs);
-            _device.TamperMachine.UpdateInput(gamepadInputs);
+            NpadManager.Update(_device.Hid, _device.TamperMachine);
 
             if(_isFocused)
             {
-                // Hotkeys
-                HotkeyButtons currentHotkeyButtons = KeyboardController.GetHotkeyButtons(OpenTK.Input.Keyboard.GetState());
+                KeyboardHotkeyState currentHotkeyState = GetHotkeyState();
 
-                if (currentHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync) &&
-                    !_prevHotkeyButtons.HasFlag(HotkeyButtons.ToggleVSync))
+                if (currentHotkeyState.HasFlag(KeyboardHotkeyState.ToggleVSync) &&
+                    !_prevHotkeyState.HasFlag(KeyboardHotkeyState.ToggleVSync))
                 {
                     _device.EnableDeviceVsync = !_device.EnableDeviceVsync;
                 }
 
-                _prevHotkeyButtons = currentHotkeyButtons;
+                _prevHotkeyState = currentHotkeyState;
             }
 
             //Touchscreen
@@ -738,6 +605,25 @@ namespace Ryujinx.Ui
             _device.Hid.DebugPad.Update();
 
             return true;
+        }
+
+        [Flags]
+        private enum KeyboardHotkeyState
+        {
+            None,
+            ToggleVSync
+        }
+
+        private KeyboardHotkeyState GetHotkeyState()
+        {
+            KeyboardHotkeyState state = KeyboardHotkeyState.None;
+
+            if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ToggleVsync))
+            {
+                state |= KeyboardHotkeyState.ToggleVSync;
+            }
+
+            return state;
         }
     }
 }

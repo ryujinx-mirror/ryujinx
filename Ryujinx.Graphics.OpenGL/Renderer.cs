@@ -149,7 +149,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void BackgroundContextAction(Action action)
         {
-            if (GraphicsContext.CurrentContext != null)
+            if (IOpenGLContext.HasContext())
             {
                 action(); // We have a context already - use that (assuming it is the main one).
             }
@@ -159,7 +159,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void InitializeBackgroundContext(IGraphicsContext baseContext)
+        public void InitializeBackgroundContext(IOpenGLContext baseContext)
         {
             _window.InitializeBackgroundContext(baseContext);
         }

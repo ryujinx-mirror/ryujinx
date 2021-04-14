@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 23;
+        public const int CurrentVersion = 24;
 
         public int Version { get; set; }
 
@@ -224,14 +224,23 @@ namespace Ryujinx.Configuration
         public KeyboardHotkeys Hotkeys { get; set; }
 
         /// <summary>
-        /// Keyboard control bindings
+        /// Legacy keyboard control bindings
         /// </summary>
-        public List<KeyboardConfig> KeyboardConfig { get; set; }
+        /// <remarks>Kept for file format compatibility (to avoid possible failure when parsing configuration on old versions)</remarks>
+        /// TODO: Remove this when those older versions aren't in use anymore.
+        public List<object> KeyboardConfig { get; set; }
 
         /// <summary>
-        /// Controller control bindings
+        /// Legacy controller control bindings
         /// </summary>
-        public List<ControllerConfig> ControllerConfig { get; set; }
+        /// <remarks>Kept for file format compatibility (to avoid possible failure when parsing configuration on old versions)</remarks>
+        /// TODO: Remove this when those older versions aren't in use anymore.
+        public List<object> ControllerConfig { get; set; }
+
+        /// <summary>
+        /// Input configurations
+        /// </summary>
+        public List<InputConfig> InputConfig { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk

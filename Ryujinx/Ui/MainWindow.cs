@@ -17,6 +17,9 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.Input.GTK3;
+using Ryujinx.Input.HLE;
+using Ryujinx.Input.SDL2;
 using Ryujinx.Modules;
 using Ryujinx.Ui.App;
 using Ryujinx.Ui.Applet;
@@ -65,6 +68,7 @@ namespace Ryujinx.Ui
         private bool   _lastScannedAmiiboShowAll = false;
 
         public GlRenderer GlRendererWidget;
+        public InputManager InputManager;
 
 #pragma warning disable CS0169, CS0649, IDE0044
 
@@ -223,6 +227,8 @@ namespace Ryujinx.Ui
             };
 
             Task.Run(RefreshFirmwareLabel);
+
+            InputManager = new InputManager(new GTK3KeyboardDriver(this), new SDL2GamepadDriver());
         }
 
         private void WindowStateEvent_Changed(object o, WindowStateEventArgs args)
@@ -293,6 +299,11 @@ namespace Ryujinx.Ui
                         break;
                 }
             }
+        }
+
+        protected override void OnDestroyed()
+        {
+            InputManager.Dispose();
         }
 
         private void InitializeSwitchInstance()
@@ -636,7 +647,7 @@ namespace Ryujinx.Ui
 
             DisplaySleep.Prevent();
 
-            GlRendererWidget = new GlRenderer(_emulationContext, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
+            GlRendererWidget = new GlRenderer(_emulationContext, InputManager, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
 
             Application.Invoke(delegate
             {

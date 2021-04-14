@@ -1,6 +1,5 @@
 using ARMeilleure.Translation.PTC;
 using Gtk;
-using OpenTK;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
@@ -12,6 +11,7 @@ using Ryujinx.Ui.Widgets;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Ryujinx
@@ -23,6 +23,9 @@ namespace Ryujinx
         public static string Version { get; private set; }
 
         public static string ConfigurationPath { get; set; }
+
+        [DllImport("libX11")]
+        private extern static int XInitThreads();
 
         static void Main(string[] args)
         { 
@@ -63,14 +66,16 @@ namespace Ryujinx
             // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);
 
-            Toolkit.Init(new ToolkitOptions
-            {
-                Backend = PlatformBackend.PreferNative
-            });
-
             Version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
             Console.Title = $"Ryujinx Console {Version}";
+
+            // NOTE: GTK3 doesn't init X11 in a multi threaded way.
+            // This ends up causing race condition and abort of XCB when a context is created by SPB (even if SPB do call XInitThreads).
+            if (OperatingSystem.IsLinux())
+            {
+                XInitThreads();
+            }
 
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
             Environment.SetEnvironmentVariable("Path", $"{Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin")};{systemPath}");

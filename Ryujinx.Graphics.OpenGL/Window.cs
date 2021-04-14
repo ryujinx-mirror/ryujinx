@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             // Remove Alpha channel
             GL.ColorMask(drawFramebuffer, false, false, false, true);
-            GL.ClearBuffer(ClearBuffer.Color, 0, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
+            GL.ClearBuffer(ClearBuffer.Color, drawFramebuffer, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
             GL.ColorMask(drawFramebuffer,
                 oldFramebufferColorWritemask[0],
                 oldFramebufferColorWritemask[1],
@@ -158,7 +158,7 @@ namespace Ryujinx.Graphics.OpenGL
             return handle;
         }
 
-        public void InitializeBackgroundContext(IGraphicsContext baseContext)
+        public void InitializeBackgroundContext(IOpenGLContext baseContext)
         {
             BackgroundContext = new BackgroundContextWorker(baseContext);
         }

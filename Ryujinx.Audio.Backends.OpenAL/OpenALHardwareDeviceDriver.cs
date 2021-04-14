@@ -1,9 +1,10 @@
-﻿using OpenTK.Audio;
+﻿using OpenTK.Audio.OpenAL;
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
 
@@ -12,8 +13,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
     public class OpenALHardwareDeviceDriver : IHardwareDeviceDriver
     {
         private object _lock = new object();
-
-        private AudioContext _context;
+        private ALDevice _device;
+        private ALContext _context;
         private ManualResetEvent _updateRequiredEvent;
         private List<OpenALHardwareDeviceSession> _sessions;
         private bool _stillRunning;
@@ -21,7 +22,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
 
         public OpenALHardwareDeviceDriver()
         {
-            _context = new AudioContext();
+            _device = ALC.OpenDevice("");
+            _context = ALC.CreateContext(_device, new ALContextAttributes());
             _updateRequiredEvent = new ManualResetEvent(false);
             _sessions = new List<OpenALHardwareDeviceSession>();
 
@@ -40,7 +42,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
             {
                 try
                 {
-                    return AudioContext.AvailableDevices.Count > 0;
+                    return ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier).Any();
                 }
                 catch
                 {
@@ -95,6 +97,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
 
         private void Update()
         {
+            ALC.MakeContextCurrent(_context);
+
             while (_stillRunning)
             {
                 bool updateRequired = false;
@@ -143,7 +147,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
                     }
                 }
 
-                _context.Dispose();
+                ALC.DestroyContext(_context);
+                ALC.CloseDevice(_device);
             }
         }
 

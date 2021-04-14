@@ -1,11 +1,20 @@
-namespace Ryujinx.Common.Configuration.Hid
+﻿namespace Ryujinx.Common.Configuration.Hid
 {
     public class InputConfig
     {
         /// <summary>
-        /// Controller Device Index
+        /// The current version of the input file format
         /// </summary>
-        public int Index { get; set; }
+        public const int CurrentVersion = 1;
+
+        public int Version { get; set; }
+
+        public InputBackendType Backend { get; set; }
+
+        /// <summary>
+        /// Controller id
+        /// </summary>
+        public string Id { get; set; }
 
         /// <summary>
         ///  Controller's Type
@@ -16,45 +25,5 @@ namespace Ryujinx.Common.Configuration.Hid
         ///  Player's Index for the controller
         /// </summary>
         public PlayerIndex PlayerIndex { get; set; }
-
-        /// <summary>
-        /// Motion Controller Slot
-        /// </summary>
-        public int Slot { get; set; }
-        
-        /// <summary>
-        /// Motion Controller Alternative Slot, for RightJoyCon in Pair mode
-        /// </summary>
-        public int AltSlot { get; set; }
-
-        /// <summary>
-        /// Mirror motion input in Pair mode
-        /// </summary>
-        public bool MirrorInput { get; set; }
-
-        /// <summary>
-        /// Host address of the DSU Server
-        /// </summary>
-        public string DsuServerHost { get; set; }
-
-        /// <summary>
-        /// Port of the DSU Server
-        /// </summary>
-        public int DsuServerPort { get; set; }
-
-        /// <summary>
-        /// Gyro Sensitivity
-        /// </summary>
-        public int Sensitivity { get; set; }
-
-        /// <summary>
-        /// Gyro Deadzone
-        /// </summary>
-        public double GyroDeadzone { get; set; }
-        
-        /// <summary>
-        /// Enable Motion Controls
-        /// </summary>
-        public bool EnableMotion { get; set; }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid.Controller.Motion;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -63,6 +65,8 @@ namespace Ryujinx.Common.Utilities
             };
 
             options.Converters.Add(new JsonStringEnumConverter());
+            options.Converters.Add(new JsonInputConfigConverter());
+            options.Converters.Add(new JsonMotionConfigControllerConverter());
 
             return options;
         }
