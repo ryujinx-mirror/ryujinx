@@ -330,6 +330,11 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
+        public void ReturnFocus()
+        {
+            AppletState.SetFocus(true);
+        }
+
         public void SimulateWakeUpMessage()
         {
             AppletState.Messages.Enqueue(MessageInfo.Resume);

@@ -30,6 +30,8 @@ namespace Ryujinx.HLE.HOS.Applets
 
             AppletStateChanged?.Invoke(this, null);
 
+            _system.ReturnFocus();
+
             return ResultCode.Success;
         }
 
