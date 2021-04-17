@@ -208,14 +208,14 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Intel)
                     {
                         GL.CopyImageSubData(
-                            src.StorageHandle,
-                            srcInfo.Target.ConvertToImageTarget(),
+                            src.Storage.Handle,
+                            src.Storage.Info.Target.ConvertToImageTarget(),
                             src.FirstLevel + srcLevel + level,
                             0,
                             0,
                             src.FirstLayer + srcLayer,
-                            dst.StorageHandle,
-                            dstInfo.Target.ConvertToImageTarget(),
+                            dst.Storage.Handle,
+                            dst.Storage.Info.Target.ConvertToImageTarget(),
                             dst.FirstLevel + dstLevel + level,
                             0,
                             0,

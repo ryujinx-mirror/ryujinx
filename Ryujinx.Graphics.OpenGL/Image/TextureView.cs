@@ -10,9 +10,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private readonly TextureStorage _parent;
 
-        public int StorageHandle => _parent.Handle;
-
         private TextureView _incompatibleFormatView;
+
+        public ITextureInfo Storage => _parent;
 
         public int FirstLayer { get; private set; }
         public int FirstLevel { get; private set; }

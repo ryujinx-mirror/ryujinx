@@ -4,10 +4,10 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
-    class TextureStorage : ITextureInfo 
+    class TextureStorage : ITextureInfo
     {
+        public ITextureInfo Storage => this;
         public int Handle { get; private set; }
-        public int StorageHandle => Handle;
         public float ScaleFactor { get; private set; }
 
         public TextureCreateInfo Info { get; }
