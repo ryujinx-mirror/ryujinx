@@ -1,3 +1,4 @@
+using ARMeilleure.Common;
 using ARMeilleure.Decoders;
 using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
@@ -41,18 +42,26 @@ namespace ARMeilleure.Translation
         public IMemoryManager Memory { get; }
 
         public JumpTable JumpTable { get; }
+        public EntryTable<uint> CountTable { get; }
 
         public ulong EntryAddress { get; }
         public bool HighCq { get; }
         public Aarch32Mode Mode { get; }
 
-        public ArmEmitterContext(IMemoryManager memory, JumpTable jumpTable, ulong entryAddress, bool highCq, Aarch32Mode mode)
+        public ArmEmitterContext(
+            IMemoryManager memory,
+            JumpTable jumpTable,
+            EntryTable<uint> countTable,
+            ulong entryAddress,
+            bool highCq,
+            Aarch32Mode mode)
         {
-            Memory       = memory;
-            JumpTable    = jumpTable;
+            Memory = memory;
+            JumpTable = jumpTable;
+            CountTable = countTable;
             EntryAddress = entryAddress;
-            HighCq       = highCq;
-            Mode         = mode;
+            HighCq = highCq;
+            Mode = mode;
 
             _labels = new Dictionary<ulong, Operand>();
         }

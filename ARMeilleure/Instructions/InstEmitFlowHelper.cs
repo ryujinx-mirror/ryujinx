@@ -200,7 +200,7 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void EmitTailContinue(ArmEmitterContext context, Operand address, bool allowRejit)
+        public static void EmitTailContinue(ArmEmitterContext context, Operand address)
         {
             // Left option here as it may be useful if we need to return to managed rather than tail call in future.
             // (eg. for debug)
@@ -218,9 +218,7 @@ namespace ARMeilleure.Instructions
                 {
                     context.StoreToContext();
 
-                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(allowRejit
-                        ? nameof(NativeInterface.GetFunctionAddress)
-                        : nameof(NativeInterface.GetFunctionAddressWithoutRejit)), address);
+                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
 
                     EmitNativeCall(context, fallbackAddr, isJump: true);
                 }

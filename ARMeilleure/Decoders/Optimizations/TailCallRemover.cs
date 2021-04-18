@@ -58,15 +58,14 @@ namespace ARMeilleure.Decoders.Optimizations
                 return blocks.ToArray(); // Nothing to do here.
             }
             
-            // Mark branches outside of contiguous region as exit blocks.
+            // Mark branches whose target is outside of the contiguous region as an exit block.
             for (int i = startBlockIndex; i <= endBlockIndex; i++)
             {
                 Block block = blocks[i];
 
                 if (block.Branch != null && (block.Branch.Address > endBlock.EndAddress || block.Branch.EndAddress < startBlock.Address))
                 {
-                    block.Branch.Exit     = true;
-                    block.Branch.TailCall = true;
+                    block.Branch.Exit = true;
                 }
             }
 

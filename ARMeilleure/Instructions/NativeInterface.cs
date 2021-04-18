@@ -220,6 +220,11 @@ namespace ARMeilleure.Instructions
         }
         #endregion
 
+        public static void EnqueueForRejit(ulong address)
+        {
+            Context.Translator.EnqueueForRejit(address, GetContext().ExecutionMode);
+        }
+
         public static void SignalMemoryTracking(ulong address, ulong size, bool write)
         {
             GetMemoryManager().SignalMemoryTracking(address, size, write);
@@ -232,24 +237,14 @@ namespace ARMeilleure.Instructions
 
         public static ulong GetFunctionAddress(ulong address)
         {
-            return GetFunctionAddressWithHint(address, true);
-        }
-
-        public static ulong GetFunctionAddressWithoutRejit(ulong address)
-        {
-            return GetFunctionAddressWithHint(address, false);
-        }
-
-        private static ulong GetFunctionAddressWithHint(ulong address, bool hintRejit)
-        {
-            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode, hintRejit);
+            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
 
             return (ulong)function.FuncPtr.ToInt64();
         }
 
         public static ulong GetIndirectFunctionAddress(ulong address, ulong entryAddress)
         {
-            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode, hintRejit: true);
+            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
 
             ulong ptr = (ulong)function.FuncPtr.ToInt64();
 

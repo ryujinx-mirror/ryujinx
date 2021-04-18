@@ -1,6 +1,7 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Unwinding;
 using ARMeilleure.CodeGen.X86;
+using ARMeilleure.Common;
 using ARMeilleure.Memory;
 using ARMeilleure.Translation.Cache;
 using Ryujinx.Common;
@@ -27,7 +28,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 2169; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 2190; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -38,6 +39,7 @@ namespace ARMeilleure.Translation.PTC
         internal const int PageTablePointerIndex = -1; // Must be a negative value.
         internal const int JumpPointerIndex = -2; // Must be a negative value.
         internal const int DynamicPointerIndex = -3; // Must be a negative value.
+        internal const int CountTableIndex = -4; // Must be a negative value.
 
         private const byte FillingByte = 0x00;
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
@@ -538,7 +540,11 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void LoadTranslations(ConcurrentDictionary<ulong, TranslatedFunction> funcs, IMemoryManager memory, JumpTable jumpTable)
+        internal static void LoadTranslations(
+            ConcurrentDictionary<ulong, TranslatedFunction> funcs,
+            IMemoryManager memory,
+            JumpTable jumpTable,
+            EntryTable<uint> countTable)
         {
             if (AreCarriersEmpty())
             {
@@ -567,16 +573,18 @@ namespace ARMeilleure.Translation.PTC
                     {
                         byte[] code = ReadCode(index, infoEntry.CodeLength);
 
+                        Counter<uint> callCounter = null;
+
                         if (infoEntry.RelocEntriesCount != 0)
                         {
                             RelocEntry[] relocEntries = GetRelocEntries(relocsReader, infoEntry.RelocEntriesCount);
 
-                            PatchCode(code.AsSpan(), relocEntries, memory.PageTablePointer, jumpTable);
+                            PatchCode(code, relocEntries, memory.PageTablePointer, jumpTable, countTable, out callCounter);
                         }
 
                         UnwindInfo unwindInfo = ReadUnwindInfo(unwindInfosReader);
 
-                        TranslatedFunction func = FastTranslate(code, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
+                        TranslatedFunction func = FastTranslate(code, callCounter, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
 
                         bool isAddressUnique = funcs.TryAdd(infoEntry.Address, func);
 
@@ -670,8 +678,16 @@ namespace ARMeilleure.Translation.PTC
             return relocEntries;
         }
 
-        private static void PatchCode(Span<byte> code, RelocEntry[] relocEntries, IntPtr pageTablePointer, JumpTable jumpTable)
+        private static void PatchCode(
+            Span<byte> code,
+            RelocEntry[] relocEntries,
+            IntPtr pageTablePointer,
+            JumpTable jumpTable,
+            EntryTable<uint> countTable,
+            out Counter<uint> callCounter)
         {
+            callCounter = null;
+
             foreach (RelocEntry relocEntry in relocEntries)
             {
                 ulong imm;
@@ -687,6 +703,12 @@ namespace ARMeilleure.Translation.PTC
                 else if (relocEntry.Index == DynamicPointerIndex)
                 {
                     imm = (ulong)jumpTable.DynamicPointer.ToInt64();
+                }
+                else if (relocEntry.Index == CountTableIndex)
+                {
+                    callCounter = new Counter<uint>(countTable);
+
+                    unsafe { imm = (ulong)Unsafe.AsPointer(ref callCounter.Value); }
                 }
                 else if (Delegates.TryGetDelegateFuncPtrByIndex(relocEntry.Index, out IntPtr funcPtr))
                 {
@@ -722,7 +744,12 @@ namespace ARMeilleure.Translation.PTC
             return new UnwindInfo(pushEntries, prologueSize);
         }
 
-        private static TranslatedFunction FastTranslate(byte[] code, ulong guestSize, UnwindInfo unwindInfo, bool highCq)
+        private static TranslatedFunction FastTranslate(
+            byte[] code,
+            Counter<uint> callCounter,
+            ulong guestSize,
+            UnwindInfo unwindInfo,
+            bool highCq)
         {
             CompiledFunction cFunc = new CompiledFunction(code, unwindInfo);
 
@@ -730,7 +757,7 @@ namespace ARMeilleure.Translation.PTC
 
             GuestFunction gFunc = Marshal.GetDelegateForFunctionPointer<GuestFunction>(codePtr);
 
-            TranslatedFunction tFunc = new TranslatedFunction(gFunc, guestSize, highCq);
+            TranslatedFunction tFunc = new TranslatedFunction(gFunc, callCounter, guestSize, highCq);
 
             return tFunc;
         }
@@ -771,7 +798,11 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void MakeAndSaveTranslations(ConcurrentDictionary<ulong, TranslatedFunction> funcs, IMemoryManager memory, JumpTable jumpTable)
+        internal static void MakeAndSaveTranslations(
+            ConcurrentDictionary<ulong, TranslatedFunction> funcs,
+            IMemoryManager memory,
+            JumpTable jumpTable,
+            EntryTable<uint> countTable)
         {
             var profiledFuncsToTranslate = PtcProfiler.GetProfiledFuncsToTranslate(funcs);
 
@@ -813,7 +844,7 @@ namespace ARMeilleure.Translation.PTC
 
                     Debug.Assert(PtcProfiler.IsAddressInStaticCodeRange(address));
 
-                    TranslatedFunction func = Translator.Translate(memory, jumpTable, address, item.mode, item.highCq);
+                    TranslatedFunction func = Translator.Translate(memory, jumpTable, countTable, address, item.mode, item.highCq);
 
                     bool isAddressUnique = funcs.TryAdd(address, func);
 

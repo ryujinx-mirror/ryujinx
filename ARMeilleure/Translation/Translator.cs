@@ -1,3 +1,4 @@
+using ARMeilleure.Common;
 using ARMeilleure.Decoders;
 using ARMeilleure.Diagnostics;
 using ARMeilleure.Instructions;
@@ -10,7 +11,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime;
 using System.Threading;
 
@@ -22,23 +22,27 @@ namespace ARMeilleure.Translation
 {
     public class Translator
     {
+        private const int CountTableCapacity = 4 * 1024 * 1024;
+
         private readonly IJitMemoryAllocator _allocator;
         private readonly IMemoryManager _memory;
 
         private readonly ConcurrentDictionary<ulong, TranslatedFunction> _funcs;
-        private readonly ConcurrentQueue<KeyValuePair<ulong, IntPtr>> _oldFuncs;
+        private readonly ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>> _oldFuncs;
 
+        private readonly ConcurrentDictionary<ulong, object> _backgroundSet;
         private readonly ConcurrentStack<RejitRequest> _backgroundStack;
         private readonly AutoResetEvent _backgroundTranslatorEvent;
         private readonly ReaderWriterLock _backgroundTranslatorLock;
 
         private JumpTable _jumpTable;
         internal JumpTable JumpTable => _jumpTable;
+        internal EntryTable<uint> CountTable { get; }
 
         private volatile int _threadCount;
 
         // FIXME: Remove this once the init logic of the emulator will be redone.
-        public static ManualResetEvent IsReadyForTranslation = new ManualResetEvent(false);
+        public static readonly ManualResetEvent IsReadyForTranslation = new(false);
 
         public Translator(IJitMemoryAllocator allocator, IMemoryManager memory)
         {
@@ -46,11 +50,14 @@ namespace ARMeilleure.Translation
             _memory = memory;
 
             _funcs = new ConcurrentDictionary<ulong, TranslatedFunction>();
-            _oldFuncs = new ConcurrentQueue<KeyValuePair<ulong, IntPtr>>();
+            _oldFuncs = new ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>>();
 
+            _backgroundSet = new ConcurrentDictionary<ulong, object>();
             _backgroundStack = new ConcurrentStack<RejitRequest>();
             _backgroundTranslatorEvent = new AutoResetEvent(false);
             _backgroundTranslatorLock = new ReaderWriterLock();
+
+            CountTable = new EntryTable<uint>();
 
             JitCache.Initialize(allocator);
 
@@ -63,9 +70,16 @@ namespace ARMeilleure.Translation
             {
                 _backgroundTranslatorLock.AcquireReaderLock(Timeout.Infinite);
 
-                if (_backgroundStack.TryPop(out RejitRequest request))
+                if (_backgroundStack.TryPop(out RejitRequest request) && 
+                    _backgroundSet.TryRemove(request.Address, out _))
                 {
-                    TranslatedFunction func = Translate(_memory, _jumpTable, request.Address, request.Mode, highCq: true);
+                    TranslatedFunction func = Translate(
+                        _memory,
+                        _jumpTable,
+                        CountTable,
+                        request.Address,
+                        request.Mode,
+                        highCq: true);
 
                     _funcs.AddOrUpdate(request.Address, func, (key, oldFunc) =>
                     {
@@ -89,7 +103,8 @@ namespace ARMeilleure.Translation
                 }
             }
 
-            _backgroundTranslatorEvent.Set(); // Wake up any other background translator threads, to encourage them to exit.
+             // Wake up any other background translator threads, to encourage them to exit.
+            _backgroundTranslatorEvent.Set();
         }
 
         public void Execute(State.ExecutionContext context, ulong address)
@@ -104,18 +119,21 @@ namespace ARMeilleure.Translation
                 if (Ptc.State == PtcState.Enabled)
                 {
                     Debug.Assert(_funcs.Count == 0);
-                    Ptc.LoadTranslations(_funcs, _memory, _jumpTable);
-                    Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable);
+                    Ptc.LoadTranslations(_funcs, _memory, _jumpTable, CountTable);
+                    Ptc.MakeAndSaveTranslations(_funcs, _memory, _jumpTable, CountTable);
                 }
 
                 PtcProfiler.Start();
 
                 Ptc.Disable();
 
-                // Simple heuristic, should be user configurable in future. (1 for 4 core/ht or less, 2 for 6 core+ht etc).
-                // All threads are normal priority except from the last, which just fills as much of the last core as the os lets it with a low priority.
-                // If we only have one rejit thread, it should be normal priority as highCq code is performance critical.
-                // TODO: Use physical cores rather than logical. This only really makes sense for processors with hyperthreading. Requires OS specific code.
+                // Simple heuristic, should be user configurable in future. (1 for 4 core/ht or less, 2 for 6 core + ht
+                // etc). All threads are normal priority except from the last, which just fills as much of the last core
+                // as the os lets it with a low priority. If we only have one rejit thread, it should be normal priority
+                // as highCq code is performance critical.
+                //
+                // TODO: Use physical cores rather than logical. This only really makes sense for processors with
+                // hyperthreading. Requires OS specific code.
                 int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
                 int threadCount          = Math.Min(4, unboundedThreadCount);
 
@@ -156,6 +174,8 @@ namespace ARMeilleure.Translation
                 _jumpTable.Dispose();
                 _jumpTable = null;
 
+                CountTable.Dispose();
+
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             }
         }
@@ -173,11 +193,11 @@ namespace ARMeilleure.Translation
             return nextAddr;
         }
 
-        internal TranslatedFunction GetOrTranslate(ulong address, ExecutionMode mode, bool hintRejit = false)
+        internal TranslatedFunction GetOrTranslate(ulong address, ExecutionMode mode)
         {
             if (!_funcs.TryGetValue(address, out TranslatedFunction func))
             {
-                func = Translate(_memory, _jumpTable, address, mode, highCq: false);
+                func = Translate(_memory, _jumpTable, CountTable, address, mode, highCq: false);
 
                 TranslatedFunction getFunc = _funcs.GetOrAdd(address, func);
 
@@ -193,18 +213,18 @@ namespace ARMeilleure.Translation
                 }
             }
 
-            if (hintRejit && func.ShouldRejit())
-            {
-                _backgroundStack.Push(new RejitRequest(address, mode));
-                _backgroundTranslatorEvent.Set();
-            }
-
             return func;
         }
 
-        internal static TranslatedFunction Translate(IMemoryManager memory, JumpTable jumpTable, ulong address, ExecutionMode mode, bool highCq)
+        internal static TranslatedFunction Translate(
+            IMemoryManager memory,
+            JumpTable jumpTable,
+            EntryTable<uint> countTable,
+            ulong address,
+            ExecutionMode mode,
+            bool highCq)
         {
-            ArmEmitterContext context = new ArmEmitterContext(memory, jumpTable, address, highCq, Aarch32Mode.User);
+            var context = new ArmEmitterContext(memory, jumpTable, countTable, address, highCq, Aarch32Mode.User);
 
             Logger.StartPass(PassName.Decoding);
 
@@ -215,6 +235,13 @@ namespace ARMeilleure.Translation
             PreparePool(highCq ? 1 : 0);
 
             Logger.StartPass(PassName.Translation);
+
+            Counter<uint> counter = null;
+
+            if (!context.HighCq)
+            {
+                EmitRejitCheck(context, out counter);
+            }
 
             EmitSynchronization(context);
 
@@ -258,7 +285,7 @@ namespace ARMeilleure.Translation
                 Ptc.WriteInfoCodeRelocUnwindInfo(address, funcSize, highCq, ptcInfo);
             }
 
-            return new TranslatedFunction(func, funcSize, highCq);
+            return new TranslatedFunction(func, counter, funcSize, highCq);
         }
 
         internal static void PreparePool(int groupId = 0)
@@ -320,7 +347,7 @@ namespace ARMeilleure.Translation
 
                 if (block.Exit)
                 {
-                    InstEmitFlowHelper.EmitTailContinue(context, Const(block.Address), block.TailCall);
+                    InstEmitFlowHelper.EmitTailContinue(context, Const(block.Address));
                 }
                 else
                 {
@@ -368,29 +395,43 @@ namespace ARMeilleure.Translation
             return context.GetControlFlowGraph();
         }
 
+        internal static void EmitRejitCheck(ArmEmitterContext context, out Counter<uint> counter)
+        {
+            const int MinsCallForRejit = 100;
+
+            counter = new Counter<uint>(context.CountTable);
+
+            Operand lblEnd = Label();
+
+            Operand address = Const(ref counter.Value, Ptc.CountTableIndex);
+            Operand curCount = context.Load(OperandType.I32, address);
+            Operand count = context.Add(curCount, Const(1));
+            context.Store(address, count);
+            context.BranchIf(lblEnd, curCount, Const(MinsCallForRejit), Comparison.NotEqual, BasicBlockFrequency.Cold);
+
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.EnqueueForRejit)), Const(context.EntryAddress));
+
+            context.MarkLabel(lblEnd);
+        }
+
         internal static void EmitSynchronization(EmitterContext context)
         {
             long countOffs = NativeContext.GetCounterOffset();
 
-            Operand countAddr = context.Add(context.LoadArgument(OperandType.I64, 0), Const(countOffs));
-
-            Operand count = context.Load(OperandType.I32, countAddr);
-
             Operand lblNonZero = Label();
-            Operand lblExit    = Label();
+            Operand lblExit = Label();
 
+            Operand countAddr = context.Add(context.LoadArgument(OperandType.I64, 0), Const(countOffs));
+            Operand count = context.Load(OperandType.I32, countAddr);
             context.BranchIfTrue(lblNonZero, count, BasicBlockFrequency.Cold);
 
             Operand running = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.CheckSynchronization)));
-
             context.BranchIfTrue(lblExit, running, BasicBlockFrequency.Cold);
 
             context.Return(Const(0L));
 
             context.MarkLabel(lblNonZero);
-
             count = context.Subtract(count, Const(1));
-
             context.Store(countAddr, count);
 
             context.MarkLabel(lblExit);
@@ -404,9 +445,18 @@ namespace ARMeilleure.Translation
             // TODO: Completely remove functions overlapping the specified range from the cache.
         }
 
+        internal void EnqueueForRejit(ulong guestAddress, ExecutionMode mode)
+        {
+            if (_backgroundSet.TryAdd(guestAddress, null))
+            {
+                _backgroundStack.Push(new RejitRequest(guestAddress, mode));
+                _backgroundTranslatorEvent.Set();
+            }
+        }
+
         private void EnqueueForDeletion(ulong guestAddress, TranslatedFunction func)
         {
-            _oldFuncs.Enqueue(new KeyValuePair<ulong, IntPtr>(guestAddress, func.FuncPtr));
+            _oldFuncs.Enqueue(new(guestAddress, func));
         }
 
         private void ClearJitCache()
@@ -414,16 +464,20 @@ namespace ARMeilleure.Translation
             // Ensure no attempt will be made to compile new functions due to rejit.
             ClearRejitQueue(allowRequeue: false);
 
-            foreach (var kv in _funcs)
+            foreach (var func in _funcs.Values)
             {
-                JitCache.Unmap(kv.Value.FuncPtr);
+                JitCache.Unmap(func.FuncPtr);
+
+                func.CallCounter?.Dispose();
             }
 
             _funcs.Clear();
 
             while (_oldFuncs.TryDequeue(out var kv))
             {
-                JitCache.Unmap(kv.Value);
+                JitCache.Unmap(kv.Value.FuncPtr);
+
+                kv.Value.CallCounter?.Dispose();
             }
         }
 
@@ -435,10 +489,12 @@ namespace ARMeilleure.Translation
             {
                 while (_backgroundStack.TryPop(out var request))
                 {
-                    if (_funcs.TryGetValue(request.Address, out var func))
+                    if (_funcs.TryGetValue(request.Address, out var func) && func.CallCounter != null)
                     {
-                        func.ResetCallCount();
+                        Volatile.Write(ref func.CallCounter.Value, 0);
                     }
+
+                    _backgroundSet.TryRemove(request.Address, out _);
                 }
             }
             else
