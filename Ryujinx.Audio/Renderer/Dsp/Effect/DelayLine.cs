@@ -33,7 +33,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Effect
         {
             _sampleRate = sampleRate;
             SampleCountMax = IDelayLine.GetSampleCount(_sampleRate, delayTimeMax);
-            _workBuffer = new float[SampleCountMax];
+            _workBuffer = new float[SampleCountMax + 1];
 
             SetDelay(delayTimeMax);
         }
