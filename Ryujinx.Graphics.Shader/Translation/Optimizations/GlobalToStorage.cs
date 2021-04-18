@@ -25,32 +25,29 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 {
                     Operand source = operation.GetSource(0);
 
-                    if (source.AsgOp is Operation asgOperation)
+                    int storageIndex = SearchForStorageBase(block, source, sbStart, sbEnd);
+
+                    if (storageIndex >= 0)
                     {
-                        int storageIndex = SearchForStorageBase(asgOperation, sbStart, sbEnd);
+                        // Storage buffers are implemented using global memory access.
+                        // If we know from where the base address of the access is loaded,
+                        // we can guess which storage buffer it is accessing.
+                        // We can then replace the global memory access with a storage
+                        // buffer access.
+                        node = ReplaceGlobalWithStorage(node, config, storageIndex);
+                    }
+                    else if (config.Stage == ShaderStage.Compute && operation.Inst == Instruction.LoadGlobal)
+                    {
+                        // Here we effectively try to replace a LDG instruction with LDC.
+                        // The hardware only supports a limited amount of constant buffers
+                        // so NVN "emulates" more constant buffers using global memory access.
+                        // Here we try to replace the global access back to a constant buffer
+                        // load.
+                        storageIndex = SearchForStorageBase(block, source, UbeBaseOffset, UbeBaseOffset + UbeDescsSize);
 
                         if (storageIndex >= 0)
                         {
-                            // Storage buffers are implemented using global memory access.
-                            // If we know from where the base address of the access is loaded,
-                            // we can guess which storage buffer it is accessing.
-                            // We can then replace the global memory access with a storage
-                            // buffer access.
-                            node = ReplaceGlobalWithStorage(node, config, storageIndex);
-                        }
-                        else if (config.Stage == ShaderStage.Compute && operation.Inst == Instruction.LoadGlobal)
-                        {
-                            // Here we effectively try to replace a LDG instruction with LDC.
-                            // The hardware only supports a limited amount of constant buffers
-                            // so NVN "emulates" more constant buffers using global memory access.
-                            // Here we try to replace the global access back to a constant buffer
-                            // load.
-                            storageIndex = SearchForStorageBase(asgOperation, UbeBaseOffset, UbeBaseOffset + UbeDescsSize);
-
-                            if (storageIndex >= 0)
-                            {
-                                node = ReplaceLdgWithLdc(node, config, storageIndex);
-                            }
+                            node = ReplaceLdgWithLdc(node, config, storageIndex);
                         }
                     }
                 }
@@ -184,35 +181,70 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             return node;
         }
 
-        private static int SearchForStorageBase(Operation operation, int sbStart, int sbEnd)
+        private static int SearchForStorageBase(BasicBlock block, Operand globalAddress, int sbStart, int sbEnd)
         {
-            Queue<Operation> assignments = new Queue<Operation>();
+            globalAddress = Utils.FindLastOperation(globalAddress, block);
 
-            assignments.Enqueue(operation);
-
-            while (assignments.TryDequeue(out operation))
+            if (globalAddress.Type == OperandType.ConstantBuffer)
             {
-                for (int index = 0; index < operation.SourcesCount; index++)
+                return GetStorageIndex(globalAddress, sbStart, sbEnd);
+            }
+
+            Operation operation = globalAddress.AsgOp as Operation;
+
+            if (operation == null || operation.Inst != Instruction.Add)
+            {
+                return -1;
+            }
+
+            Operand src1 = operation.GetSource(0);
+            Operand src2 = operation.GetSource(1);
+
+            if ((src1.Type == OperandType.LocalVariable && src2.Type == OperandType.Constant) ||
+                (src2.Type == OperandType.LocalVariable && src1.Type == OperandType.Constant))
+            {
+                if (src1.Type == OperandType.LocalVariable)
                 {
-                    Operand source = operation.GetSource(index);
+                    operation = Utils.FindLastOperation(src1, block).AsgOp as Operation;
+                }
+                else
+                {
+                    operation = Utils.FindLastOperation(src2, block).AsgOp as Operation;
+                }
 
-                    if (source.Type == OperandType.ConstantBuffer)
-                    {
-                        int slot   = source.GetCbufSlot();
-                        int offset = source.GetCbufOffset();
+                if (operation == null || operation.Inst != Instruction.Add)
+                {
+                    return -1;
+                }
+            }
 
-                        if (slot == 0 && offset >= sbStart && offset < sbEnd)
-                        {
-                            int storageIndex = (offset - sbStart) / StorageDescSize;
+            for (int index = 0; index < operation.SourcesCount; index++)
+            {
+                Operand source = operation.GetSource(index);
 
-                            return storageIndex;
-                        }
-                    }
+                int storageIndex = GetStorageIndex(source, sbStart, sbEnd);
 
-                    if (source.AsgOp is Operation asgOperation)
-                    {
-                        assignments.Enqueue(asgOperation);
-                    }
+                if (storageIndex != -1)
+                {
+                    return storageIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int GetStorageIndex(Operand operand, int sbStart, int sbEnd)
+        {
+            if (operand.Type == OperandType.ConstantBuffer)
+            {
+                int slot   = operand.GetCbufSlot();
+                int offset = operand.GetCbufOffset();
+
+                if (slot == 0 && offset >= sbStart && offset < sbEnd)
+                {
+                    int storageIndex = (offset - sbStart) / StorageDescSize;
+
+                    return storageIndex;
                 }
             }
 
