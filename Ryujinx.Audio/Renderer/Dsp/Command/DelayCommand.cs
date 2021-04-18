@@ -78,7 +78,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 float input = inputBuffer[i] * 64;
                 float delayLineValue = state.DelayLines[0].Read();
 
-                float lowPassResult = input * inGain + delayLineValue * feedbackGain * state.LowPassBaseGain + state.LowPassZ[0] * state.LowPassFeedbackGain;
+                float lowPassResult = (input * inGain + delayLineValue * feedbackGain) * state.LowPassBaseGain + state.LowPassZ[0] * state.LowPassFeedbackGain;
 
                 state.LowPassZ[0] = lowPassResult;
 
