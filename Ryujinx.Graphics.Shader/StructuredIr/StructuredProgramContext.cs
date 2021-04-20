@@ -291,10 +291,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 Info.IAttributes.Add(attrIndex);
             }
-            else if (operand.Type == OperandType.Attribute && operand.Value == AttributeConsts.InstanceId)
-            {
-                Info.UsesInstanceId = true;
-            }
             else if (operand.Type == OperandType.ConstantBuffer)
             {
                 Info.CBuffers.Add(operand.GetCbufSlot());

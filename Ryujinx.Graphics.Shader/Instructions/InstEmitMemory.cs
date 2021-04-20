@@ -53,6 +53,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 Operand dest = Attribute(op.AttributeOffset + index * 4);
 
+                context.FlagAttributeWritten(dest.Value);
+
                 context.Copy(dest, Register(rd));
             }
         }

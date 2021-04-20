@@ -12,7 +12,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public HashSet<int> IAttributes { get; }
         public HashSet<int> OAttributes { get; }
 
-        public bool UsesInstanceId { get; set; }
         public bool UsesCbIndexing { get; set; }
 
         public HelperFunctionsMask HelperFunctionsMask { get; set; }

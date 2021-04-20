@@ -75,7 +75,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
                                                     programInfo.SBuffers.Count,
                                                     programInfo.Textures.Count,
                                                     programInfo.Images.Count,
-                                                    programInfo.UsesInstanceId);
+                                                    programInfo.UsesInstanceId,
+                                                    programInfo.ClipDistancesWritten);
             CBuffers = programInfo.CBuffers.ToArray();
             SBuffers = programInfo.SBuffers.ToArray();
             Textures = programInfo.Textures.ToArray();
@@ -88,7 +89,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// <returns>A new <see cref="ShaderProgramInfo"/> from this instance</returns>
         internal ShaderProgramInfo ToShaderProgramInfo()
         {
-            return new ShaderProgramInfo(CBuffers, SBuffers, Textures, Images, Header.UsesInstanceId);
+            return new ShaderProgramInfo(CBuffers, SBuffers, Textures, Images, Header.UsesInstanceId, Header.ClipDistancesWritten);
         }
 
         /// <summary>

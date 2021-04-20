@@ -94,7 +94,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                 program.SBufferDescriptors,
                 program.TextureDescriptors,
                 program.ImageDescriptors,
-                sInfo.UsesInstanceId);
+                config.UsedFeatures.HasFlag(FeatureFlags.InstanceId),
+                config.ClipDistancesWritten);
 
             string glslCode = program.Code;
 

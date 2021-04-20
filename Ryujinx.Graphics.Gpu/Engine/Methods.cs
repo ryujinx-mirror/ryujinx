@@ -39,6 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private bool _isAnyVbInstanced;
         private bool _vsUsesInstanceId;
+        private byte _vsClipDistancesWritten;
 
         private bool _forceShaderUpdate;
 
@@ -993,7 +994,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ShaderBundle gs = ShaderCache.GetGraphicsShader(state, addresses);
 
-            _vsUsesInstanceId = gs.Shaders[0]?.Info.UsesInstanceId ?? false;
+            byte oldVsClipDistancesWritten = _vsClipDistancesWritten;
+
+            _vsUsesInstanceId       = gs.Shaders[0]?.Info.UsesInstanceId ?? false;
+            _vsClipDistancesWritten = gs.Shaders[0]?.Info.ClipDistancesWritten ?? 0;
+
+            if (oldVsClipDistancesWritten != _vsClipDistancesWritten)
+            {
+                UpdateUserClipState(state);
+            }
 
             int storageBufferBindingsCount = 0;
             int uniformBufferBindingsCount = 0;
@@ -1098,7 +1107,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="state">Current GPU state</param>
         private void UpdateUserClipState(GpuState state)
         {
-            int clipMask = state.Get<int>(MethodOffset.ClipDistanceEnable);
+            int clipMask = state.Get<int>(MethodOffset.ClipDistanceEnable) & _vsClipDistancesWritten;
 
             for (int i = 0; i < Constants.TotalClipDistances; ++i)
             {

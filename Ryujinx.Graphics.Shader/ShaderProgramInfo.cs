@@ -11,13 +11,15 @@ namespace Ryujinx.Graphics.Shader
         public ReadOnlyCollection<TextureDescriptor> Images   { get; }
 
         public bool UsesInstanceId { get; }
+        public byte ClipDistancesWritten { get; }
 
         public ShaderProgramInfo(
             BufferDescriptor[]  cBuffers,
             BufferDescriptor[]  sBuffers,
             TextureDescriptor[] textures,
             TextureDescriptor[] images,
-            bool                usesInstanceId)
+            bool                usesInstanceId,
+            byte                clipDistancesWritten)
         {
             CBuffers = Array.AsReadOnly(cBuffers);
             SBuffers = Array.AsReadOnly(sBuffers);
@@ -25,6 +27,7 @@ namespace Ryujinx.Graphics.Shader
             Images   = Array.AsReadOnly(images);
 
             UsesInstanceId = usesInstanceId;
+            ClipDistancesWritten = clipDistancesWritten;
         }
     }
 }

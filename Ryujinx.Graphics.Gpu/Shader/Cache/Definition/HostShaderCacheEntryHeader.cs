@@ -42,9 +42,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         public bool InUse;
 
         /// <summary>
+        /// Mask of clip distances that are written to on the shader.
+        /// </summary>
+        public byte ClipDistancesWritten;
+
+        /// <summary>
         /// Reserved / unused.
         /// </summary>
-        public short Reserved;
+        public byte Reserved;
 
         /// <summary>
         /// Create a new host shader cache entry header.
@@ -54,14 +59,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// <param name="texturesCount">Count of texture descriptors</param>
         /// <param name="imagesCount">Count of image descriptors</param>
         /// <param name="usesInstanceId">Set to true if the shader uses instance id</param>
-        public HostShaderCacheEntryHeader(int cBuffersCount, int sBuffersCount, int texturesCount, int imagesCount, bool usesInstanceId) : this()
+        public HostShaderCacheEntryHeader(
+            int cBuffersCount,
+            int sBuffersCount,
+            int texturesCount,
+            int imagesCount,
+            bool usesInstanceId,
+            byte clipDistancesWritten) : this()
         {
-            CBuffersCount  = cBuffersCount;
-            SBuffersCount  = sBuffersCount;
-            TexturesCount  = texturesCount;
-            ImagesCount    = imagesCount;
-            UsesInstanceId = usesInstanceId;
-            InUse          = true;
+            CBuffersCount        = cBuffersCount;
+            SBuffersCount        = sBuffersCount;
+            TexturesCount        = texturesCount;
+            ImagesCount          = imagesCount;
+            UsesInstanceId       = usesInstanceId;
+            ClipDistancesWritten = clipDistancesWritten;
+            InUse                = true;
         }
     }
 }

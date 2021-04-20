@@ -28,6 +28,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int Size { get; private set; }
 
+        public byte ClipDistancesWritten { get; private set; }
+
         public FeatureFlags UsedFeatures { get; private set; }
 
         public HashSet<int> TextureHandlesForCache { get; }
@@ -113,6 +115,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public void SizeAdd(int size)
         {
             Size += size;
+        }
+
+        public void SetClipDistanceWritten(int index)
+        {
+            ClipDistancesWritten |= (byte)(1 << index);
         }
 
         public void SetUsedFeature(FeatureFlags flags)
