@@ -140,6 +140,8 @@ namespace Ryujinx.Input.HLE
                 List<GamepadInput> hleInputStates = new List<GamepadInput>();
                 List<SixAxisInput> hleMotionStates = new List<SixAxisInput>(NpadDevices.MaxControllers);
 
+                KeyboardInput? hleKeyboardInput = null;
+
                 foreach (InputConfig inputConfig in _inputConfig)
                 {
                     GamepadInput inputState = default;
@@ -160,6 +162,11 @@ namespace Ryujinx.Input.HLE
                         inputState.Buttons |= hleHid.UpdateStickButtons(inputState.LStick, inputState.RStick);
 
                         motionState = controller.GetHLEMotionState();
+
+                        if (ConfigurationState.Instance.Hid.EnableKeyboard)
+                        {
+                            hleKeyboardInput = controller.GetHLEKeyboardInput();
+                        }
                     }
                     else
                     {
@@ -172,20 +179,16 @@ namespace Ryujinx.Input.HLE
 
                     hleInputStates.Add(inputState);
                     hleMotionStates.Add(motionState);
-
-                    if (ConfigurationState.Instance.Hid.EnableKeyboard)
-                    {
-                        KeyboardInput? hleKeyboardInput = controller.GetHLEKeyboardInput();
-
-                        if (hleKeyboardInput.HasValue)
-                        {
-                            hleHid.Keyboard.Update(hleKeyboardInput.Value);
-                        }
-                    }
                 }
 
                 hleHid.Npads.Update(hleInputStates);
                 hleHid.Npads.UpdateSixAxis(hleMotionStates);
+
+                if (hleKeyboardInput.HasValue)
+                {
+                    hleHid.Keyboard.Update(hleKeyboardInput.Value);
+                }
+
                 tamperMachine.UpdateInput(hleInputStates);
             }
         }
