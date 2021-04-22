@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
         private static uint _uniqueId = 1;
 
-        public IRequest(ServiceCtx context) {}
+        public IRequest(ServiceCtx context) { }
 
         [CommandHipc(0)]
         // InitializeOld(u32, u32, u32)
@@ -50,14 +50,14 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         public ResultCode SetAndWaitOld(ServiceCtx context)
         {
             MultiMediaOperationType operationType = (MultiMediaOperationType)context.RequestData.ReadUInt32();
-            uint                    value         = context.RequestData.ReadUInt32();
+            uint                    frequenceHz   = context.RequestData.ReadUInt32();
             int                     timeout       = context.RequestData.ReadInt32();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType, value, timeout });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { operationType, frequenceHz, timeout });
 
             lock (_sessionListLock)
             {
-                GetSessionByType(operationType)?.SetAndWait(value, timeout);
+                GetSessionByType(operationType)?.SetAndWait(frequenceHz, timeout);
             }
 
             return ResultCode.Success;
@@ -120,15 +120,15 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         // SetAndWait(u32, u32, u32)
         public ResultCode SetAndWait(ServiceCtx context)
         {
-            uint id      = context.RequestData.ReadUInt32();
-            uint value   = context.RequestData.ReadUInt32();
-            int  timeout = context.RequestData.ReadInt32();
+            uint id          = context.RequestData.ReadUInt32();
+            uint frequenceHz = context.RequestData.ReadUInt32();
+            int  timeout     = context.RequestData.ReadInt32();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { id, value, timeout });
+            Logger.Stub?.PrintStub(LogClass.ServiceMm, new { id, frequenceHz, timeout });
 
             lock (_sessionListLock)
             {
-                GetSessionById(id)?.SetAndWait(value, timeout);
+                GetSessionById(id)?.SetAndWait(frequenceHz, timeout);
             }
 
             return ResultCode.Success;
