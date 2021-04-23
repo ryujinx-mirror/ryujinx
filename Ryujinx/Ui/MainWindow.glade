@@ -248,6 +248,16 @@
                         <signal name="activate" handler="Settings_Pressed" swapped="no"/>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_manageUserProfiles">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Open User Profiles Manager window</property>
+                        <property name="label" translatable="yes">Manage User Profiles</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="ManageUserProfiles_Pressed" swapped="no"/>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

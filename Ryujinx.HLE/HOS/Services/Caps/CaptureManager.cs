@@ -1,7 +1,6 @@
 ﻿using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Caps.Types;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
@@ -19,11 +18,6 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         public CaptureManager(Switch device)
         {
             _sdCardPath = device.FileSystem.GetSdCardPath();
-
-            SixLabors.ImageSharp.Configuration.Default.ImageFormatsManager.SetEncoder(JpegFormat.Instance, new JpegEncoder()
-            {
-                Quality = 100
-            });
         }
 
         public ResultCode SetShimLibraryVersion(ServiceCtx context)

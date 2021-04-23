@@ -115,7 +115,7 @@ namespace Ryujinx.Ui.Widgets
                     Logger.Warning?.Print(LogClass.Application, "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
                 }
 
-                Uid user = new Uid(1, 0); // TODO: Remove Hardcoded value.
+                Uid user = new Uid((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
 
                 result = EnsureApplicationSaveData(_virtualFileSystem.FsClient, out _, new LibHac.Ncm.ApplicationId(titleId), ref control, ref user);
 

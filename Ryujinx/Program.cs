@@ -8,6 +8,7 @@ using Ryujinx.Configuration;
 using Ryujinx.Modules;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
 using System.IO;
 using System.Reflection;
@@ -96,6 +97,12 @@ namespace Ryujinx
 
             // Initialize Discord integration.
             DiscordIntegrationModule.Initialize();
+
+            // Sets ImageSharp Jpeg Encoder Quality.
+            SixLabors.ImageSharp.Configuration.Default.ImageFormatsManager.SetEncoder(JpegFormat.Instance, new JpegEncoder()
+            {
+                Quality = 100
+            });
 
             string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
             string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath,            "Config.json");

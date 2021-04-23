@@ -8,31 +8,80 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public UserId UserId { get; }
 
-        public string Name { get; }
+        public long LastModifiedTimestamp { get; set; }
 
-        public byte[] Image { get; }
+        private string _name;
 
-        public long LastModifiedTimestamp { get; private set; }
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
 
-        public AccountState AccountState { get; set; }
-        public AccountState OnlinePlayState { get; set; }
+                UpdateLastModifiedTimestamp();
+            }
+        }
 
-        public UserProfile(UserId userId, string name, byte[] image)
+        private byte[] _image;
+
+        public byte[] Image
+        {
+            get => _image;
+            set
+            {
+                _image = value;
+
+                UpdateLastModifiedTimestamp();
+            }
+        }
+
+        private AccountState _accountState;
+
+        public AccountState AccountState
+        {
+            get => _accountState;
+            set
+            {
+                _accountState = value;
+
+                UpdateLastModifiedTimestamp();
+            }
+        }
+
+        public AccountState _onlinePlayState;
+
+        public AccountState OnlinePlayState
+        {
+            get => _onlinePlayState;
+            set
+            {
+                _onlinePlayState = value;
+
+                UpdateLastModifiedTimestamp();
+            }
+        }
+
+        public UserProfile(UserId userId, string name, byte[] image, long lastModifiedTimestamp = 0)
         {
             UserId = userId;
             Name   = name;
-
-            Image = image;
-
-            LastModifiedTimestamp = 0;
+            Image  = image;
 
             AccountState    = AccountState.Closed;
             OnlinePlayState = AccountState.Closed;
 
-            UpdateTimestamp();
+            if (lastModifiedTimestamp != 0)
+            {
+                LastModifiedTimestamp = lastModifiedTimestamp;
+            }
+            else
+            {
+                UpdateLastModifiedTimestamp();
+            }
         }
 
-        private void UpdateTimestamp()
+        private void UpdateLastModifiedTimestamp()
         {
             LastModifiedTimestamp = (long)(DateTime.Now - Epoch).TotalSeconds;
         }

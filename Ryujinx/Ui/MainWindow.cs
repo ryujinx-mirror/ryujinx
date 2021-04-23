@@ -78,6 +78,7 @@ namespace Ryujinx.Ui
         [GUI] Box             _footerBox;
         [GUI] Box             _statusBar;
         [GUI] MenuItem        _optionMenu;
+        [GUI] MenuItem        _manageUserProfiles;
         [GUI] MenuItem        _actionMenu;
         [GUI] MenuItem        _stopEmulation;
         [GUI] MenuItem        _simulateWakeUpMessage;
@@ -140,7 +141,7 @@ namespace Ryujinx.Ui
             // Instanciate HLE objects.
             _virtualFileSystem      = VirtualFileSystem.CreateInstance();
             _contentManager         = new ContentManager(_virtualFileSystem);
-            _accountManager         = new AccountManager();
+            _accountManager         = new AccountManager(_virtualFileSystem);
             _userChannelPersistence = new UserChannelPersistence();
 
             // Instanciate GUI objects.
@@ -155,6 +156,7 @@ namespace Ryujinx.Ui
             _applicationLibrary.ApplicationCountUpdated += ApplicationCount_Updated;
 
             _actionMenu.StateChanged += ActionMenu_StateChanged;
+            _optionMenu.StateChanged += OptionMenu_StateChanged;
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
             _fullScreen.Activated         += FullScreen_Toggled;
@@ -1192,12 +1194,25 @@ namespace Ryujinx.Ui
             SaveConfig();
         }
 
+        private void OptionMenu_StateChanged(object o, StateChangedArgs args)
+        {
+            _manageUserProfiles.Sensitive = _emulationContext == null;
+        }
+
         private void Settings_Pressed(object sender, EventArgs args)
         {
             SettingsWindow settingsWindow = new SettingsWindow(this, _virtualFileSystem, _contentManager);
 
             settingsWindow.SetSizeRequest((int)(settingsWindow.DefaultWidth * Program.WindowScaleFactor), (int)(settingsWindow.DefaultHeight * Program.WindowScaleFactor));
             settingsWindow.Show();
+        }
+
+        private void ManageUserProfiles_Pressed(object sender, EventArgs args)
+        {
+            UserProfilesManagerWindow userProfilesManagerWindow = new UserProfilesManagerWindow(_accountManager, _contentManager, _virtualFileSystem);
+
+            userProfilesManagerWindow.SetSizeRequest((int)(userProfilesManagerWindow.DefaultWidth * Program.WindowScaleFactor), (int)(userProfilesManagerWindow.DefaultHeight * Program.WindowScaleFactor));
+            userProfilesManagerWindow.Show();
         }
 
         private void Simulate_WakeUp_Message_Pressed(object sender, EventArgs args)
