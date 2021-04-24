@@ -73,8 +73,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 
         public ResultCode LoadIdTokenCache(ServiceCtx context)
         {
-            long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferSize     = context.Request.ReceiveBuff[0].Size;
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferSize     = context.Request.ReceiveBuff[0].Size;
 
             // NOTE: This opens the file at "su/cache/USERID_IN_UUID_STRING.dat" (where USERID_IN_UUID_STRING is formatted as "%08x-%04x-%04x-%02x%02x-%08x%04x")
             //       in the "account:/" savedata and writes some data in the buffer.

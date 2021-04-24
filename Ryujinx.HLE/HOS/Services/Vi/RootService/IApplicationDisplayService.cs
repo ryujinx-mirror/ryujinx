@@ -61,16 +61,16 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         // ListDisplays() -> (u64, buffer<nn::vi::DisplayInfo, 6>)
         public ResultCode ListDisplays(ServiceCtx context)
         {
-            long recBuffPtr = context.Request.ReceiveBuff[0].Position;
+            ulong recBuffPtr = context.Request.ReceiveBuff[0].Position;
 
             MemoryHelper.FillWithZeros(context.Memory, recBuffPtr, 0x60);
 
             // Add only the default display to buffer
-            context.Memory.Write((ulong)recBuffPtr, Encoding.ASCII.GetBytes("Default"));
-            context.Memory.Write((ulong)recBuffPtr + 0x40, 0x1L);
-            context.Memory.Write((ulong)recBuffPtr + 0x48, 0x1L);
-            context.Memory.Write((ulong)recBuffPtr + 0x50, 1280L);
-            context.Memory.Write((ulong)recBuffPtr + 0x58, 720L);
+            context.Memory.Write(recBuffPtr, Encoding.ASCII.GetBytes("Default"));
+            context.Memory.Write(recBuffPtr + 0x40, 0x1UL);
+            context.Memory.Write(recBuffPtr + 0x48, 0x1UL);
+            context.Memory.Write(recBuffPtr + 0x50, 1280UL);
+            context.Memory.Write(recBuffPtr + 0x58, 720UL);
 
             context.ResponseData.Write(1L);
 
@@ -120,9 +120,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             // TODO: support multi display.
             byte[] displayName = context.RequestData.ReadBytes(0x40);
 
-            long layerId   = context.RequestData.ReadInt64();
-            long userId    = context.RequestData.ReadInt64();
-            long parcelPtr = context.Request.ReceiveBuff[0].Position;
+            long  layerId   = context.RequestData.ReadInt64();
+            long  userId    = context.RequestData.ReadInt64();
+            ulong parcelPtr = context.Request.ReceiveBuff[0].Position;
 
             IBinder producer = context.Device.System.SurfaceFlinger.OpenLayer(context.Request.HandleDesc.PId, layerId);
 
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             ReadOnlySpan<byte> parcelData = parcel.Finish();
 
-            context.Memory.Write((ulong)parcelPtr, parcelData);
+            context.Memory.Write(parcelPtr, parcelData);
 
             context.ResponseData.Write((long)parcelData.Length);
 
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             long layerFlags = context.RequestData.ReadInt64();
             long displayId  = context.RequestData.ReadInt64();
 
-            long parcelPtr = context.Request.ReceiveBuff[0].Position;
+            ulong parcelPtr = context.Request.ReceiveBuff[0].Position;
 
             // TODO: support multi display.
             Display disp = _displays.GetData<Display>((int)displayId);
@@ -174,7 +174,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             ReadOnlySpan<byte> parcelData = parcel.Finish();
 
-            context.Memory.Write((ulong)parcelPtr, parcelData);
+            context.Memory.Write(parcelPtr, parcelData);
 
             context.ResponseData.Write(layerId);
             context.ResponseData.Write((long)parcelData.Length);
@@ -250,11 +250,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             // The size of the layer buffer should be an aligned multiple of width * height
             // because it was created using GetIndirectLayerImageRequiredMemoryInfo as a guide.
 
-            long layerBuffPosition = context.Request.ReceiveBuff[0].Position;
-            long layerBuffSize     = context.Request.ReceiveBuff[0].Size;
+            ulong layerBuffPosition = context.Request.ReceiveBuff[0].Position;
+            ulong layerBuffSize     = context.Request.ReceiveBuff[0].Size;
 
             // Fill the layer with zeros.
-            context.Memory.Fill((ulong)layerBuffPosition, (ulong)layerBuffSize, 0x00);
+            context.Memory.Fill(layerBuffPosition, layerBuffSize, 0x00);
 
             Logger.Stub?.PrintStub(LogClass.ServiceVi);
 

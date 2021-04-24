@@ -8,9 +8,9 @@ namespace Ryujinx.HLE.Utilities
     {
         private IVirtualMemoryManager _memory;
 
-        public long Position { get; private set; }
+        public ulong Position { get; private set; }
 
-        public StructWriter(IVirtualMemoryManager memory, long position)
+        public StructWriter(IVirtualMemoryManager memory, ulong position)
         {
             _memory  = memory;
             Position = position;
@@ -20,10 +20,10 @@ namespace Ryujinx.HLE.Utilities
         {
             MemoryHelper.Write(_memory, Position, value);
 
-            Position += Marshal.SizeOf<T>();
+            Position += (ulong)Marshal.SizeOf<T>();
         }
 
-        public void SkipBytes(long count)
+        public void SkipBytes(ulong count)
         {
             Position += count;
         }

@@ -29,11 +29,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetClientId() -> buffer<nn::nifm::ClientId, 0x1a, 4>
         public ResultCode GetClientId(ServiceCtx context)
         {
-            long position = context.Request.RecvListBuff[0].Position;
+            ulong position = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(4);
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(sizeof(int));
 
-            context.Memory.Write((ulong)position, _generalServiceDetail.ClientId);
+            context.Memory.Write(position, _generalServiceDetail.ClientId);
 
             return ResultCode.Success;
         }
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetCurrentNetworkProfile() -> buffer<nn::nifm::detail::sf::NetworkProfileData, 0x1a, 0x17c>
         public ResultCode GetCurrentNetworkProfile(ServiceCtx context)
         {
-            long networkProfileDataPosition = context.Request.RecvListBuff[0].Position;
+            ulong networkProfileDataPosition = context.Request.RecvListBuff[0].Position;
 
             (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
 
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             Logger.Info?.Print(LogClass.ServiceNifm, $"Console's local IP is \"{unicastAddress.Address}\".");
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Unsafe.SizeOf<NetworkProfileData>());
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Unsafe.SizeOf<NetworkProfileData>());
 
             NetworkProfileData networkProfile = new NetworkProfileData
             {
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             Encoding.ASCII.GetBytes("RyujinxNetwork").CopyTo(networkProfile.Name.ToSpan());
 
-            context.Memory.Write((ulong)networkProfileDataPosition, networkProfile);
+            context.Memory.Write(networkProfileDataPosition, networkProfile);
 
             return ResultCode.Success;
         }
@@ -148,10 +148,10 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // IsAnyInternetRequestAccepted(buffer<nn::nifm::ClientId, 0x19, 4>) -> bool
         public ResultCode IsAnyInternetRequestAccepted(ServiceCtx context)
         {
-            long position = context.Request.PtrBuff[0].Position;
-            long size     = context.Request.PtrBuff[0].Size;
+            ulong position = context.Request.PtrBuff[0].Position;
+            ulong size     = context.Request.PtrBuff[0].Size;
 
-            int clientId = context.Memory.Read<int>((ulong)position);
+            int clientId = context.Memory.Read<int>(position);
 
             context.ResponseData.Write(GeneralServiceManager.Get(clientId).IsAnyInternetRequestAccepted);
 

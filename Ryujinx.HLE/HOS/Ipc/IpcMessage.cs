@@ -196,7 +196,7 @@ namespace Ryujinx.HLE.HOS.Ipc
         }
 
         // ReSharper disable once InconsistentNaming
-        public (long Position, long Size) GetBufferType0x21(int index = 0)
+        public (ulong Position, ulong Size) GetBufferType0x21(int index = 0)
         {
             if (PtrBuff.Count > index &&
                 PtrBuff[index].Position != 0 &&
@@ -216,7 +216,7 @@ namespace Ryujinx.HLE.HOS.Ipc
         }
 
         // ReSharper disable once InconsistentNaming
-        public (long Position, long Size) GetBufferType0x22(int index = 0)
+        public (ulong Position, ulong Size) GetBufferType0x22(int index = 0)
         {
             if (RecvListBuff.Count > index &&
                 RecvListBuff[index].Position != 0 &&

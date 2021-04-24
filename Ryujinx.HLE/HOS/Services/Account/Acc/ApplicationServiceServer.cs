@@ -53,8 +53,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 return ResultCode.InvalidBuffer;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
-            long outputSize     = context.Request.RecvListBuff[0].Size;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputSize     = context.Request.RecvListBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
@@ -67,8 +67,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                     break;
                 }
 
-                context.Memory.Write((ulong)outputPosition + offset,     userProfile.UserId.High);
-                context.Memory.Write((ulong)outputPosition + offset + 8, userProfile.UserId.Low);
+                context.Memory.Write(outputPosition + offset,     userProfile.UserId.High);
+                context.Memory.Write(outputPosition + offset + 8, userProfile.UserId.Low);
 
                 offset += 0x10;
             }
@@ -156,8 +156,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 return ResultCode.InvalidBuffer;
             }
 
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize     = context.Request.SendBuff[0].Size;
 
             if (inputSize != 0x24000)
             {
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             byte[] thumbnailBuffer = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, thumbnailBuffer);
+            context.Memory.Read(inputPosition, thumbnailBuffer);
 
             // NOTE: Account service call nn::fs::WriteSaveDataThumbnailFile().
             // TODO: Store thumbnailBuffer somewhere, in save data 0x8000000000000010 ?

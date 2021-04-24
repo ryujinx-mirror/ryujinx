@@ -97,12 +97,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
 
         public ResultCode ResolveEx(ServiceCtx context, out ResultCode resultCode, out string resolvedAddress)
         {
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize     = context.Request.SendBuff[0].Size;
 
             byte[] addressBuffer = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, addressBuffer);
+            context.Memory.Read(inputPosition, addressBuffer);
 
             string address = Encoding.UTF8.GetString(addressBuffer).TrimEnd('\0');
 

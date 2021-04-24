@@ -26,12 +26,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // SetHostName(buffer<bytes, 5>)
         public ResultCode SetHostName(ServiceCtx context)
         {
-            long hostNameDataPosition = context.Request.SendBuff[0].Position;
-            long hostNameDataSize     = context.Request.SendBuff[0].Size;
+            ulong hostNameDataPosition = context.Request.SendBuff[0].Position;
+            ulong hostNameDataSize     = context.Request.SendBuff[0].Size;
 
             byte[] hostNameData = new byte[hostNameDataSize];
 
-            context.Memory.Read((ulong)hostNameDataPosition, hostNameData);
+            context.Memory.Read(hostNameDataPosition, hostNameData);
 
             string hostName = Encoding.ASCII.GetString(hostNameData).Trim('\0');
 
@@ -75,12 +75,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // Write(buffer<bytes, 5>) -> u32
         public ResultCode Write(ServiceCtx context)
         {
-            long inputDataPosition = context.Request.SendBuff[0].Position;
-            long inputDataSize     = context.Request.SendBuff[0].Size;
+            ulong inputDataPosition = context.Request.SendBuff[0].Position;
+            ulong inputDataSize     = context.Request.SendBuff[0].Size;
 
             byte[] data = new byte[inputDataSize];
 
-            context.Memory.Read((ulong)inputDataPosition, data);
+            context.Memory.Read(inputDataPosition, data);
 
             // NOTE: Tell the guest everything is transferred.
             uint transferredSize = (uint)inputDataSize;

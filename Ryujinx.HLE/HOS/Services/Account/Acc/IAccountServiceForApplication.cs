@@ -142,8 +142,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // ListOpenContextStoredUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListOpenContextStoredUsers(ServiceCtx context)
         {
-            long outputPosition = context.Request.RecvListBuff[0].Position;
-            long outputSize     = context.Request.RecvListBuff[0].Size;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputSize     = context.Request.RecvListBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 

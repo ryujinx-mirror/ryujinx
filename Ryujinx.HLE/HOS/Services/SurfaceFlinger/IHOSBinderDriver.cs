@@ -18,11 +18,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             uint code  = context.RequestData.ReadUInt32();
             uint flags = context.RequestData.ReadUInt32();
 
-            ulong dataPos  = (ulong)context.Request.SendBuff[0].Position;
-            ulong dataSize = (ulong)context.Request.SendBuff[0].Size;
+            ulong dataPos  = context.Request.SendBuff[0].Position;
+            ulong dataSize = context.Request.SendBuff[0].Size;
 
-            long replyPos  = context.Request.ReceiveBuff[0].Position;
-            long replySize = context.Request.ReceiveBuff[0].Size;
+            ulong replyPos  = context.Request.ReceiveBuff[0].Position;
+            ulong replySize = context.Request.ReceiveBuff[0].Size;
 
             ReadOnlySpan<byte> inputParcel = context.Memory.GetSpan(dataPos, (int)dataSize);
 
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (result == ResultCode.Success)
             {
-                context.Memory.Write((ulong)replyPos, outputParcel);
+                context.Memory.Write(replyPos, outputParcel);
             }
 
             return result;
@@ -78,10 +78,10 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             uint code  = context.RequestData.ReadUInt32();
             uint flags = context.RequestData.ReadUInt32();
 
-            (long dataPos, long dataSize)   = context.Request.GetBufferType0x21();
-            (long replyPos, long replySize) = context.Request.GetBufferType0x22();
+            (ulong dataPos, ulong dataSize)   = context.Request.GetBufferType0x21();
+            (ulong replyPos, ulong replySize) = context.Request.GetBufferType0x22();
 
-            ReadOnlySpan<byte> inputParcel = context.Memory.GetSpan((ulong)dataPos, (int)dataSize);
+            ReadOnlySpan<byte> inputParcel = context.Memory.GetSpan(dataPos, (int)dataSize);
 
             Span<byte> outputParcel = new Span<byte>(new byte[replySize]);
 
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             if (result == ResultCode.Success)
             {
-                context.Memory.Write((ulong)replyPos, outputParcel);
+                context.Memory.Write(replyPos, outputParcel);
             }
 
             return result;

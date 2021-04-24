@@ -29,20 +29,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
                 return ResultCode.ObjectInvalid;
             }
 
-            long writePosition = context.RequestData.ReadInt64();
+            ulong writePosition = context.RequestData.ReadUInt64();
 
-            if (writePosition > _storage.Data.Length)
+            if (writePosition > (ulong)_storage.Data.Length)
             {
                 return ResultCode.OutOfBounds;
             }
 
-            (long position, long size) = context.Request.GetBufferType0x21();
+            (ulong position, ulong size) = context.Request.GetBufferType0x21();
 
-            size = Math.Min(size, _storage.Data.Length - writePosition);
+            size = Math.Min(size, (ulong)_storage.Data.Length - writePosition);
 
             if (size > 0)
             {
-                long maxSize = _storage.Data.Length - writePosition;
+                ulong maxSize = (ulong)_storage.Data.Length - writePosition;
 
                 if (size > maxSize)
                 {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 
                 byte[] data = new byte[size];
 
-                context.Memory.Read((ulong)position, data);
+                context.Memory.Read(position, data);
 
                 Buffer.BlockCopy(data, 0, _storage.Data, (int)writePosition, (int)size);
             }
@@ -63,22 +63,22 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // Read(u64) -> buffer<bytes, 0x22>
         public ResultCode Read(ServiceCtx context)
         {
-            long readPosition = context.RequestData.ReadInt64();
+            ulong readPosition = context.RequestData.ReadUInt64();
 
-            if (readPosition > _storage.Data.Length)
+            if (readPosition > (ulong)_storage.Data.Length)
             {
                 return ResultCode.OutOfBounds;
             }
 
-            (long position, long size) = context.Request.GetBufferType0x22();
+            (ulong position, ulong size) = context.Request.GetBufferType0x22();
 
-            size = Math.Min(size, _storage.Data.Length - readPosition);
+            size = Math.Min(size, (ulong)_storage.Data.Length - readPosition);
 
             byte[] data = new byte[size];
 
             Buffer.BlockCopy(_storage.Data, (int)readPosition, data, 0, (int)size);
 
-            context.Memory.Write((ulong)position, data);
+            context.Memory.Write(position, data);
 
             return ResultCode.Success;
         }

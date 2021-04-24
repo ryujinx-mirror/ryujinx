@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
@@ -590,25 +591,22 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode SetSupportedNpadIdType(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
-            long arraySize = context.Request.PtrBuff[0].Size / 4;
+            ulong arrayPosition = context.Request.PtrBuff[0].Position;
+            ulong arraySize = context.Request.PtrBuff[0].Size;
 
-            NpadIdType[] supportedPlayerIds = new NpadIdType[arraySize];
+            ReadOnlySpan<NpadIdType> supportedPlayerIds = MemoryMarshal.Cast<byte, NpadIdType>(context.Memory.GetSpan(arrayPosition, (int)arraySize));
 
             context.Device.Hid.Npads.ClearSupportedPlayers();
 
-            for (int i = 0; i < arraySize; ++i)
+            for (int i = 0; i < supportedPlayerIds.Length; ++i)
             {
-                NpadIdType id = context.Memory.Read<NpadIdType>((ulong)(context.Request.PtrBuff[0].Position + i * 4));
-
-                if (id >= 0)
+                if (supportedPlayerIds[i] >= 0)
                 {
-                    context.Device.Hid.Npads.SetSupportedPlayer(HidUtils.GetIndexFromNpadIdType(id));
+                    context.Device.Hid.Npads.SetSupportedPlayer(HidUtils.GetIndexFromNpadIdType(supportedPlayerIds[i]));
                 }
-
-                supportedPlayerIds[i] = id;
             }
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"{arraySize} " + string.Join(",", supportedPlayerIds));
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, $"{supportedPlayerIds.Length} " + string.Join(",", supportedPlayerIds.ToArray()));
 
             return ResultCode.Success;
         }
@@ -1007,11 +1005,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             byte[] vibrationDeviceHandleBuffer = new byte[context.Request.PtrBuff[0].Size];
 
-            context.Memory.Read((ulong)context.Request.PtrBuff[0].Position, vibrationDeviceHandleBuffer);
+            context.Memory.Read(context.Request.PtrBuff[0].Position, vibrationDeviceHandleBuffer);
 
             byte[] vibrationValueBuffer = new byte[context.Request.PtrBuff[1].Size];
 
-            context.Memory.Read((ulong)context.Request.PtrBuff[1].Position, vibrationValueBuffer);
+            context.Memory.Read(context.Request.PtrBuff[1].Position, vibrationValueBuffer);
 
             // TODO: Read all handles and values from buffer.
 

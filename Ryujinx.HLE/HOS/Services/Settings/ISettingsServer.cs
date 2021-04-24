@@ -190,17 +190,17 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                     break;
             }
 
-            context.Memory.Write((ulong)context.Request.ReceiveBuff[0].Position, keyCodeMap);
+            context.Memory.Write(context.Request.ReceiveBuff[0].Position, keyCodeMap);
 
             if (version == 1 && context.Device.System.State.DesiredKeyboardLayout == (long)KeyboardLayout.Default)
             {
-                context.Memory.Write((ulong)context.Request.ReceiveBuff[0].Position, (byte)0x01);
+                context.Memory.Write(context.Request.ReceiveBuff[0].Position, (byte)0x01);
             }
 
             return ResultCode.Success;
         }
 
-        public ResultCode GetAvailableLanguagesCodesImpl(ServiceCtx context, long position, long size, int maxSize)
+        public ResultCode GetAvailableLanguagesCodesImpl(ServiceCtx context, ulong position, ulong size, int maxSize)
         {
             int count = (int)(size / 8);
 
@@ -211,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             for (int index = 0; index < count; index++)
             {
-                context.Memory.Write((ulong)position, SystemStateMgr.GetLanguageCode(index));
+                context.Memory.Write(position, SystemStateMgr.GetLanguageCode(index));
 
                 position += 8;
             }

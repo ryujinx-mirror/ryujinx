@@ -57,16 +57,16 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6> output, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6> performanceOutput)
         public ResultCode RequestUpdate(ServiceCtx context)
         {
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize = context.Request.ReceiveBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
-            long performanceOutputPosition = context.Request.ReceiveBuff[1].Position;
-            long performanceOutputSize = context.Request.ReceiveBuff[1].Size;
+            ulong performanceOutputPosition = context.Request.ReceiveBuff[1].Position;
+            ulong performanceOutputSize = context.Request.ReceiveBuff[1].Size;
 
-            ReadOnlyMemory<byte> input = context.Memory.GetSpan((ulong)inputPosition, (int)inputSize).ToArray();
+            ReadOnlyMemory<byte> input = context.Memory.GetSpan(inputPosition, (int)inputSize).ToArray();
 
             Memory<byte> output = new byte[outputSize];
             Memory<byte> performanceOutput = new byte[performanceOutputSize];
@@ -78,8 +78,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             if (result == ResultCode.Success)
             {
-                context.Memory.Write((ulong)outputPosition, output.Span);
-                context.Memory.Write((ulong)performanceOutputPosition, performanceOutput.Span);
+                context.Memory.Write(outputPosition, output.Span);
+                context.Memory.Write(performanceOutputPosition, performanceOutput.Span);
             }
             else
             {
@@ -149,11 +149,11 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22> output, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22> performanceOutput)
         public ResultCode RequestUpdateAuto(ServiceCtx context)
         {
-            (long inputPosition, long inputSize) = context.Request.GetBufferType0x21();
-            (long outputPosition, long outputSize) = context.Request.GetBufferType0x22(0);
-            (long performanceOutputPosition, long performanceOutputSize) = context.Request.GetBufferType0x22(1);
+            (ulong inputPosition, ulong inputSize) = context.Request.GetBufferType0x21();
+            (ulong outputPosition, ulong outputSize) = context.Request.GetBufferType0x22(0);
+            (ulong performanceOutputPosition, ulong performanceOutputSize) = context.Request.GetBufferType0x22(1);
 
-            ReadOnlyMemory<byte> input = context.Memory.GetSpan((ulong)inputPosition, (int)inputSize).ToArray();
+            ReadOnlyMemory<byte> input = context.Memory.GetSpan(inputPosition, (int)inputSize).ToArray();
 
             Memory<byte> output = new byte[outputSize];
             Memory<byte> performanceOutput = new byte[performanceOutputSize];
@@ -165,8 +165,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             if (result == ResultCode.Success)
             {
-                context.Memory.Write((ulong)outputPosition, output.Span);
-                context.Memory.Write((ulong)performanceOutputPosition, performanceOutput.Span);
+                context.Memory.Write(outputPosition, output.Span);
+                context.Memory.Write(performanceOutputPosition, performanceOutput.Span);
             }
 
             return result;

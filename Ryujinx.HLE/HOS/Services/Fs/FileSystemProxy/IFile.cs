@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
         public ResultCode Read(ServiceCtx context)
         {
-            long position = context.Request.ReceiveBuff[0].Position;
+            ulong position = context.Request.ReceiveBuff[0].Position;
 
             ReadOption readOption = new ReadOption(context.RequestData.ReadInt32());
             context.RequestData.BaseStream.Position += 4;
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             Result result = _baseFile.Read(out long bytesRead, offset, data, readOption);
 
-            context.Memory.Write((ulong)position, data);
+            context.Memory.Write(position, data);
 
             context.ResponseData.Write(bytesRead);
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // Write(u32 writeOption, u64 offset, u64 size, buffer<u8, 0x45, 0>)
         public ResultCode Write(ServiceCtx context)
         {
-            long position = context.Request.SendBuff[0].Position;
+            ulong position = context.Request.SendBuff[0].Position;
 
             WriteOption writeOption = new WriteOption(context.RequestData.ReadInt32());
             context.RequestData.BaseStream.Position += 4;
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             byte[] data = new byte[size];
 
-            context.Memory.Read((ulong)position, data);
+            context.Memory.Read(position, data);
 
             return (ResultCode)_baseFile.Write(offset, data, writeOption).Value;
         }

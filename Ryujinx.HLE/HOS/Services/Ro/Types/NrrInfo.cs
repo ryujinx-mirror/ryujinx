@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Ro
     {
         public NrrHeader    Header     { get; private set; }
         public List<byte[]> Hashes     { get; private set; }
-        public long         NrrAddress { get; private set; }
+        public ulong        NrrAddress { get; private set; }
 
-        public NrrInfo(long nrrAddress, NrrHeader header, List<byte[]> hashes)
+        public NrrInfo(ulong nrrAddress, NrrHeader header, List<byte[]> hashes)
         {
             NrrAddress = nrrAddress;
             Header     = header;

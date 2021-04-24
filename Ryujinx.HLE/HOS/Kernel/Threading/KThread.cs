@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 TlsDramAddress = owner.MemoryManager.GetDramAddressFromVa(_tlsAddress);
 
-                MemoryHelper.FillWithZeros(owner.CpuMemory, (long)_tlsAddress, KTlsPageInfo.TlsEntrySize);
+                MemoryHelper.FillWithZeros(owner.CpuMemory, _tlsAddress, KTlsPageInfo.TlsEntrySize);
             }
 
             bool is64Bits;

@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         // AppendAudioOutBuffer(u64 bufferTag, buffer<nn::audio::AudioOutBuffer, 5> buffer)
         public ResultCode AppendAudioOutBuffer(ServiceCtx context)
         {
-            long position = context.Request.SendBuff[0].Position;
+            ulong position = context.Request.SendBuff[0].Position;
 
             ulong bufferTag = context.RequestData.ReadUInt64();
 
@@ -74,10 +74,10 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         // GetReleasedAudioOutBuffers() -> (u32 count, buffer<u64, 6> tags)
         public ResultCode GetReleasedAudioOutBuffers(ServiceCtx context)
         {
-            long position = context.Request.ReceiveBuff[0].Position;
-            long size = context.Request.ReceiveBuff[0].Size;
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
 
-            using (WritableRegion outputRegion = context.Memory.GetWritableRegion((ulong)position, (int)size))
+            using (WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size))
             {
                 ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
 
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         // AppendAudioOutBufferAuto(u64 tag, buffer<nn::audio::AudioOutBuffer, 0x21>)
         public ResultCode AppendAudioOutBufferAuto(ServiceCtx context)
         {
-            (long position, _) = context.Request.GetBufferType0x21();
+            (ulong position, _) = context.Request.GetBufferType0x21();
 
             ulong bufferTag = context.RequestData.ReadUInt64();
 
@@ -115,9 +115,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         // GetReleasedAudioOutBuffersAuto() -> (u32 count, buffer<u64, 0x22> tags)
         public ResultCode GetReleasedAudioOutBuffersAuto(ServiceCtx context)
         {
-            (long position, long size) = context.Request.GetBufferType0x22();
+            (ulong position, ulong size) = context.Request.GetBufferType0x22();
 
-            using (WritableRegion outputRegion = context.Memory.GetWritableRegion((ulong)position, (int)size))
+            using (WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size))
             {
                 ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
 

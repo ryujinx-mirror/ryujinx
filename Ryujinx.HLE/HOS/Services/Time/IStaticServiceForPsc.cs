@@ -246,7 +246,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             byte type = context.RequestData.ReadByte();
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf<ClockSnapshot>());
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<ClockSnapshot>());
 
             ResultCode result = _timeManager.StandardUserSystemClock.GetClockContext(context.Thread, out SystemClockContext userContext);
 
@@ -274,7 +274,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             byte type = context.RequestData.ReadByte();
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf<ClockSnapshot>());
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<ClockSnapshot>());
 
             context.RequestData.BaseStream.Position += 7;
 
@@ -404,11 +404,11 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         private ClockSnapshot ReadClockSnapshotFromBuffer(ServiceCtx context, IpcPtrBuffDesc ipcDesc)
         {
-            Debug.Assert(ipcDesc.Size == Marshal.SizeOf<ClockSnapshot>());
+            Debug.Assert(ipcDesc.Size == (ulong)Marshal.SizeOf<ClockSnapshot>());
 
             byte[] temp = new byte[ipcDesc.Size];
 
-            context.Memory.Read((ulong)ipcDesc.Position, temp);
+            context.Memory.Read(ipcDesc.Position, temp);
 
             using (BinaryReader bufferReader = new BinaryReader(new MemoryStream(temp)))
             {

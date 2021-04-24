@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Font
 
                 FontInfo CreateFont(string name)
                 {
-                    if (contentManager.TryGetFontTitle(name, out long fontTitle) &&
+                    if (contentManager.TryGetFontTitle(name, out ulong fontTitle) &&
                         contentManager.TryGetFontFilename(name, out string fontFilename))
                     {
                         string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, NcaContentType.Data);

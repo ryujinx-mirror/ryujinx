@@ -51,9 +51,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // LoadLocationNameList(u32 index) -> (u32 outCount, buffer<nn::time::LocationName, 6>)
         public ResultCode LoadLocationNameList(ServiceCtx context)
         {
-            uint index          = context.RequestData.ReadUInt32();
-            long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferSize     = context.Request.ReceiveBuff[0].Size;
+            uint  index          = context.RequestData.ReadUInt32();
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferSize     = context.Request.ReceiveBuff[0].Size;
 
             ResultCode errorCode = _timeZoneContentManager.LoadLocationNameList(index, out string[] locationNameArray, (uint)bufferSize / 0x24);
 
@@ -70,8 +70,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                         return ResultCode.LocationNameTooLong;
                     }
 
-                    context.Memory.Write((ulong)bufferPosition + offset, Encoding.ASCII.GetBytes(locationName));
-                    MemoryHelper.FillWithZeros(context.Memory, bufferPosition + offset + locationName.Length, padding);
+                    context.Memory.Write(bufferPosition + offset, Encoding.ASCII.GetBytes(locationName));
+                    MemoryHelper.FillWithZeros(context.Memory, bufferPosition + offset + (ulong)locationName.Length, padding);
 
                     offset += 0x24;
                 }
@@ -86,8 +86,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // LoadTimeZoneRule(nn::time::LocationName locationName) -> buffer<nn::time::TimeZoneRule, 0x16>
         public ResultCode LoadTimeZoneRule(ServiceCtx context)
         {
-            long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferSize     = context.Request.ReceiveBuff[0].Size;
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferSize     = context.Request.ReceiveBuff[0].Size;
 
             if (bufferSize != 0x4000)
             {

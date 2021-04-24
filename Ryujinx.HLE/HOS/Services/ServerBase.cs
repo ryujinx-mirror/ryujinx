@@ -180,13 +180,13 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 for (int i = 0; i < request.RecvListBuff.Count; i++)
                 {
-                    int size = BinaryPrimitives.ReadInt16LittleEndian(request.RawData.AsSpan().Slice(sizesOffset + i * 2, 2));
+                    ulong size = (ulong)BinaryPrimitives.ReadInt16LittleEndian(request.RawData.AsSpan().Slice(sizesOffset + i * 2, 2));
 
-                    response.PtrBuff.Add(new IpcPtrBuffDesc((long)tempAddr, i, size));
+                    response.PtrBuff.Add(new IpcPtrBuffDesc(tempAddr, (uint)i, size));
 
-                    request.RecvListBuff[i] = new IpcRecvListBuffDesc((long)tempAddr, size);
+                    request.RecvListBuff[i] = new IpcRecvListBuffDesc(tempAddr, size);
 
-                    tempAddr += (ulong)size;
+                    tempAddr += size;
                 }
             }
 

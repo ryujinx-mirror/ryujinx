@@ -1431,7 +1431,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             KProcess process = KernelStatic.GetCurrentProcess();
 
-            string str = MemoryHelper.ReadAsciiString(process.CpuMemory, (long)strPtr, (long)size);
+            string str = MemoryHelper.ReadAsciiString(process.CpuMemory, strPtr, (long)size);
 
             Logger.Warning?.Print(LogClass.KernelSvc, str);
         }

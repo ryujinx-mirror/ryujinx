@@ -37,12 +37,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             _appletResourceUserId = context.RequestData.ReadUInt64();
             _mcuVersionData       = context.RequestData.ReadUInt64();
 
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize     = context.Request.SendBuff[0].Size;
 
             _mcuData = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, _mcuData);
+            context.Memory.Read(inputPosition, _mcuData);
 
             // TODO: The mcuData buffer seems to contains entries with a size of 0x40 bytes each. Usage of the data needs to be determined.
 
@@ -93,8 +93,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.WrongArgument;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
-            long outputSize      = context.Request.RecvListBuff[0].Size;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputSize      = context.Request.RecvListBuff[0].Size;
 
             if (context.Device.System.NfpDevices.Count == 0)
             {
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             {
                 for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
                 {
-                    context.Memory.Write((ulong)(outputPosition + (i * sizeof(long))), (uint)context.Device.System.NfpDevices[i].Handle);
+                    context.Memory.Write(outputPosition + ((uint)i * sizeof(long)), (uint)context.Device.System.NfpDevices[i].Handle);
                 }
 
                 context.ResponseData.Write(context.Device.System.NfpDevices.Count);
@@ -376,8 +376,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.DeviceNotFound;
             }
 
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
@@ -397,7 +397,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                         {
                             byte[] applicationArea = VirtualAmiibo.GetApplicationArea(context.Device.System.NfpDevices[i].AmiiboId);
 
-                            context.Memory.Write((ulong)outputPosition, applicationArea);
+                            context.Memory.Write(outputPosition, applicationArea);
 
                             size = (uint)applicationArea.Length;
 
@@ -444,12 +444,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.DeviceNotFound;
             }
 
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize     = context.Request.SendBuff[0].Size;
 
             byte[] applicationArea = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, applicationArea);
+            context.Memory.Read(inputPosition, applicationArea);
 
             for (int i = 0; i < context.Device.System.NfpDevices.Count; i++)
             {
@@ -523,12 +523,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             uint applicationAreaId = context.RequestData.ReadUInt32();
 
-            long inputPosition = context.Request.SendBuff[0].Position;
-            long inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputPosition = context.Request.SendBuff[0].Position;
+            ulong inputSize     = context.Request.SendBuff[0].Size;
 
             byte[] applicationArea = new byte[inputSize];
 
-            context.Memory.Read((ulong)inputPosition, applicationArea);
+            context.Memory.Read(inputPosition, applicationArea);
 
             bool isCreated = false;
 
@@ -582,9 +582,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.WrongArgument;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(TagInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(TagInfo)));
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(TagInfo)));
 
@@ -625,7 +625,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
                             Uuid.CopyTo(tagInfo.Uuid.ToSpan());
 
-                            context.Memory.Write((ulong)outputPosition, tagInfo);
+                            context.Memory.Write(outputPosition, tagInfo);
 
                             resultCode = ResultCode.Success;
                         }
@@ -658,9 +658,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.WrongArgument;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(RegisterInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(RegisterInfo)));
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(RegisterInfo)));
 
@@ -685,7 +685,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                         {
                             RegisterInfo registerInfo = VirtualAmiibo.GetRegisterInfo(context.Device.System.NfpDevices[i].AmiiboId);
 
-                            context.Memory.Write((ulong)outputPosition, registerInfo);
+                            context.Memory.Write(outputPosition, registerInfo);
 
                             resultCode = ResultCode.Success;
                         }
@@ -718,9 +718,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.WrongArgument;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(CommonInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(CommonInfo)));
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(CommonInfo)));
 
@@ -745,7 +745,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                         {
                             CommonInfo commonInfo = VirtualAmiibo.GetCommonInfo(context.Device.System.NfpDevices[i].AmiiboId);
 
-                            context.Memory.Write((ulong)outputPosition, commonInfo);
+                            context.Memory.Write(outputPosition, commonInfo);
 
                             resultCode = ResultCode.Success;
                         }
@@ -778,9 +778,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return ResultCode.WrongArgument;
             }
 
-            long outputPosition = context.Request.RecvListBuff[0].Position;
+            ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(Marshal.SizeOf(typeof(ModelInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(ModelInfo)));
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(ModelInfo)));
 
@@ -814,7 +814,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                             modelInfo.ModelNumber      = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(8, 4), NumberStyles.HexNumber);
                             modelInfo.Type             = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(6, 2), NumberStyles.HexNumber);
 
-                            context.Memory.Write((ulong)outputPosition, modelInfo);
+                            context.Memory.Write(outputPosition, modelInfo);
 
                             resultCode = ResultCode.Success;
                         }

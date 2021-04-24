@@ -30,14 +30,14 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // Read() -> (u32, buffer<nn::bcat::DeliveryCacheDirectoryEntry, 6>)
         public ResultCode Read(ServiceCtx context)
         {
-            long position = context.Request.ReceiveBuff[0].Position;
-            long size = context.Request.ReceiveBuff[0].Size;
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
 
             byte[] data = new byte[size];
 
             Result result = _base.Read(out int entriesRead, MemoryMarshal.Cast<byte, DeliveryCacheDirectoryEntry>(data));
 
-            context.Memory.Write((ulong)position, data);
+            context.Memory.Write(position, data);
 
             context.ResponseData.Write(entriesRead);
 

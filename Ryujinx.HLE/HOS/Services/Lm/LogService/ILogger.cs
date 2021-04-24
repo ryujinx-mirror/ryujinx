@@ -19,11 +19,11 @@ namespace Ryujinx.HLE.HOS.Services.Lm.LogService
 
         private string LogImpl(ServiceCtx context)
         {
-            (long bufPos, long bufSize) = context.Request.GetBufferType0x21();
+            (ulong bufPos, ulong bufSize) = context.Request.GetBufferType0x21();
 
             byte[] logBuffer = new byte[bufSize];
 
-            context.Memory.Read((ulong)bufPos, logBuffer);
+            context.Memory.Read(bufPos, logBuffer);
 
             using MemoryStream ms = new MemoryStream(logBuffer);
 

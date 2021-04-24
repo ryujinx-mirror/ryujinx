@@ -121,11 +121,11 @@ namespace Ryujinx.HLE.HOS.Services.Time
             uint                 totalLocationNameCount  = context.RequestData.ReadUInt32();
             UInt128              timeZoneRuleVersion     = context.RequestData.ReadStruct<UInt128>();
 
-            (long bufferPosition, long bufferSize) = context.Request.GetBufferType0x21();
+            (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
 
             byte[] temp = new byte[bufferSize];
 
-            context.Memory.Read((ulong)bufferPosition, temp);
+            context.Memory.Read(bufferPosition, temp);
 
             using (MemoryStream timeZoneBinaryStream = new MemoryStream(temp))
             {

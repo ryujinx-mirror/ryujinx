@@ -41,8 +41,8 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         {
             CertificateFormat certificateFormat = (CertificateFormat)context.RequestData.ReadUInt32();
 
-            long certificateDataPosition = context.Request.SendBuff[0].Position;
-            long certificateDataSize     = context.Request.SendBuff[0].Size;
+            ulong certificateDataPosition = context.Request.SendBuff[0].Position;
+            ulong certificateDataSize     = context.Request.SendBuff[0].Size;
 
             context.ResponseData.Write(_serverCertificateId++);
 
@@ -55,15 +55,15 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // ImportClientPki(buffer<bytes, 5> certificate, buffer<bytes, 5> ascii_password) -> u64 certificateId
         public ResultCode ImportClientPki(ServiceCtx context)
         {
-            long certificateDataPosition = context.Request.SendBuff[0].Position;
-            long certificateDataSize     = context.Request.SendBuff[0].Size;
+            ulong certificateDataPosition = context.Request.SendBuff[0].Position;
+            ulong certificateDataSize     = context.Request.SendBuff[0].Size;
 
-            long asciiPasswordDataPosition = context.Request.SendBuff[1].Position;
-            long asciiPasswordDataSize     = context.Request.SendBuff[1].Size;
+            ulong asciiPasswordDataPosition = context.Request.SendBuff[1].Position;
+            ulong asciiPasswordDataSize     = context.Request.SendBuff[1].Size;
 
             byte[] asciiPasswordData = new byte[asciiPasswordDataSize];
 
-            context.Memory.Read((ulong)asciiPasswordDataPosition, asciiPasswordData);
+            context.Memory.Read(asciiPasswordDataPosition, asciiPasswordData);
 
             string asciiPassword = Encoding.ASCII.GetString(asciiPasswordData).Trim('\0');
 

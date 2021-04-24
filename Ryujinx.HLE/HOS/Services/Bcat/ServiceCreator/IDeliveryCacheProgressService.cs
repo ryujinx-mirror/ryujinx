@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
                 Result = 0
             };
 
-            long dcpSize = WriteDeliveryCacheProgressImpl(context, context.Request.RecvListBuff[0], deliveryCacheProgress);
+            ulong dcpSize = WriteDeliveryCacheProgressImpl(context, context.Request.RecvListBuff[0], deliveryCacheProgress);
             context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(dcpSize);
 
             Logger.Stub?.PrintStub(LogClass.ServiceBcat);
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return ResultCode.Success;
         }
 
-        private long WriteDeliveryCacheProgressImpl(ServiceCtx context, IpcRecvListBuffDesc ipcDesc, DeliveryCacheProgressImpl deliveryCacheProgress)
+        private ulong WriteDeliveryCacheProgressImpl(ServiceCtx context, IpcRecvListBuffDesc ipcDesc, DeliveryCacheProgressImpl deliveryCacheProgress)
         {
             return MemoryHelper.Write(context.Memory, ipcDesc.Position, deliveryCacheProgress);
         }

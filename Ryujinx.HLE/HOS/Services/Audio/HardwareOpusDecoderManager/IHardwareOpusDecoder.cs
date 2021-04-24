@@ -106,24 +106,24 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
         {
             ResultCode result;
 
-            long inPosition     = context.Request.SendBuff[0].Position;
-            long inSize         = context.Request.SendBuff[0].Size;
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong inPosition     = context.Request.SendBuff[0].Position;
+            ulong inSize         = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             byte[] buffer = new byte[inSize];
 
-            context.Memory.Read((ulong)inPosition, buffer);
+            context.Memory.Read(inPosition, buffer);
 
             using (BinaryReader inputStream = new BinaryReader(new MemoryStream(buffer)))
             {
-                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, outputSize, out uint outConsumed, out int outSamples);
+                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, (long)outputSize, out uint outConsumed, out int outSamples);
 
                 if (result == ResultCode.Success)
                 {
                     byte[] pcmDataBytes = new byte[outPcmData.Length * sizeof(short)];
                     Buffer.BlockCopy(outPcmData, 0, pcmDataBytes, 0, pcmDataBytes.Length);
-                    context.Memory.Write((ulong)outputPosition, pcmDataBytes);
+                    context.Memory.Write(outputPosition, pcmDataBytes);
 
                     context.ResponseData.Write(outConsumed);
                     context.ResponseData.Write(outSamples);
@@ -139,24 +139,24 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
         {
             ResultCode result;
 
-            long inPosition     = context.Request.SendBuff[0].Position;
-            long inSize         = context.Request.SendBuff[0].Size;
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong inPosition     = context.Request.SendBuff[0].Position;
+            ulong inSize         = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             byte[] buffer = new byte[inSize];
 
-            context.Memory.Read((ulong)inPosition, buffer);
+            context.Memory.Read(inPosition, buffer);
 
             using (BinaryReader inputStream = new BinaryReader(new MemoryStream(buffer)))
             {
-                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, outputSize, out uint outConsumed, out int outSamples);
+                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, (long)outputSize, out uint outConsumed, out int outSamples);
 
                 if (result == ResultCode.Success)
                 {
                     byte[] pcmDataBytes = new byte[outPcmData.Length * sizeof(short)];
                     Buffer.BlockCopy(outPcmData, 0, pcmDataBytes, 0, pcmDataBytes.Length);
-                    context.Memory.Write((ulong)outputPosition, pcmDataBytes);
+                    context.Memory.Write(outputPosition, pcmDataBytes);
 
                     context.ResponseData.Write(outConsumed);
                     context.ResponseData.Write(outSamples);
@@ -177,24 +177,24 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
 
             _reset = context.RequestData.ReadBoolean();
 
-            long inPosition     = context.Request.SendBuff[0].Position;
-            long inSize         = context.Request.SendBuff[0].Size;
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong inPosition     = context.Request.SendBuff[0].Position;
+            ulong inSize         = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             byte[] buffer = new byte[inSize];
 
-            context.Memory.Read((ulong)inPosition, buffer);
+            context.Memory.Read(inPosition, buffer);
 
             using (BinaryReader inputStream = new BinaryReader(new MemoryStream(buffer)))
             {
-                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, outputSize, out uint outConsumed, out int outSamples);
+                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, (long)outputSize, out uint outConsumed, out int outSamples);
 
                 if (result == ResultCode.Success)
                 {
                     byte[] pcmDataBytes = new byte[outPcmData.Length * sizeof(short)];
                     Buffer.BlockCopy(outPcmData, 0, pcmDataBytes, 0, pcmDataBytes.Length);
-                    context.Memory.Write((ulong)outputPosition, pcmDataBytes);
+                    context.Memory.Write(outputPosition, pcmDataBytes);
 
                     context.ResponseData.Write(outConsumed);
                     context.ResponseData.Write(outSamples);
@@ -215,24 +215,24 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
 
             _reset = context.RequestData.ReadBoolean();
 
-            long inPosition     = context.Request.SendBuff[0].Position;
-            long inSize         = context.Request.SendBuff[0].Size;
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong inPosition     = context.Request.SendBuff[0].Position;
+            ulong inSize         = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             byte[] buffer = new byte[inSize];
 
-            context.Memory.Read((ulong)inPosition, buffer);
+            context.Memory.Read(inPosition, buffer);
 
             using (BinaryReader inputStream = new BinaryReader(new MemoryStream(buffer)))
             {
-                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, outputSize, out uint outConsumed, out int outSamples);
+                result = DecodeInterleavedInternal(inputStream, out short[] outPcmData, (long)outputSize, out uint outConsumed, out int outSamples);
 
                 if (result == ResultCode.Success)
                 {
                     byte[] pcmDataBytes = new byte[outPcmData.Length * sizeof(short)];
                     Buffer.BlockCopy(outPcmData, 0, pcmDataBytes, 0, pcmDataBytes.Length);
-                    context.Memory.Write((ulong)outputPosition, pcmDataBytes);
+                    context.Memory.Write(outputPosition, pcmDataBytes);
 
                     context.ResponseData.Write(outConsumed);
                     context.ResponseData.Write(outSamples);

@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             if (currentProcess.CpuMemory.IsMapped(address) &&
                 currentProcess.CpuMemory.IsMapped(address + (ulong)size - 1))
             {
-                value = MemoryHelper.ReadAsciiString(currentProcess.CpuMemory, (long)address, size);
+                value = MemoryHelper.ReadAsciiString(currentProcess.CpuMemory, address, size);
 
                 return true;
             }

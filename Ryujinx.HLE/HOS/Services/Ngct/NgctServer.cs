@@ -11,8 +11,8 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
             //       Then it checks if ngc.t!functionality_override_enabled is enabled and if sys:set GetT is == 2.
             //       If both conditions are true, it does this following code. Since we currently stub it, it's fine to don't check settings service values.
 
-            long bufferPosition = context.Request.PtrBuff[0].Position;
-            long bufferSize     = context.Request.PtrBuff[0].Size;
+            ulong bufferPosition = context.Request.PtrBuff[0].Position;
+            ulong bufferSize     = context.Request.PtrBuff[0].Size;
 
             bool   isMatch = false;
             string text    = "";
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
                 {
                     byte[] buffer = new byte[bufferSize];
 
-                    context.Memory.Read((ulong)bufferPosition, buffer);
+                    context.Memory.Read(bufferPosition, buffer);
 
                     text = Encoding.ASCII.GetString(buffer);
 
@@ -52,10 +52,10 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
             //       Then it checks if ngc.t!functionality_override_enabled is enabled and if sys:set GetT is == 2.
             //       If both conditions are true, it does this following code. Since we currently stub it, it's fine to don't check settings service values.
 
-            long bufferPosition = context.Request.PtrBuff[0].Position;
-            long bufferSize     = context.Request.PtrBuff[0].Size;
+            ulong bufferPosition = context.Request.PtrBuff[0].Position;
+            ulong bufferSize     = context.Request.PtrBuff[0].Size;
 
-            long bufferFilteredPosition = context.Request.RecvListBuff[0].Position;
+            ulong bufferFilteredPosition = context.Request.RecvListBuff[0].Position;
 
             string text         = "";
             string textFiltered = "";
@@ -66,13 +66,13 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
                 {
                     textFiltered = new string('*', text.Length);
 
-                    context.Memory.Write((ulong)bufferFilteredPosition, Encoding.ASCII.GetBytes(textFiltered));
+                    context.Memory.Write(bufferFilteredPosition, Encoding.ASCII.GetBytes(textFiltered));
                 }
                 else
                 {
                     byte[] buffer = new byte[bufferSize];
 
-                    context.Memory.Read((ulong)bufferPosition, buffer);
+                    context.Memory.Read(bufferPosition, buffer);
 
                     // NOTE: Ngct use the archive 0100000000001034 which contains a words table. This is pushed on Chinese Switchs using Bcat service.
                     //       This call check if the string contains words which are in the table then returns the same string with each matched words replaced by '*'.
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
 
                     textFiltered = text = Encoding.ASCII.GetString(buffer);
 
-                    context.Memory.Write((ulong)bufferFilteredPosition, buffer);
+                    context.Memory.Write(bufferFilteredPosition, buffer);
                 }
             }
 

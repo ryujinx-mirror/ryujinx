@@ -184,12 +184,12 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // Pid placeholder
             context.RequestData.ReadInt64();
 
-            long position = context.Request.PtrBuff[0].Position;
-            long size     = context.Request.PtrBuff[0].Size;
+            ulong position = context.Request.PtrBuff[0].Position;
+            ulong size     = context.Request.PtrBuff[0].Size;
 
             byte[] bufferContent = new byte[size];
 
-            context.Memory.Read((ulong)position, bufferContent);
+            context.Memory.Read(position, bufferContent);
 
             if (uuid.IsNull)
             {
@@ -215,9 +215,9 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             bool   unknownBool = context.RequestData.ReadBoolean();
             UserId userId      = context.RequestData.ReadStruct<UserId>();
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x40L);
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x40UL);
 
-            long bufferPosition  = context.Request.RecvListBuff[0].Position;
+            ulong bufferPosition  = context.Request.RecvListBuff[0].Position;
 
             if (userId.IsNull)
             {
@@ -265,8 +265,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 
             */
 
-            context.Memory.Write((ulong)bufferPosition,        playHistoryRegistrationKeyBuffer);
-            context.Memory.Write((ulong)bufferPosition + 0x20, new byte[0x20]); // HmacHash
+            context.Memory.Write(bufferPosition,        playHistoryRegistrationKeyBuffer);
+            context.Memory.Write(bufferPosition + 0x20, new byte[0x20]); // HmacHash
 
             return ResultCode.Success;
         }
@@ -281,14 +281,14 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             context.RequestData.ReadInt64();
             long pid = context.Process.Pid;
 
-            long playHistoryRegistrationKeyPosition = context.Request.PtrBuff[0].Position;
-            long PlayHistoryRegistrationKeySize     = context.Request.PtrBuff[0].Size;
+            ulong playHistoryRegistrationKeyPosition = context.Request.PtrBuff[0].Position;
+            ulong PlayHistoryRegistrationKeySize     = context.Request.PtrBuff[0].Size;
 
-            long inAppScreenName1Position = context.Request.PtrBuff[1].Position;
-            long inAppScreenName1Size     = context.Request.PtrBuff[1].Size;
+            ulong inAppScreenName1Position = context.Request.PtrBuff[1].Position;
+            ulong inAppScreenName1Size     = context.Request.PtrBuff[1].Size;
 
-            long inAppScreenName2Position = context.Request.PtrBuff[2].Position;
-            long inAppScreenName2Size     = context.Request.PtrBuff[2].Size;
+            ulong inAppScreenName2Position = context.Request.PtrBuff[2].Position;
+            ulong inAppScreenName2Size     = context.Request.PtrBuff[2].Size;
 
             if (userId.IsNull || inAppScreenName1Size > 0x48 || inAppScreenName2Size > 0x48)
             {

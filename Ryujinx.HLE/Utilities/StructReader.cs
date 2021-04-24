@@ -1,5 +1,6 @@
 using Ryujinx.Cpu;
 using Ryujinx.Memory;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.Utilities
@@ -8,39 +9,30 @@ namespace Ryujinx.HLE.Utilities
     {
         private IVirtualMemoryManager _memory;
 
-        public long Position { get; private set; }
+        public ulong Position { get; private set; }
 
-        public StructReader(IVirtualMemoryManager memory, long position)
+        public StructReader(IVirtualMemoryManager memory, ulong position)
         {
             _memory  = memory;
             Position = position;
         }
 
-        public T Read<T>() where T : struct
+        public T Read<T>() where T : unmanaged
         {
             T value = MemoryHelper.Read<T>(_memory, Position);
 
-            Position += Marshal.SizeOf<T>();
+            Position += (uint)Marshal.SizeOf<T>();
 
             return value;
         }
 
-        public T[] Read<T>(int size) where T : struct
+        public ReadOnlySpan<T> Read<T>(int size) where T : unmanaged
         {
-            int structSize = Marshal.SizeOf<T>();
+            ReadOnlySpan<byte> data = _memory.GetSpan(Position, size);
 
-            int count = size / structSize;
+            Position += (uint)size;
 
-            T[] output = new T[count];
-
-            for (int index = 0; index < count; index++)
-            {
-                output[index] = MemoryHelper.Read<T>(_memory, Position);
-
-                Position += structSize;
-            }
-
-            return output;
+            return MemoryMarshal.Cast<byte, T>(data);
         }
     }
 }

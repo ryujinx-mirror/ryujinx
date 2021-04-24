@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // GetSettingName() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingName(ServiceCtx context)
         {
-            (long outputPosition, long outputSize) = context.Request.GetBufferType0x22();
+            (ulong outputPosition, ulong outputSize) = context.Request.GetBufferType0x22();
 
             ResultCode result = _fqdnResolver.GetSettingName(context, out string settingName);
 
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             {
                 byte[] settingNameBuffer = Encoding.UTF8.GetBytes(settingName + '\0');
 
-                context.Memory.Write((ulong)outputPosition, settingNameBuffer);
+                context.Memory.Write(outputPosition, settingNameBuffer);
             }
 
             return result;
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // GetEnvironmentIdentifier() -> buffer<unknown<8>, 0x16>
         public ResultCode GetEnvironmentIdentifier(ServiceCtx context)
         {
-            (long outputPosition, long outputSize) = context.Request.GetBufferType0x22();
+            (ulong outputPosition, ulong outputSize) = context.Request.GetBufferType0x22();
 
             ResultCode result = _fqdnResolver.GetEnvironmentIdentifier(context, out string identifier);
 
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             {
                 byte[] identifierBuffer = Encoding.UTF8.GetBytes(identifier + '\0');
 
-                context.Memory.Write((ulong)outputPosition, identifierBuffer);
+                context.Memory.Write(outputPosition, identifierBuffer);
             }
 
             return result;
@@ -133,12 +133,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // Resolve(buffer<unknown<0x100>, 0x15>) -> buffer<unknown<0x100>, 0x16>
         public ResultCode Resolve(ServiceCtx context)
         {
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out _, out string resolvedAddress);
 
-            if (resolvedAddress.Length > outputSize)
+            if ((ulong)resolvedAddress.Length > outputSize)
             {
                 return ResultCode.InvalidArgument;
             }
@@ -147,7 +147,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
-            context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
+            context.Memory.Write(outputPosition, resolvedAddressBuffer);
 
             return result;
         }
@@ -156,12 +156,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // ResolveEx(buffer<unknown<0x100>, 0x15>) -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode ResolveEx(ServiceCtx context)
         {
-            long outputPosition = context.Request.ReceiveBuff[0].Position;
-            long outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
 
-            if (resolvedAddress.Length > outputSize)
+            if ((ulong)resolvedAddress.Length > outputSize)
             {
                 return ResultCode.InvalidArgument;
             }
@@ -170,7 +170,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
-            context.Memory.Write((ulong)outputPosition, resolvedAddressBuffer);
+            context.Memory.Write(outputPosition, resolvedAddressBuffer);
 
             context.ResponseData.Write((int)errorCode);
 

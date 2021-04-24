@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // AppendAudioInBuffer(u64 tag, buffer<nn::audio::AudioInBuffer, 5>)
         public ResultCode AppendAudioInBuffer(ServiceCtx context)
         {
-            long position = context.Request.SendBuff[0].Position;
+            ulong position = context.Request.SendBuff[0].Position;
 
             ulong bufferTag = context.RequestData.ReadUInt64();
 
@@ -74,8 +74,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // GetReleasedAudioInBuffers() -> (u32 count, buffer<u64, 6> tags)
         public ResultCode GetReleasedAudioInBuffers(ServiceCtx context)
         {
-            long position = context.Request.ReceiveBuff[0].Position;
-            long size = context.Request.ReceiveBuff[0].Size;
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
 
             using (WritableRegion outputRegion = context.Memory.GetWritableRegion((ulong)position, (int)size))
             {
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // AppendUacInBuffer(u64 tag, handle<copy, unknown>, buffer<nn::audio::AudioInBuffer, 5>)
         public ResultCode AppendUacInBuffer(ServiceCtx context)
         {
-            long position = context.Request.SendBuff[0].Position;
+            ulong position = context.Request.SendBuff[0].Position;
 
             ulong bufferTag = context.RequestData.ReadUInt64();
             uint handle = (uint)context.Request.HandleDesc.ToCopy[0];
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // AppendAudioInBufferAuto(u64 tag, buffer<nn::audio::AudioInBuffer, 0x21>)
         public ResultCode AppendAudioInBufferAuto(ServiceCtx context)
         {
-            (long position, _) = context.Request.GetBufferType0x21();
+            (ulong position, _) = context.Request.GetBufferType0x21();
 
             ulong bufferTag = context.RequestData.ReadUInt64();
 
@@ -129,9 +129,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // GetReleasedAudioInBuffersAuto() -> (u32 count, buffer<u64, 0x22> tags)
         public ResultCode GetReleasedAudioInBuffersAuto(ServiceCtx context)
         {
-            (long position, long size) = context.Request.GetBufferType0x22();
+            (ulong position, ulong size) = context.Request.GetBufferType0x22();
 
-            using (WritableRegion outputRegion = context.Memory.GetWritableRegion((ulong)position, (int)size))
+            using (WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size))
             {
                 ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
 
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         // AppendUacInBufferAuto(u64 tag, handle<copy, event>, buffer<nn::audio::AudioInBuffer, 0x21>)
         public ResultCode AppendUacInBufferAuto(ServiceCtx context)
         {
-            (long position, _) = context.Request.GetBufferType0x21();
+            (ulong position, _) = context.Request.GetBufferType0x21();
 
             ulong bufferTag = context.RequestData.ReadUInt64();
             uint handle = (uint)context.Request.HandleDesc.ToCopy[0];

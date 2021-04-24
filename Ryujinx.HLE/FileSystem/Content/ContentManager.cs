@@ -24,8 +24,8 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         private Dictionary<StorageId, LinkedList<LocationEntry>> _locationEntries;
 
-        private Dictionary<string, long>   _sharedFontTitleDictionary;
-        private Dictionary<long, string>   _systemTitlesNameDictionary;
+        private Dictionary<string, ulong>  _sharedFontTitleDictionary;
+        private Dictionary<ulong, string>  _systemTitlesNameDictionary;
         private Dictionary<string, string> _sharedFontFilenameDictionary;
 
         private SortedDictionary<(ulong titleId, NcaContentType type), string> _contentDictionary;
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             _contentDictionary = new SortedDictionary<(ulong, NcaContentType), string>();
             _locationEntries   = new Dictionary<StorageId, LinkedList<LocationEntry>>();
 
-            _sharedFontTitleDictionary = new Dictionary<string, long>
+            _sharedFontTitleDictionary = new Dictionary<string, ulong>
             {
                 { "FontStandard",                  0x0100000000000811 },
                 { "FontChineseSimplified",         0x0100000000000814 },
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 { "FontNintendoExtended",          0x0100000000000810 }
             };
 
-            _systemTitlesNameDictionary = new Dictionary<long, string>()
+            _systemTitlesNameDictionary = new Dictionary<ulong, string>()
             {
                 { 0x010000000000080E, "TimeZoneBinary"         },
                 { 0x0100000000000810, "FontNintendoExtension"  },
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                                 LocationEntry entry = new LocationEntry(switchPath,
                                                                         0,
-                                                                        (long)nca.Header.TitleId,
+                                                                        nca.Header.TitleId,
                                                                         nca.Header.ContentType);
 
                                 AddEntry(entry);
@@ -167,7 +167,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                                 LocationEntry entry = new LocationEntry(switchPath,
                                                                         0,
-                                                                        (long)nca.Header.TitleId,
+                                                                        nca.Header.TitleId,
                                                                         nca.Header.ContentType);
 
                                 AddEntry(entry);
@@ -297,7 +297,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             return false;
         }
 
-        public void ClearEntry(long titleId, NcaContentType contentType, StorageId storageId)
+        public void ClearEntry(ulong titleId, NcaContentType contentType, StorageId storageId)
         {
             lock (_lock)
             {
@@ -333,7 +333,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 if (_contentDictionary.ContainsValue(ncaId))
                 {
                     var content = _contentDictionary.FirstOrDefault(x => x.Value == ncaId);
-                    long titleId = (long)content.Key.Item1;
+                    ulong titleId = content.Key.Item1;
 
                     NcaContentType contentType = content.Key.type;
                     StorageId storage = GetInstalledStorage(titleId, contentType, storageId);
@@ -345,20 +345,20 @@ namespace Ryujinx.HLE.FileSystem.Content
             return false;
         }
 
-        public UInt128 GetInstalledNcaId(long titleId, NcaContentType contentType)
+        public UInt128 GetInstalledNcaId(ulong titleId, NcaContentType contentType)
         {
             lock (_lock)
             {
-                if (_contentDictionary.ContainsKey(((ulong)titleId, contentType)))
+                if (_contentDictionary.ContainsKey((titleId, contentType)))
                 {
-                    return new UInt128(_contentDictionary[((ulong)titleId, contentType)]);
+                    return new UInt128(_contentDictionary[(titleId, contentType)]);
                 }
             }
 
             return new UInt128();
         }
 
-        public StorageId GetInstalledStorage(long titleId, NcaContentType contentType, StorageId storageId)
+        public StorageId GetInstalledStorage(ulong titleId, NcaContentType contentType, StorageId storageId)
         {
             lock (_lock)
             {
@@ -369,7 +369,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             }
         }
 
-        public string GetInstalledContentPath(long titleId, StorageId storageId, NcaContentType contentType)
+        public string GetInstalledContentPath(ulong titleId, StorageId storageId, NcaContentType contentType)
         {
             lock (_lock)
             {
@@ -445,7 +445,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             }
         }
 
-        private void RemoveLocationEntry(long titleId, NcaContentType contentType, StorageId storageId)
+        private void RemoveLocationEntry(ulong titleId, NcaContentType contentType, StorageId storageId)
         {
             LinkedList<LocationEntry> locationList = null;
 
@@ -466,7 +466,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             }
         }
 
-        public bool TryGetFontTitle(string fontName, out long titleId)
+        public bool TryGetFontTitle(string fontName, out ulong titleId)
         {
             return _sharedFontTitleDictionary.TryGetValue(fontName, out titleId);
         }
@@ -476,12 +476,12 @@ namespace Ryujinx.HLE.FileSystem.Content
             return _sharedFontFilenameDictionary.TryGetValue(fontName, out filename);
         }
 
-        public bool TryGetSystemTitlesName(long titleId, out string name)
+        public bool TryGetSystemTitlesName(ulong titleId, out string name)
         {
             return _systemTitlesNameDictionary.TryGetValue(titleId, out name);
         }
 
-        private LocationEntry GetLocation(long titleId, NcaContentType contentType, StorageId storageId)
+        private LocationEntry GetLocation(ulong titleId, NcaContentType contentType, StorageId storageId)
         {
             LinkedList<LocationEntry> locationList = _locationEntries[storageId];
 
