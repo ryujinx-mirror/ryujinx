@@ -354,6 +354,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             clockSnapshot.IsAutomaticCorrectionEnabled = _timeManager.StandardUserSystemClock.IsAutomaticCorrectionEnabled();
             clockSnapshot.UserContext                  = userContext;
             clockSnapshot.NetworkContext               = networkContext;
+            clockSnapshot.SteadyClockTimePoint         = currentTimePoint;
 
             ResultCode result = _timeManager.TimeZone.Manager.GetDeviceLocationName(out string deviceLocationName);
 
