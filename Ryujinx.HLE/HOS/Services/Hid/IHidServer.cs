@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
@@ -70,6 +71,13 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
+            // Initialize entries to avoid issues with some games.
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.DebugPad.Update();
+            }
+
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
             return ResultCode.Success;
@@ -82,6 +90,13 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Touchscreen.Active = true;
+
+            // Initialize entries to avoid issues with some games.
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.Touchscreen.Update();
+            }
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
@@ -96,6 +111,13 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.Device.Hid.Mouse.Active = true;
 
+            // Initialize entries to avoid issues with some games.
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.Mouse.Update(0, 0);
+            }
+
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
             return ResultCode.Success;
@@ -108,6 +130,16 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Keyboard.Active = true;
+
+            // Initialize entries to avoid issues with some games.
+
+            KeyboardInput emptyInput = new KeyboardInput();
+            emptyInput.Keys = new int[8];
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.Keyboard.Update(emptyInput);
+            }
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
@@ -618,6 +650,32 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.Device.Hid.Npads.Active = true;
+
+            // Initialize entries to avoid issues with some games.
+
+            List<GamepadInput> emptyGamepadInputs = new List<GamepadInput>();
+            List<SixAxisInput> emptySixAxisInputs = new List<SixAxisInput>();
+
+            for (int player = 0; player < NpadDevices.MaxControllers; player++)
+            {
+                GamepadInput gamepadInput = new GamepadInput();
+                SixAxisInput sixaxisInput = new SixAxisInput();
+
+                gamepadInput.PlayerId = (PlayerIndex)player;
+                sixaxisInput.PlayerId = (PlayerIndex)player;
+
+                sixaxisInput.Orientation = new float[9];
+
+                emptyGamepadInputs.Add(gamepadInput);
+                emptySixAxisInputs.Add(sixaxisInput);
+            }
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.Npads.Update(emptyGamepadInputs);
+                context.Device.Hid.Npads.UpdateSixAxis(emptySixAxisInputs);
+            }
+
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
 
             return ResultCode.Success;
@@ -689,6 +747,31 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int  revision             = context.RequestData.ReadInt32();
             long appletResourceUserId = context.RequestData.ReadInt64();
+
+            // Initialize entries to avoid issues with some games.
+
+            List<GamepadInput> emptyGamepadInputs = new List<GamepadInput>();
+            List<SixAxisInput> emptySixAxisInputs = new List<SixAxisInput>();
+
+            for (int player = 0; player < NpadDevices.MaxControllers; player++)
+            {
+                GamepadInput gamepadInput = new GamepadInput();
+                SixAxisInput sixaxisInput = new SixAxisInput();
+
+                gamepadInput.PlayerId = (PlayerIndex)player;
+                sixaxisInput.PlayerId = (PlayerIndex)player;
+
+                sixaxisInput.Orientation = new float[9];
+
+                emptyGamepadInputs.Add(gamepadInput);
+                emptySixAxisInputs.Add(sixaxisInput);
+            }
+
+            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
+            {
+                context.Device.Hid.Npads.Update(emptyGamepadInputs);
+                context.Device.Hid.Npads.UpdateSixAxis(emptySixAxisInputs);
+            }
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, revision });
 
