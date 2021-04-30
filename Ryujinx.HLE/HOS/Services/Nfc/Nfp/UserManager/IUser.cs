@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                         if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
                         {
                             context.Device.System.NfpDevices[i].SignalActivate();
-                            Thread.Sleep(50); // NOTE: Simulate amiibo scanning delay.
+                            Thread.Sleep(125); // NOTE: Simulate amiibo scanning delay.
                             context.Device.System.NfpDevices[i].SignalDeactivate();
 
                             break;
