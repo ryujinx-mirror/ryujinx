@@ -1,5 +1,6 @@
 {
   "version": 24,
+  "enable_file_log": true,
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,
@@ -14,7 +15,6 @@
   "logging_enable_fs_access_log": false,
   "logging_filtered_classes": [],
   "logging_graphics_debug_level": "None",
-  "enable_file_log": true,
   "system_language": "AmericanEnglish",
   "system_region": "USA",
   "system_time_zone": "UTC",

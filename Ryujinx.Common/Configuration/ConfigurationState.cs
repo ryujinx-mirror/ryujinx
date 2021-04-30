@@ -408,6 +408,7 @@ namespace Ryujinx.Configuration
             ConfigurationFileFormat configurationFile = new ConfigurationFileFormat
             {
                 Version                   = ConfigurationFileFormat.CurrentVersion,
+                EnableFileLog             = Logger.EnableFileLog,
                 ResScale                  = Graphics.ResScale,
                 ResScaleCustom            = Graphics.ResScaleCustom,
                 MaxAnisotropy             = Graphics.MaxAnisotropy,
@@ -422,7 +423,6 @@ namespace Ryujinx.Configuration
                 LoggingEnableFsAccessLog  = Logger.EnableFsAccessLog,
                 LoggingFilteredClasses    = Logger.FilteredClasses,
                 LoggingGraphicsDebugLevel = Logger.GraphicsDebugLevel,
-                EnableFileLog             = Logger.EnableFileLog,
                 SystemLanguage            = System.Language,
                 SystemRegion              = System.Region,
                 SystemTimeZone            = System.TimeZone,
@@ -474,6 +474,7 @@ namespace Ryujinx.Configuration
 
         public void LoadDefault()
         {
+            Logger.EnableFileLog.Value             = true;
             Graphics.ResScale.Value                = 1;
             Graphics.ResScaleCustom.Value          = 1.0f;
             Graphics.MaxAnisotropy.Value           = -1.0f;
@@ -488,7 +489,6 @@ namespace Ryujinx.Configuration
             Logger.EnableFsAccessLog.Value         = false;
             Logger.FilteredClasses.Value           = Array.Empty<LogClass>();
             Logger.GraphicsDebugLevel.Value        = GraphicsDebugLevel.None;
-            Logger.EnableFileLog.Value             = true;
             System.Language.Value                  = Language.AmericanEnglish;
             System.Region.Value                    = Region.USA;
             System.TimeZone.Value                  = "UTC";
@@ -803,6 +803,7 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
             Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;
@@ -817,7 +818,6 @@ namespace Ryujinx.Configuration
             Logger.EnableFsAccessLog.Value         = configurationFileFormat.LoggingEnableFsAccessLog;
             Logger.FilteredClasses.Value           = configurationFileFormat.LoggingFilteredClasses;
             Logger.GraphicsDebugLevel.Value        = configurationFileFormat.LoggingGraphicsDebugLevel;
-            Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             System.Language.Value                  = configurationFileFormat.SystemLanguage;
             System.Region.Value                    = configurationFileFormat.SystemRegion;
             System.TimeZone.Value                  = configurationFileFormat.SystemTimeZone;
