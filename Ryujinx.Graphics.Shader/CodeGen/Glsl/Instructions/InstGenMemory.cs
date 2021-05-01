@@ -205,13 +205,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return $"{arrayName}[{offsetExpr}]";
         }
 
-        public static string LoadStorage(CodeGenContext context, AstOperation operation)
+        public static string LoadStorage(CodeGenContext context, AstOperation operation, bool forAtomic = false)
         {
             IAstNode src1 = operation.GetSource(0);
             IAstNode src2 = operation.GetSource(1);
 
             string indexExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
             string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
+
+            if (forAtomic)
+            {
+                SetStorageWriteFlag(context, src1, context.Config.Stage);
+            }
 
             return GetStorageBufferAccessor(indexExpr, offsetExpr, context.Config.Stage);
         }
@@ -485,7 +490,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         {
                             flags |= TextureUsageFlags.ResScaleUnsupported;
                         }
-                    } 
+                    }
                     else
                     {
                         // Resolution scaling cannot be applied to this texture right now.
