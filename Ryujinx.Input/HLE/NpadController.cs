@@ -456,14 +456,14 @@ namespace Ryujinx.Input.HLE
                 KeyboardInput hidKeyboard = new KeyboardInput
                 {
                     Modifier = 0,
-                    Keys = new int[0x8]
+                    Keys = new ulong[0x4]
                 };
 
                 foreach (HLEKeyboardMappingEntry entry in KeyMapping)
                 {
-                    int value = keyboardState.IsPressed(entry.TargetKey) ? 1 : 0;
+                    ulong value = keyboardState.IsPressed(entry.TargetKey) ? 1UL : 0UL;
 
-                    hidKeyboard.Keys[entry.Target / 0x20] |= (value << (entry.Target % 0x20));
+                    hidKeyboard.Keys[entry.Target / 0x40] |= (value << (entry.Target % 0x40));
                 }
 
                 foreach (HLEKeyboardMappingEntry entry in KeyModifierMapping)

@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
+using Ryujinx.HLE.HOS.Services.Hid.Types;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -134,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             // Initialize entries to avoid issues with some games.
 
             KeyboardInput emptyInput = new KeyboardInput();
-            emptyInput.Keys = new int[8];
+            emptyInput.Keys = new ulong[4];
 
             for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
             {

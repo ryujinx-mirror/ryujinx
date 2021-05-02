@@ -1,3 +1,7 @@
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Keyboard;
+using System;
+
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
     public class KeyboardDevice : BaseDevice
@@ -6,27 +10,26 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public unsafe void Update(KeyboardInput keyState)
         {
-            ref ShMemKeyboard keyboard = ref _device.Hid.SharedMemory.Keyboard;
-
-            int currentIndex = UpdateEntriesHeader(ref keyboard.Header, out int previousIndex);
+            ref RingLifo<KeyboardState> lifo = ref _device.Hid.SharedMemory.Keyboard;
 
             if (!Active)
             {
+                lifo.Clear();
+
                 return;
             }
 
-            ref KeyboardState currentEntry = ref keyboard.Entries[currentIndex];
-            KeyboardState previousEntry = keyboard.Entries[previousIndex];
+            ref KeyboardState previousEntry = ref lifo.GetCurrentEntryRef();
 
-            currentEntry.SampleTimestamp = previousEntry.SampleTimestamp + 1;
-            currentEntry.SampleTimestamp2 = previousEntry.SampleTimestamp2 + 1;
-
-            for (int i = 0; i < 8; ++i)
+            KeyboardState newState = new KeyboardState
             {
-                currentEntry.Keys[i] = (uint)keyState.Keys[i];
-            }
+                SamplingNumber = previousEntry.SamplingNumber + 1,
+            };
 
-            currentEntry.Modifier = (ulong)keyState.Modifier;
+            keyState.Keys.AsSpan().CopyTo(newState.Keys.RawData.ToSpan());
+            newState.Modifiers = (KeyboardModifier)keyState.Modifier;
+
+            lifo.Write(ref newState);
         }
     }
 }

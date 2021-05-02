@@ -3,6 +3,14 @@ using Ryujinx.HLE.Exceptions;
 using Ryujinx.Common.Configuration.Hid;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Ryujinx.Common.Memory;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Mouse;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Keyboard;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.DebugPad;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
@@ -12,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         private readonly ulong _hidMemoryAddress;
 
-        internal ref HidSharedMemory SharedMemory => ref _device.Memory.GetRef<HidSharedMemory>(_hidMemoryAddress);
+        internal ref SharedMemory SharedMemory => ref _device.Memory.GetRef<SharedMemory>(_hidMemoryAddress);
 
         internal const int SharedMemEntryCount = 17;
 
@@ -22,32 +30,22 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public KeyboardDevice Keyboard;
         public NpadDevices    Npads;
 
+        private static void CheckTypeSizeOrThrow<T>(int expectedSize)
+        {
+            if (Unsafe.SizeOf<T>() != expectedSize)
+            {
+                throw new InvalidStructLayoutException<T>(expectedSize);
+            }
+        }
+
         static Hid()
         {
-            if (Unsafe.SizeOf<ShMemDebugPad>() != 0x400)
-            {
-                throw new InvalidStructLayoutException<ShMemDebugPad>(0x400);
-            }
-            if (Unsafe.SizeOf<ShMemTouchScreen>() != 0x3000)
-            {
-                throw new InvalidStructLayoutException<ShMemTouchScreen>(0x3000);
-            }
-            if (Unsafe.SizeOf<ShMemKeyboard>() != 0x400)
-            {
-                throw new InvalidStructLayoutException<ShMemKeyboard>(0x400);
-            }
-            if (Unsafe.SizeOf<ShMemMouse>() != 0x400)
-            {
-                throw new InvalidStructLayoutException<ShMemMouse>(0x400);
-            }
-            if (Unsafe.SizeOf<ShMemNpad>() != 0x5000)
-            {
-                throw new InvalidStructLayoutException<ShMemNpad>(0x5000);
-            }
-            if (Unsafe.SizeOf<HidSharedMemory>() != Horizon.HidSize)
-            {
-                throw new InvalidStructLayoutException<HidSharedMemory>(Horizon.HidSize);
-            }
+            CheckTypeSizeOrThrow<RingLifo<DebugPadState>>(0x2c8);
+            CheckTypeSizeOrThrow<RingLifo<TouchScreenState>>(0x2C38);
+            CheckTypeSizeOrThrow<RingLifo<MouseState>>(0x350);
+            CheckTypeSizeOrThrow<RingLifo<KeyboardState>>(0x3D8);
+            CheckTypeSizeOrThrow<Array10<NpadState>>(0x32000);
+            CheckTypeSizeOrThrow<SharedMemory>(Horizon.HidSize);
         }
 
         public Hid(in Switch device, ulong sharedHidMemoryAddress)
@@ -55,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             _device           = device;
             _hidMemoryAddress = sharedHidMemoryAddress;
 
-            device.Memory.ZeroFill(sharedHidMemoryAddress, Horizon.HidSize);
+            SharedMemory = SharedMemory.Create();
         }
 
         public void InitDevices()

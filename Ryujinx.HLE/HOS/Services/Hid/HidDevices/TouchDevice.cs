@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
@@ -8,39 +10,38 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public void Update(params TouchPoint[] points)
         {
-            ref ShMemTouchScreen touchscreen = ref _device.Hid.SharedMemory.TouchScreen;
+            ref RingLifo<TouchScreenState> lifo = ref _device.Hid.SharedMemory.TouchScreen;
 
-            int currentIndex = UpdateEntriesHeader(ref touchscreen.Header, out int previousIndex);
+            ref TouchScreenState previousEntry = ref lifo.GetCurrentEntryRef();
 
-            if (!Active)
+            TouchScreenState newState = new TouchScreenState
             {
-                return;
-            }
+                SamplingNumber = previousEntry.SamplingNumber + 1
+            };
 
-            ref TouchScreenState currentEntry = ref touchscreen.Entries[currentIndex];
-            TouchScreenState previousEntry = touchscreen.Entries[previousIndex];
-
-            currentEntry.SampleTimestamp = previousEntry.SampleTimestamp + 1;
-            currentEntry.SampleTimestamp2 = previousEntry.SampleTimestamp2 + 1;
-
-            currentEntry.NumTouches = (ulong)points.Length;
-
-            int pointsLength = Math.Min(points.Length, currentEntry.Touches.Length);
-
-            for (int i = 0; i < pointsLength; ++i)
+            if (Active)
             {
-                TouchPoint pi = points[i];
-                currentEntry.Touches[i] = new TouchScreenStateData
+                newState.TouchesCount = points.Length;
+
+                int pointsLength = Math.Min(points.Length, newState.Touches.Length);
+
+                for (int i = 0; i < pointsLength; ++i)
                 {
-                    SampleTimestamp = currentEntry.SampleTimestamp,
-                    X = pi.X,
-                    Y = pi.Y,
-                    TouchIndex = (uint)i,
-                    DiameterX = pi.DiameterX,
-                    DiameterY = pi.DiameterY,
-                    Angle = pi.Angle
-                };
+                    TouchPoint pi = points[i];
+                    newState.Touches[i] = new TouchState
+                    {
+                        DeltaTime = newState.SamplingNumber,
+                        X = pi.X,
+                        Y = pi.Y,
+                        FingerId = (uint)i,
+                        DiameterX = pi.DiameterX,
+                        DiameterY = pi.DiameterY,
+                        RotationAngle = pi.Angle
+                    };
+                }
             }
+
+            lifo.Write(ref newState);
         }
     }
 }
