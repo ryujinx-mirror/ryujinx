@@ -6,6 +6,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
     unsafe class FFmpegContext : IDisposable
     {
         private readonly AVCodec* _codec;
+        private AVPacket* _packet;
         private AVCodecContext* _context;
 
         public FFmpegContext()
@@ -14,20 +15,21 @@ namespace Ryujinx.Graphics.Nvdec.H264
             _context = ffmpeg.avcodec_alloc_context3(_codec);
 
             ffmpeg.avcodec_open2(_context, _codec, null);
+
+            _packet = ffmpeg.av_packet_alloc();
         }
 
         public int DecodeFrame(Surface output, ReadOnlySpan<byte> bitstream)
         {
-            AVPacket packet;
-
-            ffmpeg.av_init_packet(&packet);
+            // Ensure the packet is clean before proceeding
+            ffmpeg.av_packet_unref(_packet);
 
             fixed (byte* ptr = bitstream)
             {
-                packet.data = ptr;
-                packet.size = bitstream.Length;
+                _packet->data = ptr;
+                _packet->size = bitstream.Length;
 
-                int rc = ffmpeg.avcodec_send_packet(_context, &packet);
+                int rc = ffmpeg.avcodec_send_packet(_context, _packet);
 
                 if (rc != 0)
                 {
@@ -40,6 +42,11 @@ namespace Ryujinx.Graphics.Nvdec.H264
 
         public void Dispose()
         {
+            fixed (AVPacket** ppPacket = &_packet)
+            {
+                ffmpeg.av_packet_free(ppPacket);
+            }
+
             ffmpeg.avcodec_close(_context);
 
             fixed (AVCodecContext** ppContext = &_context)
