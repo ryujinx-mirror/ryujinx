@@ -187,9 +187,9 @@ namespace Ryujinx.Ui.Windows
             mainWindow.InputManager.GamepadDriver.OnGamepadConnected += HandleOnGamepadConnected;
             mainWindow.InputManager.GamepadDriver.OnGamepadDisconnected += HandleOnGamepadDisconnected;
 
-            if (_mainWindow.GlRendererWidget != null)
+            if (_mainWindow.RendererWidget != null)
             {
-                _mainWindow.GlRendererWidget.NpadManager.BlockInputUpdates();
+                _mainWindow.RendererWidget.NpadManager.BlockInputUpdates();
             }
         }
 
@@ -219,9 +219,9 @@ namespace Ryujinx.Ui.Windows
             _mainWindow.InputManager.GamepadDriver.OnGamepadConnected -= HandleOnGamepadConnected;
             _mainWindow.InputManager.GamepadDriver.OnGamepadDisconnected -= HandleOnGamepadDisconnected;
 
-            if (_mainWindow.GlRendererWidget != null)
+            if (_mainWindow.RendererWidget != null)
             {
-                _mainWindow.GlRendererWidget.NpadManager.UnblockInputUpdates();
+                _mainWindow.RendererWidget.NpadManager.UnblockInputUpdates();
             }
 
             _selectedGamepad?.Dispose();
@@ -1141,9 +1141,9 @@ namespace Ryujinx.Ui.Windows
                 }
             }
 
-            if (_mainWindow.GlRendererWidget != null)
+            if (_mainWindow.RendererWidget != null)
             {
-                _mainWindow.GlRendererWidget.NpadManager.ReloadConfiguration(newConfig);
+                _mainWindow.RendererWidget.NpadManager.ReloadConfiguration(newConfig);
             }
 
             // Atomically replace and signal input change.

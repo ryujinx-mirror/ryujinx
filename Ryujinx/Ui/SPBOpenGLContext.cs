@@ -34,7 +34,7 @@ namespace Ryujinx.Ui
         public static SPBOpenGLContext CreateBackgroundContext(OpenGLContextBase sharedContext)
         {
             OpenGLContextBase context = PlatformHelper.CreateOpenGLContext(FramebufferFormat.Default, 3, 3, OpenGLContextFlags.Compat, true, sharedContext);
-            NativeWindowBase window = PlatformHelper.CreateWindow(FramebufferFormat.Default, 0, 0, 100, 100);
+            NativeWindowBase window = PlatformHelper.CreateOpenGLWindow(FramebufferFormat.Default, 0, 0, 100, 100);
 
             context.Initialize(window);
             context.MakeCurrent(window);
