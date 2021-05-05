@@ -15,9 +15,9 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 {
     class IUserInterface : IpcService
     {
-        private Dictionary<string, Type> _services;
+        private static Dictionary<string, Type> _services;
 
-        private readonly ConcurrentDictionary<string, KPort> _registeredServices;
+        private static readonly ConcurrentDictionary<string, KPort> _registeredServices;
 
         private readonly ServerBase _commonServer;
 
@@ -25,16 +25,17 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         public IUserInterface(KernelContext context)
         {
+            _commonServer = new ServerBase(context, "CommonServer");
+        }
+
+        static IUserInterface()
+        {
             _registeredServices = new ConcurrentDictionary<string, KPort>();
 
             _services = Assembly.GetExecutingAssembly().GetTypes()
                 .SelectMany(type => type.GetCustomAttributes(typeof(ServiceAttribute), true)
                 .Select(service => (((ServiceAttribute)service).Name, type)))
                 .ToDictionary(service => service.Name, service => service.type);
-
-            TrySetServer(new ServerBase(context, "SmServer") { SmObject = this });
-
-            _commonServer = new ServerBase(context, "CommonServer");
         }
 
         [CommandHipc(0)]
@@ -47,9 +48,16 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
         [CommandTipc(1)] // 12.0.0+
         // GetService(ServiceName name) -> handle<move, session>
+        public ResultCode GetServiceTipc(ServiceCtx context)
+        {
+            context.Response.HandleDesc = IpcHandleDesc.MakeMove(0);
+
+            return GetService(context);
+        }
+
+        [CommandHipc(1)]
         public ResultCode GetService(ServiceCtx context)
         {
             if (!_isInitialized)
@@ -142,6 +150,8 @@ namespace Ryujinx.HLE.HOS.Services.Sm
         {
             if (!_isInitialized)
             {
+                context.Response.HandleDesc = IpcHandleDesc.MakeMove(0);
+
                 return ResultCode.NotInitialized;
             }
 
