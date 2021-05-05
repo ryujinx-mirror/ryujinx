@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
 
         Success = 0,
 
-        NotImplemented         = (  1 << ErrorCodeShift) | ModuleId,
+        InvalidSettingsValue   = (  1 << ErrorCodeShift) | ModuleId,
         InvalidObject1         = (  3 << ErrorCodeShift) | ModuleId,
         InvalidObject2         = (  4 << ErrorCodeShift) | ModuleId,
         NullOutputObject       = (  5 << ErrorCodeShift) | ModuleId,

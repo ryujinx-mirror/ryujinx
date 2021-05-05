@@ -13,38 +13,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
             _nsdSettings = nsdSettings;
         }
 
-        public ResultCode GetSettingName(ServiceCtx context, out string settingName)
+        public ResultCode GetEnvironmentIdentifier(out string identifier)
         {
             if (_nsdSettings.TestMode)
             {
-                settingName = "";
+                identifier = "err";
 
-                return ResultCode.NotImplemented;
-            }
-            else
-            {
-                settingName = "";
-
-                if (true) // TODO: Determine field (struct + 0x2C)
-                {
-                    settingName = _nsdSettings.Environment;
-
-                    return ResultCode.Success;
-                }
-
-#pragma warning disable CS0162
-                return ResultCode.NullOutputObject;
-#pragma warning restore CS0162
-            }
-        }
-
-        public ResultCode GetEnvironmentIdentifier(ServiceCtx context, out string identifier)
-        {
-            if (_nsdSettings.TestMode)
-            {
-                identifier = "rre";
-
-                return ResultCode.NotImplemented;
+                return ResultCode.InvalidSettingsValue;
             }
             else
             {
@@ -56,7 +31,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
 
         public ResultCode Resolve(ServiceCtx context, string address, out string resolvedAddress)
         {
-            if (address != "api.sect.srv.nintendo.net" || address != "conntest.nintendowifi.net")
+            if (address == "api.sect.srv.nintendo.net"     ||
+                address == "ctest.cdn.nintendo.net"        ||
+                address == "ctest.cdn.n.nintendoswitch.cn" ||
+                address == "unknown.dummy.nintendo.net")
+            {
+                resolvedAddress = address;
+            }
+            else
             {
                 // TODO: Load Environment from the savedata.
                 address = address.Replace("%", _nsdSettings.Environment);
@@ -86,10 +68,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
                     */
                     _ => address,
                 };
-            }
-            else
-            {
-                resolvedAddress = address;
             }
 
             return ResultCode.Success;

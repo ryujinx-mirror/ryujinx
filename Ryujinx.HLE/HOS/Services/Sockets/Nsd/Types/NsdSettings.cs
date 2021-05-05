@@ -4,6 +4,6 @@
     {
         public bool   Initialized;
         public bool   TestMode;
-        public string Environment = "lp1";  // or "dd1" if devkit.
+        public string Environment;
     }
 }
