@@ -803,6 +803,13 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 25)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 25.");
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;

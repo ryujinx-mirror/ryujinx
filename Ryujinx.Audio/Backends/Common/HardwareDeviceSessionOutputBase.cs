@@ -18,6 +18,7 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Memory;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Backends.Common
 {
@@ -52,7 +53,13 @@ namespace Ryujinx.Audio.Backends.Common
 
         protected ulong GetSampleCount(AudioBuffer buffer)
         {
-            return (ulong)BackendHelper.GetSampleCount(RequestedSampleFormat, (int)RequestedChannelCount, (int)buffer.DataSize);
+            return GetSampleCount((int)buffer.DataSize);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected ulong GetSampleCount(int dataSize)
+        {
+            return (ulong)BackendHelper.GetSampleCount(RequestedSampleFormat, (int)RequestedChannelCount, dataSize);
         }
 
         public abstract void Dispose();

@@ -5,6 +5,7 @@ using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Backends.OpenAL;
+using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
@@ -327,7 +328,18 @@ namespace Ryujinx.Ui
 
             IHardwareDeviceDriver deviceDriver = new DummyHardwareDeviceDriver();
 
-            if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.SoundIo)
+            if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.SDL2)
+            {
+                if (SDL2HardwareDeviceDriver.IsSupported)
+                {
+                    deviceDriver = new SDL2HardwareDeviceDriver();
+                }
+                else
+                {
+                    Logger.Warning?.Print(LogClass.Audio, "SDL2 audio is not supported, falling back to dummy audio out.");
+                }
+            }
+            else if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.SoundIo)
             {
                 if (SoundIoHardwareDeviceDriver.IsSupported)
                 {

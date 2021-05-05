@@ -4,9 +4,9 @@ using System.IO;
 using System.Threading;
 using static SDL2.SDL;
 
-namespace Ryujinx.Input.SDL2
+namespace Ryujinx.SDL2.Common
 {
-    class SDL2Driver : IDisposable
+    public class SDL2Driver : IDisposable
     {
         private static SDL2Driver _instance;
 
@@ -25,7 +25,7 @@ namespace Ryujinx.Input.SDL2
             }
         }
 
-        private const uint SdlInitFlags = SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK;
+        private const uint SdlInitFlags = SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO;
 
         private bool _isRunning;
         private uint _refereceCount;

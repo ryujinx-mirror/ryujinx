@@ -1,5 +1,6 @@
 using Gtk;
 using Ryujinx.Audio.Backends.OpenAL;
+using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
@@ -302,6 +303,7 @@ namespace Ryujinx.Ui.Windows
 
             TreeIter openAlIter  = _audioBackendStore.AppendValues("OpenAL", AudioBackend.OpenAl);
             TreeIter soundIoIter = _audioBackendStore.AppendValues("SoundIO", AudioBackend.SoundIo);
+            TreeIter sdl2Iter    = _audioBackendStore.AppendValues("SDL2", AudioBackend.SDL2);
             TreeIter dummyIter   = _audioBackendStore.AppendValues("Dummy", AudioBackend.Dummy);
 
             _audioBackendSelect = ComboBox.NewWithModelAndEntry(_audioBackendStore);
@@ -316,6 +318,9 @@ namespace Ryujinx.Ui.Windows
                 case AudioBackend.SoundIo:
                     _audioBackendSelect.SetActiveIter(soundIoIter);
                     break;
+                case AudioBackend.SDL2:
+                    _audioBackendSelect.SetActiveIter(sdl2Iter);
+                    break;
                 case AudioBackend.Dummy:
                     _audioBackendSelect.SetActiveIter(dummyIter);
                     break;
@@ -328,11 +333,13 @@ namespace Ryujinx.Ui.Windows
 
             bool openAlIsSupported  = false;
             bool soundIoIsSupported = false;
+            bool sdl2IsSupported    = false;
 
             Task.Run(() =>
             {
                 openAlIsSupported  = OpenALHardwareDeviceDriver.IsSupported;
                 soundIoIsSupported = SoundIoHardwareDeviceDriver.IsSupported;
+                sdl2IsSupported    = SDL2HardwareDeviceDriver.IsSupported;
             });
 
             // This function runs whenever the dropdown is opened
@@ -342,6 +349,7 @@ namespace Ryujinx.Ui.Windows
                 {
                     AudioBackend.OpenAl  => openAlIsSupported,
                     AudioBackend.SoundIo => soundIoIsSupported,
+                    AudioBackend.SDL2    => sdl2IsSupported,
                     AudioBackend.Dummy   => true,
                     _ => throw new ArgumentOutOfRangeException()
                 };

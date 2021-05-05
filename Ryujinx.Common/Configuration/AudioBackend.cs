@@ -4,6 +4,7 @@
     {
         Dummy,
         OpenAl,
-        SoundIo
+        SoundIo,
+        SDL2
     }
 }
