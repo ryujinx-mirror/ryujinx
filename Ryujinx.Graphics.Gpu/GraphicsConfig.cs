@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.
         /// </summary>
-        public static float MaxAnisotropy;
+        public static float MaxAnisotropy = -1;
 
         /// <summary>
         /// Base directory used to write shader code dumps.
