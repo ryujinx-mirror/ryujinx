@@ -64,6 +64,9 @@ namespace Ryujinx.Ui
         private GraphicsDebugLevel _glLogLevel;
         private string _gpuVendorName;
 
+        private int _windowHeight;
+        private int _windowWidth;
+
         public RendererWidgetBase(InputManager inputManager, GraphicsDebugLevel glLogLevel)
         {
             _inputManager = inputManager;
@@ -225,7 +228,10 @@ namespace Ryujinx.Ui
 
             Gdk.Monitor monitor = Display.GetMonitorAtWindow(Window);
 
-            Renderer?.Window.SetSize(evnt.Width * monitor.ScaleFactor, evnt.Height * monitor.ScaleFactor);
+            _windowWidth = evnt.Width * monitor.ScaleFactor;
+            _windowHeight = evnt.Height * monitor.ScaleFactor;
+
+            Renderer?.Window.SetSize(_windowWidth, _windowHeight);
 
             return result;
         }
@@ -293,6 +299,7 @@ namespace Ryujinx.Ui
         {
             Device = device;
             Renderer = Device.Gpu.Renderer;
+            Renderer?.Window.SetSize(_windowWidth, _windowHeight);
         }
 
         public void Render()
