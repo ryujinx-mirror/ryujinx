@@ -48,7 +48,7 @@ namespace Ryujinx.Input.GTK3
             GtkKey.F27,
             GtkKey.F28,
             GtkKey.F29,
-            GtkKey.F29,
+            GtkKey.F30,
             GtkKey.F31,
             GtkKey.F32,
             GtkKey.F33,
@@ -128,6 +128,7 @@ namespace Ryujinx.Input.GTK3
             GtkKey.Key_8,
             GtkKey.Key_9,
             GtkKey.grave,
+            GtkKey.grave,
             GtkKey.minus,
             GtkKey.plus,
             GtkKey.bracketleft,
@@ -137,7 +138,6 @@ namespace Ryujinx.Input.GTK3
             GtkKey.comma,
             GtkKey.period,
             GtkKey.slash,
-            GtkKey.backslash,
             GtkKey.backslash,
 
             // NOTE: invalid
