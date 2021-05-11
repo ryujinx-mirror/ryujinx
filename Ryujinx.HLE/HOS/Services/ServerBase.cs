@@ -38,13 +38,14 @@ namespace Ryujinx.HLE.HOS.Services
         private readonly Dictionary<int, Func<IpcService>> _ports = new Dictionary<int, Func<IpcService>>();
 
         public ManualResetEvent InitDone { get; }
-        public Func<IpcService> SmObjectFactory { get; set; }
+        public Func<IpcService> SmObjectFactory { get; }
         public string Name { get; }
 
-        public ServerBase(KernelContext context, string name)
+        public ServerBase(KernelContext context, string name, Func<IpcService> smObjectFactory = null)
         {
             InitDone = new ManualResetEvent(false);
             Name = name;
+            SmObjectFactory = smObjectFactory;
             _context = context;
 
             const ProcessCreationFlags flags =

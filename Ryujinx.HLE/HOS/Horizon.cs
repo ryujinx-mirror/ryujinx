@@ -274,7 +274,7 @@ namespace Ryujinx.HLE.HOS
         public void InitializeServices()
         {
             IUserInterface sm = new IUserInterface(KernelContext);
-            sm.TrySetServer(new ServerBase(KernelContext, "SmServer") { SmObjectFactory = () => new IUserInterface(KernelContext) });
+            sm.TrySetServer(new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext)));
 
             // Wait until SM server thread is done with initialization,
             // only then doing connections to SM is safe.
