@@ -87,8 +87,7 @@ namespace ARMeilleure.Instructions
             }
 
             Operand address = GetAddress(context);
-
-            Operand address2 = context.Add(address, Const(1L << op.Size));
+            Operand address2 = GetAddress(context, 1L << op.Size);
 
             EmitLoad(op.Rt,  address);
             EmitLoad(op.Rt2, address2);
@@ -112,8 +111,7 @@ namespace ARMeilleure.Instructions
             OpCodeMemPair op = (OpCodeMemPair)context.CurrOp;
 
             Operand address = GetAddress(context);
-
-            Operand address2 = context.Add(address, Const(1L << op.Size));
+            Operand address2 = GetAddress(context, 1L << op.Size);
 
             InstEmitMemoryHelper.EmitStore(context, address,  op.Rt,  op.Size);
             InstEmitMemoryHelper.EmitStore(context, address2, op.Rt2, op.Size);
@@ -121,7 +119,7 @@ namespace ARMeilleure.Instructions
             EmitWBackIfNeeded(context, address);
         }
 
-        private static Operand GetAddress(ArmEmitterContext context)
+        private static Operand GetAddress(ArmEmitterContext context, long addend = 0)
         {
             Operand address = null;
 
@@ -134,7 +132,11 @@ namespace ARMeilleure.Instructions
                     // Pre-indexing.
                     if (!op.PostIdx)
                     {
-                        address = context.Add(address, Const(op.Immediate));
+                        address = context.Add(address, Const(op.Immediate + addend));
+                    }
+                    else if (addend != 0)
+                    {
+                        address = context.Add(address, Const(addend));
                     }
 
                     break;
@@ -152,6 +154,11 @@ namespace ARMeilleure.Instructions
                     }
 
                     address = context.Add(n, m);
+
+                    if (addend != 0)
+                    {
+                        address = context.Add(address, Const(addend));
+                    }
 
                     break;
                 }

@@ -1,6 +1,7 @@
 ﻿using ARMeilleure.CodeGen.Optimizations;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
+using System.Collections.Generic;
 
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 using static ARMeilleure.IntermediateRepresentation.OperationHelper;
@@ -11,8 +12,28 @@ namespace ARMeilleure.CodeGen.X86
     {
         public static void RunPass(ControlFlowGraph cfg)
         {
+            var constants = new Dictionary<ulong, Operand>();
+
+            Operand GetConstantCopy(BasicBlock block, Operation operation, Operand source)
+            {
+                if (!constants.TryGetValue(source.Value, out var constant))
+                {
+                    constant = Local(source.Type);
+
+                    Operation copyOp = Operation(Instruction.Copy, constant, source);
+
+                    block.Operations.AddBefore(operation, copyOp);
+
+                    constants.Add(source.Value, constant);
+                }
+
+                return constant;
+            }
+
             for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
+                constants.Clear();
+
                 Node nextNode;
 
                 for (Node node = block.Operations.First; node != null; node = nextNode)
@@ -33,24 +54,12 @@ namespace ARMeilleure.CodeGen.X86
 
                         if (src1.Kind == OperandKind.Constant && (src1.Relocatable || CodeGenCommon.IsLongConst(src1)))
                         {
-                            Operand temp = Local(src1.Type);
-
-                            Operation copyOp = Operation(Instruction.Copy, temp, src1);
-
-                            block.Operations.AddBefore(operation, copyOp);
-
-                            operation.SetSource(0, temp);
+                            operation.SetSource(0, GetConstantCopy(block, operation, src1));
                         }
 
                         if (src2.Kind == OperandKind.Constant && (src2.Relocatable || CodeGenCommon.IsLongConst(src2)))
                         {
-                            Operand temp = Local(src2.Type);
-
-                            Operation copyOp = Operation(Instruction.Copy, temp, src2);
-
-                            block.Operations.AddBefore(operation, copyOp);
-
-                            operation.SetSource(1, temp);
+                            operation.SetSource(1, GetConstantCopy(block, operation, src2));
                         }
                     }
 
@@ -109,6 +118,11 @@ namespace ARMeilleure.CodeGen.X86
             if (baseOp == addr)
             {
                 return null;
+            }
+
+            if (imm == 0 && scale == Multiplier.x1 && indexOp != null)
+            {
+                imm = GetConstOp(ref indexOp);
             }
 
             return MemoryOp(type, baseOp, indexOp, scale, imm);
