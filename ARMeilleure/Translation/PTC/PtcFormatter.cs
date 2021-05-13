@@ -50,7 +50,12 @@ namespace ARMeilleure.Translation.PTC
             T structure = default(T);
 
             Span<T> spanT = MemoryMarshal.CreateSpan(ref structure, 1);
-            stream.Read(MemoryMarshal.AsBytes(spanT));
+            int bytesCount = stream.Read(MemoryMarshal.AsBytes(spanT));
+
+            if (bytesCount != Unsafe.SizeOf<T>())
+            {
+                throw new EndOfStreamException();
+            }
 
             return structure;
         }
@@ -130,7 +135,12 @@ namespace ARMeilleure.Translation.PTC
 
                 T[] item = new T[itemLength];
 
-                stream.Read(MemoryMarshal.AsBytes(item.AsSpan()));
+                int bytesCount = stream.Read(MemoryMarshal.AsBytes(item.AsSpan()));
+
+                if (bytesCount != itemLength)
+                {
+                    throw new EndOfStreamException();
+                }
 
                 list.Add(item);
             }

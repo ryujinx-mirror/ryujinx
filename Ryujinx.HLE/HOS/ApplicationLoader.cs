@@ -507,20 +507,18 @@ namespace Ryujinx.HLE.HOS
                 metaData = modLoadResult.Npdm;
             }
 
-            bool hasPatches = _fileSystem.ModLoader.ApplyNsoPatches(TitleId, programs);
+            _fileSystem.ModLoader.ApplyNsoPatches(TitleId, programs);
 
             _contentManager.LoadEntries(_device);
 
             bool usePtc = _device.System.EnablePtc;
 
-            // don't use PTC if exefs files have been replaced
+            // Don't use PPTC if ExeFs files have been replaced.
             usePtc &= !modLoadResult.Modified;
-            // don't use PTC if exefs files have been patched
-            usePtc &= !hasPatches;
 
             if (_device.System.EnablePtc && !usePtc)
             {
-                Logger.Warning?.Print(LogClass.Ptc, $"Detected exefs modifications. PPTC disabled.");
+                Logger.Warning?.Print(LogClass.Ptc, $"Detected unsupported ExeFs modifications. PPTC disabled.");
             }
 
             Graphics.Gpu.GraphicsConfig.TitleId = TitleIdText;

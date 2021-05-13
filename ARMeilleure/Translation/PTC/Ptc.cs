@@ -28,7 +28,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 2190; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 1866; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -49,8 +49,6 @@ namespace ARMeilleure.Translation.PTC
         private static List<byte[]> _codesList;
         private static MemoryStream _relocsStream;
         private static MemoryStream _unwindInfosStream;
-
-        private static BinaryWriter _infosWriter;
 
         private static readonly ulong _outerHeaderMagic;
         private static readonly ulong _innerHeaderMagic;
@@ -153,14 +151,10 @@ namespace ARMeilleure.Translation.PTC
             _codesList = new List<byte[]>();
             _relocsStream = new MemoryStream();
             _unwindInfosStream = new MemoryStream();
-
-            _infosWriter = new BinaryWriter(_infosStream, EncodingCache.UTF8NoBOM, true);
         }
 
         private static void DisposeCarriers()
         {
-            _infosWriter.Dispose();
-
             _infosStream.Dispose();
             _codesList.Clear();
             _relocsStream.Dispose();
@@ -551,46 +545,33 @@ namespace ARMeilleure.Translation.PTC
                 return;
             }
 
+            long infosStreamLength = _infosStream.Length;
+            long relocsStreamLength = _relocsStream.Length;
+            long unwindInfosStreamLength = _unwindInfosStream.Length;
+
             _infosStream.Seek(0L, SeekOrigin.Begin);
             _relocsStream.Seek(0L, SeekOrigin.Begin);
             _unwindInfosStream.Seek(0L, SeekOrigin.Begin);
 
-            using (BinaryReader infosReader = new(_infosStream, EncodingCache.UTF8NoBOM, true))
             using (BinaryReader relocsReader = new(_relocsStream, EncodingCache.UTF8NoBOM, true))
             using (BinaryReader unwindInfosReader = new(_unwindInfosStream, EncodingCache.UTF8NoBOM, true))
             {
                 for (int index = 0; index < GetEntriesCount(); index++)
                 {
-                    InfoEntry infoEntry = ReadInfo(infosReader);
+                    InfoEntry infoEntry = DeserializeStructure<InfoEntry>(_infosStream);
 
                     if (infoEntry.Stubbed)
                     {
                         SkipCode(index, infoEntry.CodeLength);
                         SkipReloc(infoEntry.RelocEntriesCount);
                         SkipUnwindInfo(unwindInfosReader);
+
+                        continue;
                     }
-                    else if (infoEntry.HighCq || !PtcProfiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) || !value.HighCq)
-                    {
-                        byte[] code = ReadCode(index, infoEntry.CodeLength);
 
-                        Counter<uint> callCounter = null;
+                    bool isEntryChanged = infoEntry.Hash != ComputeHash(memory, infoEntry.Address, infoEntry.GuestSize);
 
-                        if (infoEntry.RelocEntriesCount != 0)
-                        {
-                            RelocEntry[] relocEntries = GetRelocEntries(relocsReader, infoEntry.RelocEntriesCount);
-
-                            PatchCode(code, relocEntries, memory.PageTablePointer, jumpTable, countTable, out callCounter);
-                        }
-
-                        UnwindInfo unwindInfo = ReadUnwindInfo(unwindInfosReader);
-
-                        TranslatedFunction func = FastTranslate(code, callCounter, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
-
-                        bool isAddressUnique = funcs.TryAdd(infoEntry.Address, func);
-
-                        Debug.Assert(isAddressUnique, $"The address 0x{infoEntry.Address:X16} is not unique.");
-                    }
-                    else
+                    if (isEntryChanged || (!infoEntry.HighCq && PtcProfiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) && value.HighCq))
                     {
                         infoEntry.Stubbed = true;
                         infoEntry.CodeLength = 0;
@@ -599,15 +580,43 @@ namespace ARMeilleure.Translation.PTC
                         StubCode(index);
                         StubReloc(infoEntry.RelocEntriesCount);
                         StubUnwindInfo(unwindInfosReader);
+
+                        if (isEntryChanged)
+                        {
+                            PtcJumpTable.Clean(infoEntry.Address);
+
+                            Logger.Info?.Print(LogClass.Ptc, $"Invalidated translated function (address: 0x{infoEntry.Address:X16})");
+                        }
+
+                        continue;
                     }
+
+                    byte[] code = ReadCode(index, infoEntry.CodeLength);
+
+                    Counter<uint> callCounter = null;
+
+                    if (infoEntry.RelocEntriesCount != 0)
+                    {
+                        RelocEntry[] relocEntries = GetRelocEntries(relocsReader, infoEntry.RelocEntriesCount);
+
+                        PatchCode(code, relocEntries, memory.PageTablePointer, jumpTable, countTable, out callCounter);
+                    }
+
+                    UnwindInfo unwindInfo = ReadUnwindInfo(unwindInfosReader);
+
+                    TranslatedFunction func = FastTranslate(code, callCounter, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
+
+                    bool isAddressUnique = funcs.TryAdd(infoEntry.Address, func);
+
+                    Debug.Assert(isAddressUnique, $"The address 0x{infoEntry.Address:X16} is not unique.");
                 }
             }
 
-            if (_infosStream.Position < _infosStream.Length ||
-                _relocsStream.Position < _relocsStream.Length ||
-                _unwindInfosStream.Position < _unwindInfosStream.Length)
+            if (_infosStream.Length != infosStreamLength || _infosStream.Position != infosStreamLength ||
+                _relocsStream.Length != relocsStreamLength || _relocsStream.Position != relocsStreamLength ||
+                _unwindInfosStream.Length != unwindInfosStreamLength || _unwindInfosStream.Position != unwindInfosStreamLength)
             {
-                throw new Exception("Could not reach the end of one or more memory streams.");
+                throw new Exception("The length of a memory stream has changed, or its position has not reached or has exceeded its end.");
             }
 
             jumpTable.Initialize(PtcJumpTable, funcs);
@@ -621,20 +630,6 @@ namespace ARMeilleure.Translation.PTC
         private static int GetEntriesCount()
         {
             return _codesList.Count;
-        }
-
-        private static InfoEntry ReadInfo(BinaryReader infosReader)
-        {
-            InfoEntry infoEntry = new InfoEntry();
-
-            infoEntry.Address = infosReader.ReadUInt64();
-            infoEntry.GuestSize = infosReader.ReadUInt64();
-            infoEntry.HighCq = infosReader.ReadBoolean();
-            infoEntry.Stubbed = infosReader.ReadBoolean();
-            infoEntry.CodeLength = infosReader.ReadInt32();
-            infoEntry.RelocEntriesCount = infosReader.ReadInt32();
-
-            return infoEntry;
         }
 
         [Conditional("DEBUG")]
@@ -764,15 +759,9 @@ namespace ARMeilleure.Translation.PTC
 
         private static void UpdateInfo(InfoEntry infoEntry)
         {
-            _infosStream.Seek(-InfoEntry.Stride, SeekOrigin.Current);
+            _infosStream.Seek(-Unsafe.SizeOf<InfoEntry>(), SeekOrigin.Current);
 
-            // WriteInfo.
-            _infosWriter.Write((ulong)infoEntry.Address);
-            _infosWriter.Write((ulong)infoEntry.GuestSize);
-            _infosWriter.Write((bool)infoEntry.HighCq);
-            _infosWriter.Write((bool)infoEntry.Stubbed);
-            _infosWriter.Write((int)infoEntry.CodeLength);
-            _infosWriter.Write((int)infoEntry.RelocEntriesCount);
+            SerializeStructure(_infosStream, infoEntry);
         }
 
         private static void StubCode(int index)
@@ -844,7 +833,7 @@ namespace ARMeilleure.Translation.PTC
 
                     Debug.Assert(PtcProfiler.IsAddressInStaticCodeRange(address));
 
-                    TranslatedFunction func = Translator.Translate(memory, jumpTable, countTable, address, item.mode, item.highCq);
+                    TranslatedFunction func = Translator.Translate(memory, jumpTable, countTable, address, item.funcProfile.Mode, item.funcProfile.HighCq);
 
                     bool isAddressUnique = funcs.TryAdd(address, func);
 
@@ -919,17 +908,26 @@ namespace ARMeilleure.Translation.PTC
             while (!endEvent.WaitOne(refreshRate));
         }
 
-        internal static void WriteInfoCodeRelocUnwindInfo(ulong address, ulong guestSize, bool highCq, PtcInfo ptcInfo)
+        internal static Hash128 ComputeHash(IMemoryManager memory, ulong address, ulong guestSize)
+        {
+            return XXHash128.ComputeHash(memory.GetSpan(address, checked((int)(guestSize))));
+        }
+
+        internal static void WriteInfoCodeRelocUnwindInfo(ulong address, ulong guestSize, Hash128 hash, bool highCq, PtcInfo ptcInfo)
         {
             lock (_lock)
             {
-                // WriteInfo.
-                _infosWriter.Write((ulong)address); // InfoEntry.Address
-                _infosWriter.Write((ulong)guestSize); // InfoEntry.GuestSize
-                _infosWriter.Write((bool)highCq); // InfoEntry.HighCq
-                _infosWriter.Write((bool)false); // InfoEntry.Stubbed
-                _infosWriter.Write((int)ptcInfo.Code.Length); // InfoEntry.CodeLength
-                _infosWriter.Write((int)ptcInfo.RelocEntriesCount); // InfoEntry.RelocEntriesCount
+                InfoEntry infoEntry = new InfoEntry();
+
+                infoEntry.Address = address;
+                infoEntry.GuestSize = guestSize;
+                infoEntry.Hash = hash;
+                infoEntry.HighCq = highCq;
+                infoEntry.Stubbed = false;
+                infoEntry.CodeLength = ptcInfo.Code.Length;
+                infoEntry.RelocEntriesCount = ptcInfo.RelocEntriesCount;
+
+                SerializeStructure(_infosStream, infoEntry);
 
                 WriteCode(ptcInfo.Code.AsSpan());
 
@@ -946,7 +944,7 @@ namespace ARMeilleure.Translation.PTC
             _codesList.Add(code.ToArray());
         }
 
-        private static bool GetEndianness()
+        internal static bool GetEndianness()
         {
             return BitConverter.IsLittleEndian;
         }
@@ -1032,12 +1030,12 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 42*/)]
         private struct InfoEntry
         {
-            public const int Stride = 26; // Bytes.
-
             public ulong Address;
             public ulong GuestSize;
+            public Hash128 Hash;
             public bool HighCq;
             public bool Stubbed;
             public int CodeLength;

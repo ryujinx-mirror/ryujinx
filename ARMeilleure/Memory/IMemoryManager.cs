@@ -12,6 +12,8 @@ namespace ARMeilleure.Memory
         T ReadTracked<T>(ulong va) where T : unmanaged;
         void Write<T>(ulong va, T value) where T : unmanaged;
 
+        ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false);
+
         ref T GetRef<T>(ulong va) where T : unmanaged;
 
         bool IsMapped(ulong va);

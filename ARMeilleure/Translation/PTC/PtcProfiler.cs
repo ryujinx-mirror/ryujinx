@@ -1,13 +1,15 @@
 using ARMeilleure.State;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Threading;
 
 using static ARMeilleure.Translation.PTC.PtcFormatter;
@@ -16,9 +18,9 @@ namespace ARMeilleure.Translation.PTC
 {
     public static class PtcProfiler
     {
-        private const string HeaderMagic = "Phd";
+        private const string OuterHeaderMagicString = "Pohd\0\0\0\0";
 
-        private const uint InternalVersion = 1713; //! Not to be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 1866; //! Not to be incremented manually for each change to the ARMeilleure project.
 
         private const int SaveInterval = 30; // Seconds.
 
@@ -26,13 +28,15 @@ namespace ARMeilleure.Translation.PTC
 
         private static readonly System.Timers.Timer _timer;
 
+        private static readonly ulong _outerHeaderMagic;
+
         private static readonly ManualResetEvent _waitEvent;
 
         private static readonly object _lock;
 
         private static bool _disposed;
 
-        private static byte[] _lastHash;
+        private static Hash128 _lastHash;
 
         internal static Dictionary<ulong, FuncProfile> ProfiledFuncs { get; private set; }
 
@@ -45,6 +49,8 @@ namespace ARMeilleure.Translation.PTC
         {
             _timer = new System.Timers.Timer((double)SaveInterval * 1000d);
             _timer.Elapsed += PreSave;
+
+            _outerHeaderMagic = BinaryPrimitives.ReadUInt64LittleEndian(EncodingCache.UTF8NoBOM.GetBytes(OuterHeaderMagicString).AsSpan());
 
             _waitEvent = new ManualResetEvent(true);
 
@@ -90,17 +96,15 @@ namespace ARMeilleure.Translation.PTC
             return address >= StaticCodeStart && address < StaticCodeStart + StaticCodeSize;
         }
 
-        internal static ConcurrentQueue<(ulong address, ExecutionMode mode, bool highCq)> GetProfiledFuncsToTranslate(ConcurrentDictionary<ulong, TranslatedFunction> funcs)
+        internal static ConcurrentQueue<(ulong address, FuncProfile funcProfile)> GetProfiledFuncsToTranslate(ConcurrentDictionary<ulong, TranslatedFunction> funcs)
         {
-            var profiledFuncsToTranslate = new ConcurrentQueue<(ulong address, ExecutionMode mode, bool highCq)>();
+            var profiledFuncsToTranslate = new ConcurrentQueue<(ulong address, FuncProfile funcProfile)>();
 
             foreach (var profiledFunc in ProfiledFuncs)
             {
-                ulong address = profiledFunc.Key;
-
-                if (!funcs.ContainsKey(address))
+                if (!funcs.ContainsKey(profiledFunc.Key))
                 {
-                    profiledFuncsToTranslate.Enqueue((address, profiledFunc.Value.Mode, profiledFunc.Value.HighCq));
+                    profiledFuncsToTranslate.Enqueue((profiledFunc.Key, profiledFunc.Value));
                 }
             }
 
@@ -115,7 +119,7 @@ namespace ARMeilleure.Translation.PTC
 
         internal static void PreLoad()
         {
-            _lastHash = Array.Empty<byte>();
+            _lastHash = default;
 
             string fileNameActual = string.Concat(Ptc.CachePathActual, ".info");
             string fileNameBackup = string.Concat(Ptc.CachePathBackup, ".info");
@@ -141,70 +145,75 @@ namespace ARMeilleure.Translation.PTC
 
         private static bool Load(string fileName, bool isBackup)
         {
-            using (FileStream compressedStream = new FileStream(fileName, FileMode.Open))
-            using (DeflateStream deflateStream = new DeflateStream(compressedStream, CompressionMode.Decompress, true))
-            using (MemoryStream stream = new MemoryStream())
-            using (MD5 md5 = MD5.Create())
+            using (FileStream compressedStream = new(fileName, FileMode.Open))
+            using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
             {
-                try
-                {
-                    deflateStream.CopyTo(stream);
-                }
-                catch
+                OuterHeader outerHeader = DeserializeStructure<OuterHeader>(compressedStream);
+
+                if (!outerHeader.IsHeaderValid())
                 {
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
 
-                int hashSize = md5.HashSize / 8;
-
-                stream.Seek(0L, SeekOrigin.Begin);
-
-                byte[] currentHash = new byte[hashSize];
-                stream.Read(currentHash, 0, hashSize);
-
-                byte[] expectedHash = md5.ComputeHash(stream);
-
-                if (!CompareHash(currentHash, expectedHash))
+                if (outerHeader.Magic != _outerHeaderMagic)
                 {
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
 
-                stream.Seek((long)hashSize, SeekOrigin.Begin);
-
-                Header header = ReadHeader(stream);
-
-                if (header.Magic != HeaderMagic)
+                if (outerHeader.InfoFileVersion != InternalVersion)
                 {
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
 
-                if (header.InfoFileVersion != InternalVersion)
+                if (outerHeader.Endianness != Ptc.GetEndianness())
                 {
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
 
-                try
+                using (MemoryStream stream = new MemoryStream())
                 {
+                    Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
+
+                    try
+                    {
+                        deflateStream.CopyTo(stream);
+                    }
+                    catch
+                    {
+                        InvalidateCompressedStream(compressedStream);
+
+                        return false;
+                    }
+
+                    Debug.Assert(stream.Position == stream.Length);
+
+                    stream.Seek(0L, SeekOrigin.Begin);
+
+                    Hash128 expectedHash = DeserializeStructure<Hash128>(stream);
+
+                    Hash128 actualHash = XXHash128.ComputeHash(GetReadOnlySpan(stream));
+
+                    if (actualHash != expectedHash)
+                    {
+                        InvalidateCompressedStream(compressedStream);
+
+                        return false;
+                    }
+
                     ProfiledFuncs = Deserialize(stream);
+
+                    Debug.Assert(stream.Position == stream.Length);
+
+                    _lastHash = actualHash;
                 }
-                catch
-                {
-                    ProfiledFuncs = new Dictionary<ulong, FuncProfile>();
-
-                    InvalidateCompressedStream(compressedStream);
-
-                    return false;
-                }
-
-                _lastHash = expectedHash;
             }
 
             long fileSize = new FileInfo(fileName).Length;
@@ -214,28 +223,14 @@ namespace ARMeilleure.Translation.PTC
             return true;
         }
 
-        private static bool CompareHash(ReadOnlySpan<byte> currentHash, ReadOnlySpan<byte> expectedHash)
-        {
-            return currentHash.SequenceEqual(expectedHash);
-        }
-
-        private static Header ReadHeader(Stream stream)
-        {
-            using (BinaryReader headerReader = new BinaryReader(stream, EncodingCache.UTF8NoBOM, true))
-            {
-                Header header = new Header();
-
-                header.Magic = headerReader.ReadString();
-
-                header.InfoFileVersion = headerReader.ReadUInt32();
-
-                return header;
-            }
-        }
-
         private static Dictionary<ulong, FuncProfile> Deserialize(Stream stream)
         {
             return DeserializeDictionary<ulong, FuncProfile>(stream, (stream) => DeserializeStructure<FuncProfile>(stream));
+        }
+
+        private static ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
+        {
+            return new(memoryStream.GetBuffer(), (int)memoryStream.Position, (int)memoryStream.Length - (int)memoryStream.Position);
         }
 
         private static void InvalidateCompressedStream(FileStream compressedStream)
@@ -266,14 +261,20 @@ namespace ARMeilleure.Translation.PTC
         {
             int profiledFuncsCount;
 
+            OuterHeader outerHeader = new OuterHeader();
+
+            outerHeader.Magic = _outerHeaderMagic;
+
+            outerHeader.InfoFileVersion = InternalVersion;
+            outerHeader.Endianness = Ptc.GetEndianness();
+
+            outerHeader.SetHeaderHash();
+
             using (MemoryStream stream = new MemoryStream())
-            using (MD5 md5 = MD5.Create())
             {
-                int hashSize = md5.HashSize / 8;
+                Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
 
-                stream.Seek((long)hashSize, SeekOrigin.Begin);
-
-                WriteHeader(stream);
+                stream.Seek((long)Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
 
                 lock (_lock)
                 {
@@ -282,22 +283,26 @@ namespace ARMeilleure.Translation.PTC
                     profiledFuncsCount = ProfiledFuncs.Count;
                 }
 
-                stream.Seek((long)hashSize, SeekOrigin.Begin);
-                byte[] hash = md5.ComputeHash(stream);
+                Debug.Assert(stream.Position == stream.Length);
+
+                stream.Seek((long)Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
+                Hash128 hash = XXHash128.ComputeHash(GetReadOnlySpan(stream));
 
                 stream.Seek(0L, SeekOrigin.Begin);
-                stream.Write(hash, 0, hashSize);
+                SerializeStructure(stream, hash);
 
-                if (CompareHash(hash, _lastHash))
+                if (hash == _lastHash)
                 {
                     return;
                 }
 
-                using (FileStream compressedStream = new FileStream(fileName, FileMode.OpenOrCreate))
-                using (DeflateStream deflateStream = new DeflateStream(compressedStream, SaveCompressionLevel, true))
+                using (FileStream compressedStream = new(fileName, FileMode.OpenOrCreate))
+                using (DeflateStream deflateStream = new(compressedStream, SaveCompressionLevel, true))
                 {
                     try
                     {
+                        SerializeStructure(compressedStream, outerHeader);
+
                         stream.WriteTo(deflateStream);
 
                         _lastHash = hash;
@@ -306,7 +311,7 @@ namespace ARMeilleure.Translation.PTC
                     {
                         compressedStream.Position = 0L;
 
-                        _lastHash = Array.Empty<byte>();
+                        _lastHash = default;
                     }
 
                     if (compressedStream.Position < compressedStream.Length)
@@ -324,26 +329,35 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static void WriteHeader(Stream stream)
-        {
-            using (BinaryWriter headerWriter = new BinaryWriter(stream, EncodingCache.UTF8NoBOM, true))
-            {
-                headerWriter.Write((string)HeaderMagic); // Header.Magic
-
-                headerWriter.Write((uint)InternalVersion); // Header.InfoFileVersion
-            }
-        }
-
         private static void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
         {
             SerializeDictionary(stream, profiledFuncs, (stream, structure) => SerializeStructure(stream, structure));
         }
 
-        private struct Header
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 29*/)]
+        private struct OuterHeader
         {
-            public string Magic;
+            public ulong Magic;
 
             public uint InfoFileVersion;
+
+            public bool Endianness;
+
+            public Hash128 HeaderHash;
+
+            public void SetHeaderHash()
+            {
+                Span<OuterHeader> spanHeader = MemoryMarshal.CreateSpan(ref this, 1);
+
+                HeaderHash = XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader).Slice(0, Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>()));
+            }
+
+            public bool IsHeaderValid()
+            {
+                Span<OuterHeader> spanHeader = MemoryMarshal.CreateSpan(ref this, 1);
+
+                return XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader).Slice(0, Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())) == HeaderHash;
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 5*/)]
