@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsSeamlessCubemapPerTexture => _supportsSeamlessCubemapPerTexture.Value;
         public static bool SupportsNonConstantTextureOffset  => _gpuVendor.Value == GpuVendor.Nvidia;
         public static bool RequiresSyncFlush                 => _gpuVendor.Value == GpuVendor.Amd || _gpuVendor.Value == GpuVendor.IntelWindows || _gpuVendor.Value == GpuVendor.IntelUnix;
+        public static bool SupportsMismatchingViewFormat     => _gpuVendor.Value != GpuVendor.Amd && _gpuVendor.Value != GpuVendor.IntelWindows;
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;

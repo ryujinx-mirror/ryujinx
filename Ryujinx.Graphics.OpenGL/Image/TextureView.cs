@@ -10,8 +10,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private readonly TextureStorage _parent;
 
-        private TextureView _incompatibleFormatView;
-
         public ITextureInfo Storage => _parent;
 
         public int FirstLayer { get; private set; }
@@ -100,35 +98,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
             firstLevel += FirstLevel;
 
             return _parent.CreateView(info, firstLayer, firstLevel);
-        }
-
-        public int GetIncompatibleFormatViewHandle()
-        {
-            // AMD and Intel have a bug where the view format is always ignored;
-            // they use the parent format instead.
-            // As a workaround we create a new texture with the correct
-            // format, and then do a copy after the draw.
-            if (_parent.Info.Format != Format)
-            {
-                if (_incompatibleFormatView == null)
-                {
-                    _incompatibleFormatView = (TextureView)_renderer.CreateTexture(Info, ScaleFactor);
-                }
-
-                _renderer.TextureCopy.CopyUnscaled(_parent, _incompatibleFormatView, FirstLayer, 0, FirstLevel, 0);
-
-                return _incompatibleFormatView.Handle;
-            }
-
-            return Handle;
-        }
-
-        public void SignalModified()
-        {
-            if (_incompatibleFormatView != null)
-            {
-                _renderer.TextureCopy.CopyUnscaled(_incompatibleFormatView, _parent, 0, FirstLayer, 0, FirstLevel);
-            }
         }
 
         public void CopyTo(ITexture destination, int firstLayer, int firstLevel)
@@ -634,13 +603,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private void DisposeHandles()
         {
-            if (_incompatibleFormatView != null)
-            {
-                _incompatibleFormatView.Dispose();
-
-                _incompatibleFormatView = null;
-            }
-
             if (Handle != 0)
             {
                 GL.DeleteTexture(Handle);

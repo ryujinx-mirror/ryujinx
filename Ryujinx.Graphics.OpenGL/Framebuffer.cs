@@ -40,15 +40,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             FramebufferAttachment attachment = FramebufferAttachment.ColorAttachment0 + index;
 
-            if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Amd ||
-                HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows)
-            {
-                GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.GetIncompatibleFormatViewHandle() ?? 0, 0);
-            }
-            else
-            {
-                GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.Handle ?? 0, 0);
-            }
+            GL.FramebufferTexture(FramebufferTarget.Framebuffer, attachment, color?.Handle ?? 0, 0);
 
             _colors[index] = color;
         }
@@ -89,21 +81,6 @@ namespace Ryujinx.Graphics.OpenGL
             else
             {
                 _lastDsAttachment = 0;
-            }
-        }
-
-        public void SignalModified()
-        {
-            if (HwCapabilities.Vendor == HwCapabilities.GpuVendor.Amd ||
-                HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    if (_colors[i] != null)
-                    {
-                        _colors[i].SignalModified();
-                    }
-                }
             }
         }
 
