@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             bool serviceExists = service.HipcCommands.TryGetValue(commandId, out MethodInfo processRequest);
 
-            if (ServiceConfiguration.IgnoreMissingServices || serviceExists)
+            if (context.Device.Configuration.IgnoreMissingServices || serviceExists)
             {
                 ResultCode result = ResultCode.Success;
 
@@ -163,7 +163,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             bool serviceExists = TipcCommands.TryGetValue(commandId, out MethodInfo processRequest);
 
-            if (ServiceConfiguration.IgnoreMissingServices || serviceExists)
+            if (context.Device.Configuration.IgnoreMissingServices || serviceExists)
             {
                 ResultCode result = ResultCode.Success;
 

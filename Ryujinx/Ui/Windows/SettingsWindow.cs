@@ -263,7 +263,7 @@ namespace Ryujinx.Ui.Windows
             }
 
             _systemTimeZoneEntry.WidthChars = Math.Max(20, maxLocationLength + 1); // Ensure minimum Entry width
-            _systemTimeZoneEntry.Text = _timeZoneContentManager.SanityCheckDeviceLocationName();
+            _systemTimeZoneEntry.Text = _timeZoneContentManager.SanityCheckDeviceLocationName(ConfigurationState.Instance.System.TimeZone);
 
             _systemTimeZoneCompletion.MatchFunc = TimeZoneMatchFunc;
 
@@ -462,7 +462,7 @@ namespace Ryujinx.Ui.Windows
         {
             if (!_validTzRegions.Contains(_systemTimeZoneEntry.Text))
             {
-                _systemTimeZoneEntry.Text = _timeZoneContentManager.SanityCheckDeviceLocationName();
+                _systemTimeZoneEntry.Text = _timeZoneContentManager.SanityCheckDeviceLocationName(ConfigurationState.Instance.System.TimeZone);
             }
         }
 

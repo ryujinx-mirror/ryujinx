@@ -2,12 +2,14 @@ using ARMeilleure.Translation;
 using ARMeilleure.Translation.PTC;
 using Gtk;
 using LibHac.Common;
+using LibHac.FsSystem;
 using LibHac.Ns;
 using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Audio.Integration;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
@@ -18,6 +20,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Input.GTK3;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
@@ -166,6 +169,10 @@ namespace Ryujinx.Ui
 
             RendererWidgetBase.StatusUpdatedEvent += Update_StatusBar;
 
+            ConfigurationState.Instance.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
+            ConfigurationState.Instance.Graphics.AspectRatio.Event         += UpdateAspectRatioState;
+            ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
+
             if (ConfigurationState.Instance.Ui.StartFullscreen)
             {
                 _startFullScreen.Active = true;
@@ -234,6 +241,30 @@ namespace Ryujinx.Ui
             Task.Run(RefreshFirmwareLabel);
 
             InputManager = new InputManager(new GTK3KeyboardDriver(this), new SDL2GamepadDriver());
+        }
+
+        private void UpdateIgnoreMissingServicesState(object sender, ReactiveEventArgs<bool> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.IgnoreMissingServices = args.NewValue;
+            }
+        }
+
+        private void UpdateAspectRatioState(object sender, ReactiveEventArgs<AspectRatio> args)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.Configuration.AspectRatio = args.NewValue;
+            }
+        }
+
+        private void UpdateDockedModeState(object sender, ReactiveEventArgs<bool> e)
+        {
+            if (_emulationContext != null)
+            {
+                _emulationContext.System.ChangeDockedModeState(e.NewValue);
+            }
         }
 
         private void WindowStateEvent_Changed(object o, WindowStateEventArgs args)
@@ -380,19 +411,29 @@ namespace Ryujinx.Ui
                 ? HLE.MemoryConfiguration.MemoryConfiguration6GB
                 : HLE.MemoryConfiguration.MemoryConfiguration4GB;
 
-            _emulationContext = new HLE.Switch(
-                _virtualFileSystem,
-                _contentManager,
-                _accountManager,
-                _userChannelPersistence,
-                renderer,
-                deviceDriver,
-                memoryConfiguration)
-            {
-                UiHandler = _uiHandler
-            };
+            IntegrityCheckLevel fsIntegrityCheckLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None;
 
-            _emulationContext.Initialize();
+            HLE.HLEConfiguration configuration = new HLE.HLEConfiguration(_virtualFileSystem,
+                                                                          _contentManager,
+                                                                          _accountManager,
+                                                                          _userChannelPersistence,
+                                                                          renderer,
+                                                                          deviceDriver,
+                                                                          memoryConfiguration,
+                                                                          _uiHandler,
+                                                                          (SystemLanguage)ConfigurationState.Instance.System.Language.Value,
+                                                                          (RegionCode)ConfigurationState.Instance.System.Region.Value,
+                                                                          ConfigurationState.Instance.Graphics.EnableVsync,
+                                                                          ConfigurationState.Instance.System.EnableDockedMode,
+                                                                          ConfigurationState.Instance.System.EnablePtc,
+                                                                          fsIntegrityCheckLevel,
+                                                                          ConfigurationState.Instance.System.FsGlobalAccessLogMode,
+                                                                          ConfigurationState.Instance.System.SystemTimeOffset,
+                                                                          ConfigurationState.Instance.System.TimeZone,
+                                                                          ConfigurationState.Instance.System.IgnoreMissingServices,
+                                                                          ConfigurationState.Instance.Graphics.AspectRatio);
+
+            _emulationContext = new HLE.Switch(configuration);
         }
 
         private void SetupProgressUiHandlers()

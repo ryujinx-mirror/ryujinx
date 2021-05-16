@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             switch (kind)
             {
                 case LaunchParameterKind.UserChannel:
-                    storageData = context.Device.UserChannelPersistence.Pop();
+                    storageData = context.Device.Configuration.UserChannelPersistence.Pop();
                     break;
                 case LaunchParameterKind.PreselectedUser:
                     // Only the first 0x18 bytes of the Data seems to be actually used.
@@ -453,7 +453,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // ClearUserChannel()
         public ResultCode ClearUserChannel(ServiceCtx context)
         {
-            context.Device.UserChannelPersistence.Clear();
+            context.Device.Configuration.UserChannelPersistence.Clear();
 
             return ResultCode.Success;
         }
@@ -464,7 +464,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         {
             AppletAE.IStorage data = GetObject<AppletAE.IStorage>(context, 0);
 
-            context.Device.UserChannelPersistence.Push(data.Data);
+            context.Device.Configuration.UserChannelPersistence.Push(data.Data);
 
             return ResultCode.Success;
         }
@@ -473,7 +473,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // GetPreviousProgramIndex() -> s32 program_index
         public ResultCode GetPreviousProgramIndex(ServiceCtx context)
         {
-            int previousProgramIndex = context.Device.UserChannelPersistence.PreviousIndex;
+            int previousProgramIndex = context.Device.Configuration.UserChannelPersistence.PreviousIndex;
 
             context.ResponseData.Write(previousProgramIndex);
 

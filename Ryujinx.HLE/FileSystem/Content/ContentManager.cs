@@ -197,7 +197,7 @@ namespace Ryujinx.HLE.FileSystem.Content
         }
 
         // fs must contain AOC nca files in its root
-        public void AddAocData(IFileSystem fs, string containerPath, ulong aocBaseId)
+        public void AddAocData(IFileSystem fs, string containerPath, ulong aocBaseId, IntegrityCheckLevel integrityCheckLevel)
         {
             _virtualFileSystem.ImportTickets(fs);
 
@@ -214,7 +214,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                         continue;
                     }
 
-                    using var pfs0 = nca.OpenFileSystem(0, Switch.GetIntegrityCheckLevel());
+                    using var pfs0 = nca.OpenFileSystem(0, integrityCheckLevel);
 
                     pfs0.OpenFile(out IFile cnmtFile, pfs0.EnumerateEntries().Single().FullPath.ToU8Span(), OpenMode.Read);
 
@@ -265,7 +265,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public IList<ulong> GetAocTitleIds() => _aocData.Where(e => e.Value.Enabled).Select(e => e.Key).ToList();
 
-        public bool GetAocDataStorage(ulong aocTitleId, out IStorage aocStorage)
+        public bool GetAocDataStorage(ulong aocTitleId, out IStorage aocStorage, IntegrityCheckLevel integrityCheckLevel)
         {
             aocStorage = null;
 
@@ -289,7 +289,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                         return false; // Print error?
                 }
 
-                aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage()).OpenStorage(NcaSectionType.Data, Switch.GetIntegrityCheckLevel());
+                aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage()).OpenStorage(NcaSectionType.Data, integrityCheckLevel);
                 
                 return true;
             }
@@ -710,8 +710,6 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersionZip(ZipArchive archive)
             {
-                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
-
                 SystemVersion systemVersion = null;
 
                 foreach (var entry in archive.Entries)
@@ -751,7 +749,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     {
                         Nca metaNca = new Nca(_virtualFileSystem.KeySet, ncaStream.AsStorage());
 
-                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -781,7 +779,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                         {
                             Nca nca = new Nca(_virtualFileSystem.KeySet, ncaStream.AsStorage());
 
-                            var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                            var romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                             if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                             {
@@ -816,7 +814,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                                 {
                                     Nca metaNca = new Nca(_virtualFileSystem.KeySet, metaNcaStream.AsStorage());
 
-                                    IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                                    IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                                     string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -873,8 +871,6 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersion(IFileSystem filesystem)
             {
-                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
-
                 SystemVersion systemVersion = null;
 
                 CnmtContentMetaEntry[] metaEntries = null;
@@ -887,7 +883,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                     if (nca.Header.TitleId == SystemUpdateTitleId && nca.Header.ContentType == NcaContentType.Meta)
                     {
-                        IFileSystem fs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                        IFileSystem fs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -905,7 +901,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     }
                     else if (nca.Header.TitleId == SystemVersionTitleId && nca.Header.ContentType == NcaContentType.Data)
                     {
-                        var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                        var romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                         if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                         {
@@ -952,7 +948,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         Nca metaNca = new Nca(_virtualFileSystem.KeySet, metaStorage);
 
-                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -1004,8 +1000,6 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public SystemVersion GetCurrentFirmwareVersion()
         {
-            IntegrityCheckLevel integrityCheckLevel = Switch.GetIntegrityCheckLevel();
-
             LoadEntries();
 
             lock (_lock)
@@ -1024,7 +1018,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                             if (nca.Header.TitleId == SystemVersionTitleId && nca.Header.ContentType == NcaContentType.Data)
                             {
-                                var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
+                                var romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
 
                                 if (romfs.OpenFile(out IFile systemVersionFile, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                                 {

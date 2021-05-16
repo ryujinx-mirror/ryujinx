@@ -8,8 +8,6 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Audio.Output;
 using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
-using Ryujinx.Common;
-using Ryujinx.Configuration;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Kernel;
@@ -111,13 +109,13 @@ namespace Ryujinx.HLE.HOS
         internal LibHac.Horizon LibHacHorizonServer { get; private set; }
         internal HorizonClient LibHacHorizonClient { get; private set; }
 
-        public Horizon(Switch device, ContentManager contentManager, AccountManager accountManager, MemoryConfiguration memoryConfiguration)
+        public Horizon(Switch device)
         {
             KernelContext = new KernelContext(
                 device,
                 device.Memory,
-                memoryConfiguration.ToKernelMemorySize(),
-                memoryConfiguration.ToKernelMemoryArrange());
+                device.Configuration.MemoryConfiguration.ToKernelMemorySize(),
+                device.Configuration.MemoryConfiguration.ToKernelMemoryArrange());
 
             Device = device;
 
@@ -166,8 +164,8 @@ namespace Ryujinx.HLE.HOS
 
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
-            AccountManager = accountManager;
-            ContentManager = contentManager;
+            AccountManager = device.Configuration.AccountManager;
+            ContentManager = device.Configuration.ContentManager;
             CaptureManager = new CaptureManager(device);
 
             // TODO: use set:sys (and get external clock source id from settings)
@@ -179,7 +177,7 @@ namespace Ryujinx.HLE.HOS
             TimeSpanType systemTime = TimeSpanType.FromSeconds((long)rtcValue);
 
             // Configure and setup internal offset
-            TimeSpanType internalOffset = TimeSpanType.FromSeconds(ConfigurationState.Instance.System.SystemTimeOffset);
+            TimeSpanType internalOffset = TimeSpanType.FromSeconds(device.Configuration.SystemTimeOffset);
 
             TimeSpanType systemTimeOffset = new TimeSpanType(systemTime.NanoSeconds + internalOffset.NanoSeconds);
 
@@ -218,8 +216,6 @@ namespace Ryujinx.HLE.HOS
             HostSyncpoint = new NvHostSyncpt(device);
 
             SurfaceFlinger = new SurfaceFlinger(device);
-
-            ConfigurationState.Instance.System.EnableDockedMode.Event += OnDockedModeChange;
 
             InitLibHacHorizon();
             InitializeAudioRenderer();
@@ -313,11 +309,11 @@ namespace Ryujinx.HLE.HOS
             LibHacHorizonClient = ryujinxClient;
         }
 
-        private void OnDockedModeChange(object sender, ReactiveEventArgs<bool> e)
+        public void ChangeDockedModeState(bool newState)
         {
-            if (e.NewValue != State.DockedMode)
+            if (newState != State.DockedMode)
             {
-                State.DockedMode = e.NewValue;
+                State.DockedMode = newState;
                 PerformanceState.PerformanceMode = State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
                 AppletState.Messages.Enqueue(MessageInfo.OperationModeChanged);
@@ -326,8 +322,7 @@ namespace Ryujinx.HLE.HOS
 
                 SignalDisplayResolutionChange();
 
-                // Reconfigure controllers
-                Device.Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
+                Device.Configuration.RefreshInputConfig?.Invoke();
             }
         }
 
@@ -388,8 +383,6 @@ namespace Ryujinx.HLE.HOS
         {
             if (!_isDisposed && disposing)
             {
-                ConfigurationState.Instance.System.EnableDockedMode.Event -= OnDockedModeChange;
-
                 _isDisposed = true;
 
                 KProcess terminationProcess = new KProcess(KernelContext);

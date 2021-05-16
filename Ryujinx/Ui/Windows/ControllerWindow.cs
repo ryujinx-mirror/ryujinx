@@ -1143,7 +1143,7 @@ namespace Ryujinx.Ui.Windows
 
             if (_mainWindow.RendererWidget != null)
             {
-                _mainWindow.RendererWidget.NpadManager.ReloadConfiguration(newConfig);
+                _mainWindow.RendererWidget.NpadManager.ReloadConfiguration(newConfig, ConfigurationState.Instance.Hid.EnableKeyboard);
             }
 
             // Atomically replace and signal input change.

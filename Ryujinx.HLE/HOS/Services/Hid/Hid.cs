@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Npads       = new NpadDevices(_device, true);
         }
 
-        internal void RefreshInputConfig(List<InputConfig> inputConfig)
+        public void RefreshInputConfig(List<InputConfig> inputConfig)
         {
             ControllerConfig[] npadConfig = new ControllerConfig[inputConfig.Count];
 
@@ -76,11 +76,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             }
 
             _device.Hid.Npads.Configure(npadConfig);
-        }
-
-        internal void RefreshInputConfigEvent(object _, ReactiveEventArgs<List<InputConfig>> args)
-        {
-            RefreshInputConfig(args.NewValue);
         }
 
         public ControllerKeys UpdateStickButtons(JoystickPosition leftStick, JoystickPosition rightStick)

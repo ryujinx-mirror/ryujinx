@@ -1,7 +1,6 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using System;
-using System.IO;
 
 namespace Ryujinx.Configuration
 {

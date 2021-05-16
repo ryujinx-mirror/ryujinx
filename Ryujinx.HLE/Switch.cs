@@ -1,22 +1,14 @@
-using LibHac.FsSystem;
 using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
-using Ryujinx.Common;
-using Ryujinx.Configuration;
-using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Host1x;
 using Ryujinx.Graphics.Nvdec;
 using Ryujinx.Graphics.Vic;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
-using Ryujinx.HLE.HOS.Services;
-using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
-using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Memory;
 using System;
 
@@ -24,69 +16,60 @@ namespace Ryujinx.HLE
 {
     public class Switch : IDisposable
     {
-        private MemoryConfiguration _memoryConfiguration;
+        public HLEConfiguration Configuration { get; }
 
-        public IHardwareDeviceDriver AudioDeviceDriver { get; private set; }
+        public IHardwareDeviceDriver AudioDeviceDriver { get; }
 
-        internal MemoryBlock Memory { get; private set; }
+        internal MemoryBlock Memory { get; }
 
-        public GpuContext Gpu { get; private set; }
+        public GpuContext Gpu { get; }
 
-        internal NvMemoryAllocator MemoryAllocator { get; private set; }
+        internal NvMemoryAllocator MemoryAllocator { get; }
 
         internal Host1xDevice Host1x { get; }
 
-        public VirtualFileSystem FileSystem { get; private set; }
+        public VirtualFileSystem FileSystem => Configuration.VirtualFileSystem;
 
-        public Horizon System { get; private set; }
+        public Horizon System { get; }
 
         public ApplicationLoader Application { get; }
 
-        public PerformanceStatistics Statistics { get; private set; }
+        public PerformanceStatistics Statistics { get; }
 
-        public UserChannelPersistence UserChannelPersistence { get; }
+        public Hid Hid { get; }
 
-        public Hid Hid { get; private set; }
+        public TamperMachine TamperMachine { get; }
 
-        public TamperMachine TamperMachine { get; private set; }
-
-        public IHostUiHandler UiHandler { get; set; }
+        public IHostUiHandler UiHandler { get; }
 
         public bool EnableDeviceVsync { get; set; } = true;
 
-        public Switch(
-            VirtualFileSystem fileSystem,
-            ContentManager contentManager,
-            AccountManager accountManager,
-            UserChannelPersistence userChannelPersistence,
-            IRenderer renderer,
-            IHardwareDeviceDriver audioDeviceDriver,
-            MemoryConfiguration memoryConfiguration)
+        public Switch(HLEConfiguration configuration)
         {
-            if (renderer == null)
+            if (configuration.GpuRenderer == null)
             {
-                throw new ArgumentNullException(nameof(renderer));
+                throw new ArgumentNullException(nameof(configuration.GpuRenderer));
             }
 
-            if (audioDeviceDriver == null)
+            if (configuration.AudioDeviceDriver == null)
             {
-                throw new ArgumentNullException(nameof(audioDeviceDriver));
+                throw new ArgumentNullException(nameof(configuration.AudioDeviceDriver));
             }
 
-            if (userChannelPersistence == null)
+            if (configuration.UserChannelPersistence== null)
             {
-                throw new ArgumentNullException(nameof(userChannelPersistence));
+                throw new ArgumentNullException(nameof(configuration.UserChannelPersistence));
             }
 
-            UserChannelPersistence = userChannelPersistence;
+            Configuration = configuration;
 
-            _memoryConfiguration = memoryConfiguration;
+            UiHandler = configuration.HostUiHandler;
 
-            AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(audioDeviceDriver);
+            AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(configuration.AudioDeviceDriver);
 
-            Memory = new MemoryBlock(memoryConfiguration.ToDramSize());
+            Memory = new MemoryBlock(configuration.MemoryConfiguration.ToDramSize());
 
-            Gpu = new GpuContext(renderer);
+            Gpu = new GpuContext(configuration.GpuRenderer);
 
             MemoryAllocator = new NvMemoryAllocator();
 
@@ -111,9 +94,7 @@ namespace Ryujinx.HLE
                 }
             };
 
-            FileSystem = fileSystem;
-
-            System = new Horizon(this, contentManager, accountManager, memoryConfiguration);
+            System = new Horizon(this);
             System.InitializeServices();
 
             Statistics = new PerformanceStatistics();
@@ -121,45 +102,30 @@ namespace Ryujinx.HLE
             Hid = new Hid(this, System.HidBaseAddress);
             Hid.InitDevices();
 
-            Application = new ApplicationLoader(this, fileSystem, contentManager);
+            Application = new ApplicationLoader(this);
 
             TamperMachine = new TamperMachine();
+
+            Initialize();
         }
 
-        public void Initialize()
+        private void Initialize()
         {
-            System.State.SetLanguage((SystemLanguage)ConfigurationState.Instance.System.Language.Value);
+            System.State.SetLanguage(Configuration.SystemLanguage);
 
-            System.State.SetRegion((RegionCode)ConfigurationState.Instance.System.Region.Value);
+            System.State.SetRegion(Configuration.Region);
 
-            EnableDeviceVsync = ConfigurationState.Instance.Graphics.EnableVsync;
+            EnableDeviceVsync = Configuration.EnableVsync;
 
-            System.State.DockedMode = ConfigurationState.Instance.System.EnableDockedMode;
+            System.State.DockedMode = Configuration.EnableDockedMode;
 
             System.PerformanceState.PerformanceMode = System.State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
-            System.EnablePtc = ConfigurationState.Instance.System.EnablePtc;
+            System.EnablePtc = Configuration.EnablePtc;
 
-            System.FsIntegrityCheckLevel = GetIntegrityCheckLevel();
+            System.FsIntegrityCheckLevel = Configuration.FsIntegrityCheckLevel;
 
-            System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
-
-            ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
-            ConfigurationState.Instance.System.IgnoreMissingServices.Event += (object _, ReactiveEventArgs<bool> args) =>
-            {
-                ServiceConfiguration.IgnoreMissingServices = args.NewValue;
-            };
-
-            // Configure controllers
-            Hid.RefreshInputConfig(ConfigurationState.Instance.Hid.InputConfig.Value);
-            ConfigurationState.Instance.Hid.InputConfig.Event += Hid.RefreshInputConfigEvent;
-        }
-
-        public static IntegrityCheckLevel GetIntegrityCheckLevel()
-        {
-            return ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                ? IntegrityCheckLevel.ErrorOnInvalid
-                : IntegrityCheckLevel.None;
+            System.GlobalAccessLogMode = Configuration.FsGlobalAccessLogMode;
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -223,8 +189,6 @@ namespace Ryujinx.HLE
         {
             if (disposing)
             {
-                ConfigurationState.Instance.Hid.InputConfig.Event -= Hid.RefreshInputConfigEvent;
-
                 System.Dispose();
                 Host1x.Dispose();
                 AudioDeviceDriver.Dispose();

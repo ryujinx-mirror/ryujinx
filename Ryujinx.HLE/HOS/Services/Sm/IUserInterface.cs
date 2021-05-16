@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 }
                 else
                 {
-                    if (ServiceConfiguration.IgnoreMissingServices)
+                    if (context.Device.Configuration.IgnoreMissingServices)
                     {
                         Logger.Warning?.Print(LogClass.Service, $"Missing service {name} ignored");
                     }

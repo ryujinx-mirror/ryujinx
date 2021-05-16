@@ -4,7 +4,7 @@ using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Logging;
-using Ryujinx.Configuration;
+using Ryujinx.Input.HLE;
 using Ryujinx.Input.Motion.CemuHook.Protocol;
 using System;
 using System.Collections.Generic;
@@ -29,12 +29,14 @@ namespace Ryujinx.Input.Motion.CemuHook
 
         private readonly bool[] _clientErrorStatus = new bool[Enum.GetValues(typeof(PlayerIndex)).Length];
         private readonly long[] _clientRetryTimer  = new long[Enum.GetValues(typeof(PlayerIndex)).Length];
+        private NpadManager _npadManager;
 
-        public Client()
+        public Client(NpadManager npadManager)
         {
-            _hosts      = new Dictionary<int, IPEndPoint>();
-            _motionData = new Dictionary<int, Dictionary<int, MotionInput>>();
-            _clients    = new Dictionary<int, UdpClient>();
+            _npadManager = npadManager;
+            _hosts       = new Dictionary<int, IPEndPoint>();
+            _motionData  = new Dictionary<int, Dictionary<int, MotionInput>>();
+            _clients     = new Dictionary<int, UdpClient>();
 
             CloseClients();
         }
@@ -323,7 +325,7 @@ namespace Ryujinx.Input.Motion.CemuHook
 
                     ulong timestamp = inputData.MotionTimestamp;
 
-                    InputConfig config = ConfigurationState.Instance.Hid.InputConfig.Value.Find(x => x.PlayerIndex == (PlayerIndex)clientId);
+                    InputConfig config = _npadManager.GetPlayerInputConfigByIndex(clientId);
 
                     lock (_motionData)
                     {

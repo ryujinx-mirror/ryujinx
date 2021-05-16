@@ -73,8 +73,6 @@ namespace Ryujinx.Ui
             NpadManager = _inputManager.CreateNpadManager();
             _keyboardInterface = (IKeyboard)_inputManager.KeyboardDriver.GetGamepad("0");
 
-            NpadManager.ReloadConfiguration(ConfigurationState.Instance.Hid.InputConfig.Value.ToList());
-
             WaitEvent = new ManualResetEvent(false);
 
             _glLogLevel = glLogLevel;
@@ -300,6 +298,8 @@ namespace Ryujinx.Ui
             Device = device;
             Renderer = Device.Gpu.Renderer;
             Renderer?.Window.SetSize(_windowWidth, _windowHeight);
+
+            NpadManager.Initialize(device, ConfigurationState.Instance.Hid.InputConfig, ConfigurationState.Instance.Hid.EnableKeyboard);
         }
 
         public void Render()
@@ -488,7 +488,7 @@ namespace Ryujinx.Ui
                 });
             }
 
-            NpadManager.Update(Device.Hid, Device.TamperMachine);
+            NpadManager.Update();
 
             if (_isFocused)
             {
