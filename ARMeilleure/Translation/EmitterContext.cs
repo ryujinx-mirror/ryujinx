@@ -12,6 +12,8 @@ namespace ARMeilleure.Translation
 {
     class EmitterContext
     {
+        private int _localsCount;
+
         private readonly Dictionary<Operand, BasicBlock> _irLabels;
         private readonly IntrusiveList<BasicBlock> _irBlocks;
 
@@ -23,11 +25,22 @@ namespace ARMeilleure.Translation
 
         public EmitterContext()
         {
+            _localsCount = 0;
+
             _irLabels = new Dictionary<Operand, BasicBlock>();
             _irBlocks = new IntrusiveList<BasicBlock>();
 
             _needsNewBlock = true;
             _nextBlockFreq = BasicBlockFrequency.Default;
+        }
+
+        public Operand AllocateLocal(OperandType type)
+        {
+            Operand local = Local(type);
+
+            local.NumberLocal(++_localsCount);
+
+            return local;
         }
 
         public Operand Add(Operand op1, Operand op2)
@@ -223,9 +236,10 @@ namespace ARMeilleure.Translation
 
         public Operand Copy(Operand dest, Operand op1)
         {
-            if (dest.Kind != OperandKind.Register)
+            if (dest.Kind != OperandKind.Register &&
+                (dest.Kind != OperandKind.LocalVariable || dest.GetLocalNumber() == 0))
             {
-                throw new ArgumentException($"Invalid dest operand kind \"{dest.Kind}\".");
+                throw new ArgumentException($"Destination operand must be a Register or a numbered LocalVariable.");
             }
 
             return Add(Instruction.Copy, dest, op1);
@@ -670,7 +684,7 @@ namespace ARMeilleure.Translation
 
         public ControlFlowGraph GetControlFlowGraph()
         {
-            return new ControlFlowGraph(_irBlocks.First, _irBlocks);
+            return new ControlFlowGraph(_irBlocks.First, _irBlocks, _localsCount);
         }
     }
 }

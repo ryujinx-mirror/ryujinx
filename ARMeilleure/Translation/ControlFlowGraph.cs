@@ -10,15 +10,17 @@ namespace ARMeilleure.Translation
         private BasicBlock[] _postOrderBlocks;
         private int[] _postOrderMap;
 
+        public int LocalsCount { get; }
         public BasicBlock Entry { get; }
         public IntrusiveList<BasicBlock> Blocks { get; }
         public BasicBlock[] PostOrderBlocks => _postOrderBlocks;
         public int[] PostOrderMap => _postOrderMap; 
 
-        public ControlFlowGraph(BasicBlock entry, IntrusiveList<BasicBlock> blocks)
+        public ControlFlowGraph(BasicBlock entry, IntrusiveList<BasicBlock> blocks, int localsCount)
         {
             Entry = entry;
             Blocks = blocks;
+            LocalsCount = localsCount;
 
             Update(removeUnreachableBlocks: true);
         }

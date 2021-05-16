@@ -976,7 +976,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         {
             if (operand.Kind == OperandKind.LocalVariable)
             {
-                return operand.AsInt32();
+                return operand.GetLocalNumber();
             }
             else if (operand.Kind == OperandKind.Register)
             {

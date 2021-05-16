@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ARMeilleure.IntermediateRepresentation
@@ -89,6 +90,13 @@ namespace ARMeilleure.IntermediateRepresentation
         public Register GetRegister()
         {
             return new Register((int)Value & 0xffffff, (RegisterType)(Value >> 24));
+        }
+
+        public int GetLocalNumber()
+        {
+            Debug.Assert(Kind == OperandKind.LocalVariable);
+
+            return (int)Value;
         }
 
         public byte AsByte()

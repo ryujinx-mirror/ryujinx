@@ -45,7 +45,7 @@ namespace ARMeilleure.Translation
         public static void Construct(ControlFlowGraph cfg)
         {
             var globalDefs = new DefMap[cfg.Blocks.Count];
-            var localDefs = new Operand[RegisterConsts.TotalCount];
+            var localDefs = new Operand[cfg.LocalsCount + RegisterConsts.TotalCount];
 
             var dfPhiBlocks = new Queue<BasicBlock>();
 
@@ -264,6 +264,12 @@ namespace ARMeilleure.Translation
 
                 return true;
             }
+            else if (operand is { Kind: OperandKind.LocalVariable } && operand.GetLocalNumber() > 0)
+            {
+                result = RegisterConsts.TotalCount + operand.GetLocalNumber() - 1;
+
+                return true;
+            }
 
             result = -1;
 
@@ -274,7 +280,7 @@ namespace ARMeilleure.Translation
         {
             if (!TryGetId(operand, out int key))
             {
-                Debug.Fail("OperandKind must be Register.");
+                Debug.Fail("OperandKind must be Register or a numbered LocalVariable.");
             }
 
             return key;
