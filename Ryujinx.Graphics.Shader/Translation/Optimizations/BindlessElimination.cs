@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     if (src0.Type == OperandType.ConstantBuffer)
                     {
                         texOp.SetHandle(src0.GetCbufOffset(), src0.GetCbufSlot());
-                        texOp.Format = config.GetTextureFormat(texOp.Handle);
+                        texOp.Format = config.GetTextureFormat(texOp.Handle, texOp.CbufSlot);
                     }
                 }
             }

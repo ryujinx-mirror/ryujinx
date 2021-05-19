@@ -398,10 +398,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="state">The current GPU state</param>
         /// <param name="stageIndex">The stage number where the texture is bound</param>
         /// <param name="handle">The texture handle</param>
+        /// <param name="cbufSlot">The texture handle's constant buffer slot</param>
         /// <returns>The texture descriptor for the specified texture</returns>
-        public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle)
+        public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle, int cbufSlot)
         {
-            int packedId = ReadPackedId(stageIndex, handle, state.Get<int>(MethodOffset.TextureBufferIndex));
+            int packedId = ReadPackedId(stageIndex, handle, cbufSlot < 0 ? state.Get<int>(MethodOffset.TextureBufferIndex) : cbufSlot);
             int textureId = UnpackTextureId(packedId);
 
             var poolState = state.Get<PoolState>(MethodOffset.TexturePoolState);

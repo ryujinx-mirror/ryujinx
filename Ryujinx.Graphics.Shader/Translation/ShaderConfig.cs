@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return count + 1;
         }
 
-        public TextureFormat GetTextureFormat(int handle)
+        public TextureFormat GetTextureFormat(int handle, int cbufSlot = -1)
         {
             // When the formatted load extension is supported, we don't need to
             // specify a format, we can just declare it without a format and the GPU will handle it.
@@ -100,7 +100,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return TextureFormat.Unknown;
             }
 
-            var format = GpuAccessor.QueryTextureFormat(handle);
+            var format = GpuAccessor.QueryTextureFormat(handle, cbufSlot);
 
             if (format == TextureFormat.Unknown)
             {

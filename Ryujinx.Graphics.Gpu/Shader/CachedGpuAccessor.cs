@@ -140,8 +140,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Gets the texture descriptor for a given texture on the pool.
         /// </summary>
         /// <param name="handle">Index of the texture (this is the word offset of the handle in the constant buffer)</param>
+        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
         /// <returns>Texture descriptor</returns>
-        public override Image.ITextureDescriptor GetTextureDescriptor(int handle)
+        public override Image.ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot)
         {
             if (!_textureDescriptors.TryGetValue(handle, out GuestTextureDescriptor textureDescriptor))
             {

@@ -142,7 +142,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.GpuAccessor.QuerySupportsNonConstantTextureOffset();
 
-            bool isRect = config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle);
+            bool isRect = config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle, texOp.CbufSlot);
 
             if (!(hasInvalidOffset || isRect))
             {
@@ -433,7 +433,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             TextureOperation texOp = (TextureOperation)node.Value;
 
-            TextureFormat format = config.GpuAccessor.QueryTextureFormat(texOp.Handle);
+            TextureFormat format = config.GpuAccessor.QueryTextureFormat(texOp.Handle, texOp.CbufSlot);
 
             int maxPositive = format switch
             {

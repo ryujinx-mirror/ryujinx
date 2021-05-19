@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     {
         public abstract T MemoryRead<T>(ulong address) where T : unmanaged;
 
-        public abstract ITextureDescriptor GetTextureDescriptor(int handle);
+        public abstract ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot);
 
         /// <summary>
         /// Queries texture format information, for shaders using image load or store.
@@ -18,10 +18,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// If the format of the texture is a compressed, depth or unsupported format, then a default value is returned.
         /// </remarks>
         /// <param name="handle">Texture handle</param>
+        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
         /// <returns>Color format of the non-compressed texture</returns>
-        public TextureFormat QueryTextureFormat(int handle)
+        public TextureFormat QueryTextureFormat(int handle, int cbufSlot = -1)
         {
-            var descriptor = GetTextureDescriptor(handle);
+            var descriptor = GetTextureDescriptor(handle, cbufSlot);
 
             if (!FormatTable.TryGetTextureFormat(descriptor.UnpackFormat(), descriptor.UnpackSrgb(), out FormatInfo formatInfo))
             {
@@ -78,20 +79,22 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Queries texture target information.
         /// </summary>
         /// <param name="handle">Texture handle</param>
+        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
         /// <returns>True if the texture is a buffer texture, false otherwise</returns>
-        public bool QueryIsTextureBuffer(int handle)
+        public bool QueryIsTextureBuffer(int handle, int cbufSlot = -1)
         {
-            return GetTextureDescriptor(handle).UnpackTextureTarget() == TextureTarget.TextureBuffer;
+            return GetTextureDescriptor(handle, cbufSlot).UnpackTextureTarget() == TextureTarget.TextureBuffer;
         }
 
         /// <summary>
         /// Queries texture target information.
         /// </summary>
         /// <param name="handle">Texture handle</param>
+        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
         /// <returns>True if the texture is a rectangle texture, false otherwise</returns>
-        public bool QueryIsTextureRectangle(int handle)
+        public bool QueryIsTextureRectangle(int handle, int cbufSlot = -1)
         {
-            var descriptor = GetTextureDescriptor(handle);
+            var descriptor = GetTextureDescriptor(handle, cbufSlot);
 
             TextureTarget target = descriptor.UnpackTextureTarget();
 

@@ -417,7 +417,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 {
                     foreach (int textureHandle in context.TextureHandlesForCache)
                     {
-                        GuestTextureDescriptor textureDescriptor = ((Image.TextureDescriptor)gpuAccessor.GetTextureDescriptor(textureHandle)).ToCache();
+                        GuestTextureDescriptor textureDescriptor = ((Image.TextureDescriptor)gpuAccessor.GetTextureDescriptor(textureHandle, -1)).ToCache();
 
                         textureDescriptor.Handle = (uint)textureHandle;
 
