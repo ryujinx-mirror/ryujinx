@@ -137,9 +137,6 @@ namespace Ryujinx
             // Logging system information.
             PrintSystemInfo();
 
-            // Force dedicated GPU if we can.
-            ForceDedicatedGpu.Nvidia();
-
             // Enable OGL multithreading on the driver, when available.
             DriverUtilities.ToggleOGLThreading(true);
 
