@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class BindlessToIndexed
     {
-        public static void RunPass(BasicBlock block)
+        public static void RunPass(BasicBlock block, ShaderConfig config)
         {
             // We can turn a bindless texture access into a indexed access,
             // as long the following conditions are true:
@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                texOp.TurnIntoIndexed(addSrc1.Value / 4);
+                TurnIntoIndexed(config, texOp, addSrc1.Value / 4);
 
                 Operand index = Local();
 
@@ -74,6 +74,12 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 texOp.SetSource(0, index);
             }
+        }
+
+        private static void TurnIntoIndexed(ShaderConfig config, TextureOperation texOp, int handle)
+        {
+            texOp.TurnIntoIndexed(handle);
+            config.SetUsedTexture(texOp.Inst, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, handle);
         }
     }
 }

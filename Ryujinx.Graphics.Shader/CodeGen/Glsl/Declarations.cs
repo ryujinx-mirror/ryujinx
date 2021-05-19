@@ -70,30 +70,34 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
-            if (info.CBuffers.Count != 0)
+            var cBufferDescriptors = context.Config.GetConstantBufferDescriptors();
+            if (cBufferDescriptors.Length != 0)
             {
-                DeclareUniforms(context, info);
+                DeclareUniforms(context, cBufferDescriptors);
 
                 context.AppendLine();
             }
 
-            if (info.SBuffers.Count != 0)
+            var sBufferDescriptors = context.Config.GetStorageBufferDescriptors();
+            if (sBufferDescriptors.Length != 0)
             {
-                DeclareStorages(context, info);
+                DeclareStorages(context, sBufferDescriptors);
 
                 context.AppendLine();
             }
 
-            if (info.Samplers.Count != 0)
+            var textureDescriptors = context.Config.GetTextureDescriptors();
+            if (textureDescriptors.Length != 0)
             {
-                DeclareSamplers(context, info);
+                DeclareSamplers(context, textureDescriptors);
 
                 context.AppendLine();
             }
 
-            if (info.Images.Count != 0)
+            var imageDescriptors = context.Config.GetImageDescriptors();
+            if (imageDescriptors.Length != 0)
             {
-                DeclareImages(context, info);
+                DeclareImages(context, imageDescriptors);
 
                 context.AppendLine();
             }
@@ -246,58 +250,40 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             throw new ArgumentException($"Invalid variable type \"{type}\".");
         }
 
-        private static void DeclareUniforms(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareUniforms(CodeGenContext context, BufferDescriptor[] descriptors)
         {
             string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
 
-            if (info.UsesCbIndexing)
+            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.CbIndexing))
             {
-                int count = info.CBuffers.Max() + 1;
-
-                int[] bindings = new int[count];
-
-                for (int i = 0; i < count; i++)
-                {
-                    bindings[i] = context.Config.Counts.IncrementUniformBuffersCount();
-                }
-
-                foreach (int cbufSlot in info.CBuffers.OrderBy(x => x))
-                {
-                    context.CBufferDescriptors.Add(new BufferDescriptor(bindings[cbufSlot], cbufSlot));
-                }
-
                 string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
                 ubName += "_" + DefaultNames.UniformNamePrefix;
 
                 string blockName = $"{ubName}_{DefaultNames.BlockSuffix}";
 
-                context.AppendLine($"layout (binding = {bindings[0]}, std140) uniform {blockName}");
+                context.AppendLine($"layout (binding = {descriptors[0].Binding}, std140) uniform {blockName}");
                 context.EnterScope();
                 context.AppendLine("vec4 " + DefaultNames.DataName + ubSize + ";");
-                context.LeaveScope($" {ubName}[{NumberFormatter.FormatInt(count)}];");
+                context.LeaveScope($" {ubName}[{NumberFormatter.FormatInt(descriptors.Length)}];");
             }
             else
             {
-                foreach (int cbufSlot in info.CBuffers.OrderBy(x => x))
+                foreach (var descriptor in descriptors)
                 {
-                    int binding = context.Config.Counts.IncrementUniformBuffersCount();
-
-                    context.CBufferDescriptors.Add(new BufferDescriptor(binding, cbufSlot));
-
                     string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
-                    ubName += "_" + DefaultNames.UniformNamePrefix + cbufSlot;
+                    ubName += "_" + DefaultNames.UniformNamePrefix + descriptor.Slot;
 
-                    context.AppendLine($"layout (binding = {binding}, std140) uniform {ubName}");
+                    context.AppendLine($"layout (binding = {descriptor.Binding}, std140) uniform {ubName}");
                     context.EnterScope();
-                    context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, cbufSlot, false) + ubSize + ";");
+                    context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, descriptor.Slot, false) + ubSize + ";");
                     context.LeaveScope(";");
                 }
             }
         }
 
-        private static void DeclareStorages(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareStorages(CodeGenContext context, BufferDescriptor[] descriptors)
         {
             string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
@@ -305,130 +291,81 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
 
-            int count = info.SBuffers.Max() + 1;
-
-            int[] bindings = new int[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                bindings[i] = context.Config.Counts.IncrementStorageBuffersCount();
-            }
-
-            foreach (int sbufSlot in info.SBuffers)
-            {
-                context.SBufferDescriptors.Add(new BufferDescriptor(bindings[sbufSlot], sbufSlot));
-            }
-
-            context.AppendLine($"layout (binding = {bindings[0]}, std430) buffer {blockName}");
+            context.AppendLine($"layout (binding = {descriptors[0].Binding}, std430) buffer {blockName}");
             context.EnterScope();
             context.AppendLine("uint " + DefaultNames.DataName + "[];");
-            context.LeaveScope($" {sbName}[{NumberFormatter.FormatInt(count)}];");
+            context.LeaveScope($" {sbName}[{NumberFormatter.FormatInt(descriptors.Length)}];");
         }
 
-        private static void DeclareSamplers(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareSamplers(CodeGenContext context, TextureDescriptor[] descriptors)
         {
-            HashSet<string> samplers = new HashSet<string>();
-
-            // Texture instructions other than TextureSample (like TextureSize)
-            // may have incomplete sampler type information. In those cases,
-            // we prefer instead the more accurate information from the
-            // TextureSample instruction, if both are available.
-            foreach (AstTextureOperation texOp in info.Samplers.OrderBy(x => x.Handle * 2 + (x.Inst == Instruction.TextureSample ? 0 : 1)))
+            int arraySize = 0;
+            foreach (var descriptor in descriptors)
             {
-                string indexExpr = NumberFormatter.FormatInt(texOp.ArraySize);
-
-                string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
-
-                if ((texOp.Flags & TextureFlags.Bindless) != 0 || !samplers.Add(samplerName))
+                if (descriptor.Type.HasFlag(SamplerType.Indexed))
                 {
-                    continue;
-                }
-
-                int firstBinding = -1;
-
-                if ((texOp.Type & SamplerType.Indexed) != 0)
-                {
-                    for (int index = 0; index < texOp.ArraySize; index++)
+                    if (arraySize == 0)
                     {
-                        int binding = context.Config.Counts.IncrementTexturesCount();
-
-                        if (firstBinding < 0)
-                        {
-                            firstBinding = binding;
-                        }
-
-                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle + index * 2);
-
-                        context.TextureDescriptors.Add(desc);
+                        arraySize = ShaderConfig.SamplerArraySize;
+                    }
+                    else if (--arraySize != 0)
+                    {
+                        continue;
                     }
                 }
-                else
-                {
-                    firstBinding = context.Config.Counts.IncrementTexturesCount();
 
-                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle);
+                string indexExpr = NumberFormatter.FormatInt(arraySize);
 
-                    context.TextureDescriptors.Add(desc);
-                }
+                string samplerName = OperandManager.GetSamplerName(
+                    context.Config.Stage,
+                    descriptor.CbufSlot,
+                    descriptor.HandleIndex,
+                    descriptor.Type.HasFlag(SamplerType.Indexed),
+                    indexExpr);
 
-                string samplerTypeName = texOp.Type.ToGlslSamplerType();
+                string samplerTypeName = descriptor.Type.ToGlslSamplerType();
 
-                context.AppendLine($"layout (binding = {firstBinding}) uniform {samplerTypeName} {samplerName};");
+                context.AppendLine($"layout (binding = {descriptor.Binding}) uniform {samplerTypeName} {samplerName};");
             }
         }
 
-        private static void DeclareImages(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareImages(CodeGenContext context, TextureDescriptor[] descriptors)
         {
-            HashSet<string> images = new HashSet<string>();
-
-            foreach (AstTextureOperation texOp in info.Images.OrderBy(x => x.Handle))
+            int arraySize = 0;
+            foreach (var descriptor in descriptors)
             {
-                string indexExpr = NumberFormatter.FormatInt(texOp.ArraySize);
-
-                string imageName = OperandManager.GetImageName(context.Config.Stage, texOp, indexExpr);
-
-                if ((texOp.Flags & TextureFlags.Bindless) != 0 || !images.Add(imageName))
+                if (descriptor.Type.HasFlag(SamplerType.Indexed))
                 {
-                    continue;
-                }
-
-                int firstBinding = -1;
-
-                if ((texOp.Type & SamplerType.Indexed) != 0)
-                {
-                    for (int index = 0; index < texOp.ArraySize; index++)
+                    if (arraySize == 0)
                     {
-                        int binding = context.Config.Counts.IncrementImagesCount();
-
-                        if (firstBinding < 0)
-                        {
-                            firstBinding = binding;
-                        }
-
-                        var desc = new TextureDescriptor(binding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle + index * 2);
-
-                        context.ImageDescriptors.Add(desc);
+                        arraySize = ShaderConfig.SamplerArraySize;
+                    }
+                    else if (--arraySize != 0)
+                    {
+                        continue;
                     }
                 }
-                else
-                {
-                    firstBinding = context.Config.Counts.IncrementImagesCount();
 
-                    var desc = new TextureDescriptor(firstBinding, texOp.Type, texOp.Format, texOp.CbufSlot, texOp.Handle);
+                string indexExpr = NumberFormatter.FormatInt(arraySize);
 
-                    context.ImageDescriptors.Add(desc);
-                }
+                string imageName = OperandManager.GetImageName(
+                    context.Config.Stage,
+                    descriptor.CbufSlot,
+                    descriptor.HandleIndex,
+                    descriptor.Format,
+                    descriptor.Type.HasFlag(SamplerType.Indexed),
+                    indexExpr);
 
-                string layout = texOp.Format.ToGlslFormat();
+                string layout = descriptor.Format.ToGlslFormat();
 
                 if (!string.IsNullOrEmpty(layout))
                 {
                     layout = ", " + layout;
                 }
 
-                string imageTypeName = texOp.Type.ToGlslImageType(texOp.Format.GetComponentType());
+                string imageTypeName = descriptor.Type.ToGlslImageType(descriptor.Format.GetComponentType());
 
-                context.AppendLine($"layout (binding = {firstBinding}{layout}) uniform {imageTypeName} {imageName};");
+                context.AppendLine($"layout (binding = {descriptor.Binding}{layout}) uniform {imageTypeName} {imageName};");
             }
         }
 
@@ -528,7 +465,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 
-                int scaleElements = context.TextureDescriptors.Count + context.ImageDescriptors.Count;
+                int scaleElements = context.Config.GetTextureDescriptors().Length + context.Config.GetImageDescriptors().Length;
 
                 if (context.Config.Stage == ShaderStage.Fragment)
                 {

@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         FragCoordXY     = 1 << 1,
 
         Bindless = 1 << 2,
-
-        InstanceId = 1 << 3
+        InstanceId = 1 << 3,
+        CbIndexing = 1 << 4
     }
 }

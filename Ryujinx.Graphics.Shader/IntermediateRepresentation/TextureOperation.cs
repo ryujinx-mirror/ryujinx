@@ -2,30 +2,30 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
     class TextureOperation : Operation
     {
-        private const int DefaultCbufSlot = -1;
+        public const int DefaultCbufSlot = -1;
 
-        public SamplerType  Type  { get; private set; }
+        public SamplerType Type { get; private set; }
+        public TextureFormat Format { get; set; }
         public TextureFlags Flags { get; private set; }
 
         public int CbufSlot { get; private set; }
-
         public int Handle { get; private set; }
 
-        public TextureFormat Format { get; set; }
-
         public TextureOperation(
-            Instruction      inst,
-            SamplerType      type,
-            TextureFlags     flags,
-            int              handle,
-            int              compIndex,
-            Operand          dest,
+            Instruction inst,
+            SamplerType type,
+            TextureFormat format,
+            TextureFlags flags,
+            int handle,
+            int compIndex,
+            Operand dest,
             params Operand[] sources) : base(inst, compIndex, dest, sources)
         {
-            Type     = type;
-            Flags    = flags;
+            Type = type;
+            Format = format;
+            Flags = flags;
             CbufSlot = DefaultCbufSlot;
-            Handle   = handle;
+            Handle = handle;
         }
 
         public void TurnIntoIndexed(int handle)
@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             }
 
             CbufSlot = cbufSlot;
-            Handle   = handle;
+            Handle = handle;
         }
     }
 }

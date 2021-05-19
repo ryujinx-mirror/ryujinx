@@ -2,7 +2,6 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
@@ -100,7 +99,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     texOp.Flags,
                     texOp.CbufSlot,
                     texOp.Handle,
-                    4, // TODO: Non-hardcoded array size.
                     texOp.Index,
                     sources);
             }
@@ -108,34 +106,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             if (operation.Dest != null)
             {
                 AstOperand dest = context.GetOperandDef(operation.Dest);
-
-                if (inst == Instruction.LoadConstant)
-                {
-                    Operand slot = operation.GetSource(0);
-
-                    if (slot.Type == OperandType.Constant)
-                    {
-                        context.Info.CBuffers.Add(slot.Value);
-                    }
-                    else
-                    {
-                        // If the value is not constant, then we don't know
-                        // how many constant buffers are used, so we assume
-                        // all of them are used.
-                        int cbCount = 32 - BitOperations.LeadingZeroCount(context.Config.GpuAccessor.QueryConstantBufferUse());
-
-                        for (int index = 0; index < cbCount; index++)
-                        {
-                            context.Info.CBuffers.Add(index);
-                        }
-
-                        context.Info.UsesCbIndexing = true;
-                    }
-                }
-                else if (UsesStorage(inst))
-                {
-                    AddSBufferUse(context.Info.SBuffers, operation);
-                }
 
                 // If all the sources are bool, it's better to use short-circuiting
                 // logical operations, rather than forcing a cast to int and doing
@@ -169,23 +139,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 if (operation is TextureOperation texOp)
                 {
-                    if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
+                    if (texOp.Inst == Instruction.ImageLoad)
                     {
                         dest.VarType = texOp.Format.GetComponentType();
                     }
 
-                    AstTextureOperation astTexOp = GetAstTextureOperation(texOp);
-
-                    if (texOp.Inst == Instruction.ImageLoad)
-                    {
-                        context.Info.Images.Add(astTexOp);
-                    }
-                    else
-                    {
-                        context.Info.Samplers.Add(astTexOp);
-                    }
-
-                    source = astTexOp;
+                    source = GetAstTextureOperation(texOp);
                 }
                 else if (!isCopy)
                 {
@@ -206,17 +165,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 AstTextureOperation astTexOp = GetAstTextureOperation(texOp);
 
-                context.Info.Images.Add(astTexOp);
-
                 context.AddNode(astTexOp);
             }
             else
             {
-                if (UsesStorage(inst))
-                {
-                    AddSBufferUse(context.Info.SBuffers, operation);
-                }
-
                 context.AddNode(new AstOperation(inst, operation.Index, sources, operation.SourcesCount));
             }
 
@@ -257,26 +209,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
         }
 
-        private static void AddSBufferUse(HashSet<int> sBuffers, Operation operation)
-        {
-            Operand slot = operation.GetSource(0);
-
-            if (slot.Type == OperandType.Constant)
-            {
-                sBuffers.Add(slot.Value);
-            }
-            else
-            {
-                // If the value is not constant, then we don't know
-                // how many storage buffers are used, so we assume
-                // all of them are used.
-                for (int index = 0; index < GlobalMemory.StorageMaxCount; index++)
-                {
-                    sBuffers.Add(index);
-                }
-            }
-        }
-
         private static VariableType GetVarTypeFromUses(Operand dest)
         {
             HashSet<Operand> visited = new HashSet<Operand>();
@@ -301,7 +233,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 foreach (INode useNode in operand.UseOps)
                 {
-                    if (!(useNode is Operation operation))
+                    if (useNode is not Operation operation)
                     {
                         continue;
                     }
@@ -340,7 +272,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             foreach (IAstNode node in sources)
             {
-                if (!(node is AstOperand operand))
+                if (node is not AstOperand operand)
                 {
                     return false;
                 }
@@ -356,52 +288,37 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private static bool IsBranchInst(Instruction inst)
         {
-            switch (inst)
+            return inst switch
             {
-                case Instruction.Branch:
-                case Instruction.BranchIfFalse:
-                case Instruction.BranchIfTrue:
-                    return true;
-            }
-
-            return false;
+                Instruction.Branch or
+                Instruction.BranchIfFalse or
+                Instruction.BranchIfTrue => true,
+                _ => false,
+            };
         }
 
         private static bool IsBitwiseInst(Instruction inst)
         {
-            switch (inst)
+            return inst switch
             {
-                case Instruction.BitwiseAnd:
-                case Instruction.BitwiseExclusiveOr:
-                case Instruction.BitwiseNot:
-                case Instruction.BitwiseOr:
-                    return true;
-            }
-
-            return false;
+                Instruction.BitwiseAnd or
+                Instruction.BitwiseExclusiveOr or
+                Instruction.BitwiseNot or
+                Instruction.BitwiseOr => true,
+                _ => false
+            };
         }
 
         private static Instruction GetLogicalFromBitwiseInst(Instruction inst)
         {
-            switch (inst)
+            return inst switch
             {
-                case Instruction.BitwiseAnd:         return Instruction.LogicalAnd;
-                case Instruction.BitwiseExclusiveOr: return Instruction.LogicalExclusiveOr;
-                case Instruction.BitwiseNot:         return Instruction.LogicalNot;
-                case Instruction.BitwiseOr:          return Instruction.LogicalOr;
-            }
-
-            throw new ArgumentException($"Unexpected instruction \"{inst}\".");
-        }
-
-        private static bool UsesStorage(Instruction inst)
-        {
-            if (inst == Instruction.LoadStorage || inst == Instruction.StoreStorage)
-            {
-                return true;
-            }
-
-            return inst.IsAtomic() && (inst & Instruction.MrMask) == Instruction.MrStorage;
+                Instruction.BitwiseAnd => Instruction.LogicalAnd,
+                Instruction.BitwiseExclusiveOr => Instruction.LogicalExclusiveOr,
+                Instruction.BitwiseNot => Instruction.LogicalNot,
+                Instruction.BitwiseOr => Instruction.LogicalOr,
+                _ => throw new ArgumentException($"Unexpected instruction \"{inst}\".")
+            };
         }
     }
 }

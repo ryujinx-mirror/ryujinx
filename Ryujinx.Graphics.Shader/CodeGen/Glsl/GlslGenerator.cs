@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         private const string MainFunctionName = "main";
 
-        public static GlslProgram Generate(StructuredProgramInfo info, ShaderConfig config)
+        public static string Generate(StructuredProgramInfo info, ShaderConfig config)
         {
             CodeGenContext context = new CodeGenContext(info, config);
 
@@ -37,12 +37,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             PrintFunction(context, info, info.Functions[0], MainFunctionName);
 
-            return new GlslProgram(
-                context.CBufferDescriptors.ToArray(),
-                context.SBufferDescriptors.ToArray(),
-                context.TextureDescriptors.ToArray(),
-                context.ImageDescriptors.ToArray(),
-                context.GetCode());
+            return context.GetCode();
         }
 
         private static void PrintFunction(CodeGenContext context, StructuredProgramInfo info, StructuredFunction function, string funcName = null)

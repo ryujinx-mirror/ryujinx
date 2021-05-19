@@ -82,7 +82,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 switch (context.CurrOp)
                 {
                     case IOpCodeCbuf op:
-                        return context.PackDouble2x32(Cbuf(op.Slot, op.Offset), Cbuf(op.Slot, op.Offset + 1));
+                        return context.PackDouble2x32(
+                            context.Config.CreateCbuf(op.Slot, op.Offset),
+                            context.Config.CreateCbuf(op.Slot, op.Offset + 1));
 
                     case IOpCodeImmF op:
                         return context.FP32ConvertToFP64(ConstF(op.Immediate));
@@ -99,7 +101,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 switch (context.CurrOp)
                 {
                     case IOpCodeCbuf op:
-                        return Cbuf(op.Slot, op.Offset);
+                        return context.Config.CreateCbuf(op.Slot, op.Offset);
 
                     case IOpCodeImm op:
                         return Const(op.Immediate);
@@ -125,7 +127,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 switch (context.CurrOp)
                 {
                     case IOpCodeRegCbuf op:
-                        return context.PackDouble2x32(Cbuf(op.Slot, op.Offset), Cbuf(op.Slot, op.Offset + 1));
+                        return context.PackDouble2x32(
+                            context.Config.CreateCbuf(op.Slot, op.Offset),
+                            context.Config.CreateCbuf(op.Slot, op.Offset + 1));
 
                     case IOpCodeRc op:
                         return context.PackDouble2x32(Register(op.Rc.Index, op.Rc.Type), Register(op.Rc.Index | 1, op.Rc.Type));
@@ -136,7 +140,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 switch (context.CurrOp)
                 {
                     case IOpCodeRegCbuf op:
-                        return Cbuf(op.Slot, op.Offset);
+                        return context.Config.CreateCbuf(op.Slot, op.Offset);
 
                     case IOpCodeRc op:
                         return Register(op.Rc);

@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else if (node is AstOperand operand)
             {
-                return context.OperandManager.GetExpression(operand, context.Config, context.CbIndexable);
+                return context.OperandManager.GetExpression(operand, context.Config);
             }
 
             throw new ArgumentException($"Invalid node type \"{node?.GetType().Name ?? "null"}\".");
@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         switch (memRegion)
                         {
                             case Instruction.MrShared: args += LoadShared(context, operation); break;
-                            case Instruction.MrStorage: args += LoadStorage(context, operation, forAtomic: true); break;
+                            case Instruction.MrStorage: args += LoadStorage(context, operation); break;
 
                             default: throw new InvalidOperationException($"Invalid memory region \"{memRegion}\".");
                         }

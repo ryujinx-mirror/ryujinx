@@ -48,6 +48,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             Operation operation = (Operation)node.Value;
 
+            bool isAtomic = operation.Inst.IsAtomic();
+            bool isWrite = isAtomic || operation.Inst == Instruction.StoreGlobal;
+
             Operation storageOp;
 
             Operand PrependOperation(Instruction inst, params Operand[] sources)
@@ -67,11 +70,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             for (int slot = 0; slot < StorageMaxCount; slot++)
             {
+                config.SetUsedStorageBuffer(slot, isWrite);
+
                 int cbOffset = GetStorageCbOffset(config.Stage, slot);
 
-                Operand baseAddrLow  = Cbuf(0, cbOffset);
-                Operand baseAddrHigh = Cbuf(0, cbOffset + 1);
-                Operand size         = Cbuf(0, cbOffset + 2);
+                Operand baseAddrLow  = config.CreateCbuf(0, cbOffset);
+                Operand baseAddrHigh = config.CreateCbuf(0, cbOffset + 1);
+                Operand size         = config.CreateCbuf(0, cbOffset + 2);
 
                 Operand offset = PrependOperation(Instruction.Subtract,       addrLow, baseAddrLow);
                 Operand borrow = PrependOperation(Instruction.CompareLessU32, addrLow, baseAddrLow);
@@ -104,7 +109,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 sources[index] = operation.GetSource(index);
             }
 
-            if (operation.Inst.IsAtomic())
+            if (isAtomic)
             {
                 Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
 
@@ -303,6 +308,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     node.List.AddBefore(node, new TextureOperation(
                         Instruction.TextureSize,
                         texOp.Type,
+                        texOp.Format,
                         texOp.Flags,
                         texOp.Handle,
                         index,
@@ -350,6 +356,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     node.List.AddBefore(node, new TextureOperation(
                         Instruction.Lod,
                         texOp.Type,
+                        texOp.Format,
                         texOp.Flags,
                         texOp.Handle,
                         1,
@@ -374,6 +381,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         node.List.AddBefore(node, new TextureOperation(
                             Instruction.TextureSize,
                             texOp.Type,
+                            texOp.Format,
                             texOp.Flags,
                             texOp.Handle,
                             index,
@@ -409,6 +417,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             TextureOperation newTexOp = new TextureOperation(
                 Instruction.TextureSample,
                 texOp.Type,
+                texOp.Format,
                 texOp.Flags & ~(TextureFlags.Offset | TextureFlags.Offsets),
                 texOp.Handle,
                 componentIndex,

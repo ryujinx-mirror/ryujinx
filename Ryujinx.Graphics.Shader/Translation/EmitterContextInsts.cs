@@ -518,6 +518,15 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static Operand LoadConstant(this EmitterContext context, Operand a, Operand b)
         {
+            if (a.Type == OperandType.Constant)
+            {
+                context.Config.SetUsedConstantBuffer(a.Value);
+            }
+            else
+            {
+                context.Config.SetUsedFeature(FeatureFlags.CbIndexing);
+            }
+
             return context.Add(Instruction.LoadConstant, Local(), a, b);
         }
 
