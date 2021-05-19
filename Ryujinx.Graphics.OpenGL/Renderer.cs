@@ -131,6 +131,11 @@ namespace Ryujinx.Graphics.OpenGL
 
             PrintGpuInformation();
 
+            if (HwCapabilities.SupportsParallelShaderCompile)
+            {
+                GL.Arb.MaxShaderCompilerThreads(Math.Min(Environment.ProcessorCount, 8));
+            }
+
             _counters.Initialize();
         }
 
@@ -178,16 +183,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public IProgram LoadProgramBinary(byte[] programBinary)
         {
-            Program program = new Program(programBinary);
-
-            if (program.IsLinked)
-            {
-                return program;
-            }
-
-            program.Dispose();
-
-            return null;
+            return new Program(programBinary);
         }
 
         public void CreateSync(ulong id)

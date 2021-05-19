@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -102,234 +103,323 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     progressReportThread.Start(progressReportEvent);
                 }
 
-                for (int programIndex = 0; programIndex < guestProgramList.Length; programIndex++)
+                // Make sure these are initialized before doing compilation.
+                Capabilities caps = _context.Capabilities;
+
+                int maxTaskCount = Math.Min(Environment.ProcessorCount, 8);
+                int programIndex = 0;
+                List<ShaderCompileTask> activeTasks = new List<ShaderCompileTask>();
+
+                AutoResetEvent taskDoneEvent = new AutoResetEvent(false);
+
+                // This thread dispatches tasks to do shader translation, and creates programs that OpenGL will link in the background.
+                // The program link status is checked in a non-blocking manner so that multiple shaders can be compiled at once.
+
+                while (programIndex < guestProgramList.Length || activeTasks.Count > 0)
                 {
-                    Hash128 key = guestProgramList[programIndex];
-
-                    byte[] hostProgramBinary = _cacheManager.GetHostProgramByHash(ref key);
-                    bool hasHostCache = hostProgramBinary != null;
-
-                    IProgram hostProgram = null;
-
-                    // If the program sources aren't in the cache, compile from saved guest program.
-                    byte[] guestProgram = _cacheManager.GetGuestProgramByHash(ref key);
-
-                    if (guestProgram == null)
+                    if (activeTasks.Count < maxTaskCount && programIndex < guestProgramList.Length)
                     {
-                        Logger.Error?.Print(LogClass.Gpu, $"Ignoring orphan shader hash {key} in cache (is the cache incomplete?)");
+                        // Begin a new shader compilation.
+                        Hash128 key = guestProgramList[programIndex];
 
-                        // Should not happen, but if someone messed with the cache it's better to catch it.
-                        invalidEntries?.Add(key);
+                        byte[] hostProgramBinary = _cacheManager.GetHostProgramByHash(ref key);
+                        bool hasHostCache = hostProgramBinary != null;
 
-                        continue;
-                    }
+                        IProgram hostProgram = null;
 
-                    ReadOnlySpan<byte> guestProgramReadOnlySpan = guestProgram;
+                        // If the program sources aren't in the cache, compile from saved guest program.
+                        byte[] guestProgram = _cacheManager.GetGuestProgramByHash(ref key);
 
-                    ReadOnlySpan<GuestShaderCacheEntry> cachedShaderEntries = GuestShaderCacheEntry.Parse(ref guestProgramReadOnlySpan, out GuestShaderCacheHeader fileHeader);
-
-                    if (cachedShaderEntries[0].Header.Stage == ShaderStage.Compute)
-                    {
-                        Debug.Assert(cachedShaderEntries.Length == 1);
-
-                        GuestShaderCacheEntry entry = cachedShaderEntries[0];
-
-                        HostShaderCacheEntry[] hostShaderEntries = null;
-
-                        // Try loading host shader binary.
-                        if (hasHostCache)
+                        if (guestProgram == null)
                         {
-                            hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
-                            hostProgramBinary = hostProgramBinarySpan.ToArray();
-                            hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
+                            Logger.Error?.Print(LogClass.Gpu, $"Ignoring orphan shader hash {key} in cache (is the cache incomplete?)");
+
+                            // Should not happen, but if someone messed with the cache it's better to catch it.
+                            invalidEntries?.Add(key);
+
+                            _shaderCount = ++programIndex;
+
+                            continue;
                         }
 
-                        bool isHostProgramValid = hostProgram != null;
+                        ReadOnlySpan<byte> guestProgramReadOnlySpan = guestProgram;
 
-                        ShaderProgram program;
-                        ShaderProgramInfo shaderProgramInfo;
+                        ReadOnlySpan<GuestShaderCacheEntry> cachedShaderEntries = GuestShaderCacheEntry.Parse(ref guestProgramReadOnlySpan, out GuestShaderCacheHeader fileHeader);
 
-                        // Reconstruct code holder.
-                        if (isHostProgramValid)
+                        if (cachedShaderEntries[0].Header.Stage == ShaderStage.Compute)
                         {
-                            program = new ShaderProgram(entry.Header.Stage, "");
-                            shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
+                            Debug.Assert(cachedShaderEntries.Length == 1);
+
+                            GuestShaderCacheEntry entry = cachedShaderEntries[0];
+
+                            HostShaderCacheEntry[] hostShaderEntries = null;
+
+                            // Try loading host shader binary.
+                            if (hasHostCache)
+                            {
+                                hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
+                                hostProgramBinary = hostProgramBinarySpan.ToArray();
+                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
+                            }
+
+                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
+                            activeTasks.Add(task);
+
+                            task.OnCompiled(hostProgram, (bool isHostProgramValid, ShaderCompileTask task) =>
+                            {
+                                ShaderProgram program = null;
+                                ShaderProgramInfo shaderProgramInfo = null;
+
+                                if (isHostProgramValid)
+                                {
+                                    // Reconstruct code holder.
+
+                                    program = new ShaderProgram(entry.Header.Stage, "");
+                                    shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
+
+                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+
+                                    _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
+
+                                    return true;
+                                }
+                                else
+                                {
+                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
+
+                                    Task compileTask = Task.Run(() =>
+                                    {
+                                        IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+
+                                        program = Translator.CreateContext(0, gpuAccessor, DefaultFlags | TranslationFlags.Compute).Translate(out shaderProgramInfo);
+                                    });
+
+                                    task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
+                                    {
+                                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+
+                                        Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
+
+                                        // Compile shader and create program as the shader program binary got invalidated.
+                                        shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
+                                        hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
+
+                                        task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
+                                        {
+                                            // As the host program was invalidated, save the new entry in the cache.
+                                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
+
+                                            if (!isReadOnly)
+                                            {
+                                                if (hasHostCache)
+                                                {
+                                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
+                                                }
+                                                else
+                                                {
+                                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
+
+                                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                                }
+                                            }
+
+                                            _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
+
+                                            return true;
+                                        });
+
+                                        return false; // Not finished: still need to compile the host program.
+                                    });
+
+                                    return false; // Not finished: translating the program.
+                                }
+                            });
                         }
                         else
                         {
-                            IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+                            Debug.Assert(cachedShaderEntries.Length == Constants.ShaderStages);
 
-                            program = Translator.CreateContext(0, gpuAccessor, DefaultFlags | TranslationFlags.Compute).Translate(out shaderProgramInfo);
-                        }
+                            ShaderCodeHolder[] shaders = new ShaderCodeHolder[cachedShaderEntries.Length];
+                            List<ShaderProgram> shaderPrograms = new List<ShaderProgram>();
 
-                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+                            TransformFeedbackDescriptor[] tfd = CacheHelper.ReadTransformFeedbackInformation(ref guestProgramReadOnlySpan, fileHeader);
 
-                        // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
-                        if (hostProgram == null)
-                        {
-                            Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
+                            TranslationFlags flags = DefaultFlags;
 
-                            // Compile shader and create program as the shader program binary got invalidated.
-                            shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
-                            hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
-
-                            // As the host program was invalidated, save the new entry in the cache.
-                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
-
-                            if (!isReadOnly)
+                            if (tfd != null)
                             {
-                                if (hasHostCache)
-                                {
-                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                                }
-                                else
-                                {
-                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
-
-                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
-                                }
+                                flags |= TranslationFlags.Feedback;
                             }
+
+                            TranslationCounts counts = new TranslationCounts();
+
+                            HostShaderCacheEntry[] hostShaderEntries = null;
+
+                            // Try loading host shader binary.
+                            if (hasHostCache)
+                            {
+                                hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
+                                hostProgramBinary = hostProgramBinarySpan.ToArray();
+                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
+                            }
+
+                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
+                            activeTasks.Add(task);
+
+                            GuestShaderCacheEntry[] entries = cachedShaderEntries.ToArray();
+
+                            task.OnCompiled(hostProgram, (bool isHostProgramValid, ShaderCompileTask task) =>
+                            {
+                                Task compileTask = Task.Run(() =>
+                                {
+                                    // Reconstruct code holder.
+                                    for (int i = 0; i < entries.Length; i++)
+                                    {
+                                        GuestShaderCacheEntry entry = entries[i];
+
+                                        if (entry == null)
+                                        {
+                                            continue;
+                                        }
+
+                                        ShaderProgram program;
+
+                                        if (entry.Header.SizeA != 0)
+                                        {
+                                            ShaderProgramInfo shaderProgramInfo;
+
+                                            if (isHostProgramValid)
+                                            {
+                                                program = new ShaderProgram(entry.Header.Stage, "");
+                                                shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
+                                            }
+                                            else
+                                            {
+                                                IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+
+                                                TranslatorContext translatorContext = Translator.CreateContext(0, gpuAccessor, flags, counts);
+                                                TranslatorContext translatorContext2 = Translator.CreateContext((ulong)entry.Header.Size, gpuAccessor, flags | TranslationFlags.VertexA, counts);
+
+                                                program = translatorContext.Translate(out shaderProgramInfo, translatorContext2);
+                                            }
+
+                                            // NOTE: Vertex B comes first in the shader cache.
+                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size).ToArray();
+                                            byte[] code2 = entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray();
+
+                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
+                                        }
+                                        else
+                                        {
+                                            ShaderProgramInfo shaderProgramInfo;
+
+                                            if (isHostProgramValid)
+                                            {
+                                                program = new ShaderProgram(entry.Header.Stage, "");
+                                                shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
+                                            }
+                                            else
+                                            {
+                                                IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+
+                                                program = Translator.CreateContext(0, gpuAccessor, flags, counts).Translate(out shaderProgramInfo);
+                                            }
+
+                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+                                        }
+
+                                        shaderPrograms.Add(program);
+                                    }
+                                });
+
+                                task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
+                                {
+                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
+                                    if (!isHostProgramValid)
+                                    {
+                                        Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
+
+                                        List<IShader> hostShaders = new List<IShader>();
+
+                                        // Compile shaders and create program as the shader program binary got invalidated.
+                                        for (int stage = 0; stage < Constants.ShaderStages; stage++)
+                                        {
+                                            ShaderProgram program = shaders[stage]?.Program;
+
+                                            if (program == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            IShader hostShader = _context.Renderer.CompileShader(program.Stage, program.Code);
+
+                                            shaders[stage].HostShader = hostShader;
+
+                                            hostShaders.Add(hostShader);
+                                        }
+
+                                        hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), tfd);
+
+                                        task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
+                                        {
+                                            // As the host program was invalidated, save the new entry in the cache.
+                                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
+
+                                            if (!isReadOnly)
+                                            {
+                                                if (hasHostCache)
+                                                {
+                                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
+                                                }
+                                                else
+                                                {
+                                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
+
+                                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
+                                                }
+                                            }
+
+                                            _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
+
+                                            return true;
+                                        });
+
+                                        return false; // Not finished: still need to compile the host program.
+                                    }
+                                    else
+                                    {
+                                        _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
+
+                                        return true;
+                                    }
+                                });
+
+                                return false; // Not finished: translating the program.
+                            });
                         }
 
-                        _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
+                        _shaderCount = ++programIndex;
                     }
-                    else
+
+                    // Process the queue.
+                    for (int i = 0; i < activeTasks.Count; i++)
                     {
-                        Debug.Assert(cachedShaderEntries.Length == Constants.ShaderStages);
+                        ShaderCompileTask task = activeTasks[i];
 
-                        ShaderCodeHolder[] shaders = new ShaderCodeHolder[cachedShaderEntries.Length];
-                        List<ShaderProgram> shaderPrograms = new List<ShaderProgram>();
-
-                        TransformFeedbackDescriptor[] tfd = CacheHelper.ReadTransformFeedbackInformation(ref guestProgramReadOnlySpan, fileHeader);
-
-                        TranslationFlags flags = DefaultFlags;
-
-                        if (tfd != null)
+                        if (task.IsDone())
                         {
-                            flags |= TranslationFlags.Feedback;
+                            activeTasks.RemoveAt(i--);
                         }
-
-                        TranslationCounts counts = new TranslationCounts();
-
-                        HostShaderCacheEntry[] hostShaderEntries = null;
-
-                        // Try loading host shader binary.
-                        if (hasHostCache)
-                        {
-                            hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
-                            hostProgramBinary = hostProgramBinarySpan.ToArray();
-                            hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
-                        }
-
-                        bool isHostProgramValid = hostProgram != null;
-
-                        // Reconstruct code holder.
-                        for (int i = 0; i < cachedShaderEntries.Length; i++)
-                        {
-                            GuestShaderCacheEntry entry = cachedShaderEntries[i];
-
-                            if (entry == null)
-                            {
-                                continue;
-                            }
-
-                            ShaderProgram program;
-
-                            if (entry.Header.SizeA != 0)
-                            {
-                                ShaderProgramInfo shaderProgramInfo;
-
-                                if (isHostProgramValid)
-                                {
-                                    program = new ShaderProgram(entry.Header.Stage, "");
-                                    shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
-                                }
-                                else
-                                {
-                                    IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
-
-                                    TranslatorContext translatorContext = Translator.CreateContext(0, gpuAccessor, flags, counts);
-                                    TranslatorContext translatorContext2 = Translator.CreateContext((ulong)entry.Header.Size, gpuAccessor, flags | TranslationFlags.VertexA, counts);
-
-                                    program = translatorContext.Translate(out shaderProgramInfo, translatorContext2);
-                                }
-
-                                // NOTE: Vertex B comes first in the shader cache.
-                                byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size).ToArray();
-                                byte[] code2 = entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray();
-
-                                shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
-                            }
-                            else
-                            {
-                                ShaderProgramInfo shaderProgramInfo;
-
-                                if (isHostProgramValid)
-                                {
-                                    program = new ShaderProgram(entry.Header.Stage, "");
-                                    shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
-                                }
-                                else
-                                {
-                                    IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
-
-                                    program = Translator.CreateContext(0, gpuAccessor, flags, counts).Translate(out shaderProgramInfo);
-                                }
-
-                                shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
-                            }
-
-                            shaderPrograms.Add(program);
-                        }
-
-                        // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
-                        if (!isHostProgramValid)
-                        {
-                            Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
-
-                            List<IShader> hostShaders = new List<IShader>();
-
-                            // Compile shaders and create program as the shader program binary got invalidated.
-                            for (int stage = 0; stage < Constants.ShaderStages; stage++)
-                            {
-                                ShaderProgram program = shaders[stage]?.Program;
-
-                                if (program == null)
-                                {
-                                    continue;
-                                }
-
-                                IShader hostShader = _context.Renderer.CompileShader(program.Stage, program.Code);
-
-                                shaders[stage].HostShader = hostShader;
-
-                                hostShaders.Add(hostShader);
-                            }
-
-                            hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), tfd);
-
-                            // As the host program was invalidated, save the new entry in the cache.
-                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
-
-                            if (!isReadOnly)
-                            {
-                                if (hasHostCache)
-                                {
-                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                                }
-                                else
-                                {
-                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
-
-                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
-                                }
-                            }
-                        }
-
-                        _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
                     }
 
-                    _shaderCount = programIndex + 1;
+                    if (activeTasks.Count == maxTaskCount)
+                    {
+                        // Wait for a task to be done, or for 1ms.
+                        // Host shader compilation cannot signal when it is done, 
+                        // so the 1ms timeout is required to poll status.
+
+                        taskDoneEvent.WaitOne(1);
+                    }
                 }
 
                 if (!isReadOnly)
@@ -457,6 +547,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
                 IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
+
+                hostProgram.CheckProgramLink(true);
 
                 byte[] hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
 
@@ -597,6 +689,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
 
                 IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), tfd);
+
+                hostProgram.CheckProgramLink(true);
 
                 byte[] hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
 
