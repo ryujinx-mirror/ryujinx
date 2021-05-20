@@ -1,6 +1,7 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
+using System;
 using System.Diagnostics;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
@@ -64,10 +65,35 @@ namespace ARMeilleure.Instructions
 
         public static void Bic_Vi(ArmEmitterContext context)
         {
-            EmitVectorImmBinaryOp(context, (op1, op2) =>
+            if (Optimizations.UseSse2)
             {
-                return context.BitwiseAnd(op1, context.BitwiseNot(op2));
-            });
+                OpCodeSimdImm op = (OpCodeSimdImm)context.CurrOp;
+
+                int eSize = 8 << op.Size;
+
+                Operand d = GetVec(op.Rd);
+                Operand imm = eSize switch {
+                    16 => X86GetAllElements(context, (short)~op.Immediate),
+                    32 => X86GetAllElements(context, (int)~op.Immediate),
+                    _ => throw new InvalidOperationException($"Invalid element size {eSize}.")
+                };
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Pand, d, imm);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+            else
+            {
+                EmitVectorImmBinaryOp(context, (op1, op2) =>
+                {
+                    return context.BitwiseAnd(op1, context.BitwiseNot(op2));
+                });
+            }
         }
 
         public static void Bif_V(ArmEmitterContext context)
@@ -278,7 +304,32 @@ namespace ARMeilleure.Instructions
 
         public static void Orr_Vi(ArmEmitterContext context)
         {
-            EmitVectorImmBinaryOp(context, (op1, op2) => context.BitwiseOr(op1, op2));
+            if (Optimizations.UseSse2)
+            {
+                OpCodeSimdImm op = (OpCodeSimdImm)context.CurrOp;
+
+                int eSize = 8 << op.Size;
+
+                Operand d = GetVec(op.Rd);
+                Operand imm = eSize switch {
+                    16 => X86GetAllElements(context, (short)op.Immediate),
+                    32 => X86GetAllElements(context, (int)op.Immediate),
+                    _ => throw new InvalidOperationException($"Invalid element size {eSize}.")
+                };
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Por, d, imm);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+            else
+            {
+                EmitVectorImmBinaryOp(context, (op1, op2) => context.BitwiseOr(op1, op2));
+            }
         }
 
         public static void Rbit_V(ArmEmitterContext context)

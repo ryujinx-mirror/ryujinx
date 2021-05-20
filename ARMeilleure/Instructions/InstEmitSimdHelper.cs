@@ -190,6 +190,15 @@ namespace ARMeilleure.Instructions
             return X86GetAllElements(context, BitConverter.DoubleToInt64Bits(value));
         }
 
+        public static Operand X86GetAllElements(ArmEmitterContext context, short value)
+        {
+            ulong value1 = (ushort)value;
+            ulong value2 = value1 << 16 | value1;
+            ulong value4 = value2 << 32 | value2;
+
+            return X86GetAllElements(context, (long)value4);
+        }
+
         public static Operand X86GetAllElements(ArmEmitterContext context, int value)
         {
             Operand vector = context.VectorCreateScalar(Const(value));
