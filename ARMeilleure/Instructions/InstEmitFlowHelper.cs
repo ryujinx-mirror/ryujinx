@@ -144,7 +144,14 @@ namespace ARMeilleure.Instructions
         {
             bool isRecursive = immediate == context.EntryAddress;
 
-            EmitJumpTableBranch(context, Const(immediate), isRecursive);
+            if (isRecursive)
+            {
+                context.Branch(context.GetLabel(immediate));
+            }
+            else
+            {
+                EmitJumpTableBranch(context, Const(immediate), isJump: false);
+            }
         }
 
         private static void EmitNativeCall(ArmEmitterContext context, Operand nativeContextPtr, Operand funcAddr, bool isJump)
