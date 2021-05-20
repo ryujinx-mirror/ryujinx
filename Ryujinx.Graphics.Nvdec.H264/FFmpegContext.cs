@@ -1,6 +1,8 @@
 ﻿using FFmpeg.AutoGen;
 using Ryujinx.Common.Logging;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Nvdec.H264
@@ -26,6 +28,40 @@ namespace Ryujinx.Graphics.Nvdec.H264
             ffmpeg.avcodec_open2(_context, _codec, null);
 
             _packet = ffmpeg.av_packet_alloc();
+        }
+
+        static FFmpegContext()
+        {
+            SetRootPath();
+        }
+
+        private static void SetRootPath()
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                // Configure FFmpeg search path
+                Process lddProcess = Process.Start(new ProcessStartInfo
+                {
+                    FileName               = "/bin/sh",
+                    Arguments              = "-c \"ldd $(which ffmpeg 2>/dev/null) | grep libavfilter\" 2>/dev/null",
+                    UseShellExecute        = false,
+                    RedirectStandardOutput = true
+                });
+
+                string lddOutput = lddProcess.StandardOutput.ReadToEnd();
+
+                lddProcess.WaitForExit();
+                lddProcess.Close();
+
+                if (lddOutput.Contains(" => "))
+                {
+                    ffmpeg.RootPath = Path.GetDirectoryName(lddOutput.Split(" => ")[1]);
+                }
+                else
+                {
+                    Logger.Error?.PrintMsg(LogClass.FFmpeg, "FFmpeg wasn't found. Make sure that you have it installed and up to date.");
+                }
+            }
         }
 
         private void Log(void* p0, int level, string format, byte* vl)

@@ -1,5 +1,4 @@
 using ARMeilleure.Translation.PTC;
-using FFmpeg.AutoGen;
 using Gtk;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
@@ -78,9 +77,6 @@ namespace Ryujinx
             if (OperatingSystem.IsLinux())
             {
                 XInitThreads();
-
-                // Configure FFmpeg search path
-                ffmpeg.RootPath = "/lib";
             }
 
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
