@@ -262,10 +262,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 string blockName = $"{ubName}_{DefaultNames.BlockSuffix}";
 
-                context.AppendLine($"layout (binding = {descriptors[0].Binding}, std140) uniform {blockName}");
+                context.AppendLine($"layout (binding = {context.Config.FirstConstantBufferBinding}, std140) uniform {blockName}");
                 context.EnterScope();
                 context.AppendLine("vec4 " + DefaultNames.DataName + ubSize + ";");
-                context.LeaveScope($" {ubName}[{NumberFormatter.FormatInt(descriptors.Length)}];");
+                context.LeaveScope($" {ubName}[{NumberFormatter.FormatInt(descriptors.Max(x => x.Slot) + 1)}];");
             }
             else
             {
@@ -291,10 +291,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
 
-            context.AppendLine($"layout (binding = {descriptors[0].Binding}, std430) buffer {blockName}");
+            context.AppendLine($"layout (binding = {context.Config.FirstStorageBufferBinding}, std430) buffer {blockName}");
             context.EnterScope();
             context.AppendLine("uint " + DefaultNames.DataName + "[];");
-            context.LeaveScope($" {sbName}[{NumberFormatter.FormatInt(descriptors.Length)}];");
+            context.LeaveScope($" {sbName}[{NumberFormatter.FormatInt(descriptors.Max(x => x.Slot) + 1)}];");
         }
 
         private static void DeclareSamplers(CodeGenContext context, TextureDescriptor[] descriptors)

@@ -91,6 +91,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         private TextureDescriptor[] _cachedTextureDescriptors;
         private TextureDescriptor[] _cachedImageDescriptors;
 
+        public int FirstConstantBufferBinding { get; private set; }
+        public int FirstStorageBufferBinding { get; private set; }
+
         public ShaderConfig(IGpuAccessor gpuAccessor, TranslationFlags flags, TranslationCounts counts)
         {
             Stage                  = ShaderStage.Compute;
@@ -215,7 +218,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        private static void SetUsedTextureOrImage(
+        private void SetUsedTextureOrImage(
             Dictionary<TextureInfo, TextureMeta> dict,
             int cbufSlot,
             int handle,
@@ -235,7 +238,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 usageFlags |= TextureUsageFlags.NeedsScaleValue;
 
-                var canScale = (dimensions == 2 && !isArray) || (dimensions == 3 && isArray);
+                var canScale = (Stage == ShaderStage.Fragment || Stage == ShaderStage.Compute) && !isIndexed && !write &&
+                    ((dimensions == 2 && !isArray) ||
+                    (dimensions == 3 && isArray));
+
                 if (!canScale)
                 {
                     // Resolution scaling cannot be applied to this texture right now.
@@ -293,33 +299,58 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (UsedFeatures.HasFlag(FeatureFlags.CbIndexing))
             {
-                usedMask = FillMask(usedMask);
+                usedMask |= (int)GpuAccessor.QueryConstantBufferUse();
             }
 
-            return _cachedConstantBufferDescriptors = GetBufferDescriptors(usedMask, 0, _counts.IncrementUniformBuffersCount);
+            FirstConstantBufferBinding = _counts.UniformBuffersCount;
+
+            return _cachedConstantBufferDescriptors = GetBufferDescriptors(
+                usedMask,
+                0,
+                UsedFeatures.HasFlag(FeatureFlags.CbIndexing),
+                _counts.IncrementUniformBuffersCount);
         }
 
         public BufferDescriptor[] GetStorageBufferDescriptors()
         {
-            return _cachedStorageBufferDescriptors ??= GetBufferDescriptors(FillMask(_usedStorageBuffers), _usedStorageBuffersWrite, _counts.IncrementStorageBuffersCount);
+            if (_cachedStorageBufferDescriptors != null)
+            {
+                return _cachedStorageBufferDescriptors;
+            }
+
+            FirstStorageBufferBinding = _counts.StorageBuffersCount;
+
+            return _cachedStorageBufferDescriptors = GetBufferDescriptors(
+                _usedStorageBuffers,
+                _usedStorageBuffersWrite,
+                true,
+                _counts.IncrementStorageBuffersCount);
         }
 
-        private static int FillMask(int mask)
-        {
-            // When the storage or uniform buffers are used as array, we must allocate a binding
-            // even for the "gaps" that are not used on the shader.
-            // For this reason, fill up the gaps so that all slots up to the highest one are
-            // marked as "used".
-            return mask != 0 ? (int)(uint.MaxValue >> BitOperations.LeadingZeroCount((uint)mask)) : 0;
-        }
-
-        private static BufferDescriptor[] GetBufferDescriptors(int usedMask, int writtenMask, Func<int> getBindingCallback)
+        private static BufferDescriptor[] GetBufferDescriptors(
+            int usedMask,
+            int writtenMask,
+            bool isArray,
+            Func<int> getBindingCallback)
         {
             var descriptors = new BufferDescriptor[BitOperations.PopCount((uint)usedMask)];
+
+            int lastSlot = -1;
 
             for (int i = 0; i < descriptors.Length; i++)
             {
                 int slot = BitOperations.TrailingZeroCount(usedMask);
+
+                if (isArray)
+                {
+                    // The next array entries also consumes bindings, even if they are unused.
+                    for (int j = lastSlot + 1; j < slot; j++)
+                    {
+                        getBindingCallback();
+                    }
+                }
+
+                lastSlot = slot;
 
                 descriptors[i] = new BufferDescriptor(getBindingCallback(), slot);
 

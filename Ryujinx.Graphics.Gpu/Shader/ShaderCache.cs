@@ -36,7 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 2290;
+        private const ulong ShaderCodeGenVersion = 2298;
 
         // Progress reporting helpers
         private volatile int _shaderCount;
@@ -415,7 +415,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     if (activeTasks.Count == maxTaskCount)
                     {
                         // Wait for a task to be done, or for 1ms.
-                        // Host shader compilation cannot signal when it is done, 
+                        // Host shader compilation cannot signal when it is done,
                         // so the 1ms timeout is required to poll status.
 
                         taskDoneEvent.WaitOne(1);

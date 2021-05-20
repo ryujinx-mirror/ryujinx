@@ -41,7 +41,7 @@
 
         uint QueryConstantBufferUse()
         {
-            return 0xffff;
+            return 0;
         }
 
         bool QueryIsTextureBuffer(int handle, int cbufSlot = -1)

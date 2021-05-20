@@ -293,7 +293,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 Instruction.Branch or
                 Instruction.BranchIfFalse or
                 Instruction.BranchIfTrue => true,
-                _ => false,
+                _ => false
             };
         }
 
