@@ -1409,6 +1409,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             if ((reason & (1UL << 31)) == 0)
             {
                 currentThread.PrintGuestStackTrace();
+                currentThread.PrintGuestRegisterPrintout();
 
                 // As the process is exiting, this is probably caused by emulation termination.
                 if (currentThread.Owner.State == ProcessState.Exiting)

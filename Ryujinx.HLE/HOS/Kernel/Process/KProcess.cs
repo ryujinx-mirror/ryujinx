@@ -1073,6 +1073,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private bool InvalidAccessHandler(ulong va)
         {
             KernelStatic.GetCurrentThread()?.PrintGuestStackTrace();
+            KernelStatic.GetCurrentThread()?.PrintGuestRegisterPrintout();
 
             Logger.Error?.Print(LogClass.Cpu, $"Invalid memory access at virtual address 0x{va:X16}.");
 
@@ -1082,6 +1083,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private void UndefinedInstructionHandler(object sender, InstUndefinedEventArgs e)
         {
             KernelStatic.GetCurrentThread().PrintGuestStackTrace();
+            KernelStatic.GetCurrentThread()?.PrintGuestRegisterPrintout();
 
             throw new UndefinedInstructionException(e.Address, e.OpCode);
         }

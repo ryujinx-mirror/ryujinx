@@ -991,12 +991,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public string GetGuestStackTrace()
         {
-            return Owner.Debugger.GetGuestStackTrace(Context);
+            return Owner.Debugger.GetGuestStackTrace(this);
+        }
+
+        public string GetGuestRegisterPrintout()
+        {
+            return Owner.Debugger.GetCpuRegisterPrintout(this);
         }
 
         public void PrintGuestStackTrace()
         {
             Logger.Info?.Print(LogClass.Cpu, $"Guest stack trace:\n{GetGuestStackTrace()}\n");
+        }
+
+        public void PrintGuestRegisterPrintout()
+        {
+            Logger.Info?.Print(LogClass.Cpu, $"Guest CPU registers:\n{GetGuestRegisterPrintout()}\n");
         }
 
         public void AddCpuTime(long ticks)
