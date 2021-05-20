@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public BackgroundContextWorker(IOpenGLContext backgroundContext)
         {
+            _backgroundContext = backgroundContext;
             _running = true;
 
             _signal = new AutoResetEvent(false);
@@ -27,7 +28,6 @@ namespace Ryujinx.Graphics.OpenGL
 
             _thread = new Thread(Run);
             _thread.Start();
-            _backgroundContext = backgroundContext;
         }
 
         private void Run()
