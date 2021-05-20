@@ -163,6 +163,34 @@ namespace Ryujinx.Graphics.Shader.Translation
             Size += size;
         }
 
+        public void InheritFrom(ShaderConfig other)
+        {
+            ClipDistancesWritten |= other.ClipDistancesWritten;
+            UsedFeatures |= other.UsedFeatures;
+
+            TextureHandlesForCache.UnionWith(other.TextureHandlesForCache);
+
+            _usedConstantBuffers |= other._usedConstantBuffers;
+            _usedStorageBuffers |= other._usedStorageBuffers;
+            _usedStorageBuffersWrite |= other._usedStorageBuffersWrite;
+
+            foreach (var kv in other._usedTextures)
+            {
+                if (!_usedTextures.TryAdd(kv.Key, kv.Value))
+                {
+                    _usedTextures[kv.Key] = MergeTextureMeta(kv.Value, _usedTextures[kv.Key]);
+                }
+            }
+
+            foreach (var kv in other._usedImages)
+            {
+                if (!_usedImages.TryAdd(kv.Key, kv.Value))
+                {
+                    _usedImages[kv.Key] = MergeTextureMeta(kv.Value, _usedImages[kv.Key]);
+                }
+            }
+        }
+
         public void SetClipDistanceWritten(int index)
         {
             ClipDistancesWritten |= (byte)(1 << index);
@@ -269,23 +297,28 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (dict.TryGetValue(info, out var existingMeta))
                 {
-                    meta.UsageFlags |= existingMeta.UsageFlags;
-
-                    // If the texture we have has inaccurate type information, then
-                    // we prefer the most accurate one.
-                    if (existingMeta.AccurateType)
-                    {
-                        meta.AccurateType = true;
-                        meta.Type = existingMeta.Type;
-                    }
-
-                    dict[info] = meta;
+                    dict[info] = MergeTextureMeta(meta, existingMeta);
                 }
                 else
                 {
                     dict.Add(info, meta);
                 }
             }
+        }
+
+        private static TextureMeta MergeTextureMeta(TextureMeta meta, TextureMeta existingMeta)
+        {
+            meta.UsageFlags |= existingMeta.UsageFlags;
+
+            // If the texture we have has inaccurate type information, then
+            // we prefer the most accurate one.
+            if (existingMeta.AccurateType)
+            {
+                meta.AccurateType = true;
+                meta.Type = existingMeta.Type;
+            }
+
+            return meta;
         }
 
         public BufferDescriptor[] GetConstantBufferDescriptors()
