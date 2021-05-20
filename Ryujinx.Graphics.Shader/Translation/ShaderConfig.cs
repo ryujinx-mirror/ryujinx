@@ -257,7 +257,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool accurateType)
         {
             var dimensions = type.GetDimensions();
-            var isArray = type.HasFlag(SamplerType.Array);
             var isIndexed = type.HasFlag(SamplerType.Indexed);
 
             var usageFlags = TextureUsageFlags.None;
@@ -266,9 +265,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 usageFlags |= TextureUsageFlags.NeedsScaleValue;
 
-                var canScale = (Stage == ShaderStage.Fragment || Stage == ShaderStage.Compute) && !isIndexed && !write &&
-                    ((dimensions == 2 && !isArray) ||
-                    (dimensions == 3 && isArray));
+                var canScale = (Stage == ShaderStage.Fragment || Stage == ShaderStage.Compute) && !isIndexed && !write && dimensions == 2;
 
                 if (!canScale)
                 {
