@@ -78,6 +78,7 @@ namespace Ryujinx.Graphics.Gpu.State
             new TableItem(MethodOffset.RtColorMask,            typeof(RtColorMask),            Constants.TotalRenderTargets),
             new TableItem(MethodOffset.VertexBufferState,      typeof(VertexBufferState),      Constants.TotalVertexBuffers),
             new TableItem(MethodOffset.BlendConstant,          typeof(ColorF),                 1),
+            new TableItem(MethodOffset.BlendStateCommon,       typeof(BlendStateCommon),       1),
             new TableItem(MethodOffset.BlendState,             typeof(BlendState),             Constants.TotalRenderTargets),
             new TableItem(MethodOffset.VertexBufferEndAddress, typeof(GpuVa),                  Constants.TotalVertexBuffers),
             new TableItem(MethodOffset.ShaderState,            typeof(ShaderState),            Constants.ShaderStages + 1),
