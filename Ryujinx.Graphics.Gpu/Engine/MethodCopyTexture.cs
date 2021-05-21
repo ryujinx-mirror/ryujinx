@@ -43,7 +43,26 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             var srcCopyTextureFormat = srcCopyTexture.Format.Convert();
 
-            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, true, srcHint);
+            int srcWidthAligned = srcCopyTexture.Stride / srcCopyTextureFormat.BytesPerPixel;
+
+            ulong offset = 0;
+
+            // For an out of bounds copy, we must ensure that the copy wraps to the next line,
+            // so for a copy from a 64x64 texture, in the region [32, 96[, there are 32 pixels that are
+            // outside the bounds of the texture. We fill the destination with the first 32 pixels
+            // of the next line on the source texture.
+            // This can be done by simply adding an offset to the texture address, so that the initial
+            // gap is skipped and the copy is inside bounds again.
+            // This is required by the proprietary guest OpenGL driver.
+            if (srcCopyTexture.LinearLayout && srcCopyTexture.Width == srcX2 && srcX2 > srcWidthAligned && srcX1 > 0)
+            {
+                offset = (ulong)(srcX1 * srcCopyTextureFormat.BytesPerPixel);
+                srcCopyTexture.Width -= srcX1;
+                srcX2 -= srcX1;
+                srcX1 = 0;
+            }
+
+            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, offset, srcCopyTextureFormat, true, srcHint);
 
             if (srcTexture == null)
             {
@@ -64,7 +83,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTextureFormat = dstCopyTexture.Format.Convert();
             }
 
-            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
+            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, 0, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
 
             if (dstTexture == null)
             {
@@ -89,30 +108,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             bool linearFilter = control.UnpackLinearFilter();
 
             srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
-
-            // For an out of bounds copy, we must ensure that the copy wraps to the next line,
-            // so for a copy from a 64x64 texture, in the region [32, 96[, there are 32 pixels that are
-            // outside the bounds of the texture. We fill the destination with the first 32 pixels
-            // of the next line on the source texture.
-            // This can be emulated with 2 copies (the first copy handles the region inside the bounds,
-            // the second handles the region outside of the bounds).
-            // We must also extend the source texture by one line to ensure we can wrap on the last line.
-            // This is required by the (guest) OpenGL driver.
-            if (srcX2 / srcTexture.Info.SamplesInX > srcTexture.Info.Width)
-            {
-                srcCopyTexture.Height++;
-
-                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, srcCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, srcHint);
-                scale = srcTexture.ScaleFactor;
-
-                srcRegion = new Extents2D(
-                    (int)Math.Ceiling(scale * ((srcX1 / srcTexture.Info.SamplesInX) - srcTexture.Info.Width)),
-                    (int)Math.Ceiling(scale * ((srcY1 / srcTexture.Info.SamplesInY) + 1)),
-                    (int)Math.Ceiling(scale * ((srcX2 / srcTexture.Info.SamplesInX) - srcTexture.Info.Width)),
-                    (int)Math.Ceiling(scale * ((srcY2 / srcTexture.Info.SamplesInY) + 1)));
-
-                srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
-            }
 
             dstTexture.SignalModified();
         }
