@@ -233,6 +233,20 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (size.Width == otherSize.Width && size.Height == otherSize.Height)
             {
+                if (level > 0 && result == TextureViewCompatibility.Full)
+                {
+                    // A resize should not change the aligned size of the largest mip.
+                    // If it would, then create a copy dependency rather than a full view.
+
+                    Size mip0SizeLhs = GetAlignedSize(lhs);
+                    Size mip0SizeRhs = GetLargestAlignedSize(rhs, level);
+
+                    if (mip0SizeLhs.Width != mip0SizeRhs.Width || mip0SizeLhs.Height != mip0SizeRhs.Height)
+                    {
+                        result = TextureViewCompatibility.CopyOnly;
+                    }
+                }
+
                 return result;
             }
             else if (lhs.IsLinear && rhs.IsLinear)
@@ -300,8 +314,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="lhs">Texture information to compare</param>
         /// <param name="rhs">Texture information to compare with</param>
         /// <param name="alignSizes">True to align the sizes according to the texture layout for comparison</param>
+        /// <param name="lhsLevel">Mip level of the lhs texture. Aligned sizes are compared for the largest mip</param>
         /// <returns>True if the sizes matches, false otherwise</returns>
-        public static bool SizeMatches(TextureInfo lhs, TextureInfo rhs, bool alignSizes)
+        public static bool SizeMatches(TextureInfo lhs, TextureInfo rhs, bool alignSizes, int lhsLevel = 0)
         {
             if (lhs.GetLayers() != rhs.GetLayers())
             {
@@ -312,8 +327,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (alignSizes && !isTextureBuffer)
             {
-                Size size0 = GetAlignedSize(lhs);
-                Size size1 = GetAlignedSize(rhs);
+                Size size0 = GetLargestAlignedSize(lhs, lhsLevel);
+                Size size1 = GetLargestAlignedSize(rhs, lhsLevel);
 
                 return size0.Width  == size1.Width &&
                        size0.Height == size1.Height &&
@@ -328,17 +343,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Gets the aligned sizes of the specified texture information.
+        /// Gets the aligned sizes for the given dimensions, using the specified texture information.
         /// The alignment depends on the texture layout and format bytes per pixel.
         /// </summary>
         /// <param name="info">Texture information to calculate the aligned size from</param>
-        /// <param name="level">Mipmap level for texture views</param>
+        /// <param name="width">The width to be aligned</param>
+        /// <param name="height">The height to be aligned</param>
+        /// <param name="depth">The depth to be aligned</param>
         /// <returns>The aligned texture size</returns>
-        public static Size GetAlignedSize(TextureInfo info, int level = 0)
+        private static Size GetAlignedSize(TextureInfo info, int width, int height, int depth)
         {
-            int width = Math.Max(1, info.Width >> level);
-            int height = Math.Max(1, info.Height >> level);
-
             if (info.IsLinear)
             {
                 return SizeCalculator.GetLinearAlignedSize(
@@ -350,8 +364,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                int depth = Math.Max(1, info.GetDepth() >> level);
-
                 return SizeCalculator.GetBlockLinearAlignedSize(
                     width,
                     height,
@@ -363,6 +375,38 @@ namespace Ryujinx.Graphics.Gpu.Image
                     info.GobBlocksInZ,
                     info.GobBlocksInTileX);
             }
+        }
+
+        /// <summary>
+        /// Gets the aligned sizes of the specified texture information, shifted to the largest mip from a given level.
+        /// The alignment depends on the texture layout and format bytes per pixel.
+        /// </summary>
+        /// <param name="info">Texture information to calculate the aligned size from</param>
+        /// <param name="level">Mipmap level for texture views. Shifts the aligned size to represent the largest mip level</param>
+        /// <returns>The aligned texture size of the largest mip level</returns>
+        public static Size GetLargestAlignedSize(TextureInfo info, int level)
+        {
+            int width = info.Width << level;
+            int height = info.Height << level;
+            int depth = info.GetDepth() << level;
+
+            return GetAlignedSize(info, width, height, depth);
+        }
+
+        /// <summary>
+        /// Gets the aligned sizes of the specified texture information.
+        /// The alignment depends on the texture layout and format bytes per pixel.
+        /// </summary>
+        /// <param name="info">Texture information to calculate the aligned size from</param>
+        /// <param name="level">Mipmap level for texture views</param>
+        /// <returns>The aligned texture size</returns>
+        public static Size GetAlignedSize(TextureInfo info, int level = 0)
+        {
+            int width = Math.Max(1, info.Width >> level);
+            int height = Math.Max(1, info.Height >> level);
+            int depth = Math.Max(1, info.GetDepth() >> level);
+
+            return GetAlignedSize(info, width, height, depth);
         }
 
         /// <summary>
