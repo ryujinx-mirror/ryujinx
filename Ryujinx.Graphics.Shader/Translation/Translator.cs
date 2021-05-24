@@ -129,19 +129,20 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 config.SetUsedFeature(FeatureFlags.Bindless);
             }
-            else // Not bindless, fill up texture handles
+
+            for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
             {
-                for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
+                for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
                 {
-                    for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
+                    Block block = cfg[funcIndex][blkIndex];
+
+                    if (maxEndAddress < block.EndAddress)
                     {
-                        Block block = cfg[funcIndex][blkIndex];
+                        maxEndAddress = block.EndAddress;
+                    }
 
-                        if (maxEndAddress < block.EndAddress)
-                        {
-                            maxEndAddress = block.EndAddress;
-                        }
-
+                    if (!hasBindless)
+                    {
                         for (int index = 0; index < block.OpCodes.Count; index++)
                         {
                             if (block.OpCodes[index] is OpCodeTextureBase texture)

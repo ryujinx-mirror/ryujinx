@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.OpenGL
                 if (attrib.IsZero)
                 {
                     // Disabling the attribute causes the shader to read a constant value.
-                    // The value is configurable, but by default is a vector of (0, 0, 0, 1).
+                    // We currently set the constant to (0, 0, 0, 0).
                     DisableVertexAttrib(index);
                 }
                 else
@@ -176,6 +176,7 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 _vertexAttribsInUse &= ~mask;
                 GL.DisableVertexAttribArray(index);
+                GL.VertexAttrib4(index, 0f, 0f, 0f, 0f);
             }
         }
 
