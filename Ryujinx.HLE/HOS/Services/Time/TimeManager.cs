@@ -55,9 +55,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
             EphemeralClockContextWriter = new EphemeralNetworkSystemClockContextWriter();
         }
 
-        public void Initialize(Switch device, Horizon system, KSharedMemory sharedMemory, ulong timeSharedMemoryAddress, int timeSharedMemorySize)
+        public void Initialize(Switch device, Horizon system, KSharedMemory sharedMemory, SharedMemoryStorage timeSharedMemoryStorage, int timeSharedMemorySize)
         {
-            SharedMemory.Initialize(device, sharedMemory, timeSharedMemoryAddress, timeSharedMemorySize);
+            SharedMemory.Initialize(device, sharedMemory, timeSharedMemoryStorage, timeSharedMemorySize);
 
             // Here we use system on purpose as device. System isn't initialized at this point.
             StandardUserSystemClock.CreateAutomaticCorrectionEvent(system);

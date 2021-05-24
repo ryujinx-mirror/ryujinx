@@ -118,6 +118,11 @@ namespace Ryujinx.HLE
         /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
         internal readonly string TimeZone;
 
+
+        /// <summary>
+        /// </summary>
+        public MemoryManagerMode MemoryManagerMode { internal get; set; }
+
         /// <summary>
         /// Control the inital state of the ignore missing services setting.
         /// If this is set to true, when a missing service is encountered, it will try to automatically handle it instead of throwing an exception.
@@ -152,6 +157,7 @@ namespace Ryujinx.HLE
                                 int fsGlobalAccessLogMode,
                                 long systemTimeOffset,
                                 string timeZone,
+                                MemoryManagerMode memoryManagerMode,
                                 bool ignoreMissingServices,
                                 AspectRatio aspectRatio)
         {
@@ -172,6 +178,7 @@ namespace Ryujinx.HLE
             FsGlobalAccessLogMode = fsGlobalAccessLogMode;
             SystemTimeOffset = systemTimeOffset;
             TimeZone = timeZone;
+            MemoryManagerMode = memoryManagerMode;
             IgnoreMissingServices = ignoreMissingServices;
             AspectRatio = aspectRatio;
         }

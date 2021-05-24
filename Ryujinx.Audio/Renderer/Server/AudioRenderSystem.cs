@@ -142,6 +142,11 @@ namespace Ryujinx.Audio.Renderer.Server
             _sessionId = sessionId;
             MemoryManager = memoryManager;
 
+            if (memoryManager is IRefCounted rc)
+            {
+                rc.IncrementReferenceCount();
+            }
+
             WorkBufferAllocator workBufferAllocator;
 
             _workBufferRegion = MemoryManager.GetWritableRegion(workBuffer, (int)workBufferSize);
@@ -832,6 +837,13 @@ namespace Ryujinx.Audio.Renderer.Server
                 _terminationEvent.Dispose();
                 _workBufferMemoryPin.Dispose();
                 _workBufferRegion.Dispose();
+
+                if (MemoryManager is IRefCounted rc)
+                {
+                    rc.DecrementReferenceCount();
+
+                    MemoryManager = null;
+                }
             }
         }
     }

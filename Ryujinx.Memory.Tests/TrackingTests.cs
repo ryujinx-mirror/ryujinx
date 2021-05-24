@@ -23,7 +23,7 @@ namespace Ryujinx.Memory.Tests
         {
             _memoryBlock = new MemoryBlock(MemorySize);
             _memoryManager = new MockVirtualMemoryManager(MemorySize, PageSize);
-            _tracking = new MemoryTracking(_memoryManager, _memoryBlock, PageSize);
+            _tracking = new MemoryTracking(_memoryManager, PageSize);
         }
 
         [TearDown]

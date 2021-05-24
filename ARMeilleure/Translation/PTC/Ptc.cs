@@ -28,7 +28,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 2305; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 2289; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -64,6 +64,8 @@ namespace ARMeilleure.Translation.PTC
         internal static string TitleIdText { get; private set; }
         internal static string DisplayVersion { get; private set; }
 
+        private static MemoryManagerMode _memoryMode;
+
         internal static string CachePathActual { get; private set; }
         internal static string CachePathBackup { get; private set; }
 
@@ -98,7 +100,7 @@ namespace ARMeilleure.Translation.PTC
             Disable();
         }
 
-        public static void Initialize(string titleIdText, string displayVersion, bool enabled)
+        public static void Initialize(string titleIdText, string displayVersion, bool enabled, MemoryManagerMode memoryMode)
         {
             Wait();
 
@@ -122,6 +124,7 @@ namespace ARMeilleure.Translation.PTC
 
             TitleIdText = titleIdText;
             DisplayVersion = !string.IsNullOrEmpty(displayVersion) ? displayVersion : DisplayVersionDefault;
+            _memoryMode = memoryMode;
 
             string workPathActual = Path.Combine(AppDataManager.GamesDirPath, TitleIdText, "cache", "cpu", ActualDir);
             string workPathBackup = Path.Combine(AppDataManager.GamesDirPath, TitleIdText, "cache", "cpu", BackupDir);
@@ -238,6 +241,13 @@ namespace ARMeilleure.Translation.PTC
                 }
 
                 if (outerHeader.FeatureInfo != GetFeatureInfo())
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
+                if (outerHeader.MemoryManagerMode != GetMemoryManagerMode())
                 {
                     InvalidateCompressedStream(compressedStream);
 
@@ -441,6 +451,7 @@ namespace ARMeilleure.Translation.PTC
             outerHeader.CacheFileVersion = InternalVersion;
             outerHeader.Endianness = GetEndianness();
             outerHeader.FeatureInfo = GetFeatureInfo();
+            outerHeader.MemoryManagerMode = GetMemoryManagerMode();
             outerHeader.OSPlatform = GetOSPlatform();
 
             outerHeader.UncompressedStreamSize =
@@ -954,6 +965,11 @@ namespace ARMeilleure.Translation.PTC
             return (ulong)HardwareCapabilities.FeatureInfoEdx << 32 | (uint)HardwareCapabilities.FeatureInfoEcx;
         }
 
+        private static byte GetMemoryManagerMode()
+        {
+            return (byte)_memoryMode;
+        }
+
         private static uint GetOSPlatform()
         {
             uint osPlatform = 0u;
@@ -966,7 +982,7 @@ namespace ARMeilleure.Translation.PTC
             return osPlatform;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 49*/)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 50*/)]
         private struct OuterHeader
         {
             public ulong Magic;
@@ -975,6 +991,7 @@ namespace ARMeilleure.Translation.PTC
 
             public bool Endianness;
             public ulong FeatureInfo;
+            public byte MemoryManagerMode;
             public uint OSPlatform;
 
             public long UncompressedStreamSize;

@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 25;
+        public const int CurrentVersion = 26;
 
         public int Version { get; set; }
 
@@ -173,6 +173,11 @@ namespace Ryujinx.Configuration
         /// The selected audio backend
         /// </summary>
         public AudioBackend AudioBackend { get; set; }
+
+        /// <summary>
+        /// The selected memory manager mode
+        /// </summary>
+        public MemoryManagerMode MemoryManagerMode { get; set; }
 
         /// <summary>
         /// Expands the RAM amount on the emulated system from 4GB to 6GB

@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             IrqAccessMask = new byte[0x80];
         }
 
-        public KernelResult InitializeForKernel(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
+        public KernelResult InitializeForKernel(ReadOnlySpan<int> capabilities, KPageTableBase memoryManager)
         {
             AllowedCpuCoresMask    = 0xf;
             AllowedThreadPriosMask = -1;
@@ -35,12 +35,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return Parse(capabilities, memoryManager);
         }
 
-        public KernelResult InitializeForUser(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
+        public KernelResult InitializeForUser(ReadOnlySpan<int> capabilities, KPageTableBase memoryManager)
         {
             return Parse(capabilities, memoryManager);
         }
 
-        private KernelResult Parse(ReadOnlySpan<int> capabilities, KMemoryManager memoryManager)
+        private KernelResult Parse(ReadOnlySpan<int> capabilities, KPageTableBase memoryManager)
         {
             int mask0 = 0;
             int mask1 = 0;
@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return KernelResult.Success;
         }
 
-        private KernelResult ParseCapability(int cap, ref int mask0, ref int mask1, KMemoryManager memoryManager)
+        private KernelResult ParseCapability(int cap, ref int mask0, ref int mask1, KPageTableBase memoryManager)
         {
             int code = (cap + 1) & ~cap;
 
@@ -217,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 {
                     long address = ((long)(uint)cap << 4) & 0xffffff000;
 
-                    memoryManager.MapIoMemory(address, KMemoryManager.PageSize, KMemoryPermission.ReadAndWrite);
+                    memoryManager.MapIoMemory(address, KPageTableBase.PageSize, KMemoryPermission.ReadAndWrite);
 
                     break;
                 }

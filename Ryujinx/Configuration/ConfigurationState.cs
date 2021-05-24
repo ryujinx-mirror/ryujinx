@@ -220,6 +220,11 @@ namespace Ryujinx.Configuration
             public ReactiveObject<AudioBackend> AudioBackend { get; private set; }
 
             /// <summary>
+            /// The selected memory manager mode
+            /// </summary>
+            public ReactiveObject<MemoryManagerMode> MemoryManagerMode { get; private set; }
+
+            /// <summary>
             /// Defines the amount of RAM available on the emulated system, and how it is distributed
             /// </summary>
             public ReactiveObject<bool> ExpandRam { get; private set; }
@@ -245,6 +250,8 @@ namespace Ryujinx.Configuration
                 FsGlobalAccessLogMode.Event   += static (sender, e) => LogValueChange(sender, e, nameof(FsGlobalAccessLogMode));
                 AudioBackend                  = new ReactiveObject<AudioBackend>();
                 AudioBackend.Event            += static (sender, e) => LogValueChange(sender, e, nameof(AudioBackend));
+                MemoryManagerMode             = new ReactiveObject<MemoryManagerMode>();
+                MemoryManagerMode.Event       += static (sender, e) => LogValueChange(sender, e, nameof(MemoryManagerMode));
                 ExpandRam                     = new ReactiveObject<bool>();
                 ExpandRam.Event               += static (sender, e) => LogValueChange(sender, e, nameof(ExpandRam));
                 IgnoreMissingServices         = new ReactiveObject<bool>();
@@ -438,6 +445,7 @@ namespace Ryujinx.Configuration
                 EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
                 FsGlobalAccessLogMode     = System.FsGlobalAccessLogMode,
                 AudioBackend              = System.AudioBackend,
+                MemoryManagerMode         = System.MemoryManagerMode,
                 ExpandRam                 = System.ExpandRam,
                 IgnoreMissingServices     = System.IgnoreMissingServices,
                 GuiColumns                = new GuiColumns
@@ -504,6 +512,7 @@ namespace Ryujinx.Configuration
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
             System.AudioBackend.Value              = AudioBackend.OpenAl;
+            System.MemoryManagerMode.Value         = MemoryManagerMode.HostMappedUnsafe;
             System.ExpandRam.Value                 = false;
             System.IgnoreMissingServices.Value     = false;
             Ui.GuiColumns.FavColumn.Value          = true;
@@ -810,6 +819,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 26)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 26.");
+
+                configurationFileFormat.MemoryManagerMode = MemoryManagerMode.HostMappedUnsafe;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
@@ -840,6 +858,7 @@ namespace Ryujinx.Configuration
             System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;
             System.FsGlobalAccessLogMode.Value     = configurationFileFormat.FsGlobalAccessLogMode;
             System.AudioBackend.Value              = configurationFileFormat.AudioBackend;
+            System.MemoryManagerMode.Value         = configurationFileFormat.MemoryManagerMode;
             System.ExpandRam.Value                 = configurationFileFormat.ExpandRam;
             System.IgnoreMissingServices.Value     = configurationFileFormat.IgnoreMissingServices;
             Ui.GuiColumns.FavColumn.Value          = configurationFileFormat.GuiColumns.FavColumn;

@@ -7,8 +7,11 @@ namespace Ryujinx.Memory
     /// <summary>
     /// Represents a block of contiguous physical guest memory.
     /// </summary>
-    public sealed class MemoryBlock : IDisposable
+    public sealed class MemoryBlock : IWritableBlock, IDisposable
     {
+        private readonly bool _usesSharedMemory;
+        private readonly bool _isMirror;
+        private IntPtr _sharedMemory;
         private IntPtr _pointer;
 
         /// <summary>
@@ -22,15 +25,21 @@ namespace Ryujinx.Memory
         public ulong Size { get; }
 
         /// <summary>
-        /// Initializes a new instance of the memory block class.
+        /// Creates a new instance of the memory block class.
         /// </summary>
-        /// <param name="size">Size of the memory block</param>
+        /// <param name="size">Size of the memory block in bytes</param>
         /// <param name="flags">Flags that controls memory block memory allocation</param>
         /// <exception cref="OutOfMemoryException">Throw when there's no enough memory to allocate the requested size</exception>
         /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
         public MemoryBlock(ulong size, MemoryAllocationFlags flags = MemoryAllocationFlags.None)
         {
-            if (flags.HasFlag(MemoryAllocationFlags.Reserve))
+            if (flags.HasFlag(MemoryAllocationFlags.Mirrorable))
+            {
+                _sharedMemory = MemoryManagement.CreateSharedMemory(size, flags.HasFlag(MemoryAllocationFlags.Reserve));
+                _pointer = MemoryManagement.MapSharedMemory(_sharedMemory);
+                _usesSharedMemory = true;
+            }
+            else if (flags.HasFlag(MemoryAllocationFlags.Reserve))
             {
                 _pointer = MemoryManagement.Reserve(size);
             }
@@ -40,6 +49,39 @@ namespace Ryujinx.Memory
             }
 
             Size = size;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the memory block class, with a existing backing storage.
+        /// </summary>
+        /// <param name="size">Size of the memory block in bytes</param>
+        /// <param name="sharedMemory">Shared memory to use as backing storage for this block</param>
+        /// <exception cref="OutOfMemoryException">Throw when there's no enough address space left to map the shared memory</exception>
+        /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
+        private MemoryBlock(ulong size, IntPtr sharedMemory)
+        {
+            _pointer = MemoryManagement.MapSharedMemory(sharedMemory);
+            Size = size;
+            _usesSharedMemory = true;
+            _isMirror = true;
+        }
+
+        /// <summary>
+        /// Creates a memory block that shares the backing storage with this block.
+        /// The memory and page commitments will be shared, however memory protections are separate.
+        /// </summary>
+        /// <returns>A new memory block that shares storage with this one</returns>
+        /// <exception cref="NotSupportedException">Throw when the current memory block does not support mirroring</exception>
+        /// <exception cref="OutOfMemoryException">Throw when there's no enough address space left to map the shared memory</exception>
+        /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
+        public MemoryBlock CreateMirror()
+        {
+            if (_sharedMemory == IntPtr.Zero)
+            {
+                throw new NotSupportedException("Mirroring is not supported on the memory block because the Mirrorable flag was not set.");
+            }
+
+            return new MemoryBlock(Size, _sharedMemory);
         }
 
         /// <summary>
@@ -57,17 +99,46 @@ namespace Ryujinx.Memory
         }
 
         /// <summary>
+        /// Decommits a region of memory that has previously been reserved and optionally comitted.
+        /// This can be used to free previously allocated memory on demand.
+        /// </summary>
+        /// <param name="offset">Starting offset of the range to be decommitted</param>
+        /// <param name="size">Size of the range to be decommitted</param>
+        /// <returns>True if the operation was successful, false otherwise</returns>
+        /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
+        /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
+        public bool Decommit(ulong offset, ulong size)
+        {
+            return MemoryManagement.Decommit(GetPointerInternal(offset, size), size);
+        }
+
+        /// <summary>
         /// Reprotects a region of memory.
         /// </summary>
         /// <param name="offset">Starting offset of the range to be reprotected</param>
         /// <param name="size">Size of the range to be reprotected</param>
         /// <param name="permission">New memory permissions</param>
+        /// <param name="throwOnFail">True if a failed reprotect should throw</param>
         /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
         /// <exception cref="MemoryProtectionException">Throw when <paramref name="permission"/> is invalid</exception>
-        public void Reprotect(ulong offset, ulong size, MemoryPermission permission)
+        public void Reprotect(ulong offset, ulong size, MemoryPermission permission, bool throwOnFail = true)
         {
-            MemoryManagement.Reprotect(GetPointerInternal(offset, size), size, permission);
+            MemoryManagement.Reprotect(GetPointerInternal(offset, size), size, permission, throwOnFail);
+        }
+
+        /// <summary>
+        /// Remaps a region of memory into this memory block.
+        /// </summary>
+        /// <param name="offset">Starting offset of the range to be remapped into</param>
+        /// <param name="sourceAddress">Starting offset of the range to be remapped from</param>
+        /// <param name="size">Size of the range to be remapped</param>
+        /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
+        /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
+        /// <exception cref="MemoryProtectionException">Throw when <paramref name="permission"/> is invalid</exception>
+        public void Remap(ulong offset, IntPtr sourceAddress, ulong size)
+        {
+            MemoryManagement.Remap(GetPointerInternal(offset, size), sourceAddress, size);
         }
 
         /// <summary>
@@ -202,7 +273,7 @@ namespace Ryujinx.Memory
         /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IntPtr GetPointer(ulong offset, int size) => GetPointerInternal(offset, (ulong)size);
+        public nuint GetPointer(ulong offset, ulong size) => (nuint)(ulong)GetPointerInternal(offset, size);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private IntPtr GetPointerInternal(ulong offset, ulong size)
@@ -235,7 +306,7 @@ namespace Ryujinx.Memory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe Span<byte> GetSpan(ulong offset, int size)
         {
-            return new Span<byte>((void*)GetPointer(offset, size), size);
+            return new Span<byte>((void*)GetPointerInternal(offset, (ulong)size), size);
         }
 
         /// <summary>
@@ -249,7 +320,20 @@ namespace Ryujinx.Memory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe Memory<byte> GetMemory(ulong offset, int size)
         {
-            return new NativeMemoryManager<byte>((byte*)GetPointer(offset, size), size).Memory;
+            return new NativeMemoryManager<byte>((byte*)GetPointerInternal(offset, (ulong)size), size).Memory;
+        }
+
+        /// <summary>
+        /// Gets a writable region of a given memory block region.
+        /// </summary>
+        /// <param name="offset">Start offset of the memory region</param>
+        /// <param name="size">Size in bytes of the region</param>
+        /// <returns>Writable region of the memory region</returns>
+        /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
+        /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
+        public WritableRegion GetWritableRegion(ulong offset, int size)
+        {
+            return new WritableRegion(this, offset, GetMemory(offset, size));
         }
 
         /// <summary>
@@ -280,7 +364,20 @@ namespace Ryujinx.Memory
             // If pointer is null, the memory was already freed or never allocated.
             if (ptr != IntPtr.Zero)
             {
-                MemoryManagement.Free(ptr);
+                if (_usesSharedMemory)
+                {
+                    MemoryManagement.UnmapSharedMemory(ptr);
+
+                    if (_sharedMemory != IntPtr.Zero && !_isMirror)
+                    {
+                        MemoryManagement.DestroySharedMemory(_sharedMemory);
+                        _sharedMemory = IntPtr.Zero;
+                    }
+                }
+                else
+                {
+                    MemoryManagement.Free(ptr);
+                }
             }
         }
 

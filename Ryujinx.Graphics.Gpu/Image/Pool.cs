@@ -1,6 +1,4 @@
-using Ryujinx.Common;
 using Ryujinx.Cpu.Tracking;
-using Ryujinx.Graphics.Gpu.Memory;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Image

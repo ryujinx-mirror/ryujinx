@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KPageList : IEnumerable<KPageNode>
     {
-        public LinkedList<KPageNode> Nodes { get; private set; }
+        public LinkedList<KPageNode> Nodes { get; }
 
         public KPageList()
         {
@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 {
                     KPageNode lastNode = Nodes.Last.Value;
 
-                    if (lastNode.Address + lastNode.PagesCount * KMemoryManager.PageSize == address)
+                    if (lastNode.Address + lastNode.PagesCount * KPageTableBase.PageSize == address)
                     {
                         address     = lastNode.Address;
                         pagesCount += lastNode.PagesCount;
@@ -66,6 +66,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
 
             return thisNode == null && otherNode == null;
+        }
+
+        public void IncrementPagesReferenceCount(KMemoryManager manager)
+        {
+            foreach (var node in this)
+            {
+                manager.IncrementPagesReferenceCount(node.Address, node.PagesCount);
+            }
+        }
+
+        public void DecrementPagesReferenceCount(KMemoryManager manager)
+        {
+            foreach (var node in this)
+            {
+                manager.DecrementPagesReferenceCount(node.Address, node.PagesCount);
+            }
         }
 
         public IEnumerator<KPageNode> GetEnumerator()

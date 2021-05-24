@@ -206,7 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
         private ResultCode MapNro(KProcess process, NroInfo info, out ulong nroMappedAddress)
         {
-            KMemoryManager memMgr = process.MemoryManager;
+            KPageTableBase memMgr = process.MemoryManager;
 
             int retryCount = 0;
 
@@ -252,7 +252,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
         private bool CanAddGuardRegionsInProcess(KProcess process, ulong baseAddress, ulong size)
         {
-            KMemoryManager memMgr = process.MemoryManager;
+            KPageTableBase memMgr = process.MemoryManager;
 
             KMemoryInfo memInfo = memMgr.QueryMemory(baseAddress - 1);
 
@@ -270,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
         private ResultCode MapCodeMemoryInProcess(KProcess process, ulong baseAddress, ulong size, out ulong targetAddress)
         {
-            KMemoryManager memMgr = process.MemoryManager;
+            KPageTableBase memMgr = process.MemoryManager;
 
             targetAddress = 0;
 
@@ -327,7 +327,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             ulong bssStart = dataStart + (ulong)relocatableObject.Data.Length;
 
-            ulong bssEnd = BitUtils.AlignUp(bssStart + (ulong)relocatableObject.BssSize, KMemoryManager.PageSize);
+            ulong bssEnd = BitUtils.AlignUp(bssStart + (ulong)relocatableObject.BssSize, KPageTableBase.PageSize);
 
             process.CpuMemory.Write(textStart, relocatableObject.Text);
             process.CpuMemory.Write(roStart,   relocatableObject.Ro);

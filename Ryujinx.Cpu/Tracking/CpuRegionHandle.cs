@@ -19,6 +19,8 @@ namespace Ryujinx.Cpu.Tracking
         }
 
         public void Dispose() => _impl.Dispose();
+        public bool DirtyOrVolatile() => _impl.DirtyOrVolatile();
+        public void ForceDirty() => _impl.ForceDirty();
         public void RegisterAction(RegionSignal action) => _impl.RegisterAction(action);
         public void RegisterDirtyEvent(Action action) => _impl.RegisterDirtyEvent(action);
         public void Reprotect(bool asDirty = false) => _impl.Reprotect(asDirty);

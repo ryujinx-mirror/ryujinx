@@ -1210,7 +1210,7 @@
         false
       ]
     },
-      "hide_cursor_on_idle": {
+    "hide_cursor_on_idle": {
       "$id": "#/properties/hide_cursor_on_idle",
       "type": "boolean",
       "title": "Hide Cursor On Idle",
@@ -1278,6 +1278,18 @@
         "Dummy",
         "SoundIo",
         "OpenAl"
+      ]
+    },
+    "memory_manager_mode": {
+      "$id": "#/properties/memory_manager_mode",
+      "type": "string",
+      "title": "The selected memory manager mode",
+      "description": "The selected memory manager mode",
+      "default": "HostMappedUnsafe",
+      "enum": [
+        "SoftwarePageTable",
+        "HostMapped",
+        "HostMappedUnsafe"
       ]
     },
     "ignore_missing_services": {

@@ -4,6 +4,7 @@ using ARMeilleure.Diagnostics;
 using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Memory;
+using ARMeilleure.Signal;
 using ARMeilleure.State;
 using ARMeilleure.Translation.Cache;
 using ARMeilleure.Translation.PTC;
@@ -63,6 +64,11 @@ namespace ARMeilleure.Translation
             JitCache.Initialize(allocator);
 
             DirectCallStubs.InitializeStubs();
+
+            if (memory.Type.IsHostMapped())
+            {
+                NativeSignalHandler.InitializeSignalHandler();
+            }
         }
 
         private void TranslateStackedSubs()

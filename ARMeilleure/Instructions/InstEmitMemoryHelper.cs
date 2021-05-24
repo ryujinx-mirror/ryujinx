@@ -1,5 +1,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.Memory;
 using ARMeilleure.Translation;
 using ARMeilleure.Translation.PTC;
 using System;
@@ -141,13 +142,16 @@ namespace ARMeilleure.Instructions
 
             SetInt(context, rt, value);
 
-            context.Branch(lblEnd);
+            if (!context.Memory.Type.IsHostMapped())
+            {
+                context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
+                context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
-            EmitReadIntFallback(context, address, rt, size);
+                EmitReadIntFallback(context, address, rt, size);
 
-            context.MarkLabel(lblEnd);
+                context.MarkLabel(lblEnd);
+            }
         }
 
         public static Operand EmitReadIntAligned(ArmEmitterContext context, Operand address, int size)
@@ -195,13 +199,16 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVec(rt), value);
 
-            context.Branch(lblEnd);
+            if (!context.Memory.Type.IsHostMapped())
+            {
+                context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
+                context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
-            EmitReadVectorFallback(context, address, vector, rt, elem, size);
+                EmitReadVectorFallback(context, address, vector, rt, elem, size);
 
-            context.MarkLabel(lblEnd);
+                context.MarkLabel(lblEnd);
+            }
         }
 
         private static Operand VectorCreate(ArmEmitterContext context, Operand value)
@@ -231,13 +238,16 @@ namespace ARMeilleure.Instructions
                 case 3: context.Store  (physAddr, value); break;
             }
 
-            context.Branch(lblEnd);
+            if (!context.Memory.Type.IsHostMapped())
+            {
+                context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
+                context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
-            EmitWriteIntFallback(context, address, rt, size);
+                EmitWriteIntFallback(context, address, rt, size);
 
-            context.MarkLabel(lblEnd);
+                context.MarkLabel(lblEnd);
+            }
         }
 
         public static void EmitWriteIntAligned(ArmEmitterContext context, Operand address, Operand value, int size)
@@ -291,17 +301,25 @@ namespace ARMeilleure.Instructions
                 case 4: context.Store  (physAddr, value);                                               break;
             }
 
-            context.Branch(lblEnd);
+            if (!context.Memory.Type.IsHostMapped())
+            {
+                context.Branch(lblEnd);
 
-            context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
+                context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
 
-            EmitWriteVectorFallback(context, address, rt, elem, size);
+                EmitWriteVectorFallback(context, address, rt, elem, size);
 
-            context.MarkLabel(lblEnd);
+                context.MarkLabel(lblEnd);
+            }
         }
 
         public static Operand EmitPtPointerLoad(ArmEmitterContext context, Operand address, Operand lblSlowPath, bool write, int size)
         {
+            if (context.Memory.Type.IsHostMapped())
+            {
+                return EmitHostMappedPointer(context, address);
+            }
+
             int ptLevelBits = context.Memory.AddressSpaceBits - PageBits;
             int ptLevelSize = 1 << ptLevelBits;
             int ptLevelMask = ptLevelSize - 1;
@@ -378,6 +396,26 @@ namespace ARMeilleure.Instructions
             }
 
             return context.Add(pte, pageOffset);
+        }
+
+        public static Operand EmitHostMappedPointer(ArmEmitterContext context, Operand address)
+        {
+            if (address.Type == OperandType.I32)
+            {
+                address = context.ZeroExtend32(OperandType.I64, address);
+            }
+
+            if (context.Memory.Type == MemoryManagerType.HostMapped)
+            {
+                Operand mask = Const(ulong.MaxValue >> (64 - context.Memory.AddressSpaceBits));
+                address = context.BitwiseAnd(address, mask);
+            }
+
+            Operand baseAddr = Ptc.State == PtcState.Disabled
+                ? Const(context.Memory.PageTablePointer.ToInt64())
+                : Const(context.Memory.PageTablePointer.ToInt64(), true, Ptc.PageTablePointerIndex);
+
+            return context.Add(baseAddr, address);
         }
 
         private static void EmitReadIntFallback(ArmEmitterContext context, Operand address, int rt, int size)

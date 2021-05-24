@@ -48,8 +48,9 @@ namespace Ryujinx.Tests.Cpu
             _currAddress = CodeBaseAddress;
 
             _ram = new MemoryBlock(Size * 2);
-            _memory = new MemoryManager(_ram, 1ul << 16);
-            _memory.Map(CodeBaseAddress, 0, Size * 2);
+            _memory = new MemoryManager(1ul << 16);
+            _memory.IncrementReferenceCount();
+            _memory.Map(CodeBaseAddress, _ram.GetPointer(0, Size * 2), Size * 2);
 
             _context = CpuContext.CreateExecutionContext();
             _context.IsAarch32 = true;
@@ -69,7 +70,7 @@ namespace Ryujinx.Tests.Cpu
         [TearDown]
         public void Teardown()
         {
-            _memory.Dispose();
+            _memory.DecrementReferenceCount();
             _context.Dispose();
             _ram.Dispose();
 

@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return KernelResult.OutOfMemory;
         }
 
-        public KernelResult CopyBuffersToClient(KMemoryManager memoryManager)
+        public KernelResult CopyBuffersToClient(KPageTableBase memoryManager)
         {
             KernelResult result = CopyToClient(memoryManager, _receiveBufferDescriptors);
 
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return CopyToClient(memoryManager, _exchangeBufferDescriptors);
         }
 
-        private KernelResult CopyToClient(KMemoryManager memoryManager, List<KBufferDescriptor> list)
+        private KernelResult CopyToClient(KPageTableBase memoryManager, List<KBufferDescriptor> list)
         {
             foreach (KBufferDescriptor desc in list)
             {
@@ -81,8 +81,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     attributeMask |= MemoryAttribute.DeviceMapped;
                 }
 
-                ulong clientAddrTruncated = BitUtils.AlignDown(desc.ClientAddress, KMemoryManager.PageSize);
-                ulong clientAddrRounded   = BitUtils.AlignUp  (desc.ClientAddress, KMemoryManager.PageSize);
+                ulong clientAddrTruncated = BitUtils.AlignDown(desc.ClientAddress, KPageTableBase.PageSize);
+                ulong clientAddrRounded   = BitUtils.AlignUp  (desc.ClientAddress, KPageTableBase.PageSize);
 
                 // Check if address is not aligned, in this case we need to perform 2 copies.
                 if (clientAddrTruncated != clientAddrRounded)
@@ -113,9 +113,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 ulong clientEndAddr = desc.ClientAddress + desc.Size;
                 ulong serverEndAddr = desc.ServerAddress + desc.Size;
 
-                ulong clientEndAddrTruncated = BitUtils.AlignDown(clientEndAddr, KMemoryManager.PageSize);
-                ulong clientEndAddrRounded   = BitUtils.AlignUp  (clientEndAddr, KMemoryManager.PageSize);
-                ulong serverEndAddrTruncated = BitUtils.AlignDown(serverEndAddr, KMemoryManager.PageSize);
+                ulong clientEndAddrTruncated = BitUtils.AlignDown(clientEndAddr, KPageTableBase.PageSize);
+                ulong clientEndAddrRounded   = BitUtils.AlignUp  (clientEndAddr, KPageTableBase.PageSize);
+                ulong serverEndAddrTruncated = BitUtils.AlignDown(serverEndAddr, KPageTableBase.PageSize);
 
                 if (clientEndAddrTruncated < clientEndAddrRounded &&
                     (clientAddrTruncated == clientAddrRounded || clientAddrTruncated < clientEndAddrTruncated))
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return KernelResult.Success;
         }
 
-        public KernelResult UnmapServerBuffers(KMemoryManager memoryManager)
+        public KernelResult UnmapServerBuffers(KPageTableBase memoryManager)
         {
             KernelResult result = UnmapServer(memoryManager, _sendBufferDescriptors);
 
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return UnmapServer(memoryManager, _exchangeBufferDescriptors);
         }
 
-        private KernelResult UnmapServer(KMemoryManager memoryManager, List<KBufferDescriptor> list)
+        private KernelResult UnmapServer(KPageTableBase memoryManager, List<KBufferDescriptor> list)
         {
             foreach (KBufferDescriptor descriptor in list)
             {
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return KernelResult.Success;
         }
 
-        public KernelResult RestoreClientBuffers(KMemoryManager memoryManager)
+        public KernelResult RestoreClientBuffers(KPageTableBase memoryManager)
         {
             KernelResult result = RestoreClient(memoryManager, _sendBufferDescriptors);
 
@@ -196,7 +196,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return RestoreClient(memoryManager, _exchangeBufferDescriptors);
         }
 
-        private KernelResult RestoreClient(KMemoryManager memoryManager, List<KBufferDescriptor> list)
+        private KernelResult RestoreClient(KPageTableBase memoryManager, List<KBufferDescriptor> list)
         {
             foreach (KBufferDescriptor descriptor in list)
             {

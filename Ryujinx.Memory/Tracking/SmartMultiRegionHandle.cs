@@ -41,6 +41,17 @@ namespace Ryujinx.Memory.Tracking
             Dirty = true;
         }
 
+        public void ForceDirty(ulong address, ulong size)
+        {
+            foreach (var handle in _handles)
+            {
+                if (handle != null && handle.OverlapsWith(address, size))
+                {
+                    handle.ForceDirty();
+                }
+            }
+        }
+
         public void RegisterAction(RegionSignal action)
         {
             foreach (var handle in _handles)

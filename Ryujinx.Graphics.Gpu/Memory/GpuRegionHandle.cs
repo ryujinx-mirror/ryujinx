@@ -56,5 +56,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 regionHandle.Reprotect(asDirty);
             }
         }
+
+        public void ForceDirty()
+        {
+            foreach (var regionHandle in _cpuRegionHandles)
+            {
+                regionHandle.ForceDirty();
+            }
+        }
     }
 }

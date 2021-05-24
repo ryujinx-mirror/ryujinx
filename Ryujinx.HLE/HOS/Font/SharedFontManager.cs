@@ -6,6 +6,7 @@ using LibHac.FsSystem.NcaUtils;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
+using Ryujinx.HLE.HOS.Kernel.Memory;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -17,9 +18,9 @@ namespace Ryujinx.HLE.HOS.Font
 {
     class SharedFontManager
     {
-        private Switch _device;
+        private readonly Switch _device;
 
-        private ulong _physicalAddress;
+        private readonly SharedMemoryStorage _storage;
 
         private struct FontInfo
         {
@@ -35,10 +36,10 @@ namespace Ryujinx.HLE.HOS.Font
 
         private Dictionary<SharedFontType, FontInfo> _fontData;
 
-        public SharedFontManager(Switch device, ulong physicalAddress)
+        public SharedFontManager(Switch device, SharedMemoryStorage storage)
         {
-            _physicalAddress = physicalAddress;
-            _device          = device;
+            _device  = device;
+            _storage = storage;
         }
 
         public void Initialize(ContentManager contentManager)
@@ -52,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Font
         {
             if (_fontData == null)
             {
-                _device.Memory.ZeroFill(_physicalAddress, Horizon.FontSize);
+                _storage.ZeroFill();
 
                 uint fontOffset = 0;
 
@@ -80,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Font
 
                             FontInfo info = new FontInfo((int)fontOffset, data.Length);
 
-                            WriteMagicAndSize(_physicalAddress + fontOffset, data.Length);
+                            WriteMagicAndSize(fontOffset, data.Length);
 
                             fontOffset += 8;
 
@@ -88,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Font
 
                             for (; fontOffset - start < data.Length; fontOffset++)
                             {
-                                _device.Memory.Write(_physicalAddress + fontOffset, data[fontOffset - start]);
+                                _storage.GetRef<byte>(fontOffset) = data[fontOffset - start];
                             }
 
                             return info;
@@ -129,15 +130,15 @@ namespace Ryujinx.HLE.HOS.Font
             }
         }
 
-        private void WriteMagicAndSize(ulong address, int size)
+        private void WriteMagicAndSize(ulong offset, int size)
         {
             const int decMagic = 0x18029a7f;
             const int key      = 0x49621806;
 
             int encryptedSize = BinaryPrimitives.ReverseEndianness(size ^ key);
 
-            _device.Memory.Write(address + 0, decMagic);
-            _device.Memory.Write(address + 4, encryptedSize);
+            _storage.GetRef<int>(offset + 0) = decMagic;
+            _storage.GetRef<int>(offset + 4) = encryptedSize;
         }
 
         public int GetFontSize(SharedFontType fontType)

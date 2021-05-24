@@ -1,6 +1,8 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.Memory.Range;
 using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
@@ -11,10 +13,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         // TODO: Remove when we no longer need to read it from the owner directly.
         public KProcess Creator => _creator;
 
-        private readonly KPageList _pageList;
+        private readonly List<HostMemoryRange> _ranges;
 
         public ulong Address { get; private set; }
-        public ulong Size => _pageList.GetPagesCount() * KMemoryManager.PageSize;
+        public ulong Size { get; private set; }
 
         public KMemoryPermission Permission { get; private set; }
 
@@ -23,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KTransferMemory(KernelContext context) : base(context)
         {
-            _pageList = new KPageList();
+            _ranges = new List<HostMemoryRange>();
         }
 
         public KernelResult Initialize(ulong address, ulong size, KMemoryPermission permission)
@@ -32,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             _creator = creator;
 
-            KernelResult result = creator.MemoryManager.BorrowTransferMemory(_pageList, address, size, permission);
+            KernelResult result = creator.MemoryManager.BorrowTransferMemory(_ranges, address, size, permission);
 
             if (result != KernelResult.Success)
             {
@@ -43,6 +45,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             Permission = permission;
             Address = address;
+            Size = size;
             _hasBeenInitialized = true;
             _isMapped = false;
 
@@ -53,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             if (_hasBeenInitialized)
             {
-                if (!_isMapped && _creator.MemoryManager.UnborrowTransferMemory(Address, Size, _pageList) != KernelResult.Success)
+                if (!_isMapped && _creator.MemoryManager.UnborrowTransferMemory(Address, Size, _ranges) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Unexpected failure restoring transfer memory attributes.");
                 }

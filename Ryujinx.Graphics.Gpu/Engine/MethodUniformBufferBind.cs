@@ -66,6 +66,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             int index = (argument >> 4) & 0x1f;
 
+            FlushUboDirty();
+
             if (enable)
             {
                 var uniformBuffer = state.Get<UniformBufferState>(MethodOffset.UniformBufferState);

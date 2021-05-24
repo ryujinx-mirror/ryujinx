@@ -5,6 +5,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     interface IProcessContextFactory
     {
-        IProcessContext Create(MemoryBlock backingMemory, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler);
+        IProcessContext Create(KernelContext context, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler);
     }
 }

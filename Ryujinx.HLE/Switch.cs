@@ -67,7 +67,7 @@ namespace Ryujinx.HLE
 
             AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(configuration.AudioDeviceDriver);
 
-            Memory = new MemoryBlock(configuration.MemoryConfiguration.ToDramSize());
+            Memory = new MemoryBlock(configuration.MemoryConfiguration.ToDramSize(), MemoryAllocationFlags.Reserve);
 
             Gpu = new GpuContext(configuration.GpuRenderer);
 
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE
 
             Statistics = new PerformanceStatistics();
 
-            Hid = new Hid(this, System.HidBaseAddress);
+            Hid = new Hid(this, System.HidStorage);
             Hid.InitDevices();
 
             Application = new ApplicationLoader(this);

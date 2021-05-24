@@ -11,6 +11,17 @@ namespace Ryujinx.Memory.Tracking
     /// </summary>
     public class RegionHandle : IRegionHandle, IRange
     {
+        /// <summary>
+        /// If more than this number of checks have been performed on a dirty flag since its last reprotect,
+        /// then it is dirtied infrequently.
+        /// </summary>
+        private static int CheckCountForInfrequent = 3;
+
+        /// <summary>
+        /// Number of frequent dirty/consume in a row to make this handle volatile.
+        /// </summary>
+        private static int VolatileThreshold = 5;
+
         public bool Dirty { get; private set; }
         public bool Unmapped { get; private set; }
 
@@ -27,6 +38,10 @@ namespace Ryujinx.Memory.Tracking
         private readonly List<VirtualRegion> _regions;
         private readonly MemoryTracking _tracking;
         private bool _disposed;
+
+        private int _checkCount = 0;
+        private int _volatileCount = 0;
+        private bool _volatile;
 
         internal MemoryPermission RequiredPermission => _preAction != null ? MemoryPermission.None : (Dirty ? MemoryPermission.ReadAndWrite : MemoryPermission.Read);
         internal RegionSignal PreAction => _preAction;
@@ -56,6 +71,25 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
+        /// Clear the volatile state of this handle.
+        /// </summary>
+        private void ClearVolatile()
+        {
+            _volatileCount = 0;
+            _volatile = false;
+        }
+
+        /// <summary>
+        /// Check if this handle is dirty, or if it is volatile. (changes very often)
+        /// </summary>
+        /// <returns>True if the handle is dirty or volatile, false otherwise</returns>
+        public bool DirtyOrVolatile()
+        {
+            _checkCount++;
+            return Dirty || _volatile;
+        }
+
+        /// <summary>
         /// Signal that a memory action occurred within this handle's virtual regions.
         /// </summary>
         /// <param name="write">Whether the region was written to or read</param>
@@ -77,17 +111,55 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
+        /// Force this handle to be dirty, without reprotecting.
+        /// </summary>
+        public void ForceDirty()
+        {
+            Dirty = true;
+        }
+
+        /// <summary>
         /// Consume the dirty flag for this handle, and reprotect so it can be set on the next write.
         /// </summary>
         public void Reprotect(bool asDirty = false)
         {
+            if (_volatile) return;
+
             Dirty = asDirty;
+
+            bool protectionChanged = false;
+
             lock (_tracking.TrackingLock)
             {
                 foreach (VirtualRegion region in _regions)
                 {
-                    region.UpdateProtection();
+                    protectionChanged |= region.UpdateProtection();
                 }
+            }
+
+            if (!protectionChanged)
+            {
+                // Counteract the check count being incremented when this handle was forced dirty.
+                // It doesn't count for protected write tracking.
+
+                _checkCount--;
+            }
+            else if (!asDirty)
+            {
+                if (_checkCount > 0 && _checkCount < CheckCountForInfrequent)
+                {
+                    if (++_volatileCount >= VolatileThreshold && _preAction == null)
+                    {
+                        _volatile = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    _volatileCount = 0;
+                }
+
+                _checkCount = 0;
             }
         }
 
@@ -98,6 +170,8 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="action">Action to call on read or write</param>
         public void RegisterAction(RegionSignal action)
         {
+            ClearVolatile();
+
             RegionSignal lastAction = Interlocked.Exchange(ref _preAction, action);
             if (lastAction == null && action != lastAction)
             {
@@ -142,6 +216,7 @@ namespace Ryujinx.Memory.Tracking
 
                 if (Unmapped)
                 {
+                    ClearVolatile();
                     Dirty = false;
                 }
             }

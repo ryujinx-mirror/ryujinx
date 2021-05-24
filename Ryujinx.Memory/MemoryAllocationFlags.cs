@@ -23,6 +23,12 @@ namespace Ryujinx.Memory
         /// Enables read and write tracking of the memory block.
         /// This currently does nothing and is reserved for future use.
         /// </summary>
-        Tracked = 1 << 1
+        Tracked = 1 << 1,
+
+        /// <summary>
+        /// Enables mirroring of the memory block through aliasing of memory pages.
+        /// When enabled, this allows creating more memory blocks sharing the same backing storage.
+        /// </summary>
+        Mirrorable = 1 << 2
     }
 }

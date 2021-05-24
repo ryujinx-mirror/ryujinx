@@ -15,6 +15,7 @@ namespace Ryujinx.Cpu.Tracking
         }
 
         public void Dispose() => _impl.Dispose();
+        public void ForceDirty(ulong address, ulong size) => _impl.ForceDirty(address, size);
         public void RegisterAction(RegionSignal action) => _impl.RegisterAction(action);
         public void QueryModified(Action<ulong, ulong> modifiedAction) => _impl.QueryModified(modifiedAction);
         public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction) => _impl.QueryModified(address, size, modifiedAction);

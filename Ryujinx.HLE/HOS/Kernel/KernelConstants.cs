@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         public const int MemoryBlockAllocatorSize = 0x2710;
 
         public const ulong UserSlabHeapBase = DramMemoryMap.SlabHeapBase;
-        public const ulong UserSlabHeapItemSize = KMemoryManager.PageSize;
+        public const ulong UserSlabHeapItemSize = KPageTableBase.PageSize;
         public const ulong UserSlabHeapSize = 0x3de000;
     }
 }

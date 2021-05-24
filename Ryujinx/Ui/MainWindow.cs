@@ -430,6 +430,7 @@ namespace Ryujinx.Ui
                                                                           ConfigurationState.Instance.System.FsGlobalAccessLogMode,
                                                                           ConfigurationState.Instance.System.SystemTimeOffset,
                                                                           ConfigurationState.Instance.System.TimeZone,
+                                                                          ConfigurationState.Instance.System.MemoryManagerMode,
                                                                           ConfigurationState.Instance.System.IgnoreMissingServices,
                                                                           ConfigurationState.Instance.Graphics.AspectRatio);
 

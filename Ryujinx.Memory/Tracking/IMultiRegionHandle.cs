@@ -10,6 +10,13 @@ namespace Ryujinx.Memory.Tracking
         bool Dirty { get; }
 
         /// <summary>
+        /// Force the range of handles to be dirty, without reprotecting.
+        /// </summary>
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size of the range</param>
+        public void ForceDirty(ulong address, ulong size);
+
+        /// <summary>
         /// Check if any part of the region has been modified, and perform an action for each.
         /// Contiguous modified regions are combined.
         /// </summary>

@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             _pagePosition = pagePosition;
 
-            _slots = new bool[KMemoryManager.PageSize / TlsEntrySize];
+            _slots = new bool[KPageTableBase.PageSize / TlsEntrySize];
         }
 
         public bool TryGetFreeTlsAddr(out long position)
