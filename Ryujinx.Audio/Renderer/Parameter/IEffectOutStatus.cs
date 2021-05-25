@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,21 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-namespace Ryujinx.Audio.Renderer.Common
+namespace Ryujinx.Audio.Renderer.Parameter
 {
-    public enum PerformanceDetailType : byte
+    /// <summary>
+    /// Generic interface to represent output information for an effect.
+    /// </summary>
+    public interface IEffectOutStatus
     {
-        Unknown,
-        PcmInt16,
-        Adpcm,
-        VolumeRamp,
-        BiquadFilter,
-        Mix,
-        Delay,
-        Aux,
-        Reverb,
-        Reverb3d,
-        PcmFloat,
-        Limiter
+        /// <summary>
+        /// Current effect state.
+        /// </summary>
+        EffectState State { get; set; }
     }
 }

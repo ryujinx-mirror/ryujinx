@@ -98,7 +98,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
         /// <returns>Returns true if the <see cref="EffectType"/> sent by the user matches the internal <see cref="EffectType"/>.</returns>
-        public bool IsTypeValid(ref EffectInParameter parameter)
+        public bool IsTypeValid<T>(ref T parameter) where T: unmanaged, IEffectInParameter
         {
             return parameter.Type == TargetEffectType;
         }
@@ -115,7 +115,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// Update the internal common parameters from a user parameter.
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
-        protected void UpdateParameterBase(ref EffectInParameter parameter)
+        protected void UpdateParameterBase<T>(ref T parameter) where T : unmanaged, IEffectInParameter
         {
             MixId = parameter.MixId;
             ProcessingOrder = parameter.ProcessingOrder;
@@ -154,12 +154,38 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         }
 
         /// <summary>
-        /// Update the internal state from a user parameter.
+        /// Initialize the given <paramref name="state"/> result state.
+        /// </summary>
+        /// <param name="state">The state to initalize</param>
+        public virtual void InitializeResultState(ref EffectResultState state) {}
+
+        /// <summary>
+        /// Update the <paramref name="destState"/> result state with <paramref name="srcState"/>.
+        /// </summary>
+        /// <param name="destState">The destination result state</param>
+        /// <param name="srcState">The source result state</param>
+        public virtual void UpdateResultState(ref EffectResultState destState, ref EffectResultState srcState) {}
+
+        /// <summary>
+        /// Update the internal state from a user version 1 parameter.
         /// </summary>
         /// <param name="updateErrorInfo">The possible <see cref="ErrorInfo"/> that was generated.</param>
         /// <param name="parameter">The user parameter.</param>
         /// <param name="mapper">The mapper to use.</param>
-        public virtual void Update(out ErrorInfo updateErrorInfo, ref EffectInParameter parameter, PoolMapper mapper)
+        public virtual void Update(out ErrorInfo updateErrorInfo, ref EffectInParameterVersion1 parameter, PoolMapper mapper)
+        {
+            Debug.Assert(IsTypeValid(ref parameter));
+
+            updateErrorInfo = new ErrorInfo();
+        }
+
+        /// <summary>
+        /// Update the internal state from a user version 2 parameter.
+        /// </summary>
+        /// <param name="updateErrorInfo">The possible <see cref="ErrorInfo"/> that was generated.</param>
+        /// <param name="parameter">The user parameter.</param>
+        /// <param name="mapper">The mapper to use.</param>
+        public virtual void Update(out ErrorInfo updateErrorInfo, ref EffectInParameterVersion2 parameter, PoolMapper mapper)
         {
             Debug.Assert(IsTypeValid(ref parameter));
 
@@ -206,26 +232,26 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// </summary>
         /// <param name="outStatus">The given user output.</param>
         /// <param name="isAudioRendererActive">If set to true, the <see cref="AudioRenderSystem"/> is active.</param>
-        public void StoreStatus(ref EffectOutStatus outStatus, bool isAudioRendererActive)
+        public void StoreStatus<T>(ref T outStatus, bool isAudioRendererActive) where T: unmanaged, IEffectOutStatus
         {
             if (isAudioRendererActive)
             {
                 if (UsageState == UsageState.Disabled)
                 {
-                    outStatus.State = EffectOutStatus.EffectState.Disabled;
+                    outStatus.State = EffectState.Disabled;
                 }
                 else
                 {
-                    outStatus.State = EffectOutStatus.EffectState.Enabled;
+                    outStatus.State = EffectState.Enabled;
                 }
             }
             else if (UsageState == UsageState.New)
             {
-                outStatus.State = EffectOutStatus.EffectState.Enabled;
+                outStatus.State = EffectState.Enabled;
             }
             else
             {
-                outStatus.State = EffectOutStatus.EffectState.Disabled;
+                outStatus.State = EffectState.Disabled;
             }
         }
 
@@ -249,6 +275,8 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
                     return PerformanceDetailType.Reverb3d;
                 case EffectType.BufferMix:
                     return PerformanceDetailType.Mix;
+                case EffectType.Limiter:
+                    return PerformanceDetailType.Limiter;
                 default:
                     throw new NotImplementedException($"{Type}");
             }

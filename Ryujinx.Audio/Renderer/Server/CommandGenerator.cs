@@ -538,7 +538,25 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
-        private void GenerateEffect(ref MixState mix, BaseEffect effect)
+        private void GenerateLimiterEffect(uint bufferOffset, LimiterEffect effect, int nodeId, int effectId)
+        {
+            Debug.Assert(effect.Type == EffectType.Limiter);
+
+            ulong workBuffer = effect.GetWorkBuffer(-1);
+
+            if (_rendererContext.BehaviourContext.IsEffectInfoVersion2Supported())
+            {
+                Memory<EffectResultState> dspResultState = _effectContext.GetDspStateMemory(effectId);
+
+                _commandBuffer.GenerateLimiterEffectVersion2(bufferOffset, effect.Parameter, effect.State, dspResultState, effect.IsEnabled, workBuffer, nodeId);
+            }
+            else
+            {
+                _commandBuffer.GenerateLimiterEffectVersion1(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId);
+            }
+        }
+
+        private void GenerateEffect(ref MixState mix, int effectId, BaseEffect effect)
         {
             int nodeId = mix.NodeId;
 
@@ -576,6 +594,9 @@ namespace Ryujinx.Audio.Renderer.Server
                 case EffectType.BiquadFilter:
                     GenerateBiquadFilterEffect(mix.BufferOffset, (BiquadFilterEffect)effect, nodeId);
                     break;
+                case EffectType.Limiter:
+                    GenerateLimiterEffect(mix.BufferOffset, (LimiterEffect)effect, nodeId, effectId);
+                    break;
                 default:
                     throw new NotImplementedException($"Unsupported effect type {effect.Type}");
             }
@@ -611,7 +632,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
                 if (!effect.ShouldSkip())
                 {
-                    GenerateEffect(ref mix, effect);
+                    GenerateEffect(ref mix, effectOrder, effect);
                 }
             }
         }

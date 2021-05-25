@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,10 +22,10 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Audio.Renderer.Parameter.Effect
 {
     /// <summary>
-    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.Delay"/>.
+    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.Limiter"/>.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct DelayParameter
+    public struct LimiterParameter
     {
         /// <summary>
         /// The input channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
@@ -48,54 +48,91 @@ namespace Ryujinx.Audio.Renderer.Parameter.Effect
         public ushort ChannelCount;
 
         /// <summary>
-        /// The maximum delay time in milliseconds.
+        /// The target sample rate.
         /// </summary>
-        public uint DelayTimeMax;
+        /// <remarks>This is in kHz.</remarks>
+        public int SampleRate;
 
         /// <summary>
-        /// The delay time in milliseconds.
+        /// The look ahead max time.
+        /// <remarks>This is in microseconds.</remarks>
         /// </summary>
-        public uint DelayTime;
+        public int LookAheadTimeMax;
 
         /// <summary>
-        /// The target sample rate. (Q15)
+        /// The attack time.
+        /// <remarks>This is in microseconds.</remarks>
         /// </summary>
-        public uint SampleRate;
+        public int AttackTime;
 
         /// <summary>
-        /// The input gain. (Q15)
+        /// The release time.
+        /// <remarks>This is in microseconds.</remarks>
         /// </summary>
-        public uint InGain;
+        public int ReleaseTime;
 
         /// <summary>
-        /// The feedback gain. (Q15)
+        /// The look ahead time.
+        /// <remarks>This is in microseconds.</remarks>
         /// </summary>
-        public uint FeedbackGain;
+        public int LookAheadTime;
 
         /// <summary>
-        /// The output gain. (Q15)
+        /// The attack coefficient.
         /// </summary>
-        public uint OutGain;
+        public float AttackCoefficient;
 
         /// <summary>
-        /// The dry gain. (Q15)
+        /// The release coefficient.
         /// </summary>
-        public uint DryGain;
+        public float ReleaseCoefficient;
 
         /// <summary>
-        /// The channel spread of the <see cref="FeedbackGain"/>. (Q15)
+        /// The threshold.
         /// </summary>
-        public uint ChannelSpread;
+        public float Threshold;
 
         /// <summary>
-        /// The low pass amount. (Q15)
+        /// The input gain.
         /// </summary>
-        public uint LowPassAmount;
+        public float InputGain;
+
+        /// <summary>
+        /// The output gain.
+        /// </summary>
+        public float OutputGain;
+
+        /// <summary>
+        /// The minimum samples stored in the delay buffer.
+        /// </summary>
+        public int DelayBufferSampleCountMin;
+
+        /// <summary>
+        /// The maximum samples stored in the delay buffer.
+        /// </summary>
+        public int DelayBufferSampleCountMax;
 
         /// <summary>
         /// The current usage status of the effect on the client side.
         /// </summary>
         public UsageState Status;
+
+        /// <summary>
+        /// Indicate if the limiter effect should output statistics.
+        /// </summary>
+        [MarshalAs(UnmanagedType.I1)]
+        public bool StatisticsEnabled;
+
+        /// <summary>
+        /// Indicate to the DSP that the user did a statistics reset.
+        /// </summary>
+        [MarshalAs(UnmanagedType.I1)]
+        public bool StatisticsReset;
+
+        /// <summary>
+        /// Reserved/padding.
+        /// </summary>
+        private byte _reserved;
 
         /// <summary>
         /// Check if the <see cref="ChannelCount"/> is valid.

@@ -18,7 +18,6 @@
 using Ryujinx.Audio.Renderer.Common;
 using Ryujinx.Audio.Renderer.Parameter;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Server.Performance
 {

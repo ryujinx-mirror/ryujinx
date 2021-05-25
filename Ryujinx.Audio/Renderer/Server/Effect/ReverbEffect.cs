@@ -56,7 +56,17 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
             return GetSingleBuffer();
         }
 
-        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, ref EffectInParameter parameter, PoolMapper mapper)
+        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, ref EffectInParameterVersion1 parameter, PoolMapper mapper)
+        {
+            Update(out updateErrorInfo, ref parameter, mapper);
+        }
+
+        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, ref EffectInParameterVersion2 parameter, PoolMapper mapper)
+        {
+            Update(out updateErrorInfo, ref parameter, mapper);
+        }
+
+        public void Update<T>(out BehaviourParameter.ErrorInfo updateErrorInfo, ref T parameter, PoolMapper mapper) where T : unmanaged, IEffectInParameter
         {
             Debug.Assert(IsTypeValid(ref parameter));
 

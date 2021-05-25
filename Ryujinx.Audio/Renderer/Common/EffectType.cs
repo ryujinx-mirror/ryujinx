@@ -55,6 +55,11 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// Effect applying a biquad filter.
         /// </summary>
-        BiquadFilter
+        BiquadFilter,
+
+        /// <summary>
+        /// Effect applying a limiter (DRC).
+        /// </summary>
+        Limiter,
     }
 }

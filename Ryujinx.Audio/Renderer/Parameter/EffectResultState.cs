@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,35 +15,29 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Ryujinx.Common.Memory;
+using Ryujinx.Common.Utilities;
+using System;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Audio.Renderer.Parameter.Effect
+namespace Ryujinx.Audio.Renderer.Parameter
 {
     /// <summary>
-    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.BufferMix"/>.
+    /// Effect result state (added in REV9).
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct BufferMixParameter
+    public struct EffectResultState
     {
         /// <summary>
-        /// The input channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// Specific data storage.
         /// </summary>
-        public Array24<byte> Input;
+        private SpecificDataStruct _specificDataStart;
+
+        [StructLayout(LayoutKind.Sequential, Size = 0x80, Pack = 1)]
+        private struct SpecificDataStruct { }
 
         /// <summary>
-        /// The output channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// Specific data changing depending of the type of effect. See also the <see cref="Effect"/> namespace.
         /// </summary>
-        public Array24<byte> Output;
-
-        /// <summary>
-        /// The output volumes of the mixes.
-        /// </summary>
-        public Array24<float> Volumes;
-
-        /// <summary>
-        /// The total count of mixes used.
-        /// </summary>
-        public uint MixesCount;
+        public Span<byte> SpecificData => SpanHelpers.AsSpan<SpecificDataStruct, byte>(ref _specificDataStart);
     }
 }

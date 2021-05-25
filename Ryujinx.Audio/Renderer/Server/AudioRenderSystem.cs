@@ -307,7 +307,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             _upsamplerManager = new UpsamplerManager(upSamplerWorkBuffer, _upsamplerCount);
 
-            _effectContext.Initialize(parameter.EffectCount);
+            _effectContext.Initialize(parameter.EffectCount, _behaviourContext.IsEffectInfoVersion2Supported() ? parameter.EffectCount : 0);
             _sinkContext.Initialize(parameter.SinkCount);
 
             Memory<VoiceUpdateState> voiceUpdateStatesDsp = workBufferAllocator.Allocate<VoiceUpdateState>(parameter.VoiceCount, VoiceUpdateState.Align);
@@ -635,6 +635,11 @@ namespace Ryujinx.Audio.Renderer.Server
             }
 
             _voiceContext.UpdateForCommandGeneration();
+
+            if (_behaviourContext.IsEffectInfoVersion2Supported())
+            {
+                _effectContext.UpdateResultStateForCommandGeneration();
+            }
 
             ulong endTicks = GetSystemTicks();
 

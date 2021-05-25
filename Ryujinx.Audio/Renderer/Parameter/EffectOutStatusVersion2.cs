@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,35 +15,31 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Audio.Renderer.Parameter.Effect
+namespace Ryujinx.Audio.Renderer.Parameter
 {
     /// <summary>
-    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.BufferMix"/>.
+    /// Output information for an effect version 2. (added with REV9)
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct BufferMixParameter
+    public struct EffectOutStatusVersion2 : IEffectOutStatus
     {
         /// <summary>
-        /// The input channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// Current effect state.
         /// </summary>
-        public Array24<byte> Input;
+        public EffectState State;
 
         /// <summary>
-        /// The output channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// Unused/Reserved.
         /// </summary>
-        public Array24<byte> Output;
+        private unsafe fixed byte _reserved[15];
 
         /// <summary>
-        /// The output volumes of the mixes.
+        /// Current result state.
         /// </summary>
-        public Array24<float> Volumes;
+        public EffectResultState ResultState;
 
-        /// <summary>
-        /// The total count of mixes used.
-        /// </summary>
-        public uint MixesCount;
+        EffectState IEffectOutStatus.State { get => State; set => State = value; }
     }
 }

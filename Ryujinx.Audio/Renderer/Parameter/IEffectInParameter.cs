@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,88 +16,55 @@
 //
 
 using Ryujinx.Audio.Renderer.Common;
-using Ryujinx.Common.Utilities;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Audio.Renderer.Parameter
 {
     /// <summary>
-    /// Input information for an effect.
+    /// Generic interface to represent input information for an effect.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct EffectInParameter
+    public interface IEffectInParameter
     {
         /// <summary>
         /// Type of the effect.
         /// </summary>
-        public EffectType Type;
+        EffectType Type { get; }
 
         /// <summary>
         /// Set to true if the effect is new.
         /// </summary>
-        [MarshalAs(UnmanagedType.I1)]
-        public bool IsNew;
+        bool IsNew { get; }
 
         /// <summary>
         /// Set to true if the effect must be active.
         /// </summary>
-        [MarshalAs(UnmanagedType.I1)]
-        public bool IsEnabled;
-
-        /// <summary>
-        /// Reserved/padding.
-        /// </summary>
-        private byte _reserved1;
+        bool IsEnabled { get; }
 
         /// <summary>
         /// The target mix id of the effect.
         /// </summary>
-        public int MixId;
+        int MixId { get; }
 
         /// <summary>
         /// Address of the processing workbuffer.
         /// </summary>
         /// <remarks>This is additional data that could be required by the effect processing.</remarks>
-        public ulong BufferBase;
+        ulong BufferBase { get; }
 
         /// <summary>
         /// Size of the processing workbuffer.
         /// </summary>
         /// <remarks>This is additional data that could be required by the effect processing.</remarks>
-        public ulong BufferSize;
+        ulong BufferSize { get; }
 
         /// <summary>
         /// Position of the effect while processing effects.
         /// </summary>
-        public uint ProcessingOrder;
-
-        /// <summary>
-        /// Reserved/padding.
-        /// </summary>
-        private uint _reserved2;
-
-        /// <summary>
-        /// Specific data storage.
-        /// </summary>
-        private SpecificDataStruct _specificDataStart;
-
-        [StructLayout(LayoutKind.Sequential, Size = 0xA0, Pack = 1)]
-        private struct SpecificDataStruct { }
+        uint ProcessingOrder { get; }
 
         /// <summary>
         /// Specific data changing depending of the <see cref="Type"/>. See also the <see cref="Effect"/> namespace.
         /// </summary>
-        public Span<byte> SpecificData => SpanHelpers.AsSpan<SpecificDataStruct, byte>(ref _specificDataStart);
-
-        /// <summary>
-        ///  Check if the given channel count is valid.
-        /// </summary>
-        /// <param name="channelCount">The channel count to check</param>
-        /// <returns>Returns true if the channel count is valid.</returns>
-        public static bool IsChannelCountValid(int channelCount)
-        {
-            return channelCount == 1 || channelCount == 2 || channelCount == 4 || channelCount == 6;
-        }
+        Span<byte> SpecificData { get; }
     }
 }

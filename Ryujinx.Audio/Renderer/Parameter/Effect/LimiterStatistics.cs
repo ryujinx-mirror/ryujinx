@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,47 +15,34 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Ryujinx.Audio.Renderer.Server.Effect;
 using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Audio.Renderer.Parameter.Effect
 {
     /// <summary>
-    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.BiquadFilter"/>.
+    /// Effect result state for <seealso cref="Common.EffectType.Limiter"/>.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct BiquadFilterEffectParameter
+    public struct LimiterStatistics
     {
         /// <summary>
-        /// The input channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// The max input sample value recorded by the limiter.
         /// </summary>
-        public Array6<byte> Input;
+        public Array6<float> InputMax;
 
         /// <summary>
-        /// The output channel indices that will be used by the <see cref="Dsp.AudioProcessor"/>.
+        /// Compression gain min value.
         /// </summary>
-        public Array6<byte> Output;
+        public Array6<float> CompressionGainMin;
 
         /// <summary>
-        /// Biquad filter numerator (b0, b1, b2).
+        /// Reset the statistics.
         /// </summary>
-        public Array3<short> Numerator;
-
-        /// <summary>
-        /// Biquad filter denominator (a1, a2).
-        /// </summary>
-        /// <remarks>a0 = 1</remarks>
-        public Array2<short> Denominator;
-
-        /// <summary>
-        /// The total channel count used.
-        /// </summary>
-        public byte ChannelCount;
-
-        /// <summary>
-        /// The current usage status of the effect on the client side.
-        /// </summary>
-        public UsageState Status;
+        public void Reset()
+        {
+            InputMax.ToSpan().Fill(0.0f);
+            CompressionGainMin.ToSpan().Fill(1.0f);
+        }
     }
 }

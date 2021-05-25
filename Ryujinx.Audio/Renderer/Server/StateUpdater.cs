@@ -224,7 +224,7 @@ namespace Ryujinx.Audio.Renderer.Server
             return ResultCode.Success;
         }
 
-        private static void ResetEffect(ref BaseEffect effect, ref EffectInParameter parameter, PoolMapper mapper)
+        private static void ResetEffect<T>(ref BaseEffect effect, ref T parameter, PoolMapper mapper) where T: unmanaged, IEffectInParameter
         {
             effect.ForceUnmapBuffers(mapper);
 
@@ -251,6 +251,9 @@ namespace Ryujinx.Audio.Renderer.Server
                 case EffectType.BiquadFilter:
                     effect = new BiquadFilterEffect();
                     break;
+                case EffectType.Limiter:
+                    effect = new LimiterEffect();
+                    break;
                 default:
                     throw new NotImplementedException($"EffectType {parameter.Type} not implemented!");
             }
@@ -258,14 +261,26 @@ namespace Ryujinx.Audio.Renderer.Server
 
         public ResultCode UpdateEffects(EffectContext context, bool isAudioRendererActive, Memory<MemoryPoolState> memoryPools)
         {
-            if (context.GetCount() * Unsafe.SizeOf<EffectInParameter>() != _inputHeader.EffectsSize)
+            if (_behaviourContext.IsEffectInfoVersion2Supported())
+            {
+                return UpdateEffectsVersion2(context, isAudioRendererActive, memoryPools);
+            }
+            else
+            {
+                return UpdateEffectsVersion1(context, isAudioRendererActive, memoryPools);
+            }
+        }
+
+        public ResultCode UpdateEffectsVersion2(EffectContext context, bool isAudioRendererActive, Memory<MemoryPoolState> memoryPools)
+        {
+            if (context.GetCount() * Unsafe.SizeOf<EffectInParameterVersion2>() != _inputHeader.EffectsSize)
             {
                 return ResultCode.InvalidUpdateInfo;
             }
 
             int initialOutputSize = _output.Length;
 
-            ReadOnlySpan<EffectInParameter> parameters = MemoryMarshal.Cast<byte, EffectInParameter>(_input.Slice(0, (int)_inputHeader.EffectsSize).Span);
+            ReadOnlySpan<EffectInParameterVersion2> parameters = MemoryMarshal.Cast<byte, EffectInParameterVersion2>(_input.Slice(0, (int)_inputHeader.EffectsSize).Span);
 
             _input = _input.Slice((int)_inputHeader.EffectsSize);
 
@@ -273,9 +288,65 @@ namespace Ryujinx.Audio.Renderer.Server
 
             for (int i = 0; i < context.GetCount(); i++)
             {
-                EffectInParameter parameter = parameters[i];
+                EffectInParameterVersion2 parameter = parameters[i];
 
-                ref EffectOutStatus outStatus = ref SpanIOHelper.GetWriteRef<EffectOutStatus>(ref _output)[0];
+                ref EffectOutStatusVersion2 outStatus = ref SpanIOHelper.GetWriteRef<EffectOutStatusVersion2>(ref _output)[0];
+
+                ref BaseEffect effect = ref context.GetEffect(i);
+
+                if (!effect.IsTypeValid(ref parameter))
+                {
+                    ResetEffect(ref effect, ref parameter, mapper);
+                }
+
+                effect.Update(out ErrorInfo updateErrorInfo, ref parameter, mapper);
+
+                if (updateErrorInfo.ErrorCode != ResultCode.Success)
+                {
+                    _behaviourContext.AppendError(ref updateErrorInfo);
+                }
+
+                effect.StoreStatus(ref outStatus, isAudioRendererActive);
+
+                if (parameter.IsNew)
+                {
+                    effect.InitializeResultState(ref context.GetDspState(i));
+                    effect.InitializeResultState(ref context.GetState(i));
+                }
+
+                effect.UpdateResultState(ref outStatus.ResultState, ref context.GetState(i));
+            }
+
+            int currentOutputSize = _output.Length;
+
+            OutputHeader.EffectsSize = (uint)(Unsafe.SizeOf<EffectOutStatusVersion2>() * context.GetCount());
+            OutputHeader.TotalSize += OutputHeader.EffectsSize;
+
+            Debug.Assert((initialOutputSize - currentOutputSize) == OutputHeader.EffectsSize);
+
+            return ResultCode.Success;
+        }
+
+        public ResultCode UpdateEffectsVersion1(EffectContext context, bool isAudioRendererActive, Memory<MemoryPoolState> memoryPools)
+        {
+            if (context.GetCount() * Unsafe.SizeOf<EffectInParameterVersion1>() != _inputHeader.EffectsSize)
+            {
+                return ResultCode.InvalidUpdateInfo;
+            }
+
+            int initialOutputSize = _output.Length;
+
+            ReadOnlySpan<EffectInParameterVersion1> parameters = MemoryMarshal.Cast<byte, EffectInParameterVersion1>(_input.Slice(0, (int)_inputHeader.EffectsSize).Span);
+
+            _input = _input.Slice((int)_inputHeader.EffectsSize);
+
+            PoolMapper mapper = new PoolMapper(_processHandle, memoryPools, _behaviourContext.IsMemoryPoolForceMappingEnabled());
+
+            for (int i = 0; i < context.GetCount(); i++)
+            {
+                EffectInParameterVersion1 parameter = parameters[i];
+
+                ref EffectOutStatusVersion1 outStatus = ref SpanIOHelper.GetWriteRef<EffectOutStatusVersion1>(ref _output)[0];
 
                 ref BaseEffect effect = ref context.GetEffect(i);
 
@@ -296,7 +367,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             int currentOutputSize = _output.Length;
 
-            OutputHeader.EffectsSize = (uint)(Unsafe.SizeOf<EffectOutStatus>() * context.GetCount());
+            OutputHeader.EffectsSize = (uint)(Unsafe.SizeOf<EffectOutStatusVersion1>() * context.GetCount());
             OutputHeader.TotalSize += OutputHeader.EffectsSize;
 
             Debug.Assert((initialOutputSize - currentOutputSize) == OutputHeader.EffectsSize);

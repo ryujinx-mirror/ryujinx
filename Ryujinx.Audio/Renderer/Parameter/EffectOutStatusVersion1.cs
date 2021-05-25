@@ -20,27 +20,11 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Audio.Renderer.Parameter
 {
     /// <summary>
-    /// Output information for an effect.
+    /// Output information for an effect version 1.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct EffectOutStatus
+    public struct EffectOutStatusVersion1 : IEffectOutStatus
     {
-        /// <summary>
-        /// The state of an effect.
-        /// </summary>
-        public enum EffectState : byte
-        {
-            /// <summary>
-            /// The effect is enabled.
-            /// </summary>
-            Enabled = 3,
-
-            /// <summary>
-            /// The effect is disabled.
-            /// </summary>
-            Disabled = 4
-        }
-
         /// <summary>
         /// Current effect state.
         /// </summary>
@@ -50,5 +34,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// Unused/Reserved.
         /// </summary>
         private unsafe fixed byte _reserved[15];
+
+        EffectState IEffectOutStatus.State { get => State; set => State = value; }
     }
 }

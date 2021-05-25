@@ -48,5 +48,7 @@ namespace Ryujinx.Audio.Renderer.Server
         uint Estimate(DeviceSinkCommand command);
         uint Estimate(DownMixSurroundToStereoCommand command);
         uint Estimate(UpsampleCommand command);
+        uint Estimate(LimiterCommandVersion1 command);
+        uint Estimate(LimiterCommandVersion2 command);
     }
 }

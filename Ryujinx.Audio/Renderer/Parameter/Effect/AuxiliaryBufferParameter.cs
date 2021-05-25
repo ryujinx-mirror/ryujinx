@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Audio.Renderer.Parameter.Effect
 {
     /// <summary>
-    /// <see cref="EffectInParameter.SpecificData"/> for <see cref="Common.EffectType.AuxiliaryBuffer"/>.
+    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.AuxiliaryBuffer"/>.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AuxiliaryBufferParameter

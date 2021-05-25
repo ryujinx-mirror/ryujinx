@@ -90,9 +90,17 @@ namespace Ryujinx.Audio.Renderer.Server
         public const int Revision8 = 8 << 24;
 
         /// <summary>
+        /// REV9:
+        /// EffectInfo parameters were revisited with a new revision (version 2) allowing more data control between the client and server.
+        /// A new effect was added: Limiter. This effect is effectively implemented with a DRC while providing statistics on the processing on <see cref="Parameter.EffectOutStatusVersion2"/>.
+        /// </summary>
+        /// <remarks>This was added in system update 12.0.0</remarks>
+        public const int Revision9 = 9 << 24;
+
+        /// <summary>
         /// Last revision supported by the implementation.
         /// </summary>
-        public const int LastRevision = Revision8;
+        public const int LastRevision = Revision9;
 
         /// <summary>
         /// Target revision magic supported by the implementation.
@@ -328,6 +336,15 @@ namespace Ryujinx.Audio.Renderer.Server
         public bool IsWaveBufferVersion2Supported()
         {
             return CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision8);
+        }
+
+        /// <summary>
+        /// Check if the audio renderer should use the new effect info format.
+        /// </summary>
+        /// <returns>True if the audio renderer should use the new effect info format.</returns>
+        public bool IsEffectInfoVersion2Supported()
+        {
+            return CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision9);
         }
 
         /// <summary>
