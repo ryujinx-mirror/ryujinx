@@ -1,12 +1,14 @@
 using ARMeilleure.Common;
 using ARMeilleure.Decoders;
+using ARMeilleure.Diagnostics;
 using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Memory;
 using ARMeilleure.State;
-using ARMeilleure.Translation.Cache;
+using ARMeilleure.Translation.PTC;
+using System;
 using System.Collections.Generic;
-
+using System.Reflection;
 using static ARMeilleure.IntermediateRepresentation.OperandHelper;
 
 namespace ARMeilleure.Translation
@@ -41,8 +43,11 @@ namespace ARMeilleure.Translation
 
         public IMemoryManager Memory { get; }
 
-        public JumpTable JumpTable { get; }
+        public bool HasPtc { get; }
+
         public EntryTable<uint> CountTable { get; }
+        public AddressTable<ulong> FunctionTable { get; }
+        public TranslatorStubs Stubs { get; }
 
         public ulong EntryAddress { get; }
         public bool HighCq { get; }
@@ -50,20 +55,44 @@ namespace ARMeilleure.Translation
 
         public ArmEmitterContext(
             IMemoryManager memory,
-            JumpTable jumpTable,
             EntryTable<uint> countTable,
+            AddressTable<ulong> funcTable,
+            TranslatorStubs stubs,
             ulong entryAddress,
             bool highCq,
             Aarch32Mode mode)
         {
+            HasPtc = Ptc.State != PtcState.Disabled;
             Memory = memory;
-            JumpTable = jumpTable;
             CountTable = countTable;
+            FunctionTable = funcTable;
+            Stubs = stubs;
             EntryAddress = entryAddress;
             HighCq = highCq;
             Mode = mode;
 
             _labels = new Dictionary<ulong, Operand>();
+        }
+
+        public override Operand Call(MethodInfo info, params Operand[] callArgs)
+        {
+            if (!HasPtc)
+            {
+                return base.Call(info, callArgs);
+            }
+            else
+            {
+                int index = Delegates.GetDelegateIndex(info);
+                IntPtr funcPtr = Delegates.GetDelegateFuncPtrByIndex(index);
+
+                OperandType returnType = GetOperandType(info.ReturnType);
+
+                Symbol symbol = new Symbol(SymbolType.DelegateTable, (ulong)index);
+
+                Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
+
+                return Call(Const(funcPtr.ToInt64(), symbol), returnType, callArgs);
+            }
         }
 
         public Operand GetLabel(ulong address)

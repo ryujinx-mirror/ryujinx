@@ -66,7 +66,11 @@ namespace ARMeilleure.State
             }
         }
 
-        public bool Running { get; private set; }
+        public bool Running
+        {
+            get => _nativeContext.GetRunning();
+            private set => _nativeContext.SetRunning(value);
+        }
 
         public event EventHandler<EventArgs>              Interrupt;
         public event EventHandler<InstExceptionEventArgs> Break;
@@ -78,7 +82,6 @@ namespace ARMeilleure.State
             _hostTickFreq = 1.0 / Stopwatch.Frequency;
 
             _tickCounter = new Stopwatch();
-
             _tickCounter.Start();
         }
 
@@ -138,6 +141,7 @@ namespace ARMeilleure.State
         public void StopRunning()
         {
             Running = false;
+
             _nativeContext.SetCounter(0);
         }
 

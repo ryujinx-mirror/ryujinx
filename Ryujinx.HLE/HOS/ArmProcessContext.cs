@@ -3,7 +3,6 @@ using ARMeilleure.State;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.Memory;
-using System;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -14,7 +13,7 @@ namespace Ryujinx.HLE.HOS
 
         public IVirtualMemoryManager AddressSpace => _memoryManager;
 
-        public ArmProcessContext(T memoryManager)
+        public ArmProcessContext(T memoryManager, bool for64Bit)
         {
             if (memoryManager is IRefCounted rc)
             {
@@ -22,7 +21,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             _memoryManager = memoryManager;
-            _cpuContext = new CpuContext(memoryManager);
+            _cpuContext = new CpuContext(memoryManager, for64Bit);
         }
 
         public void Execute(ExecutionContext context, ulong codeAddress)

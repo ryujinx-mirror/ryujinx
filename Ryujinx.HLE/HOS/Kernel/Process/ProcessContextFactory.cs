@@ -1,11 +1,10 @@
-﻿using Ryujinx.Cpu;
-using Ryujinx.Memory;
+﻿using Ryujinx.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     class ProcessContextFactory : IProcessContextFactory
     {
-        public IProcessContext Create(KernelContext context, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler)
+        public IProcessContext Create(KernelContext context, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler, bool for64Bit)
         {
             return new ProcessContext(new AddressSpaceManager(addressSpaceSize));
         }

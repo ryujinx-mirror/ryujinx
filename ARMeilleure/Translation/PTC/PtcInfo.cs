@@ -30,7 +30,8 @@ namespace ARMeilleure.Translation.PTC
         public void WriteRelocEntry(RelocEntry relocEntry)
         {
             _relocWriter.Write((int)relocEntry.Position);
-            _relocWriter.Write((int)relocEntry.Index);
+            _relocWriter.Write((byte)relocEntry.Symbol.Type);
+            _relocWriter.Write((ulong)relocEntry.Symbol.Value);
 
             RelocEntriesCount++;
         }

@@ -242,23 +242,6 @@ namespace ARMeilleure.Instructions
             return (ulong)function.FuncPtr.ToInt64();
         }
 
-        public static ulong GetIndirectFunctionAddress(ulong address, ulong entryAddress)
-        {
-            TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
-
-            ulong ptr = (ulong)function.FuncPtr.ToInt64();
-
-            if (function.HighCq)
-            {
-                Debug.Assert(Context.Translator.JumpTable.CheckEntryFromAddressDynamicTable((IntPtr)entryAddress));
-
-                // Rewrite the host function address in the table to point to the highCq function.
-                Marshal.WriteInt64((IntPtr)entryAddress, 8, (long)ptr);
-            }
-
-            return ptr;
-        }
-
         public static bool CheckSynchronization()
         {
             Statistics.PauseTimer();

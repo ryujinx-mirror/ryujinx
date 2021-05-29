@@ -168,7 +168,7 @@ namespace ARMeilleure.Common
         }
 
         /// <summary>
-        /// Releases all unmanaged and optionally managed resources used by the <see cref="EntryTable{TEntry}{T}"/>
+        /// Releases all unmanaged and optionally managed resources used by the <see cref="EntryTable{TEntry}"/>
         /// instance.
         /// </summary>
         /// <param name="disposing"><see langword="true"/> to dispose managed resources also; otherwise just unmanaged resouces</param>

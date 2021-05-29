@@ -963,8 +963,6 @@ namespace ARMeilleure.CodeGen.X86
                     }
                     else if (dest?.Kind == OperandKind.Register && info.OpRImm64 != BadOp)
                     {
-                        int? index = source.PtcIndex;
-
                         int rexPrefix = GetRexPrefix(dest, source, type, rrm: false);
 
                         if (rexPrefix != 0)
@@ -974,9 +972,9 @@ namespace ARMeilleure.CodeGen.X86
 
                         WriteByte((byte)(info.OpRImm64 + (dest.GetRegister().Index & 0b111)));
 
-                        if (_ptcInfo != null && index != null)
+                        if (_ptcInfo != null && source.Relocatable)
                         {
-                            _ptcInfo.WriteRelocEntry(new RelocEntry((int)_stream.Position, (int)index));
+                            _ptcInfo.WriteRelocEntry(new RelocEntry((int)_stream.Position, source.Symbol));
                         }
 
                         WriteUInt64(imm);

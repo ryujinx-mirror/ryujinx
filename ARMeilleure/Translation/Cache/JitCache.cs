@@ -25,6 +25,8 @@ namespace ARMeilleure.Translation.Cache
         private static readonly object _lock = new object();
         private static bool _initialized;
 
+        public static IntPtr Base => _jitRegion.Pointer;
+
         public static void Initialize(IJitMemoryAllocator allocator)
         {
             if (_initialized) return;

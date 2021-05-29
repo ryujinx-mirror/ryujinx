@@ -9,19 +9,19 @@ namespace Ryujinx.HLE.HOS
 {
     class ArmProcessContextFactory : IProcessContextFactory
     {
-        public IProcessContext Create(KernelContext context, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler)
+        public IProcessContext Create(KernelContext context, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler, bool for64Bit)
         {
             MemoryManagerMode mode = context.Device.Configuration.MemoryManagerMode;
 
             switch (mode)
             {
                 case MemoryManagerMode.SoftwarePageTable:
-                    return new ArmProcessContext<MemoryManager>(new MemoryManager(addressSpaceSize, invalidAccessHandler));
+                    return new ArmProcessContext<MemoryManager>(new MemoryManager(addressSpaceSize, invalidAccessHandler), for64Bit);
 
                 case MemoryManagerMode.HostMapped:
                 case MemoryManagerMode.HostMappedUnsafe:
                     bool unsafeMode = mode == MemoryManagerMode.HostMappedUnsafe;
-                    return new ArmProcessContext<MemoryManagerHostMapped>(new MemoryManagerHostMapped(addressSpaceSize, unsafeMode, invalidAccessHandler));
+                    return new ArmProcessContext<MemoryManagerHostMapped>(new MemoryManagerHostMapped(addressSpaceSize, unsafeMode, invalidAccessHandler), for64Bit);
 
                 default:
                     throw new ArgumentOutOfRangeException();

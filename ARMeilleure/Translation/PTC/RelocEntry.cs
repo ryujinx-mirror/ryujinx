@@ -2,20 +2,20 @@ namespace ARMeilleure.Translation.PTC
 {
     struct RelocEntry
     {
-        public const int Stride = 8; // Bytes.
+        public const int Stride = 13; // Bytes.
 
         public int Position;
-        public int Index;
+        public Symbol Symbol;
 
-        public RelocEntry(int position, int index)
+        public RelocEntry(int position, Symbol symbol)
         {
             Position = position;
-            Index    = index;
+            Symbol = symbol;
         }
 
         public override string ToString()
         {
-            return $"({nameof(Position)} = {Position}, {nameof(Index)} = {Index})";
+            return $"({nameof(Position)} = {Position}, {nameof(Symbol)} = {Symbol})";
         }
     }
 }

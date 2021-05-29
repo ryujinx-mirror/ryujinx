@@ -1049,7 +1049,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 _ => 39
             };
 
-            Context = _contextFactory.Create(KernelContext, 1UL << addrSpaceBits, InvalidAccessHandler);
+            bool for64Bit = flags.HasFlag(ProcessCreationFlags.Is64Bit);
+
+            Context = _contextFactory.Create(KernelContext, 1UL << addrSpaceBits, InvalidAccessHandler, for64Bit);
 
             // TODO: This should eventually be removed.
             // The GPU shouldn't depend on the CPU memory manager at all.

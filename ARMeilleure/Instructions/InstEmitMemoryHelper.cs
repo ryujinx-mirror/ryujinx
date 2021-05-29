@@ -327,9 +327,9 @@ namespace ARMeilleure.Instructions
             Operand addrRotated = size != 0 ? context.RotateRight(address, Const(size)) : address;
             Operand addrShifted = context.ShiftRightUI(addrRotated, Const(PageBits - size));
 
-            Operand pte = Ptc.State == PtcState.Disabled
+            Operand pte = !context.HasPtc
                 ? Const(context.Memory.PageTablePointer.ToInt64())
-                : Const(context.Memory.PageTablePointer.ToInt64(), true, Ptc.PageTablePointerIndex);
+                : Const(context.Memory.PageTablePointer.ToInt64(), Ptc.PageTableSymbol);
 
             Operand pteOffset = context.BitwiseAnd(addrShifted, Const(addrShifted.Type, ptLevelMask));
 
@@ -411,9 +411,9 @@ namespace ARMeilleure.Instructions
                 address = context.BitwiseAnd(address, mask);
             }
 
-            Operand baseAddr = Ptc.State == PtcState.Disabled
+            Operand baseAddr = !context.HasPtc
                 ? Const(context.Memory.PageTablePointer.ToInt64())
-                : Const(context.Memory.PageTablePointer.ToInt64(), true, Ptc.PageTablePointerIndex);
+                : Const(context.Memory.PageTablePointer.ToInt64(), Ptc.PageTableSymbol);
 
             return context.Add(baseAddr, address);
         }

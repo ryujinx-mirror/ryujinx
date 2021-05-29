@@ -150,21 +150,70 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitJumpTableBranch(context, Const(immediate), isJump: false);
+                EmitTableBranch(context, Const(immediate), isJump: false);
             }
         }
 
-        private static void EmitNativeCall(ArmEmitterContext context, Operand nativeContextPtr, Operand funcAddr, bool isJump)
+        public static void EmitVirtualCall(ArmEmitterContext context, Operand target)
         {
+            EmitTableBranch(context, target, isJump: false);
+        }
+
+        public static void EmitVirtualJump(ArmEmitterContext context, Operand target, bool isReturn)
+        {
+            if (isReturn)
+            {
+                context.Return(target);
+            }
+            else
+            {
+                EmitTableBranch(context, target, isJump: true);
+            }
+        }
+
+        private static void EmitTableBranch(ArmEmitterContext context, Operand guestAddress, bool isJump)
+        {
+            context.StoreToContext();
+
+            if (guestAddress.Type == OperandType.I32)
+            {
+                guestAddress = context.ZeroExtend32(OperandType.I64, guestAddress);
+            }
+
+            // Store the target guest address into the native context. The stubs uses this address to dispatch into the
+            // next translation.
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+            Operand dispAddressAddr = context.Add(nativeContext, Const((ulong)NativeContext.GetDispatchAddressOffset()));
+            context.Store(dispAddressAddr, guestAddress);
+
+            Operand hostAddress;
+
+            // If address is mapped onto the function table, we can skip the table walk. Otherwise we fallback
+            // onto the dispatch stub.
+            if (guestAddress.Kind == OperandKind.Constant && context.FunctionTable.IsValid(guestAddress.Value))
+            {
+                Operand hostAddressAddr = !context.HasPtc ?
+                    Const(ref context.FunctionTable.GetValue(guestAddress.Value)) :
+                    Const(ref context.FunctionTable.GetValue(guestAddress.Value), new Symbol(SymbolType.FunctionTable, guestAddress.Value));
+
+                hostAddress = context.Load(OperandType.I64, hostAddressAddr);
+            }
+            else
+            {
+                hostAddress = !context.HasPtc ?
+                    Const((long)context.Stubs.DispatchStub) :
+                    Const((long)context.Stubs.DispatchStub, Ptc.DispatchStubSymbol);
+            }
+
             if (isJump)
             {
-                context.Tailcall(funcAddr, nativeContextPtr);
+                context.Tailcall(hostAddress, nativeContext);
             }
             else
             {
                 OpCode op = context.CurrOp;
 
-                Operand returnAddress = context.Call(funcAddr, OperandType.I64, nativeContextPtr);
+                Operand returnAddress = context.Call(hostAddress, OperandType.I64, nativeContext);
 
                 context.LoadFromContext();
 
@@ -177,202 +226,9 @@ namespace ARMeilleure.Instructions
                 // If the return address isn't to our next instruction, we need to return so the JIT can figure out
                 // what to do.
                 Operand lblContinue = context.GetLabel(nextAddr.Value);
-
-                // We need to clear out the call flag for the return address before comparing it.
                 context.BranchIf(lblContinue, returnAddress, nextAddr, Comparison.Equal, BasicBlockFrequency.Cold);
 
                 context.Return(returnAddress);
-            }
-        }
-
-        private static void EmitNativeCall(ArmEmitterContext context, Operand funcAddr, bool isJump)
-        {
-            EmitNativeCall(context, context.LoadArgument(OperandType.I64, 0), funcAddr, isJump);
-        }
-
-        public static void EmitVirtualCall(ArmEmitterContext context, Operand target)
-        {
-            EmitJumpTableBranch(context, target, isJump: false);
-        }
-
-        public static void EmitVirtualJump(ArmEmitterContext context, Operand target, bool isReturn)
-        {
-            if (isReturn)
-            {
-                context.Return(target);
-            }
-            else
-            {
-                EmitJumpTableBranch(context, target, isJump: true);
-            }
-        }
-
-        public static void EmitTailContinue(ArmEmitterContext context, Operand address)
-        {
-            // Left option here as it may be useful if we need to return to managed rather than tail call in future.
-            // (eg. for debug)
-            bool useTailContinue = true;
-
-            if (useTailContinue)
-            {
-                if (context.HighCq)
-                {
-                    // If we're doing a tail continue in HighCq, reserve a space in the jump table to avoid calling back
-                    // to the translator. This will always try to get a HighCq version of our continue target as well.
-                    EmitJumpTableBranch(context, address, isJump: true);
-                }
-                else
-                {
-                    context.StoreToContext();
-
-                    Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
-
-                    EmitNativeCall(context, fallbackAddr, isJump: true);
-                }
-            }
-            else
-            {
-                context.Return(address);
-            }
-        }
-
-        private static void EmitNativeCallWithGuestAddress(ArmEmitterContext context, Operand funcAddr, Operand guestAddress, bool isJump)
-        {
-            Operand nativeContextPtr = context.LoadArgument(OperandType.I64, 0);
-            context.Store(context.Add(nativeContextPtr, Const((long)NativeContext.GetCallAddressOffset())), guestAddress);
-
-            EmitNativeCall(context, nativeContextPtr, funcAddr, isJump);
-        }
-
-        private static void EmitBranchFallback(ArmEmitterContext context, Operand address, bool isJump)
-        {
-            Operand fallbackAddr = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), address);
-
-            EmitNativeCall(context, fallbackAddr, isJump);
-        }
-
-        private static void EmitDynamicTableCall(ArmEmitterContext context, Operand tableAddress, Operand address, bool isJump)
-        {
-            // Loop over elements of the dynamic table. Unrolled loop.
-
-            Operand endLabel = Label();
-            Operand fallbackLabel = Label();
-
-            void EmitTableEntry(Operand entrySkipLabel)
-            {
-                // Try to take this entry in the table if its guest address equals 0.
-                Operand gotResult = context.CompareAndSwap(tableAddress, Const(0L), address);
-
-                // Is the address ours? (either taken via CompareAndSwap (0), or what was already here)
-                context.BranchIfFalse(entrySkipLabel,
-                    context.BitwiseOr(
-                        context.ICompareEqual(gotResult, address),
-                        context.ICompareEqual(gotResult, Const(0L)))
-                );
-
-                // It's ours, so what function is it pointing to?
-                Operand targetFunctionPtr = context.Add(tableAddress, Const(8L));
-                Operand targetFunction = context.Load(OperandType.I64, targetFunctionPtr);
-
-                // Call the function.
-                // We pass in the entry address as the guest address, as the entry may need to be updated by the
-                // indirect call stub.
-                EmitNativeCallWithGuestAddress(context, targetFunction, tableAddress, isJump);
-
-                context.Branch(endLabel);
-            }
-
-            // Currently this uses a size of 1, as higher values inflate code size for no real benefit.
-            for (int i = 0; i < JumpTable.DynamicTableElems; i++)
-            {
-                if (i == JumpTable.DynamicTableElems - 1)
-                {
-                    // If this is the last entry, avoid emitting the additional label and add.
-                    EmitTableEntry(fallbackLabel);
-                }
-                else
-                {
-                    Operand nextLabel = Label();
-
-                    EmitTableEntry(nextLabel);
-
-                    context.MarkLabel(nextLabel);
-
-                    // Move to the next table entry.
-                    tableAddress = context.Add(tableAddress, Const((long)JumpTable.JumpTableStride));
-                }
-            }
-
-            context.MarkLabel(fallbackLabel);
-
-            EmitBranchFallback(context, address, isJump);
-
-            context.MarkLabel(endLabel);
-        }
-
-        private static void EmitJumpTableBranch(ArmEmitterContext context, Operand address, bool isJump)
-        {
-            if (address.Type == OperandType.I32)
-            {
-                address = context.ZeroExtend32(OperandType.I64, address);
-            }
-
-            context.StoreToContext();
-
-            // TODO: Constant folding. Indirect calls are slower in the best case and emit more code so we want to
-            // avoid them when possible.
-            bool isConst = address.Kind == OperandKind.Constant;
-            ulong constAddr = address.Value;
-
-            if (!context.HighCq)
-            {
-                // Don't emit indirect calls or jumps if we're compiling in lowCq mode. This avoids wasting space on the
-                // jump and indirect tables. Just ask the translator for the function address.
-                EmitBranchFallback(context, address, isJump);
-            }
-            else if (!isConst)
-            {
-                // Virtual branch/call - store first used addresses on a small table for fast lookup.
-                int entry = context.JumpTable.ReserveDynamicEntry(context.EntryAddress, isJump);
-
-                int jumpOffset = entry * JumpTable.JumpTableStride * JumpTable.DynamicTableElems;
-
-                Operand dynTablePtr;
-
-                if (Ptc.State == PtcState.Disabled)
-                {
-                    dynTablePtr = Const(context.JumpTable.DynamicPointer.ToInt64() + jumpOffset);
-                }
-                else
-                {
-                    dynTablePtr = Const(context.JumpTable.DynamicPointer.ToInt64(), true, Ptc.DynamicPointerIndex);
-                    dynTablePtr = context.Add(dynTablePtr, Const((long)jumpOffset));
-                }
-
-                EmitDynamicTableCall(context, dynTablePtr, address, isJump);
-            }
-            else
-            {
-                int entry = context.JumpTable.ReserveTableEntry(context.EntryAddress, constAddr, isJump);
-
-                int jumpOffset = entry * JumpTable.JumpTableStride + 8; // Offset directly to the host address.
-
-                Operand tableEntryPtr;
-
-                if (Ptc.State == PtcState.Disabled)
-                {
-                    tableEntryPtr = Const(context.JumpTable.JumpPointer.ToInt64() + jumpOffset);
-                }
-                else
-                {
-                    tableEntryPtr = Const(context.JumpTable.JumpPointer.ToInt64(), true, Ptc.JumpPointerIndex);
-                    tableEntryPtr = context.Add(tableEntryPtr, Const((long)jumpOffset));
-                }
-
-                Operand funcAddr = context.Load(OperandType.I64, tableEntryPtr);
-
-                // Call the function directly. If it's not present yet, this will call the direct call stub.
-                EmitNativeCallWithGuestAddress(context, funcAddr, address, isJump);
             }
         }
     }

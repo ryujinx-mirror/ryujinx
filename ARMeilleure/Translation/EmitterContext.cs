@@ -97,33 +97,18 @@ namespace ARMeilleure.Translation
             return Add(Instruction.ByteSwap, Local(op1.Type), op1);
         }
 
-        public Operand Call(MethodInfo info, params Operand[] callArgs)
+        public virtual Operand Call(MethodInfo info, params Operand[] callArgs)
         {
-            if (Ptc.State == PtcState.Disabled)
-            {
-                IntPtr funcPtr = Delegates.GetDelegateFuncPtr(info);
+            IntPtr funcPtr = Delegates.GetDelegateFuncPtr(info);
 
-                OperandType returnType = GetOperandType(info.ReturnType);
+            OperandType returnType = GetOperandType(info.ReturnType);
 
-                Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
+            Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
 
-                return Call(Const(funcPtr.ToInt64()), returnType, callArgs);
-            }
-            else
-            {
-                int index = Delegates.GetDelegateIndex(info);
-
-                IntPtr funcPtr = Delegates.GetDelegateFuncPtrByIndex(index);
-
-                OperandType returnType = GetOperandType(info.ReturnType);
-
-                Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
-
-                return Call(Const(funcPtr.ToInt64(), true, index), returnType, callArgs);
-            }
+            return Call(Const(funcPtr.ToInt64()), returnType, callArgs);
         }
 
-        private static OperandType GetOperandType(Type type)
+        protected static OperandType GetOperandType(Type type)
         {
             if (type == typeof(bool)   || type == typeof(byte)  ||
                 type == typeof(char)   || type == typeof(short) ||
