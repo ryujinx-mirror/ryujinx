@@ -333,8 +333,8 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             KernelResult result = _syscall.GetThreadCoreMask(handle, out preferredCore, out long affinityMask);
 
-            affinityMaskLow = (int)(affinityMask >> 32);
-            affinityMaskHigh = (int)(affinityMask & uint.MaxValue);
+            affinityMaskLow = (int)(affinityMask & uint.MaxValue);
+            affinityMaskHigh = (int)(affinityMask >> 32);
 
             return result;
         }
