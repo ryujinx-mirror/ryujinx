@@ -167,17 +167,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     return true;
                 }
 
-                if (middle + 1 < image.Symbols.Length)
-                {
-                    ElfSymbol next = image.Symbols[middle + 1];
-                    
-                    // If our symbol points inbetween two symbols, we can *guess* that it's referring to the first one
-                    if (address >= symbol.Value && address < next.Value)
-                    {
-                        return true;
-                    }
-                }
-
                 if (address < symbol.Value)
                 {
                     right = middle - 1;
