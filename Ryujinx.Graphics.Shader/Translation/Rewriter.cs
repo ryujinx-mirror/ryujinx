@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
                 {
-                    if (!(node.Value is Operation operation))
+                    if (node.Value is not Operation operation)
                     {
                         continue;
                     }
@@ -33,11 +33,11 @@ namespace Ryujinx.Graphics.Shader.Translation
                         if (texOp.Inst == Instruction.TextureSample)
                         {
                             node = RewriteTextureSample(node, config);
-                        }
 
-                        if (texOp.Type == SamplerType.TextureBuffer)
-                        {
-                            node = InsertSnormNormalization(node, config);
+                            if (texOp.Type == SamplerType.TextureBuffer)
+                            {
+                                node = InsertSnormNormalization(node, config);
+                            }
                         }
                     }
                 }
@@ -147,14 +147,15 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.GpuAccessor.QuerySupportsNonConstantTextureOffset();
 
-            bool isRect = config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle, texOp.CbufSlot);
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+
+            bool isRect = !isBindless && config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle, texOp.CbufSlot);
 
             if (!(hasInvalidOffset || isRect))
             {
                 return node;
             }
-
-            bool isBindless     = (texOp.Flags & TextureFlags.Bindless)    != 0;
+            
             bool isGather       = (texOp.Flags & TextureFlags.Gather)      != 0;
             bool hasDerivatives = (texOp.Flags & TextureFlags.Derivatives) != 0;
             bool intCoords      = (texOp.Flags & TextureFlags.IntCoords)   != 0;
@@ -442,6 +443,13 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             TextureOperation texOp = (TextureOperation)node.Value;
 
+            // We can't query the format of a bindless texture,
+            // because the handle is unknown, it can have any format.
+            if (texOp.Flags.HasFlag(TextureFlags.Bindless))
+            {
+                return node;
+            }
+
             TextureFormat format = config.GpuAccessor.QueryTextureFormat(texOp.Handle, texOp.CbufSlot);
 
             int maxPositive = format switch
@@ -455,13 +463,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                 _                               => 0
             };
 
-            // The value being 0 means that the format is not a SNORM format, so there's nothing to do here.
+            // The value being 0 means that the format is not a SNORM format,
+            // so there's nothing to do here.
             if (maxPositive == 0)
             {
                 return node;
             }
 
-            // Do normalization. We assume SINT formats are being used as replacement for SNORM (that is not supported).
+            // Do normalization. We assume SINT formats are being used
+            // as replacement for SNORM (which is not supported).
             INode[] uses = texOp.Dest.UseOps.ToArray();
 
             Operation convOp = new Operation(Instruction.ConvertS32ToFP, Local(), texOp.Dest);
@@ -472,7 +482,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             foreach (INode useOp in uses)
             {
-                if (!(useOp is Operation op))
+                if (useOp is not Operation op)
                 {
                     continue;
                 }

@@ -365,7 +365,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
 
                     _context.Methods.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, format, true);
-                } 
+                }
                 else if (isStore)
                 {
                     texture?.SignalModified();
