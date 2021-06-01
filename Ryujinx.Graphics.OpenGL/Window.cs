@@ -1,4 +1,3 @@
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
@@ -39,11 +38,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void CopyTextureToFrameBufferRGB(int drawFramebuffer, int readFramebuffer, TextureView view, ImageCrop crop)
         {
-            bool[] oldFramebufferColorWritemask = new bool[4];
-
             (int oldDrawFramebufferHandle, int oldReadFramebufferHandle) = ((Pipeline)_renderer.Pipeline).GetBoundFramebuffers();
-
-            GL.GetBoolean(GetIndexedPName.ColorWritemask, drawFramebuffer, oldFramebufferColorWritemask);
 
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, drawFramebuffer);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, readFramebuffer);
@@ -124,13 +119,14 @@ namespace Ryujinx.Graphics.OpenGL
                 BlitFramebufferFilter.Linear);
 
             // Remove Alpha channel
-            GL.ColorMask(drawFramebuffer, false, false, false, true);
-            GL.ClearBuffer(ClearBuffer.Color, drawFramebuffer, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
-            GL.ColorMask(drawFramebuffer,
-                oldFramebufferColorWritemask[0],
-                oldFramebufferColorWritemask[1],
-                oldFramebufferColorWritemask[2],
-                oldFramebufferColorWritemask[3]);
+            GL.ColorMask(false, false, false, true);
+            GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            for (int i = 0; i < Constants.MaxRenderTargets; i++)
+            {
+                ((Pipeline)_renderer.Pipeline).RestoreComponentMask(i);
+            }
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);

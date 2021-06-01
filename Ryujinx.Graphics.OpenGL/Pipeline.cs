@@ -1232,7 +1232,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        private void RestoreComponentMask(int index)
+        public void RestoreComponentMask(int index)
         {
             // If the bound render target is bgra, swap the red and blue masks.
             uint redMask = _fpIsBgra[index] == 0 ? 1u : 4u;
