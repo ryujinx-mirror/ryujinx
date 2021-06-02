@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ryujinx.SDL2-CS" Version="2.0.15-build9" />
+    <PackageReference Include="Ryujinx.SDL2-CS" Version="2.0.15-build11" />
   </ItemGroup>
 
   <ItemGroup>
