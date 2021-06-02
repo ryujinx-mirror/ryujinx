@@ -278,7 +278,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 OpCode op = makeOp(emitter, opAddress, opCode);
 
                 // We check these patterns to figure out the presence of bindless access
-                hasBindless |= (op is OpCodeImage image && image.IsBindless) || 
+                hasBindless |= (op is OpCodeImage image && image.IsBindless) ||
                     (op is OpCodeTxd txd && txd.IsBindless) ||
                     (op is OpCodeTld4B) ||
                     (emitter == InstEmit.TexB) ||
@@ -318,6 +318,12 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     opCode is OpCodeExit;
         }
 
+        private enum MergeType
+        {
+            Brk = 0,
+            Sync = 1
+        }
+
         private struct PathBlockState
         {
             public Block Block { get; }
@@ -332,35 +338,39 @@ namespace Ryujinx.Graphics.Shader.Decoders
             private RestoreType _restoreType;
 
             private ulong _restoreValue;
+            private MergeType _restoreMergeType;
 
             public bool ReturningFromVisit => _restoreType != RestoreType.None;
 
             public PathBlockState(Block block)
             {
-                Block         = block;
-                _restoreType  = RestoreType.None;
-                _restoreValue = 0;
+                Block             = block;
+                _restoreType      = RestoreType.None;
+                _restoreValue     = 0;
+                _restoreMergeType = default;
             }
 
             public PathBlockState(int oldStackSize)
             {
-                Block         = null;
-                _restoreType  = RestoreType.PopPushOp;
-                _restoreValue = (ulong)oldStackSize;
+                Block             = null;
+                _restoreType      = RestoreType.PopPushOp;
+                _restoreValue     = (ulong)oldStackSize;
+                _restoreMergeType = default;
             }
 
-            public PathBlockState(ulong syncAddress)
+            public PathBlockState(ulong syncAddress, MergeType mergeType)
             {
-                Block         = null;
-                _restoreType  = RestoreType.PushBranchOp;
-                _restoreValue = syncAddress;
+                Block             = null;
+                _restoreType      = RestoreType.PushBranchOp;
+                _restoreValue     = syncAddress;
+                _restoreMergeType = mergeType;
             }
 
-            public void RestoreStackState(Stack<ulong> branchStack)
+            public void RestoreStackState(Stack<(ulong, MergeType)> branchStack)
             {
                 if (_restoreType == RestoreType.PushBranchOp)
                 {
-                    branchStack.Push(_restoreValue);
+                    branchStack.Push((_restoreValue, _restoreMergeType));
                 }
                 else if (_restoreType == RestoreType.PopPushOp)
                 {
@@ -380,7 +390,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             HashSet<Block> visited = new HashSet<Block>();
 
-            Stack<ulong> branchStack = new Stack<ulong>();
+            Stack<(ulong, MergeType)> branchStack = new Stack<(ulong, MergeType)>();
 
             void Push(PathBlockState pbs)
             {
@@ -426,7 +436,9 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                     for (int index = pushOpIndex; index < pushOpsCount; index++)
                     {
-                        branchStack.Push(current.PushOpCodes[index].GetAbsoluteAddress());
+                        OpCodePush currentPushOp = current.PushOpCodes[index];
+                        MergeType pushMergeType = currentPushOp.Emitter == InstEmit.Ssy ? MergeType.Sync : MergeType.Brk;
+                        branchStack.Push((currentPushOp.GetAbsoluteAddress(), pushMergeType));
                     }
                 }
 
@@ -452,24 +464,48 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
                 else if (current.GetLastOp() is OpCodeBranchPop op)
                 {
-                    ulong targetAddress = branchStack.Pop();
+                    MergeType popMergeType = op.Emitter == InstEmit.Sync ? MergeType.Sync : MergeType.Brk;
 
-                    if (branchStack.Count == 0)
+                    bool found = true;
+                    ulong targetAddress = 0UL;
+                    MergeType mergeType;
+
+                    do
                     {
-                        branchStack.Push(targetAddress);
+                        if (branchStack.Count == 0)
+                        {
+                            found = false;
+                            break;
+                        }
 
-                        op.Targets.Add(pushOp, op.Targets.Count);
+                        (targetAddress, mergeType) = branchStack.Pop();
 
-                        pushOp.PopOps.TryAdd(op, Local());
+                        // Push the target address (this will be used to push the address
+                        // back into the SSY/PBK stack when we return from that block),
+                        Push(new PathBlockState(targetAddress, mergeType));
                     }
-                    else
+                    while (mergeType != popMergeType);
+
+                    // Make sure we found the correct address,
+                    // the push and pop instruction types must match, so:
+                    // - BRK can only consume addresses pushed by PBK.
+                    // - SYNC can only consume addresses pushed by SSY.
+                    if (found)
                     {
-                        // First we push the target address (this will be used to push the
-                        // address back into the SSY/PBK stack when we return from that block),
-                        // then we push the block itself into the work "queue" (well, it's a stack)
-                        // for processing.
-                        Push(new PathBlockState(targetAddress));
-                        Push(new PathBlockState(blocks[targetAddress]));
+                        if (branchStack.Count == 0)
+                        {
+                            // If the entire stack was consumed, then the current pop instruction
+                            // just consumed the address from out push instruction.
+                            op.Targets.Add(pushOp, op.Targets.Count);
+
+                            pushOp.PopOps.TryAdd(op, Local());
+                        }
+                        else
+                        {
+                            // Push the block itself into the work "queue" (well, it's a stack)
+                            // for processing.
+                            Push(new PathBlockState(blocks[targetAddress]));
+                        }
                     }
                 }
             }
