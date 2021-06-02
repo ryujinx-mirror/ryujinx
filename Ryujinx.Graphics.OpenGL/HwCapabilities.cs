@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.OpenGL
         private static readonly Lazy<bool> _supportsViewportSwizzle           = new Lazy<bool>(() => HasExtension("GL_NV_viewport_swizzle"));
         private static readonly Lazy<bool> _supportsSeamlessCubemapPerTexture = new Lazy<bool>(() => HasExtension("GL_ARB_seamless_cubemap_per_texture"));
         private static readonly Lazy<bool> _supportsParallelShaderCompile     = new Lazy<bool>(() => HasExtension("GL_ARB_parallel_shader_compile"));
+        private static readonly Lazy<bool> _supportsQuads                     = new Lazy<bool>(SupportsQuadsCheck);
 
         private static readonly Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
         private static readonly Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
@@ -36,6 +37,7 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsViewportSwizzle           => _supportsViewportSwizzle.Value;
         public static bool SupportsSeamlessCubemapPerTexture => _supportsSeamlessCubemapPerTexture.Value;
         public static bool SupportsParallelShaderCompile     => _supportsParallelShaderCompile.Value;
+        public static bool SupportsQuads                     => _supportsQuads.Value;
         public static bool SupportsNonConstantTextureOffset  => _gpuVendor.Value == GpuVendor.Nvidia;
         public static bool RequiresSyncFlush                 => _gpuVendor.Value == GpuVendor.Amd || _gpuVendor.Value == GpuVendor.IntelWindows || _gpuVendor.Value == GpuVendor.IntelUnix;
         public static bool SupportsMismatchingViewFormat     => _gpuVendor.Value != GpuVendor.Amd && _gpuVendor.Value != GpuVendor.IntelWindows;
@@ -87,6 +89,15 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 return GpuVendor.Unknown;
             }
+        }
+
+        private static bool SupportsQuadsCheck()
+        {
+            GL.GetError(); // Clear any existing error.
+            GL.Begin(PrimitiveType.Quads);
+            GL.End();
+
+            return GL.GetError() == ErrorCode.NoError;
         }
     }
 }
