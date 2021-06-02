@@ -9,6 +9,11 @@ namespace Ryujinx.Graphics.Gpu.State
         public uint Packed;
 #pragma warning restore CS0649
 
+        public bool UnpackOriginCorner()
+        {
+            return (Packed & 1u) != 0;
+        }
+
         public bool UnpackLinearFilter()
         {
             return (Packed & (1u << 4)) != 0;
