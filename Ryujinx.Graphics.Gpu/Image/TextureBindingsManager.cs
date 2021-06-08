@@ -1,13 +1,14 @@
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
     /// Texture bindings manager.
     /// </summary>
-    class TextureBindingsManager
+    class TextureBindingsManager : IDisposable
     {
         private const int HandleHigh = 16;
         private const int HandleMask = (1 << HandleHigh) - 1;
@@ -504,6 +505,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void Rebind()
         {
             _rebind = true;
+        }
+
+        /// <summary>
+        /// Disposes all textures and samplers in the cache.
+        /// </summary>
+        public void Dispose()
+        {
+            _samplerPool?.Dispose();
         }
     }
 }

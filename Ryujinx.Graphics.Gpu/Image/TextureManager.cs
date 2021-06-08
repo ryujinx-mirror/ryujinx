@@ -1286,7 +1286,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Disposes all textures in the cache.
+        /// Disposes all textures and samplers in the cache.
         /// It's an error to use the texture manager after disposal.
         /// </summary>
         public void Dispose()
@@ -1297,6 +1297,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     texture.Dispose();
                 }
+
+                _cpBindingsManager.Dispose();
+                _gpBindingsManager.Dispose();
             }
         }
     }
