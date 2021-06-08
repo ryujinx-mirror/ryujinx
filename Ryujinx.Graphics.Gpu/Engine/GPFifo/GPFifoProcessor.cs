@@ -140,7 +140,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         {
             if ((MethodOffset)meth.Method == MethodOffset.BindChannel)
             {
-                _subChannels[meth.SubChannel] = new GpuState();
+                _subChannels[meth.SubChannel].ClearCallbacks();
 
                 _context.Methods.RegisterCallbacks(_subChannels[meth.SubChannel]);
             }

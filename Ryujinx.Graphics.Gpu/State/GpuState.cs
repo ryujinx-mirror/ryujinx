@@ -211,6 +211,17 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
+        /// Clear all registered callbacks.
+        /// </summary>
+        public void ClearCallbacks()
+        {
+            for (int index = 0; index < _registers.Length; index++)
+            {
+                _registers[index].Callback = null;
+            }
+        }
+
+        /// <summary>
         /// Checks if a given register has been modified since the last call to this method.
         /// </summary>
         /// <param name="offset">Register offset</param>
