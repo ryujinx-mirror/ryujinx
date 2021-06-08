@@ -12,6 +12,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private const int HandleHigh = 16;
         private const int HandleMask = (1 << HandleHigh) - 1;
 
+        private const int SlotHigh = 16;
+        private const int SlotMask = (1 << SlotHigh) - 1;
+
         private GpuContext _context;
 
         private bool _isCompute;
@@ -267,9 +270,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo bindingInfo = _textureBindings[stageIndex][index];
 
-                int textureBufferIndex = bindingInfo.CbufSlot < 0 ? _textureBufferIndex : bindingInfo.CbufSlot;
+                int textureBufferIndex;
+                int samplerBufferIndex;
 
-                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex);
+                if (bindingInfo.CbufSlot < 0)
+                {
+                    textureBufferIndex = _textureBufferIndex;
+                    samplerBufferIndex = textureBufferIndex;
+                }
+                else
+                {
+                    textureBufferIndex = bindingInfo.CbufSlot & SlotMask;
+                    samplerBufferIndex = ((bindingInfo.CbufSlot >> SlotHigh) != 0) ? (bindingInfo.CbufSlot >> SlotHigh) - 1 : textureBufferIndex;
+                }
+
+                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex, samplerBufferIndex);
                 int textureId = UnpackTextureId(packedId);
                 int samplerId;
 
@@ -340,9 +355,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo bindingInfo = _imageBindings[stageIndex][index];
 
-                int textureBufferIndex = bindingInfo.CbufSlot < 0 ? _textureBufferIndex : bindingInfo.CbufSlot;
+                int textureBufferIndex;
+                int samplerBufferIndex;
 
-                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex);
+                if (bindingInfo.CbufSlot < 0)
+                {
+                    textureBufferIndex = _textureBufferIndex;
+                    samplerBufferIndex = textureBufferIndex;
+                }
+                else
+                {
+                    textureBufferIndex = bindingInfo.CbufSlot & SlotMask;
+                    samplerBufferIndex = ((bindingInfo.CbufSlot >> SlotHigh) != 0) ? (bindingInfo.CbufSlot >> SlotHigh) - 1 : textureBufferIndex;
+                }
+
+                int packedId = ReadPackedId(stageIndex, bindingInfo.Handle, textureBufferIndex, samplerBufferIndex);
                 int textureId = UnpackTextureId(packedId);
 
                 Texture texture = pool.Get(textureId);
@@ -402,7 +429,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture descriptor for the specified texture</returns>
         public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle, int cbufSlot)
         {
-            int packedId = ReadPackedId(stageIndex, handle, cbufSlot < 0 ? state.Get<int>(MethodOffset.TextureBufferIndex) : cbufSlot);
+            int textureBufferIndex = cbufSlot < 0 ? state.Get<int>(MethodOffset.TextureBufferIndex) : cbufSlot & SlotMask;
+            int packedId = ReadPackedId(stageIndex, handle, textureBufferIndex, textureBufferIndex);
             int textureId = UnpackTextureId(packedId);
 
             var poolState = state.Get<PoolState>(MethodOffset.TexturePoolState);
@@ -421,23 +449,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="stageIndex">The number of the shader stage where the texture is bound</param>
         /// <param name="wordOffset">A word offset of the handle on the buffer (the "fake" shader handle)</param>
         /// <param name="textureBufferIndex">Index of the constant buffer holding the texture handles</param>
+        /// <param name="samplerBufferIndex">Index of the constant buffer holding the sampler handles</param>
         /// <returns>The packed texture and sampler ID (the real texture handle)</returns>
-        private int ReadPackedId(int stageIndex, int wordOffset, int textureBufferIndex)
+        private int ReadPackedId(int stageIndex, int wordOffset, int textureBufferIndex, int samplerBufferIndex)
         {
-            ulong address;
-
             var bufferManager = _context.Methods.BufferManager;
+            ulong textureBufferAddress = _isCompute
+                ? bufferManager.GetComputeUniformBufferAddress(textureBufferIndex)
+                : bufferManager.GetGraphicsUniformBufferAddress(stageIndex, textureBufferIndex);
 
-            if (_isCompute)
-            {
-                address = bufferManager.GetComputeUniformBufferAddress(textureBufferIndex);
-            }
-            else
-            {
-                address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, textureBufferIndex);
-            }
-
-            int handle = _context.PhysicalMemory.Read<int>(address + (ulong)(wordOffset & HandleMask) * 4);
+            int handle = _context.PhysicalMemory.Read<int>(textureBufferAddress + (ulong)(wordOffset & HandleMask) * 4);
 
             // The "wordOffset" (which is really the immediate value used on texture instructions on the shader)
             // is a 13-bit value. However, in order to also support separate samplers and textures (which uses
@@ -447,7 +468,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             // turn that into a regular texture access and produce those special handles with values on the higher 16 bits.
             if (wordOffset >> HandleHigh != 0)
             {
-                handle |= _context.PhysicalMemory.Read<int>(address + (ulong)(wordOffset >> HandleHigh) * 4);
+                ulong samplerBufferAddress = _isCompute
+                    ? bufferManager.GetComputeUniformBufferAddress(samplerBufferIndex)
+                    : bufferManager.GetGraphicsUniformBufferAddress(stageIndex, samplerBufferIndex);
+
+                handle |= _context.PhysicalMemory.Read<int>(samplerBufferAddress + (ulong)((uint)wordOffset >> HandleHigh) * 4);
             }
 
             return handle;

@@ -50,13 +50,16 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     Operand src0 = Utils.FindLastOperation(handleCombineOp.GetSource(0), block);
                     Operand src1 = Utils.FindLastOperation(handleCombineOp.GetSource(1), block);
 
-                    if (src0.Type != OperandType.ConstantBuffer ||
-                        src1.Type != OperandType.ConstantBuffer || src0.GetCbufSlot() != src1.GetCbufSlot())
+                    if (src0.Type != OperandType.ConstantBuffer || src1.Type != OperandType.ConstantBuffer)
                     {
                         continue;
                     }
 
-                    SetHandle(config, texOp, src0.GetCbufOffset() | (src1.GetCbufOffset() << 16), src0.GetCbufSlot());
+                    SetHandle(
+                        config,
+                        texOp,
+                        src0.GetCbufOffset() | (src1.GetCbufOffset() << 16),
+                        src0.GetCbufSlot() | ((src1.GetCbufSlot() + 1) << 16));
                 }
                 else if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
                 {
