@@ -46,7 +46,7 @@
     <property name="modal">True</property>
     <property name="window-position">center</property>
     <property name="default-width">650</property>
-    <property name="default-height">550</property>
+    <property name="default-height">650</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
