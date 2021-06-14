@@ -8,6 +8,7 @@ using Ryujinx.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.Input;
+using Ryujinx.Input.GTK3;
 using Ryujinx.Input.HLE;
 using Ryujinx.Ui.Widgets;
 using System;
@@ -28,6 +29,7 @@ namespace Ryujinx.Ui
 
         public ManualResetEvent WaitEvent { get; set; }
         public NpadManager NpadManager { get; }
+        public TouchScreenManager TouchScreenManager { get; }
         public Switch Device { get; private set; }
         public IRenderer Renderer { get; private set; }
 
@@ -36,10 +38,6 @@ namespace Ryujinx.Ui
         private bool _isActive;
         private bool _isStopped;
         private bool _isFocused;
-
-        private double _mouseX;
-        private double _mouseY;
-        private bool _mousePressed;
 
         private bool _toggleFullscreen;
         private bool _toggleDockedMode;
@@ -69,8 +67,12 @@ namespace Ryujinx.Ui
 
         public RendererWidgetBase(InputManager inputManager, GraphicsDebugLevel glLogLevel)
         {
+            var mouseDriver = new GTK3MouseDriver(this);
+
             _inputManager = inputManager;
+            _inputManager.SetMouseDriver(mouseDriver);
             NpadManager = _inputManager.CreateNpadManager();
+            TouchScreenManager = _inputManager.CreateTouchScreenManager();
             _keyboardInterface = (IKeyboard)_inputManager.KeyboardDriver.GetGamepad("0");
 
             WaitEvent = new ManualResetEvent(false);
@@ -145,37 +147,8 @@ namespace Ryujinx.Ui
             _isFocused = ParentWindow.State.HasFlag(Gdk.WindowState.Focused);
         }
 
-        protected override bool OnButtonPressEvent(EventButton evnt)
-        {
-            _mouseX = evnt.X;
-            _mouseY = evnt.Y;
-
-            if (evnt.Button == 1)
-            {
-                _mousePressed = true;
-            }
-
-            return false;
-        }
-
-        protected override bool OnButtonReleaseEvent(EventButton evnt)
-        {
-            if (evnt.Button == 1)
-            {
-                _mousePressed = false;
-            }
-
-            return false;
-        }
-
         protected override bool OnMotionNotifyEvent(EventMotion evnt)
         {
-            if (evnt.Device.InputSource == InputSource.Mouse)
-            {
-                _mouseX = evnt.X;
-                _mouseY = evnt.Y;
-            }
-
             if (_hideCursorOnIdle)
             {
                 _lastCursorMoveTime = Stopwatch.GetTimestamp();
@@ -300,6 +273,7 @@ namespace Ryujinx.Ui
             Renderer?.Window.SetSize(_windowWidth, _windowHeight);
 
             NpadManager.Initialize(device, ConfigurationState.Instance.Hid.InputConfig, ConfigurationState.Instance.Hid.EnableKeyboard);
+            TouchScreenManager.Initialize(device);
         }
 
         public void Render()
@@ -412,6 +386,7 @@ namespace Ryujinx.Ui
 
         public void Exit()
         {
+            TouchScreenManager?.Dispose();
             NpadManager?.Dispose();
 
             if (_isStopped)
@@ -507,67 +482,20 @@ namespace Ryujinx.Ui
             bool hasTouch = false;
 
             // Get screen touch position from left mouse click
-            // OpenTK always captures mouse events, even if out of focus, so check if window is focused.
-            if (_isFocused && _mousePressed)
+            if (_isFocused && (_inputManager.MouseDriver as GTK3MouseDriver).IsButtonPressed(MouseButton.Button1))
             {
-                float aspectWidth = SwitchPanelHeight * ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat();
-
-                int screenWidth = AllocatedWidth;
-                int screenHeight = AllocatedHeight;
-
-                if (AllocatedWidth > AllocatedHeight * aspectWidth / SwitchPanelHeight)
-                {
-                    screenWidth = (int)(AllocatedHeight * aspectWidth) / SwitchPanelHeight;
-                }
-                else
-                {
-                    screenHeight = (AllocatedWidth * SwitchPanelHeight) / (int)aspectWidth;
-                }
-
-                int startX = (AllocatedWidth - screenWidth) >> 1;
-                int startY = (AllocatedHeight - screenHeight) >> 1;
-
-                int endX = startX + screenWidth;
-                int endY = startY + screenHeight;
-
-                if (_mouseX >= startX &&
-                    _mouseY >= startY &&
-                    _mouseX < endX &&
-                    _mouseY < endY)
-                {
-                    int screenMouseX = (int)_mouseX - startX;
-                    int screenMouseY = (int)_mouseY - startY;
-
-                    int mX = (screenMouseX * (int)aspectWidth) / screenWidth;
-                    int mY = (screenMouseY * SwitchPanelHeight) / screenHeight;
-
-                    TouchPoint currentPoint = new TouchPoint
-                    {
-                        X = (uint)mX,
-                        Y = (uint)mY,
-
-                        // Placeholder values till more data is acquired
-                        DiameterX = 10,
-                        DiameterY = 10,
-                        Angle = 90
-                    };
-
-                    hasTouch = true;
-
-                    Device.Hid.Touchscreen.Update(currentPoint);
-                }
+                hasTouch = TouchScreenManager.Update(true, ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
             }
 
             if (!hasTouch)
             {
-                Device.Hid.Touchscreen.Update();
+                TouchScreenManager.Update(false);
             }
 
             Device.Hid.DebugPad.Update();
 
             return true;
         }
-
 
         [Flags]
         private enum KeyboardHotkeyState
