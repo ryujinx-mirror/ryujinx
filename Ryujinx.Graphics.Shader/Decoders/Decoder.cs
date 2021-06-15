@@ -9,6 +9,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class Decoder
     {
+        public const ulong ShaderEndDelimiter = 0xe2400fffff87000f;
+
         public static Block[][] Decode(IGpuAccessor gpuAccessor, ulong startAddress, out bool hasBindless)
         {
             hasBindless = false;
@@ -190,7 +192,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             ulong inst = gpuAccessor.MemoryRead<ulong>(startAdddress + currBlock.EndAddress);
 
-            return inst != 0UL;
+            return inst != 0UL && inst != ShaderEndDelimiter;
         }
 
         private static bool BinarySearch(List<Block> blocks, ulong address, out int index)
