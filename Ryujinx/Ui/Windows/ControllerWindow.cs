@@ -931,7 +931,7 @@ namespace Ryujinx.Ui.Windows
                         Version          = InputConfig.CurrentVersion,
                         Backend          = InputBackendType.WindowKeyboard,
                         Id               = null,
-                        ControllerType   = ControllerType.JoyconPair,
+                        ControllerType   = ControllerType.ProController,
                         LeftJoycon       = new LeftJoyconCommonConfig<Key>
                         {
                             DpadUp       = Key.Up,
