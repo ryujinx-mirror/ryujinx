@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private bool _unintendedHomeButtonInputProtectionEnabled;
         private bool _vibrationPermitted;
         private bool _usbFullKeyControllerEnabled;
+        private bool _isFirmwareUpdateAvailableForSixAxisSensor;
 
         private HidNpadJoyAssignmentMode      _npadJoyAssignmentMode;
         private HidNpadHandheldActivationMode _npadHandheldActivationMode;
@@ -46,6 +47,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             _npadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
             _npadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;
             _gyroscopeZeroDriftMode     = HidGyroscopeZeroDriftMode.Standard;
+
+            _isFirmwareUpdateAvailableForSixAxisSensor = false;
 
             _sensorFusionParams  = new HidSensorFusionParameters();
             _accelerometerParams = new HidAccelerometerParameters();
@@ -570,6 +573,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             context.ResponseData.Write(isAtRest);
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, sixAxisSensorHandle, isAtRest });
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(83)] // 6.0.0+
+        // IsFirmwareUpdateAvailableForSixAxisSensor(nn::hid::AppletResourceUserId, nn::hid::SixAxisSensorHandle, pid) -> bool UpdateAvailable
+        public ResultCode IsFirmwareUpdateAvailableForSixAxisSensor(ServiceCtx context)
+        {
+            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Position += 4;
+            long appletResourceUserId = context.RequestData.ReadInt64();
+
+            context.ResponseData.Write(_isFirmwareUpdateAvailableForSixAxisSensor);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, sixAxisSensorHandle, _isFirmwareUpdateAvailableForSixAxisSensor });
 
             return ResultCode.Success;
         }
