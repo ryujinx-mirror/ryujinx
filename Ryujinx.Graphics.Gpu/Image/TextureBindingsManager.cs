@@ -473,7 +473,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     ? bufferManager.GetComputeUniformBufferAddress(samplerBufferIndex)
                     : bufferManager.GetGraphicsUniformBufferAddress(stageIndex, samplerBufferIndex);
 
-                handle |= _context.PhysicalMemory.Read<int>(samplerBufferAddress + (ulong)((uint)wordOffset >> HandleHigh) * 4);
+                handle |= _context.PhysicalMemory.Read<int>(samplerBufferAddress + (ulong)((wordOffset >> HandleHigh) - 1) * 4);
             }
 
             return handle;

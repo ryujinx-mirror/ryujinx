@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     SetHandle(
                         config,
                         texOp,
-                        src0.GetCbufOffset() | (src1.GetCbufOffset() << 16),
+                        src0.GetCbufOffset() | ((src1.GetCbufOffset() + 1) << 16),
                         src0.GetCbufSlot() | ((src1.GetCbufSlot() + 1) << 16));
                 }
                 else if (texOp.Inst == Instruction.ImageLoad || texOp.Inst == Instruction.ImageStore)
