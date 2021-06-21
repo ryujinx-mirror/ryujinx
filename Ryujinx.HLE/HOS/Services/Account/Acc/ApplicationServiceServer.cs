@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             foreach (UserProfile userProfile in profiles)
             {
-                if (offset + 0x10 > (ulong)outputSize)
+                if (offset + 0x10 > outputSize)
                 {
                     break;
                 }
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public ResultCode TrySelectUserWithoutInteraction(ServiceCtx context)
         {
-            if (context.Device.System.AccountManager.GetUserCount() != 1)
+            if (context.Device.System.AccountManager.GetUserCount() < 1)
             {
                 // Invalid UserId.
                 UserId.Null.Write(context.ResponseData);
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public ResultCode StoreSaveDataThumbnail(ServiceCtx context)
         {
-            ResultCode resultCode = CheckUserId(context, out UserId userId);
+            ResultCode resultCode = CheckUserId(context, out UserId _);
 
             if (resultCode != ResultCode.Success)
             {
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public ResultCode ClearSaveDataThumbnail(ServiceCtx context)
         {
-            ResultCode resultCode = CheckUserId(context, out UserId userId);
+            ResultCode resultCode = CheckUserId(context, out UserId _);
 
             if (resultCode != ResultCode.Success)
             {
