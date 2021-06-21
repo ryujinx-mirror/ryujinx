@@ -321,8 +321,8 @@ namespace Ryujinx.HLE.HOS
                 State.DockedMode = newState;
                 PerformanceState.PerformanceMode = State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
 
-                AppletState.Messages.Enqueue(MessageInfo.OperationModeChanged);
-                AppletState.Messages.Enqueue(MessageInfo.PerformanceModeChanged);
+                AppletState.Messages.Enqueue(AppletMessage.OperationModeChanged);
+                AppletState.Messages.Enqueue(AppletMessage.PerformanceModeChanged);
                 AppletState.MessageEvent.ReadableEvent.Signal();
 
                 SignalDisplayResolutionChange();
@@ -338,7 +338,7 @@ namespace Ryujinx.HLE.HOS
 
         public void SimulateWakeUpMessage()
         {
-            AppletState.Messages.Enqueue(MessageInfo.Resume);
+            AppletState.Messages.Enqueue(AppletMessage.Resume);
             AppletState.MessageEvent.ReadableEvent.Signal();
         }
 

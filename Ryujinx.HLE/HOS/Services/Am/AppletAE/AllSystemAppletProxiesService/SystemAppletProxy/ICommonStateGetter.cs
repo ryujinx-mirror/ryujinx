@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // ReceiveMessage() -> nn::am::AppletMessage
         public ResultCode ReceiveMessage(ServiceCtx context)
         {
-            if (!context.Device.System.AppletState.Messages.TryDequeue(out MessageInfo message))
+            if (!context.Device.System.AppletState.Messages.TryDequeue(out AppletMessage message))
             {
                 return ResultCode.NoMessages;
             }

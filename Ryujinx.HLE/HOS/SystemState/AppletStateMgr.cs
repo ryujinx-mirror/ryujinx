@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.SystemState
 {
     class AppletStateMgr
     {
-        public ConcurrentQueue<MessageInfo> Messages { get; }
+        public ConcurrentQueue<AppletMessage> Messages { get; }
 
         public FocusState FocusState { get; private set; }
 
@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public AppletStateMgr(Horizon system)
         {
-            Messages     = new ConcurrentQueue<MessageInfo>();
+            Messages     = new ConcurrentQueue<AppletMessage>();
             MessageEvent = new KEvent(system.KernelContext);
 
             AppletResourceUserIds = new IdDictionary();
@@ -26,7 +26,13 @@ namespace Ryujinx.HLE.HOS.SystemState
         {
             FocusState = isFocused ? FocusState.InFocus : FocusState.OutOfFocus;
 
-            Messages.Enqueue(MessageInfo.FocusStateChanged);
+            Messages.Enqueue(AppletMessage.FocusStateChanged);
+
+            if (isFocused)
+            {
+                Messages.Enqueue(AppletMessage.ChangeIntoForeground);
+            }
+
             MessageEvent.ReadableEvent.Signal();
         }
     }
