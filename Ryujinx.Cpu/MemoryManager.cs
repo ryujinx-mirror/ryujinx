@@ -550,9 +550,9 @@ namespace Ryujinx.Cpu
         }
 
         /// <inheritdoc/>
-        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, ulong granularity)
+        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
         {
-            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, granularity));
+            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, handles, granularity));
         }
 
         /// <inheritdoc/>

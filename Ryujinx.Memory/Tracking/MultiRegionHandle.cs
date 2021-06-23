@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Tracking
 {
@@ -18,16 +19,68 @@ namespace Ryujinx.Memory.Tracking
 
         public bool Dirty { get; private set; } = true;
 
-        internal MultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong granularity)
+        internal MultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
         {
             _handles = new RegionHandle[size / granularity];
             Granularity = granularity;
 
-            for (int i = 0; i < _handles.Length; i++)
+            int i = 0;
+
+            if (handles != null)
+            {
+                // Inherit from the handles we were given. Any gaps must be filled with new handles,
+                // and old handles larger than our granularity must copy their state onto new granular handles and dispose.
+                // It is assumed that the provided handles do not overlap, in order, are on page boundaries,
+                // and don't extend past the requested range.
+
+                foreach (RegionHandle handle in handles)
+                {
+                    int startIndex = (int)((handle.Address - address) / granularity);
+
+                    // Fill any gap left before this handle.
+                    while (i < startIndex)
+                    {
+                        RegionHandle fillHandle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
+                        fillHandle.Parent = this;
+                        _handles[i++] = fillHandle;
+                    }
+
+                    if (handle.Size == granularity)
+                    {
+                        handle.Parent = this;
+                        _handles[i++] = handle;
+                    }
+                    else
+                    {
+                        int endIndex = (int)((handle.EndAddress - address) / granularity);
+
+                        while (i < endIndex)
+                        {
+                            RegionHandle splitHandle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
+                            splitHandle.Parent = this;
+
+                            splitHandle.Reprotect(handle.Dirty);
+
+                            RegionSignal signal = handle.PreAction;
+                            if (signal != null)
+                            {
+                                splitHandle.RegisterAction(signal);
+                            }
+
+                            _handles[i++] = splitHandle;
+                        }
+
+                        handle.Dispose();
+                    }
+                }
+            }
+
+            // Fill any remaining space with new handles.
+            while (i < _handles.Length)
             {
                 RegionHandle handle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
                 handle.Parent = this;
-                _handles[i] = handle;
+                _handles[i++] = handle;
             }
 
             Address = address;
@@ -46,6 +99,11 @@ namespace Ryujinx.Memory.Tracking
                 _handles[i].SequenceNumber--;
                 _handles[i].ForceDirty();
             }
+        }
+
+        public IEnumerable<RegionHandle> GetHandles()
+        {
+            return _handles;
         }
 
         public void SignalWrite()

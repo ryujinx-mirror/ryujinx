@@ -2,7 +2,9 @@ using Ryujinx.Cpu;
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
+using Ryujinx.Memory.Tracking;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -200,11 +202,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
+        /// <param name="handles">Handles to inherit state from or reuse</param>
         /// <param name="granularity">Desired granularity of write tracking</param>
         /// <returns>The memory tracking handle</returns>
-        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, ulong granularity = 4096)
+        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles = null, ulong granularity = 4096)
         {
-            return _cpuMemory.BeginGranularTracking(address, size, granularity);
+            return _cpuMemory.BeginGranularTracking(address, size, handles, granularity);
         }
 
         /// <summary>

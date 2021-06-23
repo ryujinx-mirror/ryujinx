@@ -533,8 +533,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         }
                     }
 
-                    Buffer newBuffer = new Buffer(_context, address, endAddress - address);
-                    newBuffer.SynchronizeMemory(address, endAddress - address);
+                    Buffer newBuffer = new Buffer(_context, address, endAddress - address, _bufferOverlaps.Take(overlapsCount));
 
                     lock (_buffers)
                     {
@@ -547,13 +546,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                         int dstOffset = (int)(buffer.Address - newBuffer.Address);
 
-                        buffer.ForceSynchronizeMemory(buffer.Address, buffer.Size);
-
                         buffer.CopyTo(newBuffer, dstOffset);
                         newBuffer.InheritModifiedRanges(buffer);
 
-                        buffer.Dispose();
+                        buffer.DisposeData();
                     }
+
+                    newBuffer.SynchronizeMemory(address, endAddress - address);
 
                     // Existing buffers were modified, we need to rebind everything.
                     _rebind = true;

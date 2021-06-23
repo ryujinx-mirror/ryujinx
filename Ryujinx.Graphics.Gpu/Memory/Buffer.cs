@@ -3,6 +3,8 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Memory.Range;
 using Ryujinx.Memory.Tracking;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
@@ -68,7 +70,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="context">GPU context that the buffer belongs to</param>
         /// <param name="address">Start address of the buffer</param>
         /// <param name="size">Size of the buffer in bytes</param>
-        public Buffer(GpuContext context, ulong address, ulong size)
+        /// <param name="baseBuffers">Buffers which this buffer contains, and will inherit tracking handles from</param>
+        public Buffer(GpuContext context, ulong address, ulong size, IEnumerable<Buffer> baseBuffers = null)
         {
             _context = context;
             Address  = address;
@@ -78,13 +81,45 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             _useGranular = size > GranularBufferThreshold;
 
+            IEnumerable<IRegionHandle> baseHandles = null;
+
+            if (baseBuffers != null)
+            {
+                baseHandles = baseBuffers.SelectMany(buffer =>
+                {
+                    if (buffer._useGranular)
+                    {
+                        return buffer._memoryTrackingGranular.GetHandles();
+                    }
+                    else
+                    {
+                        return Enumerable.Repeat(buffer._memoryTracking.GetHandle(), 1);
+                    }
+                });
+            }
+
             if (_useGranular)
             {
-                _memoryTrackingGranular = context.PhysicalMemory.BeginGranularTracking(address, size);
+                _memoryTrackingGranular = context.PhysicalMemory.BeginGranularTracking(address, size, baseHandles);
             }
             else
             {
                 _memoryTracking = context.PhysicalMemory.BeginTracking(address, size);
+
+                if (baseHandles != null)
+                {
+                    _memoryTracking.Reprotect(false);
+
+                    foreach (IRegionHandle handle in baseHandles)
+                    {
+                        if (handle.Dirty)
+                        {
+                            _memoryTracking.Reprotect(true);
+                        }
+
+                        handle.Dispose();
+                    }
+                }
             }
 
             _externalFlushDelegate = new RegionSignal(ExternalFlush);
@@ -176,39 +211,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
                     
                     _sequenceNumber = _context.SequenceNumber;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Performs guest to host memory synchronization of the buffer data, regardless of sequence number.
-        /// </summary>
-        /// <remarks>
-        /// This causes the buffer data to be overwritten if a write was detected from the CPU,
-        /// since the last call to this method.
-        /// </remarks>
-        /// <param name="address">Start address of the range to synchronize</param>
-        /// <param name="size">Size in bytes of the range to synchronize</param>
-        public void ForceSynchronizeMemory(ulong address, ulong size)
-        {
-            if (_useGranular)
-            {
-                _memoryTrackingGranular.QueryModified(address, size, _modifiedDelegate);
-            }
-            else
-            {
-                if (_memoryTracking.DirtyOrVolatile())
-                {
-                    _memoryTracking.Reprotect();
-
-                    if (_modifiedRanges != null)
-                    {
-                        _modifiedRanges.ExcludeModifiedRegions(Address, Size, _loadDelegate);
-                    }
-                    else
-                    {
-                        _context.Renderer.SetBufferData(Handle, 0, _context.PhysicalMemory.GetSpan(Address, (int)Size));
-                    }
                 }
             }
         }
@@ -461,18 +463,26 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Disposes the host buffer.
+        /// Disposes the host buffer's data, not its tracking handles.
         /// </summary>
-        public void Dispose()
+        public void DisposeData()
         {
             _modifiedRanges?.Clear();
-
-            _memoryTrackingGranular?.Dispose();
-            _memoryTracking?.Dispose();
 
             _context.Renderer.DeleteBuffer(Handle);
 
             UnmappedSequence++;
+        }
+
+        /// <summary>
+        /// Disposes the host buffer.
+        /// </summary>
+        public void Dispose()
+        {
+            _memoryTrackingGranular?.Dispose();
+            _memoryTracking?.Dispose();
+
+            DisposeData();
         }
     }
 }

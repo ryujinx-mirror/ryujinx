@@ -35,7 +35,7 @@ namespace Ryujinx.Memory.Tests
         {
             return smart ?
                 _tracking.BeginSmartGranularTracking(address, size, granularity) :
-                (IMultiRegionHandle)_tracking.BeginGranularTracking(address, size, granularity);
+                (IMultiRegionHandle)_tracking.BeginGranularTracking(address, size, null, granularity);
         }
 
         private void RandomOrder(Random random, List<int> indices, Action<int> action)
@@ -278,6 +278,126 @@ namespace Ryujinx.Memory.Tests
             handleHigh.Dispose(); // After disposing the other, there are no pages left.
 
             Assert.AreEqual(0, _tracking.GetRegionCount());
+        }
+
+        [Test]
+        public void InheritHandles()
+        {
+            // Test merging the following into a granular region handle:
+            // - 3x gap (creates new granular handles)
+            // - 3x from multiregion: not dirty, dirty and with action
+            // - 2x gap
+            // - 3x single page: not dirty, dirty and with action
+            // - 3x two page: not dirty, dirty and with action (handle is not reused, but its state is copied to the granular handles)
+            // - 1x gap
+            // For a total of 18 pages.
+
+            bool[] actionsTriggered = new bool[3];
+
+            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize);
+            PreparePages(granular, 3, PageSize * 3);
+
+            // Write to the second handle in the multiregion.
+            _tracking.VirtualMemoryEvent(PageSize * 4, PageSize, true);
+
+            // Add an action to the third handle in the multiregion.
+            granular.RegisterAction(PageSize * 5, PageSize, (_, _) => { actionsTriggered[0] = true; });
+
+            RegionHandle[] singlePages = new RegionHandle[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                singlePages[i] = _tracking.BeginTracking(PageSize * (8 + (ulong)i), PageSize);
+                singlePages[i].Reprotect();
+            }
+
+            // Write to the second handle.
+            _tracking.VirtualMemoryEvent(PageSize * 9, PageSize, true);
+
+            // Add an action to the third handle.
+            singlePages[2].RegisterAction((_, _) => { actionsTriggered[1] = true; });
+
+            RegionHandle[] doublePages = new RegionHandle[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                doublePages[i] = _tracking.BeginTracking(PageSize * (11 + (ulong)i * 2), PageSize * 2);
+                doublePages[i].Reprotect();
+            }
+
+            // Write to the second handle.
+            _tracking.VirtualMemoryEvent(PageSize * 13, PageSize * 2, true);
+
+            // Add an action to the third handle.
+            doublePages[2].RegisterAction((_, _) => { actionsTriggered[2] = true; });
+
+            // Finally, create a granular handle that inherits all these handles.
+
+            IEnumerable<IRegionHandle>[] handleGroups = new IEnumerable<IRegionHandle>[]
+            {
+                granular.GetHandles(),
+                singlePages,
+                doublePages
+            };
+
+            MultiRegionHandle combined = _tracking.BeginGranularTracking(0, PageSize * 18, handleGroups.SelectMany((handles) => handles), PageSize);
+
+            bool[] expectedDirty = new bool[]
+            {
+                true, true, true, // Gap.
+                false, true, false, // Multi-region.
+                true, true, // Gap.
+                false, true, false, // Individual handles.
+                false, false, true, true, false, false, // Double size handles.
+                true // Gap.
+            };
+
+            for (int i = 0; i < 18; i++)
+            {
+                bool modified = false;
+                combined.QueryModified(PageSize * (ulong)i, PageSize, (_, _) => { modified = true; });
+
+                Assert.AreEqual(expectedDirty[i], modified);
+            }
+
+            Assert.AreEqual(new bool[3], actionsTriggered);
+
+            _tracking.VirtualMemoryEvent(PageSize * 5, PageSize, false);
+            Assert.IsTrue(actionsTriggered[0]);
+
+            _tracking.VirtualMemoryEvent(PageSize * 10, PageSize, false);
+            Assert.IsTrue(actionsTriggered[1]);
+
+            _tracking.VirtualMemoryEvent(PageSize * 15, PageSize, false);
+            Assert.IsTrue(actionsTriggered[2]);
+
+            // The double page handles should be disposed, as they were split into granular handles.
+            foreach (RegionHandle doublePage in doublePages)
+            {
+                // These should have been disposed.
+                bool throws = false;
+
+                try
+                {
+                    doublePage.Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                    throws = true;
+                }
+
+                Assert.IsTrue(throws);
+            }
+
+            IEnumerable<IRegionHandle> combinedHandles = combined.GetHandles();
+
+            Assert.AreEqual(handleGroups[0].ElementAt(0), combinedHandles.ElementAt(3));
+            Assert.AreEqual(handleGroups[0].ElementAt(1), combinedHandles.ElementAt(4));
+            Assert.AreEqual(handleGroups[0].ElementAt(2), combinedHandles.ElementAt(5));
+
+            Assert.AreEqual(singlePages[0], combinedHandles.ElementAt(8));
+            Assert.AreEqual(singlePages[1], combinedHandles.ElementAt(9));
+            Assert.AreEqual(singlePages[2], combinedHandles.ElementAt(10));
         }
     }
 }
