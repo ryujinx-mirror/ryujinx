@@ -129,8 +129,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public uint QueryConstantBufferUse()
         {
             return _compute
-                ? _context.Methods.BufferManager.GetComputeUniformBufferUseMask()
-                : _context.Methods.BufferManager.GetGraphicsUniformBufferUseMask(_stageIndex);
+                ? _state.Channel.BufferManager.GetComputeUniformBufferUseMask()
+                : _state.Channel.BufferManager.GetGraphicsUniformBufferUseMask(_stageIndex);
         }
 
         /// <summary>
@@ -190,11 +190,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             if (_compute)
             {
-                return _context.Methods.TextureManager.GetComputeTextureDescriptor(_state, handle, cbufSlot);
+                return _state.Channel.TextureManager.GetComputeTextureDescriptor(_state, handle, cbufSlot);
             }
             else
             {
-                return _context.Methods.TextureManager.GetGraphicsTextureDescriptor(_state, _stageIndex, handle, cbufSlot);
+                return _state.Channel.TextureManager.GetGraphicsTextureDescriptor(_state, _stageIndex, handle, cbufSlot);
             }
         }
 

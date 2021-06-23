@@ -109,7 +109,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 BufferRange br = new BufferRange(_ibStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
 
-                _context.Methods.BufferManager.SetIndexBuffer(br, IndexType.UInt);
+                state.Channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
 
                 _context.Renderer.Pipeline.DrawIndexed(
                     inlineIndexCount,

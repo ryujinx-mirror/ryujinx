@@ -218,7 +218,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Debug.Assert(!isView);
 
-                TextureCreateInfo createInfo = TextureManager.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
+                TextureCreateInfo createInfo = TextureCache.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
                 HostTexture = _context.Renderer.CreateTexture(createInfo, ScaleFactor);
 
                 SynchronizeMemory(); // Load the data.
@@ -242,7 +242,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         ScaleFactor = GraphicsConfig.ResScale;
                     }
 
-                    TextureCreateInfo createInfo = TextureManager.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
+                    TextureCreateInfo createInfo = TextureCache.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
                     HostTexture = _context.Renderer.CreateTexture(createInfo, ScaleFactor);
                 }
             }
@@ -284,7 +284,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 ScaleFactor,
                 ScaleMode);
 
-            TextureCreateInfo createInfo = TextureManager.GetCreateInfo(info, _context.Capabilities, ScaleFactor);
+            TextureCreateInfo createInfo = TextureCache.GetCreateInfo(info, _context.Capabilities, ScaleFactor);
             texture.HostTexture = HostTexture.CreateView(createInfo, firstLayer, firstLevel);
 
             _viewStorage.AddView(texture);
@@ -453,7 +453,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 Info.SwizzleB,
                 Info.SwizzleA));
 
-            TextureCreateInfo createInfo = TextureManager.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
+            TextureCreateInfo createInfo = TextureCache.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
 
             if (_viewStorage != this)
             {
@@ -511,7 +511,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             if (storage == null)
             {
-                TextureCreateInfo createInfo = TextureManager.GetCreateInfo(Info, _context.Capabilities, scale);
+                TextureCreateInfo createInfo = TextureCache.GetCreateInfo(Info, _context.Capabilities, scale);
                 storage = _context.Renderer.CreateTexture(createInfo, scale);
             }
 
@@ -558,7 +558,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Logger.Debug?.Print(LogClass.Gpu, $"  Recreating view {Info.Width}x{Info.Height} {Info.FormatInfo.Format.ToString()}.");
                     view.ScaleFactor = scale;
 
-                    TextureCreateInfo viewCreateInfo = TextureManager.GetCreateInfo(view.Info, _context.Capabilities, scale);
+                    TextureCreateInfo viewCreateInfo = TextureCache.GetCreateInfo(view.Info, _context.Capabilities, scale);
                     ITexture newView = HostTexture.CreateView(viewCreateInfo, view.FirstLayer - FirstLayer, view.FirstLevel - FirstLevel);
 
                     view.ReplaceStorage(newView);
@@ -1134,7 +1134,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 foreach (Texture view in viewCopy)
                 {
-                    TextureCreateInfo createInfo = TextureManager.GetCreateInfo(view.Info, _context.Capabilities, ScaleFactor);
+                    TextureCreateInfo createInfo = TextureCache.GetCreateInfo(view.Info, _context.Capabilities, ScaleFactor);
 
                     ITexture newView = parent.HostTexture.CreateView(createInfo, view.FirstLayer + firstLayer, view.FirstLevel + firstLevel);
 
@@ -1280,7 +1280,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _viewStorage.RemoveView(this);
                 }
 
-                _context.Methods.TextureManager.RemoveTextureFromCache(this);
+                _context.Methods.TextureCache.RemoveTextureFromCache(this);
             }
 
             Debug.Assert(newRefCount >= 0);

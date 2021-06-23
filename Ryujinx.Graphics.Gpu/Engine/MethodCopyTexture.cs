@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 srcX1 = 0;
             }
 
-            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture, offset, srcCopyTextureFormat, true, srcHint);
+            Texture srcTexture = TextureCache.FindOrCreateTexture(srcCopyTexture, offset, srcCopyTextureFormat, true, srcHint);
 
             if (srcTexture == null)
             {
@@ -101,7 +101,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTextureFormat = dstCopyTexture.Format.Convert();
             }
 
-            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture, 0, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
+            Texture dstTexture = TextureCache.FindOrCreateTexture(dstCopyTexture, 0, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
 
             if (dstTexture == null)
             {

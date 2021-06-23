@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Graphics.Gpu.Image;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.State
@@ -38,10 +39,18 @@ namespace Ryujinx.Graphics.Gpu.State
         public ShadowRamControl ShadowRamControl { get; set; }
 
         /// <summary>
+        /// GPU channel for the sub-channel state.
+        /// </summary>
+        public GpuChannel Channel { get; }
+
+        /// <summary>
         /// Creates a new instance of the GPU state.
         /// </summary>
-        public GpuState()
+        /// <param name="channel">Channel that the sub-channel state belongs to</param>
+        public GpuState(GpuChannel channel)
         {
+            Channel = channel;
+
             _memory = new int[RegistersCount];
             _shadow = new int[RegistersCount];
 
@@ -219,6 +228,21 @@ namespace Ryujinx.Graphics.Gpu.State
             {
                 _registers[index].Callback = null;
             }
+        }
+
+        /// <summary>
+        /// Forces a full host state update by marking all state as modified,
+        /// and also requests all GPU resources in use to be rebound.
+        /// </summary>
+        public void ForceAllDirty()
+        {
+            for (int index = 0; index < _registers.Length; index++)
+            {
+                _registers[index].Modified = true;
+            }
+
+            Channel.BufferManager.Rebind();
+            Channel.TextureManager.Rebind();
         }
 
         /// <summary>

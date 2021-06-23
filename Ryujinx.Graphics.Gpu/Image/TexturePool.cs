@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ProcessDereferenceQueue();
 
-                texture = Context.Methods.TextureManager.FindOrCreateTexture(TextureSearchFlags.ForSampler, info, layerSize);
+                texture = Context.Methods.TextureCache.FindOrCreateTexture(TextureSearchFlags.ForSampler, info, layerSize);
 
                 // If this happens, then the texture address is invalid, we can't add it to the cache.
                 if (texture == null)

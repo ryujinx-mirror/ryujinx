@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             UpdateRenderTargetState(state, useControl: false, singleUse: index);
 
-            TextureManager.UpdateRenderTargets();
+            state.Channel.TextureManager.UpdateRenderTargets();
 
             bool clearDepth   = (argument & 1) != 0;
             bool clearStencil = (argument & 2) != 0;

@@ -174,7 +174,7 @@ namespace Ryujinx.Graphics.Gpu
             {
                 pt.AcquireCallback(_context, pt.UserObj);
 
-                Texture texture = _context.Methods.TextureManager.FindOrCreateTexture(TextureSearchFlags.WithUpscale, pt.Info, 0, null, pt.Range);
+                Texture texture = _context.Methods.TextureCache.FindOrCreateTexture(TextureSearchFlags.WithUpscale, pt.Info, 0, null, pt.Range);
 
                 texture.SynchronizeMemory();
 

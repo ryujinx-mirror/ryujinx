@@ -72,6 +72,11 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         internal List<Action> SyncActions { get; }
 
+        /// <summary>
+        /// Queue with closed channels for deferred disposal from the render thread.
+        /// </summary>
+        internal Queue<GpuChannel> DisposedChannels { get; }
+
         private readonly Lazy<Capabilities> _caps;
 
         /// <summary>
@@ -111,6 +116,13 @@ namespace Ryujinx.Graphics.Gpu
             HostInitalized = new ManualResetEvent(false);
 
             SyncActions = new List<Action>();
+
+            DisposedChannels = new Queue<GpuChannel>();
+        }
+
+        public GpuChannel CreateChannel()
+        {
+            return new GpuChannel(this);
         }
 
         /// <summary>
@@ -174,6 +186,18 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
+        /// Performs deferred disposal of closed channels.
+        /// This must only be called from the render thread.
+        /// </summary>
+        internal void DisposePendingChannels()
+        {
+            while (DisposedChannels.TryDequeue(out GpuChannel channel))
+            {
+                channel.Destroy();
+            }
+        }
+
+        /// <summary>
         /// Disposes all GPU resources currently cached.
         /// It's an error to push any GPU commands after disposal.
         /// Additionally, the GPU commands FIFO must be empty for disposal,
@@ -181,9 +205,10 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         public void Dispose()
         {
+            DisposePendingChannels();
             Methods.ShaderCache.Dispose();
-            Methods.BufferManager.Dispose();
-            Methods.TextureManager.Dispose();
+            Methods.BufferCache.Dispose();
+            Methods.TextureCache.Dispose();
             Renderer.Dispose();
             GPFifo.Dispose();
             HostInitalized.Dispose();

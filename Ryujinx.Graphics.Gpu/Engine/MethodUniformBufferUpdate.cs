@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             if (_ubFollowUpAddress != 0)
             {
-                BufferManager.ForceDirty(_ubFollowUpAddress - _ubByteCount, _ubByteCount);
+                BufferCache.ForceDirty(_ubFollowUpAddress - _ubByteCount, _ubByteCount);
 
                 _ubFollowUpAddress = 0;
             }
