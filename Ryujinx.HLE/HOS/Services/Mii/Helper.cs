@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 {
     static class Helper
     {
-        public static ushort CalculateCrc16BE(ReadOnlySpan<byte> data, int crc = 0)
+        public static ushort CalculateCrc16(ReadOnlySpan<byte> data, int crc, bool reverseEndianess)
         {
             const ushort poly = 0x1021;
 
@@ -25,7 +25,12 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                 }
             }
 
-            return BinaryPrimitives.ReverseEndianness((ushort)crc);
+            if (reverseEndianess)
+            {
+                return (ushort)(BinaryPrimitives.ReverseEndianness(crc) >> 16);
+            }
+
+            return (ushort)crc;
         }
 
         public static UInt128 GetDeviceId()

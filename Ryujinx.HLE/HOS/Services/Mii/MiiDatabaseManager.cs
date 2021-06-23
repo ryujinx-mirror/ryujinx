@@ -416,35 +416,35 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                 return ResultCode.InvalidStoreData;
             }
 
-            if (!metadata.MiiKeyCode.IsEnabledSpecialMii() && !storeData.IsSpecial())
+            if (!metadata.MiiKeyCode.IsEnabledSpecialMii() && storeData.IsSpecial())
             {
-                if (_database.GetIndexByCreatorId(out int index, storeData.CreateId))
-                {
-                    StoreData oldStoreData = _database.Get(index);
-
-                    if (oldStoreData.IsSpecial())
-                    {
-                        return ResultCode.InvalidOperationOnSpecialMii;
-                    }
-
-                    _database.Replace(index, storeData);
-                }
-                else
-                {
-                    if (_database.IsFull())
-                    {
-                        return ResultCode.DatabaseFull;
-                    }
-
-                    _database.Add(storeData);
-                }
-
-                MarkDirty(metadata);
-
-                return ResultCode.Success;
+                return ResultCode.InvalidOperationOnSpecialMii;
             }
 
-            return ResultCode.InvalidOperationOnSpecialMii;
+            if (_database.GetIndexByCreatorId(out int index, storeData.CreateId))
+            {
+                StoreData oldStoreData = _database.Get(index);
+
+                if (oldStoreData.IsSpecial())
+                {
+                    return ResultCode.InvalidOperationOnSpecialMii;
+                }
+
+                _database.Replace(index, storeData);
+            }
+            else
+            {
+                if (_database.IsFull())
+                {
+                    return ResultCode.DatabaseFull;
+                }
+
+                _database.Add(storeData);
+            }
+
+            MarkDirty(metadata);
+
+            return ResultCode.Success;
         }
 
         public ResultCode Delete(DatabaseSessionMetadata metadata, CreateId createId)

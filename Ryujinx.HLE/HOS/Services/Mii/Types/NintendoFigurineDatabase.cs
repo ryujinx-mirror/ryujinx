@@ -233,7 +233,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
         private ushort CalculateCrc()
         {
-            return Helper.CalculateCrc16BE(AsSpanWithoutCrc());
+            return Helper.CalculateCrc16(AsSpanWithoutCrc(), 0, true);
         }
 
         public Span<byte> AsSpan()
