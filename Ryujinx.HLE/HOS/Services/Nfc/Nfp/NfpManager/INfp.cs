@@ -6,7 +6,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
-using Ryujinx.HLE.HOS.Services.Nfc.Nfp.UserManager;
+using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
 using System;
 using System.Buffers.Binary;
 using System.Globalization;
@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
-    class IUser : IpcService
+    class INfp : IpcService
     {
         private ulong  _appletResourceUserId;
         private ulong  _mcuVersionData;
@@ -28,7 +28,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         private CancellationTokenSource _cancelTokenSource;
 
-        public IUser() { }
+        private NfpPermissionLevel _permissionLevel;
+
+        public INfp(NfpPermissionLevel permissionLevel)
+        {
+            _permissionLevel = permissionLevel;
+        }
 
         [CommandHipc(0)]
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
@@ -213,9 +218,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return resultCode;
             }
 
-            uint                   deviceHandle = (uint)context.RequestData.ReadUInt64();
-            UserManager.DeviceType deviceType   = (UserManager.DeviceType)context.RequestData.ReadUInt32();
-            MountTarget            mountTarget  = (MountTarget)context.RequestData.ReadUInt32();
+            uint        deviceHandle = (uint)context.RequestData.ReadUInt64();
+            DeviceType  deviceType   = (DeviceType)context.RequestData.ReadUInt32();
+            MountTarget mountTarget  = (MountTarget)context.RequestData.ReadUInt32();
 
             if (deviceType != 0)
             {
@@ -967,6 +972,20 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context, false);
+        }
+
+        [CommandHipc(102)]
+        // GetRegisterInfo2(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
+        public ResultCode GetRegisterInfo2(ServiceCtx context)
+        {
+            // TODO: Find the differencies between IUser and ISystem/IDebug.
+
+            if (_permissionLevel == NfpPermissionLevel.Debug || _permissionLevel == NfpPermissionLevel.System)
+            {
+                return GetRegisterInfo(context);
+            }
+
+            return ResultCode.DeviceNotFound;
         }
 
         private ResultCode CheckNfcIsEnabled()

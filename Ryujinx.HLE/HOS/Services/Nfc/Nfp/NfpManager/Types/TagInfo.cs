@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp.UserManager
+namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager
 {
     [StructLayout(LayoutKind.Sequential, Size = 0x58)]
     struct TagInfo
