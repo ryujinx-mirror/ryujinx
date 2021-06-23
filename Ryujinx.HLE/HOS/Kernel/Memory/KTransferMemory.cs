@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.Memory.Range;
@@ -15,6 +16,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private readonly List<HostMemoryRange> _ranges;
 
+        private readonly SharedMemoryStorage _storage;
+
         public ulong Address { get; private set; }
         public ulong Size { get; private set; }
 
@@ -26,6 +29,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public KTransferMemory(KernelContext context) : base(context)
         {
             _ranges = new List<HostMemoryRange>();
+        }
+
+        public KTransferMemory(KernelContext context, SharedMemoryStorage storage) : base(context)
+        {
+            _storage = storage;
+            Permission = KMemoryPermission.ReadAndWrite;
+
+            _hasBeenInitialized = true;
+            _isMapped = false;
         }
 
         public KernelResult Initialize(ulong address, ulong size, KMemoryPermission permission)
@@ -48,6 +60,83 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             Size = size;
             _hasBeenInitialized = true;
             _isMapped = false;
+
+            return result;
+        }
+
+        public KernelResult MapIntoProcess(
+            KPageTableBase memoryManager,
+            ulong address,
+            ulong size,
+            KProcess process,
+            KMemoryPermission permission)
+        {
+            if (_storage == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KPageTableBase.PageSize);
+
+            var pageList = _storage.GetPageList();
+            if (pageList.GetPagesCount() != pagesCountRounded)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (permission != Permission || _isMapped)
+            {
+                return KernelResult.InvalidState;
+            }
+
+            MemoryState state = Permission == KMemoryPermission.None ? MemoryState.TransferMemoryIsolated : MemoryState.TransferMemory;
+
+            KernelResult result = memoryManager.MapPages(address, pageList, state, KMemoryPermission.ReadAndWrite);
+
+            if (result == KernelResult.Success)
+            {
+                _isMapped = true;
+
+                if (!memoryManager.SupportsMemoryAliasing)
+                {
+                    _storage.Borrow(process, address);
+                }
+            }
+
+            return result;
+        }
+
+        public KernelResult UnmapFromProcess(
+            KPageTableBase memoryManager,
+            ulong address,
+            ulong size,
+            KProcess process)
+        {
+            if (_storage == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KPageTableBase.PageSize);
+
+            var pageList = _storage.GetPageList();
+            ulong pagesCount = pageList.GetPagesCount();
+
+            if (pagesCount != pagesCountRounded)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            var ranges = _storage.GetRanges();
+
+            MemoryState state = Permission == KMemoryPermission.None ? MemoryState.TransferMemoryIsolated : MemoryState.TransferMemory;
+
+            KernelResult result = memoryManager.UnmapPages(address, pagesCount, ranges, state);
+
+            if (result == KernelResult.Success)
+            {
+                _isMapped = false;
+            }
 
             return result;
         }

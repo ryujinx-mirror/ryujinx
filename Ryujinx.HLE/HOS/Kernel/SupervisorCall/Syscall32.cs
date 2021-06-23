@@ -135,6 +135,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.CreateTransferMemory(address, size, permission, out handle);
         }
 
+        public KernelResult MapTransferMemory32([R(0)] int handle, [R(1)] uint address, [R(2)] uint size, [R(3)] KMemoryPermission permission)
+        {
+            return _syscall.MapTransferMemory(handle, address, size, permission);
+        }
+
+        public KernelResult UnmapTransferMemory32([R(0)] int handle, [R(1)] uint address, [R(2)] uint size)
+        {
+            return _syscall.UnmapTransferMemory(handle, address, size);
+        }
+
         public KernelResult MapPhysicalMemory32([R(0)] uint address, [R(1)] uint size)
         {
             return _syscall.MapPhysicalMemory(address, size);

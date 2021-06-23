@@ -1095,6 +1095,92 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
+        public KernelResult MapTransferMemory(int handle, ulong address, ulong size, KMemoryPermission permission)
+        {
+            if (!PageAligned(address))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (address + size <= address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            if (permission > KMemoryPermission.ReadAndWrite || permission == KMemoryPermission.Write)
+            {
+                return KernelResult.InvalidPermission;
+            }
+
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            KTransferMemory transferMemory = currentProcess.HandleTable.GetObject<KTransferMemory>(handle);
+
+            if (transferMemory == null)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            if (currentProcess.MemoryManager.IsInvalidRegion(address, size) ||
+                currentProcess.MemoryManager.InsideHeapRegion(address, size) ||
+                currentProcess.MemoryManager.InsideAliasRegion(address, size))
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            return transferMemory.MapIntoProcess(
+                currentProcess.MemoryManager,
+                address,
+                size,
+                currentProcess,
+                permission);
+        }
+
+        public KernelResult UnmapTransferMemory(int handle, ulong address, ulong size)
+        {
+            if (!PageAligned(address))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (address + size <= address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            KTransferMemory transferMemory = currentProcess.HandleTable.GetObject<KTransferMemory>(handle);
+
+            if (transferMemory == null)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            if (currentProcess.MemoryManager.IsInvalidRegion(address, size) ||
+                currentProcess.MemoryManager.InsideHeapRegion(address, size) ||
+                currentProcess.MemoryManager.InsideAliasRegion(address, size))
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            return transferMemory.UnmapFromProcess(
+                currentProcess.MemoryManager,
+                address,
+                size,
+                currentProcess);
+        }
+
         public KernelResult MapPhysicalMemory(ulong address, ulong size)
         {
             if (!PageAligned(address))
