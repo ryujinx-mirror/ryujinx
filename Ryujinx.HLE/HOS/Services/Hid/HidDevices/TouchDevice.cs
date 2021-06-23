@@ -31,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     newState.Touches[i] = new TouchState
                     {
                         DeltaTime = newState.SamplingNumber,
+                        Attribute = pi.Attribute,
                         X = pi.X,
                         Y = pi.Y,
                         FingerId = (uint)i,

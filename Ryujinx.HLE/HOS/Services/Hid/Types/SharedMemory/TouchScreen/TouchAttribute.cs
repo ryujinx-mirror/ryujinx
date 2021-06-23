@@ -3,7 +3,7 @@
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen
 {
     [Flags]
-    enum TouchAttribute : uint
+    public enum TouchAttribute : uint
     {
         None = 0,
         Start = 1 << 0,

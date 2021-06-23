@@ -37,7 +37,6 @@ namespace Ryujinx.Ui
 
         private bool _isActive;
         private bool _isStopped;
-        private bool _isFocused;
 
         private bool _toggleFullscreen;
         private bool _toggleDockedMode;
@@ -91,8 +90,6 @@ namespace Ryujinx.Ui
                           | EventMask.KeyPressMask
                           | EventMask.KeyReleaseMask));
 
-            Shown += Renderer_Shown;
-
             _exitEvent = new ManualResetEvent(false);
 
             _hideCursorOnIdle = ConfigurationState.Instance.HideCursorOnIdle;
@@ -124,27 +121,12 @@ namespace Ryujinx.Ui
             });
         }
 
-        private void Parent_FocusOutEvent(object o, Gtk.FocusOutEventArgs args)
-        {
-            _isFocused = false;
-        }
-
-        private void Parent_FocusInEvent(object o, Gtk.FocusInEventArgs args)
-        {
-            _isFocused = true;
-        }
-
         private void Renderer_Destroyed(object sender, EventArgs e)
         {
             ConfigurationState.Instance.HideCursorOnIdle.Event -= HideCursorStateChanged;
 
             NpadManager.Dispose();
             Dispose();
-        }
-
-        private void Renderer_Shown(object sender, EventArgs e)
-        {
-            _isFocused = ParentWindow.State.HasFlag(Gdk.WindowState.Focused);
         }
 
         protected override bool OnMotionNotifyEvent(EventMotion evnt)
@@ -341,10 +323,7 @@ namespace Ryujinx.Ui
 
             _isActive = true;
 
-            Gtk.Window parent = this.Toplevel as Gtk.Window;
-
-            parent.FocusInEvent += Parent_FocusInEvent;
-            parent.FocusOutEvent += Parent_FocusOutEvent;
+            Gtk.Window parent = Toplevel as Gtk.Window;
 
             Application.Invoke(delegate
             {
@@ -445,9 +424,9 @@ namespace Ryujinx.Ui
                 return false;
             }
 
-            if (_isFocused)
+            if ((Toplevel as MainWindow).IsFocused)
             {
-                Gtk.Application.Invoke(delegate
+                Application.Invoke(delegate
                 {
                     KeyboardStateSnapshot keyboard = _keyboardInterface.GetKeyboardStateSnapshot();
 
@@ -465,7 +444,7 @@ namespace Ryujinx.Ui
 
             NpadManager.Update();
 
-            if (_isFocused)
+            if ((Toplevel as MainWindow).IsFocused)
             {
                 KeyboardHotkeyState currentHotkeyState = GetHotkeyState();
 
@@ -481,10 +460,10 @@ namespace Ryujinx.Ui
             // Touchscreen
             bool hasTouch = false;
 
-            // Get screen touch position from left mouse click
-            if (_isFocused && (_inputManager.MouseDriver as GTK3MouseDriver).IsButtonPressed(MouseButton.Button1))
+            // Get screen touch position
+            if ((Toplevel as MainWindow).IsFocused)
             {
-                hasTouch = TouchScreenManager.Update(true, ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
+                hasTouch = TouchScreenManager.Update(true, (_inputManager.MouseDriver as GTK3MouseDriver).IsButtonPressed(MouseButton.Button1), ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
             }
 
             if (!hasTouch)
