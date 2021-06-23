@@ -605,6 +605,7 @@ namespace ARMeilleure.Instructions
         Vnmul,
         Vnmla,
         Vnmls,
+        Vorn,
         Vorr,
         Vpadd,
         Vpmax,

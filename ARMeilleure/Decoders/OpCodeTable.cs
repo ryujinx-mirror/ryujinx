@@ -907,6 +907,7 @@ namespace ARMeilleure.Decoders
             SetA32("<<<<11100x01xxxxxxxx101xx1x0xxxx", InstName.Vnmla,    InstEmit32.Vnmla_S,  OpCode32SimdRegS.Create);
             SetA32("<<<<11100x01xxxxxxxx101xx0x0xxxx", InstName.Vnmls,    InstEmit32.Vnmls_S,  OpCode32SimdRegS.Create);
             SetA32("<<<<11100x10xxxxxxxx101xx1x0xxxx", InstName.Vnmul,    InstEmit32.Vnmul_S,  OpCode32SimdRegS.Create);
+            SetA32("111100100x11xxxxxxxx0001xxx1xxxx", InstName.Vorn,     InstEmit32.Vorn_I,   OpCode32SimdBinary.Create);
             SetA32("111100100x10xxxxxxxx0001xxx1xxxx", InstName.Vorr,     InstEmit32.Vorr_I,   OpCode32SimdBinary.Create);
             SetA32("1111001x1x000xxxxxxx<<x10x01xxxx", InstName.Vorr,     InstEmit32.Vorr_II,  OpCode32SimdImm.Create);
             SetA32("111100100x<<xxxxxxxx1011x0x1xxxx", InstName.Vpadd,    InstEmit32.Vpadd_I,  OpCode32SimdReg.Create);

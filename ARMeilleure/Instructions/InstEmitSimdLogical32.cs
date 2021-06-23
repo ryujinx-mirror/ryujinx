@@ -115,6 +115,24 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vorn_I(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                Operand mask = context.VectorOne();
+
+                EmitVectorBinaryOpSimd32(context, (n, m) =>
+                {
+                    m = context.AddIntrinsic(Intrinsic.X86Pandn, m, mask);
+                    return context.AddIntrinsic(Intrinsic.X86Por, n, m);
+                });
+            }
+            else
+            {
+                EmitVectorBinaryOpZx32(context, (op1, op2) => context.BitwiseOr(op1, context.BitwiseNot(op2)));
+            }
+        }
+
         public static void Vorr_I(ArmEmitterContext context)
         {
             if (Optimizations.UseSse2)

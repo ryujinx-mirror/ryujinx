@@ -22,7 +22,7 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _Vbic_Vbif_Vbit_Vbsl_Vand_Vorr_Veor_I_()
+        private static uint[] _Vbic_Vbif_Vbit_Vbsl_Vand_Vorn_Vorr_Veor_I_()
         {
             return new uint[]
             {
@@ -31,6 +31,7 @@ namespace Ryujinx.Tests.Cpu
                 0xf3200110u, // VBIT D0, D0, D0
                 0xf3100110u, // VBSL D0, D0, D0
                 0xf2000110u, // VAND D0, D0, D0
+                0xf2300110u, // VORN D0, D0, D0
                 0xf2200110u, // VORR D0, D0, D0
                 0xf3000110u  // VEOR D0, D0, D0
             };
@@ -51,14 +52,14 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 2;
 
         [Test, Pairwise]
-        public void Vbic_Vbif_Vbit_Vbsl_Vand_Vorr_Veor_I([ValueSource("_Vbic_Vbif_Vbit_Vbsl_Vand_Vorr_Veor_I_")] uint opcode,
-                                                         [Range(0u, 5u)] uint rd,
-                                                         [Range(0u, 5u)] uint rn,
-                                                         [Range(0u, 5u)] uint rm,
-                                                         [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong z,
-                                                         [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong a,
-                                                         [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong b,
-                                                         [Values] bool q)
+        public void Vbic_Vbif_Vbit_Vbsl_Vand_Vorn_Vorr_Veor_I([ValueSource("_Vbic_Vbif_Vbit_Vbsl_Vand_Vorn_Vorr_Veor_I_")] uint opcode,
+                                                              [Range(0u, 5u)] uint rd,
+                                                              [Range(0u, 5u)] uint rn,
+                                                              [Range(0u, 5u)] uint rm,
+                                                              [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong z,
+                                                              [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong a,
+                                                              [Values(ulong.MinValue, ulong.MaxValue)] [Random(RndCnt)] ulong b,
+                                                              [Values] bool q)
         {
             if (q)
             {
