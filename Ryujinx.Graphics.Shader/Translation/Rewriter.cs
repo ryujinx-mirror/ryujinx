@@ -155,7 +155,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 return node;
             }
-            
+
             bool isGather       = (texOp.Flags & TextureFlags.Gather)      != 0;
             bool hasDerivatives = (texOp.Flags & TextureFlags.Derivatives) != 0;
             bool intCoords      = (texOp.Flags & TextureFlags.IntCoords)   != 0;
@@ -360,7 +360,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         texOp.Format,
                         texOp.Flags,
                         texOp.Handle,
-                        1,
+                        0,
                         lod,
                         lodSources));
 
