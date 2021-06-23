@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     context.AppendLine();
                 }
 
-                if (info.IAttributes.Count != 0)
+                if (info.IAttributes.Count != 0 || context.Config.GpPassthrough)
                 {
                     DeclareInputAttributes(context, info);
 
@@ -371,45 +371,64 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareInputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            string suffix = context.Config.Stage == ShaderStage.Geometry ? "[]" : string.Empty;
-
-            foreach (int attr in info.IAttributes.OrderBy(x => x))
+            if (context.Config.GpPassthrough)
             {
-                string iq = string.Empty;
-
-                if (context.Config.Stage == ShaderStage.Fragment)
+                for (int attr = 0; attr < MaxAttributes; attr++)
                 {
-                    iq = context.Config.ImapTypes[attr].GetFirstUsedType() switch
-                    {
-                        PixelImap.Constant => "flat ",
-                        PixelImap.ScreenLinear => "noperspective ",
-                        _ => string.Empty
-                    };
+                    DeclareInputAttribute(context, info, attr);
                 }
 
-                string pass = context.Config.GpPassthrough ? "passthrough, " : string.Empty;
-
-                string name = $"{DefaultNames.IAttributePrefix}{attr}";
-
-                if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+                foreach (int attr in info.IAttributes.OrderBy(x => x).Where(x => x >= MaxAttributes))
                 {
-                    for (int c = 0; c < 4; c++)
-                    {
-                        char swzMask = "xyzw"[c];
-
-                        context.AppendLine($"layout ({pass}location = {attr}, component = {c}) {iq}in float {name}_{swzMask}{suffix};");
-                    }
+                    DeclareInputAttribute(context, info, attr);
                 }
-                else
+            }
+            else
+            {
+                foreach (int attr in info.IAttributes.OrderBy(x => x))
                 {
-                    context.AppendLine($"layout ({pass}location = {attr}) {iq}in vec4 {name}{suffix};");
+                    DeclareInputAttribute(context, info, attr);
                 }
+            }
+        }
+
+        private static void DeclareInputAttribute(CodeGenContext context, StructuredProgramInfo info, int attr)
+        {
+            string suffix = context.Config.Stage == ShaderStage.Geometry ? "[]" : string.Empty;
+            string iq = string.Empty;
+
+            if (context.Config.Stage == ShaderStage.Fragment)
+            {
+                iq = context.Config.ImapTypes[attr].GetFirstUsedType() switch
+                {
+                    PixelImap.Constant => "flat ",
+                    PixelImap.ScreenLinear => "noperspective ",
+                    _ => string.Empty
+                };
+            }
+
+            string pass = context.Config.GpPassthrough && !info.OAttributes.Contains(attr) ? "passthrough, " : string.Empty;
+
+            string name = $"{DefaultNames.IAttributePrefix}{attr}";
+
+            if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+            {
+                for (int c = 0; c < 4; c++)
+                {
+                    char swzMask = "xyzw"[c];
+
+                    context.AppendLine($"layout ({pass}location = {attr}, component = {c}) {iq}in float {name}_{swzMask}{suffix};");
+                }
+            }
+            else
+            {
+                context.AppendLine($"layout ({pass}location = {attr}) {iq}in vec4 {name}{suffix};");
             }
         }
 
         private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            if (context.Config.Stage == ShaderStage.Fragment)
+            if (context.Config.Stage == ShaderStage.Fragment || context.Config.GpPassthrough)
             {
                 DeclareUsedOutputAttributes(context, info);
             }
@@ -423,7 +442,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             foreach (int attr in info.OAttributes.OrderBy(x => x))
             {
-                context.AppendLine($"layout (location = {attr}) out vec4 {DefaultNames.OAttributePrefix}{attr};");
+                DeclareOutputAttribute(context, attr);
             }
         }
 
