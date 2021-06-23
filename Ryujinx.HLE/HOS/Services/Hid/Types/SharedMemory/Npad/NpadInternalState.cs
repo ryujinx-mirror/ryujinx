@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         public NpadBatteryLevel BatteryLevelJoyLeft;
         public NpadBatteryLevel BatteryLevelJoyRight;
         public uint AppletFooterUiAttributes;
-        public byte AppletFooterUiType;
+        public AppletFooterUiType AppletFooterUiType;
         private unsafe fixed byte _reserved2[0x7B];
         public RingLifo<NpadGcTriggerState> GcTrigger;
         public NpadLarkType LarkTypeLeftAndMain;

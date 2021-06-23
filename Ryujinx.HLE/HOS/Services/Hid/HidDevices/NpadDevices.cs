@@ -239,45 +239,51 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             switch (type)
             {
                 case ControllerType.ProController:
-                    controller.StyleSet          = NpadStyleTag.FullKey;
-                    controller.DeviceType        = DeviceType.FullKey;
-                    controller.SystemProperties |= NpadSystemProperties.IsAbxyButtonOriented |
-                                                   NpadSystemProperties.IsPlusAvailable      |
-                                                   NpadSystemProperties.IsMinusAvailable;
+                    controller.StyleSet           = NpadStyleTag.FullKey;
+                    controller.DeviceType         = DeviceType.FullKey;
+                    controller.SystemProperties  |= NpadSystemProperties.IsAbxyButtonOriented |
+                                                    NpadSystemProperties.IsPlusAvailable      |
+                                                    NpadSystemProperties.IsMinusAvailable;
+                    controller.AppletFooterUiType = AppletFooterUiType.SwitchProController;
                     break;
                 case ControllerType.Handheld:
-                    controller.StyleSet          = NpadStyleTag.Handheld;
-                    controller.DeviceType        = DeviceType.HandheldLeft |
-                                                   DeviceType.HandheldRight;
-                    controller.SystemProperties |= NpadSystemProperties.IsAbxyButtonOriented |
-                                                   NpadSystemProperties.IsPlusAvailable      |
-                                                   NpadSystemProperties.IsMinusAvailable;
+                    controller.StyleSet           = NpadStyleTag.Handheld;
+                    controller.DeviceType         = DeviceType.HandheldLeft |
+                                                    DeviceType.HandheldRight;
+                    controller.SystemProperties  |= NpadSystemProperties.IsAbxyButtonOriented |
+                                                    NpadSystemProperties.IsPlusAvailable      |
+                                                    NpadSystemProperties.IsMinusAvailable;
+                    controller.AppletFooterUiType = AppletFooterUiType.HandheldJoyConLeftJoyConRight;
                     break;
                 case ControllerType.JoyconPair:
-                    controller.StyleSet          = NpadStyleTag.JoyDual;
-                    controller.DeviceType        = DeviceType.JoyLeft |
-                                                   DeviceType.JoyRight;
-                    controller.SystemProperties |= NpadSystemProperties.IsAbxyButtonOriented |
-                                                   NpadSystemProperties.IsPlusAvailable      |
-                                                   NpadSystemProperties.IsMinusAvailable;
+                    controller.StyleSet           = NpadStyleTag.JoyDual;
+                    controller.DeviceType         = DeviceType.JoyLeft |
+                                                    DeviceType.JoyRight;
+                    controller.SystemProperties  |= NpadSystemProperties.IsAbxyButtonOriented |
+                                                    NpadSystemProperties.IsPlusAvailable      |
+                                                    NpadSystemProperties.IsMinusAvailable;
+                    controller.AppletFooterUiType = _device.System.State.DockedMode ? AppletFooterUiType.JoyDual : AppletFooterUiType.HandheldJoyConLeftJoyConRight;
                     break;
                 case ControllerType.JoyconLeft:
-                    controller.StyleSet          = NpadStyleTag.JoyLeft;
-                    controller.JoyAssignmentMode = NpadJoyAssignmentMode.Single;
-                    controller.DeviceType        = DeviceType.JoyLeft;
-                    controller.SystemProperties |= NpadSystemProperties.IsSlSrButtonOriented |
-                                                   NpadSystemProperties.IsMinusAvailable;
+                    controller.StyleSet           = NpadStyleTag.JoyLeft;
+                    controller.JoyAssignmentMode  = NpadJoyAssignmentMode.Single;
+                    controller.DeviceType         = DeviceType.JoyLeft;
+                    controller.SystemProperties  |= NpadSystemProperties.IsSlSrButtonOriented |
+                                                    NpadSystemProperties.IsMinusAvailable;
+                    controller.AppletFooterUiType = _device.System.State.DockedMode ? AppletFooterUiType.JoyDualLeftOnly : AppletFooterUiType.HandheldJoyConLeftOnly;
                     break;
                 case ControllerType.JoyconRight:
-                    controller.StyleSet          = NpadStyleTag.JoyRight;
-                    controller.JoyAssignmentMode = NpadJoyAssignmentMode.Single;
-                    controller.DeviceType        = DeviceType.JoyRight;
-                    controller.SystemProperties |= NpadSystemProperties.IsSlSrButtonOriented |
-                                                   NpadSystemProperties.IsPlusAvailable;
+                    controller.StyleSet           = NpadStyleTag.JoyRight;
+                    controller.JoyAssignmentMode  = NpadJoyAssignmentMode.Single;
+                    controller.DeviceType         = DeviceType.JoyRight;
+                    controller.SystemProperties  |= NpadSystemProperties.IsSlSrButtonOriented |
+                                                    NpadSystemProperties.IsPlusAvailable;
+                    controller.AppletFooterUiType = _device.System.State.DockedMode ? AppletFooterUiType.JoyDualRightOnly : AppletFooterUiType.HandheldJoyConRightOnly;
                     break;
                 case ControllerType.Pokeball:
-                    controller.StyleSet   = NpadStyleTag.Palma;
-                    controller.DeviceType = DeviceType.Palma;
+                    controller.StyleSet           = NpadStyleTag.Palma;
+                    controller.DeviceType         = DeviceType.Palma;
+                    controller.AppletFooterUiType = AppletFooterUiType.None;
                     break;
             }
 

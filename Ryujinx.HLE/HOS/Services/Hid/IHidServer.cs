@@ -746,22 +746,33 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         [CommandHipc(108)]
-        // GetPlayerLedPattern(uint NpadId) -> ulong LedPattern
+        // GetPlayerLedPattern(u32 npad_id) -> u64 led_pattern
         public ResultCode GetPlayerLedPattern(ServiceCtx context)
         {
-            NpadIdType npadId = (NpadIdType)context.RequestData.ReadInt32();
+            NpadIdType npadId = (NpadIdType)context.RequestData.ReadUInt32();
 
-            long ledPattern = HidUtils.GetLedPatternFromNpadId(npadId);
+            ulong ledPattern = npadId switch
+            {
+                NpadIdType.Player1  => 0b0001,
+                NpadIdType.Player2  => 0b0011,
+                NpadIdType.Player3  => 0b0111,
+                NpadIdType.Player4  => 0b1111,
+                NpadIdType.Player5  => 0b1001,
+                NpadIdType.Player6  => 0b0101,
+                NpadIdType.Player7  => 0b1101,
+                NpadIdType.Player8  => 0b0110,
+                NpadIdType.Unknown  => 0b0000,
+                NpadIdType.Handheld => 0b0000,
+                _ => throw new ArgumentOutOfRangeException(nameof(npadId))
+            };
 
             context.ResponseData.Write(ledPattern);
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { npadId, ledPattern });
 
             return ResultCode.Success;
         }
 
         [CommandHipc(109)] // 5.0.0+
-        // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, int Unknown)
+        // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, int revision)
         public ResultCode ActivateNpadWithRevision(ServiceCtx context)
         {
             int  revision             = context.RequestData.ReadInt32();
@@ -798,32 +809,46 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         [CommandHipc(120)]
-        // SetNpadJoyHoldType(nn::applet::AppletResourceUserId, long NpadJoyHoldType)
+        // SetNpadJoyHoldType(nn::applet::AppletResourceUserId, ulong NpadJoyHoldType)
         public ResultCode SetNpadJoyHoldType(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
-            context.Device.Hid.Npads.JoyHold = (NpadJoyHoldType)context.RequestData.ReadInt64();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
-                    appletResourceUserId,
-                    context.Device.Hid.Npads.JoyHold
-                });
+            NpadJoyHoldType npadJoyHoldType = (NpadJoyHoldType)context.RequestData.ReadUInt64();
+
+            if (npadJoyHoldType > NpadJoyHoldType.Horizontal)
+            {
+                throw new ArgumentOutOfRangeException(nameof(npadJoyHoldType));
+            }
+
+            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
+            {
+                if (HidUtils.GetNpadIdTypeFromIndex(playerIndex) > NpadIdType.Handheld)
+                {
+                    return ResultCode.InvalidNpadIdType;
+                }
+            }
+
+            context.Device.Hid.Npads.JoyHold = npadJoyHoldType;
 
             return ResultCode.Success;
         }
 
         [CommandHipc(121)]
-        // GetNpadJoyHoldType(nn::applet::AppletResourceUserId) -> long NpadJoyHoldType
+        // GetNpadJoyHoldType(nn::applet::AppletResourceUserId) -> ulong NpadJoyHoldType
         public ResultCode GetNpadJoyHoldType(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            context.ResponseData.Write((long)context.Device.Hid.Npads.JoyHold);
+            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
+            {
+                if (HidUtils.GetNpadIdTypeFromIndex(playerIndex) > NpadIdType.Handheld)
+                {
+                    return ResultCode.InvalidNpadIdType;
+                }
+            }
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
-                    appletResourceUserId,
-                    context.Device.Hid.Npads.JoyHold
-                });
+            context.ResponseData.Write((ulong)context.Device.Hid.Npads.JoyHold);
 
             return ResultCode.Success;
         }
@@ -1167,6 +1192,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode EndPermitVibrationSession(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(211)] // 7.0.0+
+        // IsVibrationDeviceMounted(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId)
+        public ResultCode IsVibrationDeviceMounted(ServiceCtx context)
+        {
+            int  vibrationDeviceHandle = context.RequestData.ReadInt32();
+            long appletResourceUserId  = context.RequestData.ReadInt64();
+
+            // NOTE: Service use vibrationDeviceHandle to get the PlayerIndex.
+            //       And return false if (npadIdType >= (NpadIdType)8 && npadIdType != NpadIdType.Handheld && npadIdType != NpadIdType.Unknown)
+
+            context.ResponseData.Write(true);
 
             return ResultCode.Success;
         }
