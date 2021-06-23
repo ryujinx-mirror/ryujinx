@@ -35,39 +35,32 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public TitleLanguage DesiredTitleLanguage { get; private set; }
 
-        internal string ActiveAudioOutput { get; private set; }
-
         public bool DockedMode { get; set; }
 
         public ColorSet ThemeColor { get; set; }
 
-        public bool InstallContents { get; set; }
+        public string DeviceNickName { get; set; }
 
         public SystemStateMgr()
         {
-            // TODO: Let user specify.
+            // TODO: Let user specify fields.
             DesiredKeyboardLayout = (long)KeyboardLayout.Default;
+            DeviceNickName        = "Ryujinx's Switch";
         }
 
         public void SetLanguage(SystemLanguage language)
         {
             DesiredSystemLanguage = language;
-            DesiredLanguageCode = GetLanguageCode((int)DesiredSystemLanguage);
+            DesiredLanguageCode   = GetLanguageCode((int)DesiredSystemLanguage);
 
-            switch (language)
+            DesiredTitleLanguage = language switch
             {
-                case SystemLanguage.Taiwanese:
-                case SystemLanguage.TraditionalChinese:
-                    DesiredTitleLanguage = TitleLanguage.Taiwanese;
-                    break;
-                case SystemLanguage.Chinese:
-                case SystemLanguage.SimplifiedChinese:
-                    DesiredTitleLanguage = TitleLanguage.Chinese;
-                    break;
-                default:
-                    DesiredTitleLanguage = Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), language));
-                    break;
-            }
+                SystemLanguage.Taiwanese or
+                SystemLanguage.TraditionalChinese => TitleLanguage.Taiwanese,
+                SystemLanguage.Chinese or
+                SystemLanguage.SimplifiedChinese  => TitleLanguage.Chinese,
+                _                                 => Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), language)),
+            };
         }
 
         public void SetRegion(RegionCode region)

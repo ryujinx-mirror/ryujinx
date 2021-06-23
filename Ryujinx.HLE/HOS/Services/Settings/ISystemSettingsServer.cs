@@ -228,7 +228,45 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             // NOTE: When set to true, is automatically synced with the internet.
             context.ResponseData.Write(true);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceSet, "Stubbed");
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(77)]
+        // GetDeviceNickName() -> buffer<nn::settings::system::DeviceNickName, 0x16>
+        public ResultCode GetDeviceNickName(ServiceCtx context)
+        {
+            ulong deviceNickNameBufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong deviceNickNameBufferSize     = context.Request.ReceiveBuff[0].Size;
+
+            if (deviceNickNameBufferPosition == 0)
+            {
+                return ResultCode.NullDeviceNicknameBuffer;
+            }
+
+            if (deviceNickNameBufferSize != 0x80)
+            {
+                Logger.Warning?.Print(LogClass.ServiceSet, "Wrong buffer size");
+            }
+
+            context.Memory.Write(deviceNickNameBufferPosition, Encoding.ASCII.GetBytes(context.Device.System.State.DeviceNickName + '\0'));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(78)]
+        // SetDeviceNickName(buffer<nn::settings::system::DeviceNickName, 0x15>)
+        public ResultCode SetDeviceNickName(ServiceCtx context)
+        {
+            ulong deviceNickNameBufferPosition = context.Request.SendBuff[0].Position;
+            ulong deviceNickNameBufferSize     = context.Request.SendBuff[0].Size;
+
+            byte[] deviceNickNameBuffer = new byte[deviceNickNameBufferSize];
+
+            context.Memory.Read(deviceNickNameBufferPosition, deviceNickNameBuffer);
+
+            context.Device.System.State.DeviceNickName = Encoding.ASCII.GetString(deviceNickNameBuffer);
 
             return ResultCode.Success;
         }
