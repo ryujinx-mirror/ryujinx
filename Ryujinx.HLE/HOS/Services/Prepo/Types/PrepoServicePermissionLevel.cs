@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ryujinx.HLE.HOS.Services.Prepo
+﻿namespace Ryujinx.HLE.HOS.Services.Prepo
 {
     enum PrepoServicePermissionLevel
     {
