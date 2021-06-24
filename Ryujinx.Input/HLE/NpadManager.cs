@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.HLE.HOS.Services.Hid;
@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-
 using CemuHookClient = Ryujinx.Input.Motion.CemuHook.Client;
 using Switch = Ryujinx.HLE.Switch;
 
@@ -26,22 +25,23 @@ namespace Ryujinx.Input.HLE
 
         private readonly IGamepadDriver _keyboardDriver;
         private readonly IGamepadDriver _gamepadDriver;
-
+        private readonly IGamepadDriver _mouseDriver;
         private bool _isDisposed;
 
         private List<InputConfig> _inputConfig;
         private bool _enableKeyboard;
+        private bool _enableMouse;
         private Switch _device;
 
-        public NpadManager(IGamepadDriver keyboardDriver, IGamepadDriver gamepadDriver)
+        public NpadManager(IGamepadDriver keyboardDriver, IGamepadDriver gamepadDriver, IGamepadDriver mouseDriver)
         {
             _controllers = new NpadController[MaxControllers];
             _cemuHookClient = new CemuHookClient(this);
 
             _keyboardDriver = keyboardDriver;
             _gamepadDriver = gamepadDriver;
+            _mouseDriver = mouseDriver;
             _inputConfig = new List<InputConfig>();
-            _enableKeyboard = false;
 
             _gamepadDriver.OnGamepadConnected += HandleOnGamepadConnected;
             _gamepadDriver.OnGamepadDisconnected += HandleOnGamepadDisconnected;
@@ -58,13 +58,13 @@ namespace Ryujinx.Input.HLE
         private void HandleOnGamepadDisconnected(string obj)
         {
             // Force input reload
-            ReloadConfiguration(_inputConfig, _enableKeyboard);
+            ReloadConfiguration(_inputConfig, _enableKeyboard, _enableMouse);
         }
 
         private void HandleOnGamepadConnected(string id)
         {
             // Force input reload
-            ReloadConfiguration(_inputConfig, _enableKeyboard);
+            ReloadConfiguration(_inputConfig, _enableKeyboard, _enableMouse);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,7 +93,7 @@ namespace Ryujinx.Input.HLE
             }
         }
 
-        public void ReloadConfiguration(List<InputConfig> inputConfig, bool enableKeyboard)
+        public void ReloadConfiguration(List<InputConfig> inputConfig, bool enableKeyboard, bool enableMouse)
         {
             lock (_lock)
             {
@@ -119,8 +119,9 @@ namespace Ryujinx.Input.HLE
                     }
                 }
 
-                _inputConfig = inputConfig;
+                _inputConfig    = inputConfig;
                 _enableKeyboard = enableKeyboard;
+                _enableMouse    = enableMouse;
 
                 _device.Hid.RefreshInputConfig(inputConfig);
             }
@@ -142,15 +143,15 @@ namespace Ryujinx.Input.HLE
             }
         }
 
-        public void Initialize(Switch device, List<InputConfig> inputConfig, bool enableKeyboard)
+        public void Initialize(Switch device, List<InputConfig> inputConfig, bool enableKeyboard, bool enableMouse)
         {
             _device = device;
             _device.Configuration.RefreshInputConfig = RefreshInputConfigForHLE;
 
-            ReloadConfiguration(inputConfig, enableKeyboard);
+            ReloadConfiguration(inputConfig, enableKeyboard, enableMouse);
         }
 
-        public void Update()
+        public void Update(float aspectRatio = 0)
         {
             lock (_lock)
             {
@@ -204,6 +205,48 @@ namespace Ryujinx.Input.HLE
                 if (hleKeyboardInput.HasValue)
                 {
                     _device.Hid.Keyboard.Update(hleKeyboardInput.Value);
+                }
+
+                if (_enableMouse)
+                {
+                    var mouse = _mouseDriver.GetGamepad("0") as IMouse;
+
+                    var mouseInput = IMouse.GetMouseStateSnapshot(mouse);
+
+                    uint buttons = 0;
+
+                    if (mouseInput.IsPressed(MouseButton.Button1))
+                    {
+                        buttons |= 1 << 0;
+                    }
+
+                    if (mouseInput.IsPressed(MouseButton.Button2))
+                    {
+                        buttons |= 1 << 1;
+                    }
+
+                    if (mouseInput.IsPressed(MouseButton.Button3))
+                    {
+                        buttons |= 1 << 2;
+                    }
+
+                    if (mouseInput.IsPressed(MouseButton.Button4))
+                    {
+                        buttons |= 1 << 3;
+                    }
+
+                    if (mouseInput.IsPressed(MouseButton.Button5))
+                    {
+                        buttons |= 1 << 4;
+                    }
+
+                    var position = IMouse.GetScreenPosition(mouseInput.Position, mouse.ClientSize, aspectRatio);
+
+                    _device.Hid.Mouse.Update((int)position.X, (int)position.Y, buttons, (int)mouseInput.Scroll.X, (int)mouseInput.Scroll.Y, true);
+                }
+                else 
+                {
+                    _device.Hid.Mouse.Update(0, 0);
                 }
 
                 _device.TamperMachine.UpdateInput(hleInputStates);

@@ -31,6 +31,11 @@ namespace Ryujinx.Input.GTK3
             return _driver.CurrentPosition;
         }
 
+        public Vector2 GetScroll()
+        {
+            return _driver.Scroll;
+        }
+
         public GamepadStateSnapshot GetMappedStateSnapshot()
         {
             throw new NotImplementedException();

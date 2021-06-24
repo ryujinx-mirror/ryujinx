@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 26;
+        public const int CurrentVersion = 27;
 
         public int Version { get; set; }
 
@@ -223,6 +223,11 @@ namespace Ryujinx.Configuration
         /// Enable or disable keyboard support (Independent from controllers binding)
         /// </summary>
         public bool EnableKeyboard { get; set; }
+
+        /// <summary>
+        /// Enable or disable mouse support (Independent from controllers binding)
+        /// </summary>
+        public bool EnableMouse { get; set; }
 
         /// <summary>
         /// Hotkey Keyboard Bindings

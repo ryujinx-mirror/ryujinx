@@ -29,7 +29,7 @@ namespace Ryujinx.Input.HLE
                 if (_wasClicking && !isClicking)
                 {
                     MouseStateSnapshot snapshot = IMouse.GetMouseStateSnapshot(_mouse);
-                    var touchPosition = IMouse.GetTouchPosition(snapshot.Position, _mouse.ClientSize, aspectRatio);
+                    var touchPosition = IMouse.GetScreenPosition(snapshot.Position, _mouse.ClientSize, aspectRatio);
 
                     TouchPoint currentPoint = new TouchPoint
                     {
@@ -58,7 +58,7 @@ namespace Ryujinx.Input.HLE
             if (aspectRatio > 0)
             {
                 MouseStateSnapshot snapshot = IMouse.GetMouseStateSnapshot(_mouse);
-                var touchPosition = IMouse.GetTouchPosition(snapshot.Position, _mouse.ClientSize, aspectRatio);
+                var touchPosition = IMouse.GetScreenPosition(snapshot.Position, _mouse.ClientSize, aspectRatio);
 
                 TouchAttribute attribute = TouchAttribute.None;
 

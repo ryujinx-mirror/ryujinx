@@ -1,5 +1,5 @@
 {
-  "version": 24,
+  "version": 27,
   "enable_file_log": true,
   "res_scale": 1,
   "res_scale_custom": 1,
@@ -55,6 +55,7 @@
   "custom_theme_path": "",
   "start_fullscreen": false,
   "enable_keyboard": false,
+  "enable_mouse": false,
   "hotkeys": {
     "toggle_vsync": "Tab"
   },

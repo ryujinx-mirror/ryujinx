@@ -23,7 +23,7 @@ namespace Ryujinx.Input.HLE
 
         public NpadManager CreateNpadManager()
         {
-            return new NpadManager(KeyboardDriver, GamepadDriver);
+            return new NpadManager(KeyboardDriver, GamepadDriver, MouseDriver);
         }
         
         public TouchScreenManager CreateTouchScreenManager()

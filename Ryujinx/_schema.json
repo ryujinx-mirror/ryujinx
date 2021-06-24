@@ -22,6 +22,7 @@
     "enable_fs_integrity_checks",
     "fs_global_access_log_mode",
     "enable_keyboard",
+    "enable_mouse",
     "keyboard_config",
     "controller_config"
   ],
@@ -1433,6 +1434,17 @@
       "title": "(HID) Keyboard Enable",
       "description": "Enable or disable direct keyboard access (HID) support (Provides games access to your keyboard as a text entry device)",
       "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
+    "enable_mouse": {
+      "$id": "#/properties/enable_mouse",
+      "type": "boolean",
+      "title": "(HID) Mouse Enable",
+      "description": "Enable or disable direct mouse access (HID) support (Provides games access to your mouse as a pointing device)",
+      "default": false,
       "examples": [
         true,
         false
