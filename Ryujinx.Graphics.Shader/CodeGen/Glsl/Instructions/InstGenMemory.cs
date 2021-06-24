@@ -309,18 +309,30 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
             bool isShadow      = (texOp.Type & SamplerType.Shadow)      != 0;
 
+            SamplerType type = texOp.Type & SamplerType.Mask;
+
+            bool is2D   = type == SamplerType.Texture2D;
+            bool isCube = type == SamplerType.TextureCube;
+
+            // 2D Array and Cube shadow samplers with LOD level or bias requires an extension.
+            // If the extension is not supported, just remove the LOD parameter.
+            if (isArray && isShadow && (is2D || isCube) && !context.Config.GpuAccessor.QuerySupportsTextureShadowLod())
+            {
+                hasLodBias = false;
+                hasLodLevel = false;
+            }
+
+            // Cube shadow samplers with LOD level requires an extension.
+            // If the extension is not supported, just remove the LOD level parameter.
+            if (isShadow && isCube && !context.Config.GpuAccessor.QuerySupportsTextureShadowLod())
+            {
+                hasLodLevel = false;
+            }
+
             // TODO: Bindless texture support. For now we just return 0.
             if (isBindless)
             {
                 return NumberFormatter.FormatFloat(0);
-            }
-
-            // This combination is valid, but not available on GLSL.
-            // For now, ignore the LOD level and do a normal sample.
-            // TODO: How to implement it properly?
-            if (hasLodLevel && isArray && isShadow)
-            {
-                hasLodLevel = false;
             }
 
             string texCall = intCoords ? "texelFetch" : "texture";

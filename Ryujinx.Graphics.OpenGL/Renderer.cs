@@ -1,4 +1,4 @@
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
@@ -96,8 +96,9 @@ namespace Ryujinx.Graphics.OpenGL
             return new Capabilities(
                 HwCapabilities.SupportsAstcCompression,
                 HwCapabilities.SupportsImageLoadFormatted,
-                HwCapabilities.SupportsNonConstantTextureOffset,
                 HwCapabilities.SupportsMismatchingViewFormat,
+                HwCapabilities.SupportsNonConstantTextureOffset,
+                HwCapabilities.SupportsTextureShadowLod,
                 HwCapabilities.SupportsViewportSwizzle,
                 HwCapabilities.MaximumComputeSharedMemorySize,
                 HwCapabilities.MaximumSupportedAnisotropy,

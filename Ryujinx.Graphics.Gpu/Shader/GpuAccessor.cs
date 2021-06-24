@@ -181,6 +181,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool QuerySupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
         /// <summary>
+        /// Queries host GPU texture shadow LOD support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>
+        public bool QuerySupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
+
+        /// <summary>
         /// Gets the texture descriptor for a given texture on the pool.
         /// </summary>
         /// <param name="handle">Index of the texture (this is the word offset of the handle in the constant buffer)</param>

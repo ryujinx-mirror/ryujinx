@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             context.AppendLine("#extension GL_ARB_shader_ballot : enable");
             context.AppendLine("#extension GL_ARB_shader_group_vote : enable");
             context.AppendLine("#extension GL_EXT_shader_image_load_formatted : enable");
+            context.AppendLine("#extension GL_EXT_texture_shadow_lod : enable");
 
             if (context.Config.Stage == ShaderStage.Compute)
             {
@@ -32,7 +33,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
 
             context.AppendLine("#pragma optionNV(fastmath off)");
-
             context.AppendLine();
 
             context.AppendLine($"const int {DefaultNames.UndefinedName} = 0;");

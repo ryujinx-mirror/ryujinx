@@ -74,6 +74,11 @@
             return true;
         }
 
+        bool QuerySupportsTextureShadowLod()
+        {
+            return true;
+        }
+
         TextureFormat QueryTextureFormat(int handle, int cbufSlot = -1)
         {
             return TextureFormat.R8G8B8A8Unorm;
