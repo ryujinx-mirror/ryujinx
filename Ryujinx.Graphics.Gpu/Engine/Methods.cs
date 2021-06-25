@@ -223,10 +223,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateTexturePoolState(state);
             }
 
-            // Input assembler state.
+            // Rasterizer state.
             if (state.QueryModified(MethodOffset.VertexAttribState))
             {
                 UpdateVertexAttribState(state);
+            }
+
+            if (state.QueryModified(MethodOffset.LineWidthSmooth, MethodOffset.LineSmoothEnable))
+            {
+                UpdateLineState(state);
             }
 
             if (state.QueryModified(MethodOffset.PointSize,
@@ -714,6 +719,18 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             _context.Renderer.Pipeline.SetVertexAttribs(vertexAttribs);
+        }
+
+        /// <summary>
+        /// Updates host line width based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        private void UpdateLineState(GpuState state)
+        {
+            float width = state.Get<float>(MethodOffset.LineWidthSmooth);
+            bool smooth = state.Get<Boolean32>(MethodOffset.LineSmoothEnable);
+
+            _context.Renderer.Pipeline.SetLineParameters(width, smooth);
         }
 
         /// <summary>

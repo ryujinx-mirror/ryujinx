@@ -746,6 +746,20 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public void SetLineParameters(float width, bool smooth)
+        {
+            if (smooth)
+            {
+                GL.Enable(EnableCap.LineSmooth);
+            }
+            else
+            {
+                GL.Disable(EnableCap.LineSmooth);
+            }
+
+            GL.LineWidth(width);
+        }
+
         public void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin)
         {
             // GL_POINT_SPRITE was deprecated in core profile 3.2+ and causes GL_INVALID_ENUM when set.

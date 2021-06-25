@@ -52,6 +52,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetLogicOpState(bool enable, LogicalOp op);
 
+        void SetLineParameters(float width, bool smooth);
         void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin);
 
         void SetPrimitiveRestart(bool enable, int index);
