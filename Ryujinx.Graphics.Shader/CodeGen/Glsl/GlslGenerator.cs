@@ -76,14 +76,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                         if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
                         {
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0.0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0.0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0.0;");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 1.0;");
                         }
                         else
                         {
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0);");
+                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0.0, 0.0, 0.0, 1.0);");
                         }
                     }
                 }
