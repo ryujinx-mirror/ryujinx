@@ -1455,7 +1455,8 @@
       "type": "object",
       "title": "Hotkey Controls",
       "required": [
-        "toggle_vsync"
+        "toggle_vsync",
+        "screenshot"        
       ],
       "properties": {
         "toggle_vsync": {
@@ -1463,6 +1464,12 @@
           "$ref": "#/definitions/key",
           "title": "Toggle VSync",
           "default": "Tab"
+        },
+        "screenshot": {
+          "$id": "#/properties/hotkeys/properties/screenshot",
+          "$ref": "#/definitions/key",
+          "title": "Screenshot",
+          "default": "F8"
         }
       }
     },

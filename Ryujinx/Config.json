@@ -1,5 +1,5 @@
 {
-  "version": 27,
+  "version": 28,
   "enable_file_log": true,
   "res_scale": 1,
   "res_scale_custom": 1,
@@ -57,7 +57,8 @@
   "enable_keyboard": false,
   "enable_mouse": false,
   "hotkeys": {
-    "toggle_vsync": "Tab"
+    "toggle_vsync": "Tab",
+    "screenshot": "F8"
   },
   "keyboard_config": [],
   "controller_config": [],

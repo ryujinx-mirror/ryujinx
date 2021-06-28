@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkApplicationWindow" id="_mainWin">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Ryujinx</property>
     <property name="window_position">center</property>
-    <child type="titlebar">
-      <placeholder/>
-    </child>
     <child>
       <object class="GtkBox" id="_box">
         <property name="visible">True</property>
@@ -332,6 +329,15 @@
                         <signal name="activate" handler="Scan_Amiibo" swapped="no"/>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_takeScreenshot">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Take a screenshot</property>
+                        <property name="label" translatable="yes">Take Screenshot</property>
+                        <signal name="activate" handler="Take_Screenshot" swapped="no"/>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -450,7 +456,7 @@
                         <property name="can_focus">True</property>
                         <property name="reorderable">True</property>
                         <property name="hover_selection">True</property>
-                        <signal name="row-activated" handler="Row_Activated" swapped="no"/>
+                        <signal name="row_activated" handler="Row_Activated" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="_gameTableSelection"/>
                         </child>
@@ -484,7 +490,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin_left">5</property>
-                        <signal name="button-release-event" handler="RefreshList_Pressed" swapped="no"/>
+                        <signal name="button_release_event" handler="RefreshList_Pressed" swapped="no"/>
                         <child>
                           <object class="GtkImage">
                             <property name="name">RefreshList</property>
@@ -547,8 +553,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">0</property>
-                        <signal name="button-release-event" handler="VSyncStatus_Clicked" swapped="no"/>
+                        <signal name="button_release_event" handler="VSyncStatus_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_vSyncStatus">
                             <property name="visible">True</property>
@@ -581,8 +586,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">0</property>
-                        <signal name="button-release-event" handler="DockedMode_Clicked" swapped="no"/>
+                        <signal name="button_release_event" handler="DockedMode_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_dockedMode">
                             <property name="visible">True</property>
@@ -614,8 +618,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">0</property>
-                        <signal name="button-release-event" handler="AspectRatio_Clicked" swapped="no"/>
+                        <signal name="button_release_event" handler="AspectRatio_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_aspectRatio">
                             <property name="visible">True</property>
@@ -714,35 +717,6 @@
                     <property name="position">1</property>
                   </packing>
                 </child>
-                  <child>
-                    <object class="GtkLabel" id="_loadingStatusLabel">
-                      <property name="can_focus">False</property>
-                      <property name="margin_left">5</property>
-                      <property name="margin_right">5</property>
-                      <property name="label" translatable="yes">0/0 </property>
-                      <property name="visible">False</property>
-                    </object>
-                    <packing>
-                      <property name="expand">False</property>
-                      <property name="fill">True</property>
-                      <property name="position">11</property>
-                    </packing>
-                  </child>
-                  <child>
-                    <object class="GtkProgressBar" id="_loadingStatusBar">
-                      <property name="width_request">200</property>
-                      <property name="can_focus">False</property>
-                      <property name="margin_left">5</property>
-                      <property name="margin_right">5</property>
-                      <property name="margin_bottom">6</property>
-                      <property name="visible">False</property>
-                    </object>
-                    <packing>
-                      <property name="expand">False</property>
-                      <property name="fill">True</property>
-                      <property name="position">12</property>
-                    </packing>
-                </child>
                 <child>
                   <object class="GtkBox">
                     <property name="visible">True</property>
@@ -781,6 +755,33 @@
                     <property name="fill">True</property>
                     <property name="pack_type">end</property>
                     <property name="position">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="_loadingStatusLabel">
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="label" translatable="yes">0/0 </property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">11</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkProgressBar" id="_loadingStatusBar">
+                    <property name="width_request">200</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_bottom">6</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">12</property>
                   </packing>
                 </child>
               </object>
