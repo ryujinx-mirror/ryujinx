@@ -1,13 +1,13 @@
+﻿using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.LibraryAppletProxy;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
-using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy;
 
-namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
+namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
 {
-    class IApplicationProxy : IpcService
+    class ILibraryAppletProxy : IpcService
     {
         private readonly long _pid;
 
-        public IApplicationProxy(long pid)
+        public ILibraryAppletProxy(long pid)
         {
             _pid = pid;
         }
@@ -57,6 +57,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
             return ResultCode.Success;
         }
 
+        [CommandHipc(10)]
+        // GetProcessWindingController() -> object<nn::am::service::IProcessWindingController>
+        public ResultCode GetProcessWindingController(ServiceCtx context)
+        {
+            MakeObject(context, new IProcessWindingController());
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(11)]
         // GetLibraryAppletCreator() -> object<nn::am::service::ILibraryAppletCreator>
         public ResultCode GetLibraryAppletCreator(ServiceCtx context)
@@ -67,10 +76,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
         }
 
         [CommandHipc(20)]
-        // GetApplicationFunctions() -> object<nn::am::service::IApplicationFunctions>
-        public ResultCode GetApplicationFunctions(ServiceCtx context)
+        // OpenLibraryAppletSelfAccessor() -> object<nn::am::service::ILibraryAppletSelfAccessor>
+        public ResultCode OpenLibraryAppletSelfAccessor(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationFunctions(context.Device.System));
+            MakeObject(context, new ILibraryAppletSelfAccessor(context));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(21)]
+        // GetAppletCommonFunctions() -> object<nn::am::service::IAppletCommonFunctions>
+        public ResultCode GetAppletCommonFunctions(ServiceCtx context)
+        {
+            MakeObject(context, new IAppletCommonFunctions());
 
             return ResultCode.Success;
         }

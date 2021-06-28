@@ -14,6 +14,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
         ObjectInvalid          = (500 << ErrorCodeShift) | ModuleId,
         IStorageInUse          = (502 << ErrorCodeShift) | ModuleId,
         OutOfBounds            = (503 << ErrorCodeShift) | ModuleId,
+        BufferNotAcquired      = (504 << ErrorCodeShift) | ModuleId,
+        BufferAlreadyAcquired  = (505 << ErrorCodeShift) | ModuleId,
         InvalidParameters      = (506 << ErrorCodeShift) | ModuleId,
         OpenedAsWrongType      = (511 << ErrorCodeShift) | ModuleId,
         UnbalancedFatalSection = (512 << ErrorCodeShift) | ModuleId,

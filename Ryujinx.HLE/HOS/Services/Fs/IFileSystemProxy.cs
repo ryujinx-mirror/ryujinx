@@ -499,6 +499,15 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
+        [CommandHipc(1003)]
+        // DisableAutoSaveDataCreation()
+        public ResultCode DisableAutoSaveDataCreation(ServiceCtx context)
+        {
+            // NOTE: This call does nothing in original service.
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(1004)]
         // SetGlobalAccessLogMode(u32 mode)
         public ResultCode SetGlobalAccessLogMode(ServiceCtx context)

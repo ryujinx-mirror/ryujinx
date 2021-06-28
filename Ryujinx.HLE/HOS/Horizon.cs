@@ -45,10 +45,11 @@ namespace Ryujinx.HLE.HOS
 
     public class Horizon : IDisposable
     {
-        internal const int HidSize  = 0x40000;
-        internal const int FontSize = 0x1100000;
-        internal const int IirsSize = 0x8000;
-        internal const int TimeSize = 0x1000;
+        internal const int HidSize                 = 0x40000;
+        internal const int FontSize                = 0x1100000;
+        internal const int IirsSize                = 0x8000;
+        internal const int TimeSize                = 0x1000;
+        internal const int AppletCaptureBufferSize = 0x384000;
 
         internal KernelContext KernelContext { get; }
 
@@ -82,6 +83,9 @@ namespace Ryujinx.HLE.HOS
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
         internal KSharedMemory IirsSharedMem { get; private set; }
+
+        internal KTransferMemory AppletCaptureBufferTransfer { get; private set; }
+
         internal SharedFontManager Font { get; private set; }
 
         internal AccountManager AccountManager { get; private set; }
@@ -129,25 +133,29 @@ namespace Ryujinx.HLE.HOS
             // region used that is used is Application, so we can use the other ones for anything.
             KMemoryRegionManager region = KernelContext.MemoryManager.MemoryRegions[(int)MemoryRegion.NvServices];
 
-            ulong hidPa  = region.Address;
-            ulong fontPa = region.Address + HidSize;
-            ulong iirsPa = region.Address + HidSize + FontSize;
-            ulong timePa = region.Address + HidSize + FontSize + IirsSize;
+            ulong hidPa                 = region.Address;
+            ulong fontPa                = region.Address + HidSize;
+            ulong iirsPa                = region.Address + HidSize + FontSize;
+            ulong timePa                = region.Address + HidSize + FontSize + IirsSize;
+            ulong appletCaptureBufferPa = region.Address + HidSize + FontSize + IirsSize + TimeSize;
 
-            KPageList hidPageList  = new KPageList();
-            KPageList fontPageList = new KPageList();
-            KPageList iirsPageList = new KPageList();
-            KPageList timePageList = new KPageList();
+            KPageList hidPageList                 = new KPageList();
+            KPageList fontPageList                = new KPageList();
+            KPageList iirsPageList                = new KPageList();
+            KPageList timePageList                = new KPageList();
+            KPageList appletCaptureBufferPageList = new KPageList();
 
-            hidPageList.AddRange(hidPa,  HidSize  / KPageTableBase.PageSize);
+            hidPageList.AddRange(hidPa, HidSize / KPageTableBase.PageSize);
             fontPageList.AddRange(fontPa, FontSize / KPageTableBase.PageSize);
             iirsPageList.AddRange(iirsPa, IirsSize / KPageTableBase.PageSize);
             timePageList.AddRange(timePa, TimeSize / KPageTableBase.PageSize);
+            appletCaptureBufferPageList.AddRange(appletCaptureBufferPa, AppletCaptureBufferSize / KPageTableBase.PageSize);
 
             var hidStorage = new SharedMemoryStorage(KernelContext, hidPageList);
             var fontStorage = new SharedMemoryStorage(KernelContext, fontPageList);
             var iirsStorage = new SharedMemoryStorage(KernelContext, iirsPageList);
             var timeStorage = new SharedMemoryStorage(KernelContext, timePageList);
+            var appletCaptureBufferStorage = new SharedMemoryStorage(KernelContext, appletCaptureBufferPageList);
 
             HidStorage = hidStorage;
 
@@ -158,6 +166,8 @@ namespace Ryujinx.HLE.HOS
             KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timeStorage, 0, 0, KMemoryPermission.Read);
 
             TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timeStorage, TimeSize);
+
+            AppletCaptureBufferTransfer = new KTransferMemory(KernelContext, appletCaptureBufferStorage);
 
             AppletState = new AppletStateMgr(this);
 

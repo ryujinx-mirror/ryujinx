@@ -19,7 +19,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkMenuItem" id="FileMenu">
+              <object class="GtkMenuItem" id="_fileMenu">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">File</property>
@@ -29,7 +29,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="LoadApplicationFile">
+                      <object class="GtkMenuItem" id="_loadApplicationFile">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Open a file chooser to chose a switch compatible file to load</property>
@@ -39,13 +39,37 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="LoadApplicationFolder">
+                      <object class="GtkMenuItem" id="_loadApplicationFolder">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Open a file chooser to chose a switch compatible, unpacked application to load</property>
                         <property name="label" translatable="yes">Load Unpacked Game</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="Load_Application_Folder" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_appletMenu">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Load Applet</property>
+                        <property name="use_underline">True</property>
+                        <child type="submenu">
+                          <object class="GtkMenu">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="LoadMiiEditApplet">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Open Mii Editor Applet in Standalone mode</property>
+                                <property name="label" translatable="yes">Mii Editor</property>
+                                <property name="use_underline">True</property>
+                                <signal name="activate" handler="Load_Mii_Edit_Applet" swapped="no"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>

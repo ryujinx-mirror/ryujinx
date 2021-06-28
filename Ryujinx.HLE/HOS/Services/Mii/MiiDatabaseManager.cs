@@ -101,6 +101,9 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             // Ensure we have valid data in the database
             _database.Format();
 
+            // TODO: Unmount is currently not implemented properly at dispose, implement that and decrement MountCounter.
+            MountCounter = 0;
+
             MountSave();
         }
 
@@ -151,8 +154,6 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                 }
             }
 
-
-
             return result;
         }
 
@@ -183,6 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             if (result.IsSuccess())
             {
                 result = _filesystemClient.GetFileSize(out long fileSize, handle);
+
                 if (result.IsSuccess())
                 {
                     if (fileSize == Unsafe.SizeOf<NintendoFigurineDatabase>())

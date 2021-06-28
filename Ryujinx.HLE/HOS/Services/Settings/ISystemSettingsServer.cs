@@ -7,6 +7,7 @@ using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.SystemState;
+using Ryujinx.HLE.Utilities;
 using System;
 using System.IO;
 using System.Text;
@@ -267,6 +268,20 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             context.Memory.Read(deviceNickNameBufferPosition, deviceNickNameBuffer);
 
             context.Device.System.State.DeviceNickName = Encoding.ASCII.GetString(deviceNickNameBuffer);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(90)]
+        // GetMiiAuthorId() -> nn::util::Uuid
+        public ResultCode GetMiiAuthorId(ServiceCtx context)
+        {
+            // NOTE: If miiAuthorId is null ResultCode.NullMiiAuthorIdBuffer is returned.
+            //       Doesn't occur in our case.
+
+            UInt128 miiAuthorId = Mii.Helper.GetDeviceId();
+
+            miiAuthorId.Write(context.ResponseData);
 
             return ResultCode.Success;
         }
