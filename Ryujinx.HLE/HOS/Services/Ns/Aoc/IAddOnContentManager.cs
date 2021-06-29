@@ -190,13 +190,14 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             //       If QuestFlag is true, counts some extra titles.
 
             uint  startIndex     = context.RequestData.ReadUInt32();
-            uint  bufferSize     = context.RequestData.ReadUInt32();
+            uint  counter        = context.RequestData.ReadUInt32();
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferSize     = context.Request.ReceiveBuff[0].Size;
 
             // TODO: This should use _addOnContentBaseId;
             uint aocCount = (uint)context.Device.System.ContentManager.GetAocCount();
 
-            if (aocCount - startIndex > bufferSize)
+            if (counter > bufferSize / sizeof(uint))
             {
                 return ResultCode.InvalidBufferSize;
             }
@@ -212,7 +213,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
             GetAddOnContentBaseIdFromTitleId(context, titleId);
 
-            for (int i = 0; i < aocCount; i++)
+            for (int i = 0; i < aocCount - startIndex; i++)
             {
                 context.Memory.Write(bufferPosition + (ulong)i * 4, (uint)(aocTitleIds[i + (int)startIndex] - _addOnContentBaseId));
             }
