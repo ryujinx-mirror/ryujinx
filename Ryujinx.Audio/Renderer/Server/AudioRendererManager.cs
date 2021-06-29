@@ -83,6 +83,11 @@ namespace Ryujinx.Audio.Renderer.Server
         public AudioProcessor Processor { get; }
 
         /// <summary>
+        /// The dispose state.
+        /// </summary>
+        private int _disposeState;
+
+        /// <summary>
         /// Create a new <see cref="AudioRendererManager"/>.
         /// </summary>
         public AudioRendererManager()
@@ -313,7 +318,10 @@ namespace Ryujinx.Audio.Renderer.Server
 
         public void Dispose()
         {
-            Dispose(true);
+            if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
+            {
+                Dispose(true);
+            }
         }
 
         protected virtual void Dispose(bool disposing)

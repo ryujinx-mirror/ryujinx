@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Sm;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services
 {
-    class ServerBase
+    class ServerBase : IDisposable
     {
         // Must be the maximum value used by services (highest one know is the one used by nvservices = 0x8000).
         // Having a size that is too low will cause failures as data copy will fail if the receiving buffer is
@@ -67,6 +68,9 @@ namespace Ryujinx.HLE.HOS.Services
 
         public void AddSessionObj(KServerSession serverSession, IpcService obj)
         {
+            // Ensure that the sever loop is running.
+            InitDone.WaitOne();
+
             _selfProcess.HandleTable.GenerateHandle(serverSession, out int serverSessionHandle);
             AddSessionObj(serverSessionHandle, obj);
         }
@@ -86,13 +90,9 @@ namespace Ryujinx.HLE.HOS.Services
                 _context.Syscall.ManageNamedPort("sm:", 50, out int serverPortHandle);
 
                 AddPort(serverPortHandle, SmObjectFactory);
+            }
 
-                InitDone.Set();
-            }
-            else
-            {
-                InitDone.Dispose();
-            }
+            InitDone.Set();
 
             KThread thread = KernelStatic.GetCurrentThread();
             ulong messagePtr = thread.TlsAddress;
@@ -153,6 +153,8 @@ namespace Ryujinx.HLE.HOS.Services
                     _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
                 }
             }
+
+            Dispose();
         }
 
         private bool Process(int serverSessionHandle, ulong recvListAddr)
@@ -348,6 +350,31 @@ namespace Ryujinx.HLE.HOS.Services
             }
 
             return response;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                foreach (IpcService service in _sessions.Values)
+                {
+                    if (service is IDisposable disposableObj)
+                    {
+                        disposableObj.Dispose();
+                    }
+
+                    service.DestroyAtExit();
+                }
+
+                _sessions.Clear();
+
+                InitDone.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
     }
 }

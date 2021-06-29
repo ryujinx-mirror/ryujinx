@@ -1,12 +1,11 @@
 ﻿using LibHac;
 using LibHac.Bcat;
 using Ryujinx.Common;
-using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {
-    class IDeliveryCacheDirectoryService : IpcService, IDisposable
+    class IDeliveryCacheDirectoryService : DisposableIpcService
     {
         private LibHac.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService _base;
 
@@ -55,9 +54,12 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        public void Dispose()
+        protected override void Dispose(bool isDisposing)
         {
-            _base?.Dispose();
+            if (isDisposing)
+            {
+                _base?.Dispose();
+            }
         }
     }
 }

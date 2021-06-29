@@ -18,6 +18,7 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using System;
+using System.Threading;
 
 namespace Ryujinx.Audio.Input
 {
@@ -62,9 +63,14 @@ namespace Ryujinx.Audio.Input
         private AudioInputManager _manager;
 
         /// <summary>
-        /// THe lock of the parent.
+        /// The lock of the parent.
         /// </summary>
         private object _parentLock;
+
+        /// <summary>
+        /// The dispose state.
+        /// </summary>
+        private int _disposeState;
 
         /// <summary>
         /// Create a new <see cref="AudioInputSystem"/>.
@@ -384,7 +390,10 @@ namespace Ryujinx.Audio.Input
 
         public void Dispose()
         {
-            Dispose(true);
+            if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
+            {
+                Dispose(true);
+            }
         }
 
         protected virtual void Dispose(bool disposing)

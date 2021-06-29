@@ -1,10 +1,9 @@
 using LibHac;
 using LibHac.Fs;
-using System;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
-    class IFile : IpcService, IDisposable
+    class IFile : DisposableIpcService
     {
         private LibHac.Fs.Fsa.IFile _baseFile;
 
@@ -82,14 +81,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        public void Dispose()
+        protected override void Dispose(bool isDisposing)
         {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
+            if (isDisposing)
             {
                 _baseFile?.Dispose();
             }

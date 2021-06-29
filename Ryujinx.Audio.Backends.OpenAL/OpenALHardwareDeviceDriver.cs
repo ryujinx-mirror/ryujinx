@@ -133,19 +133,28 @@ namespace Ryujinx.Audio.Backends.OpenAL
         {
             if (disposing)
             {
-                lock (_lock)
-                {
-                    _stillRunning = false;
-                    _updaterThread.Join();
+                _stillRunning = false;
 
-                    // Loop against all sessions to dispose them (they will unregister themself)
-                    while (_sessions.Count > 0)
+                int sessionCount = 0;
+
+                // NOTE: This is done in a way to avoid possible situations when the OpenALHardwareDeviceSession is already being dispose in another thread but doesn't hold the lock and tries to Unregister.
+                do
+                {
+                    lock (_lock)
                     {
-                        OpenALHardwareDeviceSession session = _sessions[0];
+                        if (_sessions.Count == 0)
+                        {
+                            break;
+                        }
+
+                        OpenALHardwareDeviceSession session = _sessions[_sessions.Count - 1];
 
                         session.Dispose();
+
+                        sessionCount = _sessions.Count;
                     }
                 }
+                while (sessionCount > 0);
 
                 ALC.DestroyContext(_context);
                 ALC.CloseDevice(_device);

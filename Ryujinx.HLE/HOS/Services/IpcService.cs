@@ -265,5 +265,18 @@ namespace Ryujinx.HLE.HOS.Services
         {
             _parent = parent._parent;
         }
+
+        public virtual void DestroyAtExit()
+        {
+            foreach (object domainObject in _domainObjects.Values)
+            {
+                if (domainObject != this && domainObject is IDisposable disposableObj)
+                {
+                    disposableObj.Dispose();
+                }
+            }
+
+            _domainObjects.Clear();
+        }
     }
 }

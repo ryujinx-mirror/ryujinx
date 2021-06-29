@@ -94,6 +94,8 @@ namespace Ryujinx.Audio.Renderer.Server
 
         private AudioRendererManager _manager;
 
+        private int _disposeState;
+
         public AudioRenderSystem(AudioRendererManager manager, IWritableEvent systemEvent)
         {
             _manager            = manager;
@@ -811,7 +813,10 @@ namespace Ryujinx.Audio.Renderer.Server
 
         public void Dispose()
         {
-            Dispose(true);
+            if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
+            {
+                Dispose(true);
+            }
         }
 
         protected virtual void Dispose(bool disposing)

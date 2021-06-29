@@ -18,6 +18,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
         private SoundIODevice _audioDevice;
         private ManualResetEvent _updateRequiredEvent;
         private List<SoundIoHardwareDeviceSession> _sessions;
+        private int _disposeState;
 
         public SoundIoHardwareDeviceDriver()
         {
@@ -208,19 +209,36 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public void Dispose()
         {
-            Dispose(true);
+            if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
+            {
+                Dispose(true);
+            }
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                while (_sessions.Count > 0)
-                {
-                    SoundIoHardwareDeviceSession session = _sessions[_sessions.Count - 1];
+                int sessionCount = 0;
 
-                    session.Dispose();
+                // NOTE: This is done in a way to avoid possible situations when the SoundIoHardwareDeviceSession is already being dispose in another thread but doesn't hold the lock and tries to Unregister.
+                do
+                {
+                    lock (_lock)
+                    {
+                        if (_sessions.Count == 0)
+                        {
+                            break;
+                        }
+
+                        SoundIoHardwareDeviceSession session = _sessions[_sessions.Count - 1];
+
+                        session.Dispose();
+
+                        sessionCount = _sessions.Count;
+                    }
                 }
+                while (sessionCount > 0);
 
                 _audioContext.Disconnect();
                 _audioContext.Dispose();

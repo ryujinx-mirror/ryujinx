@@ -21,6 +21,8 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 
 namespace Ryujinx.Audio.Input
 {
@@ -60,6 +62,11 @@ namespace Ryujinx.Audio.Input
         /// The count of active sessions.
         /// </summary>
         private int _activeSessionCount;
+
+        /// <summary>
+        /// The dispose state.
+        /// </summary>
+        private int _disposeState;
 
         /// <summary>
         /// Create a new <see cref="AudioInputManager"/>.
@@ -248,14 +255,28 @@ namespace Ryujinx.Audio.Input
 
         public void Dispose()
         {
-            Dispose(true);
+            if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
+            {
+                Dispose(true);
+            }
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                // Nothing to do here.
+                // Clone the sessions array to dispose them outside the lock.
+                AudioInputSystem[] sessions;
+
+                lock (_sessionLock)
+                {
+                    sessions = _sessions.ToArray();
+                }
+
+                foreach (AudioInputSystem input in sessions)
+                {
+                    input?.Dispose();
+                }
             }
         }
     }

@@ -70,6 +70,7 @@ namespace Ryujinx.HLE.HOS
 
         internal List<NfpDevice> NfpDevices { get; private set; }
 
+        internal ServerBase SmServer { get; private set; }
         internal ServerBase BsdServer { get; private set; }
         internal ServerBase AudRenServer { get; private set; }
         internal ServerBase AudOutServer { get; private set; }
@@ -284,13 +285,11 @@ namespace Ryujinx.HLE.HOS
 
         public void InitializeServices()
         {
-            IUserInterface sm = new IUserInterface(KernelContext);
-            sm.TrySetServer(new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext)));
+            SmServer = new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext));
 
             // Wait until SM server thread is done with initialization,
             // only then doing connections to SM is safe.
-            sm.Server.InitDone.WaitOne();
-            sm.Server.InitDone.Dispose();
+            SmServer.InitDone.WaitOne();
 
             BsdServer = new ServerBase(KernelContext, "BsdServer");
             AudRenServer = new ServerBase(KernelContext, "AudioRendererServer");
@@ -419,7 +418,7 @@ namespace Ryujinx.HLE.HOS
                         SurfaceFlinger.Dispose();
 
                         // Terminate HLE services (must be done after the application is already terminated,
-                        // otherwise the application will receive errors due to service termination.
+                        // otherwise the application will receive errors due to service termination).
                         foreach (KProcess process in KernelContext.Processes.Values.Where(x => !x.Flags.HasFlag(ProcessCreationFlags.IsApplication)))
                         {
                             process.Terminate();
