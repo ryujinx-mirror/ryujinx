@@ -285,6 +285,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandHipc(65)]
+        // ReportUserIsActive()
+        public ResultCode ReportUserIsActive(ServiceCtx context)
+        {
+            // TODO: Call idle:sys ReportUserIsActive when implemented.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(68)]
         // SetAutoSleepDisabled(u8)
         public ResultCode SetAutoSleepDisabled(ServiceCtx context)

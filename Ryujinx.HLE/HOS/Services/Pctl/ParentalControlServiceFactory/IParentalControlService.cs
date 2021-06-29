@@ -7,6 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 {
     class IParentalControlService : IpcService
     {
+        private long                     _pid;
         private int                      _permissionFlag;
         private ulong                    _titleId;
         private ParentalControlFlagValue _parentalControlFlag;
@@ -18,8 +19,9 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private bool _stereoVisionRestrictionConfigurable = true;
         private bool _stereoVisionRestriction             = false;
 
-        public IParentalControlService(ServiceCtx context, bool withInitialize, int permissionFlag)
+        public IParentalControlService(ServiceCtx context, long pid, bool withInitialize, int permissionFlag)
         {
+            _pid            = pid;
             _permissionFlag = permissionFlag;
 
             if (withInitialize)
@@ -39,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 
             ResultCode resultCode = ResultCode.InvalidPid;
 
-            if (context.Process.Pid != 0)
+            if (_pid != 0)
             {
                 if ((_permissionFlag & 0x40) == 0)
                 {

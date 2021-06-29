@@ -1,11 +1,10 @@
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
-namespace Ryujinx.HLE.HOS.Services.Ns
+namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 {
     class IPurchaseEventManager : IpcService
     {
@@ -20,8 +19,8 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // SetDefaultDeliveryTarget(pid, buffer<bytes, 5> unknown)
         public ResultCode SetDefaultDeliveryTarget(ServiceCtx context)
         {
-            ulong   inBufferPosition = context.Request.SendBuff[0].Position;
-            ulong   inBufferSize     = context.Request.SendBuff[0].Size;
+            ulong  inBufferPosition = context.Request.SendBuff[0].Position;
+            ulong  inBufferSize     = context.Request.SendBuff[0].Size;
             byte[] buffer           = new byte[inBufferSize];
 
             context.Memory.Read(inBufferPosition, buffer);
@@ -39,12 +38,12 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // GetPurchasedEventReadableHandle() -> handle<copy, event>
         public ResultCode GetPurchasedEventReadableHandle(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_purchasedEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_purchasedEvent.ReadableEvent, out int purchasedEventReadableHandle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(purchasedEventReadableHandle);
 
             return ResultCode.Success;
         }
