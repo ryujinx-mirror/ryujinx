@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     class TexturePool : Pool<Texture, TextureDescriptor>
     {
         private int _sequenceNumber;
+        private readonly GpuChannel _channel;
         private readonly ConcurrentQueue<Texture> _dereferenceQueue = new ConcurrentQueue<Texture>();
 
         /// <summary>
@@ -24,9 +25,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs a new instance of the texture pool.
         /// </summary>
         /// <param name="context">GPU context that the texture pool belongs to</param>
+        /// <param name="channel">GPU channel that the texture pool belongs to</param>
         /// <param name="address">Address of the texture pool in guest memory</param>
         /// <param name="maximumId">Maximum texture ID of the texture pool (equal to maximum textures minus one)</param>
-        public TexturePool(GpuContext context, ulong address, int maximumId) : base(context, address, maximumId) { }
+        public TexturePool(GpuContext context, GpuChannel channel, ulong address, int maximumId) : base(context, channel.MemoryManager.Physical, address, maximumId)
+        {
+            _channel = channel;
+        }
 
         /// <summary>
         /// Gets the texture with the given ID.
@@ -57,7 +62,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ProcessDereferenceQueue();
 
-                texture = Context.Methods.TextureCache.FindOrCreateTexture(TextureSearchFlags.ForSampler, info, layerSize);
+                texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
 
                 // If this happens, then the texture address is invalid, we can't add it to the cache.
                 if (texture == null)
@@ -148,7 +153,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (texture != null)
                 {
-                    TextureDescriptor descriptor = Context.PhysicalMemory.Read<TextureDescriptor>(address);
+                    TextureDescriptor descriptor = PhysicalMemory.Read<TextureDescriptor>(address);
 
                     // If the descriptors are the same, the texture is the same,
                     // we don't need to remove as it was not modified. Just continue.
@@ -214,7 +219,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (!FormatTable.TryGetTextureFormat(format, srgb, out FormatInfo formatInfo))
             {
-                if (Context.MemoryManager.IsMapped(gpuVa) && (int)format > 0)
+                if (gpuVa != 0 && (int)format > 0)
                 {
                     Logger.Error?.Print(LogClass.Gpu, $"Invalid texture format 0x{format:X} (sRGB: {srgb}).");
                 }

@@ -16,11 +16,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <summary>
         /// Flushes any queued ubo updates.
         /// </summary>
-        private void FlushUboDirty()
+        /// <param name="memoryManager">GPU memory manager where the uniform buffer is mapped</param>
+        private void FlushUboDirty(MemoryManager memoryManager)
         {
             if (_ubFollowUpAddress != 0)
             {
-                BufferCache.ForceDirty(_ubFollowUpAddress - _ubByteCount, _ubByteCount);
+                memoryManager.Physical.BufferCache.ForceDirty(memoryManager, _ubFollowUpAddress - _ubByteCount, _ubByteCount);
 
                 _ubFollowUpAddress = 0;
             }
@@ -39,13 +40,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (_ubFollowUpAddress != address)
             {
-                FlushUboDirty();
+                FlushUboDirty(state.Channel.MemoryManager);
 
                 _ubByteCount = 0;
-                _ubBeginCpuAddress = _context.MemoryManager.Translate(address);
+                _ubBeginCpuAddress = state.Channel.MemoryManager.Translate(address);
             }
 
-            _context.PhysicalMemory.WriteUntracked(_ubBeginCpuAddress + _ubByteCount, MemoryMarshal.Cast<int, byte>(MemoryMarshal.CreateSpan(ref argument, 1)));
+            var byteData = MemoryMarshal.Cast<int, byte>(MemoryMarshal.CreateSpan(ref argument, 1));
+            state.Channel.MemoryManager.Physical.WriteUntracked(_ubBeginCpuAddress + _ubByteCount, byteData);
 
             _ubFollowUpAddress = address + 4;
             _ubByteCount += 4;
@@ -68,13 +70,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (_ubFollowUpAddress != address)
             {
-                FlushUboDirty();
+                FlushUboDirty(state.Channel.MemoryManager);
 
                 _ubByteCount = 0;
-                _ubBeginCpuAddress = _context.MemoryManager.Translate(address);
+                _ubBeginCpuAddress = state.Channel.MemoryManager.Translate(address);
             }
 
-            _context.PhysicalMemory.WriteUntracked(_ubBeginCpuAddress + _ubByteCount, MemoryMarshal.Cast<int, byte>(data));
+            var byteData = MemoryMarshal.Cast<int, byte>(data);
+            state.Channel.MemoryManager.Physical.WriteUntracked(_ubBeginCpuAddress + _ubByteCount, byteData);
 
             _ubFollowUpAddress = address + size;
             _ubByteCount += size;

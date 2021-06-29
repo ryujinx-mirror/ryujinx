@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Graphics.Gpu.Memory;
+using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -53,11 +54,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             /// <summary>
             /// Fetch the command buffer.
             /// </summary>
-            public void Fetch(GpuContext context)
+            public void Fetch(MemoryManager memoryManager)
             {
                 if (Words == null)
                 {
-                    Words = MemoryMarshal.Cast<byte, int>(context.MemoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, true)).ToArray();
+                    Words = MemoryMarshal.Cast<byte, int>(memoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, true)).ToArray();
                 }
             }
         }
@@ -155,7 +156,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                 if (beforeBarrier && commandBuffer.Type == CommandBufferType.Prefetch)
                 {
-                    commandBuffer.Fetch(_context);
+                    commandBuffer.Fetch(processor.MemoryManager);
                 }
 
                 if (commandBuffer.Type == CommandBufferType.NoPrefetch)
@@ -182,13 +183,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public void DispatchCalls()
         {
             // Use this opportunity to also dispose any pending channels that were closed.
-            _context.DisposePendingChannels();
+            _context.RunDeferredActions();
 
             // Process command buffers.
             while (_ibEnable && !_interrupt && _commandBufferQueue.TryDequeue(out CommandBuffer entry))
             {
                 _currentCommandBuffer = entry;
-                _currentCommandBuffer.Fetch(_context);
+                _currentCommandBuffer.Fetch(entry.Processor.MemoryManager);
 
                 // If we are changing the current channel,
                 // we need to force all the host state to be updated.

@@ -1,14 +1,10 @@
 using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Graphics.Gpu;
-using Ryujinx.Graphics.Host1x;
-using Ryujinx.Graphics.Nvdec;
-using Ryujinx.Graphics.Vic;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
 using Ryujinx.Memory;
 using System;
 
@@ -23,10 +19,6 @@ namespace Ryujinx.HLE
         internal MemoryBlock Memory { get; }
 
         public GpuContext Gpu { get; }
-
-        internal NvMemoryAllocator MemoryAllocator { get; }
-
-        internal Host1xDevice Host1x { get; }
 
         public VirtualFileSystem FileSystem => Configuration.VirtualFileSystem;
 
@@ -70,29 +62,6 @@ namespace Ryujinx.HLE
             Memory = new MemoryBlock(configuration.MemoryConfiguration.ToDramSize(), MemoryAllocationFlags.Reserve);
 
             Gpu = new GpuContext(configuration.GpuRenderer);
-
-            MemoryAllocator = new NvMemoryAllocator();
-
-            Host1x = new Host1xDevice(Gpu.Synchronization);
-            var nvdec = new NvdecDevice(Gpu.MemoryManager);
-            var vic = new VicDevice(Gpu.MemoryManager);
-            Host1x.RegisterDevice(ClassId.Nvdec, nvdec);
-            Host1x.RegisterDevice(ClassId.Vic, vic);
-
-            nvdec.FrameDecoded += (FrameDecodedEventArgs e) =>
-            {
-                // FIXME:
-                // Figure out what is causing frame ordering issues on H264.
-                // For now this is needed as workaround.
-                if (e.CodecId == CodecId.H264)
-                {
-                    vic.SetSurfaceOverride(e.LumaOffset, e.ChromaOffset, 0);
-                }
-                else
-                {
-                    vic.DisableSurfaceOverride();
-                }
-            };
 
             System = new Horizon(this);
             System.InitializeServices();
@@ -190,7 +159,6 @@ namespace Ryujinx.HLE
             if (disposing)
             {
                 System.Dispose();
-                Host1x.Dispose();
                 AudioDeviceDriver.Dispose();
                 FileSystem.Unload();
                 Memory.Dispose();

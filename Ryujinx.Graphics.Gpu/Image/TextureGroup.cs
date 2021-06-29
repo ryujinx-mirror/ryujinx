@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Memory.Range;
 using System;
@@ -28,7 +29,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public bool HasCopyDependencies { get; set; }
 
-        private GpuContext _context;
+        private readonly GpuContext _context;
+        private readonly PhysicalMemory _physicalMemory;
 
         private int[] _allOffsets;
         private int[] _sliceSizes;
@@ -51,11 +53,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Create a new texture group.
         /// </summary>
         /// <param name="context">GPU context that the texture group belongs to</param>
+        /// <param name="physicalMemory">Physical memory where the <paramref name="storage"/> texture is mapped</param>
         /// <param name="storage">The storage texture for this group</param>
-        public TextureGroup(GpuContext context, Texture storage)
+        public TextureGroup(GpuContext context, PhysicalMemory physicalMemory, Texture storage)
         {
             Storage = storage;
             _context = context;
+            _physicalMemory = physicalMemory;
 
             _is3D = storage.Info.Target == Target.Texture3D;
             _layers = storage.Info.GetSlices();
@@ -211,7 +215,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                             int endOffset = (offsetIndex + 1 == _allOffsets.Length) ? (int)Storage.Size : _allOffsets[offsetIndex + 1];
                             int size = endOffset - offset;
 
-                            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
+                            ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
 
                             data = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel, true);
 
@@ -561,7 +565,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A CpuRegionHandle covering the given range</returns>
         private CpuRegionHandle GenerateHandle(ulong address, ulong size)
         {
-            return _context.PhysicalMemory.BeginTracking(address, size);
+            return _physicalMemory.BeginTracking(address, size);
         }
 
         /// <summary>

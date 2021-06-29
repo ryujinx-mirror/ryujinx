@@ -4,7 +4,7 @@ using System;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Common.Logging;
 
-namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
+namespace Ryujinx.HLE.HOS.Services.Nv
 {
     class NvMemoryAllocator
     {

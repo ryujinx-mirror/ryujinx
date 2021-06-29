@@ -3,7 +3,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
@@ -24,8 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     [Service("nvdrv:t")]
     class INvDrvServices : IpcService
     {
-        private static Dictionary<string, Type> _deviceFileRegistry =
-                   new Dictionary<string, Type>()
+        private static Dictionary<string, Type> _deviceFileRegistry = new Dictionary<string, Type>()
         {
             { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
             { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
@@ -39,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             //{ "/dev/nvhost-display",  typeof(NvHostChannelDeviceFile) },
         };
 
-        private static IdDictionary _deviceFileIdRegistry = new IdDictionary();
+        public static IdDictionary DeviceFileIdRegistry = new IdDictionary();
 
         private IVirtualMemoryManager _clientMemory;
         private long _owner;
@@ -61,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 deviceFile.Path = path;
 
-                return _deviceFileIdRegistry.Add(deviceFile);
+                return DeviceFileIdRegistry.Add(deviceFile);
             }
             else
             {
@@ -139,7 +137,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 return NvResult.InvalidParameter;
             }
 
-            deviceFile = _deviceFileIdRegistry.GetData<NvDeviceFile>(fd);
+            deviceFile = DeviceFileIdRegistry.GetData<NvDeviceFile>(fd);
 
             if (deviceFile == null)
             {
@@ -302,7 +300,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 {
                     deviceFile.Close();
 
-                    _deviceFileIdRegistry.Delete(fd);
+                    DeviceFileIdRegistry.Delete(fd);
                 }
             }
 
@@ -569,14 +567,16 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         public static void Destroy()
         {
-            foreach (object entry in _deviceFileIdRegistry.Values)
+            NvHostChannelDeviceFile.Destroy();
+
+            foreach (object entry in DeviceFileIdRegistry.Values)
             {
                 NvDeviceFile deviceFile = (NvDeviceFile)entry;
 
                 deviceFile.Close();
             }
 
-            _deviceFileIdRegistry.Clear();
+            DeviceFileIdRegistry.Clear();
         }
     }
 }

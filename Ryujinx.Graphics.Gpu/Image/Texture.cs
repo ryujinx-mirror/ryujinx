@@ -28,6 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         private GpuContext _context;
+        private PhysicalMemory _physicalMemory;
 
         private SizeInfo _sizeInfo;
 
@@ -139,6 +140,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs a new instance of the cached GPU texture.
         /// </summary>
         /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="physicalMemory">Physical memory where the texture is mapped</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
         /// <param name="range">Physical memory ranges where the texture data is located</param>
@@ -147,16 +149,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="scaleFactor">The floating point scale factor to initialize with</param>
         /// <param name="scaleMode">The scale mode to initialize with</param>
         private Texture(
-            GpuContext       context,
-            TextureInfo      info,
-            SizeInfo         sizeInfo,
-            MultiRange       range,
-            int              firstLayer,
-            int              firstLevel,
-            float            scaleFactor,
+            GpuContext context,
+            PhysicalMemory physicalMemory,
+            TextureInfo info,
+            SizeInfo sizeInfo,
+            MultiRange range,
+            int firstLayer,
+            int firstLevel,
+            float scaleFactor,
             TextureScaleMode scaleMode)
         {
-            InitializeTexture(context, info, sizeInfo, range);
+            InitializeTexture(context, physicalMemory, info, sizeInfo, range);
 
             FirstLayer = firstLayer;
             FirstLevel = firstLevel;
@@ -171,16 +174,23 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs a new instance of the cached GPU texture.
         /// </summary>
         /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="physicalMemory">Physical memory where the texture is mapped</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
         /// <param name="range">Physical memory ranges where the texture data is located</param>
         /// <param name="scaleMode">The scale mode to initialize with. If scaled, the texture's data is loaded immediately and scaled up</param>
-        public Texture(GpuContext context, TextureInfo info, SizeInfo sizeInfo, MultiRange range, TextureScaleMode scaleMode)
+        public Texture(
+            GpuContext context,
+            PhysicalMemory physicalMemory,
+            TextureInfo info,
+            SizeInfo sizeInfo,
+            MultiRange range,
+            TextureScaleMode scaleMode)
         {
             ScaleFactor = 1f; // Texture is first loaded at scale 1x.
             ScaleMode = scaleMode;
 
-            InitializeTexture(context, info, sizeInfo, range);
+            InitializeTexture(context, physicalMemory, info, sizeInfo, range);
         }
 
         /// <summary>
@@ -189,14 +199,21 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Other fields are initialized with their default values.
         /// </summary>
         /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="physicalMemory">Physical memory where the texture is mapped</param>
         /// <param name="info">Texture information</param>
         /// <param name="sizeInfo">Size information of the texture</param>
         /// <param name="range">Physical memory ranges where the texture data is located</param>
-        private void InitializeTexture(GpuContext context, TextureInfo info, SizeInfo sizeInfo, MultiRange range)
+        private void InitializeTexture(
+            GpuContext context,
+            PhysicalMemory physicalMemory,
+            TextureInfo info,
+            SizeInfo sizeInfo,
+            MultiRange range)
         {
-            _context  = context;
+            _context = context;
+            _physicalMemory = physicalMemory;
             _sizeInfo = sizeInfo;
-            Range     = range;
+            Range = range;
 
             SetInfo(info);
 
@@ -255,7 +272,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="hasMipViews">True if the texture will have mip views</param>
         public void InitializeGroup(bool hasLayerViews, bool hasMipViews)
         {
-            Group = new TextureGroup(_context, this);
+            Group = new TextureGroup(_context, _physicalMemory, this);
 
             Group.Initialize(ref _sizeInfo, hasLayerViews, hasMipViews);
         }
@@ -276,6 +293,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             Texture texture = new Texture(
                 _context,
+                _physicalMemory,
                 info,
                 sizeInfo,
                 range,
@@ -638,7 +656,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 BlacklistScale();
             }
 
-            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Range);
+            ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Range);
 
             IsModified = false;
 
@@ -805,11 +823,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (tracked)
             {
-                _context.PhysicalMemory.Write(Range, GetTextureDataFromGpu(tracked));
+                _physicalMemory.Write(Range, GetTextureDataFromGpu(tracked));
             }
             else
             {
-                _context.PhysicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(tracked));
+                _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(tracked));
             }
         }
 
@@ -846,7 +864,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     texture = _flushHostTexture = GetScaledHostTexture(1f, _flushHostTexture);
                 }
 
-                _context.PhysicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(false, texture));
+                _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(false, texture));
             });
         }
 
@@ -1280,7 +1298,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _viewStorage.RemoveView(this);
                 }
 
-                _context.Methods.TextureCache.RemoveTextureFromCache(this);
+                _physicalMemory.TextureCache.RemoveTextureFromCache(this);
             }
 
             Debug.Assert(newRefCount >= 0);

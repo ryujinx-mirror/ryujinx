@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Data at the memory location</returns>
         public override T MemoryRead<T>(ulong address)
         {
-            return _context.MemoryManager.Read<T>(address);
+            return _state.Channel.MemoryManager.Read<T>(address);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>True if the address is mapped, false otherwise</returns>
         public bool MemoryMapped(ulong address)
         {
-            return _context.MemoryManager.IsMapped(address);
+            return _state.Channel.MemoryManager.IsMapped(address);
         }
 
         /// <summary>

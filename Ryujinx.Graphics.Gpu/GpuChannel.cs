@@ -2,6 +2,7 @@
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
 {
@@ -13,6 +14,7 @@ namespace Ryujinx.Graphics.Gpu
         private readonly GpuContext _context;
         private readonly GPFifoDevice _device;
         private readonly GPFifoProcessor _processor;
+        private MemoryManager _memoryManager;
 
         /// <summary>
         /// Channel buffer bindings manager.
@@ -25,6 +27,11 @@ namespace Ryujinx.Graphics.Gpu
         internal TextureManager TextureManager { get; }
 
         /// <summary>
+        /// Current channel memory manager.
+        /// </summary>
+        internal MemoryManager MemoryManager => _memoryManager;
+
+        /// <summary>
         /// Creates a new instance of a GPU channel.
         /// </summary>
         /// <param name="context">GPU context that the channel belongs to</param>
@@ -33,8 +40,28 @@ namespace Ryujinx.Graphics.Gpu
             _context = context;
             _device = context.GPFifo;
             _processor = new GPFifoProcessor(context, this);
-            BufferManager = new BufferManager(context);
+            BufferManager = new BufferManager(context, this);
             TextureManager = new TextureManager(context, this);
+        }
+
+        /// <summary>
+        /// Binds a memory manager to the channel.
+        /// All submitted and in-flight commands will use the specified memory manager for any memory operations.
+        /// </summary>
+        /// <param name="memoryManager">The new memory manager to be bound</param>
+        public void BindMemory(MemoryManager memoryManager)
+        {
+            var oldMemoryManager = Interlocked.Exchange(ref _memoryManager, memoryManager ?? throw new ArgumentNullException(nameof(memoryManager)));
+
+            memoryManager.Physical.IncrementReferenceCount();
+
+            if (oldMemoryManager != null)
+            {
+                oldMemoryManager.Physical.BufferCache.NotifyBuffersModified -= BufferManager.Rebind;
+                oldMemoryManager.Physical.DecrementReferenceCount();
+            }
+
+            memoryManager.Physical.BufferCache.NotifyBuffersModified += BufferManager.Rebind;
         }
 
         /// <summary>
@@ -62,17 +89,23 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         public void Dispose()
         {
-            _context.DisposedChannels.Enqueue(this);
+            _context.DeferredActions.Enqueue(Destroy);
         }
 
         /// <summary>
         /// Performs disposal of the host GPU resources used by this channel, that are not shared.
         /// This must only be called from the render thread.
         /// </summary>
-        internal void Destroy()
+        private void Destroy()
         {
-            BufferManager.Dispose();
             TextureManager.Dispose();
+
+            var oldMemoryManager = Interlocked.Exchange(ref _memoryManager, null);
+            if (oldMemoryManager != null)
+            {
+                oldMemoryManager.Physical.BufferCache.NotifyBuffersModified -= BufferManager.Rebind;
+                oldMemoryManager.Physical.DecrementReferenceCount();
+            }
         }
     }
 }

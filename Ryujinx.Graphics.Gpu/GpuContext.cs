@@ -2,8 +2,10 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -23,16 +25,6 @@ namespace Ryujinx.Graphics.Gpu
         /// Host renderer.
         /// </summary>
         public IRenderer Renderer { get; }
-
-        /// <summary>
-        /// Physical memory access (it actually accesses the process memory, not actual physical memory).
-        /// </summary>
-        internal PhysicalMemory PhysicalMemory { get; private set; }
-
-        /// <summary>
-        /// GPU memory manager.
-        /// </summary>
-        public MemoryManager MemoryManager { get; }
 
         /// <summary>
         /// GPU engine methods processing.
@@ -73,11 +65,14 @@ namespace Ryujinx.Graphics.Gpu
         internal List<Action> SyncActions { get; }
 
         /// <summary>
-        /// Queue with closed channels for deferred disposal from the render thread.
+        /// Queue with deferred actions that must run on the render thread.
         /// </summary>
-        internal Queue<GpuChannel> DisposedChannels { get; }
+        internal Queue<Action> DeferredActions { get; }
 
-        private readonly Lazy<Capabilities> _caps;
+        /// <summary>
+        /// Registry with physical memories that can be used with this GPU context, keyed by owner process ID.
+        /// </summary>
+        internal ConcurrentDictionary<long, PhysicalMemory> PhysicalMemoryRegistry { get; }
 
         /// <summary>
         /// Host hardware capabilities.
@@ -87,11 +82,9 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Event for signalling shader cache loading progress.
         /// </summary>
-        public event Action<Shader.ShaderCacheState, int, int> ShaderCacheStateChanged
-        {
-            add => Methods.ShaderCache.ShaderCacheStateChanged += value;
-            remove => Methods.ShaderCache.ShaderCacheStateChanged -= value;
-        }
+        public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
+
+        private readonly Lazy<Capabilities> _caps;
 
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
@@ -101,8 +94,6 @@ namespace Ryujinx.Graphics.Gpu
         {
             Renderer = renderer;
 
-            MemoryManager = new MemoryManager(this);
-
             Methods = new Methods(this);
 
             GPFifo = new GPFifoDevice(this);
@@ -111,18 +102,81 @@ namespace Ryujinx.Graphics.Gpu
 
             Window = new Window(this);
 
-            _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
-
             HostInitalized = new ManualResetEvent(false);
 
             SyncActions = new List<Action>();
 
-            DisposedChannels = new Queue<GpuChannel>();
+            DeferredActions = new Queue<Action>();
+
+            PhysicalMemoryRegistry = new ConcurrentDictionary<long, PhysicalMemory>();
+
+            _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
         }
 
+        /// <summary>
+        /// Creates a new GPU channel.
+        /// </summary>
+        /// <returns>The GPU channel</returns>
         public GpuChannel CreateChannel()
         {
             return new GpuChannel(this);
+        }
+
+        /// <summary>
+        /// Creates a new GPU memory manager.
+        /// </summary>
+        /// <param name="pid">ID of the process that owns the memory manager</param>
+        /// <returns>The memory manager</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="pid"/> is invalid</exception>
+        public MemoryManager CreateMemoryManager(long pid)
+        {
+            if (!PhysicalMemoryRegistry.TryGetValue(pid, out var physicalMemory))
+            {
+                throw new ArgumentException("The PID is invalid or the process was not registered", nameof(pid));
+            }
+
+            return new MemoryManager(physicalMemory);
+        }
+
+        /// <summary>
+        /// Registers virtual memory used by a process for GPU memory access, caching and read/write tracking.
+        /// </summary>
+        /// <param name="pid">ID of the process that owns <paramref name="cpuMemory"/></param>
+        /// <param name="cpuMemory">Virtual memory owned by the process</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="pid"/> was already registered</exception>
+        public void RegisterProcess(long pid, Cpu.IVirtualMemoryManagerTracked cpuMemory)
+        {
+            var physicalMemory = new PhysicalMemory(this, cpuMemory);
+            if (!PhysicalMemoryRegistry.TryAdd(pid, physicalMemory))
+            {
+                throw new ArgumentException("The PID was already registered", nameof(pid));
+            }
+
+            physicalMemory.ShaderCache.ShaderCacheStateChanged += ShaderCacheStateUpdate;
+        }
+
+        /// <summary>
+        /// Unregisters a process, indicating that its memory will no longer be used, and that caches can be freed.
+        /// </summary>
+        /// <param name="pid">ID of the process</param>
+        public void UnregisterProcess(long pid)
+        {
+            if (PhysicalMemoryRegistry.TryRemove(pid, out var physicalMemory))
+            {
+                physicalMemory.ShaderCache.ShaderCacheStateChanged -= ShaderCacheStateUpdate;
+                physicalMemory.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Shader cache state update handler.
+        /// </summary>
+        /// <param name="state">Current state of the shader cache load process</param>
+        /// <param name="current">Number of the current shader being processed</param>
+        /// <param name="total">Total number of shaders to process</param>
+        private void ShaderCacheStateUpdate(ShaderCacheState state, int current, int total)
+        {
+            ShaderCacheStateChanged?.Invoke(state, current, total);
         }
 
         /// <summary>
@@ -132,7 +186,10 @@ namespace Ryujinx.Graphics.Gpu
         {
             HostInitalized.WaitOne();
 
-            Methods.ShaderCache.Initialize();
+            foreach (var physicalMemory in PhysicalMemoryRegistry.Values)
+            {
+                physicalMemory.ShaderCache.Initialize();
+            }
         }
 
         /// <summary>
@@ -142,16 +199,6 @@ namespace Ryujinx.Graphics.Gpu
         internal void AdvanceSequence()
         {
             SequenceNumber++;
-        }
-
-        /// <summary>
-        /// Sets the process memory manager, after the application process is initialized.
-        /// This is required for any GPU memory access.
-        /// </summary>
-        /// <param name="cpuMemory">CPU memory manager</param>
-        public void SetVmm(Cpu.IVirtualMemoryManagerTracked cpuMemory)
-        {
-            PhysicalMemory = new PhysicalMemory(cpuMemory);
         }
 
         /// <summary>
@@ -186,14 +233,14 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
-        /// Performs deferred disposal of closed channels.
-        /// This must only be called from the render thread.
+        /// Performs deferred actions.
+        /// This is useful for actions that must run on the render thread, such as resource disposal.
         /// </summary>
-        internal void DisposePendingChannels()
+        internal void RunDeferredActions()
         {
-            while (DisposedChannels.TryDequeue(out GpuChannel channel))
+            while (DeferredActions.TryDequeue(out Action action))
             {
-                channel.Destroy();
+                action();
             }
         }
 
@@ -205,15 +252,19 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         public void Dispose()
         {
-            DisposePendingChannels();
-            Methods.ShaderCache.Dispose();
-            Methods.BufferCache.Dispose();
-            Methods.TextureCache.Dispose();
             Renderer.Dispose();
             GPFifo.Dispose();
             HostInitalized.Dispose();
 
-            PhysicalMemory.Dispose();
+            // Has to be disposed before processing deferred actions, as it will produce some.
+            foreach (var physicalMemory in PhysicalMemoryRegistry.Values)
+            {
+                physicalMemory.Dispose();
+            }
+
+            PhysicalMemoryRegistry.Clear();
+
+            RunDeferredActions();
         }
     }
 }

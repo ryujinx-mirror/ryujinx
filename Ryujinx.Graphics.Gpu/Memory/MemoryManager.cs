@@ -34,15 +34,28 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         public event EventHandler<UnmapEventArgs> MemoryUnmapped;
 
-        private GpuContext _context;
+        /// <summary>
+        /// Physical memory where the virtual memory is mapped into.
+        /// </summary>
+        internal PhysicalMemory Physical { get; }
+
+        /// <summary>
+        /// Cache of GPU counters.
+        /// </summary>
+        internal CounterCache CounterCache { get; }
 
         /// <summary>
         /// Creates a new instance of the GPU memory manager.
         /// </summary>
-        public MemoryManager(GpuContext context)
+        /// <param name="physicalMemory">Physical memory that this memory manager will map into</param>
+        internal MemoryManager(PhysicalMemory physicalMemory)
         {
-            _context = context;
+            Physical = physicalMemory;
+            CounterCache = new CounterCache();
             _pageTable = new ulong[PtLvl0Size][];
+            MemoryUnmapped += Physical.TextureCache.MemoryUnmappedHandler;
+            MemoryUnmapped += Physical.BufferCache.MemoryUnmappedHandler;
+            MemoryUnmapped += CounterCache.MemoryUnmappedHandler;
         }
 
         /// <summary>
@@ -67,7 +80,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (IsContiguous(va, size))
             {
-                return _context.PhysicalMemory.GetSpan(Translate(va), size, tracked);
+                return Physical.GetSpan(Translate(va), size, tracked);
             }
             else
             {
@@ -100,7 +113,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 size = Math.Min(data.Length, (int)PageSize - (int)(va & PageMask));
 
-                _context.PhysicalMemory.GetSpan(pa, size, tracked).CopyTo(data.Slice(0, size));
+                Physical.GetSpan(pa, size, tracked).CopyTo(data.Slice(0, size));
 
                 offset += size;
             }
@@ -111,7 +124,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 size = Math.Min(data.Length - offset, (int)PageSize);
 
-                _context.PhysicalMemory.GetSpan(pa, size, tracked).CopyTo(data.Slice(offset, size));
+                Physical.GetSpan(pa, size, tracked).CopyTo(data.Slice(offset, size));
             }
         }
 
@@ -125,7 +138,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (IsContiguous(va, size))
             {
-                return _context.PhysicalMemory.GetWritableRegion(Translate(va), size);
+                return Physical.GetWritableRegion(Translate(va), size);
             }
             else
             {
@@ -155,7 +168,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="data">The data to be written</param>
         public void Write(ulong va, ReadOnlySpan<byte> data)
         {
-            WriteImpl(va, data, _context.PhysicalMemory.Write);
+            WriteImpl(va, data, Physical.Write);
         }
 
         /// <summary>
@@ -165,7 +178,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="data">The data to be written</param>
         public void WriteUntracked(ulong va, ReadOnlySpan<byte> data)
         {
-            WriteImpl(va, data, _context.PhysicalMemory.WriteUntracked);
+            WriteImpl(va, data, Physical.WriteUntracked);
         }
 
         private delegate void WriteCallback(ulong address, ReadOnlySpan<byte> data);

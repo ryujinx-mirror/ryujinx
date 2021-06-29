@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             int index = (argument >> 4) & 0x1f;
 
-            FlushUboDirty();
+            FlushUboDirty(state.Channel.MemoryManager);
 
             if (enable)
             {

@@ -12,8 +12,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private const int NsToTicksFractionNumerator   = 384;
         private const int NsToTicksFractionDenominator = 625;
 
-        private readonly CounterCache _counterCache = new CounterCache();
-
         /// <summary>
         /// Writes a GPU counter to guest memory.
         /// </summary>
@@ -39,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             var rs = state.Get<SemaphoreState>(MethodOffset.ReportState);
 
-            _context.MemoryManager.Write(rs.Address.Pack(), rs.Payload);
+            state.Channel.MemoryManager.Write(rs.Address.Pack(), rs.Payload);
 
             _context.AdvanceSequence();
         }
@@ -85,7 +83,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (counter?.Invalid != true)
                 {
-                    _context.MemoryManager.Write(gpuVa, counterData);
+                    state.Channel.MemoryManager.Write(gpuVa, counterData);
                 }
             };
 
@@ -105,7 +103,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     break;
             }
 
-            _counterCache.AddOrUpdate(gpuVa, counter);
+            state.Channel.MemoryManager.CounterCache.AddOrUpdate(gpuVa, counter);
         }
 
         /// <summary>

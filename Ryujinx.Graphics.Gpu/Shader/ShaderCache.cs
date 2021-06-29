@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader.Cache;
 using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
 using Ryujinx.Graphics.Gpu.State;
@@ -492,7 +493,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 foreach (ShaderBundle cachedCpShader in list)
                 {
-                    if (IsShaderEqual(cachedCpShader, gpuVa))
+                    if (IsShaderEqual(state.Channel.MemoryManager, cachedCpShader, gpuVa))
                     {
                         return cachedCpShader;
                     }
@@ -527,7 +528,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
 
                 // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(_context.MemoryManager, shaderContexts);
+                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(state.Channel.MemoryManager, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries);
             }
 
@@ -542,7 +543,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
 
                 // The shader isn't currently cached, translate it and compile it.
-                ShaderCodeHolder shader = TranslateShader(shaderContexts[0]);
+                ShaderCodeHolder shader = TranslateShader(state.Channel.MemoryManager, shaderContexts[0]);
 
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
@@ -595,7 +596,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 foreach (ShaderBundle cachedGpShaders in list)
                 {
-                    if (IsShaderEqual(cachedGpShaders, addresses))
+                    if (IsShaderEqual(state.Channel.MemoryManager, cachedGpShaders, addresses))
                     {
                         return cachedGpShaders;
                     }
@@ -647,7 +648,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
 
                 // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(_context.MemoryManager, shaderContexts);
+                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(state.Channel.MemoryManager, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries, tfd);
             }
 
@@ -664,11 +665,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 // The shader isn't currently cached, translate it and compile it.
                 ShaderCodeHolder[] shaders = new ShaderCodeHolder[Constants.ShaderStages];
 
-                shaders[0] = TranslateShader(shaderContexts[1], shaderContexts[0]);
-                shaders[1] = TranslateShader(shaderContexts[2]);
-                shaders[2] = TranslateShader(shaderContexts[3]);
-                shaders[3] = TranslateShader(shaderContexts[4]);
-                shaders[4] = TranslateShader(shaderContexts[5]);
+                shaders[0] = TranslateShader(state.Channel.MemoryManager, shaderContexts[1], shaderContexts[0]);
+                shaders[1] = TranslateShader(state.Channel.MemoryManager, shaderContexts[2]);
+                shaders[2] = TranslateShader(state.Channel.MemoryManager, shaderContexts[3]);
+                shaders[3] = TranslateShader(state.Channel.MemoryManager, shaderContexts[4]);
+                shaders[4] = TranslateShader(state.Channel.MemoryManager, shaderContexts[5]);
 
                 List<IShader> hostShaders = new List<IShader>();
 
@@ -724,7 +725,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <returns>Four transform feedback descriptors for the enabled TFBs, or null if TFB is disabled</returns>
-        private TransformFeedbackDescriptor[] GetTransformFeedbackDescriptors(GpuState state)
+        private static TransformFeedbackDescriptor[] GetTransformFeedbackDescriptors(GpuState state)
         {
             bool tfEnable = state.Get<Boolean32>(MethodOffset.TfEnable);
 
@@ -752,21 +753,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Checks if compute shader code in memory is equal to the cached shader.
         /// </summary>
+        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
         /// <param name="cpShader">Cached compute shader</param>
         /// <param name="gpuVa">GPU virtual address of the shader code in memory</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private bool IsShaderEqual(ShaderBundle cpShader, ulong gpuVa)
+        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderBundle cpShader, ulong gpuVa)
         {
-            return IsShaderEqual(cpShader.Shaders[0], gpuVa);
+            return IsShaderEqual(memoryManager, cpShader.Shaders[0], gpuVa);
         }
 
         /// <summary>
         /// Checks if graphics shader code from all stages in memory are equal to the cached shaders.
         /// </summary>
+        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
         /// <param name="gpShaders">Cached graphics shaders</param>
         /// <param name="addresses">GPU virtual addresses of all enabled shader stages</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private bool IsShaderEqual(ShaderBundle gpShaders, ShaderAddresses addresses)
+        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderBundle gpShaders, ShaderAddresses addresses)
         {
             for (int stage = 0; stage < gpShaders.Shaders.Length; stage++)
             {
@@ -783,7 +786,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     case 4: gpuVa = addresses.Fragment;       break;
                 }
 
-                if (!IsShaderEqual(shader, gpuVa, addresses.VertexA))
+                if (!IsShaderEqual(memoryManager, shader, gpuVa, addresses.VertexA))
                 {
                     return false;
                 }
@@ -795,24 +798,25 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Checks if the code of the specified cached shader is different from the code in memory.
         /// </summary>
+        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
         /// <param name="shader">Cached shader to compare with</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
         /// <param name="gpuVaA">Optional GPU virtual address of the "Vertex A" binary shader code</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private bool IsShaderEqual(ShaderCodeHolder shader, ulong gpuVa, ulong gpuVaA = 0)
+        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderCodeHolder shader, ulong gpuVa, ulong gpuVaA = 0)
         {
             if (shader == null)
             {
                 return true;
             }
 
-            ReadOnlySpan<byte> memoryCode = _context.MemoryManager.GetSpan(gpuVa, shader.Code.Length);
+            ReadOnlySpan<byte> memoryCode = memoryManager.GetSpan(gpuVa, shader.Code.Length);
 
             bool equals = memoryCode.SequenceEqual(shader.Code);
 
             if (equals && shader.Code2 != null)
             {
-                memoryCode = _context.MemoryManager.GetSpan(gpuVaA, shader.Code2.Length);
+                memoryCode = memoryManager.GetSpan(gpuVaA, shader.Code2.Length);
 
                 equals = memoryCode.SequenceEqual(shader.Code2);
             }
@@ -882,10 +886,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Translates a previously generated translator context to something that the host API accepts.
         /// </summary>
+        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
         /// <param name="translatorContext">Current translator context to translate</param>
         /// <param name="translatorContext2">Optional translator context of the shader that should be combined</param>
         /// <returns>Compiled graphics shader code</returns>
-        private ShaderCodeHolder TranslateShader(TranslatorContext translatorContext, TranslatorContext translatorContext2 = null)
+        private ShaderCodeHolder TranslateShader(
+            MemoryManager memoryManager,
+            TranslatorContext translatorContext,
+            TranslatorContext translatorContext2 = null)
         {
             if (translatorContext == null)
             {
@@ -894,8 +902,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             if (translatorContext2 != null)
             {
-                byte[] codeA = _context.MemoryManager.GetSpan(translatorContext2.Address, translatorContext2.Size).ToArray();
-                byte[] codeB = _context.MemoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
+                byte[] codeA = memoryManager.GetSpan(translatorContext2.Address, translatorContext2.Size).ToArray();
+                byte[] codeB = memoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
 
                 _dumper.Dump(codeA, compute: false, out string fullPathA, out string codePathA);
                 _dumper.Dump(codeB, compute: false, out string fullPathB, out string codePathB);
@@ -914,7 +922,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
             else
             {
-                byte[] code = _context.MemoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
+                byte[] code = memoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
 
                 _dumper.Dump(code, translatorContext.Stage == ShaderStage.Compute, out string fullPath, out string codePath);
 

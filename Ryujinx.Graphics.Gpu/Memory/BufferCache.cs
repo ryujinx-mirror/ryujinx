@@ -18,7 +18,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private const ulong BufferAlignmentSize = 0x1000;
         private const ulong BufferAlignmentMask = BufferAlignmentSize - 1;
 
-        private GpuContext _context;
+        private readonly GpuContext _context;
+        private readonly PhysicalMemory _physicalMemory;
 
         private readonly RangeList<Buffer> _buffers;
 
@@ -32,9 +33,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Creates a new instance of the buffer manager.
         /// </summary>
         /// <param name="context">The GPU context that the buffer manager belongs to</param>
-        public BufferCache(GpuContext context)
+        /// <param name="physicalMemory">Physical memory where the cached buffers are mapped</param>
+        public BufferCache(GpuContext context, PhysicalMemory physicalMemory)
         {
             _context = context;
+            _physicalMemory = physicalMemory;
 
             _buffers = new RangeList<Buffer>();
 
@@ -53,7 +56,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             Buffer[] overlaps = new Buffer[10];
             int overlapCount;
 
-            ulong address = _context.MemoryManager.Translate(e.Address);
+            ulong address = ((MemoryManager)sender).Translate(e.Address);
             ulong size = e.Size;
 
             lock (_buffers)
@@ -71,17 +74,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Performs address translation of the GPU virtual address, and creates a
         /// new buffer, if needed, for the specified range.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         /// <param name="size">Size in bytes of the buffer</param>
         /// <returns>CPU virtual address of the buffer, after address translation</returns>
-        public ulong TranslateAndCreateBuffer(ulong gpuVa, ulong size)
+        public ulong TranslateAndCreateBuffer(MemoryManager memoryManager, ulong gpuVa, ulong size)
         {
             if (gpuVa == 0)
             {
                 return 0;
             }
 
-            ulong address = _context.MemoryManager.Translate(gpuVa);
+            ulong address = memoryManager.Translate(gpuVa);
 
             if (address == MemoryManager.PteUnmapped)
             {
@@ -122,15 +126,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// The buffer lookup for this function is cached in a dictionary for quick access, which
         /// accelerates common UBO updates.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         /// <param name="size">Size in bytes of the buffer</param>
-        public void ForceDirty(ulong gpuVa, ulong size)
+        public void ForceDirty(MemoryManager memoryManager, ulong gpuVa, ulong size)
         {
-            BufferCacheEntry result;
-
-            if (!_dirtyCache.TryGetValue(gpuVa, out result) || result.EndGpuAddress < gpuVa + size || result.UnmappedSequence != result.Buffer.UnmappedSequence)
+            if (!_dirtyCache.TryGetValue(gpuVa, out BufferCacheEntry result) ||
+                result.EndGpuAddress < gpuVa + size ||
+                result.UnmappedSequence != result.Buffer.UnmappedSequence)
             {
-                ulong address = TranslateAndCreateBuffer(gpuVa, size);
+                ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa, size);
                 result = new BufferCacheEntry(address, gpuVa, GetBuffer(address, size));
 
                 _dirtyCache[gpuVa] = result;
@@ -179,7 +184,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         }
                     }
 
-                    Buffer newBuffer = new Buffer(_context, address, endAddress - address, _bufferOverlaps.Take(overlapsCount));
+                    Buffer newBuffer = new Buffer(_context, _physicalMemory, address, endAddress - address, _bufferOverlaps.Take(overlapsCount));
 
                     lock (_buffers)
                     {
@@ -207,7 +212,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             else
             {
                 // No overlap, just create a new buffer.
-                Buffer buffer = new Buffer(_context, address, size);
+                Buffer buffer = new Buffer(_context, _physicalMemory, address, size);
 
                 lock (_buffers)
                 {
@@ -235,13 +240,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <remarks>
         /// This does a GPU side copy.
         /// </remarks>
+        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="srcVa">GPU virtual address of the copy source</param>
         /// <param name="dstVa">GPU virtual address of the copy destination</param>
         /// <param name="size">Size in bytes of the copy</param>
-        public void CopyBuffer(GpuVa srcVa, GpuVa dstVa, ulong size)
+        public void CopyBuffer(MemoryManager memoryManager, GpuVa srcVa, GpuVa dstVa, ulong size)
         {
-            ulong srcAddress = TranslateAndCreateBuffer(srcVa.Pack(), size);
-            ulong dstAddress = TranslateAndCreateBuffer(dstVa.Pack(), size);
+            ulong srcAddress = TranslateAndCreateBuffer(memoryManager, srcVa.Pack(), size);
+            ulong dstAddress = TranslateAndCreateBuffer(memoryManager, dstVa.Pack(), size);
 
             Buffer srcBuffer = GetBuffer(srcAddress, size);
             Buffer dstBuffer = GetBuffer(dstAddress, size);
@@ -265,7 +271,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 // Optimization: If the data being copied is already in memory, then copy it directly instead of flushing from GPU.
 
                 dstBuffer.ClearModified(dstAddress, size);
-                _context.PhysicalMemory.WriteUntracked(dstAddress, _context.PhysicalMemory.GetSpan(srcAddress, (int)size));
+                memoryManager.Physical.WriteUntracked(dstAddress, memoryManager.Physical.GetSpan(srcAddress, (int)size));
             }
         }
 
@@ -275,12 +281,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <remarks>
         /// Both the address and size must be aligned to 4 bytes.
         /// </remarks>
+        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">GPU virtual address of the region to clear</param>
         /// <param name="size">Number of bytes to clear</param>
         /// <param name="value">Value to be written into the buffer</param>
-        public void ClearBuffer(GpuVa gpuVa, ulong size, uint value)
+        public void ClearBuffer(MemoryManager memoryManager, GpuVa gpuVa, ulong size, uint value)
         {
-            ulong address = TranslateAndCreateBuffer(gpuVa.Pack(), size);
+            ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa.Pack(), size);
 
             Buffer buffer = GetBuffer(address, size);
 

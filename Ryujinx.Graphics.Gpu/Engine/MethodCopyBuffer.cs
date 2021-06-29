@@ -69,7 +69,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            FlushUboDirty();
+            FlushUboDirty(state.Channel.MemoryManager);
 
             if (copy2D)
             {
@@ -98,21 +98,27 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     dst.MemoryLayout.UnpackGobBlocksInZ(),
                     dstBpp);
 
-                ulong srcBaseAddress = _context.MemoryManager.Translate(cbp.SrcAddress.Pack());
-                ulong dstBaseAddress = _context.MemoryManager.Translate(cbp.DstAddress.Pack());
+                ulong srcBaseAddress = state.Channel.MemoryManager.Translate(cbp.SrcAddress.Pack());
+                ulong dstBaseAddress = state.Channel.MemoryManager.Translate(cbp.DstAddress.Pack());
 
                 (int srcBaseOffset, int srcSize) = srcCalculator.GetRectangleRange(src.RegionX, src.RegionY, cbp.XCount, cbp.YCount);
                 (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dst.RegionX, dst.RegionY, cbp.XCount, cbp.YCount);
 
-                ReadOnlySpan<byte> srcSpan = _context.PhysicalMemory.GetSpan(srcBaseAddress + (ulong)srcBaseOffset, srcSize, true);
-                Span<byte> dstSpan         = _context.PhysicalMemory.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
+                ReadOnlySpan<byte> srcSpan = state.Channel.MemoryManager.Physical.GetSpan(srcBaseAddress + (ulong)srcBaseOffset, srcSize, true);
+                Span<byte> dstSpan         = state.Channel.MemoryManager.Physical.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
 
                 bool completeSource = IsTextureCopyComplete(cbp, src, srcLinear, srcBpp, cbp.SrcStride);
                 bool completeDest   = IsTextureCopyComplete(cbp, dst, dstLinear, dstBpp, cbp.DstStride);
 
                 if (completeSource && completeDest)
                 {
-                    Image.Texture target = TextureCache.FindTexture(dst, cbp, swizzle, dstLinear);
+                    Image.Texture target = state.Channel.MemoryManager.Physical.TextureCache.FindTexture(
+                        state.Channel.MemoryManager,
+                        dst,
+                        cbp,
+                        swizzle,
+                        dstLinear);
+
                     if (target != null)
                     {
                         ReadOnlySpan<byte> data;
@@ -154,7 +160,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     {
                         srcSpan.CopyTo(dstSpan); // No layout conversion has to be performed, just copy the data entirely.
 
-                        _context.PhysicalMemory.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
+                        state.Channel.MemoryManager.Physical.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
 
                         return;
                     }
@@ -195,7 +201,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
                 };
 
-                _context.PhysicalMemory.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
+                state.Channel.MemoryManager.Physical.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
             }
             else
             {
@@ -209,13 +215,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     swizzle.UnpackComponentSize() == 4)
                 {
                     // Fast path for clears when remap is enabled.
-                    BufferCache.ClearBuffer(cbp.DstAddress, (uint)size * 4, state.Get<uint>(MethodOffset.CopyBufferConstA));
+                    state.Channel.MemoryManager.Physical.BufferCache.ClearBuffer(
+                        state.Channel.MemoryManager,
+                        cbp.DstAddress,
+                        (uint)size * 4,
+                        state.Get<uint>(MethodOffset.CopyBufferConstA));
                 }
                 else
                 {
                     // TODO: Implement remap functionality.
                     // Buffer to buffer copy.
-                    BufferCache.CopyBuffer(cbp.SrcAddress, cbp.DstAddress, (uint)size);
+                    state.Channel.MemoryManager.Physical.BufferCache.CopyBuffer(
+                        state.Channel.MemoryManager,
+                        cbp.SrcAddress,
+                        cbp.DstAddress,
+                        (uint)size);
                 }
             }
         }

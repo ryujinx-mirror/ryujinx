@@ -32,6 +32,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private const int OverlapsBufferMaxCapacity     = 10000;
 
         private readonly GpuContext _context;
+        private readonly PhysicalMemory _physicalMemory;
 
         private readonly MultiRangeList<Texture> _textures;
 
@@ -44,9 +45,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs a new instance of the texture manager.
         /// </summary>
         /// <param name="context">The GPU context that the texture manager belongs to</param>
-        public TextureCache(GpuContext context)
+        /// <param name="physicalMemory">Physical memory where the textures managed by this cache are mapped</param>
+        public TextureCache(GpuContext context, PhysicalMemory physicalMemory)
         {
             _context = context;
+            _physicalMemory = physicalMemory;
 
             _textures = new MultiRangeList<Texture>();
 
@@ -68,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             lock (_textures)
             {
-                overlapCount = _textures.FindOverlaps(_context.MemoryManager.Translate(e.Address), e.Size, ref overlaps);
+                overlapCount = _textures.FindOverlaps(((MemoryManager)sender).Translate(e.Address), e.Size, ref overlaps);
             }
 
             for (int i = 0; i < overlapCount; i++)
@@ -139,13 +142,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="copyTexture">Copy texture to find or create</param>
         /// <param name="offset">Offset to be added to the physical texture address</param>
         /// <param name="formatInfo">Format information of the copy texture</param>
         /// <param name="preferScaling">Indicates if the texture should be scaled from the start</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(CopyTexture copyTexture, ulong offset, FormatInfo formatInfo, bool preferScaling = true, Size? sizeHint = null)
+        public Texture FindOrCreateTexture(
+            MemoryManager memoryManager,
+            CopyTexture copyTexture,
+            ulong offset,
+            FormatInfo formatInfo,
+            bool preferScaling = true,
+            Size? sizeHint = null)
         {
             int gobBlocksInY = copyTexture.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = copyTexture.MemoryLayout.UnpackGobBlocksInZ();
@@ -184,7 +194,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 flags |= TextureSearchFlags.WithUpscale;
             }
 
-            Texture texture = FindOrCreateTexture(flags, info, 0, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, flags, info, 0, sizeHint);
 
             texture?.SynchronizeMemory();
 
@@ -194,12 +204,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="colorState">Color buffer texture to find or create</param>
         /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
         /// <param name="samplesInY">Number of samples in the Y direction, for MSAA</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(RtColorState colorState, int samplesInX, int samplesInY, Size sizeHint)
+        public Texture FindOrCreateTexture(MemoryManager memoryManager, RtColorState colorState, int samplesInX, int samplesInY, Size sizeHint)
         {
             bool isLinear = colorState.MemoryLayout.UnpackIsLinear();
 
@@ -263,7 +274,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             int layerSize = !isLinear ? colorState.LayerSize * 4 : 0;
 
-            Texture texture = FindOrCreateTexture(TextureSearchFlags.WithUpscale, info, layerSize, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, layerSize, sizeHint);
 
             texture?.SynchronizeMemory();
 
@@ -273,13 +284,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="dsState">Depth-stencil buffer texture to find or create</param>
         /// <param name="size">Size of the depth-stencil texture</param>
         /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
         /// <param name="samplesInY">Number of samples in the Y direction, for MSAA</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(RtDepthStencilState dsState, Size3D size, int samplesInX, int samplesInY, Size sizeHint)
+        public Texture FindOrCreateTexture(
+            MemoryManager memoryManager,
+            RtDepthStencilState dsState,
+            Size3D size,
+            int samplesInX,
+            int samplesInY,
+            Size sizeHint)
         {
             int gobBlocksInY = dsState.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = dsState.MemoryLayout.UnpackGobBlocksInZ();
@@ -306,7 +324,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 target,
                 formatInfo);
 
-            Texture texture = FindOrCreateTexture(TextureSearchFlags.WithUpscale, info, dsState.LayerSize * 4, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, dsState.LayerSize * 4, sizeHint);
 
             texture?.SynchronizeMemory();
 
@@ -316,13 +334,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="flags">The texture search flags, defines texture comparison rules</param>
         /// <param name="info">Texture information of the texture to be found or created</param>
         /// <param name="layerSize">Size in bytes of a single texture layer</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <param name="range">Optional ranges of physical memory where the texture data is located</param>
         /// <returns>The texture</returns>
-        public Texture FindOrCreateTexture(TextureSearchFlags flags, TextureInfo info, int layerSize = 0, Size? sizeHint = null, MultiRange? range = null)
+        public Texture FindOrCreateTexture(
+            MemoryManager memoryManager,
+            TextureSearchFlags flags,
+            TextureInfo info,
+            int layerSize = 0,
+            Size? sizeHint = null,
+            MultiRange? range = null)
         {
             bool isSamplerTexture = (flags & TextureSearchFlags.ForSampler) != 0;
 
@@ -342,7 +367,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                address = _context.MemoryManager.Translate(info.GpuAddress);
+                address = memoryManager.Translate(info.GpuAddress);
 
                 if (address == MemoryManager.PteUnmapped)
                 {
@@ -371,22 +396,26 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (matchQuality != TextureMatchQuality.NoMatch)
                 {
                     // If the parameters match, we need to make sure the texture is mapped to the same memory regions.
-
-                    // If a range of memory was supplied, just check if the ranges match.
-                    if (range != null && !overlap.Range.Equals(range.Value))
+                    if (range != null)
                     {
-                        continue;
+                        // If a range of memory was supplied, just check if the ranges match.
+                        if (!overlap.Range.Equals(range.Value))
+                        {
+                            continue;
+                        }
                     }
-
-                    // If no range was supplied, we can check if the GPU virtual address match. If they do,
-                    // we know the textures are located at the same memory region.
-                    // If they don't, it may still be mapped to the same physical region, so we
-                    // do a more expensive check to tell if they are mapped into the same physical regions.
-                    // If the GPU VA for the texture has ever been unmapped, then the range must be checked regardless.
-                    if ((overlap.Info.GpuAddress != info.GpuAddress || overlap.ChangedMapping) &&
-                        !_context.MemoryManager.CompareRange(overlap.Range, info.GpuAddress))
+                    else
                     {
-                        continue;
+                        // If no range was supplied, we can check if the GPU virtual address match. If they do,
+                        // we know the textures are located at the same memory region.
+                        // If they don't, it may still be mapped to the same physical region, so we
+                        // do a more expensive check to tell if they are mapped into the same physical regions.
+                        // If the GPU VA for the texture has ever been unmapped, then the range must be checked regardless.
+                        if ((overlap.Info.GpuAddress != info.GpuAddress || overlap.ChangedMapping) &&
+                            !memoryManager.CompareRange(overlap.Range, info.GpuAddress))
+                        {
+                            continue;
+                        }
                     }
                 }
 
@@ -426,7 +455,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (range == null)
             {
-                range = _context.MemoryManager.GetPhysicalRegions(info.GpuAddress, size);
+                range = memoryManager.GetPhysicalRegions(info.GpuAddress, size);
             }
 
             // Find view compatible matches.
@@ -495,7 +524,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     // Only copy compatible. If there's another choice for a FULLY compatible texture, choose that instead.
 
-                    texture = new Texture(_context, info, sizeInfo, range.Value, scaleMode);
+                    texture = new Texture(_context, _physicalMemory, info, sizeInfo, range.Value, scaleMode);
                     texture.InitializeGroup(true, true);
                     texture.InitializeData(false, false);
 
@@ -531,7 +560,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // No match, create a new texture.
             if (texture == null)
             {
-                texture = new Texture(_context, info, sizeInfo, range.Value, scaleMode);
+                texture = new Texture(_context, _physicalMemory, info, sizeInfo, range.Value, scaleMode);
 
                 // Step 1: Find textures that are view compatible with the new texture.
                 // Any textures that are incompatible will contain garbage data, so they should be removed where possible.
@@ -722,14 +751,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Tries to find an existing texture matching the given buffer copy destination. If none is found, returns null.
         /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="tex">The texture information</param>
         /// <param name="cbp">The copy buffer parameters</param>
         /// <param name="swizzle">The copy buffer swizzle</param>
         /// <param name="linear">True if the texture has a linear layout, false otherwise</param>
         /// <returns>A matching texture, or null if there is no match</returns>
-        public Texture FindTexture(CopyBufferTexture tex, CopyBufferParams cbp, CopyBufferSwizzle swizzle, bool linear)
+        public Texture FindTexture(MemoryManager memoryManager, CopyBufferTexture tex, CopyBufferParams cbp, CopyBufferSwizzle swizzle, bool linear)
         {
-            ulong address = _context.MemoryManager.Translate(cbp.DstAddress.Pack());
+            ulong address = memoryManager.Translate(cbp.DstAddress.Pack());
 
             if (address == MemoryManager.PteUnmapped)
             {

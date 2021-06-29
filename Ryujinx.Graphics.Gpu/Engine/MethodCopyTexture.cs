@@ -17,6 +17,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         private void CopyTexture(GpuState state, int argument)
         {
+            var memoryManager = state.Channel.MemoryManager;
+
             var dstCopyTexture = state.Get<CopyTexture>(MethodOffset.CopyDstTexture);
             var srcCopyTexture = state.Get<CopyTexture>(MethodOffset.CopySrcTexture);
 
@@ -80,7 +82,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 srcX1 = 0;
             }
 
-            Texture srcTexture = TextureCache.FindOrCreateTexture(srcCopyTexture, offset, srcCopyTextureFormat, true, srcHint);
+            Texture srcTexture = memoryManager.Physical.TextureCache.FindOrCreateTexture(
+                memoryManager,
+                srcCopyTexture,
+                offset,
+                srcCopyTextureFormat,
+                true,
+                srcHint);
 
             if (srcTexture == null)
             {
@@ -101,7 +109,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTextureFormat = dstCopyTexture.Format.Convert();
             }
 
-            Texture dstTexture = TextureCache.FindOrCreateTexture(dstCopyTexture, 0, dstCopyTextureFormat, srcTexture.ScaleMode == TextureScaleMode.Scaled, dstHint);
+            Texture dstTexture = memoryManager.Physical.TextureCache.FindOrCreateTexture(
+                memoryManager,
+                dstCopyTexture,
+                0,
+                dstCopyTextureFormat,
+                srcTexture.ScaleMode == TextureScaleMode.Scaled,
+                dstHint);
 
             if (dstTexture == null)
             {

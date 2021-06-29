@@ -23,6 +23,11 @@ namespace Ryujinx.Graphics.Gpu
         private struct PresentationTexture
         {
             /// <summary>
+            /// Texture cache where the texture might be located.
+            /// </summary>
+            public TextureCache Cache { get; }
+
+            /// <summary>
             /// Texture information.
             /// </summary>
             public TextureInfo Info { get; }
@@ -55,6 +60,7 @@ namespace Ryujinx.Graphics.Gpu
             /// <summary>
             /// Creates a new instance of the presentation texture.
             /// </summary>
+            /// <param name="cache">Texture cache used to look for the texture to be presented</param>
             /// <param name="info">Information of the texture to be presented</param>
             /// <param name="range">Physical memory locations where the texture data is located</param>
             /// <param name="crop">Texture crop region</param>
@@ -62,6 +68,7 @@ namespace Ryujinx.Graphics.Gpu
             /// <param name="releaseCallback">Texture release callback</param>
             /// <param name="userObj">User defined object passed to the release callback, can be used to identify the texture</param>
             public PresentationTexture(
+                TextureCache               cache,
                 TextureInfo                info,
                 MultiRange                 range,
                 ImageCrop                  crop,
@@ -69,6 +76,7 @@ namespace Ryujinx.Graphics.Gpu
                 Action<object>             releaseCallback,
                 object                     userObj)
             {
+                Cache           = cache;
                 Info            = info;
                 Range           = range;
                 Crop            = crop;
@@ -99,6 +107,7 @@ namespace Ryujinx.Graphics.Gpu
         /// When the texture is presented and not needed anymore, the release callback is called.
         /// It's an error to modify the texture after calling this method, before the release callback is called.
         /// </summary>
+        /// <param name="pid">Process ID of the process that owns the texture pointed to by <paramref name="address"/></param>
         /// <param name="address">CPU virtual address of the texture data</param>
         /// <param name="width">Texture width</param>
         /// <param name="height">Texture height</param>
@@ -111,7 +120,9 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="acquireCallback">Texture acquire callback</param>
         /// <param name="releaseCallback">Texture release callback</param>
         /// <param name="userObj">User defined object passed to the release callback</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="pid"/> is invalid</exception>
         public void EnqueueFrameThreadSafe(
+            long                       pid,
             ulong                      address,
             int                        width,
             int                        height,
@@ -125,6 +136,11 @@ namespace Ryujinx.Graphics.Gpu
             Action<object>             releaseCallback,
             object                     userObj)
         {
+            if (!_context.PhysicalMemoryRegistry.TryGetValue(pid, out var physicalMemory))
+            {
+                throw new ArgumentException("The PID is invalid or the process was not registered", nameof(pid));
+            }
+
             FormatInfo formatInfo = new FormatInfo(format, 1, 1, bytesPerPixel, 4);
 
             TextureInfo info = new TextureInfo(
@@ -158,7 +174,14 @@ namespace Ryujinx.Graphics.Gpu
 
             MultiRange range = new MultiRange(address, (ulong)size);
 
-            _frameQueue.Enqueue(new PresentationTexture(info, range, crop, acquireCallback, releaseCallback, userObj));
+            _frameQueue.Enqueue(new PresentationTexture(
+                physicalMemory.TextureCache,
+                info,
+                range,
+                crop,
+                acquireCallback,
+                releaseCallback,
+                userObj));
         }
 
         /// <summary>
@@ -174,7 +197,7 @@ namespace Ryujinx.Graphics.Gpu
             {
                 pt.AcquireCallback(_context, pt.UserObj);
 
-                Texture texture = _context.Methods.TextureCache.FindOrCreateTexture(TextureSearchFlags.WithUpscale, pt.Info, 0, null, pt.Range);
+                Texture texture = pt.Cache.FindOrCreateTexture(null, TextureSearchFlags.WithUpscale, pt.Info, 0, null, pt.Range);
 
                 texture.SynchronizeMemory();
 

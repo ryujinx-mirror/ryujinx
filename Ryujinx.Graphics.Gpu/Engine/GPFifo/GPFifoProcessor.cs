@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Gpu.State;
+﻿using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -13,6 +14,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private const int MacroIndexMask = MacrosCount - 1;
 
         private readonly GpuContext _context;
+        private readonly GpuChannel _channel;
+
+        public MemoryManager MemoryManager => _channel.MemoryManager;
 
         /// <summary>
         /// Internal GPFIFO state.
@@ -39,6 +43,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public GPFifoProcessor(GpuContext context, GpuChannel channel)
         {
             _context = context;
+            _channel = channel;
 
             _fifoClass = new GPFifoClass(context, this);
             _subChannels = new GpuState[8];

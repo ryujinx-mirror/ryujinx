@@ -49,8 +49,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private class TextureCallbackInformation
         {
-            public Layer        Layer;
-            public BufferItem   Item;
+            public Layer      Layer;
+            public BufferItem Item;
         }
 
         public SurfaceFlinger(Switch device)
@@ -385,6 +385,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
 
             _device.Gpu.Window.EnqueueFrameThreadSafe(
+                layer.Owner,
                 frameBufferAddress,
                 frameBufferWidth,
                 frameBufferHeight,
