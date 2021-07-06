@@ -562,7 +562,7 @@ namespace Ryujinx.Ui
             }
         }
 
-        public void LoadApplication(string path)
+        public void LoadApplication(string path, bool startFullscreen = false)
         {
             if (_gameLoaded)
             {
@@ -576,7 +576,7 @@ namespace Ryujinx.Ui
 
                 RendererWidget = CreateRendererWidget();
 
-                SwitchToRenderWidget();
+                SwitchToRenderWidget(startFullscreen);
 
                 InitializeSwitchInstance();
 
@@ -769,7 +769,7 @@ namespace Ryujinx.Ui
             }
         }
 
-        private void SwitchToRenderWidget()
+        private void SwitchToRenderWidget(bool startFullscreen = false)
         {
             _viewBox.Remove(_gameTableWindow);
             RendererWidget.Expand = true;
@@ -782,7 +782,7 @@ namespace Ryujinx.Ui
             {
                 ToggleExtraWidgets(false);
             }
-            else if (ConfigurationState.Instance.Ui.StartFullscreen.Value)
+            else if (startFullscreen || ConfigurationState.Instance.Ui.StartFullscreen.Value)
             {
                 FullScreen_Toggled(null, null);
             }

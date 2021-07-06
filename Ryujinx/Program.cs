@@ -136,11 +136,6 @@ namespace Ryujinx
                 }
             }
 
-            if (startFullscreenArg)
-            {
-                ConfigurationState.Instance.Ui.StartFullscreen.Value = true;
-            }
-
             // Logging system information.
             PrintSystemInfo();
 
@@ -164,7 +159,7 @@ namespace Ryujinx
 
             if (launchPathArg != null)
             {
-                mainWindow.LoadApplication(launchPathArg);
+                mainWindow.LoadApplication(launchPathArg, startFullscreenArg);
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
