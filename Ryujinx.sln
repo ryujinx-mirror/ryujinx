@@ -63,9 +63,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Input", "Ryujinx.In
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Input.SDL2", "Ryujinx.Input.SDL2\Ryujinx.Input.SDL2.csproj", "{DFAB6F2D-B9BF-4AFF-B22B-7684A328EBA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.SDL2.Common", "Ryujinx.SDL2.Common\Ryujinx.SDL2.Common.csproj", "{2D5D3A1D-5730-4648-B0AB-06C53CB910C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.SDL2.Common", "Ryujinx.SDL2.Common\Ryujinx.SDL2.Common.csproj", "{2D5D3A1D-5730-4648-B0AB-06C53CB910C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Audio.Backends.SDL2", "Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj", "{D99A395A-8569-4DB0-B336-900647890052}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Backends.SDL2", "Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj", "{D99A395A-8569-4DB0-B336-900647890052}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Headless.SDL2", "Ryujinx.Headless.SDL2\Ryujinx.Headless.SDL2.csproj", "{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -189,6 +191,10 @@ Global
 		{D99A395A-8569-4DB0-B336-900647890052}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D99A395A-8569-4DB0-B336-900647890052}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D99A395A-8569-4DB0-B336-900647890052}.Release|Any CPU.Build.0 = Release|Any CPU
+		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

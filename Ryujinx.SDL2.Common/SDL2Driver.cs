@@ -1,5 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using static SDL2.SDL;
@@ -25,7 +27,7 @@ namespace Ryujinx.SDL2.Common
             }
         }
 
-        private const uint SdlInitFlags = SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO;
+        private const uint SdlInitFlags = SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO | SDL_INIT_VIDEO;
 
         private bool _isRunning;
         private uint _refereceCount;
@@ -33,6 +35,8 @@ namespace Ryujinx.SDL2.Common
 
         public event Action<int, int> OnJoyStickConnected;
         public event Action<int> OnJoystickDisconnected;
+
+        private ConcurrentDictionary<uint, Action<SDL_Event>> _registeredWindowHandlers;
 
         private object _lock = new object();
 
@@ -85,10 +89,21 @@ namespace Ryujinx.SDL2.Common
                     SDL_GameControllerAddMappingsFromFile(gamepadDbPath);
                 }
 
+                _registeredWindowHandlers = new ConcurrentDictionary<uint, Action<SDL_Event>>();
                 _worker = new Thread(EventWorker);
                 _isRunning = true;
                 _worker.Start();
             }
+        }
+
+        public bool RegisterWindow(uint windowId, Action<SDL_Event> windowEventHandler)
+        {
+            return _registeredWindowHandlers.TryAdd(windowId, windowEventHandler);
+        }
+
+        public void UnregisterWindow(uint windowId)
+        {
+            _registeredWindowHandlers.Remove(windowId, out _);
         }
 
         private void HandleSDLEvent(ref SDL_Event evnt)
@@ -114,6 +129,13 @@ namespace Ryujinx.SDL2.Common
                 Logger.Debug?.Print(LogClass.Application, $"Removed joystick instance id {evnt.cbutton.which}");
 
                 OnJoystickDisconnected?.Invoke(evnt.cbutton.which);
+            }
+            else if (evnt.type == SDL_EventType.SDL_WINDOWEVENT || evnt.type == SDL_EventType.SDL_MOUSEBUTTONDOWN || evnt.type == SDL_EventType.SDL_MOUSEBUTTONUP)
+            {
+                if (_registeredWindowHandlers.TryGetValue(evnt.window.windowID, out Action<SDL_Event> handler))
+                {
+                    handler(evnt);
+                }
             }
         }
 

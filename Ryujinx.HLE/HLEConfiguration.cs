@@ -133,7 +133,7 @@ namespace Ryujinx.HLE
         /// <summary>
         /// Aspect Ratio applied to the renderer window by the SurfaceFlinger service.
         /// </summary>
-        public AspectRatio AspectRatio { internal get; set; }
+        public AspectRatio AspectRatio { get; set; }
 
         /// <summary>
         /// An action called when HLE force a refresh of output after docked mode changed.
