@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
     class IAddOnContentManager : IpcService
     {
         private readonly KEvent _addOnContentListChangedEvent;
+        private int             _addOnContentListChangedEventHandle;
 
         private ulong _addOnContentBaseId;
 
@@ -190,19 +191,19 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             //       If QuestFlag is true, counts some extra titles.
 
             uint  startIndex     = context.RequestData.ReadUInt32();
-            uint  counter        = context.RequestData.ReadUInt32();
+            uint  indexNumber    = context.RequestData.ReadUInt32();
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
             ulong bufferSize     = context.Request.ReceiveBuff[0].Size;
 
             // TODO: This should use _addOnContentBaseId;
-            uint aocCount = (uint)context.Device.System.ContentManager.GetAocCount();
+            uint aocTotalCount = (uint)context.Device.System.ContentManager.GetAocCount();
 
-            if (counter > bufferSize / sizeof(uint))
+            if (indexNumber > bufferSize / sizeof(uint))
             {
                 return ResultCode.InvalidBufferSize;
             }
 
-            if (aocCount <= startIndex)
+            if (aocTotalCount <= startIndex)
             {
                 context.ResponseData.Write(0);
 
@@ -213,12 +214,19 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
             GetAddOnContentBaseIdFromTitleId(context, titleId);
 
-            for (int i = 0; i < aocCount - startIndex; i++)
+            uint indexCounter = 0;
+
+            for (int i = 0; i < indexNumber; i++)
             {
-                context.Memory.Write(bufferPosition + (ulong)i * 4, (uint)(aocTitleIds[i + (int)startIndex] - _addOnContentBaseId));
+                if (i + (int)startIndex < aocTitleIds.Count)
+                {
+                    context.Memory.Write(bufferPosition + (ulong)i * sizeof(uint), (uint)(aocTitleIds[i + (int)startIndex] - _addOnContentBaseId));
+
+                    indexCounter++;
+                }
             }
 
-            context.ResponseData.Write(aocCount);
+            context.ResponseData.Write(indexCounter);
 
             return ResultCode.Success;
         }
@@ -268,12 +276,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
         private ResultCode GetAddOnContentListChangedEventImpl(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out int addOnContentListChangedEventHandle) != KernelResult.Success)
+            if (_addOnContentListChangedEventHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out _addOnContentListChangedEventHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(addOnContentListChangedEventHandle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_addOnContentListChangedEventHandle);
 
             return ResultCode.Success;
         }
