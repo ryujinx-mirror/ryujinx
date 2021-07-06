@@ -156,7 +156,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     ? DefaultNames.OAttributePrefix
                     : DefaultNames.IAttributePrefix;
 
-                if ((config.Flags & TranslationFlags.Feedback) != 0)
+                if ((config.Options.Flags & TranslationFlags.Feedback) != 0)
                 {
                     string name = $"{prefix}{(value >> 4)}_{swzMask}";
 

@@ -291,7 +291,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
 
-            context.AppendLine($"layout (binding = {context.Config.FirstStorageBufferBinding}, std430) buffer {blockName}");
+            string layout = context.Config.Options.TargetApi == TargetApi.Vulkan ? ", set = 1" : string.Empty;
+
+            context.AppendLine($"layout (binding = {context.Config.FirstStorageBufferBinding}{layout}, std430) buffer {blockName}");
             context.EnterScope();
             context.AppendLine("uint " + DefaultNames.DataName + "[];");
             context.LeaveScope($" {sbName}[{NumberFormatter.FormatInt(descriptors.Max(x => x.Slot) + 1)}];");
@@ -325,7 +327,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 string samplerTypeName = descriptor.Type.ToGlslSamplerType();
 
-                context.AppendLine($"layout (binding = {descriptor.Binding}) uniform {samplerTypeName} {samplerName};");
+                string layout = string.Empty;
+
+                if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+                {
+                    bool isBuffer = (descriptor.Type & SamplerType.Mask) == SamplerType.TextureBuffer;
+                    int setIndex = isBuffer ? 4 : 2;
+
+                    layout = $", set = {setIndex}";
+                }
+
+                context.AppendLine($"layout (binding = {descriptor.Binding}{layout}) uniform {samplerTypeName} {samplerName};");
             }
         }
 
@@ -356,6 +368,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     descriptor.Type.HasFlag(SamplerType.Indexed),
                     indexExpr);
 
+                string imageTypeName = descriptor.Type.ToGlslImageType(descriptor.Format.GetComponentType());
+
                 string layout = descriptor.Format.ToGlslFormat();
 
                 if (!string.IsNullOrEmpty(layout))
@@ -363,7 +377,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     layout = ", " + layout;
                 }
 
-                string imageTypeName = descriptor.Type.ToGlslImageType(descriptor.Format.GetComponentType());
+                if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+                {
+                    bool isBuffer = (descriptor.Type & SamplerType.Mask) == SamplerType.TextureBuffer;
+                    int setIndex = isBuffer ? 5 : 3;
+
+                    layout = $", set = {setIndex}{layout}";
+                }
 
                 context.AppendLine($"layout (binding = {descriptor.Binding}{layout}) uniform {imageTypeName} {imageName};");
             }
@@ -411,7 +431,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             string name = $"{DefaultNames.IAttributePrefix}{attr}";
 
-            if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+            if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
             {
                 for (int c = 0; c < 4; c++)
                 {
@@ -463,7 +483,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             string name = $"{DefaultNames.OAttributePrefix}{attr}";
 
-            if ((context.Config.Flags & TranslationFlags.Feedback) != 0)
+            if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
             {
                 for (int c = 0; c < 4; c++)
                 {
