@@ -231,12 +231,12 @@ namespace Ryujinx.Ui.Windows
 
         private static string GetShrinkedGamepadName(string str)
         {
-            const string ShrinkChars = "..";
-            const int MaxSize = 52;
+            const string ShrinkChars = "...";
+            const int MaxSize = 50;
 
-            if (str.Length > MaxSize - ShrinkChars.Length)
+            if (str.Length > MaxSize)
             {
-                return str.Substring(0, MaxSize) + ShrinkChars;
+                return str.Substring(0, MaxSize - ShrinkChars.Length) + ShrinkChars;
             }
 
             return str;
