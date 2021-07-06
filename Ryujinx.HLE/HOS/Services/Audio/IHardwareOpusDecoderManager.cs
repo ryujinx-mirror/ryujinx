@@ -1,4 +1,6 @@
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager;
+using Ryujinx.HLE.HOS.Services.Audio.Types;
 
 namespace Ryujinx.HLE.HOS.Services.Audio
 {
@@ -26,11 +28,38 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // GetWorkBufferSize(bytes<8, 4>) -> u32
         public ResultCode GetWorkBufferSize(ServiceCtx context)
         {
-            // Note: The sample rate is ignored because it is fixed to 48KHz.
+            // NOTE: The sample rate is ignored because it is fixed to 48KHz.
             int sampleRate    = context.RequestData.ReadInt32();
             int channelsCount = context.RequestData.ReadInt32();
 
             context.ResponseData.Write(GetOpusDecoderSize(channelsCount));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(4)] // 12.0.0+
+        // InitializeEx(OpusParametersEx, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
+        public ResultCode InitializeEx(ServiceCtx context)
+        {
+            OpusParametersEx parameters = context.RequestData.ReadStruct<OpusParametersEx>();
+
+            // UseLargeFrameSize can be ignored due to not relying on fixed size buffers for storing the decoded result.
+            MakeObject(context, new IHardwareOpusDecoder(parameters.SampleRate, parameters.ChannelCount));
+
+            // Close transfer memory immediately as we don't use it.
+            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(5)] // 12.0.0+
+        // GetWorkBufferSizeEx(OpusParametersEx) -> u32
+        public ResultCode GetWorkBufferSizeEx(ServiceCtx context)
+        {
+            OpusParametersEx parameters = context.RequestData.ReadStruct<OpusParametersEx>();
+
+            // NOTE: The sample rate is ignored because it is fixed to 48KHz.
+            context.ResponseData.Write(GetOpusDecoderSize(parameters.ChannelCount));
 
             return ResultCode.Success;
         }
