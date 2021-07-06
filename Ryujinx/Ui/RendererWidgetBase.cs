@@ -310,7 +310,7 @@ namespace Ryujinx.Ui
 
         private unsafe void Renderer_ScreenCaptured(object sender, ScreenCaptureImageInfo e)
         {
-            if (e.Data.Length > 0)
+            if (e.Data.Length > 0 && e.Height > 0 && e.Width > 0)
             {
                 Task.Run(() =>
                 {
@@ -318,10 +318,24 @@ namespace Ryujinx.Ui
                     {
                         var    currentTime = DateTime.Now;
                         string filename    = $"ryujinx_capture_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.png";
-                        string directory   = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyPictures), "Ryujinx");
-                        string path        = System.IO.Path.Combine(directory, filename);
+                        string directory   = AppDataManager.Mode switch
+                        {
+                            AppDataManager.LaunchMode.Portable => System.IO.Path.Combine(AppDataManager.BaseDirPath, "screenshots"),
+                            _ => System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyPictures), "Ryujinx")
+                        };
 
-                        Directory.CreateDirectory(directory);
+                        string path = System.IO.Path.Combine(directory, filename);
+
+                        try
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error?.Print(LogClass.Application, $"Failed to create directory at path {directory}. Error : {ex.GetType().Name}", "Screenshot");
+
+                            return;
+                        }
 
                         Image image = e.IsBgra ? Image.LoadPixelData<Bgra32>(e.Data, e.Width, e.Height)
                                                : Image.LoadPixelData<Rgba32>(e.Data, e.Width, e.Height);
@@ -346,6 +360,10 @@ namespace Ryujinx.Ui
                         Logger.Notice.Print(LogClass.Application, $"Screenshot saved to {path}", "Screenshot");
                     }
                 });
+            }
+            else
+            {
+                Logger.Error?.Print(LogClass.Application, $"Screenshot is empty. Size : {e.Data.Length} bytes. Resolution : {e.Width}x{e.Height}", "Screenshot");
             }
         }
 
