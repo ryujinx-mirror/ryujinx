@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
@@ -13,7 +14,14 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
 
         public DnsSetting(IPInterfaceProperties interfaceProperties)
         {
-            IsDynamicDnsEnabled = interfaceProperties.IsDynamicDnsEnabled;
+            try
+            {
+                IsDynamicDnsEnabled = interfaceProperties.IsDynamicDnsEnabled;
+            }
+            catch (PlatformNotSupportedException)
+            {
+                IsDynamicDnsEnabled = false;
+            }
 
             if (interfaceProperties.DnsAddresses.Count == 0)
             {
