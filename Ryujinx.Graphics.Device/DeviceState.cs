@@ -20,7 +20,10 @@ namespace Ryujinx.Graphics.Device
         private readonly Dictionary<int, Func<int>> _readCallbacks;
         private readonly Dictionary<int, Action<int>> _writeCallbacks;
 
-        public DeviceState(IReadOnlyDictionary<string, RwCallback> callbacks = null)
+        private readonly Dictionary<int, string> _fieldNamesForDebug;
+        private readonly Action<string> _debugLogCallback;
+
+        public DeviceState(IReadOnlyDictionary<string, RwCallback> callbacks = null, Action<string> debugLogCallback = null)
         {
             int size = (Unsafe.SizeOf<TState>() + RegisterSize - 1) / RegisterSize;
 
@@ -29,6 +32,12 @@ namespace Ryujinx.Graphics.Device
 
             _readCallbacks = new Dictionary<int, Func<int>>();
             _writeCallbacks = new Dictionary<int, Action<int>>();
+
+            if (debugLogCallback != null)
+            {
+                _fieldNamesForDebug = new Dictionary<int, string>();
+                _debugLogCallback = debugLogCallback;
+            }
 
             var fields = typeof(TState).GetFields();
             int offset = 0;
@@ -57,6 +66,11 @@ namespace Ryujinx.Graphics.Device
                     {
                         _writeCallbacks.Add(offset, cb.Write);
                     }
+                }
+
+                if (debugLogCallback != null)
+                {
+                    _fieldNamesForDebug.Add(offset, field.Name);
                 }
 
                 offset += sizeOfField;
@@ -89,6 +103,11 @@ namespace Ryujinx.Graphics.Device
             if (Check(offset) && _writableRegisters[offset / RegisterSize])
             {
                 int alignedOffset = Align(offset);
+
+                if (_fieldNamesForDebug != null && _fieldNamesForDebug.TryGetValue(alignedOffset, out string fieldName))
+                {
+                    _debugLogCallback($"{typeof(TState).Name}.{fieldName} = 0x{data:X}");
+                }
 
                 GetRef<int>(alignedOffset) = data;
 

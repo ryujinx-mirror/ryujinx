@@ -425,22 +425,28 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Gets the texture descriptor for a given texture handle.
         /// </summary>
-        /// <param name="state">The current GPU state</param>
+        /// <param name="poolGpuVa">GPU virtual address of the texture pool</param>
+        /// <param name="bufferIndex">Index of the constant buffer with texture handles</param>
+        /// <param name="maximumId">Maximum ID of the texture pool</param>
         /// <param name="stageIndex">The stage number where the texture is bound</param>
         /// <param name="handle">The texture handle</param>
         /// <param name="cbufSlot">The texture handle's constant buffer slot</param>
         /// <returns>The texture descriptor for the specified texture</returns>
-        public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle, int cbufSlot)
+        public TextureDescriptor GetTextureDescriptor(
+            ulong poolGpuVa,
+            int bufferIndex,
+            int maximumId,
+            int stageIndex,
+            int handle,
+            int cbufSlot)
         {
-            int textureBufferIndex = cbufSlot < 0 ? state.Get<int>(MethodOffset.TextureBufferIndex) : cbufSlot & SlotMask;
+            int textureBufferIndex = cbufSlot < 0 ? bufferIndex : cbufSlot & SlotMask;
             int packedId = ReadPackedId(stageIndex, handle, textureBufferIndex, textureBufferIndex);
             int textureId = UnpackTextureId(packedId);
 
-            var poolState = state.Get<PoolState>(MethodOffset.TexturePoolState);
+            ulong poolAddress = _channel.MemoryManager.Translate(poolGpuVa);
 
-            ulong poolAddress = _channel.MemoryManager.Translate(poolState.Address.Pack());
-
-            TexturePool texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, poolState.MaximumId);
+            TexturePool texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, maximumId);
 
             return texturePool.GetDescriptor(textureId);
         }

@@ -313,26 +313,36 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Gets a texture descriptor used on the compute pipeline.
         /// </summary>
-        /// <param name="state">Current GPU state</param>
+        /// <param name="poolGpuVa">GPU virtual address of the texture pool</param>
+        /// <param name="bufferIndex">Index of the constant buffer with texture handles</param>
+        /// <param name="maximumId">Maximum ID of the texture pool</param>
         /// <param name="handle">Shader "fake" handle of the texture</param>
         /// <param name="cbufSlot">Shader constant buffer slot of the texture</param>
         /// <returns>The texture descriptor</returns>
-        public TextureDescriptor GetComputeTextureDescriptor(GpuState state, int handle, int cbufSlot)
+        public TextureDescriptor GetComputeTextureDescriptor(ulong poolGpuVa, int bufferIndex, int maximumId, int handle, int cbufSlot)
         {
-            return _cpBindingsManager.GetTextureDescriptor(state, 0, handle, cbufSlot);
+            return _cpBindingsManager.GetTextureDescriptor(poolGpuVa, bufferIndex, maximumId, 0, handle, cbufSlot);
         }
 
         /// <summary>
         /// Gets a texture descriptor used on the graphics pipeline.
         /// </summary>
-        /// <param name="state">Current GPU state</param>
+        /// <param name="poolGpuVa">GPU virtual address of the texture pool</param>
+        /// <param name="bufferIndex">Index of the constant buffer with texture handles</param>
+        /// <param name="maximumId">Maximum ID of the texture pool</param>
         /// <param name="stageIndex">Index of the shader stage where the texture is bound</param>
         /// <param name="handle">Shader "fake" handle of the texture</param>
         /// <param name="cbufSlot">Shader constant buffer slot of the texture</param>
         /// <returns>The texture descriptor</returns>
-        public TextureDescriptor GetGraphicsTextureDescriptor(GpuState state, int stageIndex, int handle, int cbufSlot)
+        public TextureDescriptor GetGraphicsTextureDescriptor(
+            ulong poolGpuVa,
+            int bufferIndex,
+            int maximumId,
+            int stageIndex,
+            int handle,
+            int cbufSlot)
         {
-            return _gpBindingsManager.GetTextureDescriptor(state, stageIndex, handle, cbufSlot);
+            return _gpBindingsManager.GetTextureDescriptor(poolGpuVa, bufferIndex, maximumId, stageIndex, handle, cbufSlot);
         }
 
         /// <summary>

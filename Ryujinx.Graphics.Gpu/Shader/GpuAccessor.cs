@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.Gpu.Shader
@@ -11,7 +10,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
     class GpuAccessor : TextureDescriptorCapableGpuAccessor, IGpuAccessor
     {
         private readonly GpuContext _context;
-        private readonly GpuState _state;
+        private readonly GpuChannel _channel;
+        private readonly GpuAccessorState _state;
         private readonly int _stageIndex;
         private readonly bool _compute;
         private readonly int _localSizeX;
@@ -24,11 +24,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Creates a new instance of the GPU state accessor for graphics shader translation.
         /// </summary>
         /// <param name="context">GPU context</param>
+        /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="stageIndex">Graphics shader stage index (0 = Vertex, 4 = Fragment)</param>
-        public GpuAccessor(GpuContext context, GpuState state, int stageIndex)
+        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state, int stageIndex)
         {
             _context = context;
+            _channel = channel;
             _state = state;
             _stageIndex = stageIndex;
         }
@@ -37,6 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Creates a new instance of the GPU state accessor for compute shader translation.
         /// </summary>
         /// <param name="context">GPU context</param>
+        /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="localSizeX">Local group size X of the compute shader</param>
         /// <param name="localSizeY">Local group size Y of the compute shader</param>
@@ -45,7 +48,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         public GpuAccessor(
             GpuContext context,
-            GpuState state,
+            GpuChannel channel,
+            GpuAccessorState state,
             int localSizeX,
             int localSizeY,
             int localSizeZ,
@@ -53,6 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             int sharedMemorySize)
         {
             _context = context;
+            _channel = channel;
             _state = state;
             _compute = true;
             _localSizeX = localSizeX;
@@ -79,7 +84,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Data at the memory location</returns>
         public override T MemoryRead<T>(ulong address)
         {
-            return _state.Channel.MemoryManager.Read<T>(address);
+            return _channel.MemoryManager.Read<T>(address);
         }
 
         /// <summary>
@@ -89,7 +94,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>True if the address is mapped, false otherwise</returns>
         public bool MemoryMapped(ulong address)
         {
-            return _state.Channel.MemoryManager.IsMapped(address);
+            return _channel.MemoryManager.IsMapped(address);
         }
 
         /// <summary>
@@ -129,8 +134,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public uint QueryConstantBufferUse()
         {
             return _compute
-                ? _state.Channel.BufferManager.GetComputeUniformBufferUseMask()
-                : _state.Channel.BufferManager.GetGraphicsUniformBufferUseMask(_stageIndex);
+                ? _channel.BufferManager.GetComputeUniformBufferUseMask()
+                : _channel.BufferManager.GetGraphicsUniformBufferUseMask(_stageIndex);
         }
 
         /// <summary>
@@ -196,11 +201,22 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             if (_compute)
             {
-                return _state.Channel.TextureManager.GetComputeTextureDescriptor(_state, handle, cbufSlot);
+                return _channel.TextureManager.GetComputeTextureDescriptor(
+                    _state.TexturePoolGpuVa,
+                    _state.TextureBufferIndex,
+                    _state.TexturePoolMaximumId,
+                    handle,
+                    cbufSlot);
             }
             else
             {
-                return _state.Channel.TextureManager.GetGraphicsTextureDescriptor(_state, _stageIndex, handle, cbufSlot);
+                return _channel.TextureManager.GetGraphicsTextureDescriptor(
+                    _state.TexturePoolGpuVa,
+                    _state.TextureBufferIndex,
+                    _state.TexturePoolMaximumId,
+                    _stageIndex,
+                    handle,
+                    cbufSlot);
             }
         }
 
@@ -210,7 +226,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>True if early depth testing is forced</returns>
         public bool QueryEarlyZForce()
         {
-            return _state.Get<bool>(MethodOffset.EarlyZForce);
+            return _state.EarlyZForce;
         }
     }
 }

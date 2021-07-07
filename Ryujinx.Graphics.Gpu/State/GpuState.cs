@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Gpu.Image;
+﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.Gpu.Image;
 using System;
 using System.Runtime.InteropServices;
 
@@ -33,6 +34,8 @@ namespace Ryujinx.Graphics.Gpu.State
 
         private readonly Register[] _registers;
 
+        private readonly IDeviceState _deviceState;
+
         /// <summary>
         /// Gets or sets the shadow ram control used for this sub-channel.
         /// </summary>
@@ -47,9 +50,11 @@ namespace Ryujinx.Graphics.Gpu.State
         /// Creates a new instance of the GPU state.
         /// </summary>
         /// <param name="channel">Channel that the sub-channel state belongs to</param>
-        public GpuState(GpuChannel channel)
+        /// <param name="deviceState">Optional device state that will replace the internal backing storage</param>
+        public GpuState(GpuChannel channel, IDeviceState deviceState = null)
         {
             Channel = channel;
+            _deviceState = deviceState;
 
             _memory = new int[RegistersCount];
             _shadow = new int[RegistersCount];
@@ -107,16 +112,23 @@ namespace Ryujinx.Graphics.Gpu.State
                 }
             }
 
-            Register register = _registers[meth.Method];
-
-            if (_memory[meth.Method] != value)
+            if (_deviceState != null)
             {
-                _registers[(int)register.BaseOffset].Modified = true;
+                _deviceState.Write(meth.Method * 4, meth.Argument);
             }
+            else
+            {
+                Register register = _registers[meth.Method];
 
-            _memory[meth.Method] = value;
+                if (_memory[meth.Method] != value)
+                {
+                    _registers[(int)register.BaseOffset].Modified = true;
+                }
 
-            register.Callback?.Invoke(this, value);
+                _memory[meth.Method] = value;
+
+                register.Callback?.Invoke(this, value);
+            }
         }
 
         /// <summary>
@@ -126,6 +138,11 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <returns>Data at the register</returns>
         public int Read(int offset)
         {
+            if (_deviceState != null)
+            {
+                return _deviceState.Read(offset * 4);
+            }
+
             return _memory[offset];
         }
 

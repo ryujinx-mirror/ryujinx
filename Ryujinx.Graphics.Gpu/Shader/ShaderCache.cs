@@ -475,7 +475,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <remarks>
         /// This automatically translates, compiles and adds the code to the cache if not present.
         /// </remarks>
-        /// <param name="state">Current GPU state</param>
+        /// <param name="channel">GPU channel</param>
+        /// <param name="gas">GPU accessor state</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
         /// <param name="localSizeX">Local group size X of the computer shader</param>
         /// <param name="localSizeY">Local group size Y of the computer shader</param>
@@ -484,7 +485,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>Compiled compute shader code</returns>
         public ShaderBundle GetComputeShader(
-            GpuState state,
+            GpuChannel channel,
+            GpuAccessorState gas,
             ulong gpuVa,
             int localSizeX,
             int localSizeY,
@@ -498,7 +500,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 foreach (ShaderBundle cachedCpShader in list)
                 {
-                    if (IsShaderEqual(state.Channel.MemoryManager, cachedCpShader, gpuVa))
+                    if (IsShaderEqual(channel.MemoryManager, cachedCpShader, gpuVa))
                     {
                         return cachedCpShader;
                     }
@@ -508,7 +510,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             TranslatorContext[] shaderContexts = new TranslatorContext[1];
 
             shaderContexts[0] = DecodeComputeShader(
-                state,
+                channel,
+                gas,
                 gpuVa,
                 localSizeX,
                 localSizeY,
@@ -533,7 +536,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
 
                 // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(state.Channel.MemoryManager, shaderContexts);
+                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel.MemoryManager, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries);
             }
 
@@ -548,7 +551,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
 
                 // The shader isn't currently cached, translate it and compile it.
-                ShaderCodeHolder shader = TranslateShader(state.Channel.MemoryManager, shaderContexts[0]);
+                ShaderCodeHolder shader = TranslateShader(channel.MemoryManager, shaderContexts[0]);
 
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
@@ -832,7 +835,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Decode the binary Maxwell shader code to a translator context.
         /// </summary>
-        /// <param name="state">Current GPU state</param>
+        /// <param name="channel">GPU channel</param>
+        /// <param name="gas">GPU accessor state</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
         /// <param name="localSizeX">Local group size X of the computer shader</param>
         /// <param name="localSizeY">Local group size Y of the computer shader</param>
@@ -841,7 +845,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>The generated translator context</returns>
         private TranslatorContext DecodeComputeShader(
-            GpuState state,
+            GpuChannel channel,
+            GpuAccessorState gas,
             ulong gpuVa,
             int localSizeX,
             int localSizeY,
@@ -854,7 +859,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return null;
             }
 
-            GpuAccessor gpuAccessor = new GpuAccessor(_context, state, localSizeX, localSizeY, localSizeZ, localMemorySize, sharedMemorySize);
+            GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gas, localSizeX, localSizeY, localSizeZ, localMemorySize, sharedMemorySize);
 
             var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags | TranslationFlags.Compute);
             return Translator.CreateContext(gpuVa, gpuAccessor, options);
@@ -884,7 +889,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return null;
             }
 
-            GpuAccessor gpuAccessor = new GpuAccessor(_context, state, (int)stage - 1);
+            GpuAccessorState gas = new GpuAccessorState(
+                state.Get<PoolState>(MethodOffset.TexturePoolState).Address.Pack(),
+                state.Get<PoolState>(MethodOffset.TexturePoolState).MaximumId,
+                state.Get<int>(MethodOffset.TextureBufferIndex),
+                state.Get<Boolean32>(MethodOffset.EarlyZForce));
+
+            GpuAccessor gpuAccessor = new GpuAccessor(_context, state.Channel, gas, (int)stage - 1);
 
             var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
             return Translator.CreateContext(gpuVa, gpuAccessor, options, counts);

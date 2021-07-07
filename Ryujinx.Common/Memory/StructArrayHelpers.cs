@@ -640,5 +640,4 @@ namespace Ryujinx.Common.Memory
         public ref T this[int index] => ref ToSpan()[index];
         public Span<T> ToSpan() => MemoryMarshal.CreateSpan(ref _e0, 64);
     }
-
 }

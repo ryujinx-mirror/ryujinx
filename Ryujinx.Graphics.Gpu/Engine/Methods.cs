@@ -50,12 +50,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.LaunchDma,      LaunchDma);
             state.RegisterCallback(MethodOffset.LoadInlineData, LoadInlineData);
 
-            state.RegisterCallback(MethodOffset.Dispatch, Dispatch);
-
             state.RegisterCallback(MethodOffset.SyncpointAction, IncrementSyncpoint);
-
-            state.RegisterCallback(MethodOffset.CopyBuffer,  CopyBuffer);
-            state.RegisterCallback(MethodOffset.CopyTexture, CopyTexture);
 
             state.RegisterCallback(MethodOffset.TextureBarrier,      TextureBarrier);
             state.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
@@ -957,24 +952,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         }
 
         /// <summary>
-        /// Storage buffer address and size information.
-        /// </summary>
-        private struct SbDescriptor
-        {
-#pragma warning disable CS0649
-            public uint AddressLow;
-            public uint AddressHigh;
-            public int  Size;
-            public int  Padding;
-#pragma warning restore CS0649
-
-            public ulong PackAddress()
-            {
-                return AddressLow | ((ulong)AddressHigh << 32);
-            }
-        }
-
-        /// <summary>
         /// Updates host shaders based on the guest GPU state.
         /// </summary>
         /// <param name="state">Current GPU state</param>
@@ -1086,6 +1063,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.Channel.BufferManager.SetGraphicsUniformBufferBindingsCount(uniformBufferBindingsCount);
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
+        }
+
+        /// <summary>
+        /// Forces the shaders to be rebound on the next draw.
+        /// </summary>
+        public void ForceShaderUpdate()
+        {
+            _forceShaderUpdate = true;
         }
 
         /// <summary>

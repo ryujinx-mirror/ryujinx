@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Ryujinx.Graphics.Gpu.Engine
+namespace Ryujinx.Graphics.Gpu.Engine.Compute
 {
     /// <summary>
     /// Type of the dependent Queue Meta Data.

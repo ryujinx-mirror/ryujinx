@@ -4,6 +4,9 @@ using Ryujinx.Common.Memory;
 
 namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 {
+    /// <summary>
+    /// Semaphore operation.
+    /// </summary>
     enum SemaphoredOperation
     {
         Acquire = 1,
@@ -13,24 +16,36 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         Reduction = 16
     }
 
+    /// <summary>
+    /// Semaphore acquire switch enable.
+    /// </summary>
     enum SemaphoredAcquireSwitch
     {
         Disabled = 0,
         Enabled = 1
     }
 
+    /// <summary>
+    /// Semaphore release interrupt wait enable.
+    /// </summary>
     enum SemaphoredReleaseWfi
     {
         En = 0,
         Dis = 1
     }
 
+    /// <summary>
+    /// Semaphore release structure size.
+    /// </summary>
     enum SemaphoredReleaseSize
     {
         SixteenBytes = 0,
         FourBytes = 1
     }
 
+    /// <summary>
+    /// Semaphore reduction operation.
+    /// </summary>
     enum SemaphoredReduction
     {
         Min = 0,
@@ -43,24 +58,36 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         Dec = 7
     }
 
+    /// <summary>
+    /// Semaphore format.
+    /// </summary>
     enum SemaphoredFormat
     {
         Signed = 0,
         Unsigned = 1
     }
 
+    /// <summary>
+    /// Memory Translation Lookaside Buffer Page Directory Buffer invalidation.
+    /// </summary>
     enum MemOpCTlbInvalidatePdb
     {
         One = 0,
         All = 1
     }
 
+    /// <summary>
+    /// Memory Translation Lookaside Buffer GPC invalidation enable.
+    /// </summary>
     enum MemOpCTlbInvalidateGpc
     {
         Enable = 0,
         Disable = 1
     }
 
+    /// <summary>
+    /// Memory Translation Lookaside Buffer invalidation target.
+    /// </summary>
     enum MemOpCTlbInvalidateTarget
     {
         VidMem = 0,
@@ -68,6 +95,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         SysMemNoncoherent = 3
     }
 
+    /// <summary>
+    /// Memory operation.
+    /// </summary>
     enum MemOpDOperation
     {
         Membar = 5,
@@ -78,24 +108,36 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         L2FlushDirty = 16
     }
 
+    /// <summary>
+    /// Syncpoint operation.
+    /// </summary>
     enum SyncpointbOperation
     {
         Wait = 0,
         Incr = 1
     }
 
+    /// <summary>
+    /// Syncpoint wait switch enable.
+    /// </summary>
     enum SyncpointbWaitSwitch
     {
         Dis = 0,
         En = 1
     }
 
+    /// <summary>
+    /// Wait for interrupt scope.
+    /// </summary>
     enum WfiScope
     {
         CurrentScgType = 0,
         All = 1
     }
 
+    /// <summary>
+    /// Yield operation.
+    /// </summary>
     enum YieldOp
     {
         Nop = 0,
@@ -104,6 +146,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         Tsg = 3
     }
 
+    /// <summary>
+    /// General Purpose FIFO class state.
+    /// </summary>
     struct GPFifoClassState
     {
 #pragma warning disable CS0649

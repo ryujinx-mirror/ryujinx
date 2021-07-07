@@ -244,10 +244,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="srcVa">GPU virtual address of the copy source</param>
         /// <param name="dstVa">GPU virtual address of the copy destination</param>
         /// <param name="size">Size in bytes of the copy</param>
-        public void CopyBuffer(MemoryManager memoryManager, GpuVa srcVa, GpuVa dstVa, ulong size)
+        public void CopyBuffer(MemoryManager memoryManager, ulong srcVa, ulong dstVa, ulong size)
         {
-            ulong srcAddress = TranslateAndCreateBuffer(memoryManager, srcVa.Pack(), size);
-            ulong dstAddress = TranslateAndCreateBuffer(memoryManager, dstVa.Pack(), size);
+            ulong srcAddress = TranslateAndCreateBuffer(memoryManager, srcVa, size);
+            ulong dstAddress = TranslateAndCreateBuffer(memoryManager, dstVa, size);
 
             Buffer srcBuffer = GetBuffer(srcAddress, size);
             Buffer dstBuffer = GetBuffer(dstAddress, size);
@@ -285,9 +285,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="gpuVa">GPU virtual address of the region to clear</param>
         /// <param name="size">Number of bytes to clear</param>
         /// <param name="value">Value to be written into the buffer</param>
-        public void ClearBuffer(MemoryManager memoryManager, GpuVa gpuVa, ulong size, uint value)
+        public void ClearBuffer(MemoryManager memoryManager, ulong gpuVa, ulong size, uint value)
         {
-            ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa.Pack(), size);
+            ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa, size);
 
             Buffer buffer = GetBuffer(address, size);
 

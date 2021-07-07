@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// Flushes any queued ubo updates.
         /// </summary>
         /// <param name="memoryManager">GPU memory manager where the uniform buffer is mapped</param>
-        private void FlushUboDirty(MemoryManager memoryManager)
+        public void FlushUboDirty(MemoryManager memoryManager)
         {
             if (_ubFollowUpAddress != 0)
             {
