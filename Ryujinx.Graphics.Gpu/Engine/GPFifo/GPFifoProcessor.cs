@@ -126,6 +126,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                     }
                 }
             }
+
+            _context.Methods.FlushUboDirty(MemoryManager);
         }
 
         /// <summary>
