@@ -14,3 +14,13 @@
         return ivec2(vec2(inputVec) * scale);
     }
 }
+
+int Helper_TextureSizeUnscale(int size, int samplerIndex)
+{
+    float scale = abs(fp_renderScale[1 + samplerIndex]);
+    if (scale == 1.0)
+    {
+        return size;
+    }
+    return int(float(size) / scale);
+}

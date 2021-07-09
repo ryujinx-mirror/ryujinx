@@ -242,7 +242,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else
             {
-                SetUsedTextureOrImage(_usedTextures, cbufSlot, handle, type, TextureFormat.Unknown, flags.HasFlag(TextureFlags.IntCoords), false, accurateType);
+                bool intCoords = flags.HasFlag(TextureFlags.IntCoords) || inst == Instruction.TextureSize;
+                SetUsedTextureOrImage(_usedTextures, cbufSlot, handle, type, TextureFormat.Unknown, intCoords, false, accurateType);
             }
         }
 

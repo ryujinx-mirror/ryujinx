@@ -1056,6 +1056,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return;
             }
 
+            context.Config.SetUsedFeature(FeatureFlags.IntegerSampling);
+
             TextureProperty property = (TextureProperty)op.RawOpCode.Extract(22, 6);
 
             // TODO: Validate and use property.
