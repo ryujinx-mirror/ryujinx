@@ -333,7 +333,7 @@ namespace Ryujinx.Memory
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
         public WritableRegion GetWritableRegion(ulong offset, int size)
         {
-            return new WritableRegion(this, offset, GetMemory(offset, size));
+            return new WritableRegion(null, offset, GetMemory(offset, size));
         }
 
         /// <summary>
