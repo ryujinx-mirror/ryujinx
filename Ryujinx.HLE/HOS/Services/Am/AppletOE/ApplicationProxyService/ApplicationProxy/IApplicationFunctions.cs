@@ -79,6 +79,26 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
+        [CommandHipc(12)] // 4.0.0+
+        // CreateApplicationAndRequestToStart(u64 title_id)
+        public ResultCode CreateApplicationAndRequestToStart(ServiceCtx context)
+        {
+            ulong titleId = context.RequestData.ReadUInt64();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { titleId });
+
+            if (titleId == 0)
+            {
+                context.Device.UiHandler.ExecuteProgram(context.Device, ProgramSpecifyKind.RestartProgram, titleId);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(20)]
         // EnsureSaveData(nn::account::Uid) -> u64
         public ResultCode EnsureSaveData(ServiceCtx context)
