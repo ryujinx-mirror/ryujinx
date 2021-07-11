@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
@@ -52,8 +52,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
         {
             var memoryManager = _channel.MemoryManager;
 
-            var dstCopyTexture = Unsafe.As<uint, CopyTexture>(ref _state.State.SetDstFormat);
-            var srcCopyTexture = Unsafe.As<uint, CopyTexture>(ref _state.State.SetSrcFormat);
+            var dstCopyTexture = Unsafe.As<uint, TwodTexture>(ref _state.State.SetDstFormat);
+            var srcCopyTexture = Unsafe.As<uint, TwodTexture>(ref _state.State.SetSrcFormat);
 
             long srcX = ((long)_state.State.SetPixelsFromMemorySrcX0Int << 32) | (long)(ulong)_state.State.SetPixelsFromMemorySrcX0Frac;
             long srcY = ((long)_state.State.PixelsFromMemorySrcY0Int << 32) | (long)(ulong)_state.State.SetPixelsFromMemorySrcY0Frac;

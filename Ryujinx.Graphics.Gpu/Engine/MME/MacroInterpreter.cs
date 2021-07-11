@@ -1,5 +1,5 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Graphics.Device;
 using System;
 using System.Collections.Generic;
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="code">Code of the program to execute</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="arg0">Optional argument passed to the program, 0 if not used</param>
-        public void Execute(ReadOnlySpan<int> code, GpuState state, int arg0)
+        public void Execute(ReadOnlySpan<int> code, IDeviceState state, int arg0)
         {
             Reset();
 
@@ -55,7 +55,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
 
             FetchOpCode(code);
 
-            while (Step(code, state)) ;
+            while (Step(code, state))
+            {
+            }
 
             // Due to the delay slot, we still need to execute
             // one more instruction before we actually exit.
@@ -85,7 +87,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="code">Program code to execute</param>
         /// <param name="state">Current GPU state</param>
         /// <returns>True to continue execution, false if the program exited</returns>
-        private bool Step(ReadOnlySpan<int> code, GpuState state)
+        private bool Step(ReadOnlySpan<int> code, IDeviceState state)
         {
             int baseAddr = _pc - 1;
 
@@ -193,7 +195,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <returns>Operation result</returns>
-        private int GetAluResult(GpuState state)
+        private int GetAluResult(IDeviceState state)
         {
             AluOperation op = (AluOperation)(_opCode & 7);
 
@@ -378,9 +380,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="state">Current GPU state</param>
         /// <param name="reg">Register offset to read</param>
         /// <returns>GPU register value</returns>
-        private int Read(GpuState state, int reg)
+        private int Read(IDeviceState state, int reg)
         {
-            return state.Read(reg);
+            return state.Read(reg * 4);
         }
 
         /// <summary>
@@ -388,11 +390,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <param name="value">Call argument</param>
-        private void Send(GpuState state, int value)
+        private void Send(IDeviceState state, int value)
         {
-            MethodParams meth = new MethodParams(_methAddr, value);
-
-            state.CallMethod(meth);
+            state.Write(_methAddr * 4, value);
 
             _methAddr += _methIncr;
         }

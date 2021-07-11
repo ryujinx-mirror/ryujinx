@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.State;
+﻿using Ryujinx.Graphics.Device;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         public MacroJitCompiler()
         {
-            _meth = new DynamicMethod("Macro", typeof(void), new Type[] { typeof(MacroJitContext), typeof(GpuState), typeof(int) });
+            _meth = new DynamicMethod("Macro", typeof(void), new Type[] { typeof(MacroJitContext), typeof(IDeviceState), typeof(int) });
             _ilGen = _meth.GetILGenerator();
             _gprs = new LocalBuilder[8];
 
@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
             _ilGen.Emit(OpCodes.Stloc, _gprs[1]);
         }
 
-        public delegate void MacroExecute(MacroJitContext context, GpuState state, int arg0);
+        public delegate void MacroExecute(MacroJitContext context, IDeviceState state, int arg0);
 
         /// <summary>
         /// Translates a new piece of GPU Macro code into host executable code.

@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Engine.MME;
-using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -150,7 +149,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="argument">Method call argument</param>
         public void WaitForIdle(int argument)
         {
-            _context.Methods.PerformDeferredDraws();
+            _parent.PerformDeferredDraws();
             _context.Renderer.Pipeline.Barrier();
 
             _context.CreateHostSyncIfNeeded();
@@ -189,7 +188,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="argument">Method call argument</param>
         public void SetMmeShadowRamControl(int argument)
         {
-            _parent.SetShadowRamControl((ShadowRamControl)argument);
+            _parent.SetShadowRamControl(argument);
         }
 
         /// <summary>
@@ -217,7 +216,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// </summary>
         /// <param name="index">Index of the macro</param>
         /// <param name="state">Current GPU state</param>
-        public void CallMme(int index, GpuState state)
+        public void CallMme(int index, IDeviceState state)
         {
             _macros[index].Execute(_macroCode, state);
         }

@@ -1,9 +1,10 @@
 ﻿using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Shader;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
@@ -14,27 +15,34 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
     /// <summary>
     /// Represents a compute engine class.
     /// </summary>
-    class ComputeClass : InlineToMemoryClass, IDeviceState
+    class ComputeClass : IDeviceState
     {
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
+        private readonly ThreedClass _3dEngine;
         private readonly DeviceState<ComputeClassState> _state;
+
+        private readonly InlineToMemoryClass _i2mClass;
 
         /// <summary>
         /// Creates a new instance of the compute engine class.
         /// </summary>
         /// <param name="context">GPU context</param>
         /// <param name="channel">GPU channel</param>
-        public ComputeClass(GpuContext context, GpuChannel channel) : base(context, channel, false)
+        /// <param name="threedEngine">3D engine</param>
+        public ComputeClass(GpuContext context, GpuChannel channel, ThreedClass threedEngine)
         {
             _context = context;
             _channel = channel;
+            _3dEngine = threedEngine;
             _state = new DeviceState<ComputeClassState>(new Dictionary<string, RwCallback>
             {
                 { nameof(ComputeClassState.LaunchDma), new RwCallback(LaunchDma, null) },
                 { nameof(ComputeClassState.LoadInlineData), new RwCallback(LoadInlineData, null) },
                 { nameof(ComputeClassState.SendSignalingPcasB), new RwCallback(SendSignalingPcasB, null) }
             });
+
+            _i2mClass = new InlineToMemoryClass(context, channel, initializeState: false);
         }
 
         /// <summary>
@@ -42,22 +50,31 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
         /// </summary>
         /// <param name="offset">Register byte offset</param>
         /// <returns>Data at the specified offset</returns>
-        public override int Read(int offset) => _state.Read(offset);
+        public int Read(int offset) => _state.Read(offset);
 
         /// <summary>
         /// Writes data to the class registers.
         /// </summary>
         /// <param name="offset">Register byte offset</param>
         /// <param name="data">Data to be written</param>
-        public override void Write(int offset, int data) => _state.Write(offset, data);
+        public void Write(int offset, int data) => _state.Write(offset, data);
 
         /// <summary>
         /// Launches the Inline-to-Memory DMA copy operation.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        protected override void LaunchDma(int argument)
+        private void LaunchDma(int argument)
         {
-            LaunchDma(ref Unsafe.As<ComputeClassState, InlineToMemoryClassState>(ref _state.State), argument);
+            _i2mClass.LaunchDma(ref Unsafe.As<ComputeClassState, InlineToMemoryClassState>(ref _state.State), argument);
+        }
+
+        /// <summary>
+        /// Pushes a word of data to the Inline-to-Memory engine.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        private void LoadInlineData(int argument)
+        {
+            _i2mClass.LoadInlineData(argument);
         }
 
         /// <summary>
@@ -68,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
         {
             var memoryManager = _channel.MemoryManager;
 
-            _context.Methods.FlushUboDirty(memoryManager);
+            _3dEngine.FlushUboDirty();
 
             uint qmdAddress = _state.State.SendPcasA;
 
@@ -102,7 +119,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 texturePoolGpuVa,
                 _state.State.SetTexHeaderPoolCMaximumIndex,
                 _state.State.SetBindlessTextureConstantBufferSlotSelect,
-                false);
+                false,
+                PrimitiveTopology.Points);
 
             ShaderBundle cs = memoryManager.Physical.ShaderCache.GetComputeShader(
                 _channel,
@@ -207,7 +225,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
 
             _context.Renderer.Pipeline.DispatchCompute(qmd.CtaRasterWidth, qmd.CtaRasterHeight, qmd.CtaRasterDepth);
 
-            _context.Methods.ForceShaderUpdate();
+            _3dEngine.ForceShaderUpdate();
         }
     }
 }

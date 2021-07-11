@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Generic;

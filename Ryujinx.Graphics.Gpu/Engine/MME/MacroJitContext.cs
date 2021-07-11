@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Graphics.Device;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Engine.MME
@@ -36,9 +36,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="state">Current GPU state</param>
         /// <param name="reg">Register offset to read</param>
         /// <returns>GPU register value</returns>
-        public static int Read(GpuState state, int reg)
+        public static int Read(IDeviceState state, int reg)
         {
-            return state.Read(reg);
+            return state.Read(reg * 4);
         }
 
         /// <summary>
@@ -47,11 +47,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="value">Call argument</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="methAddr">Address, in words, of the method</param>
-        public static void Send(int value, GpuState state, int methAddr)
+        public static void Send(int value, IDeviceState state, int methAddr)
         {
-            MethodParams meth = new MethodParams(methAddr, value);
-
-            state.CallMethod(meth);
+            state.Write(methAddr * 4, value);
         }
     }
 }

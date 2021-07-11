@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.Engine;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader;
@@ -25,11 +24,6 @@ namespace Ryujinx.Graphics.Gpu
         /// Host renderer.
         /// </summary>
         public IRenderer Renderer { get; }
-
-        /// <summary>
-        /// GPU engine methods processing.
-        /// </summary>
-        internal Methods Methods { get; }
 
         /// <summary>
         /// GPU General Purpose FIFO queue.
@@ -93,8 +87,6 @@ namespace Ryujinx.Graphics.Gpu
         public GpuContext(IRenderer renderer)
         {
             Renderer = renderer;
-
-            Methods = new Methods(this);
 
             GPFifo = new GPFifoDevice(this);
 

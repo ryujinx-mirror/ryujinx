@@ -144,27 +144,21 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Current primitive topology</returns>
         public InputTopology QueryPrimitiveTopology()
         {
-            switch (_context.Methods.Topology)
+            return _state.Topology switch
             {
-                case PrimitiveTopology.Points:
-                    return InputTopology.Points;
-                case PrimitiveTopology.Lines:
-                case PrimitiveTopology.LineLoop:
-                case PrimitiveTopology.LineStrip:
-                    return InputTopology.Lines;
-                case PrimitiveTopology.LinesAdjacency:
-                case PrimitiveTopology.LineStripAdjacency:
-                    return InputTopology.LinesAdjacency;
-                case PrimitiveTopology.Triangles:
-                case PrimitiveTopology.TriangleStrip:
-                case PrimitiveTopology.TriangleFan:
-                    return InputTopology.Triangles;
-                case PrimitiveTopology.TrianglesAdjacency:
-                case PrimitiveTopology.TriangleStripAdjacency:
-                    return InputTopology.TrianglesAdjacency;
-            }
-
-            return InputTopology.Points;
+                PrimitiveTopology.Points => InputTopology.Points,
+                PrimitiveTopology.Lines or
+                PrimitiveTopology.LineLoop or
+                PrimitiveTopology.LineStrip => InputTopology.Lines,
+                PrimitiveTopology.LinesAdjacency or
+                PrimitiveTopology.LineStripAdjacency => InputTopology.LinesAdjacency,
+                PrimitiveTopology.Triangles or
+                PrimitiveTopology.TriangleStrip or
+                PrimitiveTopology.TriangleFan => InputTopology.Triangles,
+                PrimitiveTopology.TrianglesAdjacency or
+                PrimitiveTopology.TriangleStripAdjacency => InputTopology.TrianglesAdjacency,
+                _ => InputTopology.Points,
+            };
         }
 
         /// <summary>

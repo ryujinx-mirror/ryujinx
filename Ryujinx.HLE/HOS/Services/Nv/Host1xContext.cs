@@ -1,9 +1,9 @@
-using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Host1x;
 using Ryujinx.Graphics.Nvdec;
 using Ryujinx.Graphics.Vic;
 using System;
+using GpuContext = Ryujinx.Graphics.Gpu.GpuContext;
 
 namespace Ryujinx.HLE.HOS.Services.Nv
 {

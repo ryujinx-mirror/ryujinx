@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using System;
 using System.Runtime.CompilerServices;
 

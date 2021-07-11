@@ -2,9 +2,9 @@
 using Ryujinx.Graphics.Gpu.Engine.Compute;
 using Ryujinx.Graphics.Gpu.Engine.Dma;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Engine.Twod;
 using Ryujinx.Graphics.Gpu.Memory;
-using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -18,9 +18,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private const int MacrosCount = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;
 
-        private readonly GpuContext _context;
+        private const int UniformBufferUpdateDataMethodOffset = 0x8e4;
+
         private readonly GpuChannel _channel;
 
+        /// <summary>
+        /// Channel memory manager.
+        /// </summary>
         public MemoryManager MemoryManager => _channel.MemoryManager;
 
         /// <summary>
@@ -37,8 +41,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
         private DmaState _state;
 
-        private readonly GpuState[] _subChannels;
-        private readonly IDeviceState[] _subChannels2;
+        private readonly ThreedClass _3dClass;
+        private readonly ComputeClass _computeClass;
+        private readonly InlineToMemoryClass _i2mClass;
+        private readonly TwodClass _2dClass;
+        private readonly DmaClass _dmaClass;
+
         private readonly GPFifoClass _fifoClass;
 
         /// <summary>
@@ -48,29 +56,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="channel">Channel that the GPFIFO processor belongs to</param>
         public GPFifoProcessor(GpuContext context, GpuChannel channel)
         {
-            _context = context;
             _channel = channel;
 
             _fifoClass = new GPFifoClass(context, this);
-            _subChannels = new GpuState[8];
-            _subChannels2 = new IDeviceState[8]
-            {
-                null,
-                new ComputeClass(context, channel),
-                new InlineToMemoryClass(context, channel),
-                new TwodClass(channel),
-                new DmaClass(context, channel),
-                null,
-                null,
-                null
-            };
-
-            for (int index = 0; index < _subChannels.Length; index++)
-            {
-                _subChannels[index] = new GpuState(channel, _subChannels2[index]);
-
-                _context.Methods.RegisterCallbacks(_subChannels[index]);
-            }
+            _3dClass = new ThreedClass(context, channel);
+            _computeClass = new ComputeClass(context, channel, _3dClass);
+            _i2mClass = new InlineToMemoryClass(context, channel);
+            _2dClass = new TwodClass(channel);
+            _dmaClass = new DmaClass(context, channel, _3dClass);
         }
 
         /// <summary>
@@ -85,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                 if (_state.MethodCount != 0)
                 {
-                    Send(new MethodParams(_state.Method, command, _state.SubChannel, _state.MethodCount));
+                    Send(_state.Method, command, _state.SubChannel, _state.MethodCount <= 1);
 
                     if (!_state.NonIncrementing)
                     {
@@ -121,13 +114,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                             _state.NonIncrementing = meth.SecOp == SecOp.NonIncMethod;
                             break;
                         case SecOp.ImmdDataMethod:
-                            Send(new MethodParams(meth.MethodAddress, meth.ImmdData, meth.MethodSubchannel, 1));
+                            Send(meth.MethodAddress, meth.ImmdData, meth.MethodSubchannel, true);
                             break;
                     }
                 }
             }
 
-            _context.Methods.FlushUboDirty(MemoryManager);
+            _3dClass.FlushUboDirty();
         }
 
         /// <summary>
@@ -145,11 +138,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
             if (meth.MethodCount < availableCount &&
                 meth.SecOp == SecOp.NonIncMethod &&
-                meth.MethodAddress == (int)MethodOffset.UniformBufferUpdateData)
+                meth.MethodAddress == UniformBufferUpdateDataMethodOffset)
             {
-                GpuState state = _subChannels[meth.MethodSubchannel];
-
-                _context.Methods.UniformBufferUpdate(state, commandBuffer.Slice(offset + 1, meth.MethodCount));
+                _3dClass.ConstantBufferUpdate(commandBuffer.Slice(offset + 1, meth.MethodCount));
 
                 return true;
             }
@@ -161,42 +152,95 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// Sends a uncompressed method for processing by the graphics pipeline.
         /// </summary>
         /// <param name="meth">Method to be processed</param>
-        private void Send(MethodParams meth)
+        private void Send(int offset, int argument, int subChannel, bool isLastCall)
         {
-            if ((MethodOffset)meth.Method == MethodOffset.BindChannel)
+            if (offset < 0x60)
             {
-                _subChannels[meth.SubChannel].ClearCallbacks();
+                _fifoClass.Write(offset * 4, argument);
+            }
+            else if (offset < 0xe00)
+            {
+                offset *= 4;
 
-                _context.Methods.RegisterCallbacks(_subChannels[meth.SubChannel]);
-            }
-            else if (meth.Method < 0x60)
-            {
-                // TODO: check if macros are shared between subchannels or not. For now let's assume they are.
-                _fifoClass.Write(meth.Method * 4, meth.Argument);
-            }
-            else if (meth.Method < 0xe00)
-            {
-                _subChannels[meth.SubChannel].CallMethod(meth);
+                switch (subChannel)
+                {
+                    case 0:
+                        _3dClass.Write(offset, argument);
+                        break;
+                    case 1:
+                        _computeClass.Write(offset, argument);
+                        break;
+                    case 2:
+                        _i2mClass.Write(offset, argument);
+                        break;
+                    case 3:
+                        _2dClass.Write(offset, argument);
+                        break;
+                    case 4:
+                        _dmaClass.Write(offset, argument);
+                        break;
+                }
             }
             else
             {
-                int macroIndex = (meth.Method >> 1) & MacroIndexMask;
-
-                if ((meth.Method & 1) != 0)
+                IDeviceState state = subChannel switch
                 {
-                    _fifoClass.MmePushArgument(macroIndex, meth.Argument);
-                }
-                else
-                {
-                    _fifoClass.MmeStart(macroIndex, meth.Argument);
-                }
+                    0 => _3dClass,
+                    3 => _2dClass,
+                    _ => null
+                };
 
-                if (meth.IsLastCall)
+                if (state != null)
                 {
-                    _fifoClass.CallMme(macroIndex, _subChannels[meth.SubChannel]);
+                    int macroIndex = (offset >> 1) & MacroIndexMask;
 
-                    _context.Methods.PerformDeferredDraws();
+                    if ((offset & 1) != 0)
+                    {
+                        _fifoClass.MmePushArgument(macroIndex, argument);
+                    }
+                    else
+                    {
+                        _fifoClass.MmeStart(macroIndex, argument);
+                    }
+
+                    if (isLastCall)
+                    {
+                        _fifoClass.CallMme(macroIndex, state);
+
+                        _3dClass.PerformDeferredDraws();
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Writes data directly to the state of the specified class.
+        /// </summary>
+        /// <param name="classId">ID of the class to write the data into</param>
+        /// <param name="offset">State offset in bytes</param>
+        /// <param name="value">Value to be written</param>
+        public void Write(ClassId classId, int offset, int value)
+        {
+            switch (classId)
+            {
+                case ClassId.Threed:
+                    _3dClass.Write(offset, value);
+                    break;
+                case ClassId.Compute:
+                    _computeClass.Write(offset, value);
+                    break;
+                case ClassId.InlineToMemory:
+                    _i2mClass.Write(offset, value);
+                    break;
+                case ClassId.Twod:
+                    _2dClass.Write(offset, value);
+                    break;
+                case ClassId.Dma:
+                    _dmaClass.Write(offset, value);
+                    break;
+                case ClassId.GPFifo:
+                    _fifoClass.Write(offset, value);
+                    break;
             }
         }
 
@@ -204,12 +248,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// Sets the shadow ram control value of all sub-channels.
         /// </summary>
         /// <param name="control">New shadow ram control value</param>
-        public void SetShadowRamControl(ShadowRamControl control)
+        public void SetShadowRamControl(int control)
         {
-            for (int i = 0; i < _subChannels.Length; i++)
-            {
-                _subChannels[i].ShadowRamControl = control;
-            }
+            _3dClass.SetShadowRamControl(control);
         }
 
         /// <summary>
@@ -218,10 +259,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// </summary>
         public void ForceAllDirty()
         {
-            for (int index = 0; index < _subChannels.Length; index++)
-            {
-                _subChannels[index].ForceAllDirty();
-            }
+            _3dClass.ForceStateDirty();
+            _channel.BufferManager.Rebind();
+            _channel.TextureManager.Rebind();
+        }
+
+        /// <summary>
+        /// Perform any deferred draws.
+        /// </summary>
+        public void PerformDeferredDraws()
+        {
+            _3dClass.PerformDeferredDraws();
         }
     }
 }

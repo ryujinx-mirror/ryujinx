@@ -1,8 +1,11 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.Dma;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
+using Ryujinx.Graphics.Gpu.Engine.Twod;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
-using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Memory.Range;
 using System;
@@ -151,7 +154,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(
             MemoryManager memoryManager,
-            CopyTexture copyTexture,
+            TwodTexture copyTexture,
             ulong offset,
             FormatInfo formatInfo,
             bool preferScaling = true,
@@ -762,7 +765,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A matching texture, or null if there is no match</returns>
         public Texture FindTexture(
             MemoryManager memoryManager,
-            CopyBufferTexture tex,
+            DmaTexture tex,
             ulong gpuVa,
             int bpp,
             int stride,

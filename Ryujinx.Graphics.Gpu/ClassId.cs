@@ -3,13 +3,13 @@ namespace Ryujinx.Graphics.Gpu
     /// <summary>
     /// GPU engine class ID.
     /// </summary>
-    enum ClassId
+    public enum ClassId
     {
-        Engine2D            = 0x902d,
-        Engine3D            = 0xb197,
-        EngineCompute       = 0xb1c0,
-        EngineInline2Memory = 0xa140,
-        EngineDma           = 0xb0b5,
-        EngineGpfifo        = 0xb06f
+        Twod = 0x902d,
+        Threed = 0xb197,
+        Compute = 0xb1c0,
+        InlineToMemory = 0xa140,
+        Dma = 0xb0b5,
+        GPFifo = 0xb06f
     }
 }

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.State;
+﻿using Ryujinx.Graphics.Device;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine.MME
@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         /// <param name="code">Program code</param>
         /// <param name="state">Current GPU state</param>
-        public void Execute(ReadOnlySpan<int> code, GpuState state)
+        public void Execute(ReadOnlySpan<int> code, IDeviceState state)
         {
             if (_executionPending)
             {

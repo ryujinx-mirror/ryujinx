@@ -14,17 +14,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
     }
 
     /// <summary>
-    /// MME shadow RAM control mode.
-    /// </summary>
-    enum SetMmeShadowRamControlMode
-    {
-        MethodTrack = 0,
-        MethodTrackWithFilter = 1,
-        MethodPassthrough = 2,
-        MethodReplay = 3,
-    }
-
-    /// <summary>
     /// Format of the destination texture.
     /// </summary>
     enum SetDstFormatV
@@ -506,7 +495,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
     /// <summary>
     /// 2D class state.
     /// </summary>
-    unsafe struct TwodClassState
+    unsafe struct TwodClassState : IShadowState
     {
 #pragma warning disable CS0649
         public uint SetObject;

@@ -3,6 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
+    /// <summary>
+    /// Represents temporary storage used by macros.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Size = 1024)]
     struct MmeShadowScratch
     {

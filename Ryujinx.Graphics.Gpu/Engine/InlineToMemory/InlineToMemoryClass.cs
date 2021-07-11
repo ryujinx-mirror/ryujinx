@@ -41,7 +41,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         /// <param name="context">GPU context</param>
         /// <param name="channel">GPU channel</param>
         /// <param name="initializeState">Indicates if the internal state should be initialized. Set to false if part of another engine</param>
-        protected InlineToMemoryClass(GpuContext context, GpuChannel channel, bool initializeState)
+        public InlineToMemoryClass(GpuContext context, GpuChannel channel, bool initializeState)
         {
             _context = context;
             _channel = channel;
@@ -70,20 +70,20 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         /// </summary>
         /// <param name="offset">Register byte offset</param>
         /// <returns>Data at the specified offset</returns>
-        public virtual int Read(int offset) => _state.Read(offset);
+        public int Read(int offset) => _state.Read(offset);
 
         /// <summary>
         /// Writes data to the class registers.
         /// </summary>
         /// <param name="offset">Register byte offset</param>
         /// <param name="data">Data to be written</param>
-        public virtual void Write(int offset, int data) => _state.Write(offset, data);
+        public void Write(int offset, int data) => _state.Write(offset, data);
 
         /// <summary>
         /// Launches Inline-to-Memory engine DMA copy.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        protected virtual void LaunchDma(int argument)
+        private void LaunchDma(int argument)
         {
             LaunchDma(ref _state.State, argument);
         }
@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         /// </summary>
         /// <param name="state">Current class state</param>
         /// <param name="argument">Method call argument</param>
-        protected void LaunchDma(ref InlineToMemoryClassState state, int argument)
+        public void LaunchDma(ref InlineToMemoryClassState state, int argument)
         {
             _isLinear = (argument & 1) != 0;
 
@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         /// Pushes a word of data to the Inline-to-Memory engine.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        protected void LoadInlineData(int argument)
+        public void LoadInlineData(int argument)
         {
             if (!_finished)
             {

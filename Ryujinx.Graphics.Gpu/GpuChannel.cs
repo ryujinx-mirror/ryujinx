@@ -65,6 +65,17 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
+        /// Writes data directly to the state of the specified class.
+        /// </summary>
+        /// <param name="classId">ID of the class to write the data into</param>
+        /// <param name="offset">State offset in bytes</param>
+        /// <param name="value">Value to be written</param>
+        public void Write(ClassId classId, int offset, uint value)
+        {
+            _processor.Write(classId, offset, (int)value);
+        }
+
+        /// <summary>
         /// Push a GPFIFO entry in the form of a prefetched command buffer.
         /// It is intended to be used by nvservices to handle special cases.
         /// </summary>

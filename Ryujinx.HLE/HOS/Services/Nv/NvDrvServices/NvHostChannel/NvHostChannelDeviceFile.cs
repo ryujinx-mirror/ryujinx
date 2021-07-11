@@ -54,6 +54,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             _host1xContext = GetHost1XContext(context.Device.Gpu, owner);
             Channel        = _device.Gpu.CreateChannel();
 
+            ChannelInitialization.InitializeState(Channel);
+
             ChannelSyncpoints = new uint[MaxModuleSyncpoint];
 
             _channelSyncpoint.Id = _device.System.HostSyncpoint.AllocateSyncpoint(false);

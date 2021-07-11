@@ -1,6 +1,6 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Graphics.Device;
-using Ryujinx.Graphics.Gpu.State;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
@@ -16,6 +16,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
     {
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
+        private readonly ThreedClass _3dEngine;
         private readonly DeviceState<DmaClassState> _state;
 
         /// <summary>
@@ -35,10 +36,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
         /// </summary>
         /// <param name="context">GPU context</param>
         /// <param name="channel">GPU channel</param>
-        public DmaClass(GpuContext context, GpuChannel channel)
+        /// <param name="threedEngine">3D engine</param>
+        public DmaClass(GpuContext context, GpuChannel channel, ThreedClass threedEngine)
         {
             _context = context;
             _channel = channel;
+            _3dEngine = threedEngine;
             _state = new DeviceState<DmaClassState>(new Dictionary<string, RwCallback>
             {
                 { nameof(DmaClassState.LaunchDma), new RwCallback(LaunchDma, null) }
@@ -69,7 +72,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
         /// <param name="xCount">Number of pixels to be copied</param>
         /// <param name="yCount">Number of lines to be copied</param>
         /// <returns></returns>
-        private static bool IsTextureCopyComplete(CopyBufferTexture tex, bool linear, int bpp, int stride, int xCount, int yCount)
+        private static bool IsTextureCopyComplete(DmaTexture tex, bool linear, int bpp, int stride, int xCount, int yCount)
         {
             if (linear)
             {
@@ -116,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
             int xCount = (int)_state.State.LineLengthIn;
             int yCount = (int)_state.State.LineCount;
 
-            _context.Methods.FlushUboDirty(memoryManager);
+            _3dEngine.FlushUboDirty();
 
             if (copy2D)
             {
@@ -125,8 +128,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 int srcBpp = remap ? ((int)_state.State.SetRemapComponentsNumSrcComponents + 1) * componentSize : 1;
                 int dstBpp = remap ? ((int)_state.State.SetRemapComponentsNumDstComponents + 1) * componentSize : 1;
 
-                var dst = Unsafe.As<uint, CopyBufferTexture>(ref _state.State.SetDstBlockSize);
-                var src = Unsafe.As<uint, CopyBufferTexture>(ref _state.State.SetSrcBlockSize);
+                var dst = Unsafe.As<uint, DmaTexture>(ref _state.State.SetDstBlockSize);
+                var src = Unsafe.As<uint, DmaTexture>(ref _state.State.SetSrcBlockSize);
 
                 int srcStride = (int)_state.State.PitchIn;
                 int dstStride = (int)_state.State.PitchOut;
