@@ -2411,8 +2411,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 if (info.State == MemoryState.Unmapped)
                 {
-                    ulong currBaseAddr = info.Address + reservedSize;
+                    ulong currBaseAddr = info.Address <= regionStart ? regionStart : info.Address;
                     ulong currEndAddr = info.Address + info.Size - 1;
+
+                    currBaseAddr += reservedSize;
 
                     ulong address = BitUtils.AlignDown(currBaseAddr, alignment) + reservedStart;
 
@@ -2423,9 +2425,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     ulong allocationEndAddr = address + totalNeededSize - 1;
 
-                    if (allocationEndAddr <= regionEndAddr &&
-                        allocationEndAddr <= currEndAddr &&
-                        address < allocationEndAddr)
+                    if (info.Address <= address &&
+                        address < allocationEndAddr &&
+                        allocationEndAddr <= regionEndAddr &&
+                        allocationEndAddr <= currEndAddr)
                     {
                         return address;
                     }
