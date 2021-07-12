@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private const int MacrosCount = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;
 
+        private const int LoadInlineDataMethodOffset = 0x6d;
         private const int UniformBufferUpdateDataMethodOffset = 0x8e4;
 
         private readonly GpuChannel _channel;
@@ -78,6 +79,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                 if (_state.MethodCount != 0)
                 {
+                    if (TryFastI2mBufferUpdate(commandBuffer, ref index))
+                    {
+                        continue;
+                    }
+
                     Send(_state.Method, command, _state.SubChannel, _state.MethodCount <= 1);
 
                     if (!_state.NonIncrementing)
@@ -124,6 +130,46 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         }
 
         /// <summary>
+        /// Tries to perform a fast Inline-to-Memory data update.
+        /// If successful, all data will be copied at once, and <see cref="DmaState.MethodCount"/>
+        /// command buffer entries will be consumed.
+        /// </summary>
+        /// <param name="commandBuffer">Command buffer where the data is contained</param>
+        /// <param name="offset">Offset at <paramref name="commandBuffer"/> where the data is located, auto-incremented on success</param>
+        /// <returns>True if the fast copy was successful, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool TryFastI2mBufferUpdate(ReadOnlySpan<int> commandBuffer, ref int offset)
+        {
+            if (_state.Method == LoadInlineDataMethodOffset && _state.NonIncrementing && _state.SubChannel <= 2)
+            {
+                int availableCount = commandBuffer.Length - offset;
+                int consumeCount = Math.Min(_state.MethodCount, availableCount);
+
+                var data = commandBuffer.Slice(offset, consumeCount);
+
+                if (_state.SubChannel == 0)
+                {
+                    _3dClass.LoadInlineData(data);
+                }
+                else if (_state.SubChannel == 1)
+                {
+                    _computeClass.LoadInlineData(data);
+                }
+                else /* if (_state.SubChannel == 2) */
+                {
+                    _i2mClass.LoadInlineData(data);
+                }
+
+                offset += consumeCount - 1;
+                _state.MethodCount -= consumeCount;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Tries to perform a fast constant buffer data update.
         /// If successful, all data will be copied at once, and <see cref="CompressedMethod.MethodCount"/> + 1
         /// command buffer entries will be consumed.
@@ -132,13 +178,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="commandBuffer">Command buffer where <paramref name="meth"/> is contained</param>
         /// <param name="offset">Offset at <paramref name="commandBuffer"/> where <paramref name="meth"/> is located</param>
         /// <returns>True if the fast copy was successful, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool TryFastUniformBufferUpdate(CompressedMethod meth, ReadOnlySpan<int> commandBuffer, int offset)
         {
             int availableCount = commandBuffer.Length - offset;
 
-            if (meth.MethodCount < availableCount &&
-                meth.SecOp == SecOp.NonIncMethod &&
-                meth.MethodAddress == UniformBufferUpdateDataMethodOffset)
+            if (meth.MethodAddress == UniformBufferUpdateDataMethodOffset &&
+                meth.MethodCount < availableCount &&
+                meth.SecOp == SecOp.NonIncMethod)
             {
                 _3dClass.ConstantBufferUpdate(commandBuffer.Slice(offset + 1, meth.MethodCount));
 

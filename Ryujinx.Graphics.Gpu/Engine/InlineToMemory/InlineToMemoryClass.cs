@@ -128,6 +128,26 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         }
 
         /// <summary>
+        /// Pushes a block of data to the Inline-to-Memory engine.
+        /// </summary>
+        /// <param name="data">Data to push</param>
+        public void LoadInlineData(ReadOnlySpan<int> data)
+        {
+            if (!_finished)
+            {
+                int copySize = Math.Min(data.Length, _buffer.Length - _offset);
+                data.Slice(0, copySize).CopyTo(new Span<int>(_buffer).Slice(_offset, copySize));
+
+                _offset += copySize;
+
+                if (_offset * 4 >= _size)
+                {
+                    FinishTransfer();
+                }
+            }
+        }
+
+        /// <summary>
         /// Pushes a word of data to the Inline-to-Memory engine.
         /// </summary>
         /// <param name="argument">Method call argument</param>

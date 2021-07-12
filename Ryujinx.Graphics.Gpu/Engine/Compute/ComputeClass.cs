@@ -69,6 +69,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
         }
 
         /// <summary>
+        /// Pushes a block of data to the Inline-to-Memory engine.
+        /// </summary>
+        /// <param name="data">Data to push</param>
+        public void LoadInlineData(ReadOnlySpan<int> data)
+        {
+            _i2mClass.LoadInlineData(data);
+        }
+
+        /// <summary>
         /// Pushes a word of data to the Inline-to-Memory engine.
         /// </summary>
         /// <param name="argument">Method call argument</param>
