@@ -16,16 +16,29 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             SamplerType type,
             TextureFormat format,
             TextureFlags flags,
+            int cbufSlot,
             int handle,
             int compIndex,
             Operand dest,
-            params Operand[] sources) : base(inst, compIndex, dest, sources)
+            Operand[] sources) : base(inst, compIndex, dest, sources)
         {
             Type = type;
             Format = format;
             Flags = flags;
-            CbufSlot = DefaultCbufSlot;
+            CbufSlot = cbufSlot;
             Handle = handle;
+        }
+
+        public TextureOperation(
+            Instruction inst,
+            SamplerType type,
+            TextureFormat format,
+            TextureFlags flags,
+            int handle,
+            int compIndex,
+            Operand dest,
+            Operand[] sources) : this(inst, type, format, flags, DefaultCbufSlot, handle, compIndex, dest, sources)
+        {
         }
 
         public void TurnIntoIndexed(int handle)
