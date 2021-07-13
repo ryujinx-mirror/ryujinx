@@ -2,12 +2,9 @@
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using Ryujinx.Common;
-using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.FileSystem.Content;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
@@ -16,16 +13,20 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
     {
         public static readonly UserId DefaultUserId = new UserId("00000000000000010000000000000000");
 
-        private readonly VirtualFileSystem      _virtualFileSystem;
         private readonly AccountSaveDataManager _accountSaveDataManager;
+
+        // Todo: The account service doesn't have the permissions to delete save data. Qlaunch takes care of deleting
+        // save data, so we're currently passing a client with full permissions. Consider moving save data deletion
+        // outside of the AccountManager.
+        private readonly HorizonClient _horizonClient;
 
         private ConcurrentDictionary<string, UserProfile> _profiles;
 
         public UserProfile LastOpenedUser { get; private set; }
 
-        public AccountManager(VirtualFileSystem virtualFileSystem)
+        public AccountManager(HorizonClient horizonClient)
         {
-            _virtualFileSystem = virtualFileSystem;
+            _horizonClient = horizonClient;
 
             _profiles = new ConcurrentDictionary<string, UserProfile>();
 
@@ -169,31 +170,22 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             SaveDataFilter saveDataFilter = new SaveDataFilter();
             saveDataFilter.SetUserId(new LibHac.Fs.UserId((ulong)userId.High, (ulong)userId.Low));
 
-            Result result = _virtualFileSystem.FsClient.OpenSaveDataIterator(out SaveDataIterator saveDataIterator, SaveDataSpaceId.User, ref saveDataFilter);
-            if (result.IsSuccess())
+            _horizonClient.Fs.OpenSaveDataIterator(out SaveDataIterator saveDataIterator, SaveDataSpaceId.User, in saveDataFilter).ThrowIfFailure();
+
+            Span<SaveDataInfo> saveDataInfo = stackalloc SaveDataInfo[10];
+
+            while (true)
             {
-                Span<SaveDataInfo> saveDataInfo = stackalloc SaveDataInfo[10];
+                saveDataIterator.ReadSaveDataInfo(out long readCount, saveDataInfo).ThrowIfFailure();
 
-                while (true)
+                if (readCount == 0)
                 {
-                    saveDataIterator.ReadSaveDataInfo(out long readCount, saveDataInfo);
+                    break;
+                }
 
-                    if (readCount == 0)
-                    {
-                        break;
-                    }
-
-                    for (int i = 0; i < readCount; i++)
-                    {
-                        // TODO: We use Directory.Delete workaround because DeleteSaveData softlock without, due to a bug in LibHac 0.12.0.
-                        string savePath     = Path.Combine(_virtualFileSystem.GetNandPath(), $"user/save/{saveDataInfo[i].SaveDataId:x16}");
-                        string saveMetaPath = Path.Combine(_virtualFileSystem.GetNandPath(), $"user/saveMeta/{saveDataInfo[i].SaveDataId:x16}");
-
-                        Directory.Delete(savePath, true);
-                        Directory.Delete(saveMetaPath, true);
-
-                        _virtualFileSystem.FsClient.DeleteSaveData(SaveDataSpaceId.User, saveDataInfo[i].SaveDataId);
-                    }
+                for (int i = 0; i < readCount; i++)
+                {
+                    _horizonClient.Fs.DeleteSaveData(SaveDataSpaceId.User, saveDataInfo[i].SaveDataId).ThrowIfFailure();
                 }
             }
         }

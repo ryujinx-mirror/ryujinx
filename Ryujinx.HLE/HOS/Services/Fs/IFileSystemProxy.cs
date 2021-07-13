@@ -1,33 +1,40 @@
 using LibHac;
 using LibHac.Fs;
+using LibHac.Fs.Shim;
 using LibHac.FsSrv;
+using LibHac.FsSrv.Impl;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
+using LibHac.Sf;
+using LibHac.Spl;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
 using System.IO;
 
 using static Ryujinx.HLE.Utilities.StringUtils;
+using IFileSystem = LibHac.FsSrv.Sf.IFileSystem;
+using IStorage = LibHac.FsSrv.Sf.IStorage;
+using RightsId = LibHac.Fs.RightsId;
 using StorageId = Ryujinx.HLE.FileSystem.StorageId;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
     [Service("fsp-srv")]
-    class IFileSystemProxy : IpcService
+    class IFileSystemProxy : DisposableIpcService
     {
-        private LibHac.FsSrv.IFileSystemProxy _baseFileSystemProxy;
+        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFileSystemProxy> _baseFileSystemProxy;
 
         public IFileSystemProxy(ServiceCtx context)
         {
-            _baseFileSystemProxy = context.Device.FileSystem.FsServer.CreateFileSystemProxyService();
+            var applicationClient = context.Device.System.LibHacHorizonManager.ApplicationClient;
+            _baseFileSystemProxy = applicationClient.Fs.Impl.GetFileSystemProxyServiceObject();
         }
 
         [CommandHipc(1)]
-        // Initialize(u64, pid)
-        public ResultCode Initialize(ServiceCtx context)
+        // SetCurrentProcess(u64, pid)
+        public ResultCode SetCurrentProcess(ServiceCtx context)
         {
             return ResultCode.Success;
         }
@@ -94,241 +101,382 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         {
             BisPartitionId bisPartitionId = (BisPartitionId)context.RequestData.ReadInt32();
 
-            Result rc = FileSystemProxyHelper.ReadFsPath(out FsPath path, context);
-            if (rc.IsFailure()) return (ResultCode)rc.Value;
+            ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
 
-            rc = _baseFileSystemProxy.OpenBisFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem, ref path, bisPartitionId);
-            if (rc.IsFailure()) return (ResultCode)rc.Value;
+            Result result = _baseFileSystemProxy.Target.OpenBisFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, in path, bisPartitionId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
             MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
             return ResultCode.Success;
+        }
+
+        [CommandHipc(12)]
+        // OpenBisStorage(u32 partitionId) -> object<nn::fssrv::sf::IStorage> bisStorage
+        public ResultCode OpenBisStorage(ServiceCtx context)
+        {
+            BisPartitionId bisPartitionId = (BisPartitionId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenBisStorage(out ReferenceCountedDisposable<IStorage> storage, bisPartitionId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IStorage(storage));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(13)]
+        // InvalidateBisCache() -> ()
+        public ResultCode InvalidateBisCache(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.InvalidateBisCache().Value;
         }
 
         [CommandHipc(18)]
         // OpenSdCardFileSystem() -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenSdCardFileSystem(ServiceCtx context)
         {
-            Result rc = _baseFileSystemProxy.OpenSdCardFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem);
-            if (rc.IsFailure()) return (ResultCode)rc.Value;
+            Result result = _baseFileSystemProxy.Target.OpenSdCardFileSystem(out var fileSystem);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
             MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
             return ResultCode.Success;
         }
 
+        [CommandHipc(19)]
+        // FormatSdCardFileSystem() -> ()
+        public ResultCode FormatSdCardFileSystem(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.FormatSdCardFileSystem().Value;
+        }
+
         [CommandHipc(21)]
+        // DeleteSaveDataFileSystem(u64 saveDataId) -> ()
         public ResultCode DeleteSaveDataFileSystem(ServiceCtx context)
         {
             ulong saveDataId = context.RequestData.ReadUInt64();
 
-            Result result = _baseFileSystemProxy.DeleteSaveDataFileSystem(saveDataId);
-
-            return (ResultCode)result.Value;
+            return (ResultCode)_baseFileSystemProxy.Target.DeleteSaveDataFileSystem(saveDataId).Value;
         }
 
         [CommandHipc(22)]
+        // CreateSaveDataFileSystem(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo, nn::fs::SaveDataMetaInfo metaInfo) -> ()
         public ResultCode CreateSaveDataFileSystem(ServiceCtx context)
         {
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
             SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
-            SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
+            SaveDataMetaInfo metaInfo = context.RequestData.ReadStruct<SaveDataMetaInfo>();
 
-            // TODO: There's currently no program registry for FS to reference.
-            // Workaround that by setting the application ID and owner ID if they're not already set
-            if (attribute.ProgramId == ProgramId.InvalidId)
-            {
-                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
-            }
-
-            Logger.Info?.Print(LogClass.ServiceFs, $"Creating save with title ID {attribute.ProgramId.Value:x16}");
-
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystem(ref attribute, ref creationInfo, ref metaCreateInfo);
-
-            return (ResultCode)result.Value;
+            return (ResultCode)_baseFileSystemProxy.Target.CreateSaveDataFileSystem(in attribute, in creationInfo, in metaInfo).Value;
         }
 
         [CommandHipc(23)]
+        // CreateSaveDataFileSystemBySystemSaveDataId(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo) -> ()
         public ResultCode CreateSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
             SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
 
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemBySystemSaveDataId(ref attribute, ref creationInfo);
+            return (ResultCode)_baseFileSystemProxy.Target.CreateSaveDataFileSystemBySystemSaveDataId(in attribute, in creationInfo).Value;
+        }
 
-            return (ResultCode)result.Value;
+        [CommandHipc(24)]
+        // RegisterSaveDataFileSystemAtomicDeletion(buffer<u64, 5> saveDataIds) -> ()
+        public ResultCode RegisterSaveDataFileSystemAtomicDeletion(ServiceCtx context)
+        {
+            byte[] saveIdBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, saveIdBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.RegisterSaveDataFileSystemAtomicDeletion(new InBuffer(saveIdBuffer)).Value;
         }
 
         [CommandHipc(25)]
+        // DeleteSaveDataFileSystemBySaveDataSpaceId(u8 spaceId, u64 saveDataId) -> ()
         public ResultCode DeleteSaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             ulong saveDataId = context.RequestData.ReadUInt64();
 
-            Result result = _baseFileSystemProxy.DeleteSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId);
+            return (ResultCode)_baseFileSystemProxy.Target.DeleteSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId).Value;
+        }
 
-            return (ResultCode)result.Value;
+        [CommandHipc(26)]
+        // FormatSdCardDryRun() -> ()
+        public ResultCode FormatSdCardDryRun(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.FormatSdCardDryRun().Value;
+        }
+
+        [CommandHipc(27)]
+        // IsExFatSupported() -> (u8 isSupported)
+        public ResultCode IsExFatSupported(ServiceCtx context)
+        {
+            Result result = _baseFileSystemProxy.Target.IsExFatSupported(out bool isSupported);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(isSupported);
+
+            return ResultCode.Success;
         }
 
         [CommandHipc(28)]
+        // DeleteSaveDataFileSystemBySaveDataAttribute(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> ()
         public ResultCode DeleteSaveDataFileSystemBySaveDataAttribute(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
-            Result result = _baseFileSystemProxy.DeleteSaveDataFileSystemBySaveDataAttribute(spaceId, ref attribute);
-
-            return (ResultCode)result.Value;
+            return (ResultCode)_baseFileSystemProxy.Target.DeleteSaveDataFileSystemBySaveDataAttribute(spaceId, in attribute).Value;
         }
 
         [CommandHipc(30)]
-        // OpenGameCardStorage(u32, u32) -> object<nn::fssrv::sf::IStorage>
+        // OpenGameCardStorage(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenGameCardStorage(ServiceCtx context)
         {
             GameCardHandle handle = new GameCardHandle(context.RequestData.ReadInt32());
             GameCardPartitionRaw partitionId = (GameCardPartitionRaw)context.RequestData.ReadInt32();
 
-            Result result = _baseFileSystemProxy.OpenGameCardStorage(out LibHac.Fs.IStorage storage, handle, partitionId);
+            Result result = _baseFileSystemProxy.Target.OpenGameCardStorage(out ReferenceCountedDisposable<IStorage> storage, handle, partitionId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new FileSystemProxy.IStorage(storage));
-            }
+            MakeObject(context, new FileSystemProxy.IStorage(storage));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(31)]
+        // OpenGameCardFileSystem(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IFileSystem>
+        public ResultCode OpenGameCardFileSystem(ServiceCtx context)
+        {
+            GameCardHandle handle = new GameCardHandle(context.RequestData.ReadInt32());
+            GameCardPartition partitionId = (GameCardPartition)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenGameCardFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, handle, partitionId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(32)]
+        // ExtendSaveDataFileSystem(u8 spaceId, u64 saveDataId, s64 dataSize, s64 journalSize) -> ()
+        public ResultCode ExtendSaveDataFileSystem(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+            long dataSize = context.RequestData.ReadInt64();
+            long journalSize = context.RequestData.ReadInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.ExtendSaveDataFileSystem(spaceId, saveDataId, dataSize, journalSize).Value;
+        }
+
+        [CommandHipc(33)]
+        // DeleteCacheStorage(u16 index) -> ()
+        public ResultCode DeleteCacheStorage(ServiceCtx context)
+        {
+            ushort index = context.RequestData.ReadUInt16();
+
+            return (ResultCode)_baseFileSystemProxy.Target.DeleteCacheStorage(index).Value;
+        }
+
+        [CommandHipc(34)]
+        // GetCacheStorageSize(u16 index) -> (s64 dataSize, s64 journalSize)
+        public ResultCode GetCacheStorageSize(ServiceCtx context)
+        {
+            ushort index = context.RequestData.ReadUInt16();
+
+            Result result = _baseFileSystemProxy.Target.GetCacheStorageSize(out long dataSize, out long journalSize, index);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(dataSize);
+            context.ResponseData.Write(journalSize);
+
+            return ResultCode.Success;
         }
 
         [CommandHipc(35)]
+        // CreateSaveDataFileSystemWithHashSalt(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo, nn::fs::SaveDataMetaInfo metaInfo nn::fs::HashSalt hashSalt) -> ()
         public ResultCode CreateSaveDataFileSystemWithHashSalt(ServiceCtx context)
         {
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
             SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
-            SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
+            SaveDataMetaInfo metaCreateInfo = context.RequestData.ReadStruct<SaveDataMetaInfo>();
             HashSalt hashSalt = context.RequestData.ReadStruct<HashSalt>();
 
-            // TODO: There's currently no program registry for FS to reference.
-            // Workaround that by setting the application ID and owner ID if they're not already set
-            if (attribute.ProgramId == ProgramId.InvalidId)
-            {
-                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
-            }
-
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemWithHashSalt(ref attribute, ref creationInfo, ref metaCreateInfo, ref hashSalt);
-
-            return (ResultCode)result.Value;
+            return (ResultCode)_baseFileSystemProxy.Target.CreateSaveDataFileSystemWithHashSalt(in attribute, in creationInfo, in metaCreateInfo, in hashSalt).Value;
         }
 
         [CommandHipc(51)]
-        // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
+        // OpenSaveDataFileSystem(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
-            // TODO: There's currently no program registry for FS to reference.
-            // Workaround that by setting the application ID if it's not already set
-            if (attribute.ProgramId == ProgramId.InvalidId)
-            {
-                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
-            }
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, spaceId, in attribute);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            Result result = _baseFileSystemProxy.OpenSaveDataFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem, spaceId, ref attribute);
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
-            }
-
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
         }
 
         [CommandHipc(52)]
-        // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
+        // OpenSaveDataFileSystemBySystemSaveDataId(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
-            Result result = _baseFileSystemProxy.OpenSaveDataFileSystemBySystemSaveDataId(out LibHac.Fs.Fsa.IFileSystem fileSystem, spaceId, ref attribute);
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataFileSystemBySystemSaveDataId(out ReferenceCountedDisposable<IFileSystem> fileSystem, spaceId, in attribute);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
-            }
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
         }
 
         [CommandHipc(53)]
-        // OpenReadOnlySaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct save_struct) -> object<nn::fssrv::sf::IFileSystem>
+        // OpenReadOnlySaveDataFileSystem(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenReadOnlySaveDataFileSystem(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
-            // TODO: There's currently no program registry for FS to reference.
-            // Workaround that by setting the application ID if it's not already set
-            if (attribute.ProgramId == ProgramId.InvalidId)
-            {
-                attribute.ProgramId = new ProgramId(context.Device.Application.TitleId);
-            }
+            Result result = _baseFileSystemProxy.Target.OpenReadOnlySaveDataFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, spaceId, in attribute);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            Result result = _baseFileSystemProxy.OpenReadOnlySaveDataFileSystem(out LibHac.Fs.Fsa.IFileSystem fileSystem, spaceId, ref attribute);
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
-            }
+            return ResultCode.Success;
+        }
 
-            return (ResultCode)result.Value;
+        [CommandHipc(57)]
+        // ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(u8 spaceId, u64 saveDataId) -> (buffer<nn::fs::SaveDataExtraData, 6> extraData)
+        public ResultCode ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] extraDataBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, extraDataBuffer);
+
+            Result result = _baseFileSystemProxy.Target.ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(new OutBuffer(extraDataBuffer), spaceId, saveDataId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.Memory.Write(context.Request.ReceiveBuff[0].Position, extraDataBuffer);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(58)]
+        // ReadSaveDataFileSystemExtraData(u64 saveDataId) -> (buffer<nn::fs::SaveDataExtraData, 6> extraData)
+        public ResultCode ReadSaveDataFileSystemExtraData(ServiceCtx context)
+        {
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] extraDataBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, extraDataBuffer);
+
+            Result result = _baseFileSystemProxy.Target.ReadSaveDataFileSystemExtraData(new OutBuffer(extraDataBuffer), saveDataId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.Memory.Write(context.Request.ReceiveBuff[0].Position, extraDataBuffer);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(59)]
+        // WriteSaveDataFileSystemExtraData(u8 spaceId, u64 saveDataId, buffer<nn::fs::SaveDataExtraData, 5> extraData) -> ()
+        public ResultCode WriteSaveDataFileSystemExtraData(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] extraDataBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, extraDataBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.WriteSaveDataFileSystemExtraData(saveDataId, spaceId, new InBuffer(extraDataBuffer)).Value;
         }
 
         [CommandHipc(60)]
+        // OpenSaveDataInfoReader() -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReader(ServiceCtx context)
         {
-            Result result = _baseFileSystemProxy.OpenSaveDataInfoReader(out ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> infoReader);
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataInfoReader(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.ISaveDataInfoReader> infoReader);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new ISaveDataInfoReader(infoReader));
-            }
+            MakeObject(context, new ISaveDataInfoReader(infoReader));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
         }
 
         [CommandHipc(61)]
+        // OpenSaveDataInfoReaderBySaveDataSpaceId(u8 spaceId) -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReaderBySaveDataSpaceId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadByte();
 
-            Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderBySaveDataSpaceId(out ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> infoReader, spaceId);
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataInfoReaderBySaveDataSpaceId(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.ISaveDataInfoReader> infoReader, spaceId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new ISaveDataInfoReader(infoReader));
-            }
+            MakeObject(context, new ISaveDataInfoReader(infoReader));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
         }
 
         [CommandHipc(62)]
+        // OpenSaveDataInfoReaderOnlyCacheStorage() -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReaderOnlyCacheStorage(ServiceCtx context)
         {
-            SaveDataFilter filter = new SaveDataFilter();
-            filter.SetSaveDataType(SaveDataType.Cache);
-            filter.SetProgramId(new ProgramId(context.Process.TitleId));
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataInfoReaderOnlyCacheStorage(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.ISaveDataInfoReader> infoReader);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            // FS would query the User and SdCache space IDs to find where the existing cache is (if any).
-            // We always have the SD card inserted, so we can always use SdCache for now.
-            Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderBySaveDataSpaceId(
-                out ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> infoReader, SaveDataSpaceId.SdCache);
+            MakeObject(context, new ISaveDataInfoReader(infoReader));
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new ISaveDataInfoReader(infoReader));
-            }
+            return ResultCode.Success;
+        }
 
-            return (ResultCode)result.Value;
+        [CommandHipc(64)]
+        // OpenSaveDataInternalStorageFileSystem(u8 spaceId, u64 saveDataId) -> object<nn::fssrv::sf::ISaveDataInfoReader>
+        public ResultCode OpenSaveDataInternalStorageFileSystem(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataInternalStorageFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, spaceId, saveDataId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(65)]
+        // UpdateSaveDataMacForDebug(u8 spaceId, u64 saveDataId) -> ()
+        public ResultCode UpdateSaveDataMacForDebug(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.UpdateSaveDataMacForDebug(spaceId, saveDataId).Value;
+        }
+
+        [CommandHipc(66)]
+        public ResultCode WriteSaveDataFileSystemExtraDataWithMask(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] extraDataBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, extraDataBuffer);
+
+            byte[] maskBuffer = new byte[context.Request.SendBuff[1].Size];
+            context.Memory.Read(context.Request.SendBuff[1].Position, maskBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.WriteSaveDataFileSystemExtraDataWithMask(saveDataId, spaceId, new InBuffer(extraDataBuffer), new InBuffer(maskBuffer)).Value;
         }
 
         [CommandHipc(67)]
@@ -342,12 +490,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 
             byte[] infoBuffer = new byte[bufferLen];
 
-            Result result = _baseFileSystemProxy.FindSaveDataWithFilter(out long count, infoBuffer, spaceId, ref filter);
+            Result result = _baseFileSystemProxy.Target.FindSaveDataWithFilter(out long count, new OutBuffer(infoBuffer), spaceId, in filter);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
             context.Memory.Write(bufferPosition, infoBuffer);
             context.ResponseData.Write(count);
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
         }
 
         [CommandHipc(68)]
@@ -356,23 +505,160 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataFilter filter = context.RequestData.ReadStruct<SaveDataFilter>();
 
-            Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderWithFilter(
-                out ReferenceCountedDisposable<LibHac.FsSrv.ISaveDataInfoReader> infoReader, spaceId, ref filter);
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataInfoReaderWithFilter(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.ISaveDataInfoReader> infoReader, spaceId, in filter);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new ISaveDataInfoReader(infoReader));
-            }
+            MakeObject(context, new ISaveDataInfoReader(infoReader));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(69)]
+        public ResultCode ReadSaveDataFileSystemExtraDataBySaveDataAttribute(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+
+            byte[] outputBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, outputBuffer);
+
+            Result result = _baseFileSystemProxy.Target.ReadSaveDataFileSystemExtraDataBySaveDataAttribute(new OutBuffer(outputBuffer), spaceId, in attribute);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.Memory.Write(context.Request.ReceiveBuff[0].Position, outputBuffer);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(70)]
+        public ResultCode WriteSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+
+            byte[] extraDataBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, extraDataBuffer);
+
+            byte[] maskBuffer = new byte[context.Request.SendBuff[1].Size];
+            context.Memory.Read(context.Request.SendBuff[1].Position, maskBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.WriteSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(in attribute, spaceId, new InBuffer(extraDataBuffer), new InBuffer(maskBuffer)).Value;
         }
 
         [CommandHipc(71)]
         public ResultCode ReadSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.ServiceFs);
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
-            MemoryHelper.FillWithZeros(context.Memory, context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
+            byte[] maskBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, maskBuffer);
+
+            byte[] outputBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, outputBuffer);
+
+            Result result = _baseFileSystemProxy.Target.ReadSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(new OutBuffer(outputBuffer), spaceId, in attribute, new InBuffer(maskBuffer));
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.Memory.Write(context.Request.ReceiveBuff[0].Position, outputBuffer);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(80)]
+        public ResultCode OpenSaveDataMetaFile(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt32();
+            SaveDataMetaType metaType = (SaveDataMetaType)context.RequestData.ReadInt32();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+
+            Result result = _baseFileSystemProxy.Target.OpenSaveDataMetaFile(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFile> file, spaceId, in attribute, metaType);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new IFile(file));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(84)]
+        public ResultCode ListAccessibleSaveDataOwnerId(ServiceCtx context)
+        {
+            int startIndex = context.RequestData.ReadInt32();
+            int bufferCount = context.RequestData.ReadInt32();
+            ProgramId programId = context.RequestData.ReadStruct<ProgramId>();
+
+            byte[] outputBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, outputBuffer);
+
+            Result result = _baseFileSystemProxy.Target.ListAccessibleSaveDataOwnerId(out int readCount, new OutBuffer(outputBuffer), programId, startIndex, bufferCount);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(readCount);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(100)]
+        public ResultCode OpenImageDirectoryFileSystem(ServiceCtx context)
+        {
+            ImageDirectoryId directoryId = (ImageDirectoryId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenImageDirectoryFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, directoryId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(101)]
+        public ResultCode OpenBaseFileSystem(ServiceCtx context)
+        {
+            BaseFileSystemId fileSystemId = (BaseFileSystemId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenBaseFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, fileSystemId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(110)]
+        public ResultCode OpenContentStorageFileSystem(ServiceCtx context)
+        {
+            ContentStorageId contentStorageId = (ContentStorageId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenContentStorageFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, contentStorageId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(120)]
+        public ResultCode OpenCloudBackupWorkStorageFileSystem(ServiceCtx context)
+        {
+            CloudBackupWorkStorageId storageId = (CloudBackupWorkStorageId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenCloudBackupWorkStorageFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, storageId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(130)]
+        public ResultCode OpenCustomStorageFileSystem(ServiceCtx context)
+        {
+            CustomStorageId customStorageId = (CustomStorageId)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.Target.OpenCustomStorageFileSystem(out ReferenceCountedDisposable<IFileSystem> fileSystem, customStorageId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
 
             return ResultCode.Success;
         }
@@ -381,13 +667,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
-            MakeObject(context, new FileSystemProxy.IStorage(context.Device.FileSystem.RomFs.AsStorage()));
+            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            var sharedStorage = new ReferenceCountedDisposable<LibHac.Fs.IStorage>(storage);
+            ReferenceCountedDisposable<IStorage> sfStorage = StorageInterfaceAdapter.CreateShared(ref sharedStorage);
 
-            return 0;
+            MakeObject(context, new FileSystemProxy.IStorage(sfStorage));
+
+            return ResultCode.Success;
         }
 
         [CommandHipc(202)]
-        // OpenDataStorageByDataId(u8 storageId, nn::ApplicationId tid) -> object<nn::fssrv::sf::IStorage> dataStorage
+        // OpenDataStorageByDataId(u8 storageId, nn::ncm::DataId dataId) -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDataStorageByDataId(ServiceCtx context)
         {
             StorageId storageId = (StorageId)context.RequestData.ReadByte();
@@ -396,11 +686,15 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 
             // We do a mitm here to find if the request is for an AOC.
             // This is because AOC can be distributed over multiple containers in the emulator.
-            if (context.Device.System.ContentManager.GetAocDataStorage((ulong)titleId, out LibHac.Fs.IStorage aocStorage, context.Device.Configuration.FsIntegrityCheckLevel))
+            if (context.Device.System.ContentManager.GetAocDataStorage(titleId, out LibHac.Fs.IStorage aocStorage, context.Device.Configuration.FsIntegrityCheckLevel))
             {
                 Logger.Info?.Print(LogClass.Loader, $"Opened AddOnContent Data TitleID={titleId:X16}");
 
-                MakeObject(context, new FileSystemProxy.IStorage(context.Device.FileSystem.ModLoader.ApplyRomFsMods((ulong)titleId, aocStorage)));
+                var storage = context.Device.FileSystem.ModLoader.ApplyRomFsMods(titleId, aocStorage);
+                var sharedStorage = new ReferenceCountedDisposable<LibHac.Fs.IStorage>(storage);
+                ReferenceCountedDisposable<IStorage> sfStorage = StorageInterfaceAdapter.CreateShared(ref sharedStorage);
+
+                MakeObject(context, new FileSystemProxy.IStorage(sfStorage));
 
                 return ResultCode.Success;
             }
@@ -432,8 +726,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                             LibHac.Fs.IStorage ncaStorage = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
                             Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
                             LibHac.Fs.IStorage romfsStorage = nca.OpenStorage(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+                            var sharedStorage = new ReferenceCountedDisposable<LibHac.Fs.IStorage>(romfsStorage);
+                            ReferenceCountedDisposable<IStorage> sfStorage = StorageInterfaceAdapter.CreateShared(ref sharedStorage);
 
-                            MakeObject(context, new FileSystemProxy.IStorage(romfsStorage));
+                            MakeObject(context, new FileSystemProxy.IStorage(sfStorage));
                         }
                         catch (HorizonResultException ex)
                         {
@@ -460,7 +756,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
-            MakeObject(context, new FileSystemProxy.IStorage(context.Device.FileSystem.RomFs.AsStorage()));
+            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            var sharedStorage = new ReferenceCountedDisposable<LibHac.Fs.IStorage>(storage);
+            ReferenceCountedDisposable<IStorage> sfStorage = StorageInterfaceAdapter.CreateShared(ref sharedStorage);
+
+            MakeObject(context, new FileSystemProxy.IStorage(sfStorage));
 
             return ResultCode.Success;
         }
@@ -469,43 +769,325 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDeviceOperator(ServiceCtx context)
         {
-            Result result = _baseFileSystemProxy.OpenDeviceOperator(out LibHac.FsSrv.IDeviceOperator deviceOperator);
+            Result result = _baseFileSystemProxy.Target.OpenDeviceOperator(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDeviceOperator> deviceOperator);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
-            {
-                MakeObject(context, new IDeviceOperator(deviceOperator));
-            }
+            MakeObject(context, new IDeviceOperator(deviceOperator));
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(601)]
+        public ResultCode QuerySaveDataTotalSize(ServiceCtx context)
+        {
+            long dataSize = context.RequestData.ReadInt64();
+            long journalSize = context.RequestData.ReadInt64();
+
+            Result result = _baseFileSystemProxy.Target.QuerySaveDataTotalSize(out long totalSize, dataSize, journalSize);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(totalSize);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(511)]
+        public ResultCode NotifySystemDataUpdateEvent(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.NotifySystemDataUpdateEvent().Value;
+        }
+
+        [CommandHipc(523)]
+        public ResultCode SimulateDeviceDetectionEvent(ServiceCtx context)
+        {
+            bool signalEvent = context.RequestData.ReadBoolean();
+            context.RequestData.BaseStream.Seek(3, SeekOrigin.Current);
+            SdmmcPort port = context.RequestData.ReadStruct<SdmmcPort>();
+            SimulatingDeviceDetectionMode mode = context.RequestData.ReadStruct<SimulatingDeviceDetectionMode>();
+
+            return (ResultCode)_baseFileSystemProxy.Target.SimulateDeviceDetectionEvent(port, mode, signalEvent).Value;
+        }
+
+        [CommandHipc(602)]
+        public ResultCode VerifySaveDataFileSystem(ServiceCtx context)
+        {
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] readBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, readBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.VerifySaveDataFileSystem(saveDataId, new OutBuffer(readBuffer)).Value;
+        }
+
+        [CommandHipc(603)]
+        public ResultCode CorruptSaveDataFileSystem(ServiceCtx context)
+        {
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.CorruptSaveDataFileSystem(saveDataId).Value;
+        }
+
+        [CommandHipc(604)]
+        public ResultCode CreatePaddingFile(ServiceCtx context)
+        {
+            long size = context.RequestData.ReadInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.CreatePaddingFile(size).Value;
+        }
+
+        [CommandHipc(605)]
+        public ResultCode DeleteAllPaddingFiles(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.DeleteAllPaddingFiles().Value;
+        }
+
+        [CommandHipc(606)]
+        public ResultCode GetRightsId(ServiceCtx context)
+        {
+            LibHac.Ncm.StorageId storageId = (LibHac.Ncm.StorageId)context.RequestData.ReadInt64();
+            ProgramId programId = context.RequestData.ReadStruct<ProgramId>();
+
+            Result result = _baseFileSystemProxy.Target.GetRightsId(out RightsId rightsId, programId, storageId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.WriteStruct(rightsId);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(607)]
+        public ResultCode RegisterExternalKey(ServiceCtx context)
+        {
+            RightsId rightsId = context.RequestData.ReadStruct<RightsId>();
+            AccessKey accessKey = context.RequestData.ReadStruct<AccessKey>();
+
+            return (ResultCode)_baseFileSystemProxy.Target.RegisterExternalKey(in rightsId, in accessKey).Value;
+        }
+
+        [CommandHipc(608)]
+        public ResultCode UnregisterAllExternalKey(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.UnregisterAllExternalKey().Value;
+        }
+
+        [CommandHipc(609)]
+        public ResultCode GetRightsIdByPath(ServiceCtx context)
+        {
+            ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
+
+            Result result = _baseFileSystemProxy.Target.GetRightsIdByPath(out RightsId rightsId, in path);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.WriteStruct(rightsId);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(610)]
+        public ResultCode GetRightsIdAndKeyGenerationByPath(ServiceCtx context)
+        {
+            ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
+
+            Result result = _baseFileSystemProxy.Target.GetRightsIdAndKeyGenerationByPath(out RightsId rightsId, out byte keyGeneration, in path);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(keyGeneration);
+            context.ResponseData.BaseStream.Seek(7, SeekOrigin.Current);
+            context.ResponseData.WriteStruct(rightsId);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(611)]
+        public ResultCode SetCurrentPosixTimeWithTimeDifference(ServiceCtx context)
+        {
+            int timeDifference = context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Seek(4, SeekOrigin.Current);
+            long time = context.RequestData.ReadInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.SetCurrentPosixTimeWithTimeDifference(time, timeDifference).Value;
+        }
+
+        [CommandHipc(612)]
+        public ResultCode GetFreeSpaceSizeForSaveData(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = context.RequestData.ReadStruct<SaveDataSpaceId>();
+
+            Result result = _baseFileSystemProxy.Target.GetFreeSpaceSizeForSaveData(out long freeSpaceSize, spaceId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(freeSpaceSize);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(613)]
+        public ResultCode VerifySaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            byte[] readBuffer = new byte[context.Request.ReceiveBuff[0].Size];
+            context.Memory.Read(context.Request.ReceiveBuff[0].Position, readBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.VerifySaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId, new OutBuffer(readBuffer)).Value;
+        }
+
+        [CommandHipc(614)]
+        public ResultCode CorruptSaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.CorruptSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId).Value;
+        }
+
+        [CommandHipc(615)]
+        public ResultCode QuerySaveDataInternalStorageTotalSize(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            Result result = _baseFileSystemProxy.Target.QuerySaveDataInternalStorageTotalSize(out long size, spaceId, saveDataId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(size);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(616)]
+        public ResultCode GetSaveDataCommitId(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+
+            Result result = _baseFileSystemProxy.Target.GetSaveDataCommitId(out long commitId, spaceId, saveDataId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(commitId);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(617)]
+        public ResultCode UnregisterExternalKey(ServiceCtx context)
+        {
+            RightsId rightsId = context.RequestData.ReadStruct<RightsId>();
+
+            return (ResultCode)_baseFileSystemProxy.Target.UnregisterExternalKey(in rightsId).Value;
+        }
+
+        [CommandHipc(620)]
+        public ResultCode SetSdCardEncryptionSeed(ServiceCtx context)
+        {
+            EncryptionSeed encryptionSeed = context.RequestData.ReadStruct<EncryptionSeed>();
+
+            return (ResultCode)_baseFileSystemProxy.Target.SetSdCardEncryptionSeed(in encryptionSeed).Value;
         }
 
         [CommandHipc(630)]
-        // SetSdCardAccessibility(u8)
+        // SetSdCardAccessibility(u8 isAccessible)
         public ResultCode SetSdCardAccessibility(ServiceCtx context)
         {
             bool isAccessible = context.RequestData.ReadBoolean();
 
-            return (ResultCode)_baseFileSystemProxy.SetSdCardAccessibility(isAccessible).Value;
+            return (ResultCode)_baseFileSystemProxy.Target.SetSdCardAccessibility(isAccessible).Value;
         }
 
         [CommandHipc(631)]
-        // IsSdCardAccessible() -> u8
+        // IsSdCardAccessible() -> u8 isAccessible
         public ResultCode IsSdCardAccessible(ServiceCtx context)
         {
-            Result result = _baseFileSystemProxy.IsSdCardAccessible(out bool isAccessible);
+            Result result = _baseFileSystemProxy.Target.IsSdCardAccessible(out bool isAccessible);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
             context.ResponseData.Write(isAccessible);
 
-            return (ResultCode)result.Value;
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(702)]
+        public ResultCode IsAccessFailureDetected(ServiceCtx context)
+        {
+            ulong processId = context.RequestData.ReadUInt64();
+
+            Result result = _baseFileSystemProxy.Target.IsAccessFailureDetected(out bool isDetected, processId);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(isDetected);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(710)]
+        public ResultCode ResolveAccessFailure(ServiceCtx context)
+        {
+            ulong processId = context.RequestData.ReadUInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.ResolveAccessFailure(processId).Value;
+        }
+
+        [CommandHipc(720)]
+        public ResultCode AbandonAccessFailure(ServiceCtx context)
+        {
+            ulong processId = context.RequestData.ReadUInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.AbandonAccessFailure(processId).Value;
+        }
+
+        [CommandHipc(800)]
+        public ResultCode GetAndClearErrorInfo(ServiceCtx context)
+        {
+            Result result = _baseFileSystemProxy.Target.GetAndClearErrorInfo(out FileSystemProxyErrorInfo errorInfo);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.WriteStruct(errorInfo);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(810)]
+        public ResultCode RegisterProgramIndexMapInfo(ServiceCtx context)
+        {
+            int programCount = context.RequestData.ReadInt32();
+
+            byte[] mapInfoBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, mapInfoBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.RegisterProgramIndexMapInfo(new InBuffer(mapInfoBuffer), programCount).Value;
+        }
+
+        [CommandHipc(1000)]
+        public ResultCode SetBisRootForHost(ServiceCtx context)
+        {
+            BisPartitionId partitionId = (BisPartitionId)context.RequestData.ReadInt32();
+            ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
+
+            return (ResultCode)_baseFileSystemProxy.Target.SetBisRootForHost(partitionId, in path).Value;
+        }
+
+        [CommandHipc(1001)]
+        public ResultCode SetSaveDataSize(ServiceCtx context)
+        {
+            long dataSize = context.RequestData.ReadInt64();
+            long journalSize = context.RequestData.ReadInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.SetSaveDataSize(dataSize, journalSize).Value;
+        }
+
+        [CommandHipc(1002)]
+        public ResultCode SetSaveDataRootPath(ServiceCtx context)
+        {
+            ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
+
+            return (ResultCode)_baseFileSystemProxy.Target.SetSaveDataRootPath(in path).Value;
         }
 
         [CommandHipc(1003)]
-        // DisableAutoSaveDataCreation()
         public ResultCode DisableAutoSaveDataCreation(ServiceCtx context)
         {
-            // NOTE: This call does nothing in original service.
-
-            return ResultCode.Success;
+            return (ResultCode)_baseFileSystemProxy.Target.DisableAutoSaveDataCreation().Value;
         }
 
         [CommandHipc(1004)]
@@ -542,11 +1124,39 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
+        [CommandHipc(1007)]
+        public ResultCode RegisterUpdatePartition(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.RegisterUpdatePartition().Value;
+        }
+
+        [CommandHipc(1008)]
+        public ResultCode OpenRegisteredUpdatePartition(ServiceCtx context)
+        {
+            Result result = _baseFileSystemProxy.Target.OpenRegisteredUpdatePartition(out ReferenceCountedDisposable<IFileSystem> fileSystem);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(1009)]
+        public ResultCode GetAndClearMemoryReportInfo(ServiceCtx context)
+        {
+            Result result = _baseFileSystemProxy.Target.GetAndClearMemoryReportInfo(out MemoryReportInfo reportInfo);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.WriteStruct(reportInfo);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(1011)]
         public ResultCode GetProgramIndexForAccessLog(ServiceCtx context)
         {
-            int programIndex = 0;
-            int programCount = 1;
+            Result result = _baseFileSystemProxy.Target.GetProgramIndexForAccessLog(out int programIndex, out int programCount);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
             context.ResponseData.Write(programIndex);
             context.ResponseData.Write(programCount);
@@ -554,18 +1164,82 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
+        [CommandHipc(1012)]
+        public ResultCode GetFsStackUsage(ServiceCtx context)
+        {
+            FsStackUsageThreadType threadType = context.RequestData.ReadStruct<FsStackUsageThreadType>();
+
+            Result result = _baseFileSystemProxy.Target.GetFsStackUsage(out uint usage, threadType);
+            if (result.IsFailure()) return (ResultCode)result.Value;
+
+            context.ResponseData.Write(usage);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(1013)]
+        public ResultCode UnsetSaveDataRootPath(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.UnsetSaveDataRootPath().Value;
+        }
+
+        [CommandHipc(1014)]
+        public ResultCode OutputMultiProgramTagAccessLog(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.OutputMultiProgramTagAccessLog().Value;
+        }
+
+        [CommandHipc(1016)]
+        public ResultCode FlushAccessLogOnSdCard(ServiceCtx context)
+        {
+            return (ResultCode)_baseFileSystemProxy.Target.FlushAccessLogOnSdCard().Value;
+        }
+
+        [CommandHipc(1017)]
+        public ResultCode OutputApplicationInfoAccessLog(ServiceCtx context)
+        {
+            ApplicationInfo info = context.RequestData.ReadStruct<ApplicationInfo>();
+
+            return (ResultCode)_baseFileSystemProxy.Target.OutputApplicationInfoAccessLog(in info).Value;
+        }
+
+        [CommandHipc(1100)]
+        public ResultCode OverrideSaveDataTransferTokenSignVerificationKey(ServiceCtx context)
+        {
+            byte[] keyBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, keyBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Target.OverrideSaveDataTransferTokenSignVerificationKey(new InBuffer(keyBuffer)).Value;
+        }
+
+        [CommandHipc(1110)]
+        public ResultCode CorruptSaveDataFileSystemByOffset(ServiceCtx context)
+        {
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
+            long offset = context.RequestData.ReadInt64();
+
+            return (ResultCode)_baseFileSystemProxy.Target.CorruptSaveDataFileSystemByOffset(spaceId, saveDataId, offset).Value;
+        }
+
         [CommandHipc(1200)] // 6.0.0+
         // OpenMultiCommitManager() -> object<nn::fssrv::sf::IMultiCommitManager>
         public ResultCode OpenMultiCommitManager(ServiceCtx context)
         {
-            Result result = _baseFileSystemProxy.OpenMultiCommitManager(out LibHac.FsSrv.IMultiCommitManager commitManager);
+            Result result = _baseFileSystemProxy.Target.OpenMultiCommitManager(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.IMultiCommitManager> commitManager);
+            if (result.IsFailure()) return (ResultCode)result.Value;
 
-            if (result.IsSuccess())
+            MakeObject(context, new IMultiCommitManager(commitManager));
+
+            return ResultCode.Success;
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
             {
-                MakeObject(context, new IMultiCommitManager(commitManager));
+                _baseFileSystemProxy?.Dispose();
             }
-
-            return (ResultCode)result.Value;
         }
     }
 }

@@ -1,15 +1,13 @@
 using LibHac;
-using LibHac.Fs;
-using System;
-using System.Runtime.InteropServices;
+using LibHac.Sf;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
-    class IDirectory : IpcService
+    class IDirectory : DisposableIpcService
     {
-        private LibHac.Fs.Fsa.IDirectory _baseDirectory;
+        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDirectory> _baseDirectory;
 
-        public IDirectory(LibHac.Fs.Fsa.IDirectory directory)
+        public IDirectory(ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDirectory> directory)
         {
             _baseDirectory = directory;
         }
@@ -19,14 +17,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         public ResultCode Read(ServiceCtx context)
         {
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong bufferLen      = context.Request.ReceiveBuff[0].Size;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            byte[]               entriesBytes = new byte[bufferLen];
-            Span<DirectoryEntry> entries      = MemoryMarshal.Cast<byte, DirectoryEntry>(entriesBytes);
+            byte[] entryBuffer = new byte[bufferLen];
 
-            Result result = _baseDirectory.Read(out long entriesRead, entries);
+            Result result = _baseDirectory.Target.Read(out long entriesRead, new OutBuffer(entryBuffer));
 
-            context.Memory.Write(bufferPosition, entriesBytes);
+            context.Memory.Write(bufferPosition, entryBuffer);
             context.ResponseData.Write(entriesRead);
 
             return (ResultCode)result.Value;
@@ -36,11 +33,19 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // GetEntryCount() -> u64
         public ResultCode GetEntryCount(ServiceCtx context)
         {
-            Result result = _baseDirectory.GetEntryCount(out long entryCount);
+            Result result = _baseDirectory.Target.GetEntryCount(out long entryCount);
 
             context.ResponseData.Write(entryCount);
 
             return (ResultCode)result.Value;
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _baseDirectory?.Dispose();
+            }
         }
     }
 }

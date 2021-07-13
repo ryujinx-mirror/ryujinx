@@ -1,6 +1,6 @@
-using LibHac;
-using LibHac.Bcat;
+using LibHac.Common.Keys;
 using LibHac.Fs;
+using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using Ryujinx.Audio;
 using Ryujinx.Audio.Input;
@@ -18,7 +18,6 @@ using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Apm;
-using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
 using Ryujinx.HLE.HOS.Services.Caps;
 using Ryujinx.HLE.HOS.Services.Mii;
@@ -38,6 +37,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using TimeSpanType = Ryujinx.HLE.HOS.Services.Time.Clock.TimeSpanType;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -97,7 +97,7 @@ namespace Ryujinx.HLE.HOS
 
         internal KEvent DisplayResolutionChangeEvent { get; private set; }
 
-        public Keyset KeySet => Device.FileSystem.KeySet;
+        public KeySet KeySet => Device.FileSystem.KeySet;
 
         private bool _isDisposed;
 
@@ -111,8 +111,7 @@ namespace Ryujinx.HLE.HOS
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
 
-        internal LibHac.Horizon LibHacHorizonServer { get; private set; }
-        internal HorizonClient LibHacHorizonClient { get; private set; }
+        internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
         public Horizon(Switch device)
         {
@@ -184,6 +183,8 @@ namespace Ryujinx.HLE.HOS
             ContentManager = device.Configuration.ContentManager;
             CaptureManager = new CaptureManager(device);
 
+            LibHacHorizonManager = device.Configuration.LibHacHorizonManager;
+
             // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
             UInt128 clockSourceId = new UInt128(Guid.NewGuid().ToByteArray());
@@ -223,17 +224,16 @@ namespace Ryujinx.HLE.HOS
 
             TimeServiceManager.Instance.SetupStandardUserSystemClock(null, false, SteadyClockTimePoint.GetRandom());
 
-            // FIXME: TimeZone shoud be init here but it's actually done in ContentManager
+            // FIXME: TimeZone should be init here but it's actually done in ContentManager
 
             TimeServiceManager.Instance.SetupEphemeralNetworkSystemClock();
 
-            DatabaseImpl.Instance.InitializeDatabase(device);
+            DatabaseImpl.Instance.InitializeDatabase(LibHacHorizonManager.SdbClient);
 
             HostSyncpoint = new NvHostSyncpt(device);
 
             SurfaceFlinger = new SurfaceFlinger(device);
 
-            InitLibHacHorizon();
             InitializeAudioRenderer();
         }
 
@@ -309,20 +309,6 @@ namespace Ryujinx.HLE.HOS
             ProgramLoader.LoadKip(KernelContext, new KipExecutable(kipFile));
         }
 
-        private void InitLibHacHorizon()
-        {
-            LibHac.Horizon horizon = new LibHac.Horizon(null, Device.FileSystem.FsServer);
-
-            horizon.CreateHorizonClient(out HorizonClient ryujinxClient).ThrowIfFailure();
-            horizon.CreateHorizonClient(out HorizonClient bcatClient).ThrowIfFailure();
-
-            ryujinxClient.Sm.RegisterService(new LibHacIReader(this), "arp:r").ThrowIfFailure();
-            new BcatServer(bcatClient);
-
-            LibHacHorizonServer = horizon;
-            LibHacHorizonClient = ryujinxClient;
-        }
-
         public void ChangeDockedModeState(bool newState)
         {
             if (newState != State.DockedMode)
@@ -355,8 +341,8 @@ namespace Ryujinx.HLE.HOS
         {
             if (NfpDevices[nfpDeviceId].State == NfpDeviceState.SearchingForTag)
             {
-                NfpDevices[nfpDeviceId].State         = NfpDeviceState.TagFound;
-                NfpDevices[nfpDeviceId].AmiiboId      = amiiboId;
+                NfpDevices[nfpDeviceId].State = NfpDeviceState.TagFound;
+                NfpDevices[nfpDeviceId].AmiiboId = amiiboId;
                 NfpDevices[nfpDeviceId].UseRandomUuid = useRandomUuid;
             }
         }
@@ -453,6 +439,8 @@ namespace Ryujinx.HLE.HOS
 
                 AudioRendererManager.Dispose();
 
+                LibHacHorizonManager.AmClient.Fs.UnregisterProgram(LibHacHorizonManager.ApplicationClient.Os.GetCurrentProcessId().Value);
+                
                 KernelContext.Dispose();
             }
         }
