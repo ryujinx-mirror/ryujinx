@@ -3,7 +3,6 @@ using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.FsSystem.RomFs;
-using LibHac.Loader;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Loaders.Mods;
@@ -13,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
+using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using System.Globalization;
 
@@ -522,7 +522,7 @@ namespace Ryujinx.HLE.HOS
         {
             public BitVector32 Stubs;
             public BitVector32 Replaces;
-            public MetaLoader Npdm;
+            public Npdm Npdm;
 
             public bool Modified => (Stubs.Data | Replaces.Data) != 0;
         }
@@ -582,10 +582,9 @@ namespace Ryujinx.HLE.HOS
                         continue;
                     }
 
-                    modLoadResult.Npdm = new MetaLoader();
-                    modLoadResult.Npdm.Load(File.ReadAllBytes(npdmFile.FullName));
+                    modLoadResult.Npdm = new Npdm(npdmFile.OpenRead());
 
-                    Logger.Info?.Print(LogClass.ModLoader, "main.npdm replaced");
+                    Logger.Info?.Print(LogClass.ModLoader, $"main.npdm replaced");
                 }
             }
 

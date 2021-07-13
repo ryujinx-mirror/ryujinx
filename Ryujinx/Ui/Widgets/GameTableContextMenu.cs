@@ -33,7 +33,6 @@ namespace Ryujinx.Ui.Widgets
         private readonly MainWindow                             _parent;
         private readonly VirtualFileSystem                      _virtualFileSystem;
         private readonly AccountManager                         _accountManager;
-        private readonly HorizonClient                          _horizonClient;
         private readonly BlitStruct<ApplicationControlProperty> _controlData;
 
         private readonly string _titleFilePath;
@@ -44,7 +43,7 @@ namespace Ryujinx.Ui.Widgets
         private MessageDialog _dialog;
         private bool          _cancel;
 
-        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, AccountManager accountManager, HorizonClient horizonClient, string titleFilePath, string titleName, string titleId, BlitStruct<ApplicationControlProperty> controlData)
+        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, AccountManager accountManager, string titleFilePath, string titleName, string titleId, BlitStruct<ApplicationControlProperty> controlData)
         {
             _parent = parent;
 
@@ -52,7 +51,6 @@ namespace Ryujinx.Ui.Widgets
 
             _virtualFileSystem = virtualFileSystem;
             _accountManager    = accountManager;
-            _horizonClient     = horizonClient;
             _titleFilePath     = titleFilePath;
             _titleName         = titleName;
             _titleIdText       = titleId;
@@ -65,9 +63,9 @@ namespace Ryujinx.Ui.Widgets
                 return;
             }
 
-            _openSaveUserDirMenuItem.Sensitive   = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize      > 0;
-            _openSaveDeviceDirMenuItem.Sensitive = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize           > 0;
-            _openSaveBcatDirMenuItem.Sensitive   = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0;
+            _openSaveUserDirMenuItem.Sensitive   = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize      > 0;
+            _openSaveDeviceDirMenuItem.Sensitive = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize           > 0;
+            _openSaveBcatDirMenuItem.Sensitive   = !Utilities.IsEmpty(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0;
 
             string fileExt = System.IO.Path.GetExtension(_titleFilePath).ToLower();
             bool   hasNca  = fileExt == ".nca" || fileExt == ".nsp" || fileExt == ".pfs0" || fileExt == ".xci";
@@ -83,7 +81,7 @@ namespace Ryujinx.Ui.Widgets
         {
             saveDataId = default;
 
-            Result result = _horizonClient.Fs.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, in filter);
+            Result result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 
             if (ResultFs.TargetNotFound.Includes(result))
             {
@@ -104,7 +102,7 @@ namespace Ryujinx.Ui.Widgets
 
                 ref ApplicationControlProperty control = ref controlHolder.Value;
 
-                if (Utilities.IsZeros(controlHolder.ByteSpan))
+                if (Utilities.IsEmpty(controlHolder.ByteSpan))
                 {
                     // If the current application doesn't have a loaded control property, create a dummy one
                     // and set the savedata sizes so a user savedata will be created.
@@ -119,7 +117,7 @@ namespace Ryujinx.Ui.Widgets
 
                 Uid user = new Uid((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
 
-                result = EnsureApplicationSaveData(_horizonClient.Fs, out _, new LibHac.Ncm.ApplicationId(titleId), ref control, ref user);
+                result = EnsureApplicationSaveData(_virtualFileSystem.FsClient, out _, new LibHac.Ncm.ApplicationId(titleId), ref control, ref user);
 
                 if (result.IsFailure())
                 {
@@ -129,7 +127,7 @@ namespace Ryujinx.Ui.Widgets
                 }
 
                 // Try to find the savedata again after creating it
-                result = _horizonClient.Fs.FindSaveDataWithFilter(out saveDataInfo, SaveDataSpaceId.User, in filter);
+                result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out saveDataInfo, SaveDataSpaceId.User, ref filter);
             }
 
             if (result.IsSuccess())
@@ -286,7 +284,7 @@ namespace Ryujinx.Ui.Widgets
                         IFileSystem ncaFileSystem = patchNca != null ? mainNca.OpenFileSystemWithPatch(patchNca, index, IntegrityCheckLevel.ErrorOnInvalid)
                                                                      : mainNca.OpenFileSystem(index, IntegrityCheckLevel.ErrorOnInvalid);
 
-                        FileSystemClient fsClient = _horizonClient.Fs;
+                        FileSystemClient fsClient = _virtualFileSystem.FsClient;
 
                         string source = DateTime.Now.ToFileTime().ToString()[10..];
                         string output = DateTime.Now.ToFileTime().ToString()[10..];
@@ -411,7 +409,7 @@ namespace Ryujinx.Ui.Widgets
                             rc = fs.ReadFile(out long _, sourceHandle, offset, buf);
                             if (rc.IsFailure()) return rc;
 
-                            rc = fs.WriteFile(destHandle, offset, buf, WriteOption.None);
+                            rc = fs.WriteFile(destHandle, offset, buf);
                             if (rc.IsFailure()) return rc;
                         }
                     }

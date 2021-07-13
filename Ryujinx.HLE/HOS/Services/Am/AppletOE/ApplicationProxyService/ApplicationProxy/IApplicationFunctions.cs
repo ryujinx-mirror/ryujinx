@@ -37,8 +37,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         private int _notificationStorageChannelEventHandle;
         private int _healthWarningDisappearedSystemEventHandle;
 
-        private HorizonClient _horizon;
-
         public IApplicationFunctions(Horizon system)
         {
             // TODO: Find where they are signaled.
@@ -46,8 +44,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             _friendInvitationStorageChannelEvent = new KEvent(system.KernelContext);
             _notificationStorageChannelEvent     = new KEvent(system.KernelContext);
             _healthWarningDisappearedSystemEvent = new KEvent(system.KernelContext);
-
-            _horizon = system.LibHacHorizonManager.AmClient;
         }
 
         [CommandHipc(1)]
@@ -107,16 +103,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // EnsureSaveData(nn::account::Uid) -> u64
         public ResultCode EnsureSaveData(ServiceCtx context)
         {
-            Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
-
-            // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Application.TitleId & ~0xFul);
+            Uid           userId        = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
+            ApplicationId applicationId = new ApplicationId(context.Process.TitleId);
 
             BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
 
             ref ApplicationControlProperty control = ref controlHolder.Value;
 
-            if (LibHac.Utilities.IsZeros(controlHolder.ByteSpan))
+            if (LibHac.Utilities.IsEmpty(controlHolder.ByteSpan))
             {
                 // If the current application doesn't have a loaded control property, create a dummy one
                 // and set the savedata sizes so a user savedata will be created.
@@ -130,8 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
-            HorizonClient hos = context.Device.System.LibHacHorizonManager.AmClient;
-            Result result = EnsureApplicationSaveData(hos.Fs, out long requiredSize, applicationId, ref control, ref userId);
+            Result result = EnsureApplicationSaveData(context.Device.FileSystem.FsClient, out long requiredSize, applicationId, ref control, ref userId);
 
             context.ResponseData.Write(requiredSize);
 
@@ -202,7 +195,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode ExtendSaveData(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
-            Uid          userId       = context.RequestData.ReadStruct<Uid>();
+            Uid          userId       = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
             ulong        saveDataSize = context.RequestData.ReadUInt64();
             ulong        journalSize  = context.RequestData.ReadUInt64();
 
@@ -224,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode GetSaveDataSize(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
-            Uid          userId       = context.RequestData.ReadStruct<Uid>();
+            Uid          userId       = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
 
             // NOTE: Service calls nn::fs::FindSaveDataWithFilter with SaveDataType = 1 hardcoded.
             //       Then it calls nn::fs::GetSaveDataAvailableSize and nn::fs::GetSaveDataJournalSize to get the sizes.
@@ -234,31 +227,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             context.ResponseData.Write(_defaultJournalSaveDataSize);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { saveDataType, userId });
-
-            return ResultCode.Success;
-        }
-
-        [CommandHipc(27)] // 5.0.0+
-        // CreateCacheStorage(u16 index, s64 save_size, s64 journal_size) -> (u32 storageTarget, u64 requiredSize)
-        public ResultCode CreateCacheStorage(ServiceCtx context)
-        {
-            ushort index = (ushort)context.RequestData.ReadUInt64();
-            long saveSize = context.RequestData.ReadInt64();
-            long journalSize = context.RequestData.ReadInt64();
-
-            // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Application.TitleId & ~0xFul);
-
-            BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
-
-            Result result = _horizon.Fs.CreateApplicationCacheStorage(out long requiredSize,
-                out CacheStorageTargetMedia storageTarget, applicationId, ref controlHolder.Value, index, saveSize,
-                journalSize);
-
-            if (result.IsFailure()) return (ResultCode)result.Value;
-
-            context.ResponseData.Write((ulong)storageTarget);
-            context.ResponseData.Write(requiredSize);
 
             return ResultCode.Success;
         }
@@ -549,7 +517,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_gpuErrorDetectedSystemEventHandle);
 
             // NOTE: This is used by "sdk" NSO during applet-application initialization.
-            //       A separate thread is setup where event-waiting is handled.
+            //       A seperate thread is setup where event-waiting is handled.
             //       When the Event is signaled, official sw will assert.
 
             return ResultCode.Success;

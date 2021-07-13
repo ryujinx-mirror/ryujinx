@@ -7,9 +7,9 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {
     class IDeliveryCacheDirectoryService : DisposableIpcService
     {
-        private LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService _base;
+        private LibHac.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService _base;
 
-        public IDeliveryCacheDirectoryService(LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService baseService)
+        public IDeliveryCacheDirectoryService(LibHac.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService baseService)
         {
             _base = baseService;
         }

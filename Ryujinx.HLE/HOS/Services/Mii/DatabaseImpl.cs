@@ -1,5 +1,4 @@
-﻿using LibHac;
-using Ryujinx.HLE.HOS.Services.Mii.Types;
+﻿using Ryujinx.HLE.HOS.Services.Mii.Types;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Mii
@@ -148,9 +147,9 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             return GetDefault(flag, ref count, elements);
         }
 
-        public ResultCode InitializeDatabase(HorizonClient horizonClient)
+        public ResultCode InitializeDatabase(Switch device)
         {
-            _miiDatabase.InitializeDatabase(horizonClient);
+            _miiDatabase.InitializeDatabase(device);
             _miiDatabase.LoadFromFile(out _isBroken);
 
             // Nintendo ignore any error code from before

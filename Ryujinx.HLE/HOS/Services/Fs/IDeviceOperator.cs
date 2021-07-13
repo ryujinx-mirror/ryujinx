@@ -3,11 +3,11 @@ using LibHac.FsSrv;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
-    class IDeviceOperator : DisposableIpcService
+    class IDeviceOperator : IpcService
     {
-        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDeviceOperator> _baseOperator;
+        private LibHac.FsSrv.IDeviceOperator _baseOperator;
 
-        public IDeviceOperator(ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDeviceOperator> baseOperator)
+        public IDeviceOperator(LibHac.FsSrv.IDeviceOperator baseOperator)
         {
             _baseOperator = baseOperator;
         }
@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // IsSdCardInserted() -> b8 is_inserted
         public ResultCode IsSdCardInserted(ServiceCtx context)
         {
-            Result result = _baseOperator.Target.IsSdCardInserted(out bool isInserted);
+            Result result = _baseOperator.IsSdCardInserted(out bool isInserted);
 
             context.ResponseData.Write(isInserted);
 
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // IsGameCardInserted() -> b8 is_inserted
         public ResultCode IsGameCardInserted(ServiceCtx context)
         {
-            Result result = _baseOperator.Target.IsGameCardInserted(out bool isInserted);
+            Result result = _baseOperator.IsGameCardInserted(out bool isInserted);
 
             context.ResponseData.Write(isInserted);
 
@@ -38,19 +38,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // GetGameCardHandle() -> u32 gamecard_handle
         public ResultCode GetGameCardHandle(ServiceCtx context)
         {
-            Result result = _baseOperator.Target.GetGameCardHandle(out GameCardHandle handle);
+            Result result = _baseOperator.GetGameCardHandle(out GameCardHandle handle);
 
             context.ResponseData.Write(handle.Value);
 
             return (ResultCode)result.Value;
-        }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            if (isDisposing)
-            {
-                _baseOperator?.Dispose();
-            }
         }
     }
 }

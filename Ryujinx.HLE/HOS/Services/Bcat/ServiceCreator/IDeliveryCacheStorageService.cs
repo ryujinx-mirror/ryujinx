@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {
     class IDeliveryCacheStorageService : DisposableIpcService
     {
-        private LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService _base;
+        private LibHac.Bcat.Detail.Ipc.IDeliveryCacheStorageService _base;
 
-        public IDeliveryCacheStorageService(ServiceCtx context, LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService baseService)
+        public IDeliveryCacheStorageService(ServiceCtx context, LibHac.Bcat.Detail.Ipc.IDeliveryCacheStorageService baseService)
         {
             _base = baseService;
         }
@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // CreateFileService() -> object<nn::bcat::detail::ipc::IDeliveryCacheFileService>
         public ResultCode CreateFileService(ServiceCtx context)
         {
-            Result result = _base.CreateFileService(out LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService service);
+            Result result = _base.CreateFileService(out LibHac.Bcat.Detail.Ipc.IDeliveryCacheFileService service);
 
             if (result.IsSuccess())
             {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // CreateDirectoryService() -> object<nn::bcat::detail::ipc::IDeliveryCacheDirectoryService>
         public ResultCode CreateDirectoryService(ServiceCtx context)
         {
-            Result result = _base.CreateDirectoryService(out LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService service);
+            Result result = _base.CreateDirectoryService(out LibHac.Bcat.Detail.Ipc.IDeliveryCacheDirectoryService service);
 
             if (result.IsSuccess())
             {

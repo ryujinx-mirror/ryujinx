@@ -9,14 +9,19 @@ namespace Ryujinx.HLE.HOS.Services.Arp
 {
     class LibHacIReader : LibHac.Arp.Impl.IReader
     {
-        public ApplicationId ApplicationId { get; set; }
+        private Horizon System { get; }
+
+        public LibHacIReader(Horizon system)
+        {
+            System = system;
+        }
 
         public Result GetApplicationLaunchProperty(out LibHac.Arp.ApplicationLaunchProperty launchProperty, ulong processId)
         {
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty
             {
                 BaseStorageId = StorageId.BuiltInUser,
-                ApplicationId = ApplicationId
+                ApplicationId = new ApplicationId(System.Device.Application.TitleId)
             };
 
             return Result.Success;
@@ -41,28 +46,6 @@ namespace Ryujinx.HLE.HOS.Services.Arp
         public Result GetApplicationControlPropertyWithApplicationId(out ApplicationControlProperty controlProperty, ApplicationId applicationId)
         {
             throw new NotImplementedException();
-        }
-
-        public Result GetServiceObject(out object serviceObject)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    internal class LibHacArpServiceObject : LibHac.Sm.IServiceObject
-    {
-        private LibHacIReader _serviceObject;
-
-        public LibHacArpServiceObject(LibHacIReader serviceObject)
-        {
-            _serviceObject = serviceObject;
-        }
-
-        public Result GetServiceObject(out object serviceObject)
-        {
-            serviceObject = _serviceObject;
-
-            return Result.Success;
         }
     }
 }

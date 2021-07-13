@@ -3,11 +3,11 @@ using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
-    class IMultiCommitManager : DisposableIpcService // 6.0.0+
+    class IMultiCommitManager : IpcService // 6.0.0+
     {
-        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IMultiCommitManager> _baseCommitManager;
+        private LibHac.FsSrv.IMultiCommitManager _baseCommitManager;
 
-        public IMultiCommitManager(ReferenceCountedDisposable<LibHac.FsSrv.Sf.IMultiCommitManager> baseCommitManager)
+        public IMultiCommitManager(LibHac.FsSrv.IMultiCommitManager baseCommitManager)
         {
             _baseCommitManager = baseCommitManager;
         }
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         {
             IFileSystem fileSystem = GetObject<IFileSystem>(context, 0);
 
-            Result result = _baseCommitManager.Target.Add(fileSystem.GetBaseFileSystem());
+            Result result = _baseCommitManager.Add(fileSystem.GetBaseFileSystem());
 
             return (ResultCode)result.Value;
         }
@@ -27,17 +27,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {
-            Result result = _baseCommitManager.Target.Commit();
+            Result result = _baseCommitManager.Commit();
 
             return (ResultCode)result.Value;
-        }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            if (isDisposing)
-            {
-                _baseCommitManager?.Dispose();
-            }
         }
     }
 }

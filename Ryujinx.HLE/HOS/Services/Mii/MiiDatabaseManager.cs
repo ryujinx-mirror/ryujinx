@@ -1,9 +1,7 @@
 ﻿using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.Fs.Fsa;
 using LibHac.Fs.Shim;
-using LibHac.Ncm;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using System.Runtime.CompilerServices;
 
@@ -16,6 +14,8 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
         private const ulong  DatabaseTestSaveDataId = 0x8000000000000031;
         private const ulong  DatabaseSaveDataId     = 0x8000000000000030;
+        private const ulong  NsTitleId              = 0x010000000000001F;
+        private const ulong  SdbTitleId             = 0x0100000000000039;
 
         private static U8String DatabasePath = new U8String("mii:/MiiDatabase.dat");
         private static U8String MountName    = new U8String("mii");
@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         private NintendoFigurineDatabase _database;
         private bool                     _isDirty;
 
-        private HorizonClient _horizonClient;
+        private FileSystemClient _filesystemClient;
 
         protected ulong UpdateCounter { get; private set; }
 
@@ -94,62 +94,74 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             return virtualIndex;
         }
 
-        public void InitializeDatabase(HorizonClient horizonClient)
+        public void InitializeDatabase(Switch device)
         {
-            _horizonClient = horizonClient;
+            _filesystemClient = device.FileSystem.FsClient;
 
             // Ensure we have valid data in the database
             _database.Format();
+
+            // TODO: Unmount is currently not implemented properly at dispose, implement that and decrement MountCounter.
+            MountCounter = 0;
 
             MountSave();
         }
 
         private Result MountSave()
         {
-            if (MountCounter != 0)
+            Result result = Result.Success;
+
+            if (MountCounter == 0)
             {
-                MountCounter++;
-                return Result.Success;
-            }
-
-            ulong saveDataId = IsTestModeEnabled ? DatabaseTestSaveDataId : DatabaseSaveDataId;
-
-            Result result = _horizonClient.Fs.MountSystemSaveData(MountName, SaveDataSpaceId.System, saveDataId);
-
-            if (result.IsFailure())
-            {
-                if (!ResultFs.TargetNotFound.Includes(result))
-                    return result;
+                ulong targetSaveDataId;
+                ulong targetTitleId;
 
                 if (IsTestModeEnabled)
                 {
-                    result = _horizonClient.Fs.CreateSystemSaveData(saveDataId, 0x10000, 0x10000,
-                        SaveDataFlags.KeepAfterResettingSystemSaveDataWithoutUserSaveData);
-                    if (result.IsFailure()) return result;
+                    targetSaveDataId = DatabaseTestSaveDataId;
+                    targetTitleId    = SdbTitleId;
                 }
                 else
                 {
-                    result = _horizonClient.Fs.CreateSystemSaveData(saveDataId, SystemProgramId.Ns.Value, 0x10000,
-                        0x10000, SaveDataFlags.KeepAfterResettingSystemSaveDataWithoutUserSaveData);
-                    if (result.IsFailure()) return result;
+                    targetSaveDataId = DatabaseSaveDataId;
+
+                    // Nintendo use NS TitleID when creating the production save even on sdb, let's follow that behaviour.
+                    targetTitleId = NsTitleId;
                 }
 
-                result = _horizonClient.Fs.MountSystemSaveData(MountName, SaveDataSpaceId.System, saveDataId);
-                if (result.IsFailure()) return result;
+                U8Span mountName = new U8Span(MountName);
+
+                result = _filesystemClient.MountSystemSaveData(mountName, SaveDataSpaceId.System, targetSaveDataId);
+
+                if (result.IsFailure())
+                {
+                    if (ResultFs.TargetNotFound.Includes(result))
+                    {
+                        // TODO: We're currently always specifying the owner ID because FS doesn't have a way of
+                        // knowing which process called it
+                        result = _filesystemClient.CreateSystemSaveData(targetSaveDataId, targetTitleId, 0x10000,
+                            0x10000, SaveDataFlags.KeepAfterResettingSystemSaveDataWithoutUserSaveData);
+                        if (result.IsFailure()) return result;
+
+                        result = _filesystemClient.MountSystemSaveData(mountName, SaveDataSpaceId.System, targetSaveDataId);
+                        if (result.IsFailure()) return result;
+                    }
+                }
+
+                if (result == Result.Success)
+                {
+                    MountCounter++;
+                }
             }
 
-            if (result == Result.Success)
-            {
-                MountCounter++;
-            }
             return result;
         }
 
         public ResultCode DeleteFile()
         {
-            ResultCode result = (ResultCode)_horizonClient.Fs.DeleteFile(DatabasePath).Value;
+            ResultCode result = (ResultCode)_filesystemClient.DeleteFile(DatabasePath).Value;
 
-            _horizonClient.Fs.Commit(MountName);
+            _filesystemClient.Commit(MountName);
 
             return result;
         }
@@ -167,17 +179,17 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
             ResetDatabase();
 
-            Result result = _horizonClient.Fs.OpenFile(out FileHandle handle, DatabasePath, OpenMode.Read);
+            Result result = _filesystemClient.OpenFile(out FileHandle handle, DatabasePath, OpenMode.Read);
 
             if (result.IsSuccess())
             {
-                result = _horizonClient.Fs.GetFileSize(out long fileSize, handle);
+                result = _filesystemClient.GetFileSize(out long fileSize, handle);
 
                 if (result.IsSuccess())
                 {
                     if (fileSize == Unsafe.SizeOf<NintendoFigurineDatabase>())
                     {
-                        result = _horizonClient.Fs.ReadFile(handle, 0, _database.AsSpan());
+                        result = _filesystemClient.ReadFile(handle, 0, _database.AsSpan());
 
                         if (result.IsSuccess())
                         {
@@ -199,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                     }
                 }
 
-                _horizonClient.Fs.CloseFile(handle);
+                _filesystemClient.CloseFile(handle);
 
                 return (ResultCode)result.Value;
             }
@@ -213,32 +225,32 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
         private Result ForceSaveDatabase()
         {
-            Result result = _horizonClient.Fs.CreateFile(DatabasePath, Unsafe.SizeOf<NintendoFigurineDatabase>());
+            Result result = _filesystemClient.CreateFile(DatabasePath, Unsafe.SizeOf<NintendoFigurineDatabase>());
 
             if (result.IsSuccess() || ResultFs.PathAlreadyExists.Includes(result))
             {
-                result = _horizonClient.Fs.OpenFile(out FileHandle handle, DatabasePath, OpenMode.Write);
+                result = _filesystemClient.OpenFile(out FileHandle handle, DatabasePath, OpenMode.Write);
 
                 if (result.IsSuccess())
                 {
-                    result = _horizonClient.Fs.GetFileSize(out long fileSize, handle);
+                    result = _filesystemClient.GetFileSize(out long fileSize, handle);
 
                     if (result.IsSuccess())
                     {
                         // If the size doesn't match, recreate the file
                         if (fileSize != Unsafe.SizeOf<NintendoFigurineDatabase>())
                         {
-                            _horizonClient.Fs.CloseFile(handle);
+                            _filesystemClient.CloseFile(handle);
 
-                            result = _horizonClient.Fs.DeleteFile(DatabasePath);
+                            result = _filesystemClient.DeleteFile(DatabasePath);
 
                             if (result.IsSuccess())
                             {
-                                result = _horizonClient.Fs.CreateFile(DatabasePath, Unsafe.SizeOf<NintendoFigurineDatabase>());
+                                result = _filesystemClient.CreateFile(DatabasePath, Unsafe.SizeOf<NintendoFigurineDatabase>());
 
                                 if (result.IsSuccess())
                                 {
-                                    result = _horizonClient.Fs.OpenFile(out handle, DatabasePath, OpenMode.Write);
+                                    result = _filesystemClient.OpenFile(out handle, DatabasePath, OpenMode.Write);
                                 }
                             }
 
@@ -248,10 +260,10 @@ namespace Ryujinx.HLE.HOS.Services.Mii
                             }
                         }
 
-                        result = _horizonClient.Fs.WriteFile(handle, 0, _database.AsReadOnlySpan(), WriteOption.Flush);
+                        result = _filesystemClient.WriteFile(handle, 0, _database.AsReadOnlySpan(), WriteOption.Flush);
                     }
 
-                    _horizonClient.Fs.CloseFile(handle);
+                    _filesystemClient.CloseFile(handle);
                 }
             }
 
@@ -259,7 +271,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             {
                 _isDirty = false;
 
-                result = _horizonClient.Fs.Commit(MountName);
+                result = _filesystemClient.Commit(MountName);
             }
 
             return result;
