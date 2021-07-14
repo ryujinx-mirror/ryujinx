@@ -816,6 +816,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (match)
                 {
+                    _cache.Lift(texture);
                     return texture;
                 }
             }
