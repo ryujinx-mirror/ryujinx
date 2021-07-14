@@ -314,7 +314,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         public ResultCode Initialize(ServiceCtx context)
         {
             long transferMemSize   = context.RequestData.ReadInt64();
-            int  transferMemHandle = context.Request.HandleDesc.ToCopy[0];
+            int  transferMemHandle = context.Request.HandleDesc.ToCopy[1];
 
             // TODO: When transfer memory will be implemented, this could be removed.
             _transferMemInitialized = true;
@@ -327,7 +327,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             context.ResponseData.Write((uint)NvResult.Success);
 
-            // Close transfer memory immediately as we don't use it.
+            // Close the process and transfer memory handles immediately as we don't use them.
+            context.Device.System.KernelContext.Syscall.CloseHandle(clientHandle);
             context.Device.System.KernelContext.Syscall.CloseHandle(transferMemHandle);
 
             return ResultCode.Success;
