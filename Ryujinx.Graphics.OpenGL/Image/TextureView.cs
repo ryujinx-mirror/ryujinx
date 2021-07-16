@@ -121,24 +121,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public byte[] GetData()
         {
-            int size = 0;
-
-            for (int level = 0; level < Info.Levels; level++)
-            {
-                size += Info.GetMipSize(level);
-            }
-
-            byte[] data = new byte[size];
-
-            unsafe
-            {
-                fixed (byte* ptr = data)
-                {
-                    WriteTo((IntPtr)ptr);
-                }
-            }
-
-            return data;
+            return _renderer.PersistentBuffers.Default.GetTextureData(this);
         }
 
         public void WriteToPbo(int offset, bool forceBgra)

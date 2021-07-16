@@ -876,9 +876,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This is not cheap, avoid doing that unless strictly needed.
         /// </remarks>
         /// <returns>Host texture data</returns>
-        private Span<byte> GetTextureDataFromGpu(bool blacklist, ITexture texture = null)
+        private ReadOnlySpan<byte> GetTextureDataFromGpu(bool blacklist, ITexture texture = null)
         {
-            Span<byte> data;
+            ReadOnlySpan<byte> data;
 
             if (texture != null)
             {
