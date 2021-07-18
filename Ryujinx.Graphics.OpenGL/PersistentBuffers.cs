@@ -63,15 +63,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.DeleteSync(sync);
         }
 
-        public byte[] GetTextureData(TextureView view)
+        public byte[] GetTextureData(TextureView view, int size)
         {
-            int size = 0;
-
-            for (int level = 0; level < view.Info.Levels; level++)
-            {
-                size += view.Info.GetMipSize(level);
-            }
-
             EnsureBuffer(size);
 
             GL.BindBuffer(BufferTarget.PixelPackBuffer, _copyBufferHandle);

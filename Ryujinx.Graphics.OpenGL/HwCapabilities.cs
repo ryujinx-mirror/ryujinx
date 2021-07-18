@@ -20,7 +20,8 @@ namespace Ryujinx.Graphics.OpenGL
         public enum GpuVendor
         {
             Unknown,
-            Amd,
+            AmdWindows,
+            AmdUnix,
             IntelWindows,
             IntelUnix,
             Nvidia
@@ -28,9 +29,14 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static readonly Lazy<GpuVendor> _gpuVendor = new Lazy<GpuVendor>(GetGpuVendor);
 
+        private static bool _isAMD   => _gpuVendor.Value == GpuVendor.AmdWindows || _gpuVendor.Value == GpuVendor.AmdUnix;
+        private static bool _isIntel => _gpuVendor.Value == GpuVendor.IntelWindows || _gpuVendor.Value == GpuVendor.IntelUnix;
+
         public static GpuVendor Vendor => _gpuVendor.Value;
 
         private static Lazy<float> _maxSupportedAnisotropy = new Lazy<float>(GL.GetFloat((GetPName)All.MaxTextureMaxAnisotropy));
+
+        public static bool UsePersistentBufferForFlush       => _gpuVendor.Value == GpuVendor.AmdWindows || _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static bool SupportsAstcCompression           => _supportsAstcCompression.Value;
         public static bool SupportsImageLoadFormatted        => _supportsImageLoadFormatted.Value;
@@ -41,9 +47,9 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsTextureShadowLod          => _supportsTextureShadowLod.Value;
         public static bool SupportsViewportSwizzle           => _supportsViewportSwizzle.Value;
 
-        public static bool SupportsMismatchingViewFormat    => _gpuVendor.Value != GpuVendor.Amd && _gpuVendor.Value != GpuVendor.IntelWindows;
+        public static bool SupportsMismatchingViewFormat    => _gpuVendor.Value != GpuVendor.AmdWindows && _gpuVendor.Value != GpuVendor.IntelWindows;
         public static bool SupportsNonConstantTextureOffset => _gpuVendor.Value == GpuVendor.Nvidia;
-        public static bool RequiresSyncFlush                => _gpuVendor.Value == GpuVendor.Amd || _gpuVendor.Value == GpuVendor.IntelWindows || _gpuVendor.Value == GpuVendor.IntelUnix;
+        public static bool RequiresSyncFlush                => _gpuVendor.Value == GpuVendor.AmdWindows || _isIntel;
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
@@ -86,7 +92,11 @@ namespace Ryujinx.Graphics.OpenGL
             }
             else if (vendor == "ati technologies inc." || vendor == "advanced micro devices, inc.")
             {
-                return GpuVendor.Amd;
+                return GpuVendor.AmdWindows;
+            }
+            else if (vendor == "amd" || vendor == "x.org")
+            {
+                return GpuVendor.AmdUnix;
             }
             else
             {
