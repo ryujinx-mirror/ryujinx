@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Shader;
+﻿using CommandLine;
+using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.IO;
@@ -23,28 +24,70 @@ namespace Ryujinx.ShaderTools
             }
         }
 
-        static void Main(string[] args)
+        private class Options
         {
-            if (args.Length == 1 || args.Length == 2)
+            [Option("compute", Required = false, Default = false, HelpText = "Indicate that the shader is a compute shader.")]
+            public bool Compute { get; set; }
+
+            [Option("target-language", Required = false, Default = TargetLanguage.Glsl, HelpText = "Indicate the target shader language to use.")]
+            public TargetLanguage TargetLanguage { get; set; }
+
+            [Option("target-api", Required = false, Default = TargetApi.OpenGL, HelpText = "Indicate the target graphics api to use.")]
+            public TargetApi TargetApi { get; set; }
+
+            [Value(0, MetaName = "input", HelpText = "Binary Maxwell shader input path.", Required = true)]
+            public string InputPath { get; set; }
+
+            [Value(1, MetaName = "output", HelpText = "Decompiled shader output path.", Required = false)]
+            public string OutputPath { get; set; }
+        }
+
+        static void HandleArguments(Options options)
+        {
+            TranslationFlags flags = TranslationFlags.DebugMode;
+
+            if (options.Compute)
             {
-                TranslationFlags flags = TranslationFlags.DebugMode;
+                flags |= TranslationFlags.Compute;
+            }
 
-                if (args.Length == 2 && args[0] == "--compute")
+            byte[] data = File.ReadAllBytes(options.InputPath);
+
+            TranslationOptions translationOptions = new TranslationOptions(options.TargetLanguage, options.TargetApi, flags);
+
+            ShaderProgram program = Translator.CreateContext(0, new GpuAccessor(data), translationOptions).Translate(out _);
+
+            if (options.OutputPath == null)
+            {
+                if (program.BinaryCode != null)
                 {
-                    flags |= TranslationFlags.Compute;
+                    using Stream outputStream = Console.OpenStandardOutput();
+
+                    outputStream.Write(program.BinaryCode);
                 }
-
-                byte[] data = File.ReadAllBytes(args[^1]);
-
-                TranslationOptions options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
-                string code = Translator.CreateContext(0, new GpuAccessor(data), options).Translate(out _).Code;
-
-                Console.WriteLine(code);
+                else
+                {
+                    Console.WriteLine(program.Code);
+                }
             }
             else
             {
-                Console.WriteLine("Usage: Ryujinx.ShaderTools [--compute] shader.bin");
+                if (program.BinaryCode != null)
+                {
+                    File.WriteAllBytes(options.OutputPath, program.BinaryCode);
+                }
+                else
+                {
+                    File.WriteAllText(options.OutputPath, program.Code);
+                }
             }
+        }
+
+        static void Main(string[] args)
+        {
+            Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(options => HandleArguments(options))
+            .WithNotParsed(errors => errors.Output());
         }
     }
 }

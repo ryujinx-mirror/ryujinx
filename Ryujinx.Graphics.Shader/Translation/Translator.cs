@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation.Optimizations;
+using System;
 using System.Collections.Generic;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -87,7 +88,16 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(funcs, config);
 
-            string glslCode = GlslGenerator.Generate(sInfo, config);
+            ShaderProgram program;
+
+            switch (config.Options.TargetLanguage)
+            {
+                case TargetLanguage.Glsl:
+                    program = new ShaderProgram(config.Stage, GlslGenerator.Generate(sInfo, config));
+                    break;
+                default:
+                    throw new NotImplementedException(config.Options.TargetLanguage.ToString());
+            }
 
             shaderProgramInfo = new ShaderProgramInfo(
                 config.GetConstantBufferDescriptors(),
@@ -97,7 +107,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 config.UsedFeatures.HasFlag(FeatureFlags.InstanceId),
                 config.ClipDistancesWritten);
 
-            return new ShaderProgram(config.Stage, glslCode);
+            return program;
         }
 
         private static Block[][] DecodeShader(

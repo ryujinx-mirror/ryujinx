@@ -3,6 +3,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     public enum TargetLanguage
     {
         Glsl,
-        Spirv
+        Spirv,
+        Arb
     }
 }
