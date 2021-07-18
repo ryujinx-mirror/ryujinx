@@ -73,21 +73,19 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         {
             Span<float> outputBuffer = context.GetBuffer(OutputBufferIndex);
 
-            DataSourceHelper.WaveBufferInformation info = new DataSourceHelper.WaveBufferInformation()
+            DataSourceHelper.WaveBufferInformation info = new DataSourceHelper.WaveBufferInformation
             {
-                State = State,
                 SourceSampleRate = SampleRate,
                 SampleFormat = SampleFormat.PcmInt16,
                 Pitch = Pitch,
                 DecodingBehaviour = DecodingBehaviour,
-                WaveBuffers = WaveBuffers,
                 ExtraParameter = 0,
                 ExtraParameterSize = 0,
                 ChannelIndex = (int)ChannelIndex,
                 ChannelCount = (int)ChannelCount,
             };
 
-            DataSourceHelper.ProcessWaveBuffers(context.MemoryManager, outputBuffer, info, context.SampleRate, (int)context.SampleCount);
+            DataSourceHelper.ProcessWaveBuffers(context.MemoryManager, outputBuffer, ref info, WaveBuffers, ref State.Span[0], context.SampleRate, (int)context.SampleCount);
         }
     }
 }

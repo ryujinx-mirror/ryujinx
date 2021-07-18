@@ -17,6 +17,7 @@
 
 using Ryujinx.Audio.Renderer.Common;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -63,6 +64,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             State = state;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float ProcessMixRampGrouped(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, float volume0, float volume1, int sampleCount)
         {
             float ramp = (volume1 - volume0) / sampleCount;

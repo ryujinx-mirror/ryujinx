@@ -61,7 +61,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             UpsamplerInfo = info;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Span<float> GetBuffer(int index, int sampleCount)
         {
             return UpsamplerInfo.OutputBuffer.Span.Slice(index * sampleCount, sampleCount);

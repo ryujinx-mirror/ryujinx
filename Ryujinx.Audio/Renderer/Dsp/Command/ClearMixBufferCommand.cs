@@ -35,7 +35,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public void Process(CommandList context)
         {
-            context.Buffers.Span.Fill(0);
+            context.ClearBuffers();
         }
     }
 }

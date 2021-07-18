@@ -32,6 +32,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Effect
         float TapUnsafe(uint sampleIndex, int offset);
         float Tap(uint sampleIndex);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Tap(Span<float> workBuffer, int baseIndex, int sampleIndex, int delaySampleCount)
         {
             int targetIndex = baseIndex - sampleIndex;

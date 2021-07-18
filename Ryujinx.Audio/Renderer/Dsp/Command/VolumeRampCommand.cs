@@ -16,6 +16,7 @@
 //
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -47,6 +48,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             Volume1 = volume1;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessVolumeRamp(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, int sampleCount)
         {
             float ramp = (Volume1 - Volume0) / sampleCount;

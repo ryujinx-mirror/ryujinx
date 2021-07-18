@@ -35,7 +35,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public float[] Coefficients { get; }
 
-        public DownMixSurroundToStereoCommand(uint bufferOffset, Span<byte> inputBufferOffset, Span<byte> outputBufferOffset, ReadOnlySpan<float> downMixParameter, int nodeId)
+        public DownMixSurroundToStereoCommand(uint bufferOffset, Span<byte> inputBufferOffset, Span<byte> outputBufferOffset, float[] downMixParameter, int nodeId)
         {
             Enabled = true;
             NodeId = nodeId;
@@ -49,7 +49,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 OutputBufferIndices[i] = (ushort)(bufferOffset + outputBufferOffset[i]);
             }
 
-            Coefficients = downMixParameter.ToArray();
+            Coefficients = downMixParameter;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,10 +69,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             Span<float> stereoLeft = context.GetBuffer(OutputBufferIndices[0]);
             Span<float> stereoRight = context.GetBuffer(OutputBufferIndices[1]);
-            Span<float> unused2 = context.GetBuffer(OutputBufferIndices[2]);
-            Span<float> unused3 = context.GetBuffer(OutputBufferIndices[3]);
-            Span<float> unused4 = context.GetBuffer(OutputBufferIndices[4]);
-            Span<float> unused5 = context.GetBuffer(OutputBufferIndices[5]);
 
             for (int i = 0; i < context.SampleCount; i++)
             {
@@ -80,10 +76,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 stereoRight[i] = DownMixSurroundToStereo(Coefficients, backRight[i], lowFrequency[i], frontCenter[i], frontRight[i]);
             }
 
-            unused2.Fill(0);
-            unused3.Fill(0);
-            unused4.Fill(0);
-            unused5.Fill(0);
+            context.ClearBuffer(OutputBufferIndices[2]);
+            context.ClearBuffer(OutputBufferIndices[3]);
+            context.ClearBuffer(OutputBufferIndices[4]);
+            context.ClearBuffer(OutputBufferIndices[5]);
         }
     }
 }

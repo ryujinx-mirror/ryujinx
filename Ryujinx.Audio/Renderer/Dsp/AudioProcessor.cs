@@ -218,6 +218,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
                         if (_sessionCommandList[i] != null)
                         {
                             _sessionCommandList[i].CommandList.Process(OutputDevices[i]);
+                            _sessionCommandList[i].CommandList.Dispose();
                             _sessionCommandList[i] = null;
                         }
                     }

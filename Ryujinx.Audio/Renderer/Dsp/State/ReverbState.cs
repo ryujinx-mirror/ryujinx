@@ -94,10 +94,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             0.0f
         };
 
-        public IDelayLine[] FdnDelayLines { get; }
+        public DelayLine[] FdnDelayLines { get; }
         public DecayDelay[] DecayDelays { get; }
-        public IDelayLine PreDelayLine { get; }
-        public IDelayLine BackLeftDelayLine { get; }
+        public DelayLine PreDelayLine { get; }
+        public DelayLine BackLeftDelayLine { get; }
         public uint[] EarlyDelayTime { get; }
         public float[] EarlyGain { get; }
         public uint PreDelayLineDelayTime { get; private set; }
@@ -122,7 +122,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
         public ReverbState(ref ReverbParameter parameter, ulong workBuffer, bool isLongSizePreDelaySupported)
         {
-            FdnDelayLines = new IDelayLine[4];
+            FdnDelayLines = new DelayLine[4];
             DecayDelays = new DecayDelay[4];
             EarlyDelayTime = new uint[EarlyModeCount];
             EarlyGain = new float[EarlyModeCount];

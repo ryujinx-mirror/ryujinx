@@ -43,10 +43,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public void Process(CommandList context)
         {
-            ReadOnlySpan<float> inputBuffer = context.GetBuffer(InputBufferIndex);
-            Span<float> outputBuffer = context.GetBuffer(OutputBufferIndex);
-
-            inputBuffer.CopyTo(outputBuffer);
+            context.CopyBuffer(OutputBufferIndex, InputBufferIndex);
         }
     }
 }

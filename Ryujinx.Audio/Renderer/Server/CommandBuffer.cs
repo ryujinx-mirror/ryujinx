@@ -478,7 +478,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <param name="outputBufferOffset">The output buffer offset.</param>
         /// <param name="downMixParameter">The downmixer parameters to use.</param>
         /// <param name="nodeId">The node id associated to this command.</param>
-        public void GenerateDownMixSurroundToStereo(uint bufferOffset, Span<byte> inputBufferOffset, Span<byte> outputBufferOffset, ReadOnlySpan<float> downMixParameter, int nodeId)
+        public void GenerateDownMixSurroundToStereo(uint bufferOffset, Span<byte> inputBufferOffset, Span<byte> outputBufferOffset, float[] downMixParameter, int nodeId)
         {
             DownMixSurroundToStereoCommand command = new DownMixSurroundToStereoCommand(bufferOffset, inputBufferOffset, outputBufferOffset, downMixParameter, nodeId);
 

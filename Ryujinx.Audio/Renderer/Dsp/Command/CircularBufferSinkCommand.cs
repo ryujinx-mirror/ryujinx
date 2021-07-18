@@ -69,20 +69,23 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             {
                 for (int i = 0; i < InputCount; i++)
                 {
-                    ReadOnlySpan<float> inputBuffer = context.GetBuffer(Input[i]);
-
-                    ulong targetOffset = CircularBuffer + currentOffset;
-
-                    for (int y = 0; y < context.SampleCount; y++)
+                    unsafe
                     {
-                        context.MemoryManager.Write(targetOffset + (ulong)y * targetChannelCount, PcmHelper.Saturate(inputBuffer[y]));
-                    }
+                        float* inputBuffer = (float*)context.GetBufferPointer(Input[i]);
 
-                    currentOffset += context.SampleCount * targetChannelCount;
+                        ulong targetOffset = CircularBuffer + currentOffset;
 
-                    if (currentOffset >= CircularBufferSize)
-                    {
-                        currentOffset = 0;
+                        for (int y = 0; y < context.SampleCount; y++)
+                        {
+                            context.MemoryManager.Write(targetOffset + (ulong)y * targetChannelCount, PcmHelper.Saturate(inputBuffer[y]));
+                        }
+
+                        currentOffset += context.SampleCount * targetChannelCount;
+
+                        if (currentOffset >= CircularBufferSize)
+                        {
+                            currentOffset = 0;
+                        }
                     }
                 }
             }

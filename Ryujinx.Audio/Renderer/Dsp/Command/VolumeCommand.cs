@@ -50,6 +50,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             Volume = volume;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessVolumeAvx(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
         {
             Vector256<float> volumeVec = Vector256.Create(Volume);
@@ -70,6 +71,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessVolumeSse41(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
         {
             Vector128<float> volumeVec = Vector128.Create(Volume);
@@ -90,6 +92,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessVolumeAdvSimd(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
         {
             Vector128<float> volumeVec = Vector128.Create(Volume);
@@ -110,6 +113,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessVolume(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer)
         {
             if (Avx.IsSupported)

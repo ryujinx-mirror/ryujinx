@@ -18,6 +18,7 @@
 using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -49,7 +50,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             NodeId = nodeId;
         }
 
-        private void ProcessBiquadFilter(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessBiquadFilter(ref BiquadFilterState state, Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, uint sampleCount)
         {
             const int fixedPointPrecisionForParameter = 14;
 
@@ -59,8 +61,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             float b1 = FixedPointHelper.ToFloat(Parameter.Denominator[0], fixedPointPrecisionForParameter);
             float b2 = FixedPointHelper.ToFloat(Parameter.Denominator[1], fixedPointPrecisionForParameter);
-
-            ref BiquadFilterState state = ref BiquadFilterState.Span[0];
 
             for (int i = 0; i < sampleCount; i++)
             {
@@ -76,14 +76,17 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public void Process(CommandList context)
         {
-            Span<float> outputBuffer = context.GetBuffer(InputBufferIndex);
+            ref BiquadFilterState state = ref BiquadFilterState.Span[0];
+
+            ReadOnlySpan<float> inputBuffer = context.GetBuffer(InputBufferIndex);
+            Span<float> outputBuffer = context.GetBuffer(OutputBufferIndex);
 
             if (NeedInitialization)
             {
-                BiquadFilterState.Span[0] = new BiquadFilterState();
+                state = new BiquadFilterState();
             }
 
-            ProcessBiquadFilter(outputBuffer, outputBuffer, context.SampleCount);
+            ProcessBiquadFilter(ref state, outputBuffer, inputBuffer, context.SampleCount);
         }
     }
 }

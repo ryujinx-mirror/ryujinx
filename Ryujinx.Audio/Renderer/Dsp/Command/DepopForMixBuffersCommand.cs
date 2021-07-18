@@ -16,6 +16,8 @@
 //
 
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -37,8 +39,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public Memory<float> DepopBuffer { get; }
 
-        private const int FixedPointPrecisionForDecay = 15;
-
         public DepopForMixBuffersCommand(Memory<float> depopBuffer, uint bufferOffset, uint mixBufferCount, int nodeId, uint sampleRate)
         {
             Enabled = true;
@@ -57,10 +57,13 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
         }
 
-        private float ProcessDepopMix(Span<float> buffer, float depopValue, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe float ProcessDepopMix(float* buffer, float depopValue, uint sampleCount)
         {
-            if (depopValue <= 0)
+            if (depopValue < 0)
             {
+                depopValue = -depopValue;
+
                 for (int i = 0; i < sampleCount; i++)
                 {
                     depopValue = FloatingPointHelper.MultiplyRoundDown(Decay, depopValue);
@@ -81,21 +84,25 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 return depopValue;
             }
-
         }
 
         public void Process(CommandList context)
         {
+            Span<float> depopBuffer = DepopBuffer.Span;
+
             uint bufferCount = Math.Min(MixBufferOffset + MixBufferCount, context.BufferCount);
 
             for (int i = (int)MixBufferOffset; i < bufferCount; i++)
             {
-                float depopValue = DepopBuffer.Span[i];
+                float depopValue = depopBuffer[i];
                 if (depopValue != 0)
                 {
-                    Span<float> buffer = context.GetBuffer(i);
+                    unsafe
+                    {
+                        float* buffer = (float*)context.GetBufferPointer(i);
 
-                    DepopBuffer.Span[i] = ProcessDepopMix(buffer, depopValue, context.SampleCount);
+                        depopBuffer[i] = ProcessDepopMix(buffer, depopValue, context.SampleCount);
+                    }
                 }
             }
         }

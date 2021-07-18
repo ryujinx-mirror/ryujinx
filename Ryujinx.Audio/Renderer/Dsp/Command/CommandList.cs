@@ -21,11 +21,14 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
-    public class CommandList
+    public class CommandList : IDisposable
     {
         public ulong StartTime { get; private set; }
         public ulong EndTime { get; private set; }
@@ -41,6 +44,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public IHardwareDevice OutputDevice { get; private set; }
 
+        private readonly int _sampleCount;
+        private readonly int _buffersEntryCount;
+        private readonly MemoryHandle _buffersMemoryHandle;
+
         public CommandList(AudioRenderSystem renderSystem) : this(renderSystem.MemoryManager,
                                                                   renderSystem.GetMixBuffer(),
                                                                   renderSystem.GetSampleCount(),
@@ -53,11 +60,15 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         public CommandList(IVirtualMemoryManager memoryManager, Memory<float> mixBuffer, uint sampleCount, uint sampleRate, uint mixBufferCount, uint voiceChannelCountMax)
         {
             SampleCount = sampleCount;
+            _sampleCount = (int)SampleCount;
             SampleRate = sampleRate;
             BufferCount = mixBufferCount + voiceChannelCountMax;
             Buffers = mixBuffer;
             Commands = new List<ICommand>();
             MemoryManager = memoryManager;
+
+            _buffersEntryCount = Buffers.Length;
+            _buffersMemoryHandle = Buffers.Pin();
         }
 
         public void AddCommand(ICommand command)
@@ -70,14 +81,47 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             throw new NotImplementedException();
         }
 
-        public Memory<float> GetBufferMemory(int index)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe IntPtr GetBufferPointer(int index)
         {
-            return Buffers.Slice(index * (int)SampleCount, (int)SampleCount);
+            if (index >= 0 && index < _buffersEntryCount)
+            {
+                return (IntPtr)((float*)_buffersMemoryHandle.Pointer + index * _sampleCount);
+            }
+
+            throw new ArgumentOutOfRangeException();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe void ClearBuffer(int index)
+        {
+            Unsafe.InitBlock((void*)GetBufferPointer(index), 0, SampleCount);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe void ClearBuffers()
+        {
+            Unsafe.InitBlock(_buffersMemoryHandle.Pointer, 0, (uint)_buffersEntryCount * sizeof(float));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe void CopyBuffer(int outputBufferIndex, int inputBufferIndex)
+        {
+            Unsafe.CopyBlock((void*)GetBufferPointer(outputBufferIndex), (void*)GetBufferPointer(inputBufferIndex), SampleCount);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<float> GetBuffer(int index)
         {
-            return Buffers.Span.Slice(index * (int)SampleCount, (int)SampleCount);
+            if (index < 0 || index >= _buffersEntryCount)
+            {
+                return Span<float>.Empty;
+            }
+
+            unsafe
+            {
+                return new Span<float>((float*)_buffersMemoryHandle.Pointer + index * _sampleCount, _sampleCount);
+            }
         }
 
         public ulong GetTimeElapsedSinceDspStartedProcessing()
@@ -119,6 +163,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
 
             EndTime = (ulong)PerformanceCounter.ElapsedNanoseconds;
+        }
+
+        public void Dispose()
+        {
+            _buffersMemoryHandle.Dispose();
         }
     }
 }

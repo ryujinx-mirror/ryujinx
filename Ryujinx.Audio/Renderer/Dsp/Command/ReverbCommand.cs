@@ -19,6 +19,7 @@ using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -86,9 +87,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             IsLongSizePreDelaySupported = isLongSizePreDelaySupported;
         }
 
-        private void ProcessReverbMono(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessReverbMono(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(outputBuffers,
+            ProcessReverbGeneric(ref state,
+                     outputBuffers,
                      inputBuffers,
                      sampleCount,
                      OutputEarlyIndicesTableMono,
@@ -97,9 +100,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      OutputIndicesTableMono);
         }
 
-        private void ProcessReverbStereo(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessReverbStereo(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(outputBuffers,
+            ProcessReverbGeneric(ref state,
+                     outputBuffers,
                      inputBuffers,
                      sampleCount,
                      OutputEarlyIndicesTableStereo,
@@ -108,9 +113,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      OutputIndicesTableStereo);
         }
 
-        private void ProcessReverbQuadraphonic(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessReverbQuadraphonic(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(outputBuffers,
+            ProcessReverbGeneric(ref state,
+                     outputBuffers,
                      inputBuffers,
                      sampleCount,
                      OutputEarlyIndicesTableQuadraphonic,
@@ -119,9 +126,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      OutputIndicesTableQuadraphonic);
         }
 
-        private void ProcessReverbSurround(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessReverbSurround(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(outputBuffers,
+            ProcessReverbGeneric(ref state,
+                     outputBuffers,
                      inputBuffers,
                      sampleCount,
                      OutputEarlyIndicesTableSurround,
@@ -130,10 +139,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      OutputIndicesTableSurround);
         }
 
-        private void ProcessReverbGeneric(Memory<float>[] outputBuffers, ReadOnlyMemory<float>[] inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable, ReadOnlySpan<int> outputIndicesTable)
+        private unsafe void ProcessReverbGeneric(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable, ReadOnlySpan<int> outputIndicesTable)
         {
-            ref ReverbState state = ref State.Span[0];
-
             bool isSurround = Parameter.ChannelCount == 6;
 
             float reverbGain = FixedPointHelper.ToFloat(Parameter.ReverbGain, FixedPointPrecision);
@@ -141,14 +148,14 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
             float dryGain = FixedPointHelper.ToFloat(Parameter.DryGain, FixedPointPrecision);
 
-            float[] outputValues = new float[Constants.ChannelCountMax];
-            float[] feedbackValues = new float[4];
-            float[] feedbackOutputValues = new float[4];
-            float[] channelInput = new float[Parameter.ChannelCount];
+            Span<float> outputValues = stackalloc float[Constants.ChannelCountMax];
+            Span<float> feedbackValues = stackalloc float[4];
+            Span<float> feedbackOutputValues = stackalloc float[4];
+            Span<float> channelInput = stackalloc float[Parameter.ChannelCount];
 
             for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++)
             {
-                outputValues.AsSpan().Fill(0);
+                outputValues.Fill(0);
 
                 for (int i = 0; i < targetEarlyDelayLineIndicesTable.Length; i++)
                 {
@@ -169,7 +176,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 for (int channelIndex = 0; channelIndex < Parameter.ChannelCount; channelIndex++)
                 {
-                    channelInput[channelIndex] = inputBuffers[channelIndex].Span[sampleIndex] * 64;
+                    channelInput[channelIndex] = *((float*)inputBuffers[channelIndex] + sampleIndex) * 64;
                     targetPreDelayValue += channelInput[channelIndex] * reverbGain;
                 }
 
@@ -212,42 +219,42 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 for (int channelIndex = 0; channelIndex < Parameter.ChannelCount; channelIndex++)
                 {
-                    outputBuffers[channelIndex].Span[sampleIndex] = (outputValues[channelIndex] * outGain + channelInput[channelIndex] * dryGain) / 64;
+                    *((float*)outputBuffers[channelIndex] + sampleIndex) = (outputValues[channelIndex] * outGain + channelInput[channelIndex] * dryGain) / 64;
                 }
             }
         }
 
-        private void ProcessReverb(CommandList context)
+        private void ProcessReverb(CommandList context, ref ReverbState state)
         {
             Debug.Assert(Parameter.IsChannelCountValid());
 
             if (IsEffectEnabled && Parameter.IsChannelCountValid())
             {
-                ReadOnlyMemory<float>[] inputBuffers = new ReadOnlyMemory<float>[Parameter.ChannelCount];
-                Memory<float>[] outputBuffers = new Memory<float>[Parameter.ChannelCount];
+                Span<IntPtr> inputBuffers = stackalloc IntPtr[Parameter.ChannelCount];
+                Span<IntPtr> outputBuffers = stackalloc IntPtr[Parameter.ChannelCount];
 
                 for (int i = 0; i < Parameter.ChannelCount; i++)
                 {
-                    inputBuffers[i] = context.GetBufferMemory(InputBufferIndices[i]);
-                    outputBuffers[i] = context.GetBufferMemory(OutputBufferIndices[i]);
+                    inputBuffers[i] = context.GetBufferPointer(InputBufferIndices[i]);
+                    outputBuffers[i] = context.GetBufferPointer(OutputBufferIndices[i]);
                 }
 
                 switch (Parameter.ChannelCount)
                 {
                     case 1:
-                        ProcessReverbMono(outputBuffers, inputBuffers, context.SampleCount);
+                        ProcessReverbMono(ref state, outputBuffers, inputBuffers, context.SampleCount);
                         break;
                     case 2:
-                        ProcessReverbStereo(outputBuffers, inputBuffers, context.SampleCount);
+                        ProcessReverbStereo(ref state, outputBuffers, inputBuffers, context.SampleCount);
                         break;
                     case 4:
-                        ProcessReverbQuadraphonic(outputBuffers, inputBuffers, context.SampleCount);
+                        ProcessReverbQuadraphonic(ref state, outputBuffers, inputBuffers, context.SampleCount);
                         break;
                     case 6:
-                        ProcessReverbSurround(outputBuffers, inputBuffers, context.SampleCount);
+                        ProcessReverbSurround(ref state, outputBuffers, inputBuffers, context.SampleCount);
                         break;
                     default:
-                        throw new NotImplementedException($"{Parameter.ChannelCount}");
+                        throw new NotImplementedException(Parameter.ChannelCount.ToString());
                 }
             }
             else
@@ -256,7 +263,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 {
                     if (InputBufferIndices[i] != OutputBufferIndices[i])
                     {
-                        context.GetBufferMemory(InputBufferIndices[i]).CopyTo(context.GetBufferMemory(OutputBufferIndices[i]));
+                        context.CopyBuffer(OutputBufferIndices[i], InputBufferIndices[i]);
                     }
                 }
             }
@@ -278,7 +285,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 }
             }
 
-            ProcessReverb(context);
+            ProcessReverb(context, ref state);
         }
     }
 }

@@ -65,6 +65,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             IsEffectEnabled = isEnabled;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private uint Read(IVirtualMemoryManager memoryManager, ulong bufferAddress, uint countMax, Span<int> outBuffer, uint count, uint readOffset, uint updateCount)
         {
             if (countMax == 0 || bufferAddress == 0)
@@ -104,6 +105,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             return count;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private uint Write(IVirtualMemoryManager memoryManager, ulong outBufferAddress, uint countMax, ReadOnlySpan<int> buffer, uint count, uint writeOffset, uint updateCount)
         {
             if (countMax == 0 || outBufferAddress == 0)
@@ -175,30 +177,13 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
             else
             {
-                ZeroFill(context.MemoryManager, BufferInfo.SendBufferInfo, Unsafe.SizeOf<AuxiliaryBufferInfo>());
-                ZeroFill(context.MemoryManager, BufferInfo.ReturnBufferInfo, Unsafe.SizeOf<AuxiliaryBufferInfo>());
+                context.MemoryManager.Fill(BufferInfo.SendBufferInfo, (ulong)Unsafe.SizeOf<AuxiliaryBufferInfo>(), 0);
+                context.MemoryManager.Fill(BufferInfo.ReturnBufferInfo, (ulong)Unsafe.SizeOf<AuxiliaryBufferInfo>(), 0);
 
                 if (InputBufferIndex != OutputBufferIndex)
                 {
                     inputBuffer.CopyTo(outputBuffer);
                 }
-            }
-        }
-
-        private static void ZeroFill(IVirtualMemoryManager memoryManager, ulong address, int size)
-        {
-            ulong endAddress = address + (ulong)size;
-
-            while (address + 7UL < endAddress)
-            {
-                memoryManager.Write(address, 0UL);
-                address += 8;
-            }
-
-            while (address < endAddress)
-            {
-                memoryManager.Write(address, (byte)0);
-                address++;
             }
         }
     }
