@@ -359,6 +359,7 @@ namespace Ryujinx.Graphics.Texture
         }
 
         public static ReadOnlySpan<byte> ConvertLinearToBlockLinear(
+            Span<byte> output,
             int width,
             int height,
             int depth,
@@ -373,7 +374,10 @@ namespace Ryujinx.Graphics.Texture
             SizeInfo sizeInfo,
             ReadOnlySpan<byte> data)
         {
-            Span<byte> output = new byte[sizeInfo.TotalSize];
+            if (output.Length == 0)
+            {
+                output = new byte[sizeInfo.TotalSize];
+            }
 
             int inOffs = 0;
 
@@ -500,6 +504,7 @@ namespace Ryujinx.Graphics.Texture
         }
 
         public static ReadOnlySpan<byte> ConvertLinearToLinearStrided(
+            Span<byte> output,
             int width,
             int height,
             int blockWidth,
@@ -516,10 +521,21 @@ namespace Ryujinx.Graphics.Texture
 
             if (inStride == stride)
             {
-                return data;
+                if (output.Length != 0)
+                {
+                    data.CopyTo(output);
+                    return output;
+                }
+                else
+                {
+                    return data;
+                }
             }
 
-            Span<byte> output = new byte[h * stride];
+            if (output.Length == 0)
+            {
+                output = new byte[h * stride];
+            }
 
             int inOffs = 0;
             int outOffs = 0;

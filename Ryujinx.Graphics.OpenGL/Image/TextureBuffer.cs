@@ -38,9 +38,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
             throw new NotSupportedException();
         }
 
-        public byte[] GetData()
+        public ReadOnlySpan<byte> GetData()
         {
-            return Buffer.GetData(_buffer, _bufferOffset, _bufferSize);
+            return Buffer.GetData(_renderer, _buffer, _bufferOffset, _bufferSize);
         }
 
         public void SetData(ReadOnlySpan<byte> data)

@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             _renderer.TextureCopy.Copy(this, (TextureView)destination, srcRegion, dstRegion, linearFilter);
         }
 
-        public byte[] GetData()
+        public unsafe ReadOnlySpan<byte> GetData()
         {
             int size = 0;
 
@@ -134,17 +134,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
             else
             {
-                byte[] data = new byte[size];
+                IntPtr target = _renderer.PersistentBuffers.Default.GetHostArray(size);
 
-                unsafe
-                {
-                    fixed (byte* ptr = data)
-                    {
-                        WriteTo((IntPtr)ptr);
-                    }
-                }
+                WriteTo(target);
 
-                return data;
+                return new ReadOnlySpan<byte>(target.ToPointer(), size);
             }
         }
 

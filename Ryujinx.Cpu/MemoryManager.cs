@@ -237,7 +237,7 @@ namespace Ryujinx.Cpu
         }
 
         /// <inheritdoc/>
-        public unsafe WritableRegion GetWritableRegion(ulong va, int size)
+        public unsafe WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
             if (size == 0)
             {
@@ -246,6 +246,11 @@ namespace Ryujinx.Cpu
 
             if (IsContiguousAndMapped(va, size))
             {
+                if (tracked)
+                {
+                    SignalMemoryTracking(va, (ulong)size, true);
+                }
+
                 return new WritableRegion(null, va, new NativeMemoryManager<byte>((byte*)GetHostAddress(va), size).Memory);
             }
             else
@@ -254,7 +259,7 @@ namespace Ryujinx.Cpu
 
                 GetSpan(va, size).CopyTo(memory.Span);
 
-                return new WritableRegion(this, va, memory);
+                return new WritableRegion(this, va, memory, tracked);
             }
         }
 

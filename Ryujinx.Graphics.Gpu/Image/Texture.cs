@@ -4,6 +4,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Texture.Astc;
+using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Generic;
@@ -821,14 +822,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return; // Flushing this format is not supported, as it may have been converted to another host format.
             }
 
-            if (tracked)
-            {
-                _physicalMemory.Write(Range, GetTextureDataFromGpu(tracked));
-            }
-            else
-            {
-                _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(tracked));
-            }
+            FlushTextureDataToGuest(tracked);
         }
 
         /// <summary>
@@ -864,8 +858,42 @@ namespace Ryujinx.Graphics.Gpu.Image
                     texture = _flushHostTexture = GetScaledHostTexture(1f, _flushHostTexture);
                 }
 
-                _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(false, texture));
+                FlushTextureDataToGuest(false, texture);
             });
+        }
+
+        /// <summary>
+        /// Gets data from the host GPU, and flushes it to guest memory.
+        /// </summary>
+        /// <remarks>
+        /// This method should be used to retrieve data that was modified by the host GPU.
+        /// This is not cheap, avoid doing that unless strictly needed.
+        /// When possible, the data is written directly into guest memory, rather than copied.
+        /// </remarks>
+        /// <param name="tracked">True if writing the texture data is tracked, false otherwise</param>
+        /// <param name="texture">The specific host texture to flush. Defaults to this texture</param>
+        private void FlushTextureDataToGuest(bool tracked, ITexture texture = null)
+        {
+            if (Range.Count == 1)
+            {
+                MemoryRange subrange = Range.GetSubRange(0);
+
+                using (WritableRegion region = _physicalMemory.GetWritableRegion(subrange.Address, (int)subrange.Size, tracked))
+                {
+                    GetTextureDataFromGpu(region.Memory.Span, tracked, texture);
+                }
+            }
+            else
+            {
+                if (tracked)
+                {
+                    _physicalMemory.Write(Range, GetTextureDataFromGpu(Span<byte>.Empty, true, texture));
+                }
+                else 
+                {
+                    _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(Span<byte>.Empty, false, texture));
+                }
+            }
         }
 
         /// <summary>
@@ -875,8 +903,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This method should be used to retrieve data that was modified by the host GPU.
         /// This is not cheap, avoid doing that unless strictly needed.
         /// </remarks>
-        /// <returns>Host texture data</returns>
-        private ReadOnlySpan<byte> GetTextureDataFromGpu(bool blacklist, ITexture texture = null)
+        /// <param name="output">An output span to place the texture data into. If empty, one is generated</param>
+        /// <param name="blacklist">True if the texture should be blacklisted, false otherwise</param>
+        /// <param name="texture">The specific host texture to flush. Defaults to this texture</param>
+        /// <returns>The span containing the texture data</returns>
+        private ReadOnlySpan<byte> GetTextureDataFromGpu(Span<byte> output, bool blacklist, ITexture texture = null)
         {
             ReadOnlySpan<byte> data;
 
@@ -909,6 +940,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (Info.IsLinear)
                 {
                     data = LayoutConverter.ConvertLinearToLinearStrided(
+                        output,
                         Info.Width,
                         Info.Height,
                         Info.FormatInfo.BlockWidth,
@@ -920,6 +952,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 else
                 {
                     data = LayoutConverter.ConvertLinearToBlockLinear(
+                        output,
                         Info.Width,
                         Info.Height,
                         _depth,

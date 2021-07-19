@@ -55,15 +55,22 @@ namespace Ryujinx.Graphics.OpenGL
                 (IntPtr)size);
         }
 
-        public static byte[] GetData(BufferHandle buffer, int offset, int size)
+        public static unsafe ReadOnlySpan<byte> GetData(Renderer renderer, BufferHandle buffer, int offset, int size)
         {
-            GL.BindBuffer(BufferTarget.CopyReadBuffer, buffer.ToInt32());
+            if (HwCapabilities.UsePersistentBufferForFlush)
+            {
+                return renderer.PersistentBuffers.Default.GetBufferData(buffer, offset, size);
+            }
+            else
+            {
+                IntPtr target = renderer.PersistentBuffers.Default.GetHostArray(size);
 
-            byte[] data = new byte[size];
+                GL.BindBuffer(BufferTarget.CopyReadBuffer, buffer.ToInt32());
 
-            GL.GetBufferSubData(BufferTarget.CopyReadBuffer, (IntPtr)offset, size, data);
+                GL.GetBufferSubData(BufferTarget.CopyReadBuffer, (IntPtr)offset, size, target);
 
-            return data;
+                return new ReadOnlySpan<byte>(target.ToPointer(), size);
+            }
         }
 
         public static void Resize(BufferHandle handle, int size)

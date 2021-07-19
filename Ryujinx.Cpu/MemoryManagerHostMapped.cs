@@ -285,9 +285,16 @@ namespace Ryujinx.Cpu
         }
 
         /// <inheritdoc/>
-        public WritableRegion GetWritableRegion(ulong va, int size)
+        public WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
-            AssertMapped(va, (ulong)size);
+            if (tracked)
+            {
+                SignalMemoryTracking(va, (ulong)size, true);
+            }
+            else
+            {
+                AssertMapped(va, (ulong)size);
+            }
 
             return _addressSpaceMirror.GetWritableRegion(va, size);
         }

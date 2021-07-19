@@ -91,16 +91,9 @@ namespace Ryujinx.Graphics.OpenGL
             Buffer.Delete(buffer);
         }
 
-        public byte[] GetBufferData(BufferHandle buffer, int offset, int size)
+        public ReadOnlySpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
         {
-            if (HwCapabilities.UsePersistentBufferForFlush)
-            {
-                return PersistentBuffers.Default.GetBufferData(buffer, offset, size);
-            }
-            else
-            {
-                return Buffer.GetData(buffer, offset, size);
-            }
+            return Buffer.GetData(this, buffer, offset, size);
         }
 
         public Capabilities GetCapabilities()

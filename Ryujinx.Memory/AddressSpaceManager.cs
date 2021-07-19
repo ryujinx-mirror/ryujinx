@@ -207,9 +207,10 @@ namespace Ryujinx.Memory
         /// </remarks>
         /// <param name="va">Virtual address of the data</param>
         /// <param name="size">Size of the data</param>
+        /// <param name="tracked">True if write tracking is triggered on the span</param>
         /// <returns>A writable region of memory containing the data</returns>
         /// <exception cref="InvalidMemoryRegionException">Throw for unhandled invalid or unmapped memory accesses</exception>
-        public unsafe WritableRegion GetWritableRegion(ulong va, int size)
+        public unsafe WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
             if (size == 0)
             {

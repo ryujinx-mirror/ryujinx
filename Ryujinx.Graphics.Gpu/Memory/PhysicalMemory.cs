@@ -128,10 +128,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Start address of the range</param>
         /// <param name="size">Size in bytes to be range</param>
+        /// <param name="tracked">True if write tracking is triggered on the span</param>
         /// <returns>A writable region with the data at the specified memory location</returns>
-        public WritableRegion GetWritableRegion(ulong address, int size)
+        public WritableRegion GetWritableRegion(ulong address, int size, bool tracked = false)
         {
-            return _cpuMemory.GetWritableRegion(address, size);
+            return _cpuMemory.GetWritableRegion(address, size, tracked);
         }
 
         /// <summary>

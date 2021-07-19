@@ -49,7 +49,7 @@ namespace Ryujinx.Memory.Tests
             throw new NotImplementedException();
         }
 
-        public WritableRegion GetWritableRegion(ulong va, int size)
+        public WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
             throw new NotImplementedException();
         }

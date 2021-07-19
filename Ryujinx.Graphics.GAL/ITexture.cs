@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.GAL
 
         ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel);
 
-        byte[] GetData();
+        ReadOnlySpan<byte> GetData();
 
         void SetData(ReadOnlySpan<byte> data);
         void SetData(ReadOnlySpan<byte> data, int layer, int level);
