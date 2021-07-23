@@ -208,7 +208,8 @@ namespace Ryujinx.Input.HLE
         private bool _isValid;
         private string _id;
 
-        private MotionInput _motionInput;
+        private MotionInput _leftMotionInput;
+        private MotionInput _rightMotionInput;
 
         private IGamepad _gamepad;
         private InputConfig _config;
@@ -259,7 +260,7 @@ namespace Ryujinx.Input.HLE
             else
             {
                 // Non-controller doesn't have motions.
-                _motionInput = null;
+                _leftMotionInput = null;
             }
 
             _config = config;
@@ -274,11 +275,11 @@ namespace Ryujinx.Input.HLE
         {
             if (motionConfig.MotionBackend != MotionInputBackendType.CemuHook)
             {
-                _motionInput = new MotionInput();
+                _leftMotionInput = new MotionInput();
              }
             else
             {
-                _motionInput = null;
+                _leftMotionInput = null;
             }
         }
 
@@ -300,7 +301,12 @@ namespace Ryujinx.Input.HLE
                             accelerometer = new Vector3(accelerometer.X, -accelerometer.Z, accelerometer.Y);
                             gyroscope = new Vector3(gyroscope.X, gyroscope.Z, gyroscope.Y);
 
-                            _motionInput.Update(accelerometer, gyroscope, (ulong)PerformanceCounter.ElapsedNanoseconds / 1000, controllerConfig.Motion.Sensitivity, (float)controllerConfig.Motion.GyroDeadzone);
+                            _leftMotionInput.Update(accelerometer, gyroscope, (ulong)PerformanceCounter.ElapsedNanoseconds / 1000, controllerConfig.Motion.Sensitivity, (float)controllerConfig.Motion.GyroDeadzone);
+
+                            if (controllerConfig.ControllerType == ConfigControllerType.JoyconPair)
+                            {
+                                _rightMotionInput = _leftMotionInput;
+                            }
                         }
                     }
                     else if (controllerConfig.Motion.MotionBackend == MotionInputBackendType.CemuHook && controllerConfig.Motion is CemuHookMotionConfigController cemuControllerConfig)
@@ -310,16 +316,22 @@ namespace Ryujinx.Input.HLE
                         // First of all ensure we are registered
                         _cemuHookClient.RegisterClient(clientId, cemuControllerConfig.DsuServerHost, cemuControllerConfig.DsuServerPort);
 
-                        // Then request data
+                        // Then request and retrieve the data
                         _cemuHookClient.RequestData(clientId, cemuControllerConfig.Slot);
+                        _cemuHookClient.TryGetData(clientId, cemuControllerConfig.Slot, out _leftMotionInput);
 
-                        if (controllerConfig.ControllerType == ConfigControllerType.JoyconPair && !cemuControllerConfig.MirrorInput)
+                        if (controllerConfig.ControllerType == ConfigControllerType.JoyconPair)
                         {
-                            _cemuHookClient.RequestData(clientId, cemuControllerConfig.AltSlot);
+                            if (!cemuControllerConfig.MirrorInput)
+                            {
+                                _cemuHookClient.RequestData(clientId, cemuControllerConfig.AltSlot);
+                                _cemuHookClient.TryGetData(clientId, cemuControllerConfig.AltSlot, out _rightMotionInput);
+                            }
+                            else
+                            {
+                                _rightMotionInput = _leftMotionInput;
+                            }
                         }
-
-                        // Finally, get motion input data
-                        _cemuHookClient.TryGetData(clientId, cemuControllerConfig.Slot, out _motionInput);
                     }
                 }
             }
@@ -327,7 +339,7 @@ namespace Ryujinx.Input.HLE
             {
                 // Reset states
                 State = default;
-                _motionInput = null;
+                _leftMotionInput = null;
             }
         }
 
@@ -395,20 +407,32 @@ namespace Ryujinx.Input.HLE
             return state;
         }
 
-        public SixAxisInput GetHLEMotionState()
+        public SixAxisInput GetHLEMotionState(bool isJoyconRightPair = false)
         {
             float[] orientationForHLE = new float[9];
             Vector3 gyroscope;
             Vector3 accelerometer;
             Vector3 rotation;
 
-            if (_motionInput != null)
-            {
-                gyroscope = Truncate(_motionInput.Gyroscrope * 0.0027f, 3);
-                accelerometer = Truncate(_motionInput.Accelerometer, 3);
-                rotation = Truncate(_motionInput.Rotation * 0.0027f, 3);
+            MotionInput motionInput = _leftMotionInput;
 
-                Matrix4x4 orientation = _motionInput.GetOrientation();
+            if (isJoyconRightPair)
+            {
+                if (_rightMotionInput == null)
+                {
+                    return default;
+                }
+
+                motionInput = _rightMotionInput;
+            }
+
+            if (motionInput != null)
+            {
+                gyroscope = Truncate(motionInput.Gyroscrope * 0.0027f, 3);
+                accelerometer = Truncate(motionInput.Accelerometer, 3);
+                rotation = Truncate(motionInput.Rotation * 0.0027f, 3);
+
+                Matrix4x4 orientation = motionInput.GetOrientation();
 
                 orientationForHLE[0] = Math.Clamp(orientation.M11, -1f, 1f);
                 orientationForHLE[1] = Math.Clamp(orientation.M12, -1f, 1f);

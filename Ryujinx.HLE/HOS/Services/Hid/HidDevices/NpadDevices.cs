@@ -569,7 +569,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 UpdateUnusedSixInputIfNotEqual(ref lifo, ref currentNpad.JoyRightSixAxisSensor);
             }
 
-            if (!needUpdateRight)
+            if (!needUpdateRight && !isRightPair)
             {
                 SixAxisSensorState emptyState = new SixAxisSensorState();
 
