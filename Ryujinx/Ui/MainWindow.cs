@@ -1072,6 +1072,15 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Graphics.AspectRatio.Value = ((int)aspectRatio + 1) > Enum.GetNames(typeof(AspectRatio)).Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
         }
 
+        private void Focus_Menu_Bar(object sender, KeyReleaseEventArgs args)
+        {
+            if (args.Event.Key == Gdk.Key.Alt_L)
+            {
+                ToggleExtraWidgets(true);
+                _menuBar.GrabFocus();
+            }
+        }
+
         private void Row_Clicked(object sender, ButtonReleaseEventArgs args)
         {
             if (args.Event.Button != 3 /* Right Click */)
@@ -1362,6 +1371,11 @@ namespace Ryujinx.Ui
 
             settingsWindow.SetSizeRequest((int)(settingsWindow.DefaultWidth * Program.WindowScaleFactor), (int)(settingsWindow.DefaultHeight * Program.WindowScaleFactor));
             settingsWindow.Show();
+        }
+
+        private void HideUi_Pressed(object sender, EventArgs args)
+        {
+            ToggleExtraWidgets(false);
         }
 
         private void ManageUserProfiles_Pressed(object sender, EventArgs args)

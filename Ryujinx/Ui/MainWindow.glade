@@ -6,6 +6,7 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Ryujinx</property>
     <property name="window_position">center</property>
+    <signal name="key-release-event" handler="Focus_Menu_Bar" swapped="no" />
     <child>
       <object class="GtkBox" id="_box">
         <property name="visible">True</property>
@@ -14,7 +15,7 @@
         <child>
           <object class="GtkMenuBar" id="_menuBar">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
             <child>
               <object class="GtkMenuItem" id="_fileMenu">
                 <property name="visible">True</property>
@@ -336,6 +337,15 @@
                         <property name="tooltip_text" translatable="yes">Take a screenshot</property>
                         <property name="label" translatable="yes">Take Screenshot</property>
                         <signal name="activate" handler="Take_Screenshot" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_hideUi">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Hide UI (Alt to show)</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="HideUi_Pressed" swapped="no" />
                       </object>
                     </child>
                   </object>
