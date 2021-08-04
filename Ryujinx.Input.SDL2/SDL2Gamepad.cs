@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
+using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -151,7 +152,18 @@ namespace Ryujinx.Input.SDL2
                 ushort lowFrequencyRaw = (ushort)(lowFrequency * ushort.MaxValue);
                 ushort highFrequencyRaw = (ushort)(highFrequency * ushort.MaxValue);
 
-                SDL_GameControllerRumble(_gamepadHandle, lowFrequencyRaw, highFrequencyRaw, durationMs);
+                if (durationMs == uint.MaxValue)
+                {
+                    SDL_GameControllerRumble(_gamepadHandle, lowFrequencyRaw, highFrequencyRaw, SDL_HAPTIC_INFINITY);
+                }
+                else if (durationMs > SDL_HAPTIC_INFINITY)
+                {
+                    Logger.Error?.Print(LogClass.Hid, $"Unsupported rumble duration {durationMs}");
+                }
+                else
+                {
+                    SDL_GameControllerRumble(_gamepadHandle, lowFrequencyRaw, highFrequencyRaw, durationMs);
+                }
             }
         }
 

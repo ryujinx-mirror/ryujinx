@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Ryujinx.Common;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
@@ -20,10 +22,20 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private ControllerType[] _configuredTypes;
         private KEvent[] _styleSetUpdateEvents;
         private bool[] _supportedPlayers;
+        private static HidVibrationValue _neutralVibrationValue = new HidVibrationValue
+        {
+            AmplitudeLow = 0f,
+            FrequencyLow = 160f,
+            AmplitudeHigh = 0f,
+            FrequencyHigh = 320f
+        };
 
         internal NpadJoyHoldType JoyHold { get; set; }
         internal bool SixAxisActive = false; // TODO: link to hidserver when implemented
         internal ControllerType SupportedStyleSets { get; set; }
+
+        public Dictionary<PlayerIndex, ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>> RumbleQueues = new Dictionary<PlayerIndex, ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>>();
+        public Dictionary<PlayerIndex, (HidVibrationValue, HidVibrationValue)> LastVibrationValues = new Dictionary<PlayerIndex, (HidVibrationValue, HidVibrationValue)>();
 
         public NpadDevices(Switch device, bool active = true) : base(device, active)
         {
@@ -595,6 +607,50 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             WriteNewSixInputEntry(ref currentNpad.JoyDualRightSixAxisSensor, ref newState);
             WriteNewSixInputEntry(ref currentNpad.JoyLeftSixAxisSensor, ref newState);
             WriteNewSixInputEntry(ref currentNpad.JoyRightSixAxisSensor, ref newState);
+        }
+
+        public void UpdateRumbleQueue(PlayerIndex index, Dictionary<byte, HidVibrationValue> dualVibrationValues)
+        {
+            if (RumbleQueues.TryGetValue(index, out ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> currentQueue))
+            {
+                if (!dualVibrationValues.TryGetValue(0, out HidVibrationValue leftVibrationValue))
+                {
+                    leftVibrationValue = _neutralVibrationValue;
+                }
+
+                if (!dualVibrationValues.TryGetValue(1, out HidVibrationValue rightVibrationValue))
+                {
+                    rightVibrationValue = _neutralVibrationValue;
+                }
+
+                if (!LastVibrationValues.TryGetValue(index, out (HidVibrationValue, HidVibrationValue) dualVibrationValue) || !leftVibrationValue.Equals(dualVibrationValue.Item1) || !rightVibrationValue.Equals(dualVibrationValue.Item2))
+                {
+                    currentQueue.Enqueue((leftVibrationValue, rightVibrationValue));
+
+                    LastVibrationValues[index] = (leftVibrationValue, rightVibrationValue);
+                }
+            }
+        }
+
+        public HidVibrationValue GetLastVibrationValue(PlayerIndex index, byte position)
+        {
+            if (!LastVibrationValues.TryGetValue(index, out (HidVibrationValue, HidVibrationValue) dualVibrationValue))
+            {
+                return _neutralVibrationValue;
+            }
+
+            return (position == 0) ? dualVibrationValue.Item1 : dualVibrationValue.Item2;
+        }
+
+        public ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> GetRumbleQueue(PlayerIndex index)
+        {
+            if (!RumbleQueues.TryGetValue(index, out ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> rumbleQueue))
+            {
+                rumbleQueue = new ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>();
+                _device.Hid.Npads.RumbleQueues[index] = rumbleQueue;
+            }
+
+            return rumbleQueue;
         }
     }
 }

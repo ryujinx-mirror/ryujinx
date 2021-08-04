@@ -34,6 +34,8 @@ namespace Ryujinx.Ui.Windows
         private bool _isWaitingForInput;
 
 #pragma warning disable CS0649, IDE0044
+        [GUI] Adjustment   _controllerStrongRumble;
+        [GUI] Adjustment   _controllerWeakRumble;
         [GUI] Adjustment   _controllerDeadzoneLeft;
         [GUI] Adjustment   _controllerDeadzoneRight;
         [GUI] Adjustment   _controllerTriggerThreshold;
@@ -99,6 +101,8 @@ namespace Ryujinx.Ui.Windows
         [GUI] ToggleButton _rSl;
         [GUI] ToggleButton _rSr;
         [GUI] Image        _controllerImage;
+        [GUI] CheckButton  _enableRumble;
+        [GUI] Box          _rumbleBox;
 #pragma warning restore CS0649, IDE0044
 
         private MainWindow _mainWindow;
@@ -314,6 +318,7 @@ namespace Ryujinx.Ui.Windows
                 _deadZoneRightBox.Hide();
                 _triggerThresholdBox.Hide();
                 _motionBox.Hide();
+                _rumbleBox.Hide();
             }
             else if (_inputDevice.ActiveId != null && _inputDevice.ActiveId.StartsWith("controller"))
             {
@@ -407,6 +412,8 @@ namespace Ryujinx.Ui.Windows
             _zR.Label                         = "Unbound";
             _rSl.Label                        = "Unbound";
             _rSr.Label                        = "Unbound";
+            _controllerStrongRumble.Value     = 1;
+            _controllerWeakRumble.Value       = 1;
             _controllerDeadzoneLeft.Value     = 0;
             _controllerDeadzoneRight.Value    = 0;
             _controllerTriggerThreshold.Value = 0;
@@ -419,6 +426,7 @@ namespace Ryujinx.Ui.Windows
             _gyroDeadzone.Value               = 1;
             _dsuServerHost.Buffer.Text        = "";
             _dsuServerPort.Buffer.Text        = "";
+            _enableRumble.Active              = false;
         }
 
         private void SetValues(InputConfig config)
@@ -497,6 +505,9 @@ namespace Ryujinx.Ui.Windows
                     _zR.Label                         = controllerConfig.RightJoycon.ButtonZr.ToString();
                     _rSl.Label                        = controllerConfig.RightJoycon.ButtonSl.ToString();
                     _rSr.Label                        = controllerConfig.RightJoycon.ButtonSr.ToString();
+                    _controllerStrongRumble.Value     = controllerConfig.Rumble.StrongRumble;
+                    _controllerWeakRumble.Value       = controllerConfig.Rumble.WeakRumble;
+                    _enableRumble.Active              = controllerConfig.Rumble.EnableRumble;
                     _controllerDeadzoneLeft.Value     = controllerConfig.DeadzoneLeft;
                     _controllerDeadzoneRight.Value    = controllerConfig.DeadzoneRight;
                     _controllerTriggerThreshold.Value = controllerConfig.TriggerThreshold;
@@ -706,7 +717,13 @@ namespace Ryujinx.Ui.Windows
                         InvertStickY = _invertRStickY.Active,
                         StickButton  = rStickButton,
                     },
-                    Motion           = motionConfig
+                    Motion           = motionConfig,
+                    Rumble           = new RumbleConfigController
+                    {
+                        StrongRumble = (float)_controllerStrongRumble.Value,
+                        WeakRumble   = (float)_controllerWeakRumble.Value,
+                        EnableRumble = _enableRumble.Active
+                    }
                 };
             }
 
@@ -1045,6 +1062,12 @@ namespace Ryujinx.Ui.Windows
                             EnableMotion = true,
                             Sensitivity  = 100,
                             GyroDeadzone = 1,
+                        },
+                        Rumble = new RumbleConfigController
+                        {
+                            StrongRumble = 1f,
+                            WeakRumble   = 1f,
+                            EnableRumble = false
                         }
                     };
                 }

@@ -3,6 +3,7 @@
     public enum HidVibrationDeviceType
     {
         None,
-        LinearResonantActuator
+        LinearResonantActuator,
+        GcErm
     }
 }

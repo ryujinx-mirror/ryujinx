@@ -4,6 +4,7 @@ using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.HLE.HOS.Services.Hid;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -167,6 +168,7 @@ namespace Ryujinx.Input.HLE
                     (SixAxisInput, SixAxisInput) motionState = default;
 
                     NpadController controller = _controllers[(int)inputConfig.PlayerIndex];
+                    Ryujinx.HLE.HOS.Services.Hid.PlayerIndex playerIndex = (Ryujinx.HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex;
 
                     bool isJoyconPair = false;
 
@@ -177,6 +179,7 @@ namespace Ryujinx.Input.HLE
 
                         controller.UpdateUserConfiguration(inputConfig);
                         controller.Update();
+                        controller.UpdateRumble(_device.Hid.Npads.GetRumbleQueue(playerIndex));
 
                         inputState = controller.GetHLEInputState();
 
@@ -199,15 +202,15 @@ namespace Ryujinx.Input.HLE
                         motionState.Item1.Orientation = new float[9];
                     }
 
-                    inputState.PlayerId = (Ryujinx.HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex;
-                    motionState.Item1.PlayerId = (Ryujinx.HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex;
+                    inputState.PlayerId = playerIndex;
+                    motionState.Item1.PlayerId = playerIndex;
 
                     hleInputStates.Add(inputState);
                     hleMotionStates.Add(motionState.Item1);
 
                     if (isJoyconPair && !motionState.Item2.Equals(default))
                     {
-                        motionState.Item2.PlayerId = (Ryujinx.HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex;
+                        motionState.Item2.PlayerId = playerIndex;
 
                         hleMotionStates.Add(motionState.Item2);
                     }

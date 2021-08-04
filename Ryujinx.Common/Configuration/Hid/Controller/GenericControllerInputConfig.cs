@@ -33,5 +33,10 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         /// Controller Motion Settings
         /// </summary>
         public MotionConfigController Motion { get; set; }
+
+        /// <summary>
+        /// Controller Rumble Settings
+        /// </summary>
+        public RumbleConfigController Rumble { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration.System;
@@ -870,6 +871,26 @@ namespace Ryujinx.Configuration
                     Screenshot = Key.F8,
                     ShowUi = Key.F4
                 };
+
+                configurationFileUpdated = true;
+            }
+
+            if (configurationFileFormat.Version < 30)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 30.");
+
+                foreach(InputConfig config in configurationFileFormat.InputConfig)
+                {
+                    if (config is StandardControllerInputConfig controllerConfig)
+                    {
+                        controllerConfig.Rumble = new RumbleConfigController
+                        {
+                            EnableRumble = false,
+                            StrongRumble = 1f,
+                            WeakRumble = 1f
+                        };
+                    }
+                }
 
                 configurationFileUpdated = true;
             }
