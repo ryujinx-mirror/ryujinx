@@ -201,7 +201,7 @@ namespace Ryujinx.Audio.Backends.SDL2
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _driver.Unregister(this))
             {
                 PrepareToClose();
                 Stop();
@@ -210,8 +210,6 @@ namespace Ryujinx.Audio.Backends.SDL2
                 {
                     SDL_CloseAudioDevice(_outputStream);
                 }
-
-                _driver.Unregister(this);
             }
         }
 

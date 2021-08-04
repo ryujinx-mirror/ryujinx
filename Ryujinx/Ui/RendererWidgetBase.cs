@@ -7,7 +7,6 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.Input;
 using Ryujinx.Input.GTK3;
 using Ryujinx.Input.HLE;
@@ -138,8 +137,6 @@ namespace Ryujinx.Ui
         {
             ConfigurationState.Instance.HideCursorOnIdle.Event -= HideCursorStateChanged;
 
-            Window.Cursor = null;
-
             NpadManager.Dispose();
             Dispose();
         }
@@ -151,7 +148,7 @@ namespace Ryujinx.Ui
                 _lastCursorMoveTime = Stopwatch.GetTimestamp();
             }
 
-            if(ConfigurationState.Instance.Hid.EnableMouse)
+            if (ConfigurationState.Instance.Hid.EnableMouse)
             {
                 Window.Cursor = _invisibleCursor;
             }
@@ -609,7 +606,7 @@ namespace Ryujinx.Ui
             {
                 state |= KeyboardHotkeyState.ToggleVSync;
             }
-            
+
             if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot))
             {
                 state |= KeyboardHotkeyState.Screenshot;

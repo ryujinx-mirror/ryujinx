@@ -190,7 +190,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _driver.Unregister(this))
             {
                 lock (_lock)
                 {
@@ -198,8 +198,6 @@ namespace Ryujinx.Audio.Backends.OpenAL
                     Stop();
 
                     AL.DeleteSource(_sourceId);
-
-                    _driver.Unregister(this);
                 }
             }
         }

@@ -423,14 +423,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _driver.Unregister(this))
             {
                 PrepareToClose();
                 Stop();
 
                 _outputStream.Dispose();
-
-                _driver.Unregister(this);
             }
         }
 

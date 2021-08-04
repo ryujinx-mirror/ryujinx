@@ -1,10 +1,9 @@
-﻿using Ryujinx.Audio.Backends.Common;
-using Ryujinx.Audio.Common;
+﻿using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Memory;
 using Ryujinx.SDL2.Common;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -15,15 +14,13 @@ namespace Ryujinx.Audio.Backends.SDL2
 {
     public class SDL2HardwareDeviceDriver : IHardwareDeviceDriver
     {
-        private object _lock = new object();
-
-        private ManualResetEvent _updateRequiredEvent;
-        private List<SDL2HardwareDeviceSession> _sessions;
+        private readonly ManualResetEvent _updateRequiredEvent;
+        private readonly ConcurrentDictionary<SDL2HardwareDeviceSession, byte> _sessions;
 
         public SDL2HardwareDeviceDriver()
         {
             _updateRequiredEvent = new ManualResetEvent(false);
-            _sessions = new List<SDL2HardwareDeviceSession>();
+            _sessions = new ConcurrentDictionary<SDL2HardwareDeviceSession, byte>();
 
             SDL2Driver.Instance.Initialize();
         }
@@ -64,22 +61,16 @@ namespace Ryujinx.Audio.Backends.SDL2
                 throw new NotImplementedException("Input direction is currently not implemented on SDL2 backend!");
             }
 
-            lock (_lock)
-            {
-                SDL2HardwareDeviceSession session = new SDL2HardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount);
+            SDL2HardwareDeviceSession session = new SDL2HardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount);
 
-                _sessions.Add(session);
+            _sessions.TryAdd(session, 0);
 
-                return session;
-            }
+            return session;
         }
 
-        internal void Unregister(SDL2HardwareDeviceSession session)
+        internal bool Unregister(SDL2HardwareDeviceSession session)
         {
-            lock (_lock)
-            {
-                _sessions.Remove(session);
-            }
+            return _sessions.TryRemove(session, out _);
         }
 
         private static SDL_AudioSpec GetSDL2Spec(SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, uint sampleCount)
@@ -149,10 +140,8 @@ namespace Ryujinx.Audio.Backends.SDL2
         {
             if (disposing)
             {
-                while (_sessions.Count > 0)
+                foreach (SDL2HardwareDeviceSession session in _sessions.Keys)
                 {
-                    SDL2HardwareDeviceSession session = _sessions[_sessions.Count - 1];
-
                     session.Dispose();
                 }
 

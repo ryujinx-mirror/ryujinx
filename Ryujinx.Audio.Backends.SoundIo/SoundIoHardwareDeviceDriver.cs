@@ -3,7 +3,7 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Memory;
 using SoundIOSharp;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
@@ -12,19 +12,17 @@ namespace Ryujinx.Audio.Backends.SoundIo
 {
     public class SoundIoHardwareDeviceDriver : IHardwareDeviceDriver
     {
-        private object _lock = new object();
-
-        private SoundIO _audioContext;
-        private SoundIODevice _audioDevice;
-        private ManualResetEvent _updateRequiredEvent;
-        private List<SoundIoHardwareDeviceSession> _sessions;
+        private readonly SoundIO _audioContext;
+        private readonly SoundIODevice _audioDevice;
+        private readonly ManualResetEvent _updateRequiredEvent;
+        private readonly ConcurrentDictionary<SoundIoHardwareDeviceSession, byte> _sessions;
         private int _disposeState;
 
         public SoundIoHardwareDeviceDriver()
         {
             _audioContext = new SoundIO();
             _updateRequiredEvent = new ManualResetEvent(false);
-            _sessions = new List<SoundIoHardwareDeviceSession>();
+            _sessions = new ConcurrentDictionary<SoundIoHardwareDeviceSession, byte>();
 
             _audioContext.Connect();
             _audioContext.FlushEvents();
@@ -142,22 +140,16 @@ namespace Ryujinx.Audio.Backends.SoundIo
                 throw new NotImplementedException("Input direction is currently not implemented on SoundIO backend!");
             }
 
-            lock (_lock)
-            {
-                SoundIoHardwareDeviceSession session = new SoundIoHardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount);
+            SoundIoHardwareDeviceSession session = new SoundIoHardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount);
 
-                _sessions.Add(session);
+            _sessions.TryAdd(session, 0);
 
-                return session;
-            }
+            return session;
         }
 
-        internal void Unregister(SoundIoHardwareDeviceSession session)
+        internal bool Unregister(SoundIoHardwareDeviceSession session)
         {
-            lock (_lock)
-            {
-                _sessions.Remove(session);
-            }
+            return _sessions.TryRemove(session, out _);
         }
 
         public static SoundIOFormat GetSoundIoFormat(SampleFormat format)
@@ -219,26 +211,10 @@ namespace Ryujinx.Audio.Backends.SoundIo
         {
             if (disposing)
             {
-                int sessionCount = 0;
-
-                // NOTE: This is done in a way to avoid possible situations when the SoundIoHardwareDeviceSession is already being dispose in another thread but doesn't hold the lock and tries to Unregister.
-                do
+                foreach (SoundIoHardwareDeviceSession session in _sessions.Keys)
                 {
-                    lock (_lock)
-                    {
-                        if (_sessions.Count == 0)
-                        {
-                            break;
-                        }
-
-                        SoundIoHardwareDeviceSession session = _sessions[_sessions.Count - 1];
-
-                        session.Dispose();
-
-                        sessionCount = _sessions.Count;
-                    }
+                    session.Dispose();
                 }
-                while (sessionCount > 0);
 
                 _audioContext.Disconnect();
                 _audioContext.Dispose();
