@@ -4,5 +4,6 @@
     {
         public Key ToggleVsync { get; set; }
         public Key Screenshot { get; set; }
+        public Key ShowUi { get; set; }
     }
 }

@@ -101,6 +101,7 @@ namespace Ryujinx.Ui
         [GUI] MenuItem        _simulateWakeUpMessage;
         [GUI] MenuItem        _scanAmiibo;
         [GUI] MenuItem        _takeScreenshot;
+        [GUI] MenuItem        _hideUi;
         [GUI] MenuItem        _fullScreen;
         [GUI] CheckMenuItem   _startFullScreen;
         [GUI] CheckMenuItem   _favToggle;
@@ -242,6 +243,8 @@ namespace Ryujinx.Ui
             _gameTable.EnableSearch = true;
             _gameTable.SearchColumn = 2;
             _gameTable.SearchEqualFunc = (model, col, key, iter) => !((string)model.GetValue(iter, col)).Contains(key, StringComparison.InvariantCultureIgnoreCase);
+
+            _hideUi.Label = _hideUi.Label.Replace("SHOWUIKEY", ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi.ToString());
 
             UpdateColumns();
             UpdateGameTable();
@@ -1070,15 +1073,6 @@ namespace Ryujinx.Ui
             AspectRatio aspectRatio = ConfigurationState.Instance.Graphics.AspectRatio.Value;
 
             ConfigurationState.Instance.Graphics.AspectRatio.Value = ((int)aspectRatio + 1) > Enum.GetNames(typeof(AspectRatio)).Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
-        }
-
-        private void Focus_Menu_Bar(object sender, KeyReleaseEventArgs args)
-        {
-            if (args.Event.Key == Gdk.Key.Alt_L)
-            {
-                ToggleExtraWidgets(true);
-                _menuBar.GrabFocus();
-            }
         }
 
         private void Row_Clicked(object sender, ButtonReleaseEventArgs args)
