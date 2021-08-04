@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
 {
@@ -169,13 +170,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         /// </summary>
         private void FinishTransfer()
         {
-            Span<byte> data = MemoryMarshal.Cast<int, byte>(_buffer).Slice(0, _size);
+            var memoryManager = _channel.MemoryManager;
+
+            var data = MemoryMarshal.Cast<int, byte>(_buffer).Slice(0, _size);
 
             if (_isLinear && _lineCount == 1)
             {
-                ulong address = _channel.MemoryManager.Translate(_dstGpuVa);
-
-                _channel.MemoryManager.Physical.Write(address, data);
+                memoryManager.Write(_dstGpuVa, data);
             }
             else
             {
@@ -189,36 +190,43 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
 
                 int srcOffset = 0;
 
-                ulong dstBaseAddress = _channel.MemoryManager.Translate(_dstGpuVa);
-
                 for (int y = _dstY; y < _dstY + _lineCount; y++)
                 {
                     int x1 = _dstX;
                     int x2 = _dstX + _lineLengthIn;
-                    int x2Trunc = _dstX + BitUtils.AlignDown(_lineLengthIn, 16);
+                    int x1Round = BitUtils.AlignUp(_dstX, 16);
+                    int x2Trunc = BitUtils.AlignDown(x2, 16);
 
-                    int x;
+                    int x = x1;
 
-                    for (x = x1; x < x2Trunc; x += 16, srcOffset += 16)
+                    if (x1Round <= x2)
+                    {
+                        for (; x < x1Round; x++, srcOffset++)
+                        {
+                            int dstOffset = dstCalculator.GetOffset(x, y);
+
+                            ulong dstAddress = _dstGpuVa + (uint)dstOffset;
+
+                            memoryManager.Write(dstAddress, data[srcOffset]);
+                        }
+                    }
+
+                    for (; x < x2Trunc; x += 16, srcOffset += 16)
                     {
                         int dstOffset = dstCalculator.GetOffset(x, y);
 
-                        ulong dstAddress = dstBaseAddress + (ulong)dstOffset;
+                        ulong dstAddress = _dstGpuVa + (uint)dstOffset;
 
-                        Span<byte> pixel = data.Slice(srcOffset, 16);
-
-                        _channel.MemoryManager.Physical.Write(dstAddress, pixel);
+                        memoryManager.Write(dstAddress, MemoryMarshal.Cast<byte, Vector128<byte>>(data.Slice(srcOffset, 16))[0]);
                     }
 
                     for (; x < x2; x++, srcOffset++)
                     {
                         int dstOffset = dstCalculator.GetOffset(x, y);
 
-                        ulong dstAddress = dstBaseAddress + (ulong)dstOffset;
+                        ulong dstAddress = _dstGpuVa + (uint)dstOffset;
 
-                        Span<byte> pixel = data.Slice(srcOffset, 1);
-
-                        _channel.MemoryManager.Physical.Write(dstAddress, pixel);
+                        memoryManager.Write(dstAddress, data[srcOffset]);
                     }
                 }
             }

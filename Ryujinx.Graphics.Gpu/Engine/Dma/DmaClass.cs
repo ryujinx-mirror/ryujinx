@@ -152,14 +152,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     dst.MemoryLayout.UnpackGobBlocksInZ(),
                     dstBpp);
 
-                ulong srcBaseAddress = memoryManager.Translate(srcGpuVa);
-                ulong dstBaseAddress = memoryManager.Translate(dstGpuVa);
-
                 (int srcBaseOffset, int srcSize) = srcCalculator.GetRectangleRange(src.RegionX, src.RegionY, xCount, yCount);
                 (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dst.RegionX, dst.RegionY, xCount, yCount);
 
-                ReadOnlySpan<byte> srcSpan = memoryManager.Physical.GetSpan(srcBaseAddress + (ulong)srcBaseOffset, srcSize, true);
-                Span<byte> dstSpan = memoryManager.Physical.GetSpan(dstBaseAddress + (ulong)dstBaseOffset, dstSize).ToArray();
+                ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (uint)srcBaseOffset, srcSize, true);
+                Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (uint)dstBaseOffset, dstSize).ToArray();
 
                 bool completeSource = IsTextureCopyComplete(src, srcLinear, srcBpp, srcStride, xCount, yCount);
                 bool completeDest = IsTextureCopyComplete(dst, dstLinear, dstBpp, dstStride, xCount, yCount);
@@ -217,7 +214,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     {
                         srcSpan.CopyTo(dstSpan); // No layout conversion has to be performed, just copy the data entirely.
 
-                        memoryManager.Physical.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
+                        memoryManager.Write(dstGpuVa + (uint)dstBaseOffset, dstSpan);
 
                         return;
                     }
@@ -258,7 +255,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
                 };
 
-                memoryManager.Physical.Write(dstBaseAddress + (ulong)dstBaseOffset, dstSpan);
+                memoryManager.Write(dstGpuVa + (uint)dstBaseOffset, dstSpan);
             }
             else
             {
