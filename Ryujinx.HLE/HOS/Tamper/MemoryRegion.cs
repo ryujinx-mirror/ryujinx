@@ -20,6 +20,16 @@ namespace Ryujinx.HLE.HOS.Tamper
         /// <summary>
         /// The address of the heap, as determined by the kernel.
         /// </summary>
-        Heap = 0x1
+        Heap = 0x1,
+
+        /// <summary>
+        /// The address of the alias region, as determined by the kernel.
+        /// </summary>
+        Alias = 0x2,
+
+        /// <summary>
+        /// The address of the code region with address space layout randomization included.
+        /// </summary>
+        Asrl = 0x3,
     }
 }

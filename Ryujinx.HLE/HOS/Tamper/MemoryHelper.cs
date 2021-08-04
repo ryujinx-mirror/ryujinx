@@ -15,6 +15,12 @@ namespace Ryujinx.HLE.HOS.Tamper
                 case MemoryRegion.Heap:
                     // Memory address is relative to the heap.
                     return context.HeapAddress;
+                case MemoryRegion.Alias:
+                    // Memory address is relative to the alias region.
+                    return context.AliasAddress;
+                case MemoryRegion.Asrl:
+                    // Memory address is relative to the asrl region, which matches the code region.
+                    return context.AslrAddress;
                 default:
                     throw new TamperCompilationException($"Invalid memory source {source} in Atmosphere cheat");
             }

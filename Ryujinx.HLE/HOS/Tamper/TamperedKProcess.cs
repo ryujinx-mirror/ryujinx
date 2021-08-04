@@ -11,9 +11,11 @@ namespace Ryujinx.HLE.HOS.Tamper
 
         public ProcessState State => _process.State;
 
+        public bool TamperedCodeMemory { get; set; } = false;
+
         public TamperedKProcess(KProcess process)
         {
-            this._process = process;
+            _process = process;
         }
 
         private void AssertMemoryRegion<T>(ulong va, bool isWrite) where T : unmanaged
@@ -32,11 +34,11 @@ namespace Ryujinx.HLE.HOS.Tamper
                 return;
             }
 
-            // TODO (Caian): It is unknown how PPTC behaves if the tamper modifies memory regions
-            // belonging to code. So for now just prevent code tampering.
-            if ((va >= _process.MemoryManager.CodeRegionStart) && (va + size <= _process.MemoryManager.CodeRegionEnd))
+            // TODO (Caian): The JIT does not support invalidating a code region so writing to code memory may not work
+            // as intended, so taint the operation to issue a warning later.
+            if (isWrite && (va >= _process.MemoryManager.CodeRegionStart) && (va + size <= _process.MemoryManager.CodeRegionEnd))
             {
-                throw new CodeRegionTamperedException($"Writing {size} bytes to address 0x{va:X16} alters code");
+                TamperedCodeMemory = true;
             }
         }
 

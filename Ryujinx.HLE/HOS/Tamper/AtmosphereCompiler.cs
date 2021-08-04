@@ -9,14 +9,36 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     class AtmosphereCompiler
     {
-        public ITamperProgram Compile(IEnumerable<string> rawInstructions, ulong exeAddress, ulong heapAddress, ITamperedProcess process)
+        private ulong            _exeAddress;
+        private ulong            _heapAddress;
+        private ulong            _aliasAddress;
+        private ulong            _aslrAddress;
+        private ITamperedProcess _process;
+
+        public AtmosphereCompiler(ulong exeAddress, ulong heapAddress, ulong aliasAddress, ulong aslrAddress, ITamperedProcess process)
         {
-            Logger.Debug?.Print(LogClass.TamperMachine, $"Executable address: {exeAddress:X16}");
-            Logger.Debug?.Print(LogClass.TamperMachine, $"Heap address: {heapAddress:X16}");
+            _exeAddress   = exeAddress;
+            _heapAddress  = heapAddress;
+            _aliasAddress = aliasAddress;
+            _aslrAddress  = aslrAddress;
+            _process      = process;
+        }
+
+        public ITamperProgram Compile(string name, IEnumerable<string> rawInstructions)
+        {
+            string[] addresses = new string[]
+            {
+                $"    Executable address: 0x{_exeAddress:X16}",
+                $"    Heap address      : 0x{_heapAddress:X16}",
+                $"    Alias address     : 0x{_aliasAddress:X16}",
+                $"    Aslr address      : 0x{_aslrAddress:X16}"
+            };
+
+            Logger.Debug?.Print(LogClass.TamperMachine, $"Compiling Atmosphere cheat {name}...\n{string.Join('\n', addresses)}");
 
             try
             {
-                return CompileImpl(rawInstructions, exeAddress, heapAddress, process);
+                return CompileImpl(name, rawInstructions);
             }
             catch(TamperCompilationException exception)
             {
@@ -33,9 +55,9 @@ namespace Ryujinx.HLE.HOS.Tamper
             return null;
         }
 
-        private ITamperProgram CompileImpl(IEnumerable<string> rawInstructions, ulong exeAddress, ulong heapAddress, ITamperedProcess process)
+        private ITamperProgram CompileImpl(string name, IEnumerable<string> rawInstructions)
         {
-            CompilationContext context = new CompilationContext(exeAddress, heapAddress, process);
+            CompilationContext context = new CompilationContext(_exeAddress, _heapAddress, _aliasAddress, _aslrAddress, _process);
             context.BlockStack.Push(new OperationBlock(null));
 
             // Parse the instructions.
@@ -124,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Tamper
                 throw new TamperCompilationException($"Reached end of compilation with unmatched conditional(s) or loop(s)");
             }
 
-            return new AtmosphereProgram(process, context.PressedKeys, new Block(context.CurrentOperations));
+            return new AtmosphereProgram(name, _process, context.PressedKeys, new Block(context.CurrentOperations));
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        internal void InstallAtmosphereCheat(IEnumerable<string> rawInstructions, ProcessTamperInfo info, ulong exeAddress)
+        internal void InstallAtmosphereCheat(string name, IEnumerable<string> rawInstructions, ProcessTamperInfo info, ulong exeAddress)
         {
             if (!CanInstallOnPid(info.Process.Pid))
             {
@@ -39,11 +39,13 @@ namespace Ryujinx.HLE.HOS
             }
 
             ITamperedProcess tamperedProcess = new TamperedKProcess(info.Process);
-            AtmosphereCompiler compiler = new AtmosphereCompiler();
-            ITamperProgram program = compiler.Compile(rawInstructions, exeAddress, info.HeapAddress, tamperedProcess);
+            AtmosphereCompiler compiler = new AtmosphereCompiler(exeAddress, info.HeapAddress, info.AliasAddress, info.AslrAddress, tamperedProcess);
+            ITamperProgram program = compiler.Compile(name, rawInstructions);
 
             if (program != null)
             {
+                program.TampersCodeMemory = false;
+
                 _programs.Enqueue(program);
             }
 
@@ -116,27 +118,27 @@ namespace Ryujinx.HLE.HOS
             // Re-enqueue the tampering program because the process is still valid.
             _programs.Enqueue(program);
 
-            Logger.Debug?.Print(LogClass.TamperMachine, "Running tampering program");
+            Logger.Debug?.Print(LogClass.TamperMachine, $"Running tampering program {program.Name}");
 
             try
             {
                 ControllerKeys pressedKeys = (ControllerKeys)Thread.VolatileRead(ref _pressedKeys);
+                program.Process.TamperedCodeMemory = false;
                 program.Execute(pressedKeys);
-            }
-            catch (CodeRegionTamperedException ex)
-            {
-                Logger.Debug?.Print(LogClass.TamperMachine, $"Prevented tampering program from modifing code memory");
 
-                if (!String.IsNullOrEmpty(ex.Message))
+                // Detect the first attempt to tamper memory and log it.
+                if (!program.TampersCodeMemory && program.Process.TamperedCodeMemory)
                 {
-                    Logger.Debug?.Print(LogClass.TamperMachine, ex.Message);
+                    program.TampersCodeMemory = true;
+
+                    Logger.Warning?.Print(LogClass.TamperMachine, $"Tampering program {program.Name} modifies code memory so it may not work properly");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Debug?.Print(LogClass.TamperMachine, $"The tampering program crashed, this can happen while the game is starting");
+                Logger.Debug?.Print(LogClass.TamperMachine, $"The tampering program {program.Name} crashed, this can happen while the game is starting");
 
-                if (!String.IsNullOrEmpty(ex.Message))
+                if (!string.IsNullOrEmpty(ex.Message))
                 {
                     Logger.Debug?.Print(LogClass.TamperMachine, ex.Message);
                 }

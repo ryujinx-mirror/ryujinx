@@ -658,7 +658,7 @@ namespace Ryujinx.HLE.HOS
 
                 Logger.Info?.Print(LogClass.ModLoader, $"Installing cheat '{cheat.Name}'");
 
-                tamperMachine.InstallAtmosphereCheat(cheat.Instructions, tamperInfo, exeAddress);
+                tamperMachine.InstallAtmosphereCheat(cheat.Name, cheat.Instructions, tamperInfo, exeAddress);
             }
         }
 

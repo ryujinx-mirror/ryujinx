@@ -280,7 +280,8 @@ namespace Ryujinx.HLE.HOS
             // Keep the build ids because the tamper machine uses them to know which process to associate a
             // tamper to and also keep the starting address of each executable inside a process because some
             // memory modifications are relative to this address.
-            tamperInfo = new ProcessTamperInfo(process, buildIds, nsoBase, process.MemoryManager.HeapRegionStart);
+            tamperInfo = new ProcessTamperInfo(process, buildIds, nsoBase, process.MemoryManager.HeapRegionStart,
+                process.MemoryManager.AliasRegionStart, process.MemoryManager.CodeRegionStart);
 
             return true;
         }
