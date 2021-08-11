@@ -8,10 +8,38 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public ulong Address    { get; set; }
         public ulong EndAddress { get; set; }
 
-        public Block Next   { get; set; }
-        public Block Branch { get; set; }
+        private Block _next;
+        private Block _branch;
 
-        public OpCodeBranchIndir BrIndir { get; set; }
+        public Block Next
+        {
+            get
+            {
+                return _next;
+            }
+            set
+            {
+                _next?.Predecessors.Remove(this);
+                value?.Predecessors.Add(this);
+                _next = value;
+            }
+        }
+
+        public Block Branch
+        {
+            get
+            {
+                return _branch;
+            }
+            set
+            {
+                _branch?.Predecessors.Remove(this);
+                value?.Predecessors.Add(this);
+                _branch = value;
+            }
+        }
+
+        public HashSet<Block> Predecessors { get; }
 
         public List<OpCode>     OpCodes     { get; }
         public List<OpCodePush> PushOpCodes { get; }
@@ -19,6 +47,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Block(ulong address)
         {
             Address = address;
+
+            Predecessors = new HashSet<Block>();
 
             OpCodes     = new List<OpCode>();
             PushOpCodes = new List<OpCodePush>();

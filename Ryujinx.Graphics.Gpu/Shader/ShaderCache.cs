@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 2469;
+        private const ulong ShaderCodeGenVersion = 2530;
 
         // Progress reporting helpers
         private volatile int _shaderCount;
@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 int programIndex = 0;
                 List<ShaderCompileTask> activeTasks = new List<ShaderCompileTask>();
 
-                AutoResetEvent taskDoneEvent = new AutoResetEvent(false);
+                using AutoResetEvent taskDoneEvent = new AutoResetEvent(false);
 
                 // This thread dispatches tasks to do shader translation, and creates programs that OpenGL will link in the background.
                 // The program link status is checked in a non-blocking manner so that multiple shaders can be compiled at once.
@@ -191,7 +191,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                     Task compileTask = Task.Run(() =>
                                     {
-                                        IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+                                        var binaryCode = new Memory<byte>(entry.Code);
+
+                                        var gpuAccessor = new CachedGpuAccessor(
+                                            _context,
+                                            binaryCode,
+                                            binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
+                                            entry.Header.GpuAccessorHeader,
+                                            entry.TextureDescriptors);
 
                                         var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags | TranslationFlags.Compute);
                                         program = Translator.CreateContext(0, gpuAccessor, options).Translate(out shaderProgramInfo);
@@ -199,12 +206,20 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                     task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
                                     {
+                                        if (task.IsFaulted)
+                                        {
+                                            Logger.Warning?.Print(LogClass.Gpu, $"Host shader {key} is corrupted or incompatible, discarding...");
+
+                                            _cacheManager.RemoveProgram(ref key);
+                                            return true; // Exit early, the decoding step failed.
+                                        }
+
                                         ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
 
                                         Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
 
                                         // Compile shader and create program as the shader program binary got invalidated.
-                                        shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
+                                        shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, program.Code);
                                         hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, null);
 
                                         task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
@@ -298,7 +313,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             }
                                             else
                                             {
-                                                IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+                                                var binaryCode = new Memory<byte>(entry.Code);
+
+                                                var gpuAccessor = new CachedGpuAccessor(
+                                                    _context,
+                                                    binaryCode,
+                                                    binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
+                                                    entry.Header.GpuAccessorHeader,
+                                                    entry.TextureDescriptors);
 
                                                 var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
                                                 var options2 = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags | TranslationFlags.VertexA);
@@ -310,7 +332,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             }
 
                                             // NOTE: Vertex B comes first in the shader cache.
-                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size).ToArray();
+                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
                                             byte[] code2 = entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray();
 
                                             shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
@@ -326,13 +348,22 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             }
                                             else
                                             {
-                                                IGpuAccessor gpuAccessor = new CachedGpuAccessor(_context, entry.Code, entry.Header.GpuAccessorHeader, entry.TextureDescriptors);
+                                                var binaryCode = new Memory<byte>(entry.Code);
+
+                                                var gpuAccessor = new CachedGpuAccessor(
+                                                    _context,
+                                                    binaryCode,
+                                                    binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
+                                                    entry.Header.GpuAccessorHeader,
+                                                    entry.TextureDescriptors);
 
                                                 var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
                                                 program = Translator.CreateContext(0, gpuAccessor, options, counts).Translate(out shaderProgramInfo);
                                             }
 
-                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+
+                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code);
                                         }
 
                                         shaderPrograms.Add(program);
@@ -341,6 +372,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                 task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
                                 {
+                                    if (task.IsFaulted)
+                                    {
+                                        Logger.Warning?.Print(LogClass.Gpu, $"Host shader {key} is corrupted or incompatible, discarding...");
+
+                                        _cacheManager.RemoveProgram(ref key);
+                                        return true; // Exit early, the decoding step failed.
+                                    }
+
                                     // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
                                     if (!isHostProgramValid)
                                     {
@@ -537,7 +576,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
 
                 // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel.MemoryManager, shaderContexts);
+                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries);
             }
 
@@ -659,7 +698,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 isShaderCacheReadOnly = _cacheManager.IsReadOnly;
 
                 // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel.MemoryManager, shaderContexts);
+                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel, shaderContexts);
                 programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries, tfd);
             }
 

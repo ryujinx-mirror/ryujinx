@@ -39,6 +39,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             RemoveManifestEntries,
 
             /// <summary>
+            /// Remove entries from the hash manifest and save it, and also deletes the temporary file.
+            /// </summary>
+            RemoveManifestEntryAndTempFile,
+
+            /// <summary>
             /// Flush temporary cache to archive.
             /// </summary>
             FlushToArchive,
@@ -116,6 +121,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// </summary>
         private ZipArchive _cacheArchive;
 
+        /// <summary>
+        /// Indicates if the cache collection supports modification.
+        /// </summary>
         public bool IsReadOnly { get; }
 
         /// <summary>
@@ -262,6 +270,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
                 SaveManifest();
             }
+        }
+
+        /// <summary>
+        /// Remove given entry from the manifest and delete the temporary file.
+        /// </summary>
+        /// <param name="entry">Entry to remove from the manifest</param>
+        private void RemoveManifestEntryAndTempFile(Hash128 entry)
+        {
+            lock (_hashTable)
+            {
+                _hashTable.Remove(entry);
+                SaveManifest();
+            }
+
+            File.Delete(GenCacheTempFilePath(entry));
         }
 
         /// <summary>
@@ -440,6 +463,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 case CacheFileOperation.RemoveManifestEntries:
                     RemoveManifestEntries((HashSet<Hash128>)task.Data);
                     break;
+                case CacheFileOperation.RemoveManifestEntryAndTempFile:
+                    RemoveManifestEntryAndTempFile((Hash128)task.Data);
+                    break;
                 case CacheFileOperation.FlushToArchive:
                     FlushToArchive();
                     break;
@@ -472,7 +498,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         {
             if (IsReadOnly)
             {
-                Logger.Warning?.Print(LogClass.Gpu, "Trying to add {keyHash} on a read-only cache, ignoring.");
+                Logger.Warning?.Print(LogClass.Gpu, $"Trying to add {keyHash} on a read-only cache, ignoring.");
 
                 return;
             }
@@ -521,7 +547,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         {
             if (IsReadOnly)
             {
-                Logger.Warning?.Print(LogClass.Gpu, "Trying to replace {keyHash} on a read-only cache, ignoring.");
+                Logger.Warning?.Print(LogClass.Gpu, $"Trying to replace {keyHash} on a read-only cache, ignoring.");
 
                 return;
             }
@@ -537,6 +563,27 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                     Key = keyHash,
                     Value = value
                 }
+            });
+        }
+
+        /// <summary>
+        /// Removes a value at the given hash from the cache.
+        /// </summary>
+        /// <param name="keyHash">The hash of the value in the cache</param>
+        public void RemoveValue(ref Hash128 keyHash)
+        {
+            if (IsReadOnly)
+            {
+                Logger.Warning?.Print(LogClass.Gpu, $"Trying to remove {keyHash} on a read-only cache, ignoring.");
+
+                return;
+            }
+
+            // Only queue file change operations
+            _fileWriterWorkerQueue.Add(new CacheFileOperationTask
+            {
+                Type = CacheFileOperation.RemoveManifestEntryAndTempFile,
+                Data = keyHash
             });
         }
 

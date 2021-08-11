@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Graphics.GAL;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +18,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         private ShaderCompileTaskCallback _action;
         private AutoResetEvent _taskDoneEvent;
+
+        public bool IsFaulted => _programsTask.IsFaulted;
 
         /// <summary>
         /// Create a new shader compile task, with an event to signal whenever a subtask completes.

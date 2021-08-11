@@ -7,6 +7,11 @@
             // No default log output.
         }
 
+        uint ConstantBuffer1Read(int offset)
+        {
+            return 0;
+        }
+
         T MemoryRead<T>(ulong address) where T : unmanaged;
 
         bool MemoryMapped(ulong address)

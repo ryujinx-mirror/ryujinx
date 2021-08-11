@@ -371,11 +371,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <summary>
         /// Create guest shader cache entries from the runtime contexts.
         /// </summary>
-        /// <param name="memoryManager">The GPU memory manager in use</param>
+        /// <param name="channel">The GPU channel in use</param>
         /// <param name="shaderContexts">The runtime contexts</param>
         /// <returns>Guest shader cahe entries from the runtime contexts</returns>
-        public static GuestShaderCacheEntry[] CreateShaderCacheEntries(MemoryManager memoryManager, ReadOnlySpan<TranslatorContext> shaderContexts)
+        public static GuestShaderCacheEntry[] CreateShaderCacheEntries(GpuChannel channel, ReadOnlySpan<TranslatorContext> shaderContexts)
         {
+            MemoryManager memoryManager = channel.MemoryManager;
+
             int startIndex = shaderContexts.Length > 1 ? 1 : 0;
 
             GuestShaderCacheEntry[] entries = new GuestShaderCacheEntry[shaderContexts.Length - startIndex];
@@ -389,31 +391,66 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                     continue;
                 }
 
+                GpuAccessor gpuAccessor = context.GpuAccessor as GpuAccessor;
+
+                ulong cb1DataAddress;
+                int cb1DataSize = gpuAccessor?.Cb1DataSize ?? 0;
+
+                if (context.Stage == ShaderStage.Compute)
+                {
+                    cb1DataAddress = channel.BufferManager.GetComputeUniformBufferAddress(1);
+                }
+                else
+                {
+                    int stageIndex = context.Stage switch
+                    {
+                        ShaderStage.TessellationControl => 1,
+                        ShaderStage.TessellationEvaluation => 2,
+                        ShaderStage.Geometry => 3,
+                        ShaderStage.Fragment => 4,
+                        _ => 0
+                    };
+
+                    cb1DataAddress = channel.BufferManager.GetGraphicsUniformBufferAddress(stageIndex, 1);
+                }
+
+                int size = context.Size;
+
                 TranslatorContext translatorContext2 = i == 1 ? shaderContexts[0] : null;
 
                 int sizeA = translatorContext2 != null ? translatorContext2.Size : 0;
 
-                byte[] code = new byte[context.Size + sizeA];
+                byte[] code = new byte[size + cb1DataSize + sizeA];
 
-                memoryManager.GetSpan(context.Address, context.Size).CopyTo(code);
+                memoryManager.GetSpan(context.Address, size).CopyTo(code);
+
+                if (cb1DataAddress != 0 && cb1DataSize != 0)
+                {
+                    memoryManager.Physical.GetSpan(cb1DataAddress, cb1DataSize).CopyTo(code.AsSpan().Slice(size, cb1DataSize));
+                }
 
                 if (translatorContext2 != null)
                 {
-                    memoryManager.GetSpan(translatorContext2.Address, sizeA).CopyTo(code.AsSpan().Slice(context.Size, sizeA));
+                    memoryManager.GetSpan(translatorContext2.Address, sizeA).CopyTo(code.AsSpan().Slice(size + cb1DataSize, sizeA));
                 }
 
                 GuestGpuAccessorHeader gpuAccessorHeader = CreateGuestGpuAccessorCache(context.GpuAccessor);
 
-                if (context.GpuAccessor is GpuAccessor)
+                if (gpuAccessor != null)
                 {
                     gpuAccessorHeader.TextureDescriptorCount = context.TextureHandlesForCache.Count;
                 }
 
-                GuestShaderCacheEntryHeader header = new GuestShaderCacheEntryHeader(context.Stage, context.Size, sizeA, gpuAccessorHeader);
+                GuestShaderCacheEntryHeader header = new GuestShaderCacheEntryHeader(
+                    context.Stage,
+                    size + cb1DataSize,
+                    sizeA,
+                    cb1DataSize,
+                    gpuAccessorHeader);
 
                 GuestShaderCacheEntry entry = new GuestShaderCacheEntry(header, code);
 
-                if (context.GpuAccessor is GpuAccessor gpuAccessor)
+                if (gpuAccessor != null)
                 {
                     foreach (int textureHandle in context.TextureHandlesForCache)
                     {

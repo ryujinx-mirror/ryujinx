@@ -115,6 +115,16 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         }
 
         /// <summary>
+        /// Removes a shader program present in the program cache.
+        /// </summary>
+        /// <param name="programCodeHash">Target program code hash</param>
+        public void RemoveProgram(ref Hash128 programCodeHash)
+        {
+            _guestProgramCache.RemoveValue(ref programCodeHash);
+            _hostProgramCache.RemoveValue(ref programCodeHash);
+        }
+
+        /// <summary>
         /// Get all guest program hashes.
         /// </summary>
         /// <returns>All guest program hashes</returns>

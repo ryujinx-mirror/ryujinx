@@ -40,9 +40,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         public int SizeA;
 
         /// <summary>
-        /// Unused/reserved.
+        /// Constant buffer 1 data size.
         /// </summary>
-        public int Reserved4;
+        public int Cb1DataSize;
 
         /// <summary>
         /// The header of the cached gpu accessor.
@@ -55,12 +55,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// <param name="stage">The stage of this shader</param>
         /// <param name="size">The size of the code section</param>
         /// <param name="sizeA">The size of the code2 section if present (Vertex A)</param>
+        /// <param name="cb1DataSize">Constant buffer 1 data size</param>
         /// <param name="gpuAccessorHeader">The header of the cached gpu accessor</param>
-        public GuestShaderCacheEntryHeader(ShaderStage stage, int size, int sizeA, GuestGpuAccessorHeader gpuAccessorHeader) : this()
+        public GuestShaderCacheEntryHeader(ShaderStage stage, int size, int sizeA, int cb1DataSize, GuestGpuAccessorHeader gpuAccessorHeader) : this()
         {
             Stage = stage;
-            Size  = size;
+            Size = size;
             SizeA = sizeA;
+            Cb1DataSize = cb1DataSize;
             GpuAccessorHeader = gpuAccessorHeader;
         }
     }

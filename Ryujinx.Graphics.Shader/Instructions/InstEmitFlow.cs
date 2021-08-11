@@ -25,6 +25,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCodeBranchIndir op = (OpCodeBranchIndir)context.CurrOp;
 
+            if (op.PossibleTargets.Count == 0)
+            {
+                context.Config.GpuAccessor.Log($"Failed to find targets for BRX instruction at 0x{op.Address:X}.");
+                return;
+            }
+
             int offset = (int)op.Address + 8 + op.Offset;
 
             Operand address = context.IAdd(Register(op.Ra), Const(offset));

@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     {
         private readonly GpuContext _context;
         private readonly ReadOnlyMemory<byte> _data;
+        private readonly ReadOnlyMemory<byte> _cb1Data;
         private readonly GuestGpuAccessorHeader _header;
         private readonly Dictionary<int, GuestTextureDescriptor> _textureDescriptors;
 
@@ -19,12 +20,19 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="context">GPU context</param>
         /// <param name="data">The data of the shader</param>
+        /// <param name="cb1Data">The constant buffer 1 data of the shader</param>
         /// <param name="header">The cache of the GPU accessor</param>
         /// <param name="guestTextureDescriptors">The cache of the texture descriptors</param>
-        public CachedGpuAccessor(GpuContext context, ReadOnlyMemory<byte> data, GuestGpuAccessorHeader header, Dictionary<int, GuestTextureDescriptor> guestTextureDescriptors)
+        public CachedGpuAccessor(
+            GpuContext context,
+            ReadOnlyMemory<byte> data,
+            ReadOnlyMemory<byte> cb1Data,
+            GuestGpuAccessorHeader header,
+            Dictionary<int, GuestTextureDescriptor> guestTextureDescriptors)
         {
             _context = context;
             _data = data;
+            _cb1Data = cb1Data;
             _header = header;
             _textureDescriptors = new Dictionary<int, GuestTextureDescriptor>();
 
@@ -32,6 +40,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 _textureDescriptors.Add(guestTextureDescriptor.Key, guestTextureDescriptor.Value);
             }
+        }
+
+        /// <summary>
+        /// Reads data from the constant buffer 1.
+        /// </summary>
+        /// <param name="offset">Offset in bytes to read from</param>
+        /// <returns>Value at the given offset</returns>
+        public uint ConstantBuffer1Read(int offset)
+        {
+            return MemoryMarshal.Cast<byte, uint>(_cb1Data.Span.Slice(offset))[0];
         }
 
         /// <summary>
