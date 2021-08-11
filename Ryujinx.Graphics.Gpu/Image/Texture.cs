@@ -549,7 +549,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="scale">The new scale factor for this texture</param>
         public void SetScale(float scale)
         {
-            TextureScaleMode newScaleMode = ScaleMode == TextureScaleMode.Blacklisted ? ScaleMode : TextureScaleMode.Scaled;
+            bool unscaled = ScaleMode == TextureScaleMode.Blacklisted || (ScaleMode == TextureScaleMode.Undesired && scale == 1);
+            TextureScaleMode newScaleMode = unscaled ? ScaleMode : TextureScaleMode.Scaled;
 
             if (_viewStorage != this)
             {

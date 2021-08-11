@@ -141,6 +141,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Check if a texture's scale must be updated to match the configured resolution scale.
+        /// </summary>
+        /// <param name="texture">The texture to check</param>
+        /// <returns>True if the scale needs updating, false if the scale is up to date</returns>
+        private bool ScaleNeedsUpdated(Texture texture)
+        {
+            return texture != null && !(texture.ScaleMode == TextureScaleMode.Blacklisted || texture.ScaleMode == TextureScaleMode.Undesired) && texture.ScaleFactor != GraphicsConfig.ResScale;
+        }
+
+        /// <summary>
         /// Sets the render target color buffer.
         /// </summary>
         /// <param name="index">The index of the color buffer to set (up to 8)</param>
@@ -164,7 +174,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 _rtColors[index] = color;
             }
 
-            return changesScale || (hasValue && color.ScaleMode != TextureScaleMode.Blacklisted && color.ScaleFactor != GraphicsConfig.ResScale);
+            return changesScale || ScaleNeedsUpdated(color);
         }
 
         /// <summary>
@@ -190,7 +200,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 _rtDepthStencil = depthStencil;
             }
 
-            return changesScale || (hasValue && depthStencil.ScaleMode != TextureScaleMode.Blacklisted && depthStencil.ScaleFactor != GraphicsConfig.ResScale);
+            return changesScale || ScaleNeedsUpdated(depthStencil);
         }
 
         /// <summary>
@@ -214,6 +224,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             bool mismatch = false;
             bool blacklisted = false;
             bool hasUpscaled = false;
+            bool hasUndesired = false;
             float targetScale = GraphicsConfig.ResScale;
 
             void ConsiderTarget(Texture target)
@@ -230,9 +241,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     case TextureScaleMode.Eligible:
                         mismatch = true; // We must make a decision.
                         break;
+                    case TextureScaleMode.Undesired:
+                        hasUndesired = true;
+                        mismatch |= scale != 1f || hasUpscaled; // If another target is upscaled, scale this one up too.
+                        break;
                     case TextureScaleMode.Scaled:
                         hasUpscaled = true;
-                        mismatch |= scale != targetScale; // If the target scale has changed, reset the scale for all targets.
+                        mismatch |= hasUndesired || scale != targetScale; // If the target scale has changed, reset the scale for all targets.
                         break;
                 }
             }
@@ -254,7 +269,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             mismatch |= blacklisted && hasUpscaled;
 
-            if (blacklisted)
+            if (blacklisted || (hasUndesired && !hasUpscaled))
             {
                 targetScale = 1f;
             }

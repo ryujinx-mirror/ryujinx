@@ -87,10 +87,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Determines if a given texture is eligible for upscaling from its info.
         /// </summary>
         /// <param name="info">The texture info to check</param>
+        /// <param name="withUpscale">True if the user of the texture would prefer it to be upscaled immediately</param>
         /// <returns>True if eligible</returns>
-        private static bool IsUpscaleCompatible(TextureInfo info)
+        private static TextureScaleMode IsUpscaleCompatible(TextureInfo info, bool withUpscale)
         {
-            return (info.Target == Target.Texture2D || info.Target == Target.Texture2DArray) && !info.FormatInfo.IsCompressed && UpscaleSafeMode(info);
+            if ((info.Target == Target.Texture2D || info.Target == Target.Texture2DArray) && !info.FormatInfo.IsCompressed)
+            {
+                return UpscaleSafeMode(info) ? (withUpscale ? TextureScaleMode.Scaled : TextureScaleMode.Eligible) : TextureScaleMode.Undesired;
+            }
+
+            return TextureScaleMode.Blacklisted;
         }
 
         /// <summary>
@@ -117,12 +123,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
+            int widthAlignment = (info.IsLinear ? Constants.StrideAlignment : Constants.GobAlignment) / info.FormatInfo.BytesPerPixel;
+
             if (!(info.FormatInfo.Format.IsDepthOrStencil() || info.FormatInfo.Components == 1))
             {
                 // Discount square textures that aren't depth-stencil like. (excludes game textures, cubemap faces, most 3D texture LUT, texture atlas)
                 // Detect if the texture is possibly square. Widths may be aligned, so to remove the uncertainty we align both the width and height.
-
-                int widthAlignment = (info.IsLinear ? Constants.StrideAlignment : Constants.GobAlignment) / info.FormatInfo.BytesPerPixel;
 
                 bool possiblySquare = BitUtils.AlignUp(info.Width, widthAlignment) == BitUtils.AlignUp(info.Height, widthAlignment);
 
@@ -132,11 +138,17 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            int aspect = (int)Math.Round((info.Width / (float)info.Height) * 9);
-            if (aspect == 16 && info.Height < 360)
+            if (info.Height < 360)
             {
-                // Targets that are roughly 16:9 can only be rescaled if they're equal to or above 360p. (excludes blur and bloom textures)
-                return false;
+                int aspectWidth = (int)MathF.Ceiling((info.Height / 9f) * 16f);
+                int aspectMaxWidth = BitUtils.AlignUp(aspectWidth, widthAlignment);
+                int aspectMinWidth = BitUtils.AlignDown(aspectWidth, widthAlignment);
+
+                if (info.Width >= aspectMinWidth && info.Width <= aspectMaxWidth && info.Height < 360)
+                {
+                    // Targets that are roughly 16:9 can only be rescaled if they're equal to or above 360p. (excludes blur and bloom textures)
+                    return false;
+                }
             }
 
             return true;
@@ -354,13 +366,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             bool isSamplerTexture = (flags & TextureSearchFlags.ForSampler) != 0;
 
-            bool isScalable = IsUpscaleCompatible(info);
-
-            TextureScaleMode scaleMode = TextureScaleMode.Blacklisted;
-            if (isScalable)
-            {
-                scaleMode = (flags & TextureSearchFlags.WithUpscale) != 0 ? TextureScaleMode.Scaled : TextureScaleMode.Eligible;
-            }
+            TextureScaleMode scaleMode = IsUpscaleCompatible(info, (flags & TextureSearchFlags.WithUpscale) != 0);
 
             ulong address;
 

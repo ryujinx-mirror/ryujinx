@@ -380,11 +380,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (changedScale)
             {
+                float oldScale = _channel.TextureManager.RenderTargetScale;
                 _channel.TextureManager.UpdateRenderTargetScale(singleUse);
-                _context.Renderer.Pipeline.SetRenderTargetScale(_channel.TextureManager.RenderTargetScale);
 
-                UpdateViewportTransform();
-                UpdateScissorState();
+                if (oldScale != _channel.TextureManager.RenderTargetScale)
+                {
+                    _context.Renderer.Pipeline.SetRenderTargetScale(_channel.TextureManager.RenderTargetScale);
+
+                    UpdateViewportTransform();
+                    UpdateScissorState();
+                }
             }
         }
 
