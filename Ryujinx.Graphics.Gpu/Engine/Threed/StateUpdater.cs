@@ -34,6 +34,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private byte _vsClipDistancesWritten;
 
         private bool _prevDrawIndexed;
+        private int _prevFirstIndex;
+        private int _prevIndexCount;
         private bool _prevTfEnable;
 
         /// <summary>
@@ -182,10 +184,25 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             // method when doing indexed draws, so we need to make sure
             // to update the vertex buffers if we are doing a regular
             // draw after a indexed one and vice-versa.
-            if (_drawState.DrawIndexed != _prevDrawIndexed)
+            if (GraphicsConfig.EnableIndexedVbSizeDetection)
             {
-                _updateTracker.ForceDirty(VertexBufferStateIndex);
-                _prevDrawIndexed = _drawState.DrawIndexed;
+                if (_drawState.DrawIndexed != _prevDrawIndexed ||
+                    _drawState.FirstIndex != _prevFirstIndex ||
+                    _drawState.IndexCount != _prevIndexCount)
+                {
+                    _updateTracker.ForceDirty(VertexBufferStateIndex);
+                    _prevDrawIndexed = _drawState.DrawIndexed;
+                    _prevFirstIndex = _drawState.FirstIndex;
+                    _prevIndexCount = _drawState.IndexCount;
+                }
+            }
+            else
+            {
+                if (_drawState.DrawIndexed != _prevDrawIndexed)
+                {
+                    _updateTracker.ForceDirty(VertexBufferStateIndex);
+                    _prevDrawIndexed = _drawState.DrawIndexed;
+                }
             }
 
             bool tfEnable = _state.State.TfEnable;
@@ -782,7 +799,25 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     // This size may be (much) larger than the real vertex buffer size.
                     // Avoid calculating it this way, unless we don't have any other option.
-                    size = endAddress.Pack() - address + 1;
+                    ulong vbSizeMax = endAddress.Pack() - address + 1;
+
+                    int firstIndex = _drawState.FirstIndex;
+                    int indexCount = _drawState.IndexCount;
+
+                    bool ibCountingProfitable = GraphicsConfig.EnableIndexedVbSizeDetection && IbUtils.IsIbCountingProfitable(vbSizeMax, indexCount);
+
+                    if (ibCountingProfitable && !_drawState.IbStreamer.HasInlineIndexData && _drawState.DrawIndexed && stride != 0)
+                    {
+                        IndexType ibType = _state.State.IndexBufferState.Type;
+                        ulong ibGpuVa = _state.State.IndexBufferState.Address.Pack();
+                        ulong vertexCount = IbUtils.GetVertexCount(_channel.MemoryManager, ibType, ibGpuVa, firstIndex, indexCount);
+
+                        size = Math.Min(vertexCount * (ulong)stride, vbSizeMax);
+                    }
+                    else
+                    {
+                        size = vbSizeMax;
+                    }
                 }
                 else
                 {
