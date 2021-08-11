@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeAttribute : OpCodeAluReg
+    class OpCodeAttribute : OpCodeAluReg, IOpCodeAttribute
     {
         public int AttributeOffset { get; }
         public int Count           { get; }

@@ -2,9 +2,10 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeIpa : OpCodeAluReg
+    class OpCodeIpa : OpCodeAluReg, IOpCodeAttribute
     {
         public int AttributeOffset { get; }
+        public int Count => 1;
 
         public InterpolationMode Mode { get; }
 

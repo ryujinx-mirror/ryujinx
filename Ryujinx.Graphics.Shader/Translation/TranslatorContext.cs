@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                    operand.Value < AttributeConsts.UserAttributeEnd;
         }
 
-        private static FunctionCode[] Combine(FunctionCode[] a, FunctionCode[] b)
+        private static FunctionCode[] Combine(FunctionCode[] a, FunctionCode[] b, int aStart)
         {
             // Here we combine two shaders.
             // For shader A:
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             Operand lblB = Label();
 
-            for (int index = 0; index < a[0].Code.Length; index++)
+            for (int index = aStart; index < a[0].Code.Length; index++)
             {
                 Operation operation = a[0].Code[index];
 
@@ -103,7 +103,17 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         if (temp != null)
                         {
-                            operation.SetSource(srcIndex, temp);
+                            // TODO: LoadAttribute should accept any integer value as first argument,
+                            // then we don't need special case here. Right now it expects the first
+                            // operand to be of type "attribute".
+                            if ((operation.Inst & Instruction.Mask) == Instruction.LoadAttribute)
+                            {
+                                operation.TurnIntoCopy(temp);
+                            }
+                            else
+                            {
+                                operation.SetSource(srcIndex, temp);
+                            }
                         }
                     }
                 }
@@ -126,13 +136,25 @@ namespace Ryujinx.Graphics.Shader.Translation
             return output;
         }
 
-        public ShaderProgram Translate(out ShaderProgramInfo shaderProgramInfo, TranslatorContext other = null)
+        public ShaderProgram Translate(
+            out ShaderProgramInfo shaderProgramInfo,
+            TranslatorContext nextStage = null,
+            TranslatorContext other = null)
         {
-            FunctionCode[] code = EmitShader(_cfg, _config);
+            if (nextStage != null)
+            {
+                _config.MergeOutputUserAttributes(nextStage._config.UsedInputAttributes);
+            }
+
+            FunctionCode[] code = EmitShader(_cfg, _config, initializeOutputs: other == null, out _);
 
             if (other != null)
             {
-                code = Combine(EmitShader(other._cfg, other._config), code);
+                other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes);
+
+                FunctionCode[] otherCode = EmitShader(other._cfg, other._config, initializeOutputs: true, out int aStart);
+
+                code = Combine(otherCode, code, aStart);
 
                 _config.InheritFrom(other._config);
             }

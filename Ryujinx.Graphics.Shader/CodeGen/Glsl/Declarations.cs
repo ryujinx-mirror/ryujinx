@@ -3,14 +3,12 @@ using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Linq;
+using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     static class Declarations
     {
-        // At least 16 attributes are guaranteed by the spec.
-        public const int MaxAttributes = 16;
-
         public static void Declare(CodeGenContext context, StructuredProgramInfo info)
         {
             context.AppendLine("#version 450 core");
@@ -129,14 +127,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     context.AppendLine();
                 }
 
-                if (info.IAttributes.Count != 0 || context.Config.GpPassthrough)
+                if (context.Config.UsedInputAttributes != 0 || context.Config.GpPassthrough)
                 {
                     DeclareInputAttributes(context, info);
 
                     context.AppendLine();
                 }
 
-                if (info.OAttributes.Count != 0 || context.Config.Stage != ShaderStage.Fragment)
+                if (context.Config.UsedOutputAttributes != 0 || context.Config.Stage != ShaderStage.Fragment)
                 {
                     DeclareOutputAttributes(context, info);
 
@@ -404,24 +402,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareInputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            if (context.Config.GpPassthrough)
+            int usedAttribtes = context.Config.UsedInputAttributes;
+            while (usedAttribtes != 0)
             {
-                for (int attr = 0; attr < MaxAttributes; attr++)
-                {
-                    DeclareInputAttribute(context, info, attr);
-                }
+                int index = BitOperations.TrailingZeroCount(usedAttribtes);
 
-                foreach (int attr in info.IAttributes.OrderBy(x => x).Where(x => x >= MaxAttributes))
-                {
-                    DeclareInputAttribute(context, info, attr);
-                }
-            }
-            else
-            {
-                foreach (int attr in info.IAttributes.OrderBy(x => x))
-                {
-                    DeclareInputAttribute(context, info, attr);
-                }
+                DeclareInputAttribute(context, info, index);
+
+                usedAttribtes &= ~(1 << index);
             }
         }
 
@@ -440,8 +428,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 };
             }
 
-            string pass = context.Config.GpPassthrough && !info.OAttributes.Contains(attr) ? "passthrough, " : string.Empty;
-
+            string pass = (context.Config.PassthroughAttributes & (1 << attr)) != 0 ? "passthrough, " : string.Empty;
             string name = $"{DefaultNames.IAttributePrefix}{attr}";
 
             if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
@@ -461,34 +448,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            if (context.Config.Stage == ShaderStage.Fragment || context.Config.GpPassthrough)
+            int usedAttribtes = context.Config.UsedOutputAttributes;
+            while (usedAttribtes != 0)
             {
-                DeclareUsedOutputAttributes(context, info);
-            }
-            else
-            {
-                DeclareAllOutputAttributes(context, info);
-            }
-        }
+                int index = BitOperations.TrailingZeroCount(usedAttribtes);
 
-        private static void DeclareUsedOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
-        {
-            foreach (int attr in info.OAttributes.OrderBy(x => x))
-            {
-                DeclareOutputAttribute(context, attr);
-            }
-        }
+                DeclareOutputAttribute(context, index);
 
-        private static void DeclareAllOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
-        {
-            for (int attr = 0; attr < MaxAttributes; attr++)
-            {
-                DeclareOutputAttribute(context, attr);
-            }
-
-            foreach (int attr in info.OAttributes.OrderBy(x => x).Where(x => x >= MaxAttributes))
-            {
-                DeclareOutputAttribute(context, attr);
+                usedAttribtes &= ~(1 << index);
             }
         }
 

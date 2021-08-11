@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public bool IsNonMain { get; }
 
+        public int OperationsCount => _operations.Count;
+
         private readonly IReadOnlyDictionary<ulong, int> _funcs;
         private readonly List<Operation> _operations;
         private readonly Dictionary<ulong, Operand> _labels;
@@ -200,6 +202,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     if (target.Enabled)
                     {
+                        Config.SetOutputUserAttribute(rtIndex);
                         regIndexBase += 4;
                     }
                 }

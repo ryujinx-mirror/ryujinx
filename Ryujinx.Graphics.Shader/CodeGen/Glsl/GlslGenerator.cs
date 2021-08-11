@@ -49,46 +49,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             Declarations.DeclareLocals(context, function);
 
-            if (funcName == MainFunctionName)
-            {
-                // Some games will leave some elements of gl_Position uninitialized,
-                // in those cases, the elements will contain undefined values according
-                // to the spec, but on NVIDIA they seems to be always initialized to (0, 0, 0, 1),
-                // so we do explicit initialization to avoid UB on non-NVIDIA gpus.
-                if (context.Config.Stage == ShaderStage.Vertex)
-                {
-                    context.AppendLine("gl_Position = vec4(0.0, 0.0, 0.0, 1.0);");
-                }
-
-                // Ensure that unused attributes are set, otherwise the downstream
-                // compiler may eliminate them.
-                // (Not needed for fragment shader as it is the last stage).
-                if (context.Config.Stage != ShaderStage.Compute &&
-                    context.Config.Stage != ShaderStage.Fragment &&
-                    !context.Config.GpPassthrough)
-                {
-                    for (int attr = 0; attr < Declarations.MaxAttributes; attr++)
-                    {
-                        if (info.OAttributes.Contains(attr))
-                        {
-                            continue;
-                        }
-
-                        if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
-                        {
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_x = 0.0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_y = 0.0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_z = 0.0;");
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr}_w = 1.0;");
-                        }
-                        else
-                        {
-                            context.AppendLine($"{DefaultNames.OAttributePrefix}{attr} = vec4(0.0, 0.0, 0.0, 1.0);");
-                        }
-                    }
-                }
-            }
-
             PrintBlock(context, function.MainBlock);
 
             context.LeaveScope();

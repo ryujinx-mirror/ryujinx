@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.Instructions;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class Decoder
     {
-        public static Block[][] Decode(IGpuAccessor gpuAccessor, ulong startAddress, out bool hasBindless)
+        public static Block[][] Decode(ShaderConfig config, ulong startAddress)
         {
-            hasBindless = false;
-
             List<Block[]> funcs = new List<Block[]>();
 
             Queue<ulong> funcQueue = new Queue<ulong>();
@@ -90,8 +89,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                             }
                         }
 
-                        FillBlock(gpuAccessor, currBlock, limitAddress, startAddress, out bool blockHasBindless);
-                        hasBindless |= blockHasBindless;
+                        FillBlock(config, currBlock, limitAddress, startAddress);
 
                         if (currBlock.OpCodes.Count != 0)
                         {
@@ -168,7 +166,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                             for (int i = 0; i < cbOffsetsCount; i++)
                             {
-                                uint targetOffset = gpuAccessor.ConstantBuffer1Read(cbBaseOffset + i * 4);
+                                uint targetOffset = config.GpuAccessor.ConstantBuffer1Read(cbBaseOffset + i * 4);
                                 Block target = GetBlock(baseOffset + targetOffset);
                                 opBrIndir.PossibleTargets.Add(target);
                                 target.Predecessors.Add(block);
@@ -224,15 +222,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
             return false;
         }
 
-        private static void FillBlock(
-            IGpuAccessor gpuAccessor,
-            Block        block,
-            ulong        limitAddress,
-            ulong        startAddress,
-            out bool     hasBindless)
+        private static void FillBlock(ShaderConfig config, Block block, ulong limitAddress, ulong startAddress)
         {
+            IGpuAccessor gpuAccessor = config.GpuAccessor;
+
             ulong address = block.Address;
-            hasBindless = false;
 
             do
             {
@@ -274,13 +268,38 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 OpCode op = makeOp(emitter, opAddress, opCode);
 
                 // We check these patterns to figure out the presence of bindless access
-                hasBindless |= (op is OpCodeImage image && image.IsBindless) ||
+                if ((op is OpCodeImage image && image.IsBindless) ||
                     (op is OpCodeTxd txd && txd.IsBindless) ||
                     (op is OpCodeTld4B) ||
                     (emitter == InstEmit.TexB) ||
                     (emitter == InstEmit.TldB) ||
                     (emitter == InstEmit.TmmlB) ||
-                    (emitter == InstEmit.TxqB);
+                    (emitter == InstEmit.TxqB))
+                {
+                    config.SetUsedFeature(FeatureFlags.Bindless);
+                }
+
+                // Populate used attributes.
+                if (op is IOpCodeAttribute opAttr)
+                {
+                    for (int elemIndex = 0; elemIndex < opAttr.Count; elemIndex++)
+                    {
+                        int attr = opAttr.AttributeOffset + elemIndex * 4;
+                        if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
+                        {
+                            int index = (attr - AttributeConsts.UserAttributeBase) / 16;
+
+                            if (op.Emitter == InstEmit.Ast)
+                            {
+                                config.SetOutputUserAttribute(index);
+                            }
+                            else
+                            {
+                                config.SetInputUserAttribute(index);
+                            }
+                        }
+                    }
+                }
 
                 block.OpCodes.Add(op);
             }

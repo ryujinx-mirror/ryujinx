@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 2494;
+        private const ulong ShaderCodeGenVersion = 2538;
 
         // Progress reporting helpers
         private volatile int _shaderCount;
@@ -290,6 +290,43 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             {
                                 Task compileTask = Task.Run(() =>
                                 {
+                                    TranslatorContext[] shaderContexts = null;
+
+                                    if (!isHostProgramValid)
+                                    {
+                                        shaderContexts = new TranslatorContext[1 + entries.Length];
+
+                                        for (int i = 0; i < entries.Length; i++)
+                                        {
+                                            GuestShaderCacheEntry entry = entries[i];
+
+                                            if (entry == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            var binaryCode = new Memory<byte>(entry.Code);
+
+                                            var gpuAccessor = new CachedGpuAccessor(
+                                                _context,
+                                                binaryCode,
+                                                binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
+                                                entry.Header.GpuAccessorHeader,
+                                                entry.TextureDescriptors);
+
+                                            var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
+
+                                            shaderContexts[i + 1] = Translator.CreateContext(0, gpuAccessor, options, counts);
+
+                                            if (entry.Header.SizeA != 0)
+                                            {
+                                                var options2 = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags | TranslationFlags.VertexA);
+
+                                                shaderContexts[0] = Translator.CreateContext((ulong)entry.Header.Size, gpuAccessor, options2, counts);
+                                            }
+                                        }
+                                    }
+
                                     // Reconstruct code holder.
                                     for (int i = 0; i < entries.Length; i++)
                                     {
@@ -301,70 +338,29 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                         }
 
                                         ShaderProgram program;
+                                        ShaderProgramInfo shaderProgramInfo;
 
-                                        if (entry.Header.SizeA != 0)
+                                        if (isHostProgramValid)
                                         {
-                                            ShaderProgramInfo shaderProgramInfo;
-
-                                            if (isHostProgramValid)
-                                            {
-                                                program = new ShaderProgram(entry.Header.Stage, "");
-                                                shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
-                                            }
-                                            else
-                                            {
-                                                var binaryCode = new Memory<byte>(entry.Code);
-
-                                                var gpuAccessor = new CachedGpuAccessor(
-                                                    _context,
-                                                    binaryCode,
-                                                    binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
-                                                    entry.Header.GpuAccessorHeader,
-                                                    entry.TextureDescriptors);
-
-                                                var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
-                                                var options2 = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags | TranslationFlags.VertexA);
-
-                                                TranslatorContext translatorContext = Translator.CreateContext(0, gpuAccessor, options, counts);
-                                                TranslatorContext translatorContext2 = Translator.CreateContext((ulong)entry.Header.Size, gpuAccessor, options2, counts);
-
-                                                program = translatorContext.Translate(out shaderProgramInfo, translatorContext2);
-                                            }
-
-                                            // NOTE: Vertex B comes first in the shader cache.
-                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-                                            byte[] code2 = entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray();
-
-                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
+                                            program = new ShaderProgram(entry.Header.Stage, "");
+                                            shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
                                         }
                                         else
                                         {
-                                            ShaderProgramInfo shaderProgramInfo;
+                                            int stageIndex = i + 1;
 
-                                            if (isHostProgramValid)
-                                            {
-                                                program = new ShaderProgram(entry.Header.Stage, "");
-                                                shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
-                                            }
-                                            else
-                                            {
-                                                var binaryCode = new Memory<byte>(entry.Code);
+                                            TranslatorContext currentStage = shaderContexts[stageIndex];
+                                            TranslatorContext nextStage = GetNextStageContext(shaderContexts, stageIndex);
+                                            TranslatorContext vertexA = stageIndex == 1 ? shaderContexts[0] : null;
 
-                                                var gpuAccessor = new CachedGpuAccessor(
-                                                    _context,
-                                                    binaryCode,
-                                                    binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
-                                                    entry.Header.GpuAccessorHeader,
-                                                    entry.TextureDescriptors);
-
-                                                var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
-                                                program = Translator.CreateContext(0, gpuAccessor, options, counts).Translate(out shaderProgramInfo);
-                                            }
-
-                                            byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-
-                                            shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code);
+                                            program = currentStage.Translate(out shaderProgramInfo, nextStage, vertexA);
                                         }
+
+                                        // NOTE: Vertex B comes first in the shader cache.
+                                        byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+                                        byte[] code2 = entry.Header.SizeA != 0 ? entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray() : null;
+
+                                        shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
 
                                         shaderPrograms.Add(program);
                                     }
@@ -591,7 +587,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
 
                 // The shader isn't currently cached, translate it and compile it.
-                ShaderCodeHolder shader = TranslateShader(channel.MemoryManager, shaderContexts[0]);
+                ShaderCodeHolder shader = TranslateShader(_dumper, channel.MemoryManager, shaderContexts[0], null, null);
 
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
@@ -715,11 +711,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 // The shader isn't currently cached, translate it and compile it.
                 ShaderCodeHolder[] shaders = new ShaderCodeHolder[Constants.ShaderStages];
 
-                shaders[0] = TranslateShader(channel.MemoryManager, shaderContexts[1], shaderContexts[0]);
-                shaders[1] = TranslateShader(channel.MemoryManager, shaderContexts[2]);
-                shaders[2] = TranslateShader(channel.MemoryManager, shaderContexts[3]);
-                shaders[3] = TranslateShader(channel.MemoryManager, shaderContexts[4]);
-                shaders[4] = TranslateShader(channel.MemoryManager, shaderContexts[5]);
+                for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
+                {
+                    shaders[stageIndex] = TranslateShader(_dumper, channel.MemoryManager, shaderContexts, stageIndex + 1);
+                }
 
                 List<IShader> hostShaders = new List<IShader>();
 
@@ -942,53 +937,94 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Translates a previously generated translator context to something that the host API accepts.
         /// </summary>
+        /// <param name="dumper">Optional shader code dumper</param>
         /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
-        /// <param name="translatorContext">Current translator context to translate</param>
-        /// <param name="translatorContext2">Optional translator context of the shader that should be combined</param>
+        /// <param name="stages">Translator context of all available shader stages</param>
+        /// <param name="stageIndex">Index on the stages array to translate</param>
         /// <returns>Compiled graphics shader code</returns>
-        private ShaderCodeHolder TranslateShader(
+        private static ShaderCodeHolder TranslateShader(
+            ShaderDumper dumper,
             MemoryManager memoryManager,
-            TranslatorContext translatorContext,
-            TranslatorContext translatorContext2 = null)
+            TranslatorContext[] stages,
+            int stageIndex)
         {
-            if (translatorContext == null)
+            TranslatorContext currentStage = stages[stageIndex];
+            TranslatorContext nextStage = GetNextStageContext(stages, stageIndex);
+            TranslatorContext vertexA = stageIndex == 1 ? stages[0] : null;
+
+            return TranslateShader(dumper, memoryManager, currentStage, nextStage, vertexA);
+        }
+
+        /// <summary>
+        /// Gets the next shader stage context, from an array of contexts and index of the current stage.
+        /// </summary>
+        /// <param name="stages">Translator context of all available shader stages</param>
+        /// <param name="stageIndex">Index on the stages array to translate</param>
+        /// <returns>The translator context of the next stage, or null if inexistent</returns>
+        private static TranslatorContext GetNextStageContext(TranslatorContext[] stages, int stageIndex)
+        {
+            for (int nextStageIndex = stageIndex + 1; nextStageIndex < stages.Length; nextStageIndex++)
+            {
+                if (stages[nextStageIndex] != null)
+                {
+                    return stages[nextStageIndex];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Translates a previously generated translator context to something that the host API accepts.
+        /// </summary>
+        /// <param name="dumper">Optional shader code dumper</param>
+        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
+        /// <param name="currentStage">Translator context of the stage to be translated</param>
+        /// <param name="nextStage">Translator context of the next active stage, if existent</param>
+        /// <param name="vertexA">Optional translator context of the shader that should be combined</param>
+        /// <returns>Compiled graphics shader code</returns>
+        private static ShaderCodeHolder TranslateShader(
+            ShaderDumper dumper,
+            MemoryManager memoryManager,
+            TranslatorContext currentStage,
+            TranslatorContext nextStage,
+            TranslatorContext vertexA)
+        {
+            if (currentStage == null)
             {
                 return null;
             }
 
-            if (translatorContext2 != null)
+            if (vertexA != null)
             {
-                byte[] codeA = memoryManager.GetSpan(translatorContext2.Address, translatorContext2.Size).ToArray();
-                byte[] codeB = memoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
+                byte[] codeA = memoryManager.GetSpan(vertexA.Address, vertexA.Size).ToArray();
+                byte[] codeB = memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
 
-                _dumper.Dump(codeA, compute: false, out string fullPathA, out string codePathA);
-                _dumper.Dump(codeB, compute: false, out string fullPathB, out string codePathB);
+                ShaderDumpPaths pathsA = default;
+                ShaderDumpPaths pathsB = default;
 
-                ShaderProgram program = translatorContext.Translate(out ShaderProgramInfo shaderProgramInfo, translatorContext2);
-
-                if (fullPathA != null && fullPathB != null && codePathA != null && codePathB != null)
+                if (dumper != null)
                 {
-                    program.Prepend("// " + codePathB);
-                    program.Prepend("// " + fullPathB);
-                    program.Prepend("// " + codePathA);
-                    program.Prepend("// " + fullPathA);
+                    pathsA = dumper.Dump(codeA, compute: false);
+                    pathsB = dumper.Dump(codeB, compute: false);
                 }
+
+                ShaderProgram program = currentStage.Translate(out ShaderProgramInfo shaderProgramInfo, nextStage, vertexA);
+
+                pathsB.Prepend(program);
+                pathsA.Prepend(program);
 
                 return new ShaderCodeHolder(program, shaderProgramInfo, codeB, codeA);
             }
             else
             {
-                byte[] code = memoryManager.GetSpan(translatorContext.Address, translatorContext.Size).ToArray();
+                byte[] code = memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
 
-                _dumper.Dump(code, translatorContext.Stage == ShaderStage.Compute, out string fullPath, out string codePath);
+                ShaderDumpPaths paths = dumper?.Dump(code, currentStage.Stage == ShaderStage.Compute) ?? default;
 
-                ShaderProgram program = translatorContext.Translate(out ShaderProgramInfo shaderProgramInfo);
+                ShaderProgram program = currentStage.Translate(out ShaderProgramInfo shaderProgramInfo, nextStage);
 
-                if (fullPath != null && codePath != null)
-                {
-                    program.Prepend("// " + codePath);
-                    program.Prepend("// " + fullPath);
-                }
+                paths.Prepend(program);
 
                 return new ShaderCodeHolder(program, shaderProgramInfo, code);
             }
