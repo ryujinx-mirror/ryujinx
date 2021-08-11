@@ -435,8 +435,19 @@ namespace Ryujinx.Graphics.OpenGL.Image
         private void ReadFrom(IntPtr data, int size)
         {
             TextureTarget target = Target.Convert();
+            int baseLevel = 0;
 
-            Bind(target, 0);
+            // glTexSubImage on cubemap views is broken on Intel, we have to use the storage instead.
+            if (Target == Target.Cubemap && HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows)
+            {
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(target, Storage.Handle);
+                baseLevel = FirstLevel;
+            }
+            else
+            {
+                Bind(target, 0);
+            }
 
             FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
@@ -457,7 +468,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     return;
                 }
 
-                switch (Info.Target)
+                switch (Target)
                 {
                     case Target.Texture1D:
                         if (format.IsCompressed)
@@ -558,7 +569,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                             {
                                 GL.CompressedTexSubImage2D(
                                     TextureTarget.TextureCubeMapPositiveX + face,
-                                    level,
+                                    baseLevel + level,
                                     0,
                                     0,
                                     width,
@@ -571,7 +582,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                             {
                                 GL.TexSubImage2D(
                                     TextureTarget.TextureCubeMapPositiveX + face,
-                                    level,
+                                    baseLevel + level,
                                     0,
                                     0,
                                     width,
