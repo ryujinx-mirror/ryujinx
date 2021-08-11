@@ -73,12 +73,12 @@ namespace Ryujinx.Graphics.GAL
 
         void SetStencilTest(StencilTestDescriptor stencilTest);
 
-        void SetStorageBuffers(ReadOnlySpan<BufferRange> buffers);
+        void SetStorageBuffers(int first, ReadOnlySpan<BufferRange> buffers);
 
         void SetTexture(int binding, ITexture texture);
 
         void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers);
-        void SetUniformBuffers(ReadOnlySpan<BufferRange> buffers);
+        void SetUniformBuffers(int first, ReadOnlySpan<BufferRange> buffers);
 
         void SetUserClipDistance(int index, bool enableClip);
 

@@ -1,9 +1,7 @@
 using Ryujinx.Common;
-using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
@@ -159,23 +157,38 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
-            if (context.Config.Stage == ShaderStage.Fragment || context.Config.Stage == ShaderStage.Compute)
-            {
-                if (context.Config.Stage == ShaderStage.Fragment)
-                {
-                    if (context.Config.GpuAccessor.QueryEarlyZForce())
-                    {
-                        context.AppendLine("layout(early_fragment_tests) in;");
-                        context.AppendLine();
-                    }
+            bool isFragment = context.Config.Stage == ShaderStage.Fragment;
 
-                    context.AppendLine($"uniform bool {DefaultNames.IsBgraName}[8];");
+            if (isFragment || context.Config.Stage == ShaderStage.Compute)
+            {
+                if (isFragment && context.Config.GpuAccessor.QueryEarlyZForce())
+                {
+                    context.AppendLine("layout(early_fragment_tests) in;");
                     context.AppendLine();
                 }
 
-                if (DeclareRenderScale(context))
+                if ((context.Config.UsedFeatures & (FeatureFlags.FragCoordXY | FeatureFlags.IntegerSampling)) != 0)
                 {
-                    context.AppendLine();
+                    string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+
+                    int scaleElements = context.Config.GetTextureDescriptors().Length + context.Config.GetImageDescriptors().Length;
+
+                    if (isFragment)
+                    {
+                        scaleElements++; // Also includes render target scale, for gl_FragCoord.
+                    }
+
+                    DeclareSupportUniformBlock(context, isFragment, scaleElements);
+
+                    if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
+                    {
+                        AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
+                        context.AppendLine();
+                    }
+                }
+                else if (isFragment)
+                {
+                    DeclareSupportUniformBlock(context, true, 0);
                 }
             }
 
@@ -498,31 +511,33 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static bool DeclareRenderScale(CodeGenContext context)
+        private static void DeclareSupportUniformBlock(CodeGenContext context, bool isFragment, int scaleElements)
         {
-            if ((context.Config.UsedFeatures & (FeatureFlags.FragCoordXY | FeatureFlags.IntegerSampling)) != 0)
+            if (!isFragment && scaleElements == 0)
             {
-                string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-                int scaleElements = context.Config.GetTextureDescriptors().Length + context.Config.GetImageDescriptors().Length;
-
-                if (context.Config.Stage == ShaderStage.Fragment)
-                {
-                    scaleElements++; // Also includes render target scale, for gl_FragCoord.
-                }
-
-                context.AppendLine($"uniform float {stage}_renderScale[{scaleElements}];");
-
-                if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
-                {
-                    context.AppendLine();
-                    AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
-                }
-
-                return true;
+                return;
             }
 
-            return false;
+            context.AppendLine($"layout (binding = 0, std140) uniform {DefaultNames.SupportBlockName}");
+            context.EnterScope();
+
+            if (isFragment)
+            {
+                context.AppendLine($"uint {DefaultNames.SupportBlockAlphaTestName};");
+                context.AppendLine($"bool {DefaultNames.SupportBlockIsBgraName}[{SupportBuffer.FragmentIsBgraCount}];");
+            }
+            else
+            {
+                context.AppendLine($"uint s_reserved[{SupportBuffer.ComputeRenderScaleOffset / SupportBuffer.FieldSize}];");
+            }
+
+            if (scaleElements != 0)
+            {
+                context.AppendLine($"float {DefaultNames.SupportBlockRenderScaleName}[{scaleElements}];");
+            }
+
+            context.LeaveScope(";");
+            context.AppendLine();
         }
 
         private static void AppendHelperFunction(CodeGenContext context, string filename)

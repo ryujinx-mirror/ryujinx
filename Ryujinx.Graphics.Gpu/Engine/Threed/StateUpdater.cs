@@ -957,9 +957,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 UpdateUserClipState();
             }
 
-            int storageBufferBindingsCount = 0;
-            int uniformBufferBindingsCount = 0;
-
             for (int stage = 0; stage < Constants.ShaderStages; stage++)
             {
                 ShaderProgramInfo info = gs.Shaders[stage]?.Info;
@@ -1015,20 +1012,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
                 _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
-
-                if (info.SBuffers.Count != 0)
-                {
-                    storageBufferBindingsCount = Math.Max(storageBufferBindingsCount, info.SBuffers.Max(x => x.Binding) + 1);
-                }
-
-                if (info.CBuffers.Count != 0)
-                {
-                    uniformBufferBindingsCount = Math.Max(uniformBufferBindingsCount, info.CBuffers.Max(x => x.Binding) + 1);
-                }
             }
-
-            _channel.BufferManager.SetGraphicsStorageBufferBindingsCount(storageBufferBindingsCount);
-            _channel.BufferManager.SetGraphicsUniformBufferBindingsCount(uniformBufferBindingsCount);
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
         }

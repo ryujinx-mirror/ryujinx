@@ -14,6 +14,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public const string DataName = "data";
 
+        public const string SupportBlockName = "support_block";
+        public const string SupportBlockAlphaTestName = "s_alpha_test";
+        public const string SupportBlockIsBgraName = "s_is_bgra";
+        public const string SupportBlockRenderScaleName = "s_render_scale";
+
         public const string BlockSuffix = "block";
 
         public const string UniformNamePrefix = "c";
@@ -25,7 +30,5 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string ArgumentNamePrefix = "a";
 
         public const string UndefinedName = "undef";
-
-        public const string IsBgraName = "is_bgra";
     }
 }

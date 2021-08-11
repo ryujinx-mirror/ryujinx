@@ -13,10 +13,6 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
-        public int FragmentIsBgraUniform { get; private set; }
-        public int FragmentRenderScaleUniform { get; private set; }
-        public int ComputeRenderScaleUniform { get; private set; }
-
         public bool IsLinked
         {
             get
@@ -30,7 +26,6 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        private bool _initialized;
         private ProgramLinkStatus _status = ProgramLinkStatus.Incomplete;
         private IShader[] _shaders;
 
@@ -117,15 +112,6 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Bind()
         {
-            if (!_initialized)
-            {
-                FragmentIsBgraUniform = GL.GetUniformLocation(Handle, "is_bgra");
-                FragmentRenderScaleUniform = GL.GetUniformLocation(Handle, "fp_renderScale");
-                ComputeRenderScaleUniform = GL.GetUniformLocation(Handle, "cp_renderScale");
-
-                _initialized = true;
-            }
-
             GL.UseProgram(Handle);
         }
 
