@@ -76,11 +76,20 @@ namespace Ryujinx.Graphics.OpenGL
                 _componentMasks[index] = 0xf;
             }
 
-            var v4Zero = new Vector4<float> { X = 0f, Y = 0f, Z = 0f, W = 0f };
-            new Span<Vector4<float>>(_renderScale).Fill(v4Zero);
+            var defaultScale = new Vector4<float> { X = 1f, Y = 0f, Z = 0f, W = 0f };
+            new Span<Vector4<float>>(_renderScale).Fill(defaultScale);
 
             _tfbs = new BufferHandle[Constants.MaxTransformFeedbackBuffers];
             _tfbTargets = new BufferRange[Constants.MaxTransformFeedbackBuffers];
+        }
+
+        public void Initialize()
+        {
+            _supportBuffer = Buffer.Create(SupportBuffer.RequiredSize);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, Unsafe.As<BufferHandle, int>(ref _supportBuffer));
+
+            SetSupportBufferData<Vector4<int>>(SupportBuffer.FragmentIsBgraOffset, _fpIsBgra, SupportBuffer.FragmentIsBgraCount);
+            SetSupportBufferData<Vector4<float>>(SupportBuffer.FragmentRenderScaleOffset, _renderScale, SupportBuffer.RenderScaleMaxCount);
         }
 
         public void Barrier()
@@ -1207,12 +1216,6 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void SetSupportBufferData<T>(int offset, ReadOnlySpan<T> data, int count) where T : unmanaged
         {
-            if (_supportBuffer == BufferHandle.Null)
-            {
-                _supportBuffer = Buffer.Create(SupportBuffer.RequiredSize);
-                GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, Unsafe.As<BufferHandle, int>(ref _supportBuffer));
-            }
-
             Buffer.SetData(_supportBuffer, offset, MemoryMarshal.Cast<T, byte>(data.Slice(0, count)));
         }
 

@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader
         public const int ComputeRenderScaleOffset = FragmentRenderScaleOffset + FieldSize; // Skip first scale that is used for the render target
 
         // One for the render target, 32 for the textures, and 8 for the images.
-        private const int RenderScaleMaxCount = 1 + 32 + 8;
+        public const int RenderScaleMaxCount = 1 + 32 + 8;
 
         public const int RequiredSize = FragmentRenderScaleOffset + RenderScaleMaxCount * FieldSize;
     }
