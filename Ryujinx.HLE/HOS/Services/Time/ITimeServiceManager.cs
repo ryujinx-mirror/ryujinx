@@ -149,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode Unknown50(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(51)]
@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode Unknown51(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(52)]
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode Unknown52(ServiceCtx context)
         {
             // TODO: figure out the usage of this event
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(60)]
@@ -201,7 +201,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode GetAlarmRegistrationEvent(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(201)]
@@ -209,7 +209,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode UpdateSteadyAlarms(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(202)]
@@ -217,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         public ResultCode TryGetNextSteadyClockAlarmSnapshot(ServiceCtx context)
         {
             // TODO
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
     }
 }

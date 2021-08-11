@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 string dbgMessage = $"{service.GetType().FullName}: {commandId}";
 
-                throw new ServiceNotImplementedException(service, context, dbgMessage, false);
+                throw new ServiceNotImplementedException(service, context, dbgMessage);
             }
         }
 
@@ -194,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 string dbgMessage = $"{GetType().FullName}: {commandId}";
 
-                throw new ServiceNotImplementedException(this, context, dbgMessage, true);
+                throw new ServiceNotImplementedException(this, context, dbgMessage);
             }
         }
 

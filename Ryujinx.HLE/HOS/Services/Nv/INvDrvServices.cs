@@ -428,7 +428,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // ForceSetClientPid(u64) -> u32 error_code
         public ResultCode ForceSetClientPid(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(8)]
@@ -455,7 +455,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // InitializeDevtools(u32, handle<copy>) -> u32 error_code;
         public ResultCode InitializeDevtools(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(11)] // 3.0.0+

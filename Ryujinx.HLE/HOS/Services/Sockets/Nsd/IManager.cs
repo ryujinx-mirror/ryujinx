@@ -48,14 +48,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // GetSettingUrl() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingUrl(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(10)]
         // GetSettingName() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingName(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(11)]
@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // ImportSettings(u32, buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode ImportSettings(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(15)] // 4.0.0+
@@ -202,49 +202,49 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // GetNasServiceSetting(buffer<unknown<0x10>, 0x15>) -> buffer<unknown<0x108>, 0x16>
         public ResultCode GetNasServiceSetting(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(31)]
         // GetNasServiceSettingEx(buffer<unknown<0x10>, 0x15>) -> (u32, buffer<unknown<0x108>, 0x16>)
         public ResultCode GetNasServiceSettingEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(40)]
         // GetNasRequestFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasRequestFqdn(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(41)]
         // GetNasRequestFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasRequestFqdnEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(42)]
         // GetNasApiFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasApiFqdn(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(43)]
         // GetNasApiFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasApiFqdnEx(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(50)]
         // GetCurrentSetting() -> buffer<unknown<0x12bf0>, 0x16>
         public ResultCode GetCurrentSetting(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(51)] // 9.0.0+
@@ -253,7 +253,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         {
             // TODO: Write test parameter through the savedata 0x80000000000000B0 (nsdsave:/test_parameter).
 
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(52)] // 9.0.0+
@@ -262,7 +262,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         {
             // TODO: Read test parameter through the savedata 0x80000000000000B0 (nsdsave:/test_parameter).
 
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(60)]
@@ -386,14 +386,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         // SetApplicationServerEnvironmentType(bytes<1>)
         public ResultCode SetApplicationServerEnvironmentType(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(102)] // 10.0.0+
         // DeleteApplicationServerEnvironmentType()
         public ResultCode DeleteApplicationServerEnvironmentType(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
     }
 }

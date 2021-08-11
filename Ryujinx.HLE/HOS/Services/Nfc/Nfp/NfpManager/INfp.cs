@@ -505,7 +505,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // Restore(bytes<8, 4>)
         public ResultCode Restore(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(12)]
@@ -971,7 +971,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // RecreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context, false);
+            throw new ServiceNotImplementedException(this, context);
         }
 
         [CommandHipc(102)]

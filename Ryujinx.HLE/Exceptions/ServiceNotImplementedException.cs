@@ -18,28 +18,24 @@ namespace Ryujinx.HLE.Exceptions
         public ServiceCtx Context { get; }
         public IpcMessage Request { get; }
 
-        private bool _isTipcCommand;
-
-        public ServiceNotImplementedException(IpcService service, ServiceCtx context, bool isTipcCommand)
-            : this(service, context, "The service call is not implemented.", isTipcCommand)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context)
+            : this(service, context, "The service call is not implemented.")
         { }
 
-        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, bool isTipcCommand)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message)
             : base(message)
         {
             Service = service;
             Context = context;
             Request = context.Request;
-            _isTipcCommand = isTipcCommand;
         }
 
-        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, Exception inner, bool isTipcCommand)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, Exception inner)
             : base(message, inner)
         {
             Service = service;
             Context = context;
             Request = context.Request;
-            _isTipcCommand = isTipcCommand;
         }
 
         protected ServiceNotImplementedException(SerializationInfo info, StreamingContext context)
@@ -66,7 +62,9 @@ namespace Ryujinx.HLE.Exceptions
 
             if (callingType != null && callingMethod != null)
             {
-                var ipcCommands = _isTipcCommand ? Service.TipcCommands : Service.HipcCommands;
+                // If the type is past 0xF, we are using TIPC
+                var ipcCommands = Request.Type > IpcMessageType.TipcCloseSession ?
+                    Service.TipcCommands : Service.HipcCommands;
 
                 // Find the handler for the method called
                 var ipcHandler   = ipcCommands.FirstOrDefault(x => x.Value == callingMethod);
