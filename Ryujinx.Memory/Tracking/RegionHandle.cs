@@ -43,7 +43,26 @@ namespace Ryujinx.Memory.Tracking
         private int _volatileCount = 0;
         private bool _volatile;
 
-        internal MemoryPermission RequiredPermission => _preAction != null ? MemoryPermission.None : (Dirty ? MemoryPermission.ReadAndWrite : MemoryPermission.Read);
+        internal MemoryPermission RequiredPermission
+        {
+            get
+            {
+                // If this is unmapped, allow reprotecting as RW as it can't be dirtied.
+                // This is required for the partial unmap cases where part of the data are still being accessed.
+                if (Unmapped)
+                {
+                    return MemoryPermission.ReadAndWrite;
+                }
+
+                if (_preAction != null)
+                {
+                    return MemoryPermission.None;
+                }
+
+                return Dirty ? MemoryPermission.ReadAndWrite : MemoryPermission.Read;
+            }
+        }
+
         internal RegionSignal PreAction => _preAction;
 
         /// <summary>
@@ -96,6 +115,15 @@ namespace Ryujinx.Memory.Tracking
         internal void Signal(ulong address, ulong size, bool write)
         {
             RegionSignal action = Interlocked.Exchange(ref _preAction, null);
+
+            // If this handle was already unmapped (even if just partially),
+            // then we have nothing to do until it is mapped again.
+            // The pre-action should be still consumed to avoid flushing on remap.
+            if (Unmapped)
+            {
+                return;
+            }
+
             action?.Invoke(address, size);
 
             if (write)
