@@ -117,8 +117,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"{GetUbName(stage, slot, cbIndexable)}[{offset >> 2}].{GetSwizzleMask(offset & 3)}";
         }
 
-        private static string GetVec4Indexed(string vectorName, string indexExpr)
+        private static string GetVec4Indexed(string vectorName, string indexExpr, bool indexElement)
         {
+            if (indexElement)
+            {
+                return $"{vectorName}[{indexExpr}]";
+            }
+
             string result = $"{vectorName}.x";
             for (int i = 1; i < 4; i++)
             {
@@ -127,14 +132,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"({result})";
         }
 
-        public static string GetConstantBufferName(int slot, string offsetExpr, ShaderStage stage, bool cbIndexable)
+        public static string GetConstantBufferName(int slot, string offsetExpr, ShaderStage stage, bool cbIndexable, bool indexElement)
         {
-            return GetVec4Indexed(GetUbName(stage, slot, cbIndexable) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3");
+            return GetVec4Indexed(GetUbName(stage, slot, cbIndexable) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3", indexElement);
         }
 
-        public static string GetConstantBufferName(string slotExpr, string offsetExpr, ShaderStage stage)
+        public static string GetConstantBufferName(string slotExpr, string offsetExpr, ShaderStage stage, bool indexElement)
         {
-            return GetVec4Indexed(GetUbName(stage, slotExpr) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3");
+            return GetVec4Indexed(GetUbName(stage, slotExpr) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3", indexElement);
         }
 
         public static string GetOutAttributeName(AstOperand attr, ShaderConfig config)
@@ -198,6 +203,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             case AttributeConsts.PositionY: return $"(gl_FragCoord.y / {DefaultNames.SupportBlockRenderScaleName}[0])";
                             case AttributeConsts.PositionZ: return "gl_FragCoord.z";
                             case AttributeConsts.PositionW: return "gl_FragCoord.w";
+
+                            case AttributeConsts.FrontFacing:
+                                if (config.GpuAccessor.QueryHostHasFrontFacingBug())
+                                {
+                                    // This is required for Intel on Windows, gl_FrontFacing sometimes returns incorrect
+                                    // (flipped) values. Doing this seems to fix it.
+                                    return "(-floatBitsToInt(float(gl_FrontFacing)) < 0)";
+                                }
+                                break;
                         }
                     }
 

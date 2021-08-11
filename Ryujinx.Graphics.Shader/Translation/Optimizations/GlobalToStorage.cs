@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 Operand baseAddrTrunc = Local();
 
-                Operand alignMask = Const(-config.GpuAccessor.QueryStorageBufferOffsetAlignment());
+                Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
 
                 Operation andOp = new Operation(Instruction.BitwiseAnd, baseAddrTrunc, baseAddrLow, alignMask);
 
@@ -142,7 +142,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 Operand baseAddrTrunc = Local();
 
-                Operand alignMask = Const(-config.GpuAccessor.QueryStorageBufferOffsetAlignment());
+                Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
 
                 Operation andOp = new Operation(Instruction.BitwiseAnd, baseAddrTrunc, baseAddrLow, alignMask);
 

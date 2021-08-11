@@ -4,8 +4,12 @@ using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
-    abstract class TextureDescriptorCapableGpuAccessor : IGpuAccessor
+    abstract class TextureDescriptorCapableGpuAccessor : GpuAccessorBase, IGpuAccessor
     {
+        public TextureDescriptorCapableGpuAccessor(GpuContext context) : base(context)
+        {
+        }
+
         public abstract T MemoryRead<T>(ulong address) where T : unmanaged;
 
         public abstract ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot);

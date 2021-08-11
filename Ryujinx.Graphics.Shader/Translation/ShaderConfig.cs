@@ -145,7 +145,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             // When the formatted load extension is supported, we don't need to
             // specify a format, we can just declare it without a format and the GPU will handle it.
-            if (GpuAccessor.QuerySupportsImageLoadFormatted())
+            if (GpuAccessor.QueryHostSupportsImageLoadFormatted())
             {
                 return TextureFormat.Unknown;
             }

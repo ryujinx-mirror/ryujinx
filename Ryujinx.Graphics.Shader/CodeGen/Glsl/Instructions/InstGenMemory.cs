@@ -157,15 +157,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             offsetExpr = Enclose(offsetExpr, src2, Instruction.ShiftRightS32, isLhs: true);
 
+            var config = context.Config;
+            bool indexElement = !config.GpuAccessor.QueryHostHasVectorIndexingBug();
+
             if (src1 is AstOperand oper && oper.Type == OperandType.Constant)
             {
-                bool cbIndexable = context.Config.UsedFeatures.HasFlag(Translation.FeatureFlags.CbIndexing);
-                return OperandManager.GetConstantBufferName(oper.Value, offsetExpr, context.Config.Stage, cbIndexable);
+                bool cbIndexable = config.UsedFeatures.HasFlag(Translation.FeatureFlags.CbIndexing);
+                return OperandManager.GetConstantBufferName(oper.Value, offsetExpr, config.Stage, cbIndexable, indexElement);
             }
             else
             {
                 string slotExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-                return OperandManager.GetConstantBufferName(slotExpr, offsetExpr, context.Config.Stage);
+                return OperandManager.GetConstantBufferName(slotExpr, offsetExpr, config.Stage, indexElement);
             }
         }
 
@@ -314,7 +317,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             // 2D Array and Cube shadow samplers with LOD level or bias requires an extension.
             // If the extension is not supported, just remove the LOD parameter.
-            if (isArray && isShadow && (is2D || isCube) && !context.Config.GpuAccessor.QuerySupportsTextureShadowLod())
+            if (isArray && isShadow && (is2D || isCube) && !context.Config.GpuAccessor.QueryHostSupportsTextureShadowLod())
             {
                 hasLodBias = false;
                 hasLodLevel = false;
@@ -322,7 +325,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             // Cube shadow samplers with LOD level requires an extension.
             // If the extension is not supported, just remove the LOD level parameter.
-            if (isShadow && isCube && !context.Config.GpuAccessor.QuerySupportsTextureShadowLod())
+            if (isShadow && isCube && !context.Config.GpuAccessor.QueryHostSupportsTextureShadowLod())
             {
                 hasLodLevel = false;
             }

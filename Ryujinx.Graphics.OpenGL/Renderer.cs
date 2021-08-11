@@ -99,6 +99,8 @@ namespace Ryujinx.Graphics.OpenGL
         public Capabilities GetCapabilities()
         {
             return new Capabilities(
+                HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows,
+                HwCapabilities.Vendor == HwCapabilities.GpuVendor.AmdWindows,
                 HwCapabilities.SupportsAstcCompression,
                 HwCapabilities.SupportsImageLoadFormatted,
                 HwCapabilities.SupportsMismatchingViewFormat,
