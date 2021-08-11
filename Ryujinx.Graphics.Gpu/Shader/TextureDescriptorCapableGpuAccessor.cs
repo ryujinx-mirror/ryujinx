@@ -4,15 +4,54 @@ using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
-    abstract class TextureDescriptorCapableGpuAccessor : GpuAccessorBase, IGpuAccessor
+    abstract class TextureDescriptorCapableGpuAccessor : IGpuAccessor
     {
-        public TextureDescriptorCapableGpuAccessor(GpuContext context) : base(context)
+        private readonly GpuContext _context;
+
+        public TextureDescriptorCapableGpuAccessor(GpuContext context)
         {
+            _context = context;
         }
 
         public abstract T MemoryRead<T>(ulong address) where T : unmanaged;
 
         public abstract ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot);
+
+        /// <summary>
+        /// Queries host about the presence of the FrontFacing built-in variable bug.
+        /// </summary>
+        /// <returns>True if the bug is present on the host device used, false otherwise</returns>
+        public bool QueryHostHasFrontFacingBug() => _context.Capabilities.HasFrontFacingBug;
+
+        /// <summary>
+        /// Queries host about the presence of the vector indexing bug.
+        /// </summary>
+        /// <returns>True if the bug is present on the host device used, false otherwise</returns>
+        public bool QueryHostHasVectorIndexingBug() => _context.Capabilities.HasVectorIndexingBug;
+
+        /// <summary>
+        /// Queries host storage buffer alignment required.
+        /// </summary>
+        /// <returns>Host storage buffer alignment in bytes</returns>
+        public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
+
+        /// <summary>
+        /// Queries host support for readable images without a explicit format declaration on the shader.
+        /// </summary>
+        /// <returns>True if formatted image load is supported, false otherwise</returns>
+        public bool QueryHostSupportsImageLoadFormatted() => _context.Capabilities.SupportsImageLoadFormatted;
+
+        /// <summary>
+        /// Queries host GPU non-constant texture offset support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports non-constant texture offsets, false otherwise</returns>
+        public bool QueryHostSupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
+
+        /// <summary>
+        /// Queries host GPU texture shadow LOD support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>
+        public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
         /// <summary>
         /// Queries texture format information, for shaders using image load or store.

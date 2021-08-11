@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// <summary>
     /// Represents a GPU state and memory accessor.
     /// </summary>
-    class GpuAccessor : TextureDescriptorCapableGpuAccessor
+    class GpuAccessor : TextureDescriptorCapableGpuAccessor, IGpuAccessor
     {
         private readonly GpuChannel _channel;
         private readonly GpuAccessorState _state;
