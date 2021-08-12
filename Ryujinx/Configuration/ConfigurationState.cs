@@ -269,7 +269,7 @@ namespace Ryujinx.Configuration
             /// Enable or disable keyboard support (Independent from controllers binding)
             /// </summary>
             public ReactiveObject<bool> EnableKeyboard { get; private set; }
-
+            
             /// <summary>
             /// Enable or disable mouse support (Independent from controllers binding)
             /// </summary>

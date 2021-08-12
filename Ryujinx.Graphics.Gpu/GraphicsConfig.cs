@@ -34,11 +34,6 @@ namespace Ryujinx.Graphics.Gpu
         public static bool EnableMacroJit = true;
 
         /// <summary>
-        /// Enables or disables vertex buffer size detection from the index buffer, for indexed draws.
-        /// </summary>
-        public static bool EnableIndexedVbSizeDetection = true;
-
-        /// <summary>
         /// Title id of the current running game.
         /// Used by the shader cache.
         /// </summary>
