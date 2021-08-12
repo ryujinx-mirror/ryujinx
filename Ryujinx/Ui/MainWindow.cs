@@ -1292,7 +1292,7 @@ namespace Ryujinx.Ui
                 catch (LibHac.MissingKeyException ex)
                 {
                     Logger.Error?.Print(LogClass.Application, ex.ToString());
-                    UserErrorDialog.CreateUserErrorDialog(UserError.NoKeys);
+                    UserErrorDialog.CreateUserErrorDialog(UserError.FirmwareParsingFailed);
                 }
                 catch (Exception ex)
                 {
