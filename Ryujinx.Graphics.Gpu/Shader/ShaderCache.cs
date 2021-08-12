@@ -179,7 +179,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                     program = new ShaderProgram(entry.Header.Stage, "");
                                     shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
 
-                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+                                    byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+
+                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
 
                                     _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
 
@@ -214,7 +216,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             return true; // Exit early, the decoding step failed.
                                         }
 
-                                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, entry.Code);
+                                        byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+
+                                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
 
                                         Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
 
