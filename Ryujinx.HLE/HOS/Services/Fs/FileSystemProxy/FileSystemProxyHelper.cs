@@ -1,10 +1,16 @@
 ﻿using LibHac;
 using LibHac.Common;
+using LibHac.Common.Keys;
 using LibHac.Fs;
+using LibHac.FsSrv.Impl;
+using LibHac.FsSrv.Sf;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Spl;
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
@@ -16,12 +22,12 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             try
             {
-                LocalStorage        storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
-                PartitionFileSystem nsp     = new PartitionFileSystem(storage);
+                LocalStorage storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
+                ReferenceCountedDisposable<LibHac.Fs.Fsa.IFileSystem> nsp = new(new PartitionFileSystem(storage));
 
-                ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
+                ImportTitleKeysFromNsp(nsp.Target, context.Device.System.KeySet);
 
-                openedFileSystem = new IFileSystem(nsp);
+                openedFileSystem = new IFileSystem(FileSystemInterfaceAdapter.CreateShared(ref nsp));
             }
             catch (HorizonResultException ex)
             {
@@ -45,8 +51,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
                 }
 
                 LibHac.Fs.Fsa.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+                var sharedFs = new ReferenceCountedDisposable<LibHac.Fs.Fsa.IFileSystem>(fileSystem);
 
-                openedFileSystem = new IFileSystem(fileSystem);
+                openedFileSystem = new IFileSystem(FileSystemInterfaceAdapter.CreateShared(ref sharedFs));
             }
             catch (HorizonResultException ex)
             {
@@ -99,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return ResultCode.PathDoesNotExist;
         }
 
-        public static void ImportTitleKeysFromNsp(LibHac.Fs.Fsa.IFileSystem nsp, Keyset keySet)
+        public static void ImportTitleKeysFromNsp(LibHac.Fs.Fsa.IFileSystem nsp, KeySet keySet)
         {
             foreach (DirectoryEntryEx ticketEntry in nsp.EnumerateEntries("/", "*.tik"))
             {
@@ -124,6 +131,28 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             context.Memory.Read(position, pathBytes);
 
             return FsPath.FromSpan(out path, pathBytes);
+        }
+
+        public static ref readonly FspPath GetFspPath(ServiceCtx context, int index = 0)
+        {
+            ulong position = (ulong)context.Request.PtrBuff[index].Position;
+            ulong size = (ulong)context.Request.PtrBuff[index].Size;
+
+            ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
+            ReadOnlySpan<FspPath> fspBuffer = MemoryMarshal.Cast<byte, FspPath>(buffer);
+
+            return ref fspBuffer[0];
+        }
+
+        public static ref readonly LibHac.FsSrv.Sf.Path GetSfPath(ServiceCtx context, int index = 0)
+        {
+            ulong position = (ulong)context.Request.PtrBuff[index].Position;
+            ulong size = (ulong)context.Request.PtrBuff[index].Size;
+
+            ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
+            ReadOnlySpan<LibHac.FsSrv.Sf.Path> pathBuffer = MemoryMarshal.Cast<byte, LibHac.FsSrv.Sf.Path>(buffer);
+
+            return ref pathBuffer[0];
         }
     }
 }

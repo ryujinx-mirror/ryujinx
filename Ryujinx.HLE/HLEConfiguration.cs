@@ -1,8 +1,6 @@
 ﻿using LibHac.FsSystem;
 using Ryujinx.Audio.Integration;
-using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
@@ -10,7 +8,6 @@ using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE
 {
@@ -26,6 +23,12 @@ namespace Ryujinx.HLE
         internal readonly VirtualFileSystem VirtualFileSystem;
 
         /// <summary>
+        /// The manager for handling a LibHac Horizon instance.
+        /// </summary>
+        /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
+        internal readonly LibHacHorizonManager LibHacHorizonManager;
+
+        /// <summary>
         /// The account manager used by the account service.
         /// </summary>
         /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
@@ -38,7 +41,7 @@ namespace Ryujinx.HLE
         internal readonly ContentManager ContentManager;
 
         /// <summary>
-        /// The persistant information between run for multi-application capabilities.
+        /// The persistent information between run for multi-application capabilities.
         /// </summary>
         /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
         public readonly UserChannelPersistence UserChannelPersistence;
@@ -124,7 +127,7 @@ namespace Ryujinx.HLE
         public MemoryManagerMode MemoryManagerMode { internal get; set; }
 
         /// <summary>
-        /// Control the inital state of the ignore missing services setting.
+        /// Control the initial state of the ignore missing services setting.
         /// If this is set to true, when a missing service is encountered, it will try to automatically handle it instead of throwing an exception.
         /// </summary>
         /// TODO: Update this again.
@@ -141,6 +144,7 @@ namespace Ryujinx.HLE
         public Action RefreshInputConfig { internal get; set; }
 
         public HLEConfiguration(VirtualFileSystem virtualFileSystem,
+                                LibHacHorizonManager libHacHorizonManager,
                                 ContentManager contentManager,
                                 AccountManager accountManager,
                                 UserChannelPersistence userChannelPersistence,
@@ -162,6 +166,7 @@ namespace Ryujinx.HLE
                                 AspectRatio aspectRatio)
         {
             VirtualFileSystem = virtualFileSystem;
+            LibHacHorizonManager = libHacHorizonManager;
             AccountManager = accountManager;
             ContentManager = contentManager;
             UserChannelPersistence = userChannelPersistence;

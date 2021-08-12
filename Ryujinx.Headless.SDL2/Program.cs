@@ -43,6 +43,7 @@ namespace Ryujinx.Headless.SDL2
         private static VirtualFileSystem _virtualFileSystem;
         private static ContentManager _contentManager;
         private static AccountManager _accountManager;
+        private static LibHacHorizonManager _libHacHorizonManager;
         private static UserChannelPersistence _userChannelPersistence;
         private static InputManager _inputManager;
         private static Switch _emulationContext;
@@ -61,8 +62,15 @@ namespace Ryujinx.Headless.SDL2
             AppDataManager.Initialize(null);
 
             _virtualFileSystem = VirtualFileSystem.CreateInstance();
+            _libHacHorizonManager = new LibHacHorizonManager();
+
+            _libHacHorizonManager.InitializeFsServer(_virtualFileSystem);
+            _libHacHorizonManager.InitializeArpServer();
+            _libHacHorizonManager.InitializeBcatServer();
+            _libHacHorizonManager.InitializeSystemClients();
+
             _contentManager = new ContentManager(_virtualFileSystem);
-            _accountManager = new AccountManager(_virtualFileSystem);
+            _accountManager = new AccountManager(_libHacHorizonManager.RyujinxClient);
             _userChannelPersistence = new UserChannelPersistence();
 
             _inputManager = new InputManager(new SDL2KeyboardDriver(), new SDL2GamepadDriver());
@@ -426,6 +434,7 @@ namespace Ryujinx.Headless.SDL2
         private static Switch InitializeEmulationContext(WindowBase window, Options options)
         {
             HLEConfiguration configuration = new HLEConfiguration(_virtualFileSystem,
+                                                                  _libHacHorizonManager,
                                                                   _contentManager,
                                                                   _accountManager,
                                                                   _userChannelPersistence,

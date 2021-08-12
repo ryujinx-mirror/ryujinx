@@ -1,21 +1,19 @@
 using LibHac;
-using LibHac.Common;
 using LibHac.Fs;
-using LibHac.Fs.Fsa;
-using static Ryujinx.HLE.Utilities.StringUtils;
+using LibHac.FsSrv.Sf;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
-    class IFileSystem : IpcService
+    class IFileSystem : DisposableIpcService
     {
-        private LibHac.Fs.Fsa.IFileSystem _fileSystem;
+        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFileSystem> _fileSystem;
 
-        public IFileSystem(LibHac.Fs.Fsa.IFileSystem provider)
+        public IFileSystem(ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFileSystem> provider)
         {
             _fileSystem = provider;
         }
 
-        public LibHac.Fs.Fsa.IFileSystem GetBaseFileSystem()
+        public ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFileSystem> GetBaseFileSystem()
         {
             return _fileSystem;
         }
@@ -24,79 +22,79 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // CreateFile(u32 createOption, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CreateFile(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            CreateFileOptions createOption = (CreateFileOptions)context.RequestData.ReadInt32();
+            int createOption = context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4;
 
             long size = context.RequestData.ReadInt64();
 
-            return (ResultCode)_fileSystem.CreateFile(name, size, createOption).Value;
+            return (ResultCode)_fileSystem.Target.CreateFile(in name, size, createOption).Value;
         }
 
         [CommandHipc(1)]
         // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteFile(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            return (ResultCode)_fileSystem.DeleteFile(name).Value;
+            return (ResultCode)_fileSystem.Target.DeleteFile(in name).Value;
         }
 
         [CommandHipc(2)]
         // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CreateDirectory(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            return (ResultCode)_fileSystem.CreateDirectory(name).Value;
+            return (ResultCode)_fileSystem.Target.CreateDirectory(in name).Value;
         }
 
         [CommandHipc(3)]
         // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteDirectory(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            return (ResultCode)_fileSystem.DeleteDirectory(name).Value;
+            return (ResultCode)_fileSystem.Target.DeleteDirectory(in name).Value;
         }
 
         [CommandHipc(4)]
         // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteDirectoryRecursively(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            return (ResultCode)_fileSystem.DeleteDirectoryRecursively(name).Value;
+            return (ResultCode)_fileSystem.Target.DeleteDirectoryRecursively(in name).Value;
         }
 
         [CommandHipc(5)]
         // RenameFile(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public ResultCode RenameFile(ServiceCtx context)
         {
-            U8Span oldName = ReadUtf8Span(context, 0);
-            U8Span newName = ReadUtf8Span(context, 1);
+            ref readonly Path currentName = ref FileSystemProxyHelper.GetSfPath(context, index: 0);
+            ref readonly Path newName = ref FileSystemProxyHelper.GetSfPath(context, index: 1);
 
-            return (ResultCode)_fileSystem.RenameFile(oldName, newName).Value;
+            return (ResultCode)_fileSystem.Target.RenameFile(in currentName, in newName).Value;
         }
 
         [CommandHipc(6)]
         // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public ResultCode RenameDirectory(ServiceCtx context)
         {
-            U8Span oldName = ReadUtf8Span(context, 0);
-            U8Span newName = ReadUtf8Span(context, 1);
+            ref readonly Path currentName = ref FileSystemProxyHelper.GetSfPath(context, index: 0);
+            ref readonly Path newName = ref FileSystemProxyHelper.GetSfPath(context, index: 1);
 
-            return (ResultCode)_fileSystem.RenameDirectory(oldName, newName).Value;
+            return (ResultCode)_fileSystem.Target.RenameDirectory(in currentName, in newName).Value;
         }
 
         [CommandHipc(7)]
         // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
         public ResultCode GetEntryType(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.GetEntryType(out DirectoryEntryType entryType, name);
+            Result result = _fileSystem.Target.GetEntryType(out uint entryType, in name);
 
             context.ResponseData.Write((int)entryType);
 
@@ -107,11 +105,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public ResultCode OpenFile(ServiceCtx context)
         {
-            OpenMode mode = (OpenMode)context.RequestData.ReadInt32();
+            uint mode = context.RequestData.ReadUInt32();
 
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.OpenFile(out LibHac.Fs.Fsa.IFile file, name, mode);
+            Result result = _fileSystem.Target.OpenFile(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.IFile> file, in name, mode);
 
             if (result.IsSuccess())
             {
@@ -127,11 +125,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public ResultCode OpenDirectory(ServiceCtx context)
         {
-            OpenDirectoryMode mode = (OpenDirectoryMode)context.RequestData.ReadInt32();
+            uint mode = context.RequestData.ReadUInt32();
 
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.OpenDirectory(out LibHac.Fs.Fsa.IDirectory dir, name, mode);
+            Result result = _fileSystem.Target.OpenDirectory(out ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDirectory> dir, name, mode);
 
             if (result.IsSuccess())
             {
@@ -147,16 +145,16 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {
-            return (ResultCode)_fileSystem.Commit().Value;
+            return (ResultCode)_fileSystem.Target.Commit().Value;
         }
 
         [CommandHipc(11)]
         // GetFreeSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalFreeSpace
         public ResultCode GetFreeSpaceSize(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.GetFreeSpaceSize(out long size, name);
+            Result result = _fileSystem.Target.GetFreeSpaceSize(out long size, in name);
 
             context.ResponseData.Write(size);
 
@@ -167,9 +165,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // GetTotalSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalSize
         public ResultCode GetTotalSpaceSize(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.GetTotalSpaceSize(out long size, name);
+            Result result = _fileSystem.Target.GetTotalSpaceSize(out long size, in name);
 
             context.ResponseData.Write(size);
 
@@ -180,18 +178,18 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // CleanDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CleanDirectoryRecursively(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            return (ResultCode)_fileSystem.CleanDirectoryRecursively(name).Value;
+            return (ResultCode)_fileSystem.Target.CleanDirectoryRecursively(in name).Value;
         }
 
         [CommandHipc(14)]
         // GetFileTimeStampRaw(buffer<bytes<0x301>, 0x19, 0x301> path) -> bytes<0x20> timestamp
         public ResultCode GetFileTimeStampRaw(ServiceCtx context)
         {
-            U8Span name = ReadUtf8Span(context);
+            ref readonly Path name = ref FileSystemProxyHelper.GetSfPath(context);
 
-            Result result = _fileSystem.GetFileTimeStampRaw(out FileTimeStampRaw timestamp, name);
+            Result result = _fileSystem.Target.GetFileTimeStampRaw(out FileTimeStampRaw timestamp, in name);
 
             context.ResponseData.Write(timestamp.Created);
             context.ResponseData.Write(timestamp.Modified);
@@ -205,6 +203,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             context.ResponseData.Write(data);
 
             return (ResultCode)result.Value;
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _fileSystem?.Dispose();
+            }
         }
     }
 }

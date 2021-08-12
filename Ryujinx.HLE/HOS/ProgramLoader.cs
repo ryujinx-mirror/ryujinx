@@ -1,4 +1,7 @@
 using ARMeilleure.Translation.PTC;
+using LibHac.Loader;
+using LibHac.Ncm;
+using LibHac.Util;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel;
@@ -6,12 +9,25 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
-using Ryujinx.HLE.Loaders.Npdm;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
+using Npdm = LibHac.Loader.Npdm;
 
 namespace Ryujinx.HLE.HOS
 {
+    struct ProgramInfo
+    {
+        public string Name;
+        public ulong ProgramId;
+
+        public ProgramInfo(in Npdm npdm)
+        {
+            Name = StringUtils.Utf8ZToString(npdm.Meta.Value.ProgramName);
+            ProgramId = npdm.Aci.Value.ProgramId.Value;
+        }
+    }
+
     static class ProgramLoader
     {
         private const bool AslrEnabled = true;
@@ -125,11 +141,21 @@ namespace Ryujinx.HLE.HOS
             return true;
         }
 
-        public static bool LoadNsos(KernelContext context, out ProcessTamperInfo tamperInfo, Npdm metaData, byte[] arguments = null, params IExecutable[] executables)
+        public static bool LoadNsos(KernelContext context, out ProcessTamperInfo tamperInfo, MetaLoader metaData, ProgramInfo programInfo, byte[] arguments = null, params IExecutable[] executables)
         {
+            LibHac.Result rc = metaData.GetNpdm(out var npdm);
+
+            if (rc.IsFailure())
+            {
+                tamperInfo = null;
+                return false;
+            }
+
+            ref readonly var meta = ref npdm.Meta.Value;
+
             ulong argsStart = 0;
             uint  argsSize  = 0;
-            ulong codeStart = metaData.Is64Bit ? 0x8000000UL : 0x200000UL;
+            ulong codeStart = (meta.Flags & 1) != 0 ? 0x8000000UL : 0x200000UL;
             uint  codeSize  = 0;
 
             var buildIds = executables.Select(e => (e switch
@@ -182,17 +208,19 @@ namespace Ryujinx.HLE.HOS
 
             int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
 
-            int personalMmHeapPagesCount = metaData.PersonalMmHeapSize / KPageTableBase.PageSize;
+            int personalMmHeapPagesCount = (int)(meta.SystemResourceSize / KPageTableBase.PageSize);
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo(
-                metaData.TitleName,
-                metaData.Version,
-                metaData.Aci0.TitleId,
+                programInfo.Name,
+                (int)meta.Version,
+                programInfo.ProgramId,
                 codeStart,
                 codePagesCount,
-                (ProcessCreationFlags)metaData.ProcessFlags | ProcessCreationFlags.IsApplication,
+                (ProcessCreationFlags)meta.Flags | ProcessCreationFlags.IsApplication,
                 0,
                 personalMmHeapPagesCount);
+
+            context.Device.System.LibHacHorizonManager.InitializeApplicationClient(new ProgramId(programInfo.ProgramId), in npdm);
 
             KernelResult result;
 
@@ -217,7 +245,7 @@ namespace Ryujinx.HLE.HOS
 
             KProcess process = new KProcess(context);
 
-            MemoryRegion memoryRegion = (MemoryRegion)((metaData.Acid.Flags >> 2) & 0xf);
+            MemoryRegion memoryRegion = (MemoryRegion)((npdm.Acid.Value.Flags >> 2) & 0xf);
 
             if (memoryRegion > MemoryRegion.NvServices)
             {
@@ -232,7 +260,7 @@ namespace Ryujinx.HLE.HOS
 
             result = process.Initialize(
                 creationInfo,
-                metaData.Aci0.KernelAccessControl.Capabilities,
+                MemoryMarshal.Cast<byte, int>(npdm.KernelCapabilityData).ToArray(),
                 resourceLimit,
                 memoryRegion,
                 processContextFactory);
@@ -262,9 +290,9 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            process.DefaultCpuCore = metaData.DefaultCpuId;
+            process.DefaultCpuCore = meta.DefaultCpuId;
 
-            result = process.Start(metaData.MainThreadPriority, (ulong)metaData.MainThreadStackSize);
+            result = process.Start(meta.MainThreadPriority, meta.MainThreadStackSize);
 
             if (result != KernelResult.Success)
             {
