@@ -178,6 +178,9 @@ namespace Ryujinx.HLE.FileSystem
 
             DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet, fsServer);
 
+            // Use our own encrypted fs creator that always uses all-zero keys
+            fsServerObjects.FsCreators.EncryptedFileSystemCreator = new EncryptedFileSystemCreator();
+
             GameCard = fsServerObjects.GameCard;
             SdCard = fsServerObjects.SdCard;
 
