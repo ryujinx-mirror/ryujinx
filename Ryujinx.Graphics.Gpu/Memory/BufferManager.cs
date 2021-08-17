@@ -503,7 +503,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         continue;
                     }
 
-                    tfbs[index] = bufferCache.GetBufferRange(tfb.Address, tfb.Size);
+                    tfbs[index] = bufferCache.GetBufferRange(tfb.Address, tfb.Size, write: true);
                 }
 
                 _context.Renderer.Pipeline.SetTransformFeedbackBuffers(tfbs);
