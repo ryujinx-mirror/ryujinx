@@ -9,7 +9,6 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
 using System.Buffers.Binary;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -28,7 +27,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 2228; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 2515; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -776,15 +775,21 @@ namespace ARMeilleure.Translation.PTC
             _translateCount = 0;
             _translateTotalCount = profiledFuncsToTranslate.Count;
 
-            int degreeOfParallelism = new DegreeOfParallelism(4d, 75d, 12.5d).GetDegreeOfParallelism(0, 32);
-
-            if (_translateTotalCount == 0 || degreeOfParallelism == 0)
+            if (_translateTotalCount == 0)
             {
                 ResetCarriersIfNeeded();
 
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
 
                 return;
+            }
+
+            int degreeOfParallelism = Environment.ProcessorCount;
+
+            // If there are enough cores lying around, we leave one alone for other tasks.
+            if (degreeOfParallelism > 4)
+            {
+                degreeOfParallelism--;
             }
 
             Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {_translateTotalCount} functions translated | Thread count: {degreeOfParallelism}");
@@ -825,8 +830,6 @@ namespace ARMeilleure.Translation.PTC
                         break;
                     }
                 }
-
-                Translator.DisposePools();
             }
 
             List<Thread> threads = new List<Thread>();
@@ -839,6 +842,8 @@ namespace ARMeilleure.Translation.PTC
                 threads.Add(thread);
             }
 
+            Stopwatch sw = Stopwatch.StartNew();
+
             threads.ForEach((thread) => thread.Start());
             threads.ForEach((thread) => thread.Join());
 
@@ -847,9 +852,11 @@ namespace ARMeilleure.Translation.PTC
             progressReportEvent.Set();
             progressReportThread.Join();
 
+            sw.Stop();
+
             PtcStateChanged?.Invoke(PtcLoadingState.Loaded, _translateCount, _translateTotalCount);
 
-            Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {_translateTotalCount} functions translated | Thread count: {degreeOfParallelism}");
+            Logger.Info?.Print(LogClass.Ptc, $"{_translateCount} of {_translateTotalCount} functions translated | Thread count: {degreeOfParallelism} in {sw.Elapsed.TotalSeconds} s");
 
             Thread preSaveThread = new Thread(PreSave);
             preSaveThread.IsBackground = true;

@@ -4,7 +4,7 @@ using ARMeilleure.Translation;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitMemoryHelper;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -121,7 +121,7 @@ namespace ARMeilleure.Instructions
 
         private static Operand GetAddress(ArmEmitterContext context, long addend = 0)
         {
-            Operand address = null;
+            Operand address = default;
 
             switch (context.CurrOp)
             {

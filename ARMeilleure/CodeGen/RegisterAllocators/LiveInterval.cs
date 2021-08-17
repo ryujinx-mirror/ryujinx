@@ -34,7 +34,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         public bool IsEmpty => _ranges.Count == 0;
 
-        public LiveInterval(Operand local = null, LiveInterval parent = null)
+        public LiveInterval(Operand local = default, LiveInterval parent = null)
         {
             Local   = local;
             _parent = parent ?? this;

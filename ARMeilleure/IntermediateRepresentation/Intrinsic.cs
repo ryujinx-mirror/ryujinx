@@ -1,6 +1,6 @@
 namespace ARMeilleure.IntermediateRepresentation
 {
-    enum Intrinsic
+    enum Intrinsic : ushort
     {
         X86Addpd,
         X86Addps,

@@ -18,7 +18,7 @@ namespace ARMeilleure.Diagnostics
         private readonly Dictionary<Operand, string> _localNames;
         private readonly Dictionary<ulong, string> _symbolNames;
 
-        private IRDumper(int indent)
+        public IRDumper(int indent)
         {
             _indentLevel = indent;
 
@@ -62,15 +62,15 @@ namespace ARMeilleure.Diagnostics
                 _builder.Append(" cold");
             }
 
-            if (block.SuccessorCount > 0)
+            if (block.SuccessorsCount > 0)
             {
                 _builder.Append(" (");
 
-                for (int i = 0; i < block.SuccessorCount; i++)
+                for (int i = 0; i < block.SuccessorsCount; i++)
                 {
                     DumpBlockName(block.GetSuccessor(i));
 
-                    if (i < block.SuccessorCount - 1)
+                    if (i < block.SuccessorsCount - 1)
                     {
                         _builder.Append(", ");
                     }
@@ -84,7 +84,7 @@ namespace ARMeilleure.Diagnostics
 
         private void DumpOperand(Operand operand)
         {
-            if (operand == null)
+            if (operand == default)
             {
                 _builder.Append("<NULL>");
                 return;
@@ -131,13 +131,13 @@ namespace ARMeilleure.Diagnostics
                     break;
 
                 case OperandKind.Memory:
-                    var memOp = (MemoryOperand)operand;
+                    var memOp = operand.GetMemory();
 
                     _builder.Append('[');
 
                     DumpOperand(memOp.BaseAddress);
 
-                    if (memOp.Index != null)
+                    if (memOp.Index != default)
                     {
                         _builder.Append(" + ");
 
@@ -165,7 +165,7 @@ namespace ARMeilleure.Diagnostics
             }
         }
 
-        private void DumpNode(Node node)
+        private void DumpNode(ControlFlowGraph cfg, Operation node)
         {
             for (int index = 0; index < node.DestinationsCount; index++)
             {
@@ -183,38 +183,41 @@ namespace ARMeilleure.Diagnostics
 
             switch (node)
             {
-                case PhiNode phi:
-                    _builder.Append("Phi ");
-
-                    for (int index = 0; index < phi.SourcesCount; index++)
-                    {
-                        _builder.Append('(');
-
-                        DumpBlockName(phi.GetBlock(index));
-
-                        _builder.Append(": ");
-
-                        DumpOperand(phi.GetSource(index));
-
-                        _builder.Append(')');
-
-                        if (index < phi.SourcesCount - 1)
-                        {
-                            _builder.Append(", ");
-                        }
-                    }
-                    break;
-
                 case Operation operation:
+                    if (operation.Instruction == Instruction.Phi)
+                    {
+                        PhiOperation phi = operation.AsPhi();
+
+                        _builder.Append("Phi ");
+
+                        for (int index = 0; index < phi.SourcesCount; index++)
+                        {
+                            _builder.Append('(');
+
+                            DumpBlockName(phi.GetBlock(cfg, index));
+
+                            _builder.Append(": ");
+
+                            DumpOperand(phi.GetSource(index));
+
+                            _builder.Append(')');
+
+                            if (index < phi.SourcesCount - 1)
+                            {
+                                _builder.Append(", ");
+                            }
+                        }
+
+                        break;
+                    }
+
                     bool comparison = false;
 
                     _builder.Append(operation.Instruction);
 
                     if (operation.Instruction == Instruction.Extended)
                     {
-                        var intrinOp = (IntrinsicOperation)operation;
-
-                        _builder.Append('.').Append(intrinOp.Intrinsic);
+                        _builder.Append('.').Append(operation.Intrinsic);
                     }
                     else if (operation.Instruction == Instruction.BranchIf ||
                              operation.Instruction == Instruction.Compare)
@@ -277,10 +280,10 @@ namespace ARMeilleure.Diagnostics
 
                 dumper.IncreaseIndentation();
 
-                for (Node node = block.Operations.First; node != null; node = node.ListNext)
+                for (Operation node = block.Operations.First; node != default; node = node.ListNext)
                 {
                     dumper.Indent();
-                    dumper.DumpNode(node);
+                    dumper.DumpNode(cfg, node);
 
                     dumper._builder.AppendLine();
                 }

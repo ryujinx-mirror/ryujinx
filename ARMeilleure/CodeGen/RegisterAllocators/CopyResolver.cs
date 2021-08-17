@@ -1,9 +1,8 @@
 using ARMeilleure.IntermediateRepresentation;
 using System;
 using System.Collections.Generic;
-
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
-using static ARMeilleure.IntermediateRepresentation.OperationHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
+using static ARMeilleure.IntermediateRepresentation.Operation.Factory;
 
 namespace ARMeilleure.CodeGen.RegisterAllocators
 {
@@ -210,7 +209,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             Operand register = GetRegister(left.Register, type);
 
-            _spillQueue.Enqueue(Operation(Instruction.Spill, null, offset, register));
+            _spillQueue.Enqueue(Operation(Instruction.Spill, default, offset, register));
 
             HasCopy = true;
         }

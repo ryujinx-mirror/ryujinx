@@ -55,7 +55,7 @@ namespace ARMeilleure.Translation
 
             Logger.EndPass(PassName.SsaConstruction, cfg);
 
-            CompilerContext cctx = new CompilerContext(cfg, argTypes, retType, options);
+            CompilerContext cctx = new(cfg, argTypes, retType, options);
 
             return CodeGenerator.Generate(cctx, ptcInfo);
         }

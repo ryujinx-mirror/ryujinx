@@ -6,7 +6,7 @@ using System;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitMemoryHelper;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -156,7 +156,7 @@ namespace ARMeilleure.Instructions
             Operand n = context.Copy(GetIntA32(context, op.Rn));
             Operand m = GetMemM(context, setCarry: false);
 
-            Operand temp = null;
+            Operand temp = default;
 
             if (op.Index || op.WBack)
             {

@@ -7,7 +7,7 @@ using System;
 using System.Reflection;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -130,7 +130,7 @@ namespace ARMeilleure.Instructions
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: false, size);
 
-            Operand value = null;
+            Operand value = default;
 
             switch (size)
             {
@@ -161,7 +161,7 @@ namespace ARMeilleure.Instructions
                 throw new ArgumentOutOfRangeException(nameof(size));
             }
 
-            Operand physAddr = EmitPtPointerLoad(context, address, null, write: false, size);
+            Operand physAddr = EmitPtPointerLoad(context, address, default, write: false, size);
 
             return size switch
             {
@@ -186,7 +186,7 @@ namespace ARMeilleure.Instructions
 
             Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: false, size);
 
-            Operand value = null;
+            Operand value = default;
 
             switch (size)
             {
@@ -257,7 +257,7 @@ namespace ARMeilleure.Instructions
                 throw new ArgumentOutOfRangeException(nameof(size));
             }
 
-            Operand physAddr = EmitPtPointerLoad(context, address, null, write: true, size);
+            Operand physAddr = EmitPtPointerLoad(context, address, default, write: true, size);
 
             if (size < 3 && value.Type == OperandType.I64)
             {
@@ -348,7 +348,7 @@ namespace ARMeilleure.Instructions
             // If the VA is out of range, or not aligned to the access size, force PTE to 0 by masking it.
             pte = context.BitwiseAnd(pte, context.ShiftRightSI(context.Add(addrShifted, Const(-(long)ptLevelSize)), Const(63)));
 
-            if (lblSlowPath != null)
+            if (lblSlowPath != default)
             {
                 if (write)
                 {
@@ -505,7 +505,7 @@ namespace ARMeilleure.Instructions
                 case 4: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.WriteVector128)); break;
             }
 
-            Operand value = null;
+            Operand value = default;
 
             if (size < 4)
             {

@@ -1,8 +1,8 @@
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
+using System;
 using System.Diagnostics;
-
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.CodeGen.Optimizations
 {
@@ -10,62 +10,60 @@ namespace ARMeilleure.CodeGen.Optimizations
     {
         public static void RunPass(ControlFlowGraph cfg)
         {
+            // Scratch buffer used to store uses.
+            Span<Operation> buffer = default;
+
             bool modified;
 
             do
             {
                 modified = false;
 
-                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
+                for (BasicBlock block = cfg.Blocks.Last; block != null; block = block.ListPrevious)
                 {
-                    Node node = block.Operations.First;
+                    Operation node;
+                    Operation prevNode;
 
-                    while (node != null)
+                    for (node = block.Operations.Last; node != default; node = prevNode)
                     {
-                        Node nextNode = node.ListNext;
+                        prevNode = node.ListPrevious;
 
-                        bool isUnused = IsUnused(node);
-
-                        if (!(node is Operation operation) || isUnused)
+                        if (IsUnused(node))
                         {
-                            if (isUnused)
-                            {
-                                RemoveNode(block, node);
+                            RemoveNode(block, node);
 
-                                modified = true;
-                            }
-
-                            node = nextNode;
+                            modified = true;
 
                             continue;
                         }
+                        else if (node.Instruction == Instruction.Phi)
+                        {
+                            continue;
+                        }
 
-                        ConstantFolding.RunPass(operation);
+                        ConstantFolding.RunPass(node);
+                        Simplification.RunPass(node);
 
-                        Simplification.RunPass(operation);
-
-                        if (DestIsLocalVar(operation))
+                        if (DestIsLocalVar(node))
                         {   
-                            if (IsPropagableCompare(operation))
+                            if (IsPropagableCompare(node))
                             {
-                                modified |= PropagateCompare(operation);
+                                modified |= PropagateCompare(ref buffer, node);
 
-                                if (modified && IsUnused(operation))
+                                if (modified && IsUnused(node))
                                 {
                                     RemoveNode(block, node);
                                 }
                             }
-                            else if (IsPropagableCopy(operation))
+                            else if (IsPropagableCopy(node))
                             {
-                                PropagateCopy(operation);
+                                PropagateCopy(ref buffer, node);
 
                                 RemoveNode(block, node);
 
                                 modified = true;
                             }
                         }
-
-                        node = nextNode;
                     }
                 }
             }
@@ -80,13 +78,14 @@ namespace ARMeilleure.CodeGen.Optimizations
             {
                 modified = false;
 
-                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
+                for (BasicBlock block = cfg.Blocks.Last; block != null; block = block.ListPrevious)
                 {
-                    Node node = block.Operations.First;
+                    Operation node;
+                    Operation prevNode;
 
-                    while (node != null)
+                    for (node = block.Operations.Last; node != default; node = prevNode)
                     {
-                        Node nextNode = node.ListNext;
+                        prevNode = node.ListPrevious;
 
                         if (IsUnused(node))
                         {
@@ -94,15 +93,27 @@ namespace ARMeilleure.CodeGen.Optimizations
 
                             modified = true;
                         }
-
-                        node = nextNode;
                     }
                 }
             }
             while (modified);
         }
 
-        private static bool PropagateCompare(Operation compOp)
+        private static Span<Operation> GetUses(ref Span<Operation> buffer, Operand operand)
+        {
+            ReadOnlySpan<Operation> uses = operand.Uses;
+
+            if (buffer.Length < uses.Length)
+            {
+                buffer = Allocators.Default.AllocateSpan<Operation>((uint)uses.Length);
+            }
+
+            uses.CopyTo(buffer);
+
+            return buffer.Slice(0, uses.Length);
+        }
+
+        private static bool PropagateCompare(ref Span<Operation> buffer, Operation compOp)
         {
             // Try to propagate Compare operations into their BranchIf uses, when these BranchIf uses are in the form
             // of:
@@ -149,17 +160,12 @@ namespace ARMeilleure.CodeGen.Optimizations
 
             Comparison compType = (Comparison)comp.AsInt32();
 
-            Node[] uses = dest.Uses.ToArray();
+            Span<Operation> uses = GetUses(ref buffer, dest);
 
-            foreach (Node use in uses)
+            foreach (Operation use in uses)
             {
-                if (!(use is Operation operation))
-                {
-                    continue;
-                }
-
                 // If operation is a BranchIf and has a constant value 0 in its RHS or LHS source operands.
-                if (IsZeroBranch(operation, out Comparison otherCompType))
+                if (IsZeroBranch(use, out Comparison otherCompType))
                 {
                     Comparison propCompType;
 
@@ -176,9 +182,9 @@ namespace ARMeilleure.CodeGen.Optimizations
                         continue;
                     }
 
-                    operation.SetSource(0, src1);
-                    operation.SetSource(1, src2);
-                    operation.SetSource(2, Const((int)propCompType));
+                    use.SetSource(0, src1);
+                    use.SetSource(1, src2);
+                    use.SetSource(2, Const((int)propCompType));
 
                     modified = true;
                 }
@@ -187,15 +193,15 @@ namespace ARMeilleure.CodeGen.Optimizations
             return modified;
         }
 
-        private static void PropagateCopy(Operation copyOp)
+        private static void PropagateCopy(ref Span<Operation> buffer, Operation copyOp)
         {
             // Propagate copy source operand to all uses of the destination operand.
             Operand dest   = copyOp.Destination;
             Operand source = copyOp.GetSource(0);
 
-            Node[] uses = dest.Uses.ToArray();
+            Span<Operation> uses = GetUses(ref buffer, dest);
 
-            foreach (Node use in uses)
+            foreach (Operation use in uses)
             {
                 for (int index = 0; index < use.SourcesCount; index++)
                 {
@@ -207,7 +213,7 @@ namespace ARMeilleure.CodeGen.Optimizations
             }
         }
 
-        private static void RemoveNode(BasicBlock block, Node node)
+        private static void RemoveNode(BasicBlock block, Operation node)
         {
             // Remove a node from the nodes list, and also remove itself
             // from all the use lists on the operands that this node uses.
@@ -215,31 +221,31 @@ namespace ARMeilleure.CodeGen.Optimizations
 
             for (int index = 0; index < node.SourcesCount; index++)
             {
-                node.SetSource(index, null);
+                node.SetSource(index, default);
             }
 
-            Debug.Assert(node.Destination == null || node.Destination.Uses.Count == 0);
+            Debug.Assert(node.Destination == default || node.Destination.UsesCount == 0);
 
-            node.Destination = null;
+            node.Destination = default;
         }
 
-        private static bool IsUnused(Node node)
+        private static bool IsUnused(Operation node)
         {
-            return DestIsLocalVar(node) && node.Destination.Uses.Count == 0 && !HasSideEffects(node);
+            return DestIsLocalVar(node) && node.Destination.UsesCount == 0 && !HasSideEffects(node);
         }
 
-        private static bool DestIsLocalVar(Node node)
+        private static bool DestIsLocalVar(Operation node)
         {
-            return node.Destination != null && node.Destination.Kind == OperandKind.LocalVariable;
+            return node.Destination != default && node.Destination.Kind == OperandKind.LocalVariable;
         }
 
-        private static bool HasSideEffects(Node node)
+        private static bool HasSideEffects(Operation node)
         {
-            return (node is Operation operation) && (operation.Instruction == Instruction.Call
-                || operation.Instruction == Instruction.Tailcall
-                || operation.Instruction == Instruction.CompareAndSwap
-                || operation.Instruction == Instruction.CompareAndSwap16
-                || operation.Instruction == Instruction.CompareAndSwap8);
+            return node.Instruction == Instruction.Call
+                || node.Instruction == Instruction.Tailcall
+                || node.Instruction == Instruction.CompareAndSwap
+                || node.Instruction == Instruction.CompareAndSwap16
+                || node.Instruction == Instruction.CompareAndSwap8;
         }
 
         private static bool IsPropagableCompare(Operation operation)

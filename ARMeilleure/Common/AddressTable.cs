@@ -211,7 +211,7 @@ namespace ARMeilleure.Common
         private IntPtr Allocate<T>(int length, T fill, bool leaf) where T : unmanaged
         {
             var size = sizeof(T) * length;
-            var page = Marshal.AllocHGlobal(size);
+            var page = (IntPtr)NativeAllocator.Instance.Allocate((uint)size);
             var span = new Span<T>((void*)page, length);
 
             span.Fill(fill);

@@ -4,7 +4,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Signal
 {
@@ -95,8 +95,6 @@ namespace ARMeilleure.Signal
             {
                 if (_initialized) return;
 
-                Translator.PreparePool();
-
                 bool unix = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
                 ref SignalHandlerConfig config = ref GetConfigRef();
 
@@ -123,10 +121,6 @@ namespace ARMeilleure.Signal
 
                     _signalHandlerHandle = WindowsSignalHandlerRegistration.RegisterExceptionHandler(_signalHandlerPtr);
                 }
-
-                Translator.ResetPool();
-
-                Translator.DisposePools();
 
                 _initialized = true;
             }

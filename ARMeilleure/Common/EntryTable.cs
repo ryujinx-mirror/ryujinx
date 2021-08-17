@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Common
 {
@@ -41,7 +40,7 @@ namespace ARMeilleure.Common
                 throw new ArgumentException("Size of TEntry cannot be zero.");
             }
 
-            _allocated = new BitMap();
+            _allocated = new BitMap(NativeAllocator.Instance);
             _pages = new Dictionary<int, IntPtr>();
             _pageLogCapacity = BitOperations.Log2((uint)(pageSize / sizeof(TEntry)));
             _pageCapacity = 1 << _pageLogCapacity;
@@ -150,7 +149,7 @@ namespace ARMeilleure.Common
 
             if (!_pages.TryGetValue(pageIndex, out IntPtr page))
             {
-                page = Marshal.AllocHGlobal(sizeof(TEntry) * _pageCapacity);
+                page = (IntPtr)NativeAllocator.Instance.Allocate((uint)sizeof(TEntry) * (uint)_pageCapacity);
 
                 _pages.Add(pageIndex, page);
             }
@@ -172,13 +171,15 @@ namespace ARMeilleure.Common
         /// instance.
         /// </summary>
         /// <param name="disposing"><see langword="true"/> to dispose managed resources also; otherwise just unmanaged resouces</param>
-        protected virtual void Dispose(bool disposing)
+        protected unsafe virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {
+                _allocated.Dispose();
+
                 foreach (var page in _pages.Values)
                 {
-                    Marshal.FreeHGlobal(page);
+                    NativeAllocator.Instance.Free((void*)page);
                 }
 
                 _disposed = true;

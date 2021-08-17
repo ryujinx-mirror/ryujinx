@@ -1,6 +1,6 @@
 ﻿namespace ARMeilleure.IntermediateRepresentation
 {
-    interface IIntrusiveListNode<T> where T : class
+    interface IIntrusiveListNode<T>
     {
         T ListPrevious { get; set; }
         T ListNext { get; set; }

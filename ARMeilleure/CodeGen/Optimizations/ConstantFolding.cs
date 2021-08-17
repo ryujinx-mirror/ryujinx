@@ -1,7 +1,6 @@
 using ARMeilleure.IntermediateRepresentation;
 using System;
-
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.CodeGen.Optimizations
 {
@@ -9,7 +8,7 @@ namespace ARMeilleure.CodeGen.Optimizations
     {
         public static void RunPass(Operation operation)
         {
-            if (operation.Destination == null || operation.SourcesCount == 0)
+            if (operation.Destination == default || operation.SourcesCount == 0)
             {
                 return;
             }

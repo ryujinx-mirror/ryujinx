@@ -3,7 +3,7 @@ using ARMeilleure.State;
 using ARMeilleure.Translation;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -20,7 +20,7 @@ namespace ARMeilleure.Instructions
                 if (size == 4)
                 {
                     // Only 128-bit CAS is guaranteed to have a atomic load.
-                    Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: false, 4);
+                    Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, default, write: false, 4);
 
                     Operand zero = context.VectorZero();
 
@@ -109,7 +109,7 @@ namespace ARMeilleure.Instructions
                 context.BranchIfTrue(lblExit, exFailed);
 
                 // STEP 2: We have exclusive access and the address is valid, attempt the store using CAS.
-                Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, null, write: true, size);
+                Operand physAddr = InstEmitMemoryHelper.EmitPtPointerLoad(context, address, default, write: true, size);
 
                 Operand exValuePtr = context.Add(arg0, Const((long)NativeContext.GetExclusiveValueOffset()));
                 Operand exValue = size switch

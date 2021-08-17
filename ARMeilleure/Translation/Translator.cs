@@ -13,12 +13,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime;
 using System.Threading;
-
-using static ARMeilleure.Common.BitMapPool;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
-using static ARMeilleure.IntermediateRepresentation.OperationHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Translation
 {
@@ -193,13 +189,9 @@ namespace ARMeilleure.Translation
 
                 ClearJitCache();
 
-                DisposePools();
-
                 Stubs.Dispose();
                 FunctionTable.Dispose();
                 CountTable.Dispose();
-
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             }
         }
 
@@ -266,8 +258,6 @@ namespace ARMeilleure.Translation
 
             Logger.EndPass(PassName.Decoding);
 
-            PreparePool(highCq ? 1 : 0);
-
             Logger.StartPass(PassName.Translation);
 
             EmitSynchronization(context);
@@ -281,7 +271,7 @@ namespace ARMeilleure.Translation
 
             ulong funcSize = funcRange.End - funcRange.Start;
 
-            Logger.EndPass(PassName.Translation);
+            Logger.EndPass(PassName.Translation, cfg);
 
             Logger.StartPass(PassName.RegisterUsage);
 
@@ -298,8 +288,6 @@ namespace ARMeilleure.Translation
             if (!context.HasPtc)
             {
                 func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
-
-                ResetPool(highCq ? 1 : 0);
             }
             else
             {
@@ -307,33 +295,16 @@ namespace ARMeilleure.Translation
 
                 func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options, ptcInfo);
 
-                ResetPool(highCq ? 1 : 0);
-
                 Hash128 hash = Ptc.ComputeHash(Memory, address, funcSize);
 
                 Ptc.WriteInfoCodeRelocUnwindInfo(address, funcSize, hash, highCq, ptcInfo);
             }
 
-            return new TranslatedFunction(func, counter, funcSize, highCq);
-        }
+            var result = new TranslatedFunction(func, counter, funcSize, highCq);
 
-        internal static void PreparePool(int groupId = 0)
-        {
-            PrepareOperandPool(groupId);
-            PrepareOperationPool(groupId);
-        }
+            Allocators.ResetAll();
 
-        internal static void ResetPool(int groupId = 0)
-        {
-            ResetOperationPool(groupId);
-            ResetOperandPool(groupId);
-        }
-
-        internal static void DisposePools()
-        {
-            DisposeOperandPools();
-            DisposeOperationPools();
-            DisposeBitMapPools();
+            return result;
         }
 
         private struct Range
@@ -408,7 +379,7 @@ namespace ARMeilleure.Translation
                             EmitSynchronization(context);
                         }
 
-                        Operand lblPredicateSkip = null;
+                        Operand lblPredicateSkip = default;
 
                         if (opCode is OpCode32 op && op.Cond < Condition.Al)
                         {
@@ -426,7 +397,7 @@ namespace ARMeilleure.Translation
                             throw new InvalidOperationException($"Invalid instruction \"{opCode.Instruction.Name}\".");
                         }
 
-                        if (lblPredicateSkip != null)
+                        if (lblPredicateSkip != default)
                         {
                             context.MarkLabel(lblPredicateSkip);
                         }

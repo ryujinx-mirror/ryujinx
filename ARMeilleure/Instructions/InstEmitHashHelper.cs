@@ -5,7 +5,7 @@ using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
 
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 
 namespace ARMeilleure.Instructions

@@ -2,7 +2,7 @@
 using ARMeilleure.Translation;
 
 using static ARMeilleure.Instructions.InstEmitFlowHelper;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {

@@ -9,7 +9,7 @@ using System.Reflection;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -391,7 +391,8 @@ namespace ARMeilleure.Instructions
                 Operand zero = context.VectorZero();
 
                 Operand nCmp;
-                Operand nIntOrLong2 = null;
+                Operand nIntOrLong2 = default;
+
                 if (!signed)
                 {
                     nCmp = context.AddIntrinsic(Intrinsic.X86Cmpss, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
@@ -441,7 +442,8 @@ namespace ARMeilleure.Instructions
                 Operand zero = context.VectorZero();
 
                 Operand nCmp;
-                Operand nIntOrLong2 = null;
+                Operand nIntOrLong2 = default;
+
                 if (!signed)
                 {
                     nCmp = context.AddIntrinsic(Intrinsic.X86Cmpsd, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
@@ -510,7 +512,8 @@ namespace ARMeilleure.Instructions
                     Operand fpMaxValMask = X86GetAllElements(context, 0x4F000000); // 2.14748365E9f (2147483648)
 
                     Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRes);
-                    Operand nInt2 = null;
+                    Operand nInt2 = default;
+
                     if (!signed)
                     {
                         nRes = context.AddIntrinsic(Intrinsic.X86Subps, nRes, fpMaxValMask);
@@ -551,7 +554,8 @@ namespace ARMeilleure.Instructions
                     Operand fpMaxValMask = X86GetAllElements(context, 0x43E0000000000000L); // 9.2233720368547760E18d (9223372036854775808)
 
                     Operand nLong = InstEmit.EmitSse2CvtDoubleToInt64OpF(context, nRes, false);
-                    Operand nLong2 = null;
+                    Operand nLong2 = default;
+
                     if (!signed)
                     {
                         nRes = context.AddIntrinsic(Intrinsic.X86Subpd, nRes, fpMaxValMask);

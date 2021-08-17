@@ -1,29 +1,54 @@
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
 namespace ARMeilleure.IntermediateRepresentation
 {
-    class MemoryOperand : Operand
+    unsafe struct MemoryOperand
     {
-        public Operand BaseAddress { get; set; }
-        public Operand Index       { get; set; }
-
-        public Multiplier Scale { get; private set; }
-
-        public int Displacement { get; private set; }
-
-        public MemoryOperand() { }
-
-        public MemoryOperand With(
-            OperandType type,
-            Operand     baseAddress,
-            Operand     index        = null,
-            Multiplier  scale        = Multiplier.x1,
-            int         displacement = 0)
+        private struct Data
         {
-            With(OperandKind.Memory, type);
-            BaseAddress  = baseAddress;
-            Index        = index;
-            Scale        = scale;
-            Displacement = displacement;
-            return this;
+#pragma warning disable CS0649
+            public byte Kind;
+            public byte Type;
+#pragma warning restore CS0649
+            public byte Scale;
+            public Operand BaseAddress;
+            public Operand Index;
+            public int Displacement;
+        }
+
+        private Data* _data;
+
+        public MemoryOperand(Operand operand)
+        {
+            Debug.Assert(operand.Kind == OperandKind.Memory);
+
+            _data = (Data*)Unsafe.As<Operand, IntPtr>(ref operand);
+        }
+
+        public Operand BaseAddress
+        {
+            get => _data->BaseAddress;
+            set => _data->BaseAddress = value; 
+        }
+
+        public Operand Index
+        {
+            get => _data->Index;
+            set => _data->Index = value; 
+        }
+
+        public Multiplier Scale
+        {
+            get => (Multiplier)_data->Scale;
+            set => _data->Scale = (byte)value;
+        }
+
+        public int Displacement
+        {
+            get => _data->Displacement;
+            set => _data->Displacement = value;
         }
     }
 }

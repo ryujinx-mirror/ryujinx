@@ -11,7 +11,7 @@ using System.Diagnostics;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
@@ -126,10 +126,10 @@ namespace ARMeilleure.Instructions
                 8  => Clz_V_I8 (context, GetVec(op.Rn)),
                 16 => Clz_V_I16(context, GetVec(op.Rn)),
                 32 => Clz_V_I32(context, GetVec(op.Rn)),
-                _  => null
+                _  => default
             };
 
-            if (res != null)
+            if (res != default)
             {
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -159,7 +159,7 @@ namespace ARMeilleure.Instructions
         {
             if (!Optimizations.UseSsse3)
             {
-                return null;
+                return default;
             }
 
             // CLZ nibble table.
@@ -189,7 +189,7 @@ namespace ARMeilleure.Instructions
         {
             if (!Optimizations.UseSsse3)
             {
-                return null;
+                return default;
             }
 
             Operand maskSwap = X86GetElements(context, 0x80_0f_80_0d_80_0b_80_09, 0x80_07_80_05_80_03_80_01);
@@ -215,7 +215,7 @@ namespace ARMeilleure.Instructions
             // TODO: Use vplzcntd when AVX-512 is supported.
             if (!Optimizations.UseSse2)
             {
-                return null;
+                return default;
             }
 
             Operand AddVectorI32(Operand op0, Operand op1)      => context.AddIntrinsic(Intrinsic.X86Paddd, op0, op1);
@@ -3684,8 +3684,8 @@ namespace ARMeilleure.Instructions
                 Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
                         mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, mask2, qMask, Const((int)CmpCondition.Equal));
 
-                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andps,  mask2, mask1) : null;
-                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnps, mask2, mask1) : null;
+                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andps,  mask2, mask1) : default;
+                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnps, mask2, mask1) : default;
             }
             else /* if ((op.Size & 1) == 1) */
             {
@@ -3698,8 +3698,8 @@ namespace ARMeilleure.Instructions
                 Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
                         mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, mask2, qMask, Const((int)CmpCondition.Equal));
 
-                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andpd,  mask2, mask1) : null;
-                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnpd, mask2, mask1) : null;
+                qNaNMask = isQNaN == null ||  (bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andpd,  mask2, mask1) : default;
+                sNaNMask = isQNaN == null || !(bool)isQNaN ? context.AddIntrinsic(Intrinsic.X86Andnpd, mask2, mask1) : default;
             }
         }
 
@@ -3707,11 +3707,11 @@ namespace ARMeilleure.Instructions
             ArmEmitterContext context,
             Func2I emit,
             bool scalar,
-            Operand n = null,
-            Operand m = null)
+            Operand n = default,
+            Operand m = default)
         {
-            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
-            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
+            Operand nCopy = n == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn)) : n;
+            Operand mCopy = m == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm)) : m;
 
             EmitSse2VectorIsNaNOpF(context, nCopy, out Operand nQNaNMask, out Operand nSNaNMask);
             EmitSse2VectorIsNaNOpF(context, mCopy, out _, out Operand mSNaNMask, isQNaN: false);
@@ -3734,7 +3734,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Blendvps, resNaN, emit(nCopy, mCopy), resMask);
 
-                if (n != null || m != null)
+                if (n != default || m != default)
                 {
                     return res;
                 }
@@ -3750,7 +3750,7 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
 
-                return null;
+                return default;
             }
             else /* if (sizeF == 1) */
             {
@@ -3768,7 +3768,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Blendvpd, resNaN, emit(nCopy, mCopy), resMask);
 
-                if (n != null || m != null)
+                if (n != default || m != default)
                 {
                     return res;
                 }
@@ -3780,7 +3780,7 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
 
-                return null;
+                return default;
             }
         }
 
@@ -3788,11 +3788,11 @@ namespace ARMeilleure.Instructions
             ArmEmitterContext context,
             Func2I emit,
             bool scalar,
-            Operand n = null,
-            Operand m = null)
+            Operand n = default,
+            Operand m = default)
         {
-            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
-            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
+            Operand nCopy = n == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn)) : n;
+            Operand mCopy = m == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm)) : m;
 
             EmitSseOrAvxEnterFtzAndDazModesOpF(context, out Operand isTrue);
 
@@ -3800,7 +3800,7 @@ namespace ARMeilleure.Instructions
 
             EmitSseOrAvxExitFtzAndDazModesOpF(context, isTrue);
 
-            if (n != null || m != null)
+            if (n != default || m != default)
             {
                 return res;
             }
@@ -3828,7 +3828,7 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
 
-            return null;
+            return default;
         }
 
         private static Operand EmitSse2VectorMaxMinOpF(ArmEmitterContext context, Operand n, Operand m, bool isMax)
@@ -3865,11 +3865,11 @@ namespace ARMeilleure.Instructions
             ArmEmitterContext context,
             bool isMaxNum,
             bool scalar,
-            Operand n = null,
-            Operand m = null)
+            Operand n = default,
+            Operand m = default)
         {
-            Operand nCopy = n ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn));
-            Operand mCopy = m ?? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm));
+            Operand nCopy = n == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn)) : n;
+            Operand mCopy = m == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm)) : m;
 
             EmitSse2VectorIsNaNOpF(context, nCopy, out Operand nQNaNMask, out _, isQNaN: true);
             EmitSse2VectorIsNaNOpF(context, mCopy, out Operand mQNaNMask, out _, isQNaN: true);
@@ -3896,7 +3896,7 @@ namespace ARMeilleure.Instructions
                     }, scalar: scalar, op1, op2);
                 }, scalar: scalar, nCopy, mCopy);
 
-                if (n != null || m != null)
+                if (n != default || m != default)
                 {
                     return res;
                 }
@@ -3912,7 +3912,7 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
 
-                return null;
+                return default;
             }
             else /* if (sizeF == 1) */
             {
@@ -3934,7 +3934,7 @@ namespace ARMeilleure.Instructions
                     }, scalar: scalar, op1, op2);
                 }, scalar: scalar, nCopy, mCopy);
 
-                if (n != null || m != null)
+                if (n != default || m != default)
                 {
                     return res;
                 }
@@ -3946,7 +3946,7 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
 
-                return null;
+                return default;
             }
         }
 

@@ -1,12 +1,10 @@
 using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
-using ARMeilleure.Translation.PTC;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-
-using static ARMeilleure.IntermediateRepresentation.OperandHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Translation
 {
@@ -77,7 +75,7 @@ namespace ARMeilleure.Translation
 
         public void BranchIf(Operand label, Operand op1, Operand op2, Comparison comp, BasicBlockFrequency falseFreq = default)
         {
-            Add(Instruction.BranchIf, null, op1, op2, Const((int)comp));
+            Add(Instruction.BranchIf, default, op1, op2, Const((int)comp));
 
             BranchToLabel(label, uncond: false, falseFreq);
         }
@@ -157,7 +155,7 @@ namespace ARMeilleure.Translation
             }
             else
             {
-                return Add(Instruction.Call, null, args);
+                return Add(Instruction.Call, default, args);
             }
         }
 
@@ -169,7 +167,7 @@ namespace ARMeilleure.Translation
 
             Array.Copy(callArgs, 0, args, 1, callArgs.Length);
 
-            Add(Instruction.Tailcall, null, args);
+            Add(Instruction.Tailcall, default, args);
 
             _needsNewBlock = true;
         }
@@ -356,7 +354,7 @@ namespace ARMeilleure.Translation
 
         public void Return(Operand op1)
         {
-            Add(Instruction.Return, null, op1);
+            Add(Instruction.Return, default, op1);
 
             _needsNewBlock = true;
         }
@@ -398,17 +396,17 @@ namespace ARMeilleure.Translation
 
         public void Store(Operand address, Operand value)
         {
-            Add(Instruction.Store, null, address, value);
+            Add(Instruction.Store, default, address, value);
         }
 
         public void Store16(Operand address, Operand value)
         {
-            Add(Instruction.Store16, null, address, value);
+            Add(Instruction.Store16, default, address, value);
         }
 
         public void Store8(Operand address, Operand value)
         {
-            Add(Instruction.Store8, null, address, value);
+            Add(Instruction.Store8, default, address, value);
         }
 
         public void StoreToContext()
@@ -501,11 +499,11 @@ namespace ARMeilleure.Translation
             }
         }
 
-        private Operand Add(Instruction inst, Operand dest = null)
+        private Operand Add(Instruction inst, Operand dest = default)
         {
             NewNextBlockIfNeeded();
 
-            Operation operation = OperationHelper.Operation(inst, dest);
+            Operation operation = Operation.Factory.Operation(inst, dest);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -516,7 +514,7 @@ namespace ARMeilleure.Translation
         {
             NewNextBlockIfNeeded();
 
-            Operation operation = OperationHelper.Operation(inst, dest, sources);
+            Operation operation = Operation.Factory.Operation(inst, dest, sources);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -527,7 +525,7 @@ namespace ARMeilleure.Translation
         {
             NewNextBlockIfNeeded();
 
-            Operation operation = OperationHelper.Operation(inst, dest, source0);
+            Operation operation = Operation.Factory.Operation(inst, dest, source0);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -538,7 +536,7 @@ namespace ARMeilleure.Translation
         {
             NewNextBlockIfNeeded();
 
-            Operation operation = OperationHelper.Operation(inst, dest, source0, source1);
+            Operation operation = Operation.Factory.Operation(inst, dest, source0, source1);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -549,7 +547,7 @@ namespace ARMeilleure.Translation
         {
             NewNextBlockIfNeeded();
 
-            Operation operation = OperationHelper.Operation(inst, dest, source0, source1, source2);
+            Operation operation = Operation.Factory.Operation(inst, dest, source0, source1, source2);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -573,14 +571,14 @@ namespace ARMeilleure.Translation
 
         public void AddIntrinsicNoRet(Intrinsic intrin, params Operand[] args)
         {
-            Add(intrin, null, args);
+            Add(intrin, default, args);
         }
 
         private Operand Add(Intrinsic intrin, Operand dest, params Operand[] sources)
         {
             NewNextBlockIfNeeded();
 
-            IntrinsicOperation operation = new IntrinsicOperation(intrin, dest, sources);
+            Operation operation = Operation.Factory.Operation(intrin, dest, sources);
 
             _irBlock.Operations.AddLast(operation);
 
@@ -641,7 +639,7 @@ namespace ARMeilleure.Translation
 
         private void NextBlock(BasicBlock nextBlock)
         {
-            if (_irBlock?.SuccessorCount == 0 && !EndsWithUnconditional(_irBlock))
+            if (_irBlock?.SuccessorsCount == 0 && !EndsWithUnconditional(_irBlock))
             {
                 _irBlock.AddSuccessor(nextBlock);
 
@@ -662,9 +660,11 @@ namespace ARMeilleure.Translation
 
         private static bool EndsWithUnconditional(BasicBlock block)
         {
-            return block.Operations.Last is Operation lastOp &&
-                   (lastOp.Instruction == Instruction.Return ||
-                    lastOp.Instruction == Instruction.Tailcall);
+            Operation last = block.Operations.Last;
+
+            return last != default &&
+               (last.Instruction == Instruction.Return ||
+                last.Instruction == Instruction.Tailcall);
         }
 
         public ControlFlowGraph GetControlFlowGraph()
