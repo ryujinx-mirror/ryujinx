@@ -176,7 +176,7 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 _vertexAttribsInUse &= ~mask;
                 GL.DisableVertexAttribArray(index);
-                GL.VertexAttrib4(index, 0f, 0f, 0f, 0f);
+                GL.VertexAttrib4(index, 0f, 0f, 0f, 1f);
             }
         }
 
