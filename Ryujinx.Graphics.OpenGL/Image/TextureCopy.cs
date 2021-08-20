@@ -27,7 +27,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             Extents2D   dstRegion,
             bool        linearFilter)
         {
-            TextureView srcConverted = src.Format.IsBgra8() != dst.Format.IsBgra8() ? BgraSwap(src) : src;
+            TextureView srcConverted = src.Format.IsBgr() != dst.Format.IsBgr() ? BgraSwap(src) : src;
 
             (int oldDrawFramebufferHandle, int oldReadFramebufferHandle) = ((Pipeline)_renderer.Pipeline).GetBoundFramebuffers();
 

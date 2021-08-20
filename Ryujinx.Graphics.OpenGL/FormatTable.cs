@@ -168,9 +168,9 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.Astc10x10Srgb,       new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Astc10X10Khr));
             Add(Format.Astc12x10Srgb,       new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Astc12X10Khr));
             Add(Format.Astc12x12Srgb,       new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Astc12X12Khr));
-            Add(Format.B5G6R5Unorm,         new FormatInfo(3, true,  false, All.Rgb565,            PixelFormat.Rgb,            PixelType.UnsignedShort565));
-            Add(Format.B5G5R5X1Unorm,       new FormatInfo(4, true,  false, All.Rgb5,              PixelFormat.Bgra,           PixelType.UnsignedShort5551));
-            Add(Format.B5G5R5A1Unorm,       new FormatInfo(4, true,  false, All.Rgb5A1,            PixelFormat.Bgra,           PixelType.UnsignedShort5551));
+            Add(Format.B5G6R5Unorm,         new FormatInfo(3, true,  false, All.Rgb565,            PixelFormat.Rgb,            PixelType.UnsignedShort565Reversed));
+            Add(Format.B5G5R5X1Unorm,       new FormatInfo(4, true,  false, All.Rgb5,              PixelFormat.Rgba,           PixelType.UnsignedShort1555Reversed));
+            Add(Format.B5G5R5A1Unorm,       new FormatInfo(4, true,  false, All.Rgb5A1,            PixelFormat.Rgba,           PixelType.UnsignedShort1555Reversed));
             Add(Format.A1B5G5R5Unorm,       new FormatInfo(4, true,  false, All.Rgb5A1,            PixelFormat.Bgra,           PixelType.UnsignedShort1555Reversed));
             Add(Format.B8G8R8X8Unorm,       new FormatInfo(4, true,  false, All.Rgba8,             PixelFormat.Rgba,           PixelType.UnsignedByte));
             Add(Format.B8G8R8A8Unorm,       new FormatInfo(4, true,  false, All.Rgba8,             PixelFormat.Rgba,           PixelType.UnsignedByte));

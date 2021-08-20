@@ -235,14 +235,17 @@ namespace Ryujinx.Graphics.GAL
         }
 
         /// <summary>
-        /// Checks if the texture format is a BGRA format with 8-bit components.
+        /// Checks if the texture format is a BGR format.
         /// </summary>
         /// <param name="format">Texture format</param>
-        /// <returns>True if the texture format is a BGRA format with 8-bit components, false otherwise</returns>
-        public static bool IsBgra8(this Format format)
+        /// <returns>True if the texture format is a BGR format, false otherwise</returns>
+        public static bool IsBgr(this Format format)
         {
             switch (format)
             {
+                case Format.B5G6R5Unorm:
+                case Format.B5G5R5X1Unorm:
+                case Format.B5G5R5A1Unorm:
                 case Format.B8G8R8X8Unorm:
                 case Format.B8G8R8A8Unorm:
                 case Format.B8G8R8X8Srgb:

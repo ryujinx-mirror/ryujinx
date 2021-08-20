@@ -879,7 +879,7 @@ namespace Ryujinx.Graphics.OpenGL
 
                 _framebuffer.AttachColor(index, color);
 
-                int isBgra = color != null && color.Format.IsBgra8() ? 1 : 0;
+                int isBgra = color != null && color.Format.IsBgr() ? 1 : 0;
 
                 if (_fpIsBgra[index].X != isBgra)
                 {
