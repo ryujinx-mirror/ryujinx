@@ -452,13 +452,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     index = handleIndex;
                     baseLevel = 0;
 
-                    int layerLevels = _levels;
+                    int levelLayers = _layers;
 
-                    while (handleIndex >= layerLevels)
+                    while (handleIndex >= levelLayers)
                     {
-                        handleIndex -= layerLevels;
+                        handleIndex -= levelLayers;
                         baseLevel++;
-                        layerLevels = Math.Max(layerLevels >> 1, 1);
+                        levelLayers = Math.Max(levelLayers >> 1, 1);
                     }
 
                     baseLayer = handleIndex;
@@ -492,13 +492,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 int baseLevel = 0;
 
-                int layerLevels = _layers;
+                int levelLayers = _layers;
 
-                while (index >= layerLevels)
+                while (index >= levelLayers)
                 {
-                    index -= layerLevels;
+                    index -= levelLayers;
                     baseLevel++;
-                    layerLevels = Math.Max(layerLevels >> 1, 1);
+                    levelLayers = Math.Max(levelLayers >> 1, 1);
                 }
 
                 return (index, baseLevel);
