@@ -254,7 +254,7 @@ namespace Ryujinx.Ui.Windows
             }
             else
             {
-                GtkDialog.CreateInfoDialog($"Amiibo API", "An error occured while fetching informations from the API.");
+                GtkDialog.CreateInfoDialog($"Amiibo API", "An error occured while fetching information from the API.");
 
                 Close();
             }

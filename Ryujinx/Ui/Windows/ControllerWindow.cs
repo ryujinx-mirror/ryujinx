@@ -1131,7 +1131,7 @@ namespace Ryujinx.Ui.Windows
 
             if (_inputDevice.ActiveId == "disabled" || _profile.ActiveId == "default" || _profile.ActiveId == null) return;
 
-            MessageDialog confirmDialog = GtkDialog.CreateConfirmationDialog("Deleting Profile", "This action is irreversible, are your sure you want to continue?");
+            MessageDialog confirmDialog = GtkDialog.CreateConfirmationDialog("Deleting Profile", "This action is irreversible, are you sure you want to continue?");
 
             if (confirmDialog.Run() == (int)ResponseType.Yes)
             {
