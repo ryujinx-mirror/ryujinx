@@ -623,29 +623,49 @@ namespace Ryujinx.Graphics.Gpu.Image
                         hasLayerViews |= overlap.Info.GetSlices() < texture.Info.GetSlices();
                         hasMipViews |= overlap.Info.Levels < texture.Info.Levels;
                     }
-                    else if (overlapInCache || !setData)
+                    else
                     {
-                        if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
+                        bool removeOverlap;
+                        bool modified = overlap.CheckModified(false);
+
+                        if (overlapInCache || !setData)
                         {
-                            // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
-                            continue;
+                            if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
+                            {
+                                // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
+                                continue;
+                            }
+
+                            // The overlap texture is going to contain garbage data after we draw, or is generally incompatible.
+                            // If the texture cannot be entirely contained in the new address space, and one of its view children is compatible with us,
+                            // it must be flushed before removal, so that the data is not lost.
+
+                            // If the texture was modified since its last use, then that data is probably meant to go into this texture.
+                            // If the data has been modified by the CPU, then it also shouldn't be flushed.
+
+                            bool viewCompatibleChild = overlap.HasViewCompatibleChild(texture);
+
+                            bool flush = overlapInCache && !modified && !texture.Range.Contains(overlap.Range) && viewCompatibleChild;
+
+                            setData |= modified || flush;
+
+                            if (overlapInCache)
+                            {
+                                _cache.Remove(overlap, flush);
+                            }
+
+                            removeOverlap = modified && !viewCompatibleChild;
+                        }
+                        else
+                        {
+                            // If an incompatible overlapping texture has been modified, then it's data is likely destined for this texture,
+                            // and the overlapped texture will contain garbage. In this case, it should be removed to save memory.
+                            removeOverlap = modified;
                         }
 
-                        // The overlap texture is going to contain garbage data after we draw, or is generally incompatible.
-                        // If the texture cannot be entirely contained in the new address space, and one of its view children is compatible with us,
-                        // it must be flushed before removal, so that the data is not lost.
-
-                        // If the texture was modified since its last use, then that data is probably meant to go into this texture.
-                        // If the data has been modified by the CPU, then it also shouldn't be flushed.
-                        bool modified = overlap.ConsumeModified();
-
-                        bool flush = overlapInCache && !modified && !texture.Range.Contains(overlap.Range) && overlap.HasViewCompatibleChild(texture);
-
-                        setData |= modified || flush;
-
-                        if (overlapInCache)
+                        if (removeOverlap && overlap.Info.Target != Target.TextureBuffer)
                         {
-                            _cache.Remove(overlap, flush);
+                            overlap.RemoveFromPools(false);
                         }
                     }
                 }

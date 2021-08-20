@@ -83,11 +83,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Consume the dirty flags for a given texture. The state is shared between views of the same layers and levels.
+        /// Check and optionally consume the dirty flags for a given texture.
+        /// The state is shared between views of the same layers and levels.
         /// </summary>
         /// <param name="texture">The texture being used</param>
+        /// <param name="consume">True to consume the dirty flags and reprotect, false to leave them as is</param>
         /// <returns>True if a flag was dirty, false otherwise</returns>
-        public bool ConsumeDirty(Texture texture)
+        public bool CheckDirty(Texture texture, bool consume)
         {
             bool dirty = false;
 
@@ -101,7 +103,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                     {
                         if (handle.Dirty)
                         {
-                            handle.Reprotect();
+                            if (consume)
+                            {
+                                handle.Reprotect();
+                            }
+
                             dirty = true;
                         }
                     }

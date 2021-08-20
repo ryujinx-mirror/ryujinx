@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 oldestTexture.SynchronizeMemory();
 
-                if (oldestTexture.IsModified && !oldestTexture.ConsumeModified())
+                if (oldestTexture.IsModified && !oldestTexture.CheckModified(true))
                 {
                     // The texture must be flushed if it falls out of the auto delete cache.
                     // Flushes out of the auto delete cache do not trigger write tracking,

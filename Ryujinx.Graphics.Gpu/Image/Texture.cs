@@ -252,7 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (!isView)
                 {
                     // Don't update this texture the next time we synchronize.
-                    ConsumeModified();
+                    CheckModified(true);
 
                     if (ScaleMode == TextureScaleMode.Scaled)
                     {
@@ -599,12 +599,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Checks if the memory for this texture was modified, and returns true if it was.
-        /// The modified flags are consumed as a result.
+        /// The modified flags are optionally consumed as a result.
         /// </summary>
+        /// <param name="consume">True to consume the dirty flags and reprotect, false to leave them as is</param>
         /// <returns>True if the texture was modified, false otherwise.</returns>
-        public bool ConsumeModified()
+        public bool CheckModified(bool consume)
         {
-            return Group.ConsumeDirty(this);
+            return Group.CheckDirty(this, consume);
         }
 
         /// <summary>
@@ -634,7 +635,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                Group.ConsumeDirty(this);
+                Group.CheckDirty(this, true);
                 SynchronizeFull();
             }
         }
@@ -698,7 +699,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             BlacklistScale();
 
-            Group.ConsumeDirty(this);
+            Group.CheckDirty(this, true);
 
             IsModified = false;
 
