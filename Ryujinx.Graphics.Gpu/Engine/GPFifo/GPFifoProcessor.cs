@@ -29,6 +29,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public MemoryManager MemoryManager => _channel.MemoryManager;
 
         /// <summary>
+        /// 3D Engine.
+        /// </summary>
+        public ThreedClass ThreedClass => _3dClass;
+
+        /// <summary>
         /// Internal GPFIFO state.
         /// </summary>
         private struct DmaState
@@ -70,12 +75,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <summary>
         /// Processes a command buffer.
         /// </summary>
+        /// <param name="baseGpuVa">Base GPU virtual address of the command buffer</param>
         /// <param name="commandBuffer">Command buffer</param>
-        public void Process(ReadOnlySpan<int> commandBuffer)
+        public void Process(ulong baseGpuVa, ReadOnlySpan<int> commandBuffer)
         {
             for (int index = 0; index < commandBuffer.Length; index++)
             {
                 int command = commandBuffer[index];
+
+                ulong gpuVa = baseGpuVa + (ulong)index * 4;
 
                 if (_state.MethodCount != 0)
                 {
@@ -84,7 +92,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                         continue;
                     }
 
-                    Send(_state.Method, command, _state.SubChannel, _state.MethodCount <= 1);
+                    Send(gpuVa, _state.Method, command, _state.SubChannel, _state.MethodCount <= 1);
 
                     if (!_state.NonIncrementing)
                     {
@@ -120,7 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                             _state.NonIncrementing = meth.SecOp == SecOp.NonIncMethod;
                             break;
                         case SecOp.ImmdDataMethod:
-                            Send(meth.MethodAddress, meth.ImmdData, meth.MethodSubchannel, true);
+                            Send(gpuVa, meth.MethodAddress, meth.ImmdData, meth.MethodSubchannel, true);
                             break;
                     }
                 }
@@ -198,8 +206,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <summary>
         /// Sends a uncompressed method for processing by the graphics pipeline.
         /// </summary>
+        /// <param name="gpuVa">GPU virtual address where the command word is located</param>
         /// <param name="meth">Method to be processed</param>
-        private void Send(int offset, int argument, int subChannel, bool isLastCall)
+        private void Send(ulong gpuVa, int offset, int argument, int subChannel, bool isLastCall)
         {
             if (offset < 0x60)
             {
@@ -243,7 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                     if ((offset & 1) != 0)
                     {
-                        _fifoClass.MmePushArgument(macroIndex, argument);
+                        _fifoClass.MmePushArgument(macroIndex, gpuVa, argument);
                     }
                     else
                     {

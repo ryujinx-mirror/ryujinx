@@ -9,6 +9,12 @@ namespace Ryujinx.Common
         public ulong Low;
         public ulong High;
 
+        public Hash128(ulong low, ulong high)
+        {
+            Low = low;
+            High = high;
+        }
+
         public override string ToString()
         {
             return $"{High:x16}{Low:x16}";

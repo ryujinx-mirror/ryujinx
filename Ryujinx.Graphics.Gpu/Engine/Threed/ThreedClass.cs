@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
 using System;
 using System.Collections.Generic;
@@ -432,6 +433,26 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static int Zero()
         {
             return 0;
+        }
+
+        /// <summary>
+        /// Performs a indirect multi-draw, with parameters from a GPU buffer.
+        /// </summary>
+        /// <param name="indexCount">Index Buffer Count</param>
+        /// <param name="topology">Primitive topology</param>
+        /// <param name="indirectBuffer">GPU buffer with the draw parameters, such as count, first index, etc</param>
+        /// <param name="parameterBuffer">GPU buffer with the draw count</param>
+        /// <param name="maxDrawCount">Maximum number of draws that can be made</param>
+        /// <param name="stride">Distance in bytes between each element on the <paramref name="indirectBuffer"/> array</param>
+        public void MultiDrawIndirectCount(
+            int indexCount,
+            PrimitiveTopology topology,
+            BufferRange indirectBuffer,
+            BufferRange parameterBuffer,
+            int maxDrawCount,
+            int stride)
+        {
+            _drawManager.MultiDrawIndirectCount(this, indexCount, topology, indirectBuffer, parameterBuffer, maxDrawCount, stride);
         }
     }
 }

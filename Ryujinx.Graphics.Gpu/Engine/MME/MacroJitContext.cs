@@ -12,22 +12,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Arguments FIFO.
         /// </summary>
-        public Queue<int> Fifo { get; } = new Queue<int>();
+        public Queue<FifoWord> Fifo { get; } = new Queue<FifoWord>();
 
         /// <summary>
         /// Fetches a arguments from the arguments FIFO.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The call argument, or 0 if the FIFO is empty</returns>
         public int FetchParam()
         {
-            if (!Fifo.TryDequeue(out int value))
+            if (!Fifo.TryDequeue(out var value))
             {
                 Logger.Warning?.Print(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
 
                 return 0;
             }
 
-            return value;
+            return value.Word;
         }
 
         /// <summary>

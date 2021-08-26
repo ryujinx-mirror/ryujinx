@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.GAL
         public bool SupportsNonConstantTextureOffset { get; }
         public bool SupportsTextureShadowLod { get; }
         public bool SupportsViewportSwizzle { get; }
+        public bool SupportsIndirectParameters { get; }
 
         public int MaximumComputeSharedMemorySize { get; }
         public float MaximumSupportedAnisotropy { get; }
@@ -25,6 +26,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsNonConstantTextureOffset,
             bool supportsTextureShadowLod,
             bool supportsViewportSwizzle,
+            bool supportsIndirectParameters,
             int maximumComputeSharedMemorySize,
             float maximumSupportedAnisotropy,
             int storageBufferOffsetAlignment)
@@ -37,6 +39,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;
             SupportsTextureShadowLod = supportsTextureShadowLod;
             SupportsViewportSwizzle = supportsViewportSwizzle;
+            SupportsIndirectParameters = supportsIndirectParameters;
             MaximumComputeSharedMemorySize = maximumComputeSharedMemorySize;
             MaximumSupportedAnisotropy = maximumSupportedAnisotropy;
             StorageBufferOffsetAlignment = storageBufferOffsetAlignment;

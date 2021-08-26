@@ -54,11 +54,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             /// <summary>
             /// Fetch the command buffer.
             /// </summary>
-            public void Fetch(MemoryManager memoryManager)
+            /// <param name="flush">If true, flushes potential GPU written data before reading the command buffer</param>
+            public void Fetch(MemoryManager memoryManager, bool flush = true)
             {
                 if (Words == null)
                 {
-                    Words = MemoryMarshal.Cast<byte, int>(memoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, true)).ToArray();
+                    Words = MemoryMarshal.Cast<byte, int>(memoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, flush)).ToArray();
                 }
             }
         }
@@ -73,6 +74,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private readonly AutoResetEvent _event;
 
         private bool _interrupt;
+        private int _flushSkips;
 
         /// <summary>
         /// Creates a new instance of the GPU General Purpose FIFO device.
@@ -188,8 +190,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             // Process command buffers.
             while (_ibEnable && !_interrupt && _commandBufferQueue.TryDequeue(out CommandBuffer entry))
             {
+                bool flushCommandBuffer = true;
+
+                if (_flushSkips != 0)
+                {
+                    _flushSkips--;
+                    flushCommandBuffer = false;
+                }
+
                 _currentCommandBuffer = entry;
-                _currentCommandBuffer.Fetch(entry.Processor.MemoryManager);
+                _currentCommandBuffer.Fetch(entry.Processor.MemoryManager, flushCommandBuffer);
 
                 // If we are changing the current channel,
                 // we need to force all the host state to be updated.
@@ -199,10 +209,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                     entry.Processor.ForceAllDirty();
                 }
 
-                entry.Processor.Process(_currentCommandBuffer.Words);
+                entry.Processor.Process(entry.EntryAddress, _currentCommandBuffer.Words);
             }
 
             _interrupt = false;
+        }
+
+        /// <summary>
+        /// Sets the number of flushes that should be skipped for subsequent command buffers.
+        /// </summary>
+        /// <remarks>
+        /// This can improve performance when command buffer data only needs to be consumed by the GPU.
+        /// </remarks>
+        /// <param name="count">The amount of flushes that should be skipped</param>
+        internal void SetFlushSkips(int count)
+        {
+            _flushSkips = count;
         }
 
         /// <summary>

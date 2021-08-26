@@ -107,6 +107,7 @@ namespace Ryujinx.Graphics.OpenGL
                 HwCapabilities.SupportsNonConstantTextureOffset,
                 HwCapabilities.SupportsTextureShadowLod,
                 HwCapabilities.SupportsViewportSwizzle,
+                HwCapabilities.SupportsIndirectParameters,
                 HwCapabilities.MaximumComputeSharedMemorySize,
                 HwCapabilities.MaximumSupportedAnisotropy,
                 HwCapabilities.StorageBufferOffsetAlignment);

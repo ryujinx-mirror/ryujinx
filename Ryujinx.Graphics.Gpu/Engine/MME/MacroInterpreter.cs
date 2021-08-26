@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Arguments FIFO.
         /// </summary>
-        public Queue<int> Fifo { get; }
+        public Queue<FifoWord> Fifo { get; }
 
         private int[] _gprs;
 
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         public MacroInterpreter()
         {
-            Fifo = new Queue<int>();
+            Fifo = new Queue<FifoWord>();
 
             _gprs = new int[8];
         }
@@ -364,14 +364,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <returns>The call argument, or 0 if the FIFO is empty</returns>
         private int FetchParam()
         {
-            if (!Fifo.TryDequeue(out int value))
+            if (!Fifo.TryDequeue(out var value))
             {
                 Logger.Warning?.Print(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
 
                 return 0;
             }
 
-            return value;
+            return value.Word;
         }
 
         /// <summary>

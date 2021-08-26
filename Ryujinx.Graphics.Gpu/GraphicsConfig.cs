@@ -34,6 +34,11 @@ namespace Ryujinx.Graphics.Gpu
         public static bool EnableMacroJit = true;
 
         /// <summary>
+        /// Enables or disables high-level emulation of common GPU Macro code.
+        /// </summary>
+        public static bool EnableMacroHLE = true;
+
+        /// <summary>
         /// Title id of the current running game.
         /// Used by the shader cache.
         /// </summary>

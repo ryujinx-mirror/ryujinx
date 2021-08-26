@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Arguments FIFO.
         /// </summary>
-        public Queue<int> Fifo => _context.Fifo;
+        public Queue<FifoWord> Fifo => _context.Fifo;
 
         private MacroJitCompiler.MacroExecute _execute;
 

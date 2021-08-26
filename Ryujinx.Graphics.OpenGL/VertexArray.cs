@@ -20,12 +20,17 @@ namespace Ryujinx.Graphics.OpenGL
         private uint _vertexAttribsInUse;
         private uint _vertexBuffersInUse;
 
+        private BufferRange _indexBuffer;
+        private BufferHandle _tempIndexBuffer;
+
         public VertexArray()
         {
             Handle = GL.GenVertexArray();
 
             _vertexAttribs = new VertexAttribDescriptor[Constants.MaxVertexAttribs];
             _vertexBuffers = new VertexBufferDescriptor[Constants.MaxVertexBuffers];
+
+            _tempIndexBuffer = Buffer.Create();
         }
 
         public void Bind()
@@ -120,9 +125,22 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetIndexBuffer(BufferHandle buffer)
+        public void SetIndexBuffer(BufferRange range)
         {
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, buffer.ToInt32());
+            _indexBuffer = range;
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, range.Handle.ToInt32());
+        }
+
+        public void SetRangeOfIndexBuffer()
+        {
+            Buffer.Resize(_tempIndexBuffer, _indexBuffer.Size);
+            Buffer.Copy(_indexBuffer.Handle, _tempIndexBuffer, _indexBuffer.Offset, 0, _indexBuffer.Size);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _tempIndexBuffer.ToInt32());
+        }
+
+        public void RestoreIndexBuffer()
+        {
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer.Handle.ToInt32());
         }
 
         public void Validate()

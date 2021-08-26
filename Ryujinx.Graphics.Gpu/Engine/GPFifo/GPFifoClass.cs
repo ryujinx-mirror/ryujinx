@@ -161,6 +161,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="argument">Method call argument</param>
         public void SetReference(int argument)
         {
+            _context.Renderer.Pipeline.CommandBufferBarrier();
+
             _context.CreateHostSyncIfNeeded();
         }
 
@@ -195,10 +197,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// Pushes an argument to a macro.
         /// </summary>
         /// <param name="index">Index of the macro</param>
+        /// <param name="gpuVa">GPU virtual address where the command word is located</param>
         /// <param name="argument">Argument to be pushed to the macro</param>
-        public void MmePushArgument(int index, int argument)
+        public void MmePushArgument(int index, ulong gpuVa, int argument)
         {
-            _macros[index].PushArgument(argument);
+            _macros[index].PushArgument(gpuVa, argument);
         }
 
         /// <summary>
@@ -208,7 +211,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// <param name="argument">Initial argument passed to the macro</param>
         public void MmeStart(int index, int argument)
         {
-            _macros[index].StartExecution(argument);
+            _macros[index].StartExecution(_context, _parent, _macroCode, argument);
         }
 
         /// <summary>
