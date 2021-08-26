@@ -273,9 +273,6 @@ namespace Ryujinx.HLE.FileSystem
             rc = FixExtraDataInSpaceId(hos, SaveDataSpaceId.User);
             if (rc.IsFailure()) return rc;
 
-            rc = FixExtraDataInSpaceId(hos, SaveDataSpaceId.SdCache);
-            if (rc.IsFailure()) return rc;
-
             return Result.Success;
         }
 
