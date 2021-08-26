@@ -204,7 +204,18 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             if (forceBgra)
             {
-                pixelFormat = PixelFormat.Bgra;
+                if (pixelType == PixelType.UnsignedShort565)
+                {
+                    pixelType = PixelType.UnsignedShort565Reversed;
+                }
+                else if (pixelType == PixelType.UnsignedShort565Reversed)
+                {
+                    pixelType = PixelType.UnsignedShort565;
+                }
+                else
+                {
+                    pixelFormat = PixelFormat.Bgra;
+                }
             }
 
             int faces = 1;
