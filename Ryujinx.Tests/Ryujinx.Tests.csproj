@@ -32,8 +32,6 @@
 
   <Target Name="CopyUnicorn" AfterTargets="Build">
     <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\unicorn.dll" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
-    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\libunicorn.dylib" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
-    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\libunicorn.so" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
   </Target>
 
 </Project>
