@@ -282,23 +282,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 // Populate used attributes.
                 if (op is IOpCodeAttribute opAttr)
                 {
-                    for (int elemIndex = 0; elemIndex < opAttr.Count; elemIndex++)
-                    {
-                        int attr = opAttr.AttributeOffset + elemIndex * 4;
-                        if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
-                        {
-                            int index = (attr - AttributeConsts.UserAttributeBase) / 16;
-
-                            if (op.Emitter == InstEmit.Ast)
-                            {
-                                config.SetOutputUserAttribute(index);
-                            }
-                            else
-                            {
-                                config.SetInputUserAttribute(index);
-                            }
-                        }
-                    }
+                    SetUserAttributeUses(config, opAttr);
                 }
 
                 block.OpCodes.Add(op);
@@ -308,6 +292,41 @@ namespace Ryujinx.Graphics.Shader.Decoders
             block.EndAddress = address;
 
             block.UpdatePushOps();
+        }
+
+        private static void SetUserAttributeUses(ShaderConfig config, IOpCodeAttribute opAttr)
+        {
+            if (opAttr.Indexed)
+            {
+                if (opAttr.Emitter == InstEmit.Ast)
+                {
+                    config.SetAllOutputUserAttributes();
+                }
+                else
+                {
+                    config.SetAllInputUserAttributes();
+                }
+            }
+            else
+            {
+                for (int elemIndex = 0; elemIndex < opAttr.Count; elemIndex++)
+                {
+                    int attr = opAttr.AttributeOffset + elemIndex * 4;
+                    if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
+                    {
+                        int index = (attr - AttributeConsts.UserAttributeBase) / 16;
+
+                        if (opAttr.Emitter == InstEmit.Ast)
+                        {
+                            config.SetOutputUserAttribute(index);
+                        }
+                        else
+                        {
+                            config.SetInputUserAttribute(index);
+                        }
+                    }
+                }
+            }
         }
 
         private static bool IsUnconditionalBranch(OpCode opCode)

@@ -32,6 +32,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             _opCodes = new TableEntry[1 << EncodingBits];
 
 #region Instructions
+            Set("1110111110100x", InstEmit.Al2p,    OpCodeAl2p.Create);
             Set("1110111111011x", InstEmit.Ald,     OpCodeAttribute.Create);
             Set("1110111111110x", InstEmit.Ast,     OpCodeAttribute.Create);
             Set("11101101xxxxxx", InstEmit.Atom,    OpCodeAtom.Create);

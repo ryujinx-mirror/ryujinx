@@ -109,6 +109,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ShuffleXor,               InstType.CallQuaternary, HelperFunctionNames.ShuffleXor);
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
+            Add(Instruction.StoreAttribute,           InstType.Special);
             Add(Instruction.StoreLocal,               InstType.Special);
             Add(Instruction.StoreShared,              InstType.Special);
             Add(Instruction.StoreStorage,             InstType.Special);

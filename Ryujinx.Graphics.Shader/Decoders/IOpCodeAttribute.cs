@@ -1,8 +1,9 @@
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    interface IOpCodeAttribute
+    interface IOpCodeAttribute : IOpCode
     {
         int AttributeOffset { get; }
         int Count { get; }
+        bool Indexed { get; }
     }
 }

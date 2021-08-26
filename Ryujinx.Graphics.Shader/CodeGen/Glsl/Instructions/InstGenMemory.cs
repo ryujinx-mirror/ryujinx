@@ -137,15 +137,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             IAstNode src1 = operation.GetSource(0);
             IAstNode src2 = operation.GetSource(1);
+            IAstNode src3 = operation.GetSource(2);
 
-            if (!(src1 is AstOperand attr) || attr.Type != OperandType.Attribute)
+            if (!(src1 is AstOperand baseAttr) || baseAttr.Type != OperandType.Constant)
             {
-                throw new InvalidOperationException("First source of LoadAttribute must be a attribute.");
+                throw new InvalidOperationException($"First input of {nameof(Instruction.LoadAttribute)} must be a constant operand.");
             }
 
-            string indexExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
+            string indexExpr = GetSoureExpr(context, src3, GetSrcVarType(operation.Inst, 2));
 
-            return OperandManager.GetAttributeName(attr, context.Config, isOutAttr: false, indexExpr);
+            if (src2 is AstOperand operand && operand.Type == OperandType.Constant)
+            {
+                return OperandManager.GetAttributeName(baseAttr.Value + (operand.Value << 2), context.Config, isOutAttr: false, indexExpr);
+            }
+            else
+            {
+                string attrExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
+                attrExpr = Enclose(attrExpr, src2, Instruction.ShiftRightS32, isLhs: true);
+                return OperandManager.GetAttributeName(attrExpr, context.Config, isOutAttr: false, indexExpr);
+            }
         }
 
         public static string LoadConstant(CodeGenContext context, AstOperation operation)
@@ -154,16 +164,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             IAstNode src2 = operation.GetSource(1);
 
             string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
-
             offsetExpr = Enclose(offsetExpr, src2, Instruction.ShiftRightS32, isLhs: true);
 
             var config = context.Config;
             bool indexElement = !config.GpuAccessor.QueryHostHasVectorIndexingBug();
 
-            if (src1 is AstOperand oper && oper.Type == OperandType.Constant)
+            if (src1 is AstOperand operand && operand.Type == OperandType.Constant)
             {
                 bool cbIndexable = config.UsedFeatures.HasFlag(Translation.FeatureFlags.CbIndexing);
-                return OperandManager.GetConstantBufferName(oper.Value, offsetExpr, config.Stage, cbIndexable, indexElement);
+                return OperandManager.GetConstantBufferName(operand.Value, offsetExpr, config.Stage, cbIndexable, indexElement);
             }
             else
             {
@@ -248,6 +257,34 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
 
             return $"textureQueryLod({samplerName}, {coordsExpr}){GetMask(texOp.Index)}";
+        }
+
+        public static string StoreAttribute(CodeGenContext context, AstOperation operation)
+        {
+            IAstNode src1 = operation.GetSource(0);
+            IAstNode src2 = operation.GetSource(1);
+            IAstNode src3 = operation.GetSource(2);
+
+            if (!(src1 is AstOperand baseAttr) || baseAttr.Type != OperandType.Constant)
+            {
+                throw new InvalidOperationException($"First input of {nameof(Instruction.StoreAttribute)} must be a constant operand.");
+            }
+
+            string attrName;
+
+            if (src2 is AstOperand operand && operand.Type == OperandType.Constant)
+            {
+                attrName = OperandManager.GetAttributeName(baseAttr.Value + (operand.Value << 2), context.Config, isOutAttr: true);
+            }
+            else
+            {
+                string attrExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
+                attrExpr = Enclose(attrExpr, src2, Instruction.ShiftRightS32, isLhs: true);
+                attrName = OperandManager.GetAttributeName(attrExpr, context.Config, isOutAttr: true);
+            }
+
+            string value = GetSoureExpr(context, src3, GetSrcVarType(operation.Inst, 2));
+            return $"{attrName} = {value}";
         }
 
         public static string StoreLocal(CodeGenContext context, AstOperation operation)

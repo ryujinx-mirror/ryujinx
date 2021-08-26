@@ -511,9 +511,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.IsNan, Local(), a);
         }
 
-        public static Operand LoadAttribute(this EmitterContext context, Operand a, Operand b)
+        public static Operand LoadAttribute(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.LoadAttribute, Local(), a, b);
+            return context.Add(Instruction.LoadAttribute, Local(), a, b, c);
         }
 
         public static Operand LoadConstant(this EmitterContext context, Operand a, Operand b)
@@ -615,6 +615,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static (Operand, Operand) ShuffleXor(this EmitterContext context, Operand a, Operand b, Operand c)
         {
             return context.Add(Instruction.ShuffleXor, (Local(), Local()), a, b, c);
+        }
+
+        public static Operand StoreAttribute(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.StoreAttribute, null, a, b, c);
         }
 
         public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b, Operand c)

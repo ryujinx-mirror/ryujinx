@@ -108,6 +108,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         ShuffleXor,
         Sine,
         SquareRoot,
+        StoreAttribute,
         StoreGlobal,
         StoreLocal,
         StoreShared,

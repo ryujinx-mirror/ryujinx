@@ -103,17 +103,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         if (temp != null)
                         {
-                            // TODO: LoadAttribute should accept any integer value as first argument,
-                            // then we don't need special case here. Right now it expects the first
-                            // operand to be of type "attribute".
-                            if ((operation.Inst & Instruction.Mask) == Instruction.LoadAttribute)
-                            {
-                                operation.TurnIntoCopy(temp);
-                            }
-                            else
-                            {
-                                operation.SetSource(srcIndex, temp);
-                            }
+                            operation.SetSource(srcIndex, temp);
                         }
                     }
                 }

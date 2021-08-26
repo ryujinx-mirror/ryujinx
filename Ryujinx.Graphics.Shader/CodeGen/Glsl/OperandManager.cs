@@ -99,7 +99,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return operand.Type switch
             {
                 OperandType.Argument => GetArgumentName(operand.Value),
-                OperandType.Attribute => GetAttributeName(operand, config),
+                OperandType.Attribute => GetAttributeName(operand.Value, config),
                 OperandType.Constant => NumberFormatter.FormatInt(operand.Value),
                 OperandType.ConstantBuffer => GetConstantBufferName(
                     operand.CbufSlot,
@@ -142,15 +142,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return GetVec4Indexed(GetUbName(stage, slotExpr) + $"[{offsetExpr} >> 2]", offsetExpr + " & 3", indexElement);
         }
 
-        public static string GetOutAttributeName(AstOperand attr, ShaderConfig config)
+        public static string GetOutAttributeName(int value, ShaderConfig config)
         {
-            return GetAttributeName(attr, config, isOutAttr: true);
+            return GetAttributeName(value, config, isOutAttr: true);
         }
 
-        public static string GetAttributeName(AstOperand attr, ShaderConfig config, bool isOutAttr = false, string indexExpr = "0")
+        public static string GetAttributeName(int value, ShaderConfig config, bool isOutAttr = false, string indexExpr = "0")
         {
-            int value = attr.Value;
-
             char swzMask = GetSwizzleMask((value >> 2) & 3);
 
             if (value >= AttributeConsts.UserAttributeBase && value < AttributeConsts.UserAttributeEnd)
@@ -161,7 +159,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     ? DefaultNames.OAttributePrefix
                     : DefaultNames.IAttributePrefix;
 
-                if ((config.Options.Flags & TranslationFlags.Feedback) != 0)
+                if (config.UsedFeatures.HasFlag(isOutAttr ? FeatureFlags.OaIndexing : FeatureFlags.IaIndexing))
+                {
+                    string name = prefix;
+
+                    if (config.Stage == ShaderStage.Geometry && !isOutAttr)
+                    {
+                        name += $"[{indexExpr}]";
+                    }
+
+                    return name + $"[{(value >> 4)}]." + swzMask;
+                }
+                else if (config.Options.Flags.HasFlag(TranslationFlags.Feedback))
                 {
                     string name = $"{prefix}{(value >> 4)}_{swzMask}";
 
@@ -229,6 +238,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             // TODO: Warn about unknown built-in attribute.
 
             return isOutAttr ? "// bad_attr0x" + value.ToString("X") : "0.0";
+        }
+
+        public static string GetAttributeName(string attrExpr, ShaderConfig config, bool isOutAttr = false, string indexExpr = "0")
+        {
+            string name = isOutAttr
+                ? DefaultNames.OAttributePrefix
+                : DefaultNames.IAttributePrefix;
+
+            if (config.Stage == ShaderStage.Geometry && !isOutAttr)
+            {
+                name += $"[{indexExpr}]";
+            }
+
+            return $"{name}[{attrExpr} >> 2][{attrExpr} & 3]";
         }
 
         public static string GetUbName(ShaderStage stage, int slot, bool cbIndexable)
@@ -314,12 +337,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             if (node is AstOperation operation)
             {
-                // Load attribute basically just returns the attribute value.
-                // Some built-in attributes may have different types, so we need
-                // to return the type based on the attribute that is being read.
                 if (operation.Inst == Instruction.LoadAttribute)
                 {
-                    return GetOperandVarType((AstOperand)operation.GetSource(0));
+                    // Load attribute basically just returns the attribute value.
+                    // Some built-in attributes may have different types, so we need
+                    // to return the type based on the attribute that is being read.
+                    if (operation.GetSource(0) is AstOperand operand && operand.Type == OperandType.Constant)
+                    {
+                        if (_builtInAttributes.TryGetValue(operand.Value & ~3, out BuiltInAttribute builtInAttr))
+                        {
+                            return builtInAttr.Type;
+                        }
+                    }
+
+                    return OperandInfo.GetVarType(OperandType.Attribute);
                 }
                 else if (operation.Inst == Instruction.Call)
                 {

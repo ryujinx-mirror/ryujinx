@@ -402,14 +402,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareInputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            int usedAttribtes = context.Config.UsedInputAttributes;
-            while (usedAttribtes != 0)
+            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IaIndexing))
             {
-                int index = BitOperations.TrailingZeroCount(usedAttribtes);
+                string suffix = context.Config.Stage == ShaderStage.Geometry ? "[]" : string.Empty;
 
-                DeclareInputAttribute(context, info, index);
+                context.AppendLine($"layout (location = 0) in vec4 {DefaultNames.IAttributePrefix}{suffix}[{Constants.MaxAttributes}];");
+            }
+            else
+            {
+                int usedAttributes = context.Config.UsedInputAttributes;
+                while (usedAttributes != 0)
+                {
+                    int index = BitOperations.TrailingZeroCount(usedAttributes);
 
-                usedAttribtes &= ~(1 << index);
+                    DeclareInputAttribute(context, info, index);
+
+                    usedAttributes &= ~(1 << index);
+                }
             }
         }
 
@@ -448,14 +457,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
         {
-            int usedAttribtes = context.Config.UsedOutputAttributes;
-            while (usedAttribtes != 0)
+            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing))
             {
-                int index = BitOperations.TrailingZeroCount(usedAttribtes);
+                context.AppendLine($"layout (location = 0) out vec4 {DefaultNames.OAttributePrefix}[{Constants.MaxAttributes}];");
+            }
+            else
+            {
+                int usedAttributes = context.Config.UsedOutputAttributes;
+                while (usedAttributes != 0)
+                {
+                    int index = BitOperations.TrailingZeroCount(usedAttributes);
 
-                DeclareOutputAttribute(context, index);
+                    DeclareOutputAttribute(context, index);
 
-                usedAttribtes &= ~(1 << index);
+                    usedAttributes &= ~(1 << index);
+                }
             }
         }
 

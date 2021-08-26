@@ -161,6 +161,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.PackHalf2x16:
                         return PackHalf2x16(context, operation);
 
+                    case Instruction.StoreAttribute:
+                        return StoreAttribute(context, operation);
+
                     case Instruction.StoreLocal:
                         return StoreLocal(context, operation);
 

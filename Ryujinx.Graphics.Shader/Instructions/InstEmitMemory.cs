@@ -15,6 +15,18 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Shared
         }
 
+        public static void Al2p(EmitterContext context)
+        {
+            OpCodeAl2p op = (OpCodeAl2p)context.CurrOp;
+
+            if (op.Rd.IsRZ)
+            {
+                return;
+            }
+
+            context.Copy(Register(op.Rd), context.IAdd(Register(op.Ra), Const(op.Immediate)));
+        }
+
         public static void Ald(EmitterContext context)
         {
             OpCodeAttribute op = (OpCodeAttribute)context.CurrOp;
@@ -30,11 +42,31 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
                 }
 
-                Operand src = Attribute(op.AttributeOffset + index * 4);
+                if (op.Phys)
+                {
+                    Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
+                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
 
-                context.FlagAttributeRead(src.Value);
+                    context.Copy(Register(rd), context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, primVertex));
 
-                context.Copy(Register(rd), context.LoadAttribute(src, primVertex));
+                    context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
+                }
+                else if (op.Rc.IsRZ)
+                {
+                    Operand src = Attribute(op.AttributeOffset + index * 4);
+
+                    context.FlagAttributeRead(src.Value);
+
+                    context.Copy(Register(rd), src);
+                }
+                else
+                {
+                    Operand src = Const(op.AttributeOffset + index * 4);
+
+                    context.FlagAttributeRead(src.Value);
+
+                    context.Copy(Register(rd), context.LoadAttribute(src, Const(0), primVertex));
+                }
             }
         }
 
@@ -51,11 +83,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
 
-                Operand dest = Attribute(op.AttributeOffset + index * 4);
+                if (op.Phys)
+                {
+                    Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
+                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
 
-                context.FlagAttributeWritten(dest.Value);
+                    context.StoreAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Register(rd));
 
-                context.Copy(dest, Register(rd));
+                    context.Config.SetUsedFeature(FeatureFlags.OaIndexing);
+                }
+                else
+                {
+                    Operand dest = Attribute(op.AttributeOffset + index * 4);
+
+                    context.FlagAttributeWritten(dest.Value);
+
+                    context.Copy(dest, Register(rd));
+                }
             }
         }
 
@@ -136,16 +180,31 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.FlagAttributeRead(op.AttributeOffset);
 
-            Operand res = Attribute(op.AttributeOffset);
+            Operand res;
 
-            if (op.AttributeOffset >= AttributeConsts.UserAttributeBase &&
-                op.AttributeOffset <  AttributeConsts.UserAttributeEnd)
+            if (op.Idx)
             {
-                int index = (op.AttributeOffset - AttributeConsts.UserAttributeBase) >> 4;
+                Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
+                Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
 
-                if (context.Config.ImapTypes[index].GetFirstUsedType() == PixelImap.Perspective)
+                res = context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Const(0));
+                res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
+
+                context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
+            }
+            else
+            {
+                res = Attribute(op.AttributeOffset);
+
+                if (op.AttributeOffset >= AttributeConsts.UserAttributeBase &&
+                    op.AttributeOffset <  AttributeConsts.UserAttributeEnd)
                 {
-                    res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
+                    int index = (op.AttributeOffset - AttributeConsts.UserAttributeBase) >> 4;
+
+                    if (context.Config.ImapTypes[index].GetFirstUsedType() == PixelImap.Perspective)
+                    {
+                        res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
+                    }
                 }
             }
 
