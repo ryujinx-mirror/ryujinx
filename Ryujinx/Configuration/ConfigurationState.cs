@@ -519,7 +519,7 @@ namespace Ryujinx.Configuration
             System.EnablePtc.Value                 = true;
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
-            System.AudioBackend.Value              = AudioBackend.OpenAl;
+            System.AudioBackend.Value              = AudioBackend.SDL2;
             System.MemoryManagerMode.Value         = MemoryManagerMode.HostMappedUnsafe;
             System.ExpandRam.Value                 = false;
             System.IgnoreMissingServices.Value     = false;
