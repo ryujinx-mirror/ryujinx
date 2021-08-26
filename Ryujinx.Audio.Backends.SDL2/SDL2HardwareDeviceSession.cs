@@ -71,10 +71,6 @@ namespace Ryujinx.Audio.Backends.SDL2
             }
         }
 
-        // TODO: Add this variant with pointer to SDL2-CS.
-        [DllImport("SDL2", EntryPoint = "SDL_MixAudioFormat", CallingConvention = CallingConvention.Cdecl)]
-        private static extern unsafe uint SDL_MixAudioFormat(IntPtr dst, IntPtr src, ushort format, uint len, int volume);
-
         private unsafe void Update(IntPtr userdata, IntPtr stream, int streamLength)
         {
             Span<byte> streamSpan = new Span<byte>((void*)stream, streamLength);

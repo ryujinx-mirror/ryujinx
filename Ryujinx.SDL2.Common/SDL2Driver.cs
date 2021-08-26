@@ -56,9 +56,8 @@ namespace Ryujinx.SDL2.Common
                 SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
                 SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
                 SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-                // TODO: Add this in nuget package once SDL2 2.0.15 hit stable release.
-                SDL_SetHint("SDL_JOYSTICK_HIDAPI_SWITCH_HOME_LED", "0");
-                SDL_SetHint("SDL_JOYSTICK_HIDAPI_JOY_CONS", "1");
+                SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH_HOME_LED, "0");
+                SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, "1");
 
                 if (SDL_Init(SdlInitFlags) != 0)
                 {

@@ -96,23 +96,13 @@ namespace Ryujinx.Audio.Backends.SDL2
             };
         }
 
-        // TODO: Fix this in SDL2-CS.
-        [DllImport("SDL2", EntryPoint = "SDL_OpenAudioDevice", CallingConvention = CallingConvention.Cdecl)]
-        private static extern uint SDL_OpenAudioDevice_Workaround(
-            IntPtr name,
-            int iscapture,
-            ref SDL_AudioSpec desired,
-            out SDL_AudioSpec obtained,
-            uint allowed_changes
-        );
-
         internal static uint OpenStream(SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, uint sampleCount, SDL_AudioCallback callback)
         {
             SDL_AudioSpec desired = GetSDL2Spec(requestedSampleFormat, requestedSampleRate, requestedChannelCount, sampleCount);
 
             desired.callback = callback;
 
-            uint device = SDL_OpenAudioDevice_Workaround(IntPtr.Zero, 0, ref desired, out SDL_AudioSpec got, 0);
+            uint device = SDL_OpenAudioDevice(IntPtr.Zero, 0, ref desired, out SDL_AudioSpec got, 0);
 
             if (device == 0)
             {
