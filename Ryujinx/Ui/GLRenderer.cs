@@ -1,16 +1,9 @@
-﻿using ARMeilleure.Translation;
-using ARMeilleure.Translation.PTC;
-using Gdk;
+﻿using Gdk;
 using Gtk;
 using OpenTK.Graphics.OpenGL;
-using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Configuration;
 using Ryujinx.Graphics.OpenGL;
-using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.Input;
 using Ryujinx.Input.HLE;
-using Ryujinx.Ui.Widgets;
 using SPB.Graphics;
 using SPB.Graphics.OpenGL;
 using SPB.Platform;
@@ -18,17 +11,10 @@ using SPB.Platform.GLX;
 using SPB.Platform.WGL;
 using SPB.Windowing;
 using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
-
-using Key = Ryujinx.Input.Key;
 
 namespace Ryujinx.Ui
 {
-    using Switch = HLE.Switch;
-
     public class GlRenderer : RendererWidgetBase
     {
         private GraphicsDebugLevel _glLogLevel;

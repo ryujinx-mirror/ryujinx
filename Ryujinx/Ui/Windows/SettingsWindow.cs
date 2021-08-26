@@ -4,11 +4,13 @@ using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Configuration;
 using Ryujinx.Configuration.System;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.Ui.Helper;
+using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -79,6 +81,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] Label           _custThemePathLabel;
         [GUI] TreeView        _gameDirsBox;
         [GUI] Entry           _addGameDirBox;
+        [GUI] ComboBoxText    _galThreading;
         [GUI] Entry           _graphicsShadersDumpPath;
         [GUI] ComboBoxText    _anisotropy;
         [GUI] ComboBoxText    _aspectRatio;
@@ -124,6 +127,13 @@ namespace Ryujinx.Ui.Windows
             _systemTimeZoneEntry.FocusOutEvent += TimeZoneEntry_FocusOut;
 
             _resScaleCombo.Changed += (sender, args) => _resScaleText.Visible = _resScaleCombo.ActiveId == "-1";
+            _galThreading.Changed += (sender, args) =>
+            {
+                if (_galThreading.ActiveId != ConfigurationState.Instance.Graphics.BackendThreading.Value.ToString())
+                {
+                    GtkDialog.CreateInfoDialog("Warning - Backend Threading", "Ryujinx must be restarted after changing this option for it to apply fully. Depending on your platform, you may need to manually disable your driver's own multithreading when using Ryujinx's.");
+                }
+            };
 
             // Setup Currents.
             if (ConfigurationState.Instance.Logger.EnableFileLog)
@@ -291,6 +301,7 @@ namespace Ryujinx.Ui.Windows
 
             _systemLanguageSelect.SetActiveId(ConfigurationState.Instance.System.Language.Value.ToString());
             _systemRegionSelect.SetActiveId(ConfigurationState.Instance.System.Region.Value.ToString());
+            _galThreading.SetActiveId(ConfigurationState.Instance.Graphics.BackendThreading.Value.ToString());
             _resScaleCombo.SetActiveId(ConfigurationState.Instance.Graphics.ResScale.Value.ToString());
             _anisotropy.SetActiveId(ConfigurationState.Instance.Graphics.MaxAnisotropy.Value.ToString());
             _aspectRatio.SetActiveId(((int)ConfigurationState.Instance.Graphics.AspectRatio.Value).ToString());
@@ -445,6 +456,12 @@ namespace Ryujinx.Ui.Windows
                 memoryMode = MemoryManagerMode.HostMappedUnsafe;
             }
 
+            BackendThreading backendThreading = Enum.Parse<BackendThreading>(_galThreading.ActiveId);
+            if (ConfigurationState.Instance.Graphics.BackendThreading != backendThreading)
+            {
+                DriverUtilities.ToggleOGLThreading(backendThreading == BackendThreading.Off);
+            }
+
             ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
@@ -478,6 +495,7 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value     = (int)_fsLogSpinAdjustment.Value;
             ConfigurationState.Instance.Graphics.MaxAnisotropy.Value           = float.Parse(_anisotropy.ActiveId, CultureInfo.InvariantCulture);
             ConfigurationState.Instance.Graphics.AspectRatio.Value             = Enum.Parse<AspectRatio>(_aspectRatio.ActiveId);
+            ConfigurationState.Instance.Graphics.BackendThreading.Value        = backendThreading;
             ConfigurationState.Instance.Graphics.ResScale.Value                = int.Parse(_resScaleCombo.ActiveId);
             ConfigurationState.Instance.Graphics.ResScaleCustom.Value          = resScaleCustom;
 

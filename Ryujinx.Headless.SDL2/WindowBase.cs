@@ -3,6 +3,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
@@ -73,7 +74,15 @@ namespace Ryujinx.Headless.SDL2
         public void Initialize(Switch device, List<InputConfig> inputConfigs, bool enableKeyboard, bool enableMouse)
         {
             Device = device;
-            Renderer = Device.Gpu.Renderer;
+
+            IRenderer renderer = Device.Gpu.Renderer;
+
+            if (renderer is ThreadedRenderer tr)
+            {
+                renderer = tr.BaseRenderer;
+            }
+
+            Renderer = renderer;
 
             NpadManager.Initialize(device, inputConfigs, enableKeyboard, enableMouse);
             TouchScreenManager.Initialize(device);
@@ -148,52 +157,55 @@ namespace Ryujinx.Headless.SDL2
 
             _gpuVendorName = GetGpuVendorName();
 
-            Device.Gpu.InitializeShaderCache();
-            Translator.IsReadyForTranslation.Set();
-
-            while (_isActive)
+            Device.Gpu.Renderer.RunLoop(() =>
             {
-                if (_isStopped)
+                Device.Gpu.InitializeShaderCache();
+                Translator.IsReadyForTranslation.Set();
+
+                while (_isActive)
                 {
-                    return;
-                }
-
-                _ticks += _chrono.ElapsedTicks;
-
-                _chrono.Restart();
-
-                if (Device.WaitFifo())
-                {
-                    Device.Statistics.RecordFifoStart();
-                    Device.ProcessFrame();
-                    Device.Statistics.RecordFifoEnd();
-                }
-
-                while (Device.ConsumeFrameAvailable())
-                {
-                    Device.PresentFrame(SwapBuffers);
-                }
-
-                if (_ticks >= _ticksPerFrame)
-                {
-                    string dockedMode = Device.System.State.DockedMode ? "Docked" : "Handheld";
-                    float scale = Graphics.Gpu.GraphicsConfig.ResScale;
-                    if (scale != 1)
+                    if (_isStopped)
                     {
-                        dockedMode += $" ({scale}x)";
+                        return;
                     }
 
-                    StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
-                        Device.EnableDeviceVsync,
-                        dockedMode,
-                        Device.Configuration.AspectRatio.ToText(),
-                        $"Game: {Device.Statistics.GetGameFrameRate():00.00} FPS",
-                        $"FIFO: {Device.Statistics.GetFifoPercent():0.00} %",
-                        $"GPU: {_gpuVendorName}"));
+                    _ticks += _chrono.ElapsedTicks;
 
-                    _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
+                    _chrono.Restart();
+
+                    if (Device.WaitFifo())
+                    {
+                        Device.Statistics.RecordFifoStart();
+                        Device.ProcessFrame();
+                        Device.Statistics.RecordFifoEnd();
+                    }
+
+                    while (Device.ConsumeFrameAvailable())
+                    {
+                        Device.PresentFrame(SwapBuffers);
+                    }
+
+                    if (_ticks >= _ticksPerFrame)
+                    {
+                        string dockedMode = Device.System.State.DockedMode ? "Docked" : "Handheld";
+                        float scale = Graphics.Gpu.GraphicsConfig.ResScale;
+                        if (scale != 1)
+                        {
+                            dockedMode += $" ({scale}x)";
+                        }
+
+                        StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
+                            Device.EnableDeviceVsync,
+                            dockedMode,
+                            Device.Configuration.AspectRatio.ToText(),
+                            $"Game: {Device.Statistics.GetGameFrameRate():00.00} FPS",
+                            $"FIFO: {Device.Statistics.GetFifoPercent():0.00} %",
+                            $"GPU: {_gpuVendorName}"));
+
+                        _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
+                    }
                 }
-            }
+            });
 
             FinalizeRenderer();
         }
@@ -295,16 +307,20 @@ namespace Ryujinx.Headless.SDL2
             };
             renderLoopThread.Start();
 
-            Thread nvStutterWorkaround = new Thread(NVStutterWorkaround)
+            Thread nvStutterWorkaround = null;
+            if (Renderer is Graphics.OpenGL.Renderer)
             {
-                Name = "GUI.NVStutterWorkaround"
-            };
-            nvStutterWorkaround.Start();
+                nvStutterWorkaround = new Thread(NVStutterWorkaround)
+                {
+                    Name = "GUI.NVStutterWorkaround"
+                };
+                nvStutterWorkaround.Start();
+            }
 
             MainLoop();
 
             renderLoopThread.Join();
-            nvStutterWorkaround.Join();
+            nvStutterWorkaround?.Join();
 
             Exit();
         }

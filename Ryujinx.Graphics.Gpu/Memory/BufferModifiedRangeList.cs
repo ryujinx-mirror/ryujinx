@@ -1,4 +1,5 @@
-﻿using Ryujinx.Memory.Range;
+﻿using Ryujinx.Common.Pools;
+using Ryujinx.Memory.Range;
 using System;
 using System.Linq;
 
@@ -63,10 +64,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private object _lock = new object();
 
-        // The list can be accessed from both the GPU thread, and a background thread.
-        private BufferModifiedRange[] _foregroundOverlaps = new BufferModifiedRange[1];
-        private BufferModifiedRange[] _backgroundOverlaps = new BufferModifiedRange[1];
-
         /// <summary>
         /// Creates a new instance of a modified range list.
         /// </summary>
@@ -87,11 +84,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             lock (_lock)
             {
                 // Slices a given region using the modified regions in the list. Calls the action for the new slices.
-                int count = FindOverlapsNonOverlapping(address, size, ref _foregroundOverlaps);
+                ref var overlaps = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
+                int count = FindOverlapsNonOverlapping(address, size, ref overlaps);
 
                 for (int i = 0; i < count; i++)
                 {
-                    BufferModifiedRange overlap = _foregroundOverlaps[i];
+                    BufferModifiedRange overlap = overlaps[i];
                     
                     if (overlap.Address > address)
                     {
@@ -124,7 +123,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
             lock (_lock)
             {
                 // We may overlap with some existing modified regions. They must be cut into by the new entry.
-                int count = FindOverlapsNonOverlapping(address, size, ref _foregroundOverlaps);
+                ref var overlaps = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
+                int count = FindOverlapsNonOverlapping(address, size, ref overlaps);
 
                 ulong endAddress = address + size;
                 ulong syncNumber = _context.SyncNumber;
@@ -133,7 +134,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 {
                     // The overlaps must be removed or split.
 
-                    BufferModifiedRange overlap = _foregroundOverlaps[i];
+                    BufferModifiedRange overlap = overlaps[i];
 
                     if (overlap.Address == address && overlap.Size == size)
                     {
@@ -174,15 +175,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             int count = 0;
 
+            ref var overlaps = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
             // Range list must be consistent for this operation.
             lock (_lock)
             {
-                count = FindOverlapsNonOverlapping(address, size, ref _foregroundOverlaps);
+                count = FindOverlapsNonOverlapping(address, size, ref overlaps);
             }
 
             for (int i = 0; i < count; i++)
             {
-                BufferModifiedRange overlap = _foregroundOverlaps[i];
+                BufferModifiedRange overlap = overlaps[i];
                 rangeAction(overlap.Address, overlap.Size);
             }
         }
@@ -198,7 +201,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             // Range list must be consistent for this operation.
             lock (_lock)
             {
-                return FindOverlapsNonOverlapping(address, size, ref _foregroundOverlaps) > 0;
+                return FindOverlapsNonOverlapping(address, size, ref ThreadStaticArray<BufferModifiedRange>.Get()) > 0;
             }
         }
 
@@ -221,10 +224,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             int rangeCount = 0;
 
+            ref var overlaps = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
             // Range list must be consistent for this operation
             lock (_lock)
             {
-                rangeCount = FindOverlapsNonOverlapping(address, size, ref _backgroundOverlaps);
+                rangeCount = FindOverlapsNonOverlapping(address, size, ref overlaps);
             }
 
             if (rangeCount == 0)
@@ -239,7 +244,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             for (int i = 0; i < rangeCount; i++)
             {
-                BufferModifiedRange overlap = _backgroundOverlaps[i];
+                BufferModifiedRange overlap = overlaps[i];
 
                 long diff = (long)(overlap.SyncNumber - currentSync);
 
@@ -262,7 +267,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 for (int i = 0; i < rangeCount; i++)
                 {
-                    BufferModifiedRange overlap = _backgroundOverlaps[i];
+                    BufferModifiedRange overlap = overlaps[i];
 
                     long diff = (long)(overlap.SyncNumber - currentSync);
 

@@ -54,6 +54,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
                 Marshal.WriteInt64(_bufferMap, -1L);
                 GL.GetQueryObject(Query, GetQueryObjectParam.QueryResult, (long*)0);
+                GL.MemoryBarrier(MemoryBarrierFlags.QueryBufferBarrierBit | MemoryBarrierFlags.ClientMappedBufferBarrierBit);
             }
         }
 

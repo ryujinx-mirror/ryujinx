@@ -302,6 +302,11 @@ namespace Ryujinx.Configuration
         public class GraphicsSection
         {
             /// <summary>
+            /// Whether or not backend threading is enabled. The "Auto" setting will determine whether threading should be enabled at runtime.
+            /// </summary>
+            public ReactiveObject<BackendThreading> BackendThreading { get; private set; }
+
+            /// <summary>
             /// Max Anisotropy. Values range from 0 - 16. Set to -1 to let the game decide.
             /// </summary>
             public ReactiveObject<float> MaxAnisotropy { get; private set; }
@@ -338,6 +343,8 @@ namespace Ryujinx.Configuration
 
             public GraphicsSection()
             {
+                BackendThreading        = new ReactiveObject<BackendThreading>();
+                BackendThreading.Event  += static (sender, e) => LogValueChange(sender, e, nameof(BackendThreading));
                 ResScale                = new ReactiveObject<int>();
                 ResScale.Event          += static (sender, e) => LogValueChange(sender, e, nameof(ResScale));
                 ResScaleCustom          = new ReactiveObject<float>();
@@ -423,6 +430,7 @@ namespace Ryujinx.Configuration
             {
                 Version                   = ConfigurationFileFormat.CurrentVersion,
                 EnableFileLog             = Logger.EnableFileLog,
+                BackendThreading          = Graphics.BackendThreading,
                 ResScale                  = Graphics.ResScale,
                 ResScaleCustom            = Graphics.ResScaleCustom,
                 MaxAnisotropy             = Graphics.MaxAnisotropy,
@@ -491,6 +499,7 @@ namespace Ryujinx.Configuration
         public void LoadDefault()
         {
             Logger.EnableFileLog.Value             = true;
+            Graphics.BackendThreading.Value        = BackendThreading.Auto;
             Graphics.ResScale.Value                = 1;
             Graphics.ResScaleCustom.Value          = 1.0f;
             Graphics.MaxAnisotropy.Value           = -1.0f;
@@ -879,7 +888,7 @@ namespace Ryujinx.Configuration
             {
                 Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 30.");
 
-                foreach(InputConfig config in configurationFileFormat.InputConfig)
+                foreach (InputConfig config in configurationFileFormat.InputConfig)
                 {
                     if (config is StandardControllerInputConfig controllerConfig)
                     {
@@ -895,7 +904,17 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 31)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 31.");
+
+                configurationFileFormat.BackendThreading = BackendThreading.Auto;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
+            Graphics.BackendThreading.Value        = configurationFileFormat.BackendThreading;
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value          = configurationFileFormat.ResScaleCustom;
             Graphics.MaxAnisotropy.Value           = configurationFileFormat.MaxAnisotropy;

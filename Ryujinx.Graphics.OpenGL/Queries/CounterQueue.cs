@@ -17,12 +17,14 @@ namespace Ryujinx.Graphics.OpenGL.Queries
         private CounterQueueEvent _current;
 
         private ulong _accumulatedCounter;
+        private int _waiterCount;
 
         private object _lock = new object();
 
         private Queue<BufferedQuery> _queryPool;
         private AutoResetEvent _queuedEvent = new AutoResetEvent(false);
         private AutoResetEvent _wakeSignal = new AutoResetEvent(false);
+        private AutoResetEvent _eventConsumed = new AutoResetEvent(false);
 
         private Thread _consumerThread;
 
@@ -63,7 +65,13 @@ namespace Ryujinx.Graphics.OpenGL.Queries
                 }
                 else
                 {
-                    evt.TryConsume(ref _accumulatedCounter, true, _wakeSignal);
+                    // Spin-wait rather than sleeping if there are any waiters, by passing null instead of the wake signal.
+                    evt.TryConsume(ref _accumulatedCounter, true, _waiterCount == 0 ? _wakeSignal : null);
+                }
+
+                if (_waiterCount > 0)
+                {
+                    _eventConsumed.Set();
                 }
             }
         }
@@ -95,7 +103,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
-        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler, ulong lastDrawIndex)
+        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler, ulong lastDrawIndex, bool hostReserved)
         {
             CounterQueueEvent result;
             ulong draws = lastDrawIndex - _current.DrawIndex;
@@ -104,6 +112,12 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             {
                 // A query's result only matters if more than one draw was performed during it.
                 // Otherwise, dummy it out and return 0 immediately.
+
+                if (hostReserved)
+                {
+                    // This counter event is guaranteed to be available for host conditional rendering.
+                    _current.ReserveForHostAccess();
+                }
 
                 if (draws > 0)
                 {
@@ -175,25 +189,18 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         public void FlushTo(CounterQueueEvent evt)
         {
-            lock (_lock)
+            // Flush the counter queue on the main thread.
+
+            Interlocked.Increment(ref _waiterCount);
+
+            _wakeSignal.Set();
+
+            while (!evt.Disposed)
             {
-                if (evt.Disposed)
-                {
-                    return;
-                }
-
-                // Tell the queue to process all events up to this one.
-                while (_events.Count > 0)
-                {
-                    CounterQueueEvent flush = _events.Dequeue();
-                    flush.TryConsume(ref _accumulatedCounter, true);
-
-                    if (flush == evt)
-                    {
-                        return;
-                    }
-                }
+                _eventConsumed.WaitOne(1);
             }
+
+            Interlocked.Decrement(ref _waiterCount);
         }
 
         public void Dispose()
@@ -218,6 +225,10 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             {
                 query.Dispose();
             }
+
+            _queuedEvent.Dispose();
+            _wakeSignal.Dispose();
+            _eventConsumed.Dispose();
         }
     }
 }

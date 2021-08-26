@@ -1,4 +1,6 @@
-﻿using Ryujinx.Memory.Range;
+﻿using Ryujinx.Common.Pools;
+using Ryujinx.Memory.Range;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Tracking
@@ -13,9 +15,6 @@ namespace Ryujinx.Memory.Tracking
 
         // Only use these from within the lock.
         private readonly NonOverlappingRangeList<VirtualRegion> _virtualRegions;
-
-        // Only use these from within the lock.
-        private readonly VirtualRegion[] _virtualResults = new VirtualRegion[10];
 
         private readonly int _pageSize;
 
@@ -62,12 +61,13 @@ namespace Ryujinx.Memory.Tracking
 
             lock (TrackingLock)
             {
-                var results = _virtualResults;
-                int count = _virtualRegions.FindOverlapsNonOverlapping(va, size, ref results);
+                ref var overlaps = ref ThreadStaticArray<VirtualRegion>.Get();
+
+                int count = _virtualRegions.FindOverlapsNonOverlapping(va, size, ref overlaps);
 
                 for (int i = 0; i < count; i++)
                 {
-                    VirtualRegion region = results[i];
+                    VirtualRegion region = overlaps[i];
 
                     // If the region has been fully remapped, signal that it has been mapped again.
                     bool remapped = _memoryManager.IsRangeMapped(region.Address, region.Size);
@@ -94,12 +94,13 @@ namespace Ryujinx.Memory.Tracking
 
             lock (TrackingLock)
             {
-                var results = _virtualResults;
-                int count = _virtualRegions.FindOverlapsNonOverlapping(va, size, ref results);
+                ref var overlaps = ref ThreadStaticArray<VirtualRegion>.Get();
+
+                int count = _virtualRegions.FindOverlapsNonOverlapping(va, size, ref overlaps);
 
                 for (int i = 0; i < count; i++)
                 {
-                    VirtualRegion region = results[i];
+                    VirtualRegion region = overlaps[i];
 
                     region.SignalMappingChanged(false);
                 }
@@ -201,8 +202,9 @@ namespace Ryujinx.Memory.Tracking
 
             lock (TrackingLock)
             {
-                var results = _virtualResults;
-                int count = _virtualRegions.FindOverlapsNonOverlapping(address, size, ref results);
+                ref var overlaps = ref ThreadStaticArray<VirtualRegion>.Get();
+
+                int count = _virtualRegions.FindOverlapsNonOverlapping(address, size, ref overlaps);
 
                 if (count == 0)
                 {
@@ -221,7 +223,7 @@ namespace Ryujinx.Memory.Tracking
 
                 for (int i = 0; i < count; i++)
                 {
-                    VirtualRegion region = results[i];
+                    VirtualRegion region = overlaps[i];
                     region.Signal(address, size, write);
                 }
             }

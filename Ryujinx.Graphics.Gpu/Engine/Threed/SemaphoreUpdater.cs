@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -184,13 +185,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     resultHandler(null, 0);
                     break;
                 case ReportCounterType.SamplesPassed:
-                    counter = _context.Renderer.ReportCounter(CounterType.SamplesPassed, resultHandler);
+                    counter = _context.Renderer.ReportCounter(CounterType.SamplesPassed, resultHandler, false);
                     break;
                 case ReportCounterType.PrimitivesGenerated:
-                    counter = _context.Renderer.ReportCounter(CounterType.PrimitivesGenerated, resultHandler);
+                    counter = _context.Renderer.ReportCounter(CounterType.PrimitivesGenerated, resultHandler, false);
                     break;
                 case ReportCounterType.TransformFeedbackPrimitivesWritten:
-                    counter = _context.Renderer.ReportCounter(CounterType.TransformFeedbackPrimitivesWritten, resultHandler);
+                    counter = _context.Renderer.ReportCounter(CounterType.TransformFeedbackPrimitivesWritten, resultHandler, false);
                     break;
             }
 

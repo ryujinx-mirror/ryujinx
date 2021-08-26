@@ -23,13 +23,15 @@ namespace Ryujinx.Graphics.OpenGL
             _renderer = renderer;
         }
 
-        public void Present(ITexture texture, ImageCrop crop)
+        public void Present(ITexture texture, ImageCrop crop, Action swapBuffersCallback)
         {
             GL.Disable(EnableCap.FramebufferSrgb);
 
             CopyTextureToFrameBufferRGB(0, GetCopyFramebufferHandleLazy(), (TextureView)texture, crop);
 
             GL.Enable(EnableCap.FramebufferSrgb);
+
+            swapBuffersCallback();
         }
 
         public void SetSize(int width, int height)

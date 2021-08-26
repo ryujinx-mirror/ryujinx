@@ -149,6 +149,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("aspect-ratio", Required = false, Default = AspectRatio.Fixed16x9, HelpText = "Aspect Ratio applied to the renderer window.")]
         public AspectRatio AspectRatio { get; set; }
 
+        [Option("backend-threading", Required = false, Default = BackendThreading.Auto, HelpText = "Whether or not backend threading is enabled. The \"Auto\" setting will determine whether threading should be enabled at runtime.")]
+        public BackendThreading BackendThreading { get; set; }
+
         [Option("graphics-shaders-dump-path", Required = false, HelpText = "Dumps shaders in this local directory. (Developer only)")]
         public string GraphicsShadersDumpPath { get; set; }
 

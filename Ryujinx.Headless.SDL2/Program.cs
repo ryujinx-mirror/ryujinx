@@ -10,6 +10,8 @@ using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
 using Ryujinx.Common.Utilities;
+using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.OpenGL;
@@ -433,12 +435,23 @@ namespace Ryujinx.Headless.SDL2
 
         private static Switch InitializeEmulationContext(WindowBase window, Options options)
         {
+            IRenderer renderer = new Renderer();
+
+            BackendThreading threadingMode = options.BackendThreading;
+
+            bool threadedGAL = threadingMode == BackendThreading.On || (threadingMode == BackendThreading.Auto && renderer.PreferThreading);
+
+            if (threadedGAL)
+            {
+                renderer = new ThreadedRenderer(renderer);
+            }
+
             HLEConfiguration configuration = new HLEConfiguration(_virtualFileSystem,
                                                                   _libHacHorizonManager,
                                                                   _contentManager,
                                                                   _accountManager,
                                                                   _userChannelPersistence,
-                                                                  new Renderer(),
+                                                                  renderer,
                                                                   new SDL2HardwareDeviceDriver(),
                                                                   (bool)options.ExpandRam ? MemoryConfiguration.MemoryConfiguration6GB : MemoryConfiguration.MemoryConfiguration4GB,
                                                                   window,

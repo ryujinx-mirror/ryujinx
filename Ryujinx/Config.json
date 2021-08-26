@@ -1,6 +1,7 @@
 {
   "version": 29,
   "enable_file_log": true,
+  "backend_threading": "Auto",
   "res_scale": 1,
   "res_scale_custom": 1,
   "max_anisotropy": -1,

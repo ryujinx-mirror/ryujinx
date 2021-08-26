@@ -14,7 +14,7 @@ namespace Ryujinx.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 30;
+        public const int CurrentVersion = 31;
 
         public int Version { get; set; }
 
@@ -22,6 +22,11 @@ namespace Ryujinx.Configuration
         /// Enables or disables logging to a file on disk
         /// </summary>
         public bool EnableFileLog { get; set; }
+
+        /// <summary>
+        /// Whether or not backend threading is enabled. The "Auto" setting will determine whether threading should be enabled at runtime.
+        /// </summary>
+        public BackendThreading BackendThreading { get; set; }
 
         /// <summary>
         /// Resolution Scale. An integer scale applied to applicable render targets. Values 1-4, or -1 to use a custom floating point scale instead.

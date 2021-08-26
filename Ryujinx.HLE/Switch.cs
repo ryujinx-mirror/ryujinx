@@ -129,6 +129,7 @@ namespace Ryujinx.HLE
 
         public void ProcessFrame()
         {
+            Gpu.ProcessShaderCacheQueue();
             Gpu.Renderer.PreFrame();
 
             Gpu.GPFifo.DispatchCalls();

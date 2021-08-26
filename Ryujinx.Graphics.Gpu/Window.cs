@@ -201,9 +201,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 texture.SynchronizeMemory();
 
-                _context.Renderer.Window.Present(texture.HostTexture, pt.Crop);
-
-                swapBuffersCallback();
+                _context.Renderer.Window.Present(texture.HostTexture, pt.Crop, swapBuffersCallback);
 
                 pt.ReleaseCallback(pt.UserObj);
             }

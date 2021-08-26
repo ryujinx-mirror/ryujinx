@@ -185,6 +185,17 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
+        /// Processes the queue of shaders that must save their binaries to the disk cache.
+        /// </summary>
+        public void ProcessShaderCacheQueue()
+        {
+            foreach (var physicalMemory in PhysicalMemoryRegistry.Values)
+            {
+                physicalMemory.ShaderCache.ProcessShaderCacheQueue();
+            }
+        }
+
+        /// <summary>
         /// Advances internal sequence number.
         /// This forces the update of any modified GPU resource.
         /// </summary>

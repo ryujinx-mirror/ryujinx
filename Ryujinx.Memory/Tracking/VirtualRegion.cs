@@ -21,9 +21,11 @@ namespace Ryujinx.Memory.Tracking
 
         public override void Signal(ulong address, ulong size, bool write)
         {
-            foreach (var handle in Handles)
+            IList<RegionHandle> handles = Handles;
+
+            for (int i = 0; i < handles.Count; i++)
             {
-                handle.Signal(address, size, write);
+                handles[i].Signal(address, size, write, ref handles);
             }
 
             UpdateProtection();
