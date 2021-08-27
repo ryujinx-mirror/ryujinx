@@ -177,8 +177,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if ((binding.Flags & TextureUsageFlags.NeedsScaleValue) != 0 && texture != null)
             {
-                _scaleChanged |= true;
-
                 switch (stage)
                 {
                     case ShaderStage.Fragment:
@@ -218,7 +216,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            _scales[index] = result;
+            if (result != _scales[index])
+            {
+                _scaleChanged = true;
+
+                _scales[index] = result;
+            }
+
             return changed;
         }
 
@@ -232,6 +236,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (_scaleChanged)
             {
                 _context.Renderer.Pipeline.UpdateRenderScale(stage, _scales, _textureBindings[stageIndex]?.Length ?? 0, _imageBindings[stageIndex]?.Length ?? 0);
+
+                _scaleChanged = false;
             }
         }
 
