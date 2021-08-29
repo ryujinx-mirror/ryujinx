@@ -9,6 +9,14 @@ namespace Ryujinx.Cpu
     public interface IVirtualMemoryManagerTracked : IVirtualMemoryManager
     {
         /// <summary>
+        /// Reads data from CPU mapped memory, with read tracking
+        /// </summary>
+        /// <typeparam name="T">Type of the data being read</typeparam>
+        /// <param name="va">Virtual address of the data in memory</param>
+        /// <returns>The data</returns>
+        T ReadTracked<T>(ulong va) where T : unmanaged;
+
+        /// <summary>
         /// Writes data to CPU mapped memory, without write tracking.
         /// </summary>
         /// <param name="va">Virtual address to write the data into</param>

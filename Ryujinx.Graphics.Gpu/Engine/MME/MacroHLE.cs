@@ -2,8 +2,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
-using Ryujinx.Graphics.Gpu.Engine.Threed;
-using Ryujinx.Graphics.Gpu.Memory;
 using System;
 using System.Collections.Generic;
 
@@ -66,17 +64,42 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
             int arg2 = FetchParam().Word;
             int arg3 = FetchParam().Word;
 
-            int startOffset = arg0;
-            int endOffset = arg1;
+            int startDraw = arg0;
+            int endDraw = arg1;
             var topology = (PrimitiveTopology)arg2;
             int paddingWords = arg3;
-            int maxDrawCount = endOffset - startOffset;
             int stride = paddingWords * 4 + 0x14;
-            int indirectBufferSize = maxDrawCount * stride;
 
             ulong parameterBufferGpuVa = FetchParam().GpuVa;
-            ulong indirectBufferGpuVa = 0;
 
+            int maxDrawCount = endDraw - startDraw;
+
+            if (startDraw != 0)
+            {
+                int drawCount = _processor.MemoryManager.Read<int>(parameterBufferGpuVa, tracked: true);
+
+                // Calculate maximum draw count based on the previous draw count and current draw count.
+                if ((uint)drawCount <= (uint)startDraw)
+                {
+                    // The start draw is past our total draw count, so all draws were already performed.
+                    maxDrawCount = 0;
+                }
+                else
+                {
+                    // Perform just the missing number of draws.
+                    maxDrawCount = (int)Math.Min((uint)maxDrawCount, (uint)(drawCount - startDraw));
+                }
+            }
+
+            if (maxDrawCount == 0)
+            {
+                Fifo.Clear();
+                return;
+            }
+
+            int indirectBufferSize = maxDrawCount * stride;
+
+            ulong indirectBufferGpuVa = 0;
             int indexCount = 0;
 
             for (int i = 0; i < maxDrawCount; i++)
@@ -106,8 +129,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
             // It should be empty at this point, but clear it just to be safe.
             Fifo.Clear();
 
-            var parameterBuffer = _processor.MemoryManager.Physical.BufferCache.GetGpuBufferRange(_processor.MemoryManager, parameterBufferGpuVa, 4);
-            var indirectBuffer = _processor.MemoryManager.Physical.BufferCache.GetGpuBufferRange(_processor.MemoryManager, indirectBufferGpuVa, (ulong)indirectBufferSize);
+            var bufferCache = _processor.MemoryManager.Physical.BufferCache;
+
+            var parameterBuffer = bufferCache.GetGpuBufferRange(_processor.MemoryManager, parameterBufferGpuVa, 4);
+            var indirectBuffer = bufferCache.GetGpuBufferRange(_processor.MemoryManager, indirectBufferGpuVa, (ulong)indirectBufferSize);
 
             _processor.ThreedClass.MultiDrawIndirectCount(indexCount, topology, indirectBuffer, parameterBuffer, maxDrawCount, stride);
         }
