@@ -9,6 +9,7 @@ using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -1289,6 +1290,37 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (texture.IsViewCompatible(view.Info, view.Range, view.LayerSize, out _, out _) != TextureViewCompatibility.Incompatible)
                 {
                     return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determine if any of this texture's data overlaps with another.
+        /// </summary>
+        /// <param name="texture">The texture to check against</param>
+        /// <returns>True if any slice of the textures overlap, false otherwise</returns>
+        public bool DataOverlaps(Texture texture)
+        {
+            if (texture._sizeInfo.AllOffsets.Length == 1 && _sizeInfo.AllOffsets.Length == 1)
+            {
+                return Range.OverlapsWith(texture.Range);
+            }
+
+            MultiRange otherRange = texture.Range;
+
+            IEnumerable<MultiRange> regions = _sizeInfo.AllRegions().Select((region) => Range.GetSlice((ulong)region.Offset, (ulong)region.Size));
+            IEnumerable<MultiRange> otherRegions = texture._sizeInfo.AllRegions().Select((region) => otherRange.GetSlice((ulong)region.Offset, (ulong)region.Size));
+
+            foreach (MultiRange region in regions)
+            {
+                foreach (MultiRange otherRegion in otherRegions)
+                {
+                    if (region.OverlapsWith(otherRegion))
+                    {
+                        return true;
+                    }
                 }
             }
 

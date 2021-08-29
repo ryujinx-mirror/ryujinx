@@ -85,8 +85,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     TextureDescriptor descriptor = GetDescriptor(id);
 
-                    int width = descriptor.UnpackWidth();
-                    int height = descriptor.UnpackHeight();
+                    int baseLevel = descriptor.UnpackBaseLevel();
+                    int width = Math.Max(1, descriptor.UnpackWidth() >> baseLevel);
+                    int height = Math.Max(1, descriptor.UnpackHeight() >> baseLevel);
 
                     if (texture.Info.Width != width || texture.Info.Height != height)
                     {
