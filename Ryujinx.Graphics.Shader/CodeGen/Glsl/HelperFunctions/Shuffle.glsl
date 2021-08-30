@@ -6,5 +6,6 @@ float Helper_Shuffle(float x, uint index, uint mask, out bool valid)
     uint maxThreadId = minThreadId | (clamp & ~segMask);
     uint srcThreadId = (index & ~segMask) | minThreadId;
     valid = srcThreadId <= maxThreadId;
-    return valid ? readInvocationARB(x, srcThreadId) : x;
+    float v = readInvocationARB(x, srcThreadId);
+    return valid ? v : x;
 }
