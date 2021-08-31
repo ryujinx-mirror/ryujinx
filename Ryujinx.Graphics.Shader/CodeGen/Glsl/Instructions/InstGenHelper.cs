@@ -72,6 +72,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.GroupMemoryBarrier,       InstType.CallNullary,    "groupMemoryBarrier");
             Add(Instruction.ImageLoad,                InstType.Special);
             Add(Instruction.ImageStore,               InstType.Special);
+            Add(Instruction.ImageAtomic,              InstType.Special);
             Add(Instruction.IsNan,                    InstType.CallUnary,      "isnan");
             Add(Instruction.LoadAttribute,            InstType.Special);
             Add(Instruction.LoadConstant,             InstType.Special);

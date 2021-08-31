@@ -18,13 +18,39 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             // TODO: Bindless texture support. For now we just return 0/do nothing.
             if (isBindless)
             {
-                return texOp.Inst == Instruction.ImageLoad ? NumberFormatter.FormatFloat(0) : "// imageStore(bindless)";
+                return texOp.Inst switch
+                {
+                    Instruction.ImageStore => "// imageStore(bindless)",
+                    Instruction.ImageLoad => NumberFormatter.FormatFloat(0),
+                    _ => NumberFormatter.FormatInt(0)
+                };
             }
 
             bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
-            string texCall = texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore";
+            string texCall;
+
+            if (texOp.Inst == Instruction.ImageAtomic)
+            {
+                texCall = (texOp.Flags & TextureFlags.AtomicMask) switch {
+                    TextureFlags.Add        => "imageAtomicAdd",
+                    TextureFlags.Minimum    => "imageAtomicMin",
+                    TextureFlags.Maximum    => "imageAtomicMax",
+                    TextureFlags.Increment  => "imageAtomicAdd", // TODO: Clamp value.
+                    TextureFlags.Decrement  => "imageAtomicAdd", // TODO: Clamp value.
+                    TextureFlags.BitwiseAnd => "imageAtomicAnd",
+                    TextureFlags.BitwiseOr  => "imageAtomicOr",
+                    TextureFlags.BitwiseXor => "imageAtomicXor",
+                    TextureFlags.Swap       => "imageAtomicExchange",
+                    TextureFlags.CAS        => "imageAtomicCompSwap",
+                    _                       => "imageAtomicAdd",
+                };
+            }
+            else
+            {
+                texCall = texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore";
+            }
 
             int srcIndex = isBindless ? 1 : 0;
 
@@ -95,8 +121,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             if (texOp.Inst == Instruction.ImageStore)
             {
-                int texIndex = context.FindImageDescriptorIndex(texOp);
-
                 VariableType type = texOp.Format.GetComponentType();
 
                 string[] cElems = new string[4];
@@ -128,7 +152,35 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 Append(prefix + "vec4(" + string.Join(", ", cElems) + ")");
             }
 
-            texCall += ")" + (texOp.Inst == Instruction.ImageLoad ? GetMask(texOp.Index) : "");
+            if (texOp.Inst == Instruction.ImageAtomic)
+            {
+                VariableType type = texOp.Format.GetComponentType();
+
+                if ((texOp.Flags & TextureFlags.AtomicMask) == TextureFlags.CAS)
+                {
+                    Append(Src(type)); // Compare value.
+                }
+
+                string value = (texOp.Flags & TextureFlags.AtomicMask) switch
+                {
+                    TextureFlags.Increment => NumberFormatter.FormatInt(1, type), // TODO: Clamp value
+                    TextureFlags.Decrement => NumberFormatter.FormatInt(-1, type), // TODO: Clamp value
+                    _ => Src(type)
+                };
+
+                Append(value);
+
+                texCall += ")";
+
+                if (type != VariableType.S32)
+                {
+                    texCall = "int(" + texCall + ")";
+                }
+            } 
+            else
+            {
+                texCall += ")" + (texOp.Inst == Instruction.ImageLoad ? GetMask(texOp.Index) : "");
+            }
 
             return texCall;
         }

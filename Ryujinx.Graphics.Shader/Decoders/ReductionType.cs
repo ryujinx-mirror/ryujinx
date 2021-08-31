@@ -7,6 +7,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         U64         = 2,
         FP32FtzRn   = 3,
         FP16x2FtzRn = 4,
-        S64         = 5
+        S64         = 5,
+        SD32        = 6,
+        SD64        = 7
     }
 }

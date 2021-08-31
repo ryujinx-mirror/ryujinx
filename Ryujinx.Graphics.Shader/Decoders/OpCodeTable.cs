@@ -209,6 +209,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("1110111101011x", InstEmit.Sts,     OpCodeMemory.Create);
             Set("11101011000xxx", InstEmit.Suld,    OpCodeImage.Create);
             Set("11101011001xxx", InstEmit.Sust,    OpCodeImage.Create);
+            Set("11101011010xxx", InstEmit.Sured,   OpCodeSured.Create);
+            Set("11101010110xxx", InstEmit.Suatom,  OpCodeSuatom.Create);
+            Set("1110101010xxxx", InstEmit.Suatom,  OpCodeSuatom.Create);
+            Set("11101010011xxx", InstEmit.Suatom,  OpCodeSuatom.Create);
+            Set("1110101000xxxx", InstEmit.Suatom,  OpCodeSuatom.Create);
             Set("1111000011111x", InstEmit.Sync,    OpCodeBranchPop.Create);
             Set("110000xxxx111x", InstEmit.Tex,     OpCodeTex.Create);
             Set("1101111010111x", InstEmit.TexB,    OpCodeTexB.Create);
