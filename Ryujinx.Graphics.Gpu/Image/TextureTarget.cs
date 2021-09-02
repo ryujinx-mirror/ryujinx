@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -53,6 +54,28 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return Target.Texture1D;
+        }
+
+        /// <summary>
+        /// Converts the texture target enum to a shader sampler type.
+        /// </summary>
+        /// <param name="target">The target enum to convert</param>
+        /// <returns>The shader sampler type</returns>
+        public static SamplerType ConvertSamplerType(this TextureTarget target)
+        {
+            return target switch
+            {
+                TextureTarget.Texture1D      => SamplerType.Texture1D,
+                TextureTarget.Texture2D      => SamplerType.Texture2D,
+                TextureTarget.Texture3D      => SamplerType.Texture3D,
+                TextureTarget.Cubemap        => SamplerType.TextureCube,
+                TextureTarget.Texture1DArray => SamplerType.Texture1D | SamplerType.Array,
+                TextureTarget.Texture2DArray => SamplerType.Texture2D | SamplerType.Array,
+                TextureTarget.TextureBuffer  => SamplerType.TextureBuffer,
+                TextureTarget.Texture2DRect  => SamplerType.Texture2D,
+                TextureTarget.CubemapArray   => SamplerType.TextureCube | SamplerType.Array,
+                _                            => SamplerType.Texture2D
+            };
         }
     }
 }

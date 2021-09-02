@@ -697,7 +697,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 flags = ConvertTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
-                if (tldsOp.Target == TexelLoadTarget.Texture1DLodZero && context.Config.GpuAccessor.QueryIsTextureBuffer(tldsOp.HandleOffset))
+                if (tldsOp.Target == TexelLoadTarget.Texture1DLodZero && context.Config.GpuAccessor.QuerySamplerType(tldsOp.HandleOffset) == SamplerType.TextureBuffer)
                 {
                     type   = SamplerType.TextureBuffer;
                     flags &= ~TextureFlags.LodLevel;
@@ -1306,8 +1306,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: Validate and use property.
             Instruction inst = Instruction.TextureSize;
 
-            SamplerType type = SamplerType.Texture2D;
-
             TextureFlags flags = bindless ? TextureFlags.Bindless : TextureFlags.None;
 
             int raIndex = op.Ra.Index;
@@ -1346,6 +1344,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             int handle = !bindless ? op.HandleOffset : 0;
+
+            SamplerType type;
+
+            if (bindless)
+            {
+                type = (op.ComponentMask & 4) != 0 ? SamplerType.Texture3D : SamplerType.Texture2D;
+            } 
+            else
+            {
+                type = context.Config.GpuAccessor.QuerySamplerType(handle);
+            }
 
             for (int compMask = op.ComponentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
             {
@@ -1422,7 +1431,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 // For bindless, we don't have any way to know the texture type,
                 // so we assume it's texture buffer when the sampler type is 1D, since that's more common.
-                bool isTypeBuffer = isBindless || context.Config.GpuAccessor.QueryIsTextureBuffer(op.HandleOffset);
+                bool isTypeBuffer = isBindless || context.Config.GpuAccessor.QuerySamplerType(op.HandleOffset) == SamplerType.TextureBuffer;
 
                 if (isTypeBuffer)
                 {

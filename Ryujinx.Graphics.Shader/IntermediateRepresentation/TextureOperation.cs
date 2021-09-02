@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
     {
         public const int DefaultCbufSlot = -1;
 
-        public SamplerType Type { get; private set; }
+        public SamplerType Type { get; set; }
         public TextureFormat Format { get; set; }
         public TextureFlags Flags { get; private set; }
 

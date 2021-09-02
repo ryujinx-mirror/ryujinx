@@ -30,10 +30,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     texOp.Inst == Instruction.TextureSize)
                 {
                     Operand bindlessHandle = Utils.FindLastOperation(texOp.GetSource(0), block);
+                    bool rewriteSamplerType = texOp.Inst == Instruction.TextureSize;
 
                     if (bindlessHandle.Type == OperandType.ConstantBuffer)
                     {
-                        SetHandle(config, texOp, bindlessHandle.GetCbufOffset(), bindlessHandle.GetCbufSlot());
+                        SetHandle(config, texOp, bindlessHandle.GetCbufOffset(), bindlessHandle.GetCbufSlot(), rewriteSamplerType);
                         continue;
                     }
 
@@ -59,7 +60,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         config,
                         texOp,
                         src0.GetCbufOffset() | ((src1.GetCbufOffset() + 1) << 16),
-                        src0.GetCbufSlot() | ((src1.GetCbufSlot() + 1) << 16));
+                        src0.GetCbufSlot() | ((src1.GetCbufSlot() + 1) << 16),
+                        rewriteSamplerType);
                 }
                 else if (texOp.Inst == Instruction.ImageLoad ||
                          texOp.Inst == Instruction.ImageStore ||
@@ -81,15 +83,21 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             texOp.Format = config.GetTextureFormat(cbufOffset, cbufSlot);
                         }
 
-                        SetHandle(config, texOp, cbufOffset, cbufSlot);
+                        SetHandle(config, texOp, cbufOffset, cbufSlot, false);
                     }
                 }
             }
         }
 
-        private static void SetHandle(ShaderConfig config, TextureOperation texOp, int cbufOffset, int cbufSlot)
+        private static void SetHandle(ShaderConfig config, TextureOperation texOp, int cbufOffset, int cbufSlot, bool rewriteSamplerType)
         {
             texOp.SetHandle(cbufOffset, cbufSlot);
+            
+            if (rewriteSamplerType)
+            {
+                texOp.Type = config.GpuAccessor.QuerySamplerType(cbufOffset, cbufSlot);
+            }
+
             config.SetUsedTexture(texOp.Inst, texOp.Type, texOp.Format, texOp.Flags, cbufSlot, cbufOffset);
         }
     }

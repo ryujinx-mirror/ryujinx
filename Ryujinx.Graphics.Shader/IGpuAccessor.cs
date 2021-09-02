@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.Graphics.Shader
+﻿using Ryujinx.Graphics.Shader.Decoders;
+
+namespace Ryujinx.Graphics.Shader
 {
     public interface IGpuAccessor
     {
@@ -79,9 +81,9 @@
             return true;
         }
 
-        bool QueryIsTextureBuffer(int handle, int cbufSlot = -1)
+        SamplerType QuerySamplerType(int handle, int cbufSlot = -1)
         {
-            return false;
+            return SamplerType.Texture2D;
         }
 
         bool QueryIsTextureRectangle(int handle, int cbufSlot = -1)
