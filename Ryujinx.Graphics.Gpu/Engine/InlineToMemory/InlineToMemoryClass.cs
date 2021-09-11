@@ -110,10 +110,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
 
             ulong dstGpuVa = ((ulong)state.OffsetOutUpperValue << 32) | state.OffsetOut;
 
-            ulong dstBaseAddress = _channel.MemoryManager.Translate(dstGpuVa);
-
             // Trigger read tracking, to flush any managed resources in the destination region.
-            _channel.MemoryManager.Physical.GetSpan(dstBaseAddress, _size, true);
+            _channel.MemoryManager.GetSpan(dstGpuVa, _size, true);
 
             _dstGpuVa = dstGpuVa;
             _dstX = state.SetDstOriginBytesXV;

@@ -892,7 +892,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     _physicalMemory.Write(Range, GetTextureDataFromGpu(Span<byte>.Empty, true, texture));
                 }
-                else 
+                else
                 {
                     _physicalMemory.WriteUntracked(Range, GetTextureDataFromGpu(Span<byte>.Empty, false, texture));
                 }

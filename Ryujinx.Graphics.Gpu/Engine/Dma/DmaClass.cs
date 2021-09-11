@@ -76,6 +76,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
         {
             if (linear)
             {
+                // If the stride is negative, the texture has to be flipped, so
+                // the fast copy is not trivial, use the slow path.
+                if (stride <= 0)
+                {
+                    return false;
+                }
+
                 int alignWidth = Constants.StrideAlignment / bpp;
                 return tex.RegionX == 0 &&
                        tex.RegionY == 0 &&
@@ -155,8 +162,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 (int srcBaseOffset, int srcSize) = srcCalculator.GetRectangleRange(src.RegionX, src.RegionY, xCount, yCount);
                 (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dst.RegionX, dst.RegionY, xCount, yCount);
 
-                ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (uint)srcBaseOffset, srcSize, true);
-                Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (uint)dstBaseOffset, dstSize).ToArray();
+                if (srcLinear && srcStride < 0)
+                {
+                    srcBaseOffset += srcStride * (yCount - 1);
+                }
+
+                if (dstLinear && dstStride < 0)
+                {
+                    dstBaseOffset += dstStride * (yCount - 1);
+                }
+
+                ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (ulong)srcBaseOffset, srcSize, true);
+                Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (ulong)dstBaseOffset, dstSize).ToArray();
 
                 bool completeSource = IsTextureCopyComplete(src, srcLinear, srcBpp, srcStride, xCount, yCount);
                 bool completeDest = IsTextureCopyComplete(dst, dstLinear, dstBpp, dstStride, xCount, yCount);
@@ -214,7 +231,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     {
                         srcSpan.CopyTo(dstSpan); // No layout conversion has to be performed, just copy the data entirely.
 
-                        memoryManager.Write(dstGpuVa + (uint)dstBaseOffset, dstSpan);
+                        memoryManager.Write(dstGpuVa + (ulong)dstBaseOffset, dstSpan);
 
                         return;
                     }
@@ -255,7 +272,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
                 };
 
-                memoryManager.Write(dstGpuVa + (uint)dstBaseOffset, dstSpan);
+                memoryManager.Write(dstGpuVa + (ulong)dstBaseOffset, dstSpan);
             }
             else
             {
