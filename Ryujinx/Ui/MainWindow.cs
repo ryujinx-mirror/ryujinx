@@ -1276,6 +1276,11 @@ namespace Ryujinx.Ui
 
         private void StopEmulation_Pressed(object sender, EventArgs args)
         {
+            if (_emulationContext != null)
+            {
+                UpdateGameMetadata(_emulationContext.Application.TitleIdText);
+            }
+
             RendererWidget?.Exit();
         }
 
