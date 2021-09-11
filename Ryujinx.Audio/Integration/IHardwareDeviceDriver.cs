@@ -36,6 +36,7 @@ namespace Ryujinx.Audio.Integration
         IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount);
 
         ManualResetEvent GetUpdateRequiredEvent();
+        ManualResetEvent GetPauseEvent();
 
         bool SupportsDirection(Direction direction);
         bool SupportsSampleRate(uint sampleRate);

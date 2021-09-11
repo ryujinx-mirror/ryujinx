@@ -294,15 +294,35 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="_stopEmulation">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Stop emulation of the current game and return to game selection</property>
-                        <property name="label" translatable="yes">Stop Emulation</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="StopEmulation_Pressed" swapped="no"/>
-                      </object>
-                    </child>
+						<object class="GtkMenuItem" id="_pauseEmulation">
+							<property name="visible">True</property>
+							<property name="can_focus">False</property>
+							<property name="tooltip_text" translatable="yes">Pause emulation</property>
+							<property name="label" translatable="yes">Pause Emulation</property>
+							<property name="use_underline">True</property>
+							<signal name="activate" handler="PauseEmulation_Pressed" swapped="no"/>
+						</object>
+					</child>
+					  <child>
+						  <object class="GtkMenuItem" id="_resumeEmulation">
+							  <property name="visible">False</property>
+							  <property name="can_focus">False</property>
+							  <property name="tooltip_text" translatable="yes">Resume emulation</property>
+							  <property name="label" translatable="yes">Resume Emulation</property>
+							  <property name="use_underline">True</property>
+							  <signal name="activate" handler="ResumeEmulation_Pressed" swapped="no"/>
+						  </object>
+					  </child>
+					  <child>
+						<object class="GtkMenuItem" id="_stopEmulation">
+							<property name="visible">True</property>
+							<property name="can_focus">False</property>
+							<property name="tooltip_text" translatable="yes">Stop emulation of the current game and return to game selection</property>
+							<property name="label" translatable="yes">Stop Emulation</property>
+							<property name="use_underline">True</property>
+							<signal name="activate" handler="StopEmulation_Pressed" swapped="no"/>
+						</object>
+					</child>
                     <child>
                       <object class="GtkSeparatorMenuItem">
                         <property name="visible">True</property>

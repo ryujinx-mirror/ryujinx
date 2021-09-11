@@ -47,6 +47,11 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             return _realDriver.GetUpdateRequiredEvent();
         }
 
+        public ManualResetEvent GetPauseEvent()
+        {
+            return _realDriver.GetPauseEvent();
+        }
+
         private uint SelectHardwareChannelCount(uint targetChannelCount)
         {
             if (_realDriver.SupportsChannelCount(targetChannelCount))

@@ -15,6 +15,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
         private readonly ALDevice _device;
         private readonly ALContext _context;
         private readonly ManualResetEvent _updateRequiredEvent;
+        private readonly ManualResetEvent _pauseEvent;
         private readonly ConcurrentDictionary<OpenALHardwareDeviceSession, byte> _sessions;
         private bool _stillRunning;
         private Thread _updaterThread;
@@ -24,6 +25,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
             _device = ALC.OpenDevice("");
             _context = ALC.CreateContext(_device, new ALContextAttributes());
             _updateRequiredEvent = new ManualResetEvent(false);
+            _pauseEvent = new ManualResetEvent(true);
             _sessions = new ConcurrentDictionary<OpenALHardwareDeviceSession, byte>();
 
             _stillRunning = true;
@@ -88,6 +90,11 @@ namespace Ryujinx.Audio.Backends.OpenAL
             return _updateRequiredEvent;
         }
 
+        public ManualResetEvent GetPauseEvent()
+        {
+            return _pauseEvent;
+        }
+
         private void Update()
         {
             ALC.MakeContextCurrent(_context);
@@ -132,6 +139,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
 
                 ALC.DestroyContext(_context);
                 ALC.CloseDevice(_device);
+
+                _pauseEvent.Dispose();
             }
         }
 

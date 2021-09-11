@@ -215,6 +215,14 @@ namespace Ryujinx.Audio.Renderer.Server
         }
 
         /// <summary>
+        /// Stop sending commands to the <see cref="AudioProcessor"/> without stopping the worker thread.
+        /// </summary>
+        public void StopSendingCommands()
+        {
+            _isRunning = false;
+        }
+
+        /// <summary>
         /// Worker main function. This is used to dispatch audio renderer commands to the <see cref="AudioProcessor"/>.
         /// </summary>
         private void SendCommands()

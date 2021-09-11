@@ -99,6 +99,8 @@ namespace Ryujinx.Ui
         [GUI] MenuItem        _loadApplicationFolder;
         [GUI] MenuItem        _appletMenu;
         [GUI] MenuItem        _actionMenu;
+        [GUI] MenuItem        _pauseEmulation;
+        [GUI] MenuItem        _resumeEmulation;
         [GUI] MenuItem        _stopEmulation;
         [GUI] MenuItem        _simulateWakeUpMessage;
         [GUI] MenuItem        _scanAmiibo;
@@ -211,6 +213,7 @@ namespace Ryujinx.Ui
             }
 
             _actionMenu.Sensitive = false;
+            _pauseEmulation.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
@@ -1281,7 +1284,36 @@ namespace Ryujinx.Ui
                 UpdateGameMetadata(_emulationContext.Application.TitleIdText);
             }
 
+            _pauseEmulation.Visible = true;
+            _pauseEmulation.Sensitive = false;
+            _resumeEmulation.Visible = false;
             RendererWidget?.Exit();
+        }
+
+        private void PauseEmulation_Pressed(object sender, EventArgs args)
+        {
+            _pauseEmulation.Visible = false;
+            _resumeEmulation.Visible = true;
+            _emulationContext.System.TogglePauseEmulation(true);
+        }
+
+        private void ResumeEmulation_Pressed(object sender, EventArgs args)
+        {
+            _pauseEmulation.Visible = true;
+            _resumeEmulation.Visible = false;
+            _emulationContext.System.TogglePauseEmulation(false);
+        }
+
+        public void ActivatePauseMenu()
+        {
+            _pauseEmulation.Sensitive = true;
+        }
+
+        public void TogglePause()
+        {
+            _pauseEmulation.Visible ^= true;
+            _resumeEmulation.Visible ^= true;
+            _emulationContext.System.TogglePauseEmulation(_resumeEmulation.Visible);
         }
 
         private void Installer_File_Pressed(object o, EventArgs args)

@@ -55,6 +55,8 @@ namespace Ryujinx.Audio.Renderer.Dsp
         private long _playbackEnds;
         private ManualResetEvent _event;
 
+        private ManualResetEvent _pauseEvent;
+
         public AudioProcessor()
         {
             _event = new ManualResetEvent(false);
@@ -94,6 +96,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             _sessionCommandList = new RendererSession[Constants.AudioRendererSessionCountMax];
             _event.Reset();
             _lastTime = PerformanceCounter.ElapsedNanoseconds;
+            _pauseEvent = deviceDriver.GetPauseEvent();
 
             StartThread();
 
@@ -202,6 +205,8 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             while (true)
             {
+                _pauseEvent?.WaitOne();
+
                 MailboxMessage message = _mailbox.ReceiveMessage();
 
                 if (message == MailboxMessage.Stop)

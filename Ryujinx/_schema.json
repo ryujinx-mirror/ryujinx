@@ -908,18 +908,6 @@
     }
   },
   "properties": {
-    "backend_threading": {
-      "$id": "#/properties/backend_threading",
-      "type": "string",
-      "title": "Backend Threading",
-      "description": "Whether backend threading is enabled or not. 'Auto' selects the most appropriate option for the current OS, vendor and backend.",
-      "default": "Auto",
-      "examples": [
-        "Auto",
-        "Off",
-        "On"
-      ]
-    },
     "res_scale": {
       "$id": "#/properties/res_scale",
       "type": "integer",
@@ -1468,7 +1456,8 @@
       "title": "Hotkey Controls",
       "required": [
         "toggle_vsync",
-        "screenshot"
+        "screenshot",
+        "pause"
       ],
       "properties": {
         "toggle_vsync": {
@@ -1482,6 +1471,12 @@
           "$ref": "#/definitions/key",
           "title": "Screenshot",
           "default": "F8"
+        },
+        "pause": {
+          "$id": "#/properties/hotkeys/properties/pause",
+          "$ref": "#/definitions/key",
+          "title": "Toggle Pause",
+          "default": "F5"
         }
       }
     },

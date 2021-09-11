@@ -45,6 +45,8 @@ namespace Ryujinx.Audio
         /// </summary>
         private Thread _workerThread;
 
+        private bool _isRunning;
+
         /// <summary>
         /// Create a new <see cref="AudioManager"/>.
         /// </summary>
@@ -52,6 +54,7 @@ namespace Ryujinx.Audio
         {
             _updateRequiredEvents = new ManualResetEvent[2];
             _actions = new Action[2];
+            _isRunning = false;
 
             // Termination event.
             _updateRequiredEvents[1] = new ManualResetEvent(false);
@@ -72,6 +75,7 @@ namespace Ryujinx.Audio
                 throw new InvalidOperationException();
             }
 
+            _isRunning = true;
             _workerThread.Start();
         }
 
@@ -96,7 +100,7 @@ namespace Ryujinx.Audio
         /// </summary>
         private void Update()
         {
-            while (true)
+            while (_isRunning)
             {
                 int index = WaitHandle.WaitAny(_updateRequiredEvents);
 
@@ -116,6 +120,14 @@ namespace Ryujinx.Audio
                     _updateRequiredEvents[0].Reset();
                 }
             }
+        }
+
+        /// <summary>
+        /// Stop updating the <see cref="AudioManager"/> without stopping the worker thread.
+        /// </summary>
+        public void StopUpdates()
+        {
+            _isRunning = false;
         }
 
         public void Dispose()

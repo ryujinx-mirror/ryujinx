@@ -60,7 +60,8 @@
   "hotkeys": {
     "toggle_vsync": "Tab",
     "screenshot": "F8",
-    "show_ui": "F4"
+    "show_ui": "F4",
+    "pause":  "F5"
   },
   "keyboard_config": [],
   "controller_config": [],

@@ -113,6 +113,8 @@ namespace Ryujinx.HLE.HOS
 
         internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
+        public bool IsPaused { get; private set; }
+
         public Horizon(Switch device)
         {
             KernelContext = new KernelContext(
@@ -385,6 +387,12 @@ namespace Ryujinx.HLE.HOS
             {
                 _isDisposed = true;
 
+                // "Soft" stops AudioRenderer and AudioManager to avoid some sound between resume and stop.
+                AudioRendererManager.StopSendingCommands();
+                AudioManager.StopUpdates();
+
+                TogglePauseEmulation(false);
+
                 KProcess terminationProcess = new KProcess(KernelContext);
                 KThread terminationThread = new KThread(KernelContext);
 
@@ -443,6 +451,33 @@ namespace Ryujinx.HLE.HOS
                 
                 KernelContext.Dispose();
             }
+        }
+
+        public void TogglePauseEmulation(bool pause)
+        {
+            lock (KernelContext.Processes)
+            {
+                foreach (KProcess process in KernelContext.Processes.Values)
+                {
+                    if (process.Flags.HasFlag(ProcessCreationFlags.IsApplication))
+                    {
+                        // Only game process should be paused.
+                        process.SetActivity(pause);
+                    }
+                }
+
+                if (pause && !IsPaused)
+                {
+                    Device.AudioDeviceDriver.GetPauseEvent().Reset();
+                    ARMeilleure.State.ExecutionContext.SuspendCounter();
+                }
+                else if (!pause && IsPaused)
+                {
+                    Device.AudioDeviceDriver.GetPauseEvent().Set();
+                    ARMeilleure.State.ExecutionContext.ResumeCounter();
+                }
+            }
+            IsPaused = pause;
         }
     }
 }

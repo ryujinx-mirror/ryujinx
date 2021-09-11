@@ -471,6 +471,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             KernelContext.CriticalSection.Leave();
         }
 
+        public void Suspend(ThreadSchedState type)
+        {
+            _forcePauseFlags |= type;
+
+            CombineForcePauseFlags();
+        }
+
+        public void Resume(ThreadSchedState type)
+        {
+            ThreadSchedState oldForcePauseFlags = _forcePauseFlags;
+
+            _forcePauseFlags &= ~type;
+
+            if ((oldForcePauseFlags & ~type) == ThreadSchedState.None)
+            {
+                ThreadSchedState oldSchedFlags = SchedFlags;
+
+                SchedFlags &= ThreadSchedState.LowMask;
+
+                AdjustScheduling(oldSchedFlags);
+            }
+        }
+
         public KernelResult SetActivity(bool pause)
         {
             KernelResult result = KernelResult.Success;
@@ -495,9 +518,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     // Pause, the force pause flag should be clear (thread is NOT paused).
                     if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) == 0)
                     {
-                        _forcePauseFlags |= ThreadSchedState.ThreadPauseFlag;
-
-                        CombineForcePauseFlags();
+                        Suspend(ThreadSchedState.ThreadPauseFlag);
                     }
                     else
                     {
@@ -509,18 +530,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     // Unpause, the force pause flag should be set (thread is paused).
                     if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) != 0)
                     {
-                        ThreadSchedState oldForcePauseFlags = _forcePauseFlags;
-
-                        _forcePauseFlags &= ~ThreadSchedState.ThreadPauseFlag;
-
-                        if ((oldForcePauseFlags & ~ThreadSchedState.ThreadPauseFlag) == ThreadSchedState.None)
-                        {
-                            ThreadSchedState oldSchedFlags = SchedFlags;
-
-                            SchedFlags &= ThreadSchedState.LowMask;
-
-                            AdjustScheduling(oldSchedFlags);
-                        }
+                        Resume(ThreadSchedState.ThreadPauseFlag);
                     }
                     else
                     {
@@ -832,19 +842,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (!IsSchedulable)
             {
-                // Ensure our thread is running and we have an event.
-                StartHostThread();
+                if (!_forcedUnschedulable)
+                {
+                    // Ensure our thread is running and we have an event.
+                    StartHostThread();
 
-                // If the thread is not schedulable, we want to just run or pause
-                // it directly as we don't care about priority or the core it is
-                // running on in this case.
-                if (SchedFlags == ThreadSchedState.Running)
-                {
-                    _schedulerWaitEvent.Set();
-                }
-                else
-                {
-                    _schedulerWaitEvent.Reset();
+                    // If the thread is not schedulable, we want to just run or pause
+                    // it directly as we don't care about priority or the core it is
+                    // running on in this case.
+                    if (SchedFlags == ThreadSchedState.Running)
+                    {
+                        _schedulerWaitEvent.Set();
+                    }
+                    else
+                    {
+                        _schedulerWaitEvent.Reset();
+                    }
                 }
 
                 return;
