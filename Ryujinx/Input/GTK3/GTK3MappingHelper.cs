@@ -134,7 +134,7 @@ namespace Ryujinx.Input.GTK3
             GtkKey.bracketleft,
             GtkKey.bracketright,
             GtkKey.semicolon,
-            GtkKey.quotedbl,
+            GtkKey.quoteright,
             GtkKey.comma,
             GtkKey.period,
             GtkKey.slash,
