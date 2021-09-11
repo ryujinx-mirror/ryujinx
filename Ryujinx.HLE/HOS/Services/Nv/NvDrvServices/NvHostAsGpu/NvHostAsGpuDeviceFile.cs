@@ -5,11 +5,39 @@ using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using Ryujinx.Memory;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 {
     class NvHostAsGpuDeviceFile : NvDeviceFile
     {
+        private const uint SmallPageSize = 0x1000;
+        private const uint BigPageSize = 0x10000;
+
+        private static readonly uint[] _pageSizes = new uint[] { SmallPageSize, BigPageSize };
+
+        private const ulong SmallRegionLimit = 0x400000000UL; // 16 GB
+        private const ulong DefaultUserSize = 1UL << 37;
+
+        private struct VmRegion
+        {
+            public ulong Start { get; }
+            public ulong Limit { get; }
+
+            public VmRegion(ulong start, ulong limit)
+            {
+                Start = start;
+                Limit = limit;
+            }
+        }
+
+        private static readonly VmRegion[] _vmRegions = new VmRegion[]
+        {
+            new VmRegion((ulong)BigPageSize << 16, SmallRegionLimit),
+            new VmRegion(SmallRegionLimit, DefaultUserSize)
+        };
+
         private readonly AddressSpaceContext _asContext;
         private readonly NvMemoryAllocator _memoryAllocator;
 
@@ -296,7 +324,31 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
         private NvInternalResult GetVaRegions(ref GetVaRegionsArguments arguments)
         {
-            Logger.Stub?.PrintStub(LogClass.ServiceNv);
+            int vaRegionStructSize = Unsafe.SizeOf<VaRegion>();
+
+            Debug.Assert(vaRegionStructSize == 0x18);
+            Debug.Assert(_pageSizes.Length == 2);
+
+            uint writeEntries = (uint)(arguments.BufferSize / vaRegionStructSize);
+            if (writeEntries > _pageSizes.Length)
+            {
+                writeEntries = (uint)_pageSizes.Length;
+            }
+
+            for (uint i = 0; i < writeEntries; i++)
+            {
+                ref var region = ref arguments.Regions[(int)i];
+
+                var vmRegion = _vmRegions[i];
+                uint pageSize = _pageSizes[i];
+
+                region.PageSize = pageSize;
+                region.Offset = vmRegion.Start;
+                region.Pages = (vmRegion.Limit - vmRegion.Start) / pageSize;
+                region.Padding = 0;
+            }
+
+            arguments.BufferSize = (uint)(_pageSizes.Length * vaRegionStructSize);
 
             return NvInternalResult.Success;
         }
