@@ -155,6 +155,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Lifts the texture to the top of the AutoDeleteCache. This is primarily used to enforce that
+        /// data written to a target will be flushed to memory should the texture be deleted, but also
+        /// keeps rendered textures alive without a pool reference.
+        /// </summary>
+        /// <param name="texture">Texture to lift</param>
+        public void Lift(Texture texture)
+        {
+            _cache.Lift(texture);
+        }
+
+        /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
@@ -442,14 +453,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (texture != null)
             {
-                if (!isSamplerTexture)
-                {
-                    // If not a sampler texture, it is managed by the auto delete
-                    // cache, ensure that it is on the "top" of the list to avoid
-                    // deletion.
-                    _cache.Lift(texture);
-                }
-
                 ChangeSizeIfNeeded(info, texture, isSamplerTexture, sizeHint);
 
                 texture.SynchronizeMemory();
@@ -849,7 +852,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (match)
                 {
-                    _cache.Lift(texture);
                     return texture;
                 }
             }

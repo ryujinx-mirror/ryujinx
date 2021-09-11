@@ -127,6 +127,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 return;
             }
 
+            memoryManager.Physical.TextureCache.Lift(srcTexture);
+
             // When the source texture that was found has a depth format,
             // we must enforce the target texture also has a depth format,
             // as copies between depth and color formats are not allowed.
