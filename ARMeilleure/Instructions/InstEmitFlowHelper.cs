@@ -1,8 +1,8 @@
+using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
-using ARMeilleure.Translation.Cache;
 using ARMeilleure.Translation.PTC;
 
 using static ARMeilleure.Instructions.InstEmitHelper;

@@ -1,3 +1,4 @@
+using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.CodeGen.Optimizations;
 using ARMeilleure.CodeGen.RegisterAllocators;
 using ARMeilleure.CodeGen.Unwinding;
@@ -5,7 +6,6 @@ using ARMeilleure.Common;
 using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-using ARMeilleure.Translation.PTC;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,7 +91,7 @@ namespace ARMeilleure.CodeGen.X86
             _instTable[(int)inst] = func;
         }
 
-        public static CompiledFunction Generate(CompilerContext cctx, PtcInfo ptcInfo = null)
+        public static CompiledFunction Generate(CompilerContext cctx)
         {
             ControlFlowGraph cfg = cctx.Cfg;
 
@@ -149,53 +149,47 @@ namespace ARMeilleure.CodeGen.X86
 
             Logger.StartPass(PassName.CodeGeneration);
 
-            using (MemoryStream stream = new MemoryStream())
+            bool relocatable = (cctx.Options & CompilerOptions.Relocatable) != 0;
+
+            using MemoryStream stream = new();
+
+            CodeGenContext context = new(stream, allocResult, maxCallArgs, cfg.Blocks.Count, relocatable);
+
+            UnwindInfo unwindInfo = WritePrologue(context);
+
+            for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                CodeGenContext context = new CodeGenContext(stream, allocResult, maxCallArgs, cfg.Blocks.Count, ptcInfo);
+                context.EnterBlock(block);
 
-                UnwindInfo unwindInfo = WritePrologue(context);
-
-                ptcInfo?.WriteUnwindInfo(unwindInfo);
-
-                for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
+                for (Operation node = block.Operations.First; node != default; node = node.ListNext)
                 {
-                    context.EnterBlock(block);
-
-                    for (Operation node = block.Operations.First; node != default; node = node.ListNext)
-                    {
-                        GenerateOperation(context, node);
-                    }
-
-                    if (block.SuccessorsCount == 0)
-                    {
-                        // The only blocks which can have 0 successors are exit blocks.
-                        Operation last = block.Operations.Last;
-
-                        Debug.Assert(last.Instruction == Instruction.Tailcall ||
-                                     last.Instruction == Instruction.Return);
-                    }
-                    else
-                    {
-                        BasicBlock succ = block.GetSuccessor(0);
-
-                        if (succ != block.ListNext)
-                        {
-                            context.JumpTo(succ);
-                        }
-                    }
+                    GenerateOperation(context, node);
                 }
 
-                byte[] code = context.GetCode();
-
-                if (ptcInfo != null)
+                if (block.SuccessorsCount == 0)
                 {
-                    ptcInfo.Code = code;
+                    // The only blocks which can have 0 successors are exit blocks.
+                    Operation last = block.Operations.Last;
+
+                    Debug.Assert(last.Instruction == Instruction.Tailcall ||
+                                 last.Instruction == Instruction.Return);
                 }
+                else
+                {
+                    BasicBlock succ = block.GetSuccessor(0);
 
-                Logger.EndPass(PassName.CodeGeneration);
-
-                return new CompiledFunction(code, unwindInfo);
+                    if (succ != block.ListNext)
+                    {
+                        context.JumpTo(succ);
+                    }
+                }
             }
+
+            (byte[] code, RelocInfo relocInfo) = context.GetCode();
+
+            Logger.EndPass(PassName.CodeGeneration);
+
+            return new CompiledFunction(code, unwindInfo, relocInfo);
         }
 
         private static void GenerateOperation(CodeGenContext context, Operation operation)

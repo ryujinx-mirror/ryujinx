@@ -1,3 +1,4 @@
+using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.Common;
 using ARMeilleure.Decoders;
 using ARMeilleure.Diagnostics;

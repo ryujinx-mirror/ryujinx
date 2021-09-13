@@ -261,7 +261,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I32, OperandType.I64, OperandType.I64 };
 
-            return Compiler.Compile<UnixExceptionHandler>(cfg, argTypes, OperandType.None, CompilerOptions.HighCq);
+            return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq).Map<UnixExceptionHandler>();
         }
 
         private static VectoredExceptionHandler GenerateWindowsSignalHandler(IntPtr signalStructPtr)
@@ -315,7 +315,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
-            return Compiler.Compile<VectoredExceptionHandler>(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq);
+            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq).Map<VectoredExceptionHandler>();
         }
     }
 }

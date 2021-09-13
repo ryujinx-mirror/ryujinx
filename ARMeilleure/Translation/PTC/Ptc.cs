@@ -1,9 +1,9 @@
 using ARMeilleure.CodeGen;
+using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.CodeGen.Unwinding;
 using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Common;
 using ARMeilleure.Memory;
-using ARMeilleure.Translation.Cache;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
@@ -727,15 +727,10 @@ namespace ARMeilleure.Translation.PTC
             UnwindInfo unwindInfo,
             bool highCq)
         {
-            CompiledFunction cFunc = new CompiledFunction(code, unwindInfo);
+            var cFunc = new CompiledFunction(code, unwindInfo, RelocInfo.Empty);
+            var gFunc = cFunc.Map<GuestFunction>();
 
-            IntPtr codePtr = JitCache.Map(cFunc);
-
-            GuestFunction gFunc = Marshal.GetDelegateForFunctionPointer<GuestFunction>(codePtr);
-
-            TranslatedFunction tFunc = new TranslatedFunction(gFunc, callCounter, guestSize, highCq);
-
-            return tFunc;
+            return new TranslatedFunction(gFunc, callCounter, guestSize, highCq);
         }
 
         private static void UpdateInfo(InfoEntry infoEntry)
@@ -889,10 +884,14 @@ namespace ARMeilleure.Translation.PTC
             return XXHash128.ComputeHash(memory.GetSpan(address, checked((int)(guestSize))));
         }
 
-        internal static void WriteInfoCodeRelocUnwindInfo(ulong address, ulong guestSize, Hash128 hash, bool highCq, PtcInfo ptcInfo)
+        internal static void WriteCompiledFunction(ulong address, ulong guestSize, Hash128 hash, bool highCq, CompiledFunction compiledFunc)
         {
             lock (_lock)
             {
+                byte[] code = compiledFunc.Code;
+                RelocInfo relocInfo = compiledFunc.RelocInfo;
+                UnwindInfo unwindInfo = compiledFunc.UnwindInfo;
+
                 InfoEntry infoEntry = new InfoEntry();
 
                 infoEntry.Address = address;
@@ -900,18 +899,37 @@ namespace ARMeilleure.Translation.PTC
                 infoEntry.Hash = hash;
                 infoEntry.HighCq = highCq;
                 infoEntry.Stubbed = false;
-                infoEntry.CodeLength = ptcInfo.Code.Length;
-                infoEntry.RelocEntriesCount = ptcInfo.RelocEntriesCount;
+                infoEntry.CodeLength = code.Length;
+                infoEntry.RelocEntriesCount = relocInfo.Entries.Length;
 
                 SerializeStructure(_infosStream, infoEntry);
 
-                WriteCode(ptcInfo.Code.AsSpan());
+                WriteCode(code.AsSpan());
 
                 // WriteReloc.
-                ptcInfo.RelocStream.WriteTo(_relocsStream);
+                using var relocInfoWriter = new BinaryWriter(_relocsStream, EncodingCache.UTF8NoBOM, true);
+
+                foreach (RelocEntry entry in relocInfo.Entries)
+                {
+                    relocInfoWriter.Write(entry.Position);
+                    relocInfoWriter.Write((byte)entry.Symbol.Type);
+                    relocInfoWriter.Write(entry.Symbol.Value);
+                }
 
                 // WriteUnwindInfo.
-                ptcInfo.UnwindInfoStream.WriteTo(_unwindInfosStream);
+                using var unwindInfoWriter = new BinaryWriter(_unwindInfosStream, EncodingCache.UTF8NoBOM, true);
+
+                unwindInfoWriter.Write(unwindInfo.PushEntries.Length);
+
+                foreach (UnwindPushEntry unwindPushEntry in unwindInfo.PushEntries)
+                {
+                    unwindInfoWriter.Write((int)unwindPushEntry.PseudoOp);
+                    unwindInfoWriter.Write(unwindPushEntry.PrologOffset);
+                    unwindInfoWriter.Write(unwindPushEntry.RegIndex);
+                    unwindInfoWriter.Write(unwindPushEntry.StackOffsetOrAllocSize);
+                }
+
+                unwindInfoWriter.Write(unwindInfo.PrologSize);
             }
         }
 

@@ -1,3 +1,4 @@
+using ARMeilleure.CodeGen;
 using ARMeilleure.Common;
 using ARMeilleure.Decoders;
 using ARMeilleure.Diagnostics;
@@ -279,32 +280,30 @@ namespace ARMeilleure.Translation
 
             Logger.EndPass(PassName.RegisterUsage);
 
-            OperandType[] argTypes = new OperandType[] { OperandType.I64 };
+            var retType = OperandType.I64;
+            var argTypes = new OperandType[] { OperandType.I64 };
 
-            CompilerOptions options = highCq ? CompilerOptions.HighCq : CompilerOptions.None;
+            var options = highCq ? CompilerOptions.HighCq : CompilerOptions.None;
 
-            GuestFunction func;
-
-            if (!context.HasPtc)
+            if (context.HasPtc)
             {
-                func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options);
+                options |= CompilerOptions.Relocatable;
             }
-            else
+
+            CompiledFunction compiledFunc = Compiler.Compile(cfg, argTypes, retType, options);
+
+            if (context.HasPtc)
             {
-                using PtcInfo ptcInfo = new PtcInfo();
-
-                func = Compiler.Compile<GuestFunction>(cfg, argTypes, OperandType.I64, options, ptcInfo);
-
                 Hash128 hash = Ptc.ComputeHash(Memory, address, funcSize);
 
-                Ptc.WriteInfoCodeRelocUnwindInfo(address, funcSize, hash, highCq, ptcInfo);
+                Ptc.WriteCompiledFunction(address, funcSize, hash, highCq, compiledFunc);
             }
 
-            var result = new TranslatedFunction(func, counter, funcSize, highCq);
+            GuestFunction func = compiledFunc.Map<GuestFunction>();
 
             Allocators.ResetAll();
 
-            return result;
+            return new TranslatedFunction(func, counter, funcSize, highCq);
         }
 
         private struct Range
