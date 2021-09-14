@@ -1201,15 +1201,20 @@ namespace Ryujinx.Ui
 
         private void Load_Application_File(object sender, EventArgs args)
         {
-            using (FileChooserDialog fileChooser = new FileChooserDialog("Choose the file to open", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Open", ResponseType.Accept))
+            using (FileChooserNative fileChooser = new FileChooserNative("Choose the file to open", this, FileChooserAction.Open, "Open", "Cancel"))
             {
-                fileChooser.Filter = new FileFilter();
-                fileChooser.Filter.AddPattern("*.nsp");
-                fileChooser.Filter.AddPattern("*.pfs0");
-                fileChooser.Filter.AddPattern("*.xci");
-                fileChooser.Filter.AddPattern("*.nca");
-                fileChooser.Filter.AddPattern("*.nro");
-                fileChooser.Filter.AddPattern("*.nso");
+                FileFilter filter = new FileFilter()
+                {
+                    Name = "Switch Executables"
+                };
+                filter.AddPattern("*.xci");
+                filter.AddPattern("*.nsp");
+                filter.AddPattern("*.pfs0");
+                filter.AddPattern("*.nca");
+                filter.AddPattern("*.nro");
+                filter.AddPattern("*.nso");
+
+                fileChooser.AddFilter(filter);
 
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
@@ -1220,7 +1225,7 @@ namespace Ryujinx.Ui
 
         private void Load_Application_Folder(object sender, EventArgs args)
         {
-            using (FileChooserDialog fileChooser = new FileChooserDialog("Choose the folder to open", this, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Open", ResponseType.Accept))
+            using (FileChooserNative fileChooser = new FileChooserNative("Choose the folder to open", this, FileChooserAction.SelectFolder, "Open", "Cancel"))
             {
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
@@ -1318,23 +1323,28 @@ namespace Ryujinx.Ui
 
         private void Installer_File_Pressed(object o, EventArgs args)
         {
-            FileChooserDialog fileChooser = new FileChooserDialog("Choose the firmware file to open", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Open", ResponseType.Accept);
+            FileChooserNative fileChooser = new FileChooserNative("Choose the firmware file to open", this, FileChooserAction.Open, "Open", "Cancel");
 
-            fileChooser.Filter = new FileFilter();
-            fileChooser.Filter.AddPattern("*.zip");
-            fileChooser.Filter.AddPattern("*.xci");
+            FileFilter filter = new FileFilter
+            {
+                Name = "Switch Firmware Files"
+            };
+            filter.AddPattern("*.zip");
+            filter.AddPattern("*.xci");
+
+            fileChooser.AddFilter(filter);
 
             HandleInstallerDialog(fileChooser);
         }
 
         private void Installer_Directory_Pressed(object o, EventArgs args)
         {
-            FileChooserDialog directoryChooser = new FileChooserDialog("Choose the firmware directory to open", this, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Open", ResponseType.Accept);
+            FileChooserNative directoryChooser = new FileChooserNative("Choose the firmware directory to open", this, FileChooserAction.SelectFolder, "Open", "Cancel");
 
             HandleInstallerDialog(directoryChooser);
         }
 
-        private void HandleInstallerDialog(FileChooserDialog fileChooser)
+        private void HandleInstallerDialog(FileChooserNative fileChooser)
         {
             if (fileChooser.Run() == (int)ResponseType.Accept)
             {

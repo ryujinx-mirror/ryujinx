@@ -110,13 +110,18 @@ namespace Ryujinx.Ui.Windows
 
         private void AddButton_Clicked(object sender, EventArgs args)
         {
-            FileChooserDialog fileChooser = new FileChooserDialog("Select DLC files", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept)
+            FileChooserNative fileChooser = new FileChooserNative("Select DLC files", this, FileChooserAction.Open, "Add", "Cancel")
             {
-                SelectMultiple = true,
-                Filter         = new FileFilter()
+                SelectMultiple = true
             };
-            fileChooser.SetPosition(WindowPosition.Center);
-            fileChooser.Filter.AddPattern("*.nsp");
+
+            FileFilter filter = new FileFilter()
+            {
+                Name = "Switch Game DLCs"
+            };
+            filter.AddPattern("*.nsp");
+
+            fileChooser.AddFilter(filter);
 
             if (fileChooser.Run() == (int)ResponseType.Accept)
             {

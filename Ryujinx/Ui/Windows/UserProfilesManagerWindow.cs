@@ -193,17 +193,21 @@ namespace Ryujinx.Ui.Windows
 
         private void ProfileImageFileChooser()
         {
-            FileChooserDialog fileChooser = new FileChooserDialog("Import Custom Profile Image", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Import", ResponseType.Accept)
+            FileChooserNative fileChooser = new FileChooserNative("Import Custom Profile Image", this, FileChooserAction.Open, "Import", "Cancel")
             {
-                SelectMultiple = false,
-                Filter         = new FileFilter()
+                SelectMultiple = false
             };
 
-            fileChooser.SetPosition(WindowPosition.Center);
-            fileChooser.Filter.AddPattern("*.jpg");
-            fileChooser.Filter.AddPattern("*.jpeg");
-            fileChooser.Filter.AddPattern("*.png");
-            fileChooser.Filter.AddPattern("*.bmp");
+            FileFilter filter = new FileFilter()
+            {
+                Name = "Custom Profile Images"
+            };
+            filter.AddPattern("*.jpg");
+            filter.AddPattern("*.jpeg");
+            filter.AddPattern("*.png");
+            filter.AddPattern("*.bmp");
+
+            fileChooser.AddFilter(filter);
 
             if (fileChooser.Run() == (int)ResponseType.Accept)
             {

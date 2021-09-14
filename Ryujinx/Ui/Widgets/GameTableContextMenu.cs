@@ -184,8 +184,7 @@ namespace Ryujinx.Ui.Widgets
 
         private void ExtractSection(NcaSectionType ncaSectionType, int programIndex = 0)
         {
-            FileChooserDialog fileChooser = new FileChooserDialog("Choose the folder to extract into", null, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Extract", ResponseType.Accept);
-            fileChooser.SetPosition(WindowPosition.Center);
+            FileChooserNative fileChooser = new FileChooserNative("Choose the folder to extract into", null, FileChooserAction.SelectFolder, "Extract", "Cancel");
 
             ResponseType response    = (ResponseType)fileChooser.Run();
             string       destination = fileChooser.Filename;

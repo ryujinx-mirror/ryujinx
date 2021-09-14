@@ -139,12 +139,17 @@ namespace Ryujinx.Ui.Windows
 
         private void AddButton_Clicked(object sender, EventArgs args)
         {
-            using (FileChooserDialog fileChooser = new FileChooserDialog("Select update files", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept))
+            using (FileChooserNative fileChooser = new FileChooserNative("Select update files", this, FileChooserAction.Open, "Add", "Cancel"))
             {
                 fileChooser.SelectMultiple = true;
-                fileChooser.SetPosition(WindowPosition.Center);
-                fileChooser.Filter = new FileFilter();
-                fileChooser.Filter.AddPattern("*.nsp");
+
+                FileFilter filter = new FileFilter()
+                {
+                    Name = "Switch Game Updates"
+                };
+                filter.AddPattern("*.nsp");
+
+                fileChooser.AddFilter(filter);
 
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
