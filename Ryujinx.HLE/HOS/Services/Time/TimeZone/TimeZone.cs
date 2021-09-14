@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.IO;

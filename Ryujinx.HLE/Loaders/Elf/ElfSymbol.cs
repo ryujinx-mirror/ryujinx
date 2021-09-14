@@ -8,13 +8,8 @@ namespace Ryujinx.HLE.Loaders.Elf
         public ElfSymbolBinding    Binding    { get; private set; }
         public ElfSymbolVisibility Visibility { get; private set; }
 
-        public bool IsFuncOrObject =>
-            Type == ElfSymbolType.SttFunc ||
-            Type == ElfSymbolType.SttObject;
-
-        public bool IsGlobalOrWeak =>
-            Binding == ElfSymbolBinding.StbGlobal ||
-            Binding == ElfSymbolBinding.StbWeak;
+        public bool IsFuncOrObject => Type == ElfSymbolType.SttFunc || Type == ElfSymbolType.SttObject;
+        public bool IsGlobalOrWeak => Binding == ElfSymbolBinding.StbGlobal || Binding == ElfSymbolBinding.StbWeak;
 
         public int  ShIdx { get; private set; }
         public ulong Value { get; private set; }

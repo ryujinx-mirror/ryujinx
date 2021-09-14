@@ -1,9 +1,7 @@
-using Ryujinx.Cpu;
+using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using Ryujinx.Common.Logging;
 
 namespace Ryujinx.HLE.Loaders.Mods
 {
@@ -71,7 +69,7 @@ namespace Ryujinx.HLE.Loaders.Mods
             foreach (var (offset, patch) in _patches.OrderBy(item => item.Key))
             {
                 int patchOffset = (int)offset;
-                int patchSize = patch.Length;
+                int patchSize   = patch.Length;
 
                 if (patchOffset < protectedOffset || patchOffset > memory.Length)
                 {
@@ -82,7 +80,7 @@ namespace Ryujinx.HLE.Loaders.Mods
 
                 if (patchOffset + patchSize > memory.Length)
                 {
-                    patchSize = memory.Length - (int)patchOffset; // Add warning?
+                    patchSize = memory.Length - patchOffset; // Add warning?
                 }
 
                 Logger.Info?.Print(LogClass.ModLoader, $"Patching address offset {patchOffset:x} <= {BitConverter.ToString(patch).Replace('-', ' ')} len={patchSize}");

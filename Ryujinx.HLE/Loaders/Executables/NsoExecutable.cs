@@ -17,14 +17,14 @@ namespace Ryujinx.HLE.Loaders.Executables
         public Span<byte> Data => Program.AsSpan().Slice((int)DataOffset, (int)DataSize);
 
         public uint TextOffset { get; }
-        public uint RoOffset { get; }
+        public uint RoOffset   { get; }
         public uint DataOffset { get; }
         public uint BssOffset => DataOffset + (uint)Data.Length;
 
         public uint TextSize { get; }
-        public uint RoSize { get; }
+        public uint RoSize   { get; }
         public uint DataSize { get; }
-        public uint BssSize { get; }
+        public uint BssSize  { get; }
 
         public string   Name;
         public Buffer32 BuildId;

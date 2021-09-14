@@ -53,8 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidAddress;
             }
 
-            StructReader reader = new StructReader(_owner.CpuMemory, nrrAddress);
-            NrrHeader    header = reader.Read<NrrHeader>();
+            NrrHeader header = _owner.CpuMemory.Read<NrrHeader>(nrrAddress);
 
             if (header.Magic != NrrMagic)
             {

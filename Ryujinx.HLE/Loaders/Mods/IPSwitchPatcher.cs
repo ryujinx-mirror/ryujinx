@@ -7,10 +7,18 @@ namespace Ryujinx.HLE.Loaders.Mods
 {
     class IPSwitchPatcher
     {
-        readonly StreamReader _reader;
-        public string BuildId { get; }
-
         const string BidHeader = "@nsobid-";
+
+        private enum Token
+        {
+            Normal,
+            String,
+            EscapeChar,
+            Comment
+        }
+
+        private readonly StreamReader _reader;
+        public string BuildId { get; }
 
         public IPSwitchPatcher(StreamReader reader)
         {
@@ -24,14 +32,6 @@ namespace Ryujinx.HLE.Loaders.Mods
 
             _reader = reader;
             BuildId = header.Substring(BidHeader.Length).TrimEnd().TrimEnd('0');
-        }
-
-        private enum Token
-        {
-            Normal,
-            String,
-            EscapeChar,
-            Comment
         }
 
         // Uncomments line and unescapes C style strings within
@@ -56,24 +56,24 @@ namespace Ryujinx.HLE.Loaders.Mods
                     case Token.String:
                         state = c switch
                         {
-                            '"' => Token.Normal,
+                            '"'  => Token.Normal,
                             '\\' => Token.EscapeChar,
-                            _ => Token.String
+                            _    => Token.String
                         };
                         break;
                     case Token.EscapeChar:
                         state = Token.String;
                         c = c switch
                         {
-                            'a' => '\a',
-                            'b' => '\b',
-                            'f' => '\f',
-                            'n' => '\n',
-                            'r' => '\r',
-                            't' => '\t',
-                            'v' => '\v',
+                            'a'  => '\a',
+                            'b'  => '\b',
+                            'f'  => '\f',
+                            'n'  => '\n',
+                            'r'  => '\r',
+                            't'  => '\t',
+                            'v'  => '\v',
                             '\\' => '\\',
-                            _ => '?'
+                            _    => '?'
                         };
                         break;
                 }
@@ -119,7 +119,8 @@ namespace Ryujinx.HLE.Loaders.Mods
             for (int i = 0; i < hexstr.Length; i += 2)
             {
                 int high = ParseHexByte((byte)hexstr[i]);
-                int low = ParseHexByte((byte)hexstr[i + 1]);
+                int low  = ParseHexByte((byte)hexstr[i + 1]);
+
                 bytes[i >> 1] = (byte)((high << 4) | low);
             }
 
@@ -131,11 +132,11 @@ namespace Ryujinx.HLE.Loaders.Mods
         {
             if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
             {
-                return Int32.TryParse(str.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
+                return int.TryParse(str.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
             }
             else
             {
-                return Int32.TryParse(str, System.Globalization.NumberStyles.Integer, null, out value);
+                return int.TryParse(str, System.Globalization.NumberStyles.Integer, null, out value);
             }
         }
 
@@ -148,7 +149,7 @@ namespace Ryujinx.HLE.Loaders.Mods
 
             MemPatch patches = new MemPatch();
 
-            bool enabled = false;
+            bool enabled     = false;
             bool printValues = false;
             int offset_shift = 0;
 
@@ -236,7 +237,7 @@ namespace Ryujinx.HLE.Loaders.Mods
                         continue;
                     }
 
-                    if (!Int32.TryParse(tokens[0], System.Globalization.NumberStyles.HexNumber, null, out int offset))
+                    if (!int.TryParse(tokens[0], System.Globalization.NumberStyles.HexNumber, null, out int offset))
                     {
                         ParseWarn();
 

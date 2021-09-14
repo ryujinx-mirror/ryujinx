@@ -143,49 +143,49 @@ namespace Ryujinx.HLE
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
 
-        public HLEConfiguration(VirtualFileSystem virtualFileSystem,
-                                LibHacHorizonManager libHacHorizonManager,
-                                ContentManager contentManager,
-                                AccountManager accountManager,
+        public HLEConfiguration(VirtualFileSystem      virtualFileSystem,
+                                LibHacHorizonManager   libHacHorizonManager,
+                                ContentManager         contentManager,
+                                AccountManager         accountManager,
                                 UserChannelPersistence userChannelPersistence,
-                                IRenderer gpuRenderer,
-                                IHardwareDeviceDriver audioDeviceDriver,
-                                MemoryConfiguration memoryConfiguration,
-                                IHostUiHandler hostUiHandler,
-                                SystemLanguage systemLanguage,
-                                RegionCode region,
-                                bool enableVsync,
-                                bool enableDockedMode,
-                                bool enablePtc,
-                                IntegrityCheckLevel fsIntegrityCheckLevel,
-                                int fsGlobalAccessLogMode,
-                                long systemTimeOffset,
-                                string timeZone,
-                                MemoryManagerMode memoryManagerMode,
-                                bool ignoreMissingServices,
-                                AspectRatio aspectRatio)
+                                IRenderer              gpuRenderer,
+                                IHardwareDeviceDriver  audioDeviceDriver,
+                                MemoryConfiguration    memoryConfiguration,
+                                IHostUiHandler         hostUiHandler,
+                                SystemLanguage         systemLanguage,
+                                RegionCode             region,
+                                bool                   enableVsync,
+                                bool                   enableDockedMode,
+                                bool                   enablePtc,
+                                IntegrityCheckLevel    fsIntegrityCheckLevel,
+                                int                    fsGlobalAccessLogMode,
+                                long                   systemTimeOffset,
+                                string                 timeZone,
+                                MemoryManagerMode      memoryManagerMode,
+                                bool                   ignoreMissingServices,
+                                AspectRatio            aspectRatio)
         {
-            VirtualFileSystem = virtualFileSystem;
-            LibHacHorizonManager = libHacHorizonManager;
-            AccountManager = accountManager;
-            ContentManager = contentManager;
+            VirtualFileSystem      = virtualFileSystem;
+            LibHacHorizonManager   = libHacHorizonManager;
+            AccountManager         = accountManager;
+            ContentManager         = contentManager;
             UserChannelPersistence = userChannelPersistence;
-            GpuRenderer = gpuRenderer;
-            AudioDeviceDriver = audioDeviceDriver;
-            MemoryConfiguration = memoryConfiguration;
-            HostUiHandler = hostUiHandler;
-            SystemLanguage = systemLanguage;
-            Region = region;
-            EnableVsync = enableVsync;
-            EnableDockedMode = enableDockedMode;
-            EnablePtc = enablePtc;
-            FsIntegrityCheckLevel = fsIntegrityCheckLevel;
-            FsGlobalAccessLogMode = fsGlobalAccessLogMode;
-            SystemTimeOffset = systemTimeOffset;
-            TimeZone = timeZone;
-            MemoryManagerMode = memoryManagerMode;
-            IgnoreMissingServices = ignoreMissingServices;
-            AspectRatio = aspectRatio;
+            GpuRenderer            = gpuRenderer;
+            AudioDeviceDriver      = audioDeviceDriver;
+            MemoryConfiguration    = memoryConfiguration;
+            HostUiHandler          = hostUiHandler;
+            SystemLanguage         = systemLanguage;
+            Region                 = region;
+            EnableVsync            = enableVsync;
+            EnableDockedMode       = enableDockedMode;
+            EnablePtc              = enablePtc;
+            FsIntegrityCheckLevel  = fsIntegrityCheckLevel;
+            FsGlobalAccessLogMode  = fsGlobalAccessLogMode;
+            SystemTimeOffset       = systemTimeOffset;
+            TimeZone               = timeZone;
+            MemoryManagerMode      = memoryManagerMode;
+            IgnoreMissingServices  = ignoreMissingServices;
+            AspectRatio            = aspectRatio;
         }
     }
 }

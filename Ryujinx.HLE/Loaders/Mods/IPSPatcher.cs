@@ -20,10 +20,10 @@ namespace Ryujinx.HLE.Loaders.Mods
 
         private static MemPatch ParseIps(BinaryReader reader)
         {
-            Span<byte> IpsHeaderMagic = Encoding.ASCII.GetBytes("PATCH").AsSpan();
-            Span<byte> IpsTailMagic = Encoding.ASCII.GetBytes("EOF").AsSpan();
+            Span<byte> IpsHeaderMagic   = Encoding.ASCII.GetBytes("PATCH").AsSpan();
+            Span<byte> IpsTailMagic     = Encoding.ASCII.GetBytes("EOF").AsSpan();
             Span<byte> Ips32HeaderMagic = Encoding.ASCII.GetBytes("IPS32").AsSpan();
-            Span<byte> Ips32TailMagic = Encoding.ASCII.GetBytes("EEOF").AsSpan();
+            Span<byte> Ips32TailMagic   = Encoding.ASCII.GetBytes("EEOF").AsSpan();
 
             MemPatch patches = new MemPatch();
             var header = reader.ReadBytes(IpsHeaderMagic.Length).AsSpan();
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.Loaders.Mods
                 }
 
                 int patchOffset = is32 ? buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3]
-                                  : buf[0] << 16 | buf[1] << 8 | buf[2];
+                                       : buf[0] << 16 | buf[1] << 8 | buf[2];
 
                 if (ReadNext(2))
                 {

@@ -9,7 +9,6 @@ using Ryujinx.Audio.Output;
 using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.HLE.FileSystem.Content;
-using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -25,6 +24,7 @@ using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
+using Ryujinx.HLE.HOS.Services.Sdb.Pl;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sm;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
@@ -87,11 +87,10 @@ namespace Ryujinx.HLE.HOS
 
         internal KTransferMemory AppletCaptureBufferTransfer { get; private set; }
 
-        internal SharedFontManager Font { get; private set; }
-
-        internal AccountManager AccountManager { get; private set; }
-        internal ContentManager ContentManager { get; private set; }
-        internal CaptureManager CaptureManager { get; private set; }
+        internal SharedFontManager SharedFontManager { get; private set; }
+        internal AccountManager    AccountManager    { get; private set; }
+        internal ContentManager    ContentManager    { get; private set; }
+        internal CaptureManager    CaptureManager    { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
 
@@ -175,15 +174,14 @@ namespace Ryujinx.HLE.HOS
 
             AppletState.SetFocus(true);
 
-            Font = new SharedFontManager(device, fontStorage);
-
             VsyncEvent = new KEvent(KernelContext);
 
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
-            AccountManager = device.Configuration.AccountManager;
-            ContentManager = device.Configuration.ContentManager;
-            CaptureManager = new CaptureManager(device);
+            SharedFontManager = new SharedFontManager(device, fontStorage);
+            AccountManager    = device.Configuration.AccountManager;
+            ContentManager    = device.Configuration.ContentManager;
+            CaptureManager    = new CaptureManager(device);
 
             LibHacHorizonManager = device.Configuration.LibHacHorizonManager;
 

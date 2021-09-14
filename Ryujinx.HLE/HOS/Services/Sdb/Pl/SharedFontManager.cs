@@ -7,19 +7,20 @@ using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.HLE.HOS.Services.Sdb.Pl.Types;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 
-using static Ryujinx.HLE.Utilities.FontUtils;
-
-namespace Ryujinx.HLE.HOS.Font
+namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
 {
     class SharedFontManager
     {
-        private readonly Switch _device;
+        private static readonly uint FontKey    = 0x06186249;
+        private static readonly uint BFTTFMagic = 0x18029a7f;
 
+        private readonly Switch              _device;
         private readonly SharedMemoryStorage _storage;
 
         private struct FontInfo
@@ -42,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Font
             _storage = storage;
         }
 
-        public void Initialize(ContentManager contentManager)
+        public void Initialize()
         {
             _fontData?.Clear();
             _fontData = null;
@@ -59,8 +60,7 @@ namespace Ryujinx.HLE.HOS.Font
 
                 FontInfo CreateFont(string name)
                 {
-                    if (contentManager.TryGetFontTitle(name, out ulong fontTitle) &&
-                        contentManager.TryGetFontFilename(name, out string fontFilename))
+                    if (contentManager.TryGetFontTitle(name, out ulong fontTitle) && contentManager.TryGetFontFilename(name, out string fontFilename))
                     {
                         string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, NcaContentType.Data);
                         string fontPath    = _device.FileSystem.SwitchPathToSystemPath(contentPath);
@@ -71,8 +71,8 @@ namespace Ryujinx.HLE.HOS.Font
 
                             using (IStorage ncaFileStream = new LocalStorage(fontPath, FileAccess.Read, FileMode.Open))
                             {
-                                Nca         nca          = new Nca(_device.System.KeySet, ncaFileStream);
-                                IFileSystem romfs        = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                                Nca         nca   = new Nca(_device.System.KeySet, ncaFileStream);
+                                IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
                                 romfs.OpenFile(out IFile fontFile, ("/" + fontFilename).ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
@@ -122,22 +122,19 @@ namespace Ryujinx.HLE.HOS.Font
 
                 if (fontOffset > Horizon.FontSize)
                 {
-                    throw new InvalidSystemResourceException(
-                        $"The sum of all fonts size exceed the shared memory size. " +
-                        $"Please make sure that the fonts don't exceed {Horizon.FontSize} bytes in total. " +
-                        $"(actual size: {fontOffset} bytes).");
+                    throw new InvalidSystemResourceException("The sum of all fonts size exceed the shared memory size. " +
+                                                             $"Please make sure that the fonts don't exceed {Horizon.FontSize} bytes in total. (actual size: {fontOffset} bytes).");
                 }
             }
         }
 
         private void WriteMagicAndSize(ulong offset, int size)
         {
-            const int decMagic = 0x18029a7f;
-            const int key      = 0x49621806;
+            const int key = 0x49621806;
 
             int encryptedSize = BinaryPrimitives.ReverseEndianness(size ^ key);
 
-            _storage.GetRef<int>(offset + 0) = decMagic;
+            _storage.GetRef<int>(offset + 0) = (int)BFTTFMagic;
             _storage.GetRef<int>(offset + 4) = encryptedSize;
         }
 
@@ -153,6 +150,30 @@ namespace Ryujinx.HLE.HOS.Font
             EnsureInitialized(_device.System.ContentManager);
 
             return _fontData[fontType].Offset + 8;
+        }
+
+        private static byte[] DecryptFont(Stream bfttfStream)
+        {
+            static uint KXor(uint data) => data ^ FontKey;
+
+            using (BinaryReader reader    = new BinaryReader(bfttfStream))
+            using (MemoryStream ttfStream = new MemoryStream())
+            using (BinaryWriter output    = new BinaryWriter(ttfStream))
+            {
+                if (KXor(reader.ReadUInt32()) != BFTTFMagic)
+                {
+                    throw new InvalidDataException("Error: Input file is not in BFTTF format!");
+                }
+
+                bfttfStream.Position += 4;
+
+                for (int i = 0; i < (bfttfStream.Length - 8) / 4; i++)
+                {
+                    output.Write(KXor(reader.ReadUInt32()));
+                }
+
+                return ttfStream.ToArray();
+            }
         }
     }
 }

@@ -19,37 +19,29 @@ namespace Ryujinx.HLE.Exceptions
         public IpcMessage Request { get; }
 
         public ServiceNotImplementedException(IpcService service, ServiceCtx context)
-            : this(service, context, "The service call is not implemented.")
-        { }
+            : this(service, context, "The service call is not implemented.") { }
 
-        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message)
-            : base(message)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message) : base(message)
         {
             Service = service;
             Context = context;
             Request = context.Request;
         }
 
-        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, Exception inner)
-            : base(message, inner)
+        public ServiceNotImplementedException(IpcService service, ServiceCtx context, string message, Exception inner) : base(message, inner)
         {
             Service = service;
             Context = context;
             Request = context.Request;
         }
 
-        protected ServiceNotImplementedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        { }
+        protected ServiceNotImplementedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         public override string Message
         {
             get
             {
-                return base.Message +
-                        Environment.NewLine +
-                        Environment.NewLine +
-                        BuildMessage();
+                return base.Message + Environment.NewLine + Environment.NewLine + BuildMessage();
             }
         }
 
@@ -63,8 +55,7 @@ namespace Ryujinx.HLE.Exceptions
             if (callingType != null && callingMethod != null)
             {
                 // If the type is past 0xF, we are using TIPC
-                var ipcCommands = Request.Type > IpcMessageType.TipcCloseSession ?
-                    Service.TipcCommands : Service.HipcCommands;
+                var ipcCommands = Request.Type > IpcMessageType.TipcCloseSession ? Service.TipcCommands : Service.HipcCommands;
 
                 // Find the handler for the method called
                 var ipcHandler   = ipcCommands.FirstOrDefault(x => x.Value == callingMethod);
@@ -82,9 +73,9 @@ namespace Ryujinx.HLE.Exceptions
             sb.AppendLine(Context.Thread.GetGuestStackTrace());
 
             // Print buffer information
-            if (Request.PtrBuff.Count > 0 ||
-                Request.SendBuff.Count > 0 ||
-                Request.ReceiveBuff.Count > 0 ||
+            if (Request.PtrBuff.Count      > 0 ||
+                Request.SendBuff.Count     > 0 ||
+                Request.ReceiveBuff.Count  > 0 ||
                 Request.ExchangeBuff.Count > 0 ||
                 Request.RecvListBuff.Count > 0)
             {
@@ -149,11 +140,12 @@ namespace Ryujinx.HLE.Exceptions
             return sb.ToString();
         }
 
-        private (Type, MethodBase) WalkStackTrace(StackTrace trace)
+        private static (Type, MethodBase) WalkStackTrace(StackTrace trace)
         {
             int i = 0;
 
             StackFrame frame;
+
             // Find the IIpcService method that threw this exception
             while ((frame = trace.GetFrame(i++)) != null)
             {

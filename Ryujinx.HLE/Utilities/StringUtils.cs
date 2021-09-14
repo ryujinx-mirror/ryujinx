@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.Utilities
     {
         public static byte[] GetFixedLengthBytes(string inputString, int size, Encoding encoding)
         {
-            inputString = inputString + "\0";
+            inputString += "\0";
 
             int bytesCount = encoding.GetByteCount(inputString);
 
@@ -76,8 +76,8 @@ namespace Ryujinx.HLE.Utilities
 
         public static U8Span ReadUtf8Span(ServiceCtx context, int index = 0)
         {
-            ulong position = (ulong)context.Request.PtrBuff[index].Position;
-            ulong size     = (ulong)context.Request.PtrBuff[index].Size;
+            ulong position = context.Request.PtrBuff[index].Position;
+            ulong size     = context.Request.PtrBuff[index].Size;
 
             ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
 
@@ -93,7 +93,7 @@ namespace Ryujinx.HLE.Utilities
             {
                 while (size-- > 0)
                 {
-                    byte value = context.Memory.Read<byte>((ulong)position++);
+                    byte value = context.Memory.Read<byte>(position++);
 
                     if (value == 0)
                     {

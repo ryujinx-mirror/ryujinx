@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
