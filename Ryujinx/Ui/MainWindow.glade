@@ -305,7 +305,7 @@
 					</child>
 					  <child>
 						  <object class="GtkMenuItem" id="_resumeEmulation">
-							  <property name="visible">False</property>
+							  <property name="visible">True</property>
 							  <property name="can_focus">False</property>
 							  <property name="tooltip_text" translatable="yes">Resume emulation</property>
 							  <property name="label" translatable="yes">Resume Emulation</property>

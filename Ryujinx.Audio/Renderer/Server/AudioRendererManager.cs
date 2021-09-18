@@ -219,7 +219,21 @@ namespace Ryujinx.Audio.Renderer.Server
         /// </summary>
         public void StopSendingCommands()
         {
-            _isRunning = false;
+            lock (_sessionLock)
+            {
+                foreach (AudioRenderSystem renderer in _sessions)
+                {
+                    renderer?.Disable();
+                }
+            }
+
+            lock (_audioProcessorLock)
+            {
+                if (_isRunning)
+                {
+                    StopLocked();
+                }
+            }
         }
 
         /// <summary>
@@ -234,7 +248,7 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 lock (_sessionLock)
                 {
-                    foreach(AudioRenderSystem renderer in _sessions)
+                    foreach (AudioRenderSystem renderer in _sessions)
                     {
                         renderer?.SendCommands();
                     }

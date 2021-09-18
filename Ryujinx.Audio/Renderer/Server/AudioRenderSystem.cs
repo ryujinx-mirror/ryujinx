@@ -395,6 +395,14 @@ namespace Ryujinx.Audio.Renderer.Server
             Logger.Info?.Print(LogClass.AudioRenderer, $"Stopped renderer id {_sessionId}");
         }
 
+        public void Disable()
+        {
+            lock (_lock)
+            {
+                _isActive = false;
+            }
+        }
+
         public ResultCode Update(Memory<byte> output, Memory<byte> performanceOutput, ReadOnlyMemory<byte> input)
         {
             lock (_lock)

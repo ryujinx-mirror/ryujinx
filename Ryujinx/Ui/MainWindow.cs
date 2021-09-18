@@ -214,6 +214,7 @@ namespace Ryujinx.Ui
 
             _actionMenu.Sensitive = false;
             _pauseEmulation.Sensitive = false;
+            _resumeEmulation.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
@@ -1289,36 +1290,36 @@ namespace Ryujinx.Ui
                 UpdateGameMetadata(_emulationContext.Application.TitleIdText);
             }
 
-            _pauseEmulation.Visible = true;
             _pauseEmulation.Sensitive = false;
-            _resumeEmulation.Visible = false;
+            _resumeEmulation.Sensitive = false;
             RendererWidget?.Exit();
         }
 
         private void PauseEmulation_Pressed(object sender, EventArgs args)
         {
-            _pauseEmulation.Visible = false;
-            _resumeEmulation.Visible = true;
+            _pauseEmulation.Sensitive = false;
+            _resumeEmulation.Sensitive = true;
             _emulationContext.System.TogglePauseEmulation(true);
         }
 
         private void ResumeEmulation_Pressed(object sender, EventArgs args)
         {
-            _pauseEmulation.Visible = true;
-            _resumeEmulation.Visible = false;
+            _pauseEmulation.Sensitive = true;
+            _resumeEmulation.Sensitive = false;
             _emulationContext.System.TogglePauseEmulation(false);
         }
 
         public void ActivatePauseMenu()
         {
             _pauseEmulation.Sensitive = true;
+            _resumeEmulation.Sensitive = false;
         }
 
         public void TogglePause()
         {
-            _pauseEmulation.Visible ^= true;
-            _resumeEmulation.Visible ^= true;
-            _emulationContext.System.TogglePauseEmulation(_resumeEmulation.Visible);
+            _pauseEmulation.Sensitive ^= true;
+            _resumeEmulation.Sensitive ^= true;
+            _emulationContext.System.TogglePauseEmulation(_resumeEmulation.Sensitive);
         }
 
         private void Installer_File_Pressed(object o, EventArgs args)

@@ -386,10 +386,14 @@ namespace Ryujinx.HLE.HOS
                 _isDisposed = true;
 
                 // "Soft" stops AudioRenderer and AudioManager to avoid some sound between resume and stop.
-                AudioRendererManager.StopSendingCommands();
-                AudioManager.StopUpdates();
+                if (IsPaused)
+                {
+                    AudioManager.StopUpdates();
 
-                TogglePauseEmulation(false);
+                    TogglePauseEmulation(false);
+
+                    AudioRendererManager.StopSendingCommands();
+                }
 
                 KProcess terminationProcess = new KProcess(KernelContext);
                 KThread terminationThread = new KThread(KernelContext);
