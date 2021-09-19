@@ -32,10 +32,12 @@ namespace Ryujinx.Memory.WindowsShared
                 return Address < address + size && address < EndAddress;
             }
 
-            public void ExtendTo(ulong end)
+            public void ExtendTo(ulong end, RangeList<PlaceholderBlock> list)
             {
                 EndAddress = end;
                 Size = end - Address;
+
+                list.UpdateEndAddress(this);
             }
         }
 
@@ -126,13 +128,13 @@ namespace Ryujinx.Memory.WindowsShared
 
             if (overlapStart && first.IsGranular)
             {
-                first.ExtendTo(endId);
+                first.ExtendTo(endId, _placeholders);
             }
             else
             {
                 if (overlapStart)
                 {
-                    first.ExtendTo(id);
+                    first.ExtendTo(id, _placeholders);
                 }
 
                 _placeholders.Add(new PlaceholderBlock(id, endId - id, true));
@@ -189,7 +191,7 @@ namespace Ryujinx.Memory.WindowsShared
 
                 if (block.Address < id && blockEnd > id)
                 {
-                    block.ExtendTo(id);
+                    block.ExtendTo(id, _placeholders);
                     extendBlock = null;
                 }
                 else
@@ -223,7 +225,7 @@ namespace Ryujinx.Memory.WindowsShared
                 else
                 {
                     extendFrom = extendBlock.Address;
-                    extendBlock.ExtendTo(block.IsGranular ? extent : block.EndAddress);
+                    extendBlock.ExtendTo(block.IsGranular ? extent : block.EndAddress, _placeholders);
                 }
 
                 if (block.IsGranular)

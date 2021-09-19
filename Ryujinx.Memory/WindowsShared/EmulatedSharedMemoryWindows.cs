@@ -41,10 +41,12 @@ namespace Ryujinx.Memory.WindowsShared
                 return Address < address + size && address < EndAddress;
             }
 
-            public void ExtendTo(ulong endAddress)
+            public void ExtendTo(ulong endAddress, RangeList<SharedMemoryMapping> list)
             {
                 EndAddress = endAddress;
                 Size = endAddress - Address;
+
+                list.UpdateEndAddress(this);
             }
 
             public void AddBlocks(IEnumerable<int> blocks)
@@ -300,14 +302,14 @@ namespace Ryujinx.Memory.WindowsShared
 
                     _mappings.Remove(endOverlap);
 
-                    startOverlap.ExtendTo(endOverlap.EndAddress);
+                    startOverlap.ExtendTo(endOverlap.EndAddress, _mappings);
 
                     startOverlap.AddBlocks(blocks);
                     startOverlap.AddBlocks(endOverlap.Blocks);
                 }
                 else if (startOverlap != null)
                 {
-                    startOverlap.ExtendTo(endAddress);
+                    startOverlap.ExtendTo(endAddress, _mappings);
 
                     startOverlap.AddBlocks(blocks);
                 }
@@ -317,7 +319,7 @@ namespace Ryujinx.Memory.WindowsShared
 
                     if (endOverlap != null)
                     {
-                        mapping.ExtendTo(endOverlap.EndAddress);
+                        mapping.ExtendTo(endOverlap.EndAddress, _mappings);
 
                         mapping.AddBlocks(endOverlap.Blocks);
 
@@ -381,6 +383,7 @@ namespace Ryujinx.Memory.WindowsShared
                         if (mapping.EndAddress > endAddress)
                         {
                             var newMapping = (SharedMemoryMapping)mapping.Split(endAddress);
+                            _mappings.UpdateEndAddress(mapping);
                             _mappings.Add(newMapping);
 
                             if ((endAddress & MappingMask) != 0)
@@ -400,7 +403,9 @@ namespace Ryujinx.Memory.WindowsShared
                         // If the first region starts before the decommit address, split it by modifying its end address.
                         if (mapping.Address < address)
                         {
+                            var oldMapping = mapping;
                             mapping = (SharedMemoryMapping)mapping.Split(address);
+                            _mappings.UpdateEndAddress(oldMapping);
 
                             if ((address & MappingMask) != 0)
                             {
