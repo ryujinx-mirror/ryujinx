@@ -43,41 +43,45 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Sets texture bindings on the compute pipeline.
+        /// Rents the texture bindings array of the compute pipeline.
         /// </summary>
-        /// <param name="bindings">The texture bindings</param>
-        public void SetComputeTextures(TextureBindingInfo[] bindings)
+        /// <param name="count">The number of bindings needed</param>
+        /// <returns>The texture bindings array</returns>
+        public TextureBindingInfo[] RentComputeTextureBindings(int count)
         {
-            _cpBindingsManager.SetTextures(0, bindings);
+            return _cpBindingsManager.RentTextureBindings(0, count);
         }
 
         /// <summary>
-        /// Sets texture bindings on the graphics pipeline.
+        /// Rents the texture bindings array for a given stage on the graphics pipeline.
         /// </summary>
         /// <param name="stage">The index of the shader stage to bind the textures</param>
-        /// <param name="bindings">The texture bindings</param>
-        public void SetGraphicsTextures(int stage, TextureBindingInfo[] bindings)
+        /// <param name="count">The number of bindings needed</param>
+        /// <returns>The texture bindings array</returns>
+        public TextureBindingInfo[] RentGraphicsTextureBindings(int stage, int count)
         {
-            _gpBindingsManager.SetTextures(stage, bindings);
+            return _gpBindingsManager.RentTextureBindings(stage, count);
         }
 
         /// <summary>
-        /// Sets image bindings on the compute pipeline.
+        /// Rents the image bindings array of the compute pipeline.
         /// </summary>
-        /// <param name="bindings">The image bindings</param>
-        public void SetComputeImages(TextureBindingInfo[] bindings)
+        /// <param name="count">The number of bindings needed</param>
+        /// <returns>The image bindings array</returns>
+        public TextureBindingInfo[] RentComputeImageBindings(int count)
         {
-            _cpBindingsManager.SetImages(0, bindings);
+            return _cpBindingsManager.RentImageBindings(0, count);
         }
 
         /// <summary>
-        /// Sets image bindings on the graphics pipeline.
+        /// Rents the image bindings array for a given stage on the graphics pipeline.
         /// </summary>
         /// <param name="stage">The index of the shader stage to bind the images</param>
-        /// <param name="bindings">The image bindings</param>
-        public void SetGraphicsImages(int stage, TextureBindingInfo[] bindings)
+        /// <param name="count">The number of bindings needed</param>
+        /// <returns>The image bindings array</returns>
+        public TextureBindingInfo[] RentGraphicsImageBindings(int stage, int count)
         {
-            _gpBindingsManager.SetImages(stage, bindings);
+            return _gpBindingsManager.RentImageBindings(stage, count);
         }
 
         /// <summary>

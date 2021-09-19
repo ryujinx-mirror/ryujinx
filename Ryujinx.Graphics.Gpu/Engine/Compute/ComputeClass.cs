@@ -191,7 +191,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
             _channel.BufferManager.SetComputeStorageBufferBindings(info.SBuffers);
             _channel.BufferManager.SetComputeUniformBufferBindings(info.CBuffers);
 
-            var textureBindings = new TextureBindingInfo[info.Textures.Count];
+            TextureBindingInfo[] textureBindings = _channel.TextureManager.RentComputeTextureBindings(info.Textures.Count);
 
             for (int index = 0; index < info.Textures.Count; index++)
             {
@@ -207,9 +207,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                     descriptor.Flags);
             }
 
-            _channel.TextureManager.SetComputeTextures(textureBindings);
-
-            var imageBindings = new TextureBindingInfo[info.Images.Count];
+            TextureBindingInfo[] imageBindings = _channel.TextureManager.RentComputeImageBindings(info.Images.Count);
 
             for (int index = 0; index < info.Images.Count; index++)
             {
@@ -226,8 +224,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                     descriptor.HandleIndex,
                     descriptor.Flags);
             }
-
-            _channel.TextureManager.SetComputeImages(imageBindings);
 
             _channel.TextureManager.CommitComputeBindings();
             _channel.BufferManager.CommitComputeBindings();

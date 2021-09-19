@@ -970,14 +970,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (info == null)
                 {
-                    _channel.TextureManager.SetGraphicsTextures(stage, Array.Empty<TextureBindingInfo>());
-                    _channel.TextureManager.SetGraphicsImages(stage, Array.Empty<TextureBindingInfo>());
+                    _channel.TextureManager.RentGraphicsTextureBindings(stage, 0);
+                    _channel.TextureManager.RentGraphicsImageBindings(stage, 0);
                     _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, null);
                     _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, null);
                     continue;
                 }
 
-                var textureBindings = new TextureBindingInfo[info.Textures.Count];
+                Span<TextureBindingInfo> textureBindings = _channel.TextureManager.RentGraphicsTextureBindings(stage, info.Textures.Count);
 
                 for (int index = 0; index < info.Textures.Count; index++)
                 {
@@ -993,9 +993,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         descriptor.Flags);
                 }
 
-                _channel.TextureManager.SetGraphicsTextures(stage, textureBindings);
-
-                var imageBindings = new TextureBindingInfo[info.Images.Count];
+                TextureBindingInfo[] imageBindings = _channel.TextureManager.RentGraphicsImageBindings(stage, info.Images.Count);
 
                 for (int index = 0; index < info.Images.Count; index++)
                 {
@@ -1012,8 +1010,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         descriptor.HandleIndex,
                         descriptor.Flags);
                 }
-
-                _channel.TextureManager.SetGraphicsImages(stage, imageBindings);
 
                 _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
                 _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
