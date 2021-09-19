@@ -127,12 +127,12 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             foreach (VirtualDeviceSession session in _sessions)
             {
-                if (!_isUsbDeviceSupported && _sessions[i].Device.IsUsbDevice())
+                if (!_isUsbDeviceSupported && session.Device.IsUsbDevice())
                 {
                     continue;
                 }
 
-                result[i] = _sessions[i].Device.Name;
+                result[i] = session.Device.Name;
 
                 i++;
             }
