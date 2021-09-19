@@ -81,6 +81,28 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Write data to memory that is destined for a resource in a cache.
+        /// This avoids triggering write tracking when possible, which can avoid flushes and incrementing sequence number.
+        /// </summary>
+        /// <param name="memoryManager">The GPU memory manager</param>
+        /// <param name="gpuVa">GPU virtual address to write the data into</param>
+        /// <param name="data">The data to be written</param>
+        public void CacheResourceWrite(MemoryManager memoryManager, ulong gpuVa, ReadOnlySpan<byte> data)
+        {
+            if (TextureCache.IsTextureInRange(memoryManager, gpuVa, (ulong)data.Length))
+            {
+                // No fast path yet - copy the data back and trigger write tracking.
+                memoryManager.Write(gpuVa, data);
+                _context.AdvanceSequence();
+            }
+            else
+            {
+                BufferCache.ForceDirty(memoryManager, gpuVa, (ulong)data.Length);
+                memoryManager.WriteUntracked(gpuVa, data);
+            }
+        }
+
+        /// <summary>
         /// Gets a span of data from the application process.
         /// </summary>
         /// <param name="address">Start address of the range</param>
