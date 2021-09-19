@@ -107,6 +107,7 @@ namespace Ryujinx.Graphics.OpenGL
                 HwCapabilities.SupportsImageLoadFormatted,
                 HwCapabilities.SupportsMismatchingViewFormat,
                 HwCapabilities.SupportsNonConstantTextureOffset,
+                HwCapabilities.SupportsShaderBallot,
                 HwCapabilities.SupportsTextureShadowLod,
                 HwCapabilities.SupportsViewportSwizzle,
                 HwCapabilities.SupportsIndirectParameters,

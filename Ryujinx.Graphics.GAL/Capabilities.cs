@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.GAL
         public bool SupportsImageLoadFormatted { get; }
         public bool SupportsMismatchingViewFormat { get; }
         public bool SupportsNonConstantTextureOffset { get; }
+        public bool SupportsShaderBallot { get; }
         public bool SupportsTextureShadowLod { get; }
         public bool SupportsViewportSwizzle { get; }
         public bool SupportsIndirectParameters { get; }
@@ -24,6 +25,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsImageLoadFormatted,
             bool supportsMismatchingViewFormat,
             bool supportsNonConstantTextureOffset,
+            bool supportsShaderBallot,
             bool supportsTextureShadowLod,
             bool supportsViewportSwizzle,
             bool supportsIndirectParameters,
@@ -37,6 +39,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsImageLoadFormatted = supportsImageLoadFormatted;
             SupportsMismatchingViewFormat = supportsMismatchingViewFormat;
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;
+            SupportsShaderBallot = supportsShaderBallot;
             SupportsTextureShadowLod = supportsTextureShadowLod;
             SupportsViewportSwizzle = supportsViewportSwizzle;
             SupportsIndirectParameters = supportsIndirectParameters;

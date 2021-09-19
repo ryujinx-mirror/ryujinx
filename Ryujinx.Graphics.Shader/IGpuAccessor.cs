@@ -1,6 +1,4 @@
-﻿using Ryujinx.Graphics.Shader.Decoders;
-
-namespace Ryujinx.Graphics.Shader
+﻿namespace Ryujinx.Graphics.Shader
 {
     public interface IGpuAccessor
     {
@@ -72,6 +70,11 @@ namespace Ryujinx.Graphics.Shader
         }
 
         bool QueryHostSupportsNonConstantTextureOffset()
+        {
+            return true;
+        }
+
+        bool QueryHostSupportsShaderBallot()
         {
             return true;
         }

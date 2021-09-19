@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using System;
 
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenBallot;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenCall;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
@@ -75,14 +76,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     }
                 }
 
-                if (inst == Instruction.Ballot)
-                {
-                    return $"unpackUint2x32({info.OpName}({args})).x";
-                }
-                else
-                {
-                    return info.OpName + "(" + args + ")";
-                }
+                return info.OpName + '(' + args + ')';
             }
             else if ((info.Type & InstType.Op) != 0)
             {
@@ -128,6 +122,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 switch (inst)
                 {
+                    case Instruction.Ballot:
+                        return Ballot(context, operation);
+
                     case Instruction.Call:
                         return Call(context, operation);
 

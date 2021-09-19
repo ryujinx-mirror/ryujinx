@@ -52,20 +52,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             { AttributeConsts.FrontFacing,         new BuiltInAttribute("gl_FrontFacing",     VariableType.Bool) },
 
             // Special.
-            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",                           VariableType.F32)  },
-            { AttributeConsts.ThreadKill,          new BuiltInAttribute("gl_HelperInvocation",                    VariableType.Bool) },
-            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x",                 VariableType.U32)  },
-            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y",                 VariableType.U32)  },
-            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z",                 VariableType.U32)  },
-            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",                       VariableType.U32)  },
-            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",                       VariableType.U32)  },
-            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",                       VariableType.U32)  },
-            { AttributeConsts.LaneId,              new BuiltInAttribute("gl_SubGroupInvocationARB",               VariableType.U32)  },
-            { AttributeConsts.EqMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupEqMaskARB).x", VariableType.U32)  },
-            { AttributeConsts.GeMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupGeMaskARB).x", VariableType.U32)  },
-            { AttributeConsts.GtMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupGtMaskARB).x", VariableType.U32)  },
-            { AttributeConsts.LeMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupLeMaskARB).x", VariableType.U32)  },
-            { AttributeConsts.LtMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupLtMaskARB).x", VariableType.U32)  },
+            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",           VariableType.F32)  },
+            { AttributeConsts.ThreadKill,          new BuiltInAttribute("gl_HelperInvocation",    VariableType.Bool) },
+            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x", VariableType.U32)  },
+            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y", VariableType.U32)  },
+            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z", VariableType.U32)  },
+            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",       VariableType.U32)  },
+            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",       VariableType.U32)  },
+            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",       VariableType.U32)  },
+            { AttributeConsts.LaneId,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.EqMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.GeMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.GtMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.LeMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.LtMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
 
             // Support uniforms.
             { AttributeConsts.FragmentOutputIsBgraBase + 0,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[0]",  VariableType.Bool) },
@@ -149,6 +149,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static string GetAttributeName(int value, ShaderConfig config, bool isOutAttr = false, string indexExpr = "0")
         {
+            value &= ~3;
             char swzMask = GetSwizzleMask((value >> 2) & 3);
 
             if (value >= AttributeConsts.UserAttributeBase && value < AttributeConsts.UserAttributeEnd)
@@ -201,12 +202,35 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     return $"{DefaultNames.OAttributePrefix}{(value >> 4)}.{swzMask}";
                 }
-                else if (_builtInAttributes.TryGetValue(value & ~3, out BuiltInAttribute builtInAttr))
+                else if (_builtInAttributes.TryGetValue(value, out BuiltInAttribute builtInAttr))
                 {
+                    string subgroupMask = value switch
+                    {
+                        AttributeConsts.EqMask => "Eq",
+                        AttributeConsts.GeMask => "Ge",
+                        AttributeConsts.GtMask => "Gt",
+                        AttributeConsts.LeMask => "Le",
+                        AttributeConsts.LtMask => "Lt",
+                        _ => null
+                    };
+
+                    if (subgroupMask != null)
+                    {
+                        return config.GpuAccessor.QueryHostSupportsShaderBallot()
+                            ? $"unpackUint2x32(gl_SubGroup{subgroupMask}MaskARB).x"
+                            : $"gl_Subgroup{subgroupMask}Mask.x";
+                    }
+                    else if (value == AttributeConsts.LaneId)
+                    {
+                        return config.GpuAccessor.QueryHostSupportsShaderBallot()
+                            ? "gl_SubGroupInvocationARB"
+                            : "gl_SubgroupInvocationID";
+                    }
+
                     // TODO: There must be a better way to handle this...
                     if (config.Stage == ShaderStage.Fragment)
                     {
-                        switch (value & ~3)
+                        switch (value)
                         {
                             case AttributeConsts.PositionX: return $"(gl_FragCoord.x / {DefaultNames.SupportBlockRenderScaleName}[0])";
                             case AttributeConsts.PositionY: return $"(gl_FragCoord.y / {DefaultNames.SupportBlockRenderScaleName}[0])";

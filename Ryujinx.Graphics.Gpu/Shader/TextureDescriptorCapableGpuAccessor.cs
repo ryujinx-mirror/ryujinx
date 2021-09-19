@@ -48,6 +48,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool QueryHostSupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
         /// <summary>
+        /// Queries host GPU shader ballot support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports shader ballot, false otherwise</returns>
+        public bool QueryHostSupportsShaderBallot() => _context.Capabilities.SupportsShaderBallot;
+
+        /// <summary>
         /// Queries host GPU texture shadow LOD support.
         /// </summary>
         /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>

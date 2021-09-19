@@ -13,7 +13,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             context.AppendLine("#version 450 core");
             context.AppendLine("#extension GL_ARB_gpu_shader_int64 : enable");
-            context.AppendLine("#extension GL_ARB_shader_ballot : enable");
+
+            if (context.Config.GpuAccessor.QueryHostSupportsShaderBallot())
+            {
+                context.AppendLine("#extension GL_ARB_shader_ballot : enable");
+            }
+            else
+            {
+                context.AppendLine("#extension GL_KHR_shader_subgroup_basic : enable");
+                context.AppendLine("#extension GL_KHR_shader_subgroup_ballot : enable");
+            }
+
             context.AppendLine("#extension GL_ARB_shader_group_vote : enable");
             context.AppendLine("#extension GL_EXT_shader_image_load_formatted : enable");
             context.AppendLine("#extension GL_EXT_texture_shadow_lod : enable");
@@ -530,6 +540,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             code = code.Replace("\t", CodeGenContext.Tab);
             code = code.Replace("$SHARED_MEM$", DefaultNames.SharedMemoryName);
             code = code.Replace("$STORAGE_MEM$", OperandManager.GetShaderStagePrefix(context.Config.Stage) + "_" + DefaultNames.StorageNamePrefix);
+
+            if (context.Config.GpuAccessor.QueryHostSupportsShaderBallot())
+            {
+                code = code.Replace("$SUBGROUP_INVOCATION$", "gl_SubGroupInvocationARB");
+                code = code.Replace("$SUBGROUP_BROADCAST$", "readInvocationARB");
+            }
+            else
+            {
+                code = code.Replace("$SUBGROUP_INVOCATION$", "gl_SubgroupInvocationID");
+                code = code.Replace("$SUBGROUP_BROADCAST$", "subgroupBroadcast");
+            }
 
             context.AppendLine(code);
             context.AppendLine();

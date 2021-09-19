@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.AtomicXor,                InstType.AtomicBinary,   "atomicXor");
             Add(Instruction.Absolute,                 InstType.CallUnary,      "abs");
             Add(Instruction.Add,                      InstType.OpBinaryCom,    "+",               2);
-            Add(Instruction.Ballot,                   InstType.CallUnary,      "ballotARB");
+            Add(Instruction.Ballot,                   InstType.Special);
             Add(Instruction.Barrier,                  InstType.CallNullary,    "barrier");
             Add(Instruction.BitCount,                 InstType.CallUnary,      "bitCount");
             Add(Instruction.BitfieldExtractS32,       InstType.CallTernary,    "bitfieldExtract");
