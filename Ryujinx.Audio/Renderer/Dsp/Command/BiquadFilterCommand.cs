@@ -32,15 +32,16 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public ulong EstimatedProcessingTime { get; set; }
 
-        public BiquadFilterParameter Parameter { get; }
         public Memory<BiquadFilterState> BiquadFilterState { get; }
         public int InputBufferIndex { get; }
         public int OutputBufferIndex { get; }
         public bool NeedInitialization { get; }
 
+        private BiquadFilterParameter _parameter;
+
         public BiquadFilterCommand(int baseIndex, ref BiquadFilterParameter filter, Memory<BiquadFilterState> biquadFilterStateMemory, int inputBufferOffset, int outputBufferOffset, bool needInitialization, int nodeId)
         {
-            Parameter = filter;
+            _parameter = filter;
             BiquadFilterState = biquadFilterStateMemory;
             InputBufferIndex = baseIndex + inputBufferOffset;
             OutputBufferIndex = baseIndex + outputBufferOffset;
@@ -48,30 +49,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             Enabled = true;
             NodeId = nodeId;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessBiquadFilter(ref BiquadFilterState state, Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, uint sampleCount)
-        {
-            const int fixedPointPrecisionForParameter = 14;
-
-            float a0 = FixedPointHelper.ToFloat(Parameter.Numerator[0], fixedPointPrecisionForParameter);
-            float a1 = FixedPointHelper.ToFloat(Parameter.Numerator[1], fixedPointPrecisionForParameter);
-            float a2 = FixedPointHelper.ToFloat(Parameter.Numerator[2], fixedPointPrecisionForParameter);
-
-            float b1 = FixedPointHelper.ToFloat(Parameter.Denominator[0], fixedPointPrecisionForParameter);
-            float b2 = FixedPointHelper.ToFloat(Parameter.Denominator[1], fixedPointPrecisionForParameter);
-
-            for (int i = 0; i < sampleCount; i++)
-            {
-                float input = inputBuffer[i];
-                float output = input * a0 + state.Z1;
-
-                state.Z1 = input * a1 + output * b1 + state.Z2;
-                state.Z2 = input * a2 + output * b2;
-
-                outputBuffer[i] = output;
-            }
         }
 
         public void Process(CommandList context)
@@ -86,7 +63,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 state = new BiquadFilterState();
             }
 
-            ProcessBiquadFilter(ref state, outputBuffer, inputBuffer, context.SampleCount);
+            BiquadFilterHelper.ProcessBiquadFilter(ref _parameter, ref state, outputBuffer, inputBuffer, context.SampleCount);
         }
     }
 }

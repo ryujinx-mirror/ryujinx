@@ -156,7 +156,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 Span<int> outputBufferInt = MemoryMarshal.Cast<float, int>(outputBuffer);
 
                 // Convert input data to the target format for user (int)
-                DataSourceHelper.ToInt(inputBufferInt, inputBuffer, outputBuffer.Length);
+                DataSourceHelper.ToInt(inputBufferInt, inputBuffer, inputBuffer.Length);
 
                 // Send the input to the user
                 Write(context.MemoryManager, OutputBuffer, CountMax, inputBufferInt, context.SampleCount, WriteOffset, UpdateCount);
@@ -177,8 +177,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
             else
             {
-                context.MemoryManager.Fill(BufferInfo.SendBufferInfo, (ulong)Unsafe.SizeOf<AuxiliaryBufferInfo>(), 0);
-                context.MemoryManager.Fill(BufferInfo.ReturnBufferInfo, (ulong)Unsafe.SizeOf<AuxiliaryBufferInfo>(), 0);
+                AuxiliaryBufferInfo.Reset(context.MemoryManager, BufferInfo.SendBufferInfo);
+                AuxiliaryBufferInfo.Reset(context.MemoryManager, BufferInfo.ReturnBufferInfo);
 
                 if (InputBufferIndex != OutputBufferIndex)
                 {

@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2019-2021 Ryujinx
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,27 +23,26 @@ using Ryujinx.Audio.Renderer.Server.MemoryPool;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static Ryujinx.Audio.Renderer.Dsp.State.AuxiliaryBufferHeader;
 using DspAddress = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Server.Effect
 {
     /// <summary>
-    /// Server state for an auxiliary buffer effect.
+    /// Server state for an capture buffer effect.
     /// </summary>
-    public class AuxiliaryBufferEffect : BaseEffect
+    public class CaptureBufferEffect : BaseEffect
     {
         /// <summary>
-        /// The auxiliary buffer parameter.
+        /// The capture buffer parameter.
         /// </summary>
         public AuxiliaryBufferParameter Parameter;
 
         /// <summary>
-        /// Auxiliary buffer state.
+        /// Capture buffer state.
         /// </summary>
         public AuxiliaryBufferAddresses State;
 
-        public override EffectType TargetEffectType => EffectType.AuxiliaryBuffer;
+        public override EffectType TargetEffectType => EffectType.CaptureBuffer;
 
         public override DspAddress GetWorkBuffer(int index)
         {
@@ -76,20 +75,18 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
                 ulong bufferSize = (ulong)Unsafe.SizeOf<int>() * Parameter.BufferStorageSize + (ulong)Unsafe.SizeOf<AuxiliaryBufferHeader>();
 
                 bool sendBufferUnmapped = !mapper.TryAttachBuffer(out updateErrorInfo, ref WorkBuffers[0], Parameter.SendBufferInfoAddress, bufferSize);
-                bool returnBufferUnmapped = !mapper.TryAttachBuffer(out updateErrorInfo, ref WorkBuffers[1], Parameter.ReturnBufferInfoAddress, bufferSize);
 
-                BufferUnmapped = sendBufferUnmapped && returnBufferUnmapped;
+                BufferUnmapped = sendBufferUnmapped;
 
                 if (!BufferUnmapped)
                 {
                     DspAddress sendDspAddress = WorkBuffers[0].GetReference(false);
-                    DspAddress returnDspAddress = WorkBuffers[1].GetReference(false);
 
-                    State.SendBufferInfo = sendDspAddress + (uint)Unsafe.SizeOf<AuxiliaryBufferInfo>();
-                    State.SendBufferInfoBase = sendDspAddress + (uint)Unsafe.SizeOf<AuxiliaryBufferHeader>();
-
-                    State.ReturnBufferInfo = returnDspAddress + (uint)Unsafe.SizeOf<AuxiliaryBufferInfo>();
-                    State.ReturnBufferInfoBase = returnDspAddress + (uint)Unsafe.SizeOf<AuxiliaryBufferHeader>();
+                    // NOTE: Nintendo directly interact with the CPU side structure in the processing of the DSP command.
+                    State.SendBufferInfo = sendDspAddress;
+                    State.SendBufferInfoBase = sendDspAddress + (ulong)Unsafe.SizeOf<AuxiliaryBufferHeader>();
+                    State.ReturnBufferInfo = 0;
+                    State.ReturnBufferInfoBase = 0;
                 }
             }
         }

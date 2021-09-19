@@ -254,6 +254,9 @@ namespace Ryujinx.Audio.Renderer.Server
                 case EffectType.Limiter:
                     effect = new LimiterEffect();
                     break;
+                case EffectType.CaptureBuffer:
+                    effect = new CaptureBufferEffect();
+                    break;
                 default:
                     throw new NotImplementedException($"EffectType {parameter.Type} not implemented!");
             }

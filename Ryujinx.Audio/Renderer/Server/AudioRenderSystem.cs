@@ -360,6 +360,9 @@ namespace Ryujinx.Audio.Renderer.Server
                 case 3:
                     _commandProcessingTimeEstimator = new CommandProcessingTimeEstimatorVersion3(_sampleCount, _mixBufferCount);
                     break;
+                case 4:
+                    _commandProcessingTimeEstimator = new CommandProcessingTimeEstimatorVersion4(_sampleCount, _mixBufferCount);
+                    break;
                 default:
                     throw new NotImplementedException($"Unsupported processing time estimator version {_behaviourContext.GetCommandProcessingTimeEstimatorVersion()}.");
             }

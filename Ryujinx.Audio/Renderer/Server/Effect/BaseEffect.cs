@@ -277,6 +277,8 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
                     return PerformanceDetailType.Mix;
                 case EffectType.Limiter:
                     return PerformanceDetailType.Limiter;
+                case EffectType.CaptureBuffer:
+                    return PerformanceDetailType.CaptureBuffer;
                 default:
                     throw new NotImplementedException($"{Type}");
             }

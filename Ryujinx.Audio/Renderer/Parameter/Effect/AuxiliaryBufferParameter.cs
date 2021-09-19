@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Audio.Renderer.Parameter.Effect
 {
     /// <summary>
-    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.AuxiliaryBuffer"/>.
+    /// <see cref="IEffectInParameter.SpecificData"/> for <see cref="Common.EffectType.AuxiliaryBuffer"/> and <see cref="Common.EffectType.CaptureBuffer"/>.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AuxiliaryBufferParameter
@@ -71,6 +71,7 @@ namespace Ryujinx.Audio.Renderer.Parameter.Effect
         /// <summary>
         /// The address of the start of the region containing two <see cref="Dsp.State.AuxiliaryBufferHeader"/> followed by the data that will be read by the <see cref="Dsp.AudioProcessor"/>.
         /// </summary>
+        /// <remarks>Unused with <see cref="Common.EffectType.CaptureBuffer"/>.</remarks>
         public ulong ReturnBufferInfoAddress;
 
         /// <summary>

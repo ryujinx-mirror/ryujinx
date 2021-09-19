@@ -98,9 +98,19 @@ namespace Ryujinx.Audio.Renderer.Server
         public const int Revision9 = 9 << 24;
 
         /// <summary>
+        /// REV10:
+        /// Added Bluetooth audio device support and removed the unused "GetAudioSystemMasterVolumeSetting" audio device API.
+        /// A new effect was added: Capture. This effect allows the client side to capture audio buffers of a mix.
+        /// A new command was added for double biquad filters on voices. This is implemented using a direct form 1 (instead of the usual direct form 2).
+        /// A new version of the command estimator was added to support the new commands.
+        /// </summary>
+        /// <remarks>This was added in system update 13.0.0</remarks>
+        public const int Revision10 = 10 << 24;
+
+        /// <summary>
         /// Last revision supported by the implementation.
         /// </summary>
-        public const int LastRevision = Revision9;
+        public const int LastRevision = Revision10;
 
         /// <summary>
         /// Target revision magic supported by the implementation.
@@ -348,11 +358,25 @@ namespace Ryujinx.Audio.Renderer.Server
         }
 
         /// <summary>
+        /// Check if the audio renderer should use an optimized Biquad Filter (Direct Form 1) in case of two biquad filters are defined on a voice.
+        /// </summary>
+        /// <returns>True if the audio renderer should use the optimization.</returns>
+        public bool IsBiquadFilterGroupedOptimizationSupported()
+        {
+            return CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision10);
+        }
+
+        /// <summary>
         /// Get the version of the <see cref="ICommandProcessingTimeEstimator"/>.
         /// </summary>
         /// <returns>The version of the <see cref="ICommandProcessingTimeEstimator"/>.</returns>
         public int GetCommandProcessingTimeEstimatorVersion()
         {
+            if (CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision10))
+            {
+                return 4;
+            }
+
             if (CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision8))
             {
                 return 3;

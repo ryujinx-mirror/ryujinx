@@ -61,5 +61,10 @@ namespace Ryujinx.Audio.Renderer.Common
         /// Effect applying a limiter (DRC).
         /// </summary>
         Limiter,
+
+        /// <summary>
+        /// Effect to capture mixes (via auxiliary buffers).
+        /// </summary>
+        CaptureBuffer
     }
 }

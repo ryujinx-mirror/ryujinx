@@ -46,6 +46,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         ClearMixBuffer,
         CopyMixBuffer,
         LimiterVersion1,
-        LimiterVersion2
+        LimiterVersion2,
+        GroupedBiquadFilter,
+        CaptureBuffer
     }
 }

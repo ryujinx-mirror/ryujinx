@@ -38,8 +38,6 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
                 if ((position - basePosition) + (ulong)buffer.Length > size)
                 {
-                    Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
-
                     break;
                 }
 
@@ -158,8 +156,6 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
                 if ((position - basePosition) + (ulong)buffer.Length > size)
                 {
-                    Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
-
                     break;
                 }
 
@@ -264,23 +260,61 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
-        // GetAudioSystemMasterVolumeSetting(buffer<bytes, 5> name) -> f32
-        public ResultCode GetAudioSystemMasterVolumeSetting(ServiceCtx context)
+        [CommandHipc(13)] // 13.0.0+
+        // GetActiveAudioOutputDeviceName() -> buffer<bytes, 6>
+        public ResultCode GetActiveAudioOutputDeviceName(ServiceCtx context)
         {
-            ulong position = context.Request.SendBuff[0].Position;
-            ulong size = context.Request.SendBuff[0].Size;
+            string name = _impl.GetActiveAudioOutputDeviceName();
 
-            string deviceName = MemoryHelper.ReadAsciiString(context.Memory, position, (long)size);
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
 
-            ResultCode result = _impl.GetAudioSystemMasterVolumeSetting(deviceName, out float systemMasterVolume);
+            byte[] deviceNameBuffer = Encoding.ASCII.GetBytes(name + "\0");
 
-            if (result == ResultCode.Success)
+            if ((ulong)deviceNameBuffer.Length <= size)
             {
-                context.ResponseData.Write(systemMasterVolume);
+                context.Memory.Write(position, deviceNameBuffer);
+            }
+            else
+            {
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
-            return result;
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(14)] // 13.0.0+
+        // ListAudioOutputDeviceName() -> (u32, buffer<bytes, 6>)
+        public ResultCode ListAudioOutputDeviceName(ServiceCtx context)
+        {
+            string[] deviceNames = _impl.ListAudioOutputDeviceName();
+
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
+
+            ulong basePosition = position;
+
+            int count = 0;
+
+            foreach (string name in deviceNames)
+            {
+                byte[] buffer = Encoding.ASCII.GetBytes(name);
+
+                if ((position - basePosition) + (ulong)buffer.Length > size)
+                {
+                    break;
+                }
+
+                context.Memory.Write(position, buffer);
+                MemoryHelper.FillWithZeros(context.Memory, position + (ulong)buffer.Length, AudioDeviceNameSize - buffer.Length);
+
+                position += AudioDeviceNameSize;
+                count++;
+            }
+
+            context.ResponseData.Write(count);
+
+            return ResultCode.Success;
         }
     }
 }

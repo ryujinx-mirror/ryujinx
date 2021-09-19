@@ -16,7 +16,6 @@
 //
 
 using Ryujinx.Audio.Common;
-using Ryujinx.Audio.Renderer.Common;
 using Ryujinx.Audio.Renderer.Dsp.Command;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
 using System;
@@ -30,8 +29,8 @@ namespace Ryujinx.Audio.Renderer.Server
     /// </summary>
     public class CommandProcessingTimeEstimatorVersion3 : ICommandProcessingTimeEstimator
     {
-        private uint _sampleCount;
-        private uint _bufferCount;
+        protected uint _sampleCount;
+        protected uint _bufferCount;
 
         public CommandProcessingTimeEstimatorVersion3(uint sampleCount, uint bufferCount)
         {
@@ -754,6 +753,16 @@ namespace Ryujinx.Audio.Renderer.Server
                 default:
                     throw new NotImplementedException($"{command.Parameter.ChannelCount}");
             }
+        }
+
+        public virtual uint Estimate(GroupedBiquadFilterCommand command)
+        {
+            return 0;
+        }
+
+        public virtual uint Estimate(CaptureBufferCommand command)
+        {
+            return 0;
         }
     }
 }
