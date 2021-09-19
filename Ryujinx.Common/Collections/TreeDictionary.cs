@@ -182,37 +182,39 @@ namespace Ryujinx.Common.Collections
 
         /// <summary>
         /// Adds all the nodes in the dictionary into <paramref name="list"/>.
-        /// <br></br>
-        /// The nodes will be added in Sorted by Key Order.
         /// </summary>
+        /// <returns>A list of all KeyValuePairs sorted by Key Order</returns>
         public List<KeyValuePair<K, V>> AsList()
         {
             List<KeyValuePair<K, V>> list = new List<KeyValuePair<K, V>>();
 
-            Queue<Node<K, V>> nodes = new Queue<Node<K, V>>();
-
-            if (this._root != null)
-            {
-                nodes.Enqueue(this._root);
-            }
-            while (nodes.Count > 0)
-            {
-                Node<K, V> node = nodes.Dequeue();
-                list.Add(new KeyValuePair<K, V>(node.Key, node.Value));
-                if (node.Left != null)
-                {
-                    nodes.Enqueue(node.Left);
-                }
-                if (node.Right != null)
-                {
-                    nodes.Enqueue(node.Right);
-                }
-            }
+            AddToList(_root, list);
 
             return list;
         }
+
         #endregion
+
         #region Private Methods (BST)
+
+        /// <summary>
+        /// Adds all nodes that are children of or contained within <paramref name="node"/> into <paramref name="list"/>, in Key Order.
+        /// </summary>
+        /// <param name="node">The node to search for nodes within</param>
+        /// <param name="list">The list to add node to</param>
+        private void AddToList(Node<K, V> node, List<KeyValuePair<K, V>> list)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            AddToList(node.Left, list);
+
+            list.Add(new KeyValuePair<K, V>(node.Key, node.Value));
+
+            AddToList(node.Right, list);
+        }
 
         /// <summary>
         /// Retrieve the node reference whose key is <paramref name="key"/>, or null if no such node exists.
@@ -373,13 +375,8 @@ namespace Ryujinx.Common.Collections
         /// </summary>
         /// <param name="node">Root Node</param>
         /// <returns>Node with the maximum key in the tree of <paramref name="node"/></returns>
-        /// <exception cref="ArgumentNullException"><paramref name="node"/> is null</exception>
         private static Node<K, V> Maximum(Node<K, V> node)
         {
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
             Node<K, V> tmp = node;
             while (tmp.Right != null)
             {
@@ -519,7 +516,7 @@ namespace Ryujinx.Common.Collections
         }
 
         /// <summary>
-        /// Finds the node with the key immediately greater than <paramref name="node"/>.Key.
+        /// Finds the node with the key is immediately greater than <paramref name="node"/>.
         /// </summary>
         /// <param name="node">Node to find the successor of</param>
         /// <returns>Successor of <paramref name="node"/></returns>
@@ -539,7 +536,7 @@ namespace Ryujinx.Common.Collections
         }
 
         /// <summary>
-        /// Finds the node whose key immediately less than <paramref name="node"/>.Key.
+        /// Finds the node whose key is immediately less than <paramref name="node"/>.
         /// </summary>
         /// <param name="node">Node to find the predecessor of</param>
         /// <returns>Predecessor of <paramref name="node"/></returns>
@@ -557,7 +554,9 @@ namespace Ryujinx.Common.Collections
             }
             return parent;
         }
+
         #endregion
+
         #region Private Methods (RBL)
 
         private void RestoreBalanceAfterRemoval(Node<K, V> balanceNode)
@@ -748,7 +747,7 @@ namespace Ryujinx.Common.Collections
 
         #region Safety-Methods
 
-        // These methods save memory by allowing us to forego sentinel nil nodes, as well as serve as protection against nullpointerexceptions.
+        // These methods save memory by allowing us to forego sentinel nil nodes, as well as serve as protection against NullReferenceExceptions.
 
         /// <summary>
         /// Returns the color of <paramref name="node"/>, or Black if it is null.
