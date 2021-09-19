@@ -11,6 +11,20 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             _applicationDisplayService = applicationDisplayService;
         }
 
+        [CommandHipc(1102)]
+        // GetDisplayResolution(u64 display_id) -> (u64 width, u64 height)
+        public ResultCode GetDisplayResolution(ServiceCtx context)
+        {
+            ulong displayId = context.RequestData.ReadUInt64();
+
+            (ulong width, ulong height) = AndroidSurfaceComposerClient.GetDisplayInfo(context, displayId);
+
+            context.ResponseData.Write(width);
+            context.ResponseData.Write(height);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(2010)]
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)

@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // Padding
             context.RequestData.ReadInt32();
 
-            UserId       userId   = context.RequestData.ReadStruct<UserId>();
+            UserId       userId = context.RequestData.ReadStruct<UserId>();
             FriendFilter filter = context.RequestData.ReadStruct<FriendFilter>();
 
             // Pid placeholder
@@ -217,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 
             context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x40UL);
 
-            ulong bufferPosition  = context.Request.RecvListBuff[0].Position;
+            ulong bufferPosition = context.Request.RecvListBuff[0].Position;
 
             if (userId.IsNull)
             {

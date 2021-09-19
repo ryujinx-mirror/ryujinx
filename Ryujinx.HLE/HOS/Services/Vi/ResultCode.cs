@@ -9,6 +9,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         InvalidArguments   = (1 << ErrorCodeShift) | ModuleId,
         InvalidLayerSize   = (4 << ErrorCodeShift) | ModuleId,
-        InvalidScalingMode = (6 << ErrorCodeShift) | ModuleId
+        InvalidRange       = (5 << ErrorCodeShift) | ModuleId,
+        InvalidScalingMode = (6 << ErrorCodeShift) | ModuleId,
+        InvalidValue       = (7 << ErrorCodeShift) | ModuleId,
+        AlreadyOpened      = (9 << ErrorCodeShift) | ModuleId
     }
 }
