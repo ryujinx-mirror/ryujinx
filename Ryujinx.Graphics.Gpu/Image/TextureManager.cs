@@ -35,8 +35,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             TexturePoolCache texturePoolCache = new TexturePoolCache(context);
 
-            _cpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, isCompute: true);
-            _gpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, isCompute: false);
+            float[] scales = new float[64];
+            new Span<float>(scales).Fill(1f);
+
+            _cpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, scales, isCompute: true);
+            _gpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, scales, isCompute: false);
 
             _rtColors = new Texture[Constants.TotalRenderTargets];
             _rtHostColors = new ITexture[Constants.TotalRenderTargets];

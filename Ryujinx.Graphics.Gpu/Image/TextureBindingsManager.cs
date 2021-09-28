@@ -62,12 +62,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="context">The GPU context that the texture bindings manager belongs to</param>
         /// <param name="channel">The GPU channel that the texture bindings manager belongs to</param>
         /// <param name="poolCache">Texture pools cache used to get texture pools from</param>
+        /// <param name="scales">Array where the scales for the currently bound textures are stored</param>
         /// <param name="isCompute">True if the bindings manager is used for the compute engine</param>
-        public TextureBindingsManager(GpuContext context, GpuChannel channel, TexturePoolCache poolCache, bool isCompute)
+        public TextureBindingsManager(GpuContext context, GpuChannel channel, TexturePoolCache poolCache, float[] scales, bool isCompute)
         {
             _context          = context;
             _channel          = channel;
             _texturePoolCache = poolCache;
+            _scales           = scales;
             _isCompute        = isCompute;
 
             int stages = isCompute ? 1 : Constants.ShaderStages;
@@ -88,13 +90,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 _textureState[stage] = new TextureStatePerStage[InitialTextureStateSize];
                 _imageState[stage] = new TextureStatePerStage[InitialImageStateSize];
-            }
-
-            _scales = new float[64];
-
-            for (int i = 0; i < 64; i++)
-            {
-                _scales[i] = 1f;
             }
         }
 
