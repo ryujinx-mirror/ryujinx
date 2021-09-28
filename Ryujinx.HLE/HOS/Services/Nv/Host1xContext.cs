@@ -22,21 +22,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             var vic = new VicDevice(Smmu);
             Host1x.RegisterDevice(ClassId.Nvdec, nvdec);
             Host1x.RegisterDevice(ClassId.Vic, vic);
-
-            nvdec.FrameDecoded += (FrameDecodedEventArgs e) =>
-            {
-                // FIXME:
-                // Figure out what is causing frame ordering issues on H264.
-                // For now this is needed as workaround.
-                if (e.CodecId == CodecId.H264)
-                {
-                    vic.SetSurfaceOverride(e.LumaOffset, e.ChromaOffset, 0);
-                }
-                else
-                {
-                    vic.DisableSurfaceOverride();
-                }
-            };
         }
 
         public void Dispose()

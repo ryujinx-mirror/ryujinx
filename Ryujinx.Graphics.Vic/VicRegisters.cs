@@ -4,9 +4,11 @@ namespace Ryujinx.Graphics.Vic
 {
     struct PlaneOffsets
     {
+#pragma warning disable CS0649
         public uint LumaOffset;
         public uint ChromaUOffset;
         public uint ChromaVOffset;
+#pragma warning restore CS0649
     }
 
     struct VicRegisters

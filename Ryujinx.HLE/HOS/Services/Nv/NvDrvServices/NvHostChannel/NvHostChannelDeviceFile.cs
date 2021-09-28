@@ -27,6 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private readonly IVirtualMemoryManager _memory;
         private readonly Host1xContext _host1xContext;
+        private readonly long _contextId;
 
         public GpuChannel Channel { get; }
 
@@ -52,6 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             _submitTimeout = 0;
             _timeslice     = 0;
             _host1xContext = GetHost1XContext(context.Device.Gpu, owner);
+            _contextId     = _host1xContext.Host1x.CreateContext();
             Channel        = _device.Gpu.CreateChannel();
 
             ChannelInitialization.InitializeState(Channel);
@@ -167,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
                     var data = _memory.GetSpan(map.Address + commandBuffer.Offset, commandBuffer.WordsCount * 4);
 
-                    _host1xContext.Host1x.Submit(MemoryMarshal.Cast<byte, int>(data));
+                    _host1xContext.Host1x.Submit(MemoryMarshal.Cast<byte, int>(data), _contextId);
                 }
             }
 
@@ -177,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
             tmpCmdBuff[0] = (4 << 28) | (int)fences[0].Id;
 
-            _host1xContext.Host1x.Submit(tmpCmdBuff);
+            _host1xContext.Host1x.Submit(tmpCmdBuff, _contextId);
 
             return NvInternalResult.Success;
         }
@@ -548,6 +550,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         public override void Close()
         {
+            _host1xContext.Host1x.DestroyContext(_contextId);
             Channel.Dispose();
         }
 

@@ -1,9 +1,7 @@
-﻿using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.Device;
+﻿using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic.Image;
 using Ryujinx.Graphics.Vic.Types;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Vic
@@ -14,9 +12,6 @@ namespace Ryujinx.Graphics.Vic
         private readonly ResourceManager _rm;
         private readonly DeviceState<VicRegisters> _state;
 
-        private PlaneOffsets _overrideOffsets;
-        private bool _hasOverride;
-
         public VicDevice(MemoryManager gmm)
         {
             _gmm = gmm;
@@ -25,32 +20,6 @@ namespace Ryujinx.Graphics.Vic
             {
                 { nameof(VicRegisters.Execute), new RwCallback(Execute, null) }
             });
-        }
-
-        /// <summary>
-        /// Overrides all input surfaces with a custom surface.
-        /// </summary>
-        /// <param name="lumaOffset">Offset of the luma plane or packed data for this surface</param>
-        /// <param name="chromaUOffset">Offset of the U chroma plane (for planar formats) or both chroma planes (for semiplanar formats)</param>
-        /// <param name="chromaVOffset">Offset of the V chroma plane for planar formats</param>
-        public void SetSurfaceOverride(uint lumaOffset, uint chromaUOffset, uint chromaVOffset)
-        {
-            _overrideOffsets.LumaOffset = lumaOffset;
-            _overrideOffsets.ChromaUOffset = chromaUOffset;
-            _overrideOffsets.ChromaVOffset = chromaVOffset;
-            _hasOverride = true;
-        }
-
-        /// <summary>
-        /// Disables overriding input surfaces.
-        /// </summary>
-        /// <remarks>
-        /// Surface overrides are disabled by default.
-        /// Call this if you previously called <see cref="SetSurfaceOverride(uint, uint, uint)"/> and which to disable it.
-        /// </remarks>
-        public void DisableSurfaceOverride()
-        {
-            _hasOverride = false;
         }
 
         public int Read(int offset) => _state.Read(offset);
@@ -75,11 +44,6 @@ namespace Ryujinx.Graphics.Vic
                 }
 
                 var offsets = _state.State.SetSurfacexSlotx[i][0];
-
-                if (_hasOverride)
-                {
-                    offsets = _overrideOffsets;
-                }
 
                 using Surface src = SurfaceReader.Read(_rm, ref slot.SlotSurfaceConfig, ref offsets);
 

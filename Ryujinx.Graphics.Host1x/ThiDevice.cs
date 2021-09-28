@@ -5,19 +5,24 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Host1x
 {
-    class ThiDevice : IDeviceState, IDisposable
+    class ThiDevice : IDeviceStateWithContext, IDisposable
     {
         private readonly ClassId _classId;
         private readonly IDeviceState _device;
 
         private readonly SyncptIncrManager _syncptIncrMgr;
 
+        private long _currentContextId;
+        private long _previousContextId;
+
         private class CommandAction
         {
+            public long ContextId { get; }
             public int Data { get; }
 
-            public CommandAction(int data)
+            public CommandAction(long contextId, int data)
             {
+                ContextId = contextId;
                 Data = data;
             }
         }
@@ -26,7 +31,7 @@ namespace Ryujinx.Graphics.Host1x
         {
             public int Method { get; }
 
-            public MethodCallAction(int method, int data) : base(data)
+            public MethodCallAction(long contextId, int method, int data) : base(contextId, data)
             {
                 Method = method;
             }
@@ -34,7 +39,7 @@ namespace Ryujinx.Graphics.Host1x
 
         private class SyncptIncrAction : CommandAction
         {
-            public SyncptIncrAction(uint syncptIncrHandle) : base((int)syncptIncrHandle)
+            public SyncptIncrAction(long contextId, uint syncptIncrHandle) : base(contextId, (int)syncptIncrHandle)
             {
             }
         }
@@ -54,6 +59,31 @@ namespace Ryujinx.Graphics.Host1x
                 { nameof(ThiRegisters.IncrSyncpt), new RwCallback(IncrSyncpt, null) },
                 { nameof(ThiRegisters.Method1), new RwCallback(Method1, null) }
             });
+
+            _previousContextId = -1;
+        }
+
+        public long CreateContext()
+        {
+            if (_device is IDeviceStateWithContext deviceWithContext)
+            {
+                return deviceWithContext.CreateContext();
+            }
+
+            return -1;
+        }
+
+        public void DestroyContext(long id)
+        {
+            if (_device is IDeviceStateWithContext deviceWithContext)
+            {
+                deviceWithContext.DestroyContext(id);
+            }
+        }
+
+        public void BindContext(long id)
+        {
+            _currentContextId = id;
         }
 
         public int Read(int offset) => _state.Read(offset);
@@ -70,17 +100,28 @@ namespace Ryujinx.Graphics.Host1x
             }
             else
             {
-                _commandQueue.Add(new SyncptIncrAction(_syncptIncrMgr.IncrementWhenDone(_classId, syncpointId)));
+                _commandQueue.Add(new SyncptIncrAction(_currentContextId, _syncptIncrMgr.IncrementWhenDone(_classId, syncpointId)));
             }
         }
 
         private void Method1(int data)
         {
-            _commandQueue.Add(new MethodCallAction((int)_state.State.Method0 * 4, data));
+            _commandQueue.Add(new MethodCallAction(_currentContextId, (int)_state.State.Method0 * 4, data));
         }
 
         private void Process(CommandAction cmdAction)
         {
+            long contextId = cmdAction.ContextId;
+            if (contextId != _previousContextId)
+            {
+                _previousContextId = contextId;
+
+                if (_device is IDeviceStateWithContext deviceWithContext)
+                {
+                    deviceWithContext.BindContext(contextId);
+                }
+            }
+
             if (cmdAction is SyncptIncrAction syncptIncrAction)
             {
                 _syncptIncrMgr.SignalDone((uint)syncptIncrAction.Data);

@@ -74,7 +74,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
             writer.WriteUe(0); // Seq parameter set id
 
             writer.WriteBit(pictureInfo.EntropyCodingModeFlag);
-            writer.WriteBit(false); // Bottom field pic order in frame present flag
+            writer.WriteBit(pictureInfo.PicOrderPresentFlag);
             writer.WriteUe(0); // Num slice groups minus 1
             writer.WriteUe(pictureInfo.NumRefIdxL0ActiveMinus1);
             writer.WriteUe(pictureInfo.NumRefIdxL1ActiveMinus1);

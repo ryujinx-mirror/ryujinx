@@ -9,8 +9,20 @@ namespace Ryujinx.Graphics.Host1x
 {
     public sealed class Host1xDevice : IDisposable
     {
+        private struct Command
+        {
+            public int[] Buffer { get; }
+            public long ContextId { get; }
+
+            public Command(int[] buffer, long contextId)
+            {
+                Buffer = buffer;
+                ContextId = contextId;
+            }
+        }
+
         private readonly SyncptIncrManager _syncptIncrMgr;
-        private readonly AsyncWorkQueue<int[]> _commandQueue;
+        private readonly AsyncWorkQueue<Command> _commandQueue;
 
         private readonly Devices _devices = new Devices();
 
@@ -26,7 +38,7 @@ namespace Ryujinx.Graphics.Host1x
         public Host1xDevice(SynchronizationManager syncMgr)
         {
             _syncptIncrMgr = new SyncptIncrManager(syncMgr);
-            _commandQueue = new AsyncWorkQueue<int[]>(Process, "Ryujinx.Host1xProcessor");
+            _commandQueue = new AsyncWorkQueue<Command>(Process, "Ryujinx.Host1xProcessor");
 
             Class = new Host1xClass(syncMgr);
 
@@ -39,13 +51,52 @@ namespace Ryujinx.Graphics.Host1x
             _devices.RegisterDevice(classId, thi);
         }
 
-        public void Submit(ReadOnlySpan<int> commandBuffer)
+        public long CreateContext()
         {
-            _commandQueue.Add(commandBuffer.ToArray());
+            if (_devices.GetDevice(ClassId.Nvdec) is IDeviceStateWithContext nvdec)
+            {
+                return nvdec.CreateContext();
+            }
+
+            return -1;
         }
 
-        private void Process(int[] commandBuffer)
+        public void DestroyContext(long id)
         {
+            if (id == -1)
+            {
+                return;
+            }
+
+            if (_devices.GetDevice(ClassId.Nvdec) is IDeviceStateWithContext nvdec)
+            {
+                nvdec.DestroyContext(id);
+            }
+        }
+
+        private void SetNvdecContext(long id)
+        {
+            if (id == -1)
+            {
+                return;
+            }
+
+            if (_devices.GetDevice(ClassId.Nvdec) is IDeviceStateWithContext nvdec)
+            {
+                nvdec.BindContext(id);
+            }
+        }
+
+        public void Submit(ReadOnlySpan<int> commandBuffer, long contextId)
+        {
+            _commandQueue.Add(new Command(commandBuffer.ToArray(), contextId));
+        }
+
+        private void Process(Command command)
+        {
+            SetNvdecContext(command.ContextId);
+            int[] commandBuffer = command.Buffer;
+
             for (int index = 0; index < commandBuffer.Length; index++)
             {
                 Step(commandBuffer[index]);

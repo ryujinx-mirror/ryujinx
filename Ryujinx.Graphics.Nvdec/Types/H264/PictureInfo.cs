@@ -26,13 +26,13 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
         public uint Transform8x8ModeFlag;
         public uint LumaPitch;
         public uint ChromaPitch;
-        public uint Unknown94;
-        public uint LumaSecondFieldOffset;
-        public uint Unknown9C;
-        public uint UnknownA0;
-        public uint ChromaSecondFieldOffset;
-        public uint UnknownA8;
-        public uint UnknownAC;
+        public uint LumaTopOffset;
+        public uint LumaBottomOffset;
+        public uint LumaFrameOffset;
+        public uint ChromaTopOffset;
+        public uint ChromaBottomFieldOffset;
+        public uint ChromaFrameOffset;
+        public uint HistBufferSize;
         public ulong Flags;
         public Array2<int> FieldOrderCnt;
         public Array16<ReferenceFrame> RefFrames;
@@ -64,8 +64,8 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
         public int ChromaQpIndexOffset => ExtractSx(Flags, 22, 5);
         public int SecondChromaQpIndexOffset => ExtractSx(Flags, 27, 5);
         public uint WeightedBipredIdc => (uint)(Flags >> 32) & 3;
-        public uint LumaOutputSurfaceIndex => (uint)(Flags >> 34) & 0x7f;
-        public uint ChromaOutputSurfaceIndex => (uint)(Flags >> 41) & 0x1f;
+        public uint OutputSurfaceIndex => (uint)(Flags >> 34) & 0x7f;
+        public uint ColIndex => (uint)(Flags >> 41) & 0x1f;
         public ushort FrameNum => (ushort)(Flags >> 46);
         public bool QpprimeYZeroTransformBypassFlag => (Flags2 & (1 << 1)) != 0;
 
