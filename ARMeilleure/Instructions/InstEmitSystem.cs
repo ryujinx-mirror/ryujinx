@@ -91,7 +91,7 @@ namespace ARMeilleure.Instructions
                     {
                         Operand address = context.Add(t, Const(offset));
 
-                        context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.WriteUInt64)), address, Const(0L));
+                        InstEmitMemoryHelper.EmitStore(context, address, RegisterConsts.ZeroIndex, 3);
                     }
 
                     break;
