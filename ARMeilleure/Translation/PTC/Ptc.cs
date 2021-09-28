@@ -681,7 +681,10 @@ namespace ARMeilleure.Translation.PTC
                 }
                 else if (symbol == CountTableSymbol)
                 {
-                    callCounter = new Counter<uint>(translator.CountTable);
+                    if (callCounter == null)
+                    {
+                        callCounter = new Counter<uint>(translator.CountTable);
+                    }
 
                     unsafe { imm = (IntPtr)Unsafe.AsPointer(ref callCounter.Value); }
                 }
