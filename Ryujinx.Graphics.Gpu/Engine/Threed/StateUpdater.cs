@@ -6,7 +6,6 @@ using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Texture;
 using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -31,6 +30,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
         private readonly ShaderProgramInfo[] _currentProgramInfo;
 
+        private bool _vtgWritesRtLayer;
         private byte _vsClipDistancesWritten;
 
         private bool _prevDrawIndexed;
@@ -334,6 +334,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 Image.Texture color = memoryManager.Physical.TextureCache.FindOrCreateTexture(
                     memoryManager,
                     colorState,
+                    _vtgWritesRtLayer,
                     samplesInX,
                     samplesInY,
                     sizeHint);
@@ -956,6 +957,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.VsUsesInstanceId = gs.Shaders[0]?.Info.UsesInstanceId ?? false;
             _vsClipDistancesWritten = gs.Shaders[0]?.Info.ClipDistancesWritten ?? 0;
+            _vtgWritesRtLayer = false;
 
             if (oldVsClipDistancesWritten != _vsClipDistancesWritten)
             {
@@ -978,6 +980,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
 
                 Span<TextureBindingInfo> textureBindings = _channel.TextureManager.RentGraphicsTextureBindings(stage, info.Textures.Count);
+
+                if (info.UsesRtLayer)
+                {
+                    _vtgWritesRtLayer = true;
+                }
 
                 for (int index = 0; index < info.Textures.Count; index++)
                 {

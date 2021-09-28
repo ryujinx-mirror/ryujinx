@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private readonly GpuChannel _channel;
         private readonly DeviceStateWithShadow<ThreedClassState> _state;
         private readonly DrawState _drawState;
+        private bool _topologySet;
 
         private bool _instancedDrawPending;
         private bool _instancedIndexed;
@@ -41,6 +42,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _channel = channel;
             _state = state;
             _drawState = drawState;
+        }
+
+        /// <summary>
+        /// Marks the entire state as dirty, forcing a full host state update before the next draw.
+        /// </summary>
+        public void ForceStateDirty()
+        {
+            _topologySet = false;
         }
 
         /// <summary>
@@ -224,11 +233,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _instanceIndex = 0;
             }
 
-            if (_drawState.Topology != topology)
+            if (_drawState.Topology != topology || !_topologySet)
             {
                 _context.Renderer.Pipeline.SetPrimitiveTopology(topology);
-
                 _drawState.Topology = topology;
+                _topologySet = true;
             }
         }
 
@@ -331,6 +340,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _context.Renderer.Pipeline.SetPrimitiveTopology(topology);
             _drawState.Topology = topology;
+            _topologySet = true;
 
             ConditionalRenderEnabled renderEnable = ConditionalRendering.GetRenderEnable(
                 _context,

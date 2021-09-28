@@ -121,6 +121,11 @@ namespace Ryujinx.Graphics.Shader.Translation
                         break;
                 }
             }
+
+            if (Config.Stage != ShaderStage.Fragment && attribute == AttributeConsts.Layer)
+            {
+                Config.SetUsedFeature(FeatureFlags.RtLayer);
+            }
         }
 
         public void MarkLabel(Operand label)

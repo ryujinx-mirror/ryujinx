@@ -139,6 +139,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         public void ForceStateDirty()
         {
+            _drawManager.ForceStateDirty();
             _stateUpdater.SetAllDirty();
         }
 
