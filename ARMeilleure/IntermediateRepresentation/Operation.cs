@@ -53,8 +53,8 @@ namespace ARMeilleure.IntermediateRepresentation
         public int DestinationsCount => _data->DestinationsCount;
         public int SourcesCount => _data->SourcesCount;
 
-        private Span<Operand> Destinations => new(_data->Destinations, _data->DestinationsCount);
-        private Span<Operand> Sources => new(_data->Sources, _data->SourcesCount);
+        internal Span<Operand> DestinationsUnsafe => new(_data->Destinations, _data->DestinationsCount);
+        internal Span<Operand> SourcesUnsafe => new(_data->Sources, _data->SourcesCount);
 
         public PhiOperation AsPhi()
         {
@@ -65,17 +65,17 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public Operand GetDestination(int index)
         {
-            return Destinations[index];
+            return DestinationsUnsafe[index];
         }
 
         public Operand GetSource(int index)
         {
-            return Sources[index];
+            return SourcesUnsafe[index];
         }
 
         public void SetDestination(int index, Operand dest)
         {
-            ref Operand curDest = ref Destinations[index];
+            ref Operand curDest = ref DestinationsUnsafe[index];
 
             RemoveAssignment(curDest);
             AddAssignment(dest);
@@ -85,7 +85,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public void SetSource(int index, Operand src)
         {
-            ref Operand curSrc = ref Sources[index];
+            ref Operand curSrc = ref SourcesUnsafe[index];
 
             RemoveUse(curSrc);
             AddUse(src);
@@ -274,8 +274,8 @@ namespace ARMeilleure.IntermediateRepresentation
                 EnsureCapacity(ref result._data->Destinations, ref result._data->DestinationsCount, destCount);
                 EnsureCapacity(ref result._data->Sources, ref result._data->SourcesCount, srcCount);
 
-                result.Destinations.Clear();
-                result.Sources.Clear();
+                result.DestinationsUnsafe.Clear();
+                result.SourcesUnsafe.Clear();
 
                 return result;
             }
