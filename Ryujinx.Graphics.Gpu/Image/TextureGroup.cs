@@ -235,6 +235,23 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Synchronize dependent textures, if any of them have deferred a copy from the given texture.
+        /// </summary>
+        /// <param name="texture">The texture to synchronize dependents of</param>
+        public void SynchronizeDependents(Texture texture)
+        {
+            EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
+            {
+                for (int i = 0; i < regionCount; i++)
+                {
+                    TextureGroupHandle group = _handles[baseHandle + i];
+
+                    group.SynchronizeDependents();
+                }
+            });
+        }
+
+        /// <summary>
         /// Signal that a texture in the group has been modified by the GPU.
         /// </summary>
         /// <param name="texture">The texture that has been modified</param>

@@ -141,6 +141,22 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Synchronize dependent textures, if any of them have deferred a copy from this texture.
+        /// </summary>
+        public void SynchronizeDependents()
+        {
+            foreach (TextureDependency dependency in Dependencies)
+            {
+                TextureGroupHandle otherHandle = dependency.Other.Handle;
+
+                if (otherHandle.DeferredCopy == this)
+                {
+                    otherHandle._group.Storage.SynchronizeMemory();
+                }
+            }
+        }
+
+        /// <summary>
         /// Signal that a copy dependent texture has been modified, and must have its data copied to this one.
         /// </summary>
         /// <param name="copyFrom">The texture handle that must defer a copy to this one</param>
