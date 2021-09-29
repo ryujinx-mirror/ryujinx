@@ -206,6 +206,17 @@ namespace Ryujinx.Memory.Tracking
             }
         }
 
+        public void RegisterPreciseAction(ulong address, ulong size, PreciseRegionSignal action)
+        {
+            int startHandle = (int)((address - Address) / Granularity);
+            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
+
+            for (int i = startHandle; i <= lastHandle; i++)
+            {
+                _handles[i].RegisterPreciseAction(action);
+            }
+        }
+
         public void Dispose()
         {
             foreach (var handle in _handles)

@@ -195,6 +195,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Writes data to GPU mapped memory, destined for a tracked resource.
+        /// </summary>
+        /// <param name="va">GPU virtual address to write the data into</param>
+        /// <param name="data">The data to be written</param>
+        public void WriteTrackedResource(ulong va, ReadOnlySpan<byte> data)
+        {
+            WriteImpl(va, data, Physical.WriteTrackedResource);
+        }
+
+        /// <summary>
         /// Writes data to GPU mapped memory without write tracking.
         /// </summary>
         /// <param name="va">GPU virtual address to write the data into</param>

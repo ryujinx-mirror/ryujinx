@@ -202,7 +202,7 @@ namespace ARMeilleure.Signal
 
                 // Call the tracking action, with the pointer's relative offset to the base address.
                 Operand trackingActionPtr = context.Load(OperandType.I64, Const((ulong)signalStructPtr + rangeBaseOffset + 20));
-                context.Call(trackingActionPtr, OperandType.I32, offset, Const(PageSize), isWrite);
+                context.Call(trackingActionPtr, OperandType.I32, offset, Const(PageSize), isWrite, Const(0));
 
                 context.Branch(endLabel);
 

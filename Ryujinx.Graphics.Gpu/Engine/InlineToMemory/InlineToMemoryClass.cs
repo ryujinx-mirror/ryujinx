@@ -171,7 +171,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
 
             if (_isLinear && _lineCount == 1)
             {
-                memoryManager.Physical.CacheResourceWrite(memoryManager, _dstGpuVa, data);
+                memoryManager.WriteTrackedResource(_dstGpuVa, data);
+                _context.AdvanceSequence();
             }
             else
             {

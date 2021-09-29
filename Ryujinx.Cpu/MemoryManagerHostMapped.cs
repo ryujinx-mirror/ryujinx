@@ -405,9 +405,15 @@ namespace Ryujinx.Cpu
         /// <remarks>
         /// This function also validates that the given range is both valid and mapped, and will throw if it is not.
         /// </remarks>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
         {
             AssertValidAddressAndSize(va, size);
+
+            if (precise)
+            {
+                Tracking.VirtualMemoryEvent(va, size, write, precise: true);
+                return;
+            }
 
             // Software table, used for managed memory tracking.
 

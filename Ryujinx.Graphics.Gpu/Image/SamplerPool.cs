@@ -7,8 +7,6 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class SamplerPool : Pool<Sampler, SamplerDescriptor>
     {
-        private int _sequenceNumber;
-
         /// <summary>
         /// Constructs a new instance of the sampler pool.
         /// </summary>
@@ -30,9 +28,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return null;
             }
 
-            if (_sequenceNumber != Context.SequenceNumber)
+            if (SequenceNumber != Context.SequenceNumber)
             {
-                _sequenceNumber = Context.SequenceNumber;
+                SequenceNumber = Context.SequenceNumber;
 
                 SynchronizeMemory();
             }

@@ -399,5 +399,41 @@ namespace Ryujinx.Memory.Tests
             Assert.AreEqual(singlePages[1], combinedHandles.ElementAt(9));
             Assert.AreEqual(singlePages[2], combinedHandles.ElementAt(10));
         }
+
+        [Test]
+        public void PreciseAction()
+        {
+            bool actionTriggered = false;
+
+            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize);
+            PreparePages(granular, 3, PageSize * 3);
+
+            // Add a precise action to the second and third handle in the multiregion.
+            granular.RegisterPreciseAction(PageSize * 4, PageSize * 2, (_, _, _) => { actionTriggered = true; return true; });
+
+            // Precise write to first handle in the multiregion.
+            _tracking.VirtualMemoryEvent(PageSize * 3, PageSize, true, precise: true);
+            Assert.IsFalse(actionTriggered); // Action not triggered.
+
+            bool firstPageModified = false;
+            granular.QueryModified(PageSize * 3, PageSize, (_, _) => { firstPageModified = true; });
+            Assert.IsTrue(firstPageModified); // First page is modified.
+
+            // Precise write to all handles in the multiregion.
+            _tracking.VirtualMemoryEvent(PageSize * 3, PageSize * 3, true, precise: true);
+
+            bool[] pagesModified = new bool[3];
+
+            for (int i = 3; i < 6; i++)
+            {
+                int index = i - 3;
+                granular.QueryModified(PageSize * (ulong)i, PageSize, (_, _) => { pagesModified[index] = true; });
+            }
+
+            Assert.IsTrue(actionTriggered); // Action triggered.
+
+            // Precise writes are ignored on two later handles due to the action returning true.
+            Assert.AreEqual(pagesModified, new bool[] { true, false, false });
+        }
     }
 }

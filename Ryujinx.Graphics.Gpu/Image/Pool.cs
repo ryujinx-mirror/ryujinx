@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         protected GpuContext Context;
         protected PhysicalMemory PhysicalMemory;
+        protected int SequenceNumber;
 
         protected T1[] Items;
         protected T2[] DescriptorCache;
@@ -64,6 +65,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             Size    = size;
 
             _memoryTracking = physicalMemory.BeginGranularTracking(address, size);
+            _memoryTracking.RegisterPreciseAction(address, size, PreciseAction);
             _modifiedDelegate = RegionModified;
         }
 
@@ -114,6 +116,23 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             InvalidateRangeImpl(mAddress, mSize);
+        }
+
+        /// <summary>
+        /// An action to be performed when a precise memory access occurs to this resource.
+        /// Makes sure that the dirty flags are checked.
+        /// </summary>
+        /// <param name="address">Address of the memory action</param>
+        /// <param name="size">Size in bytes</param>
+        /// <param name="write">True if the access was a write, false otherwise</param>
+        private bool PreciseAction(ulong address, ulong size, bool write)
+        {
+            if (write && Context.SequenceNumber == SequenceNumber)
+            {
+                SequenceNumber--;
+            }
+
+            return false;
         }
 
         protected abstract void InvalidateRangeImpl(ulong address, ulong size);

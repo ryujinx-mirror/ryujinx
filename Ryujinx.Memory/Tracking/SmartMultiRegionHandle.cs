@@ -63,6 +63,17 @@ namespace Ryujinx.Memory.Tracking
             }
         }
 
+        public void RegisterPreciseAction(PreciseRegionSignal action)
+        {
+            foreach (var handle in _handles)
+            {
+                if (handle != null)
+                {
+                    handle?.RegisterPreciseAction((address, size, write) => action(handle.Address, handle.Size, write));
+                }
+            }
+        }
+
         public void QueryModified(Action<ulong, ulong> modifiedAction)
         {
             if (!Dirty)

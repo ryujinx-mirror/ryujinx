@@ -23,6 +23,7 @@ namespace Ryujinx.Cpu.Tracking
         public void ForceDirty() => _impl.ForceDirty();
         public IRegionHandle GetHandle() => _impl;
         public void RegisterAction(RegionSignal action) => _impl.RegisterAction(action);
+        public void RegisterPreciseAction(PreciseRegionSignal action) => _impl.RegisterPreciseAction(action);
         public void RegisterDirtyEvent(Action action) => _impl.RegisterDirtyEvent(action);
         public void Reprotect(bool asDirty = false) => _impl.Reprotect(asDirty);
 

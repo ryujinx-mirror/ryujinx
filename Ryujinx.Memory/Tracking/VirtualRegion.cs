@@ -31,6 +31,25 @@ namespace Ryujinx.Memory.Tracking
             UpdateProtection();
         }
 
+        public override void SignalPrecise(ulong address, ulong size, bool write)
+        {
+            IList<RegionHandle> handles = Handles;
+
+            bool allPrecise = true;
+
+            for (int i = 0; i < handles.Count; i++)
+            {
+                allPrecise &= handles[i].SignalPrecise(address, size, write, ref handles);
+            }
+
+            // Only update protection if a regular signal handler was called.
+            // This allows precise actions to skip reprotection costs if they want (they can still do it manually).
+            if (!allPrecise)
+            {
+                UpdateProtection();
+            }
+        }
+
         /// <summary>
         /// Signal that this region has been mapped or unmapped.
         /// </summary>

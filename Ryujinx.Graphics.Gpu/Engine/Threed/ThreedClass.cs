@@ -211,6 +211,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             uint syncpointId = (uint)argument & 0xFFFF;
 
+            _context.AdvanceSequence();
             _context.CreateHostSyncIfNeeded();
             _context.Renderer.UpdateCounters(); // Poll the query counters, the game may want an updated result.
             _context.Synchronization.IncrementSyncpoint(syncpointId);

@@ -53,6 +53,14 @@ namespace Ryujinx.Memory.Tracking
         public abstract void Signal(ulong address, ulong size, bool write);
 
         /// <summary>
+        /// Signals to the handles that a precise memory event has occurred. Assumes that the tracking lock has been obtained.
+        /// </summary>
+        /// <param name="address">Address accessed</param>
+        /// <param name="size">Size of the region affected in bytes</param>
+        /// <param name="write">Whether the region was written to or read</param>
+        public abstract void SignalPrecise(ulong address, ulong size, bool write);
+
+        /// <summary>
         /// Split this region into two, around the specified address. 
         /// This region is updated to end at the split address, and a new region is created to represent past that point.
         /// </summary>

@@ -481,7 +481,7 @@ namespace Ryujinx.Memory
             throw new NotImplementedException();
         }
 
-        public void SignalMemoryTracking(ulong va, ulong size, bool write)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
         {
             // Only the ARM Memory Manager has tracking for now.
         }

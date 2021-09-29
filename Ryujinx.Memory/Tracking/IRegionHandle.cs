@@ -13,5 +13,6 @@ namespace Ryujinx.Memory.Tracking
         void ForceDirty();
         void Reprotect(bool asDirty = false);
         void RegisterAction(RegionSignal action);
+        void RegisterPreciseAction(PreciseRegionSignal action);
     }
 }

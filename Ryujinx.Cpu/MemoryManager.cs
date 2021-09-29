@@ -567,9 +567,15 @@ namespace Ryujinx.Cpu
         }
 
         /// <inheritdoc/>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
         {
             AssertValidAddressAndSize(va, size);
+
+            if (precise)
+            {
+                Tracking.VirtualMemoryEvent(va, size, write, precise: true);
+                return;
+            }
 
             // We emulate guard pages for software memory access. This makes for an easy transition to
             // tracking using host guard pages in future, but also supporting platforms where this is not possible.

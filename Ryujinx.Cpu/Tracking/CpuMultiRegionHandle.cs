@@ -22,6 +22,7 @@ namespace Ryujinx.Cpu.Tracking
         public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction) => _impl.QueryModified(address, size, modifiedAction);
         public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction, int sequenceNumber) => _impl.QueryModified(address, size, modifiedAction, sequenceNumber);
         public void RegisterAction(ulong address, ulong size, RegionSignal action) => _impl.RegisterAction(address, size, action);
+        public void RegisterPreciseAction(ulong address, ulong size, PreciseRegionSignal action) => _impl.RegisterPreciseAction(address, size, action);
         public void SignalWrite() => _impl.SignalWrite();
     }
 }

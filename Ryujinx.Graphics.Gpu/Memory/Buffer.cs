@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Memory.Range;
@@ -104,6 +105,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             if (_useGranular)
             {
                 _memoryTrackingGranular = physicalMemory.BeginGranularTracking(address, size, baseHandles);
+
+                _memoryTrackingGranular.RegisterPreciseAction(address, size, PreciseAction);
             }
             else
             {
@@ -123,6 +126,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         handle.Dispose();
                     }
                 }
+
+                _memoryTracking.RegisterPreciseAction(PreciseAction);
             }
 
             _externalFlushDelegate = new RegionSignal(ExternalFlush);
@@ -450,6 +455,38 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     ranges.WaitForAndGetRanges(address, size, Flush);
                 }
             }, true);
+        }
+
+        /// <summary>
+        /// An action to be performed when a precise memory access occurs to this resource.
+        /// For buffers, this skips flush-on-write by punching holes directly into the modified range list.
+        /// </summary>
+        /// <param name="address">Address of the memory action</param>
+        /// <param name="size">Size in bytes</param>
+        /// <param name="write">True if the access was a write, false otherwise</param>
+        private bool PreciseAction(ulong address, ulong size, bool write)
+        {
+            if (!write)
+            {
+                // We only want to skip flush-on-write.
+                return false;
+            }
+
+            if (address < Address)
+            {
+                address = Address;
+            }
+
+            ulong maxSize = Address + Size - address;
+
+            if (size > maxSize)
+            {
+                size = maxSize;
+            }
+
+            ForceDirty(address, size);
+
+            return true;
         }
 
         /// <summary>
