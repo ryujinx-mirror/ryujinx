@@ -344,12 +344,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
-            if (samplerPool == null)
-            {
-                Logger.Error?.Print(LogClass.Gpu, $"Shader stage \"{stage}\" uses textures, but sampler pool was not set.");
-                return;
-            }
-
             for (int index = 0; index < textureCount; index++)
             {
                 TextureBindingInfo bindingInfo = _textureBindings[stageIndex][index];
@@ -405,7 +399,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _channel.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, bindingInfo.Format, false);
                 }
 
-                Sampler sampler = samplerPool.Get(samplerId);
+                Sampler sampler = samplerPool?.Get(samplerId);
 
                 ISampler hostSampler = sampler?.HostSampler;
 
