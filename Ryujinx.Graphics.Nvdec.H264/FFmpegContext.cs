@@ -106,6 +106,8 @@ namespace Ryujinx.Graphics.Nvdec.H264
 
         public int DecodeFrame(Surface output, ReadOnlySpan<byte> bitstream)
         {
+            ffmpeg.av_frame_unref(output.Frame);
+
             int result;
             int gotFrame;
 
