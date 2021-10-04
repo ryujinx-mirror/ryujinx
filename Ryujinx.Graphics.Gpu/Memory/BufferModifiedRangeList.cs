@@ -60,6 +60,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// </summary>
     class BufferModifiedRangeList : RangeList<BufferModifiedRange>
     {
+        private const int BackingInitialSize = 8;
+
         private GpuContext _context;
 
         private object _lock = new object();
@@ -68,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Creates a new instance of a modified range list.
         /// </summary>
         /// <param name="context">GPU context that the buffer range list belongs to</param>
-        public BufferModifiedRangeList(GpuContext context)
+        public BufferModifiedRangeList(GpuContext context) : base(BackingInitialSize)
         {
             _context = context;
         }

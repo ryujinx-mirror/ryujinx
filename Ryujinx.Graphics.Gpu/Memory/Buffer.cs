@@ -259,10 +259,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">The size of the region</param>
         public void ClearModified(ulong address, ulong size)
         {
-            if (_modifiedRanges != null)
-            {
-                _modifiedRanges.Clear(address, size);
-            }
+            _modifiedRanges?.Clear(address, size);
         }
 
         /// <summary>
@@ -275,7 +272,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (_useGranular)
             {
-                _modifiedRanges.GetRanges(Address, Size, (address, size) =>
+                _modifiedRanges?.GetRanges(Address, Size, (address, size) =>
                 {
                     _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
                     SynchronizeMemory(address, size);
@@ -302,18 +299,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     _syncActionRegistered = true;
                 }
 
-                EnsureRangeList();
-                _modifiedRanges.InheritRanges(from._modifiedRanges, (ulong address, ulong size) =>
+                if (_modifiedRanges == null)
                 {
-                    if (_useGranular)
+                    _modifiedRanges = from._modifiedRanges;
+                    from._modifiedRanges = null;
+                }
+                else
+                {
+                    _modifiedRanges.InheritRanges(from._modifiedRanges, (ulong address, ulong size) =>
                     {
-                        _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
-                    }
-                    else
-                    {
-                        _memoryTracking.RegisterAction(_externalFlushDelegate);
-                    }
-                });
+                        if (_useGranular)
+                        {
+                            _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
+                        }
+                        else
+                        {
+                            _memoryTracking.RegisterAction(_externalFlushDelegate);
+                        }
+                    });
+                }
             }
         }
 
@@ -381,10 +385,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="mSize">Size of the region to force dirty</param>
         public void ForceDirty(ulong mAddress, ulong mSize)
         {
-            if (_modifiedRanges != null)
-            {
-                _modifiedRanges.Clear(mAddress, mSize);
-            }
+            _modifiedRanges?.Clear(mAddress, mSize);
 
             if (_useGranular)
             {
@@ -497,7 +498,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">Size of the unmapped region</param>
         public void Unmapped(ulong address, ulong size)
         {
-            _modifiedRanges?.Clear(address, size);
+            BufferModifiedRangeList modifiedRanges = _modifiedRanges;
+
+            modifiedRanges?.Clear(address, size);
 
             UnmappedSequence++;
         }

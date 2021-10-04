@@ -33,18 +33,22 @@ namespace Ryujinx.Memory.Range
             }
         }
 
+        private const int BackingInitialSize = 1024;
         private const int ArrayGrowthSize = 32;
-        private const int BackingGrowthSize = 1024;
 
         private RangeItem<T>[] _items;
+        private readonly int _backingGrowthSize;
+
         public int Count { get; protected set; }
 
         /// <summary>
         /// Creates a new range list.
         /// </summary>
-        public RangeList()
+        /// <param name="backingInitialSize">The initial size of the backing array</param>
+        public RangeList(int backingInitialSize = BackingInitialSize)
         {
-            _items = new RangeItem<T>[BackingGrowthSize];
+            _backingGrowthSize = backingInitialSize;
+            _items = new RangeItem<T>[backingInitialSize];
         }
 
         /// <summary>
@@ -68,7 +72,7 @@ namespace Ryujinx.Memory.Range
         {
             if (Count + 1 > _items.Length)
             {
-                Array.Resize(ref _items, _items.Length + ArrayGrowthSize);
+                Array.Resize(ref _items, _items.Length + _backingGrowthSize);
             }
 
             if (index >= Count)
