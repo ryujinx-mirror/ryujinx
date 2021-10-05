@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService.Type
     [StructLayout(LayoutKind.Sequential, Size = 0x60)]
     struct DisplayInfo
     {
-        public Array40<byte> Name;
+        public Array64<byte> Name;
         public bool          LayerLimitEnabled;
         public Array7<byte>  Padding;
         public ulong         LayerLimitMax;

@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             {
                 DisplayInfo displayInfo = new DisplayInfo()
                 {
-                    Name              = new Array40<byte>(),
+                    Name              = new Array64<byte>(),
                     LayerLimitEnabled = layerLimitEnabled,
                     Padding           = new Array7<byte>(),
                     LayerLimitMax     = layerLimitMax,
@@ -123,8 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             for (int i = 0; i < (int)displayCount; i++)
             {
-                context.Memory.Fill(displayInfoBuffer + (ulong)(i * Unsafe.SizeOf<DisplayInfo>()), (ulong)(Unsafe.SizeOf<DisplayInfo>()), 0x00);
-                context.Memory.Write(displayInfoBuffer, _displayInfo[i]);
+                context.Memory.Write(displayInfoBuffer + (ulong)(i * Unsafe.SizeOf<DisplayInfo>()), _displayInfo[i]);
             }
 
             context.ResponseData.Write(displayCount);
