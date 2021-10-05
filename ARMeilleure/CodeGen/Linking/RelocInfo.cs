@@ -17,7 +17,7 @@ namespace ARMeilleure.CodeGen.Linking
         /// <summary>
         /// Gets the set of <see cref="RelocEntry"/>.
         /// </summary>
-        public ReadOnlySpan<RelocEntry> Entries => _entries ?? Array.Empty<RelocEntry>();
+        public ReadOnlySpan<RelocEntry> Entries => _entries;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelocInfo"/> struct with the specified set of
@@ -26,7 +26,7 @@ namespace ARMeilleure.CodeGen.Linking
         /// <param name="entries">Set of <see cref="RelocInfo"/> to use</param>
         public RelocInfo(RelocEntry[] entries)
         {
-            _entries = entries ?? Array.Empty<RelocEntry>();
+            _entries = entries;
         }
     }
 }

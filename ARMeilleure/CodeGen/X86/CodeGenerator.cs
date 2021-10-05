@@ -9,7 +9,6 @@ using ARMeilleure.Translation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Numerics;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
@@ -20,7 +19,7 @@ namespace ARMeilleure.CodeGen.X86
         private const int PageSize       = 0x1000;
         private const int StackGuardSize = 0x2000;
 
-        private static Action<CodeGenContext, Operation>[] _instTable;
+        private static readonly Action<CodeGenContext, Operation>[] _instTable;
 
         static CodeGenerator()
         {
@@ -84,11 +83,11 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.ZeroExtend16,            GenerateZeroExtend16);
             Add(Instruction.ZeroExtend32,            GenerateZeroExtend32);
             Add(Instruction.ZeroExtend8,             GenerateZeroExtend8);
-        }
 
-        private static void Add(Instruction inst, Action<CodeGenContext, Operation> func)
-        {
-            _instTable[(int)inst] = func;
+            static void Add(Instruction inst, Action<CodeGenContext, Operation> func)
+            {
+                _instTable[(int)inst] = func;
+            }
         }
 
         public static CompiledFunction Generate(CompilerContext cctx)
@@ -113,7 +112,7 @@ namespace ARMeilleure.CodeGen.X86
 
             Logger.StartPass(PassName.PreAllocation);
 
-            StackAllocator stackAlloc = new StackAllocator();
+            StackAllocator stackAlloc = new();
 
             PreAllocator.RunPass(cctx, stackAlloc, out int maxCallArgs);
 
@@ -137,7 +136,7 @@ namespace ARMeilleure.CodeGen.X86
                 regAlloc = new HybridAllocator();
             }
 
-            RegisterMasks regMasks = new RegisterMasks(
+            RegisterMasks regMasks = new(
                 CallingConvention.GetIntAvailableRegisters(),
                 CallingConvention.GetVecAvailableRegisters(),
                 CallingConvention.GetIntCallerSavedRegisters(),
@@ -153,9 +152,7 @@ namespace ARMeilleure.CodeGen.X86
 
             bool relocatable = (cctx.Options & CompilerOptions.Relocatable) != 0;
 
-            using MemoryStream stream = new();
-
-            CodeGenContext context = new(stream, allocResult, maxCallArgs, cfg.Blocks.Count, relocatable);
+            CodeGenContext context = new(allocResult, maxCallArgs, cfg.Blocks.Count, relocatable);
 
             UnwindInfo unwindInfo = WritePrologue(context);
 
@@ -187,7 +184,7 @@ namespace ARMeilleure.CodeGen.X86
                 }
             }
 
-            (byte[] code, RelocInfo relocInfo) = context.GetCode();
+            (byte[] code, RelocInfo relocInfo) = context.Assembler.GetCode();
 
             Logger.EndPass(PassName.CodeGeneration);
 
@@ -870,11 +867,13 @@ namespace ARMeilleure.CodeGen.X86
             // ZF flag is set. We are supposed to return the operand size on that
             // case. So, add an additional jump to handle that case, by moving the
             // operand size constant to the destination register.
-            context.JumpToNear(X86Condition.NotEqual);
+            Operand neLabel = Label();
+
+            context.Assembler.Jcc(X86Condition.NotEqual, neLabel);
 
             context.Assembler.Mov(dest, Const(operandSize | operandMask), OperandType.I32);
 
-            context.JumpHere();
+            context.Assembler.MarkLabel(neLabel);
 
             // BSR returns the zero based index of the last bit set on the operand,
             // starting from the least significant bit. However we are supposed to
