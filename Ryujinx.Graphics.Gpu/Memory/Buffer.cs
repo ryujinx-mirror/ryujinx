@@ -299,24 +299,28 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     _syncActionRegistered = true;
                 }
 
+                Action<ulong, ulong> registerRangeAction = (ulong address, ulong size) =>
+                {
+                    if (_useGranular)
+                    {
+                        _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
+                    }
+                    else
+                    {
+                        _memoryTracking.RegisterAction(_externalFlushDelegate);
+                    }
+                };
+
                 if (_modifiedRanges == null)
                 {
                     _modifiedRanges = from._modifiedRanges;
+                    _modifiedRanges.ReregisterRanges(registerRangeAction);
+
                     from._modifiedRanges = null;
                 }
                 else
                 {
-                    _modifiedRanges.InheritRanges(from._modifiedRanges, (ulong address, ulong size) =>
-                    {
-                        if (_useGranular)
-                        {
-                            _memoryTrackingGranular.RegisterAction(address, size, _externalFlushDelegate);
-                        }
-                        else
-                        {
-                            _memoryTracking.RegisterAction(_externalFlushDelegate);
-                        }
-                    });
+                    _modifiedRanges.InheritRanges(from._modifiedRanges, registerRangeAction);
                 }
             }
         }

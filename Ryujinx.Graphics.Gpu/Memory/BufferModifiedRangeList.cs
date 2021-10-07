@@ -318,6 +318,40 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Calls the given action for modified ranges that aren't from the current sync number.
+        /// </summary>
+        /// <param name="rangeAction">The action to call for each modified range</param>
+        public void ReregisterRanges(Action<ulong, ulong> rangeAction)
+        {
+            ref var ranges = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
+            // Range list must be consistent for this operation.
+            lock (_lock)
+            {
+                if (ranges.Length < Count)
+                {
+                    Array.Resize(ref ranges, Count);
+                }
+
+                int i = 0;
+                foreach (BufferModifiedRange range in this)
+                {
+                    ranges[i++] = range;
+                }
+            }
+
+            ulong currentSync = _context.SyncNumber;
+            for (int i = 0; i < Count; i++)
+            {
+                BufferModifiedRange range = ranges[i];
+                if (range.SyncNumber != currentSync)
+                {
+                    rangeAction(range.Address, range.Size);
+                }
+            }
+        }
+
         private void ClearPart(BufferModifiedRange overlap, ulong address, ulong endAddress)
         {
             Remove(overlap);
