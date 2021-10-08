@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace ARMeilleure.Common
 {
@@ -170,12 +171,12 @@ namespace ARMeilleure.Common
 
         public struct Enumerator : IEnumerator<int>
         {
-            private int _index;
+            private long _index;
             private long _mask;
             private int _bit;
             private readonly BitMap _map;
 
-            public int Current => _index * IntSize + _bit;
+            public int Current => (int)_index * IntSize + _bit;
             object IEnumerator.Current => Current;
 
             public Enumerator(BitMap map)
@@ -186,6 +187,7 @@ namespace ARMeilleure.Common
                 _map = map;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 if (_mask != 0)
@@ -193,14 +195,18 @@ namespace ARMeilleure.Common
                     _mask &= ~(1L << _bit);
                 }
 
+                // Manually hoist these loads, because RyuJIT does not.
+                long count = (uint)_map._count;
+                long* masks = _map._masks;
+
                 while (_mask == 0)
                 {
-                    if (++_index >= _map._count)
+                    if (++_index >= count)
                     {
                         return false;
                     }
 
-                    _mask = _map._masks[_index];
+                    _mask = masks[_index];
                 }
 
                 _bit = BitOperations.TrailingZeroCount(_mask);
