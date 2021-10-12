@@ -370,20 +370,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Item  = item
             };
 
-            if (item.Fence.FenceCount == 0)
-            {
-                _device.Gpu.Window.SignalFrameReady();
-                _device.Gpu.GPFifo.Interrupt();
-            }
-            else
-            {
-                item.Fence.RegisterCallback(_device.Gpu, () =>
-                {
-                    _device.Gpu.Window.SignalFrameReady();
-                    _device.Gpu.GPFifo.Interrupt();
-                });
-            }
-
             _device.Gpu.Window.EnqueueFrameThreadSafe(
                 layer.Owner,
                 frameBufferAddress,
@@ -398,6 +384,20 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 AcquireBuffer,
                 ReleaseBuffer,
                 textureCallbackInformation);
+
+            if (item.Fence.FenceCount == 0)
+            {
+                _device.Gpu.Window.SignalFrameReady();
+                _device.Gpu.GPFifo.Interrupt();
+            }
+            else
+            {
+                item.Fence.RegisterCallback(_device.Gpu, () =>
+                {
+                    _device.Gpu.Window.SignalFrameReady();
+                    _device.Gpu.GPFifo.Interrupt();
+                });
+            }
         }
 
         private void ReleaseBuffer(object obj)
