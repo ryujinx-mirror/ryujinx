@@ -7,6 +7,7 @@ using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.SystemState;
+using Ryujinx.HLE.Ui;
 using System;
 
 namespace Ryujinx.HLE

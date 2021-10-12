@@ -11,23 +11,23 @@
         Uninitialized = 0x0,
 
         /// <summary>
-        /// A Calc was previously received and fulfilled, so the software keyboard is initialized, but is not processing input.
+        /// The software keyboard is initialized, but it is not visible and not processing input.
         /// </summary>
         Initialized = 0x1,
 
         /// <summary>
-        /// A Calc was received and the software keyboard is processing input.
+        /// The software keyboard is transitioning to a visible state.
         /// </summary>
-        Ready = 0x2,
+        Appearing = 0x2,
 
         /// <summary>
-        /// New text data or cursor position of the software keyboard are available.
+        /// The software keyboard is visible and receiving processing input.
         /// </summary>
-        DataAvailable = 0x3,
+        Shown = 0x3,
 
         /// <summary>
-        /// The Calc request was fulfilled with either a text input or a cancel.
+        /// software keyboard is transitioning to a hidden state because the user pressed either OK or Cancel.
         /// </summary>
-        Complete = 0x4
+        Disappearing = 0x4
     }
 }

@@ -4,10 +4,9 @@ using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
-using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
-using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.HLE.Ui;
 using Ryujinx.Input;
 using Ryujinx.Input.HLE;
 using Ryujinx.SDL2.Common;
@@ -35,6 +34,9 @@ namespace Ryujinx.Headless.SDL2
         public event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
         protected IntPtr WindowHandle { get; set; }
+
+        public IHostUiTheme HostUiTheme { get; }
+
         protected SDL2MouseDriver MouseDriver;
         private InputManager _inputManager;
         private IKeyboard _keyboardInterface;
@@ -67,6 +69,7 @@ namespace Ryujinx.Headless.SDL2
             _exitEvent = new ManualResetEvent(false);
             _aspectRatio = aspectRatio;
             _enableMouse = enableMouse;
+            HostUiTheme = new HeadlessHostUiTheme();
 
             SDL2Driver.Instance.Initialize();
         }
@@ -351,6 +354,11 @@ namespace Ryujinx.Headless.SDL2
                            + "Please reconfigure Input now and then press OK.";
 
             return DisplayMessageDialog("Controller Applet", message);
+        }
+
+        public IDynamicTextInputHandler CreateDynamicTextInputHandler()
+        {
+            return new HeadlessDynamicTextInputHandler();
         }
 
         public void ExecuteProgram(Switch device, ProgramSpecifyKind kind, ulong value)

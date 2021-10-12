@@ -1,7 +1,7 @@
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 
-namespace Ryujinx.HLE
+namespace Ryujinx.HLE.Ui
 {
     public interface IHostUiHandler
     {
@@ -36,5 +36,16 @@ namespace Ryujinx.HLE
         /// </summary>
         /// <returns>False when OK is pressed, True when another button (Details) is pressed.</returns>
         bool DisplayErrorAppletDialog(string title, string message, string[] buttonsText);
+
+        /// <summary>
+        /// Creates a handler to process keyboard inputs into text strings.
+        /// </summary>
+        /// <returns>An instance of the text handler.</returns>
+        IDynamicTextInputHandler CreateDynamicTextInputHandler();
+
+        /// <summary>
+        /// Gets fonts and colors used by the host.
+        /// </summary>
+        IHostUiTheme HostUiTheme { get; }
     }
 }

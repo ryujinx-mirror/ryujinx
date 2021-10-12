@@ -25,6 +25,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         private int _normalOutDataEventHandle;
         private int _interactiveOutDataEventHandle;
 
+        private int _indirectLayerHandle;
+
         public ILibraryAppletAccessor(AppletId appletId, Horizon system)
         {
             _kernelContext = system.KernelContext;
@@ -222,21 +224,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetIndirectLayerConsumerHandle() -> u64 indirect_layer_consumer_handle
         public ResultCode GetIndirectLayerConsumerHandle(ServiceCtx context)
         {
-            /*
-            if (indirectLayerConsumer == null)
-            {
-                return ResultCode.ObjectInvalid;
-            }
-            */
+            Horizon horizon = _kernelContext.Device.System;
 
-            // TODO: Official sw uses this during LibraryApplet creation when LibraryAppletMode is 0x3.
-            //       Since we don't support IndirectLayer and the handle couldn't be 0, it's fine to return 1.
+            _indirectLayerHandle = horizon.AppletState.IndirectLayerHandles.Add(_applet);
 
-            ulong indirectLayerConsumerHandle = 1;
-
-            context.ResponseData.Write(indirectLayerConsumerHandle);
-
-            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { indirectLayerConsumerHandle });
+            context.ResponseData.Write((ulong)_indirectLayerHandle);
 
             return ResultCode.Success;
         }
@@ -260,6 +252,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
                     _kernelContext.Syscall.CloseHandle(_interactiveOutDataEventHandle);
                 }
             }
+
+            Horizon horizon = _kernelContext.Device.System;
+
+            horizon.AppletState.IndirectLayerHandles.Delete(_indirectLayerHandle);
         }
     }
 }

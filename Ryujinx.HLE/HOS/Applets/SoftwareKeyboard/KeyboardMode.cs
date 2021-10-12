@@ -8,21 +8,24 @@
         /// <summary>
         /// A full alpha-numeric keyboard.
         /// </summary>
-        Default,
+        Default = 0,
 
         /// <summary>
         /// Number pad.
         /// </summary>
-        NumbersOnly,
+        NumbersOnly = 1,
 
         /// <summary>
-        /// QWERTY (and variants) keyboard only.
+        /// ASCII characters keyboard.
         /// </summary>
-        LettersOnly,
+        ASCII = 2,
 
-        /// <summary>
-        /// Unknown keyboard variant.
-        /// </summary>
-        Unknown
+        FullLatin          = 3,
+        Alphabet           = 4,
+        SimplifiedChinese  = 5,
+        TraditionalChinese = 6,
+        Korean             = 7,
+        LanguageSet2       = 8,
+        LanguageSet2Latin  = 9,
     }
 }

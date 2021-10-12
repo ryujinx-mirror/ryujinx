@@ -14,12 +14,15 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public IdDictionary AppletResourceUserIds { get; }
 
+        public IdDictionary IndirectLayerHandles { get; }
+
         public AppletStateMgr(Horizon system)
         {
             Messages     = new ConcurrentQueue<AppletMessage>();
             MessageEvent = new KEvent(system.KernelContext);
 
             AppletResourceUserIds = new IdDictionary();
+            IndirectLayerHandles = new IdDictionary();
         }
 
         public void SetFocus(bool isFocused)

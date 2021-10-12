@@ -4,11 +4,18 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
     /// <summary>
     /// A structure with configuration options of the software keyboard when starting a new input request in inline mode.
+    /// This is the extended version of the structure with extended appear options.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack=1, CharSet = CharSet.Unicode)]
-    struct SoftwareKeyboardCalc
+    struct SoftwareKeyboardCalcEx
     {
-        public const int InputTextLength = SoftwareKeyboardCalcEx.InputTextLength;
+        /// <summary>
+        /// This struct was built following Switchbrew's specs, but this size (larger) is also found in real games.
+        /// It's assumed that this is padding at the end of this struct, because all members seem OK.
+        /// </summary>
+        public const int AlternativeSize = 1256;
+
+        public const int InputTextLength = 505;
 
         public uint Unknown;
 
@@ -47,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         /// <summary>
         /// Appearance configurations for the on-screen keyboard.
         /// </summary>
-        public SoftwareKeyboardAppear Appear;
+        public SoftwareKeyboardAppearEx Appear;
 
         /// <summary>
         /// The initial input text to be used by the software keyboard.
@@ -171,50 +178,5 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         public byte Trigger;
 
         public byte Padding;
-
-        public SoftwareKeyboardCalcEx ToExtended()
-        {
-            SoftwareKeyboardCalcEx calc = new SoftwareKeyboardCalcEx();
-
-            calc.Unknown                 = Unknown;
-            calc.Size                    = Size;
-            calc.Unknown1                = Unknown1;
-            calc.Unknown2                = Unknown2;
-            calc.Flags                   = Flags;
-            calc.Initialize              = Initialize;
-            calc.Volume                  = Volume;
-            calc.CursorPos               = CursorPos;
-            calc.Appear                  = Appear.ToExtended();
-            calc.InputText               = InputText;
-            calc.UseUtf8                 = UseUtf8;
-            calc.Unknown3                = Unknown3;
-            calc.BackspaceEnabled        = BackspaceEnabled;
-            calc.Unknown4                = Unknown4;
-            calc.Unknown5                = Unknown5;
-            calc.KeytopAsFloating        = KeytopAsFloating;
-            calc.FooterScalable          = FooterScalable;
-            calc.AlphaEnabledInInputMode = AlphaEnabledInInputMode;
-            calc.InputModeFadeType        = InputModeFadeType;
-            calc.TouchDisabled            = TouchDisabled;
-            calc.HardwareKeyboardDisabled = HardwareKeyboardDisabled;
-            calc.Unknown6                 = Unknown6;
-            calc.Unknown7                 = Unknown7;
-            calc.KeytopScale0             = KeytopScale0;
-            calc.KeytopScale1             = KeytopScale1;
-            calc.KeytopTranslate0         = KeytopTranslate0;
-            calc.KeytopTranslate1         = KeytopTranslate1;
-            calc.KeytopBgAlpha            = KeytopBgAlpha;
-            calc.FooterBgAlpha            = FooterBgAlpha;
-            calc.BalloonScale             = BalloonScale;
-            calc.Unknown8                 = Unknown8;
-            calc.Unknown9                 = Unknown9;
-            calc.Unknown10                = Unknown10;
-            calc.Unknown11                = Unknown11;
-            calc.SeGroup                  = SeGroup;
-            calc.TriggerFlag              = TriggerFlag;
-            calc.Trigger                  = Trigger;
-
-            return calc;
-        }
     }
 }

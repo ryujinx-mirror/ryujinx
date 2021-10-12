@@ -2,13 +2,16 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Cpu;
+using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService;
+using Ryujinx.HLE.Ui;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService.Types;
 using Ryujinx.HLE.HOS.Services.Vi.Types;
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -343,6 +346,20 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
+        private ulong GetA8B8G8R8LayerSize(int width, int height, out int pitch, out int alignment)
+        {
+            const int   defaultAlignment = 0x1000;
+            const ulong defaultSize      = 0x20000;
+
+            alignment = defaultAlignment;
+            pitch     = BitUtils.AlignUp(BitUtils.DivRoundUp(width * 32, 8), 64);
+
+            int   memorySize         = pitch * BitUtils.AlignUp(height, 64);
+            ulong requiredMemorySize = (ulong)BitUtils.AlignUp(memorySize, alignment);
+
+            return (requiredMemorySize + defaultSize - 1) / defaultSize * defaultSize;
+        }
+
         [CommandHipc(2450)]
         // GetIndirectLayerImageMap(s64 width, s64 height, u64 handle, nn::applet::AppletResourceUserId, pid) -> (s64, s64, buffer<bytes, 0x46>)
         public ResultCode GetIndirectLayerImageMap(ServiceCtx context)
@@ -350,13 +367,42 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             // The size of the layer buffer should be an aligned multiple of width * height
             // because it was created using GetIndirectLayerImageRequiredMemoryInfo as a guide.
 
+            long  layerWidth        = context.RequestData.ReadInt64();
+            long  layerHeight       = context.RequestData.ReadInt64();
+            long  layerHandle       = context.RequestData.ReadInt64();
             ulong layerBuffPosition = context.Request.ReceiveBuff[0].Position;
             ulong layerBuffSize     = context.Request.ReceiveBuff[0].Size;
 
-            // Fill the layer with zeros.
-            context.Memory.Fill(layerBuffPosition, layerBuffSize, 0x00);
+            // Get the pitch of the layer that is necessary to render correctly.
+            ulong size = GetA8B8G8R8LayerSize((int)layerWidth, (int)layerHeight, out int pitch, out _);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceVi);
+            Debug.Assert(layerBuffSize == size);
+
+            RenderingSurfaceInfo surfaceInfo = new RenderingSurfaceInfo(ColorFormat.A8B8G8R8, (uint)layerWidth, (uint)layerHeight, (uint)pitch, (uint)layerBuffSize);
+
+            // Get the applet associated with the handle.
+            object appletObject = context.Device.System.AppletState.IndirectLayerHandles.GetData((int)layerHandle);
+
+            if (appletObject == null)
+            {
+                Logger.Error?.Print(LogClass.ServiceVi, $"Indirect layer handle {layerHandle} does not match any applet");
+
+                return ResultCode.Success;
+            }
+
+            Debug.Assert(appletObject is IApplet);
+
+            IApplet applet = appletObject as IApplet;
+
+            if (!applet.DrawTo(surfaceInfo, context.Memory, layerBuffPosition))
+            {
+                Logger.Error?.Print(LogClass.ServiceVi, $"Applet did not draw on indirect layer handle {layerHandle}");
+
+                return ResultCode.Success;
+            }
+
+            context.ResponseData.Write(layerWidth);
+            context.ResponseData.Write(layerHeight);
 
             return ResultCode.Success;
         }
@@ -390,19 +436,13 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
                 }
                 */
 
-                const ulong defaultAlignment = 0x1000;
-                const ulong defaultSize      = 0x20000;
-
                 // NOTE: The official service setup a A8B8G8R8 texture with a linear layout and then query its size.
                 //       As we don't need this texture on the emulator, we can just simplify this logic and directly
                 //       do a linear layout size calculation. (stride * height * bytePerPixel)
-                int   pitch              = BitUtils.AlignUp(BitUtils.DivRoundUp(width * 32, 8), 64);
-                int   memorySize         = pitch * BitUtils.AlignUp(height, 64);
-                ulong requiredMemorySize = (ulong)BitUtils.AlignUp(memorySize, (int)defaultAlignment);
-                ulong size               = (requiredMemorySize + defaultSize - 1) / defaultSize * defaultSize;
+                ulong size = GetA8B8G8R8LayerSize(width, height, out int pitch, out int alignment);
 
                 context.ResponseData.Write(size);
-                context.ResponseData.Write(defaultAlignment);
+                context.ResponseData.Write(alignment);
             }
 
             return ResultCode.Success;
