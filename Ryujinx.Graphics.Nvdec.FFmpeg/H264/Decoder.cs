@@ -1,7 +1,8 @@
-﻿using Ryujinx.Graphics.Video;
+﻿using FFmpeg.AutoGen;
+using Ryujinx.Graphics.Video;
 using System;
 
-namespace Ryujinx.Graphics.Nvdec.H264
+namespace Ryujinx.Graphics.Nvdec.FFmpeg.H264
 {
     public sealed class Decoder : IH264Decoder
     {
@@ -11,7 +12,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
 
         private readonly byte[] _workBuffer = new byte[WorkBufferSize];
 
-        private FFmpegContext _context = new FFmpegContext();
+        private FFmpegContext _context = new FFmpegContext(AVCodecID.AV_CODEC_ID_H264);
 
         private int _oldOutputWidth;
         private int _oldOutputHeight;
@@ -29,7 +30,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
                 outSurf.RequestedHeight != _oldOutputHeight)
             {
                 _context.Dispose();
-                _context = new FFmpegContext();
+                _context = new FFmpegContext(AVCodecID.AV_CODEC_ID_H264);
 
                 _oldOutputWidth = outSurf.RequestedWidth;
                 _oldOutputHeight = outSurf.RequestedHeight;

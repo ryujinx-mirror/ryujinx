@@ -5,27 +5,26 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Graphics.Nvdec.H264
+namespace Ryujinx.Graphics.Nvdec.FFmpeg
 {
     unsafe class FFmpegContext : IDisposable
     {
-        private readonly AVCodec_decode _h264Decode;
+        private readonly AVCodec_decode _decodeFrame;
         private static readonly av_log_set_callback_callback _logFunc;
         private readonly AVCodec* _codec;
         private AVPacket* _packet;
         private AVCodecContext* _context;
 
-        public FFmpegContext()
+        public FFmpegContext(AVCodecID codecId)
         {
-            _codec = ffmpeg.avcodec_find_decoder(AVCodecID.AV_CODEC_ID_H264);
+            _codec = ffmpeg.avcodec_find_decoder(codecId);
             _context = ffmpeg.avcodec_alloc_context3(_codec);
-            _context->debug |= ffmpeg.FF_DEBUG_MMCO;
 
             ffmpeg.avcodec_open2(_context, _codec, null);
 
             _packet = ffmpeg.av_packet_alloc();
 
-            _h264Decode = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(_codec->decode.Pointer);
+            _decodeFrame = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(_codec->decode.Pointer);
         }
 
         static FFmpegContext()
@@ -115,7 +114,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
             {
                 _packet->data = ptr;
                 _packet->size = bitstream.Length;
-                result = _h264Decode(_context, output.Frame, &gotFrame, _packet);
+                result = _decodeFrame(_context, output.Frame, &gotFrame, _packet);
             }
 
             if (gotFrame == 0)
@@ -126,7 +125,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
                 // Get the next delayed frame by passing a 0 length packet.
                 _packet->data = null;
                 _packet->size = 0;
-                result = _h264Decode(_context, output.Frame, &gotFrame, _packet);
+                result = _decodeFrame(_context, output.Frame, &gotFrame, _packet);
 
                 // We need to set B frames to 0 as we already consumed all delayed frames.
                 // This prevents the decoder from trying to return a delayed frame next time.
@@ -138,6 +137,7 @@ namespace Ryujinx.Graphics.Nvdec.H264
             if (gotFrame == 0)
             {
                 ffmpeg.av_frame_unref(output.Frame);
+
                 return -1;
             }
 

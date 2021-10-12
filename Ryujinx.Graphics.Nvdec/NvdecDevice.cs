@@ -68,6 +68,9 @@ namespace Ryujinx.Graphics.Nvdec
                 case CodecId.H264:
                     H264Decoder.Decode(_currentContext, _rm, ref _state.State);
                     break;
+                case CodecId.Vp8:
+                    Vp8Decoder.Decode(_currentContext, _rm, ref _state.State);
+                    break;
                 case CodecId.Vp9:
                     Vp9Decoder.Decode(_rm, ref _state.State);
                     break;

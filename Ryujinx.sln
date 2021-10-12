@@ -51,8 +51,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Nvdec.Vp9"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Vic", "Ryujinx.Graphics.Vic\Ryujinx.Graphics.Vic.csproj", "{81BB2C11-9408-4EA3-822E-42987AF54429}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Nvdec.H264", "Ryujinx.Graphics.Nvdec.H264\Ryujinx.Graphics.Nvdec.H264.csproj", "{990F9601-343E-46CB-8529-B498FA761A92}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Video", "Ryujinx.Graphics.Video\Ryujinx.Graphics.Video.csproj", "{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Backends.OpenAL", "Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj", "{0BE11899-DF2D-4BDE-B9EE-2489E8D35E7D}"
@@ -67,7 +65,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.SDL2.Common", "Ryuj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio.Backends.SDL2", "Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj", "{D99A395A-8569-4DB0-B336-900647890052}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Headless.SDL2", "Ryujinx.Headless.SDL2\Ryujinx.Headless.SDL2.csproj", "{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Headless.SDL2", "Ryujinx.Headless.SDL2\Ryujinx.Headless.SDL2.csproj", "{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Graphics.Nvdec.FFmpeg", "Ryujinx.Graphics.Nvdec.FFmpeg\Ryujinx.Graphics.Nvdec.FFmpeg.csproj", "{BEE1C184-C9A4-410B-8DFC-FB74D5C93AEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,10 +159,6 @@ Global
 		{81BB2C11-9408-4EA3-822E-42987AF54429}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81BB2C11-9408-4EA3-822E-42987AF54429}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81BB2C11-9408-4EA3-822E-42987AF54429}.Release|Any CPU.Build.0 = Release|Any CPU
-		{990F9601-343E-46CB-8529-B498FA761A92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{990F9601-343E-46CB-8529-B498FA761A92}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{990F9601-343E-46CB-8529-B498FA761A92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{990F9601-343E-46CB-8529-B498FA761A92}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD4A2C14-8E3D-4957-ABBE-3C38897B3E2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -195,6 +191,10 @@ Global
 		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{390DC343-5CB4-4C79-A5DD-E3ED235E4C49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEE1C184-C9A4-410B-8DFC-FB74D5C93AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEE1C184-C9A4-410B-8DFC-FB74D5C93AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEE1C184-C9A4-410B-8DFC-FB74D5C93AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEE1C184-C9A4-410B-8DFC-FB74D5C93AEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

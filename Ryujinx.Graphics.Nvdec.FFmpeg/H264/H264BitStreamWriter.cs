@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Ryujinx.Graphics.Nvdec.H264
+namespace Ryujinx.Graphics.Nvdec.FFmpeg.H264
 {
     struct H264BitStreamWriter
     {

@@ -2,7 +2,7 @@
 using Ryujinx.Graphics.Video;
 using System;
 
-namespace Ryujinx.Graphics.Nvdec.H264
+namespace Ryujinx.Graphics.Nvdec.FFmpeg.H264
 {
     static class SpsAndPpsReconstruction
     {
