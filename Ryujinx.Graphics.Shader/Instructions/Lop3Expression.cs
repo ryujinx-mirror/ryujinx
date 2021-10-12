@@ -7,12 +7,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static class Lop3Expression
     {
-        public static Operand GetFromTruthTable(
-            EmitterContext context,
-            Operand        srcA,
-            Operand        srcB,
-            Operand        srcC,
-            int            imm)
+        public static Operand GetFromTruthTable(EmitterContext context, Operand srcA, Operand srcB, Operand srcC, int imm)
         {
             Operand expr = null;
 
@@ -45,7 +40,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             int map;
 
             // Encode into gray code.
-            map  = ((imm >> 0) & 1) << 0;
+            map = ((imm >> 0) & 1) << 0;
             map |= ((imm >> 1) & 1) << 4;
             map |= ((imm >> 2) & 1) << 1;
             map |= ((imm >> 3) & 1) << 5;

@@ -18,9 +18,9 @@ namespace Ryujinx.ShaderTools
                 _data = data;
             }
 
-            public T MemoryRead<T>(ulong address) where T : unmanaged
+            public ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize)
             {
-                return MemoryMarshal.Cast<byte, T>(new ReadOnlySpan<byte>(_data).Slice((int)address))[0];
+                return MemoryMarshal.Cast<byte, ulong>(new ReadOnlySpan<byte>(_data).Slice((int)address));
             }
         }
 

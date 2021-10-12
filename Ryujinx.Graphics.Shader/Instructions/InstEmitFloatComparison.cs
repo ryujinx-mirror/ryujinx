@@ -1,0 +1,419 @@
+using Ryujinx.Graphics.Shader.Decoders;
+using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
+using System;
+
+using static Ryujinx.Graphics.Shader.Instructions.InstEmitAluHelper;
+using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
+using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
+
+namespace Ryujinx.Graphics.Shader.Instructions
+{
+    static partial class InstEmit
+    {
+        public static void FcmpR(EmitterContext context)
+        {
+            InstFcmpR op = context.GetOp<InstFcmpR>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcReg(context, op.SrcB);
+            var srcC = GetSrcReg(context, op.SrcC);
+
+            EmitFcmp(context, op.FComp, srcA, srcB, srcC, op.Dest);
+        }
+
+        public static void FcmpI(EmitterContext context)
+        {
+            InstFcmpI op = context.GetOp<InstFcmpI>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcImm(context, Imm20ToFloat(op.Imm20));
+            var srcC = GetSrcReg(context, op.SrcC);
+
+            EmitFcmp(context, op.FComp, srcA, srcB, srcC, op.Dest);
+        }
+
+        public static void FcmpC(EmitterContext context)
+        {
+            InstFcmpC op = context.GetOp<InstFcmpC>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+            var srcC = GetSrcReg(context, op.SrcC);
+
+            EmitFcmp(context, op.FComp, srcA, srcB, srcC, op.Dest);
+        }
+
+        public static void FcmpRc(EmitterContext context)
+        {
+            InstFcmpRc op = context.GetOp<InstFcmpRc>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcReg(context, op.SrcC);
+            var srcC = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+
+            EmitFcmp(context, op.FComp, srcA, srcB, srcC, op.Dest);
+        }
+
+        public static void FsetR(EmitterContext context)
+        {
+            InstFsetR op = context.GetOp<InstFsetR>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcReg(context, op.SrcB);
+
+            EmitFset(context, op.FComp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.AbsA, op.AbsB, op.NegA, op.NegB, op.BVal, op.WriteCC);
+        }
+
+        public static void FsetC(EmitterContext context)
+        {
+            InstFsetC op = context.GetOp<InstFsetC>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+
+            EmitFset(context, op.FComp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.AbsA, op.AbsB, op.NegA, op.NegB, op.BVal, op.WriteCC);
+        }
+
+        public static void FsetI(EmitterContext context)
+        {
+            InstFsetI op = context.GetOp<InstFsetI>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcImm(context, Imm20ToFloat(op.Imm20));
+
+            EmitFset(context, op.FComp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.AbsA, op.AbsB, op.NegA, op.NegB, op.BVal, op.WriteCC);
+        }
+
+        public static void FsetpR(EmitterContext context)
+        {
+            InstFsetpR op = context.GetOp<InstFsetpR>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcReg(context, op.SrcB);
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.WriteCC);
+        }
+
+        public static void FsetpI(EmitterContext context)
+        {
+            InstFsetpI op = context.GetOp<InstFsetpI>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcImm(context, Imm20ToFloat(op.Imm20));
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.WriteCC);
+        }
+
+        public static void FsetpC(EmitterContext context)
+        {
+            InstFsetpC op = context.GetOp<InstFsetpC>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.WriteCC);
+        }
+
+        public static void Hset2R(EmitterContext context)
+        {
+            InstHset2R op = context.GetOp<InstHset2R>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, op.BSwizzle, op.SrcB, op.NegB, op.AbsB);
+
+            EmitHset2(context, op.Cmp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.Bval);
+        }
+
+        public static void Hset2I(EmitterContext context)
+        {
+            InstHset2I op = context.GetOp<InstHset2I>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, op.BimmH0, op.BimmH1);
+
+            EmitHset2(context, op.Cmp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.Bval);
+        }
+
+        public static void Hset2C(EmitterContext context)
+        {
+            InstHset2C op = context.GetOp<InstHset2C>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, HalfSwizzle.F32, op.CbufSlot, op.CbufOffset, op.NegB, false);
+
+            EmitHset2(context, op.Cmp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.Dest, op.Bval);
+        }
+
+        public static void Hsetp2R(EmitterContext context)
+        {
+            InstHsetp2R op = context.GetOp<InstHsetp2R>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, op.BSwizzle, op.SrcB, op.NegB, op.AbsB);
+
+            EmitHsetp2(context, op.FComp2, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.DestPred, op.DestPredInv, op.HAnd);
+        }
+
+        public static void Hsetp2I(EmitterContext context)
+        {
+            InstHsetp2I op = context.GetOp<InstHsetp2I>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, op.BimmH0, op.BimmH1);
+
+            EmitHsetp2(context, op.FComp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.DestPred, op.DestPredInv, op.HAnd);
+        }
+
+        public static void Hsetp2C(EmitterContext context)
+        {
+            InstHsetp2C op = context.GetOp<InstHsetp2C>();
+
+            var srcA = GetHalfSrc(context, op.ASwizzle, op.SrcA, op.NegA, op.AbsA);
+            var srcB = GetHalfSrc(context, HalfSwizzle.F32, op.CbufSlot, op.CbufOffset, op.NegB, op.AbsB);
+
+            EmitHsetp2(context, op.FComp, op.Bop, srcA, srcB, op.SrcPred, op.SrcPredInv, op.DestPred, op.DestPredInv, op.HAnd);
+        }
+
+        private static void EmitFcmp(EmitterContext context, FComp cmpOp, Operand srcA, Operand srcB, Operand srcC, int rd)
+        {
+            Operand cmpRes = GetFPComparison(context, cmpOp, srcC, ConstF(0));
+
+            Operand res = context.ConditionalSelect(cmpRes, srcA, srcB);
+
+            context.Copy(GetDest(rd), res);
+        }
+
+        private static void EmitFset(
+            EmitterContext context,
+            FComp cmpOp,
+            BoolOp logicOp,
+            Operand srcA,
+            Operand srcB,
+            int srcPred,
+            bool srcPredInv,
+            int rd,
+            bool absoluteA,
+            bool absoluteB,
+            bool negateA,
+            bool negateB,
+            bool boolFloat,
+            bool writeCC)
+        {
+            srcA = context.FPAbsNeg(srcA, absoluteA, negateA);
+            srcB = context.FPAbsNeg(srcB, absoluteB, negateB);
+
+            Operand res = GetFPComparison(context, cmpOp, srcA, srcB);
+            Operand pred = GetPredicate(context, srcPred, srcPredInv);
+
+            res = GetPredLogicalOp(context, logicOp, res, pred);
+
+            Operand dest = GetDest(rd);
+
+            if (boolFloat)
+            {
+                res = context.ConditionalSelect(res, ConstF(1), Const(0));
+
+                context.Copy(dest, res);
+
+                SetFPZnFlags(context, res, writeCC);
+            }
+            else
+            {
+                context.Copy(dest, res);
+
+                SetZnFlags(context, res, writeCC, extended: false);
+            }
+        }
+
+        private static void EmitFsetp(
+            EmitterContext context,
+            FComp cmpOp,
+            BoolOp logicOp,
+            Operand srcA,
+            Operand srcB,
+            int srcPred,
+            bool srcPredInv,
+            int destPred,
+            int destPredInv,
+            bool absoluteA,
+            bool absoluteB,
+            bool negateA,
+            bool negateB,
+            bool writeCC)
+        {
+            srcA = context.FPAbsNeg(srcA, absoluteA, negateA);
+            srcB = context.FPAbsNeg(srcB, absoluteB, negateB);
+
+            Operand p0Res = GetFPComparison(context, cmpOp, srcA, srcB);
+            Operand p1Res = context.BitwiseNot(p0Res);
+            Operand pred = GetPredicate(context, srcPred, srcPredInv);
+
+            p0Res = GetPredLogicalOp(context, logicOp, p0Res, pred);
+            p1Res = GetPredLogicalOp(context, logicOp, p1Res, pred);
+
+            context.Copy(Register(destPred, RegisterType.Predicate), p0Res);
+            context.Copy(Register(destPredInv, RegisterType.Predicate), p1Res);
+        }
+
+        private static void EmitHset2(
+            EmitterContext context,
+            FComp cmpOp,
+            BoolOp logicOp,
+            Operand[] srcA,
+            Operand[] srcB,
+            int srcPred,
+            bool srcPredInv,
+            int rd,
+            bool boolFloat)
+        {
+            Operand[] res = new Operand[2];
+
+            res[0] = GetFPComparison(context, cmpOp, srcA[0], srcB[0]);
+            res[1] = GetFPComparison(context, cmpOp, srcA[1], srcB[1]);
+
+            Operand pred = GetPredicate(context, srcPred, srcPredInv);
+
+            res[0] = GetPredLogicalOp(context, logicOp, res[0], pred);
+            res[1] = GetPredLogicalOp(context, logicOp, res[1], pred);
+
+            if (boolFloat)
+            {
+                res[0] = context.ConditionalSelect(res[0], ConstF(1), Const(0));
+                res[1] = context.ConditionalSelect(res[1], ConstF(1), Const(0));
+
+                context.Copy(GetDest(rd), context.PackHalf2x16(res[0], res[1]));
+            }
+            else
+            {
+                Operand low  = context.BitwiseAnd(res[0], Const(0xffff));
+                Operand high = context.ShiftLeft (res[1], Const(16));
+
+                Operand packed = context.BitwiseOr(low, high);
+
+                context.Copy(GetDest(rd), packed);
+            }
+        }
+
+        private static void EmitHsetp2(
+            EmitterContext context,
+            FComp cmpOp,
+            BoolOp logicOp,
+            Operand[] srcA,
+            Operand[] srcB,
+            int srcPred,
+            bool srcPredInv,
+            int destPred,
+            int destPredInv,
+            bool hAnd)
+        {
+            Operand p0Res = GetFPComparison(context, cmpOp, srcA[0], srcB[0]);
+            Operand p1Res = GetFPComparison(context, cmpOp, srcA[1], srcB[1]);
+
+            if (hAnd)
+            {
+                p0Res = context.BitwiseAnd(p0Res, p1Res);
+                p1Res = context.BitwiseNot(p0Res);
+            }
+
+            Operand pred = GetPredicate(context, srcPred, srcPredInv);
+
+            p0Res = GetPredLogicalOp(context, logicOp, p0Res, pred);
+            p1Res = GetPredLogicalOp(context, logicOp, p1Res, pred);
+
+            context.Copy(Register(destPred, RegisterType.Predicate), p0Res);
+            context.Copy(Register(destPredInv, RegisterType.Predicate), p1Res);
+        }
+
+        private static Operand GetFPComparison(EmitterContext context, FComp cond, Operand srcA, Operand srcB)
+        {
+            Operand res;
+
+            if (cond == FComp.T)
+            {
+                res = Const(IrConsts.True);
+            }
+            else if (cond == FComp.F)
+            {
+                res = Const(IrConsts.False);
+            }
+            else if (cond == FComp.Nan || cond == FComp.Num)
+            {
+                res = context.BitwiseOr(context.IsNan(srcA), context.IsNan(srcB));
+
+                if (cond == FComp.Num)
+                {
+                    res = context.BitwiseNot(res);
+                }
+            }
+            else
+            {
+                Instruction inst;
+
+                switch (cond & ~FComp.Nan)
+                {
+                    case FComp.Lt: inst = Instruction.CompareLess; break;
+                    case FComp.Eq: inst = Instruction.CompareEqual; break;
+                    case FComp.Le: inst = Instruction.CompareLessOrEqual; break;
+                    case FComp.Gt: inst = Instruction.CompareGreater; break;
+                    case FComp.Ne: inst = Instruction.CompareNotEqual; break;
+                    case FComp.Ge: inst = Instruction.CompareGreaterOrEqual; break;
+
+                    default: throw new ArgumentException($"Unexpected condition \"{cond}\".");
+                }
+
+                res = context.Add(inst | Instruction.FP32, Local(), srcA, srcB);
+
+                if ((cond & FComp.Nan) != 0)
+                {
+                    res = context.BitwiseOr(res, context.IsNan(srcA));
+                    res = context.BitwiseOr(res, context.IsNan(srcB));
+                }
+            }
+
+            return res;
+        }
+    }
+}

@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.Graphics.Shader
+﻿using System;
+
+namespace Ryujinx.Graphics.Shader
 {
     public interface IGpuAccessor
     {
@@ -12,12 +14,7 @@
             return 0;
         }
 
-        T MemoryRead<T>(ulong address) where T : unmanaged;
-
-        bool MemoryMapped(ulong address)
-        {
-            return true;
-        }
+        ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         int QueryComputeLocalSizeX()
         {

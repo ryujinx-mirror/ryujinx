@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
@@ -113,11 +114,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderHeader(IGpuAccessor gpuAccessor, ulong address)
         {
-            int commonWord0 = gpuAccessor.MemoryRead<int>(address + 0);
-            int commonWord1 = gpuAccessor.MemoryRead<int>(address + 4);
-            int commonWord2 = gpuAccessor.MemoryRead<int>(address + 8);
-            int commonWord3 = gpuAccessor.MemoryRead<int>(address + 12);
-            int commonWord4 = gpuAccessor.MemoryRead<int>(address + 16);
+            ReadOnlySpan<int> header = MemoryMarshal.Cast<ulong, int>(gpuAccessor.GetCode(address, 0x50));
+
+            int commonWord0 = header[0];
+            int commonWord1 = header[1];
+            int commonWord2 = header[2];
+            int commonWord3 = header[3];
+            int commonWord4 = header[4];
 
             SphType = commonWord0.Extract(0, 5);
             Version = commonWord0.Extract(5, 5);
@@ -164,9 +167,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             ImapTypes = new ImapPixelType[32];
 
-            for (ulong i = 0; i < 32; i++)
+            for (int i = 0; i < 32; i++)
             {
-                byte imap = gpuAccessor.MemoryRead<byte>(address + 0x18 + i);
+                byte imap = (byte)(header[6 + (i >> 2)] >> ((i & 3) * 8));
 
                 ImapTypes[i] = new ImapPixelType(
                     (PixelImap)((imap >> 0) & 3),
@@ -175,8 +178,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                     (PixelImap)((imap >> 6) & 3));
             }
 
-            int type2OmapTarget = gpuAccessor.MemoryRead<int>(address + 0x48);
-            int type2Omap       = gpuAccessor.MemoryRead<int>(address + 0x4c);
+            int type2OmapTarget = header[18];
+            int type2Omap       = header[19];
 
             OmapTargets = new OmapTarget[8];
 

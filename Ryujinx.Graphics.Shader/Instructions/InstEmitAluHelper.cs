@@ -10,50 +10,39 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static class InstEmitAluHelper
     {
-        public static long GetIntMin(IntegerType type)
+        public static long GetIntMin(IDstFmt type)
         {
-            switch (type)
+            return type switch
             {
-                case IntegerType.U8:  return byte.MinValue;
-                case IntegerType.S8:  return sbyte.MinValue;
-                case IntegerType.U16: return ushort.MinValue;
-                case IntegerType.S16: return short.MinValue;
-                case IntegerType.U32: return uint.MinValue;
-                case IntegerType.S32: return int.MinValue;
-            }
-
-            throw new ArgumentException($"The type \"{type}\" is not a supported int type.");
+                IDstFmt.U16 => ushort.MinValue,
+                IDstFmt.S16 => short.MinValue,
+                IDstFmt.U32 => uint.MinValue,
+                IDstFmt.S32 => int.MinValue,
+                _ => throw new ArgumentException($"The type \"{type}\" is not a supported integer type.")
+            };
         }
 
-        public static long GetIntMax(IntegerType type)
+        public static long GetIntMax(IDstFmt type)
         {
-            switch (type)
+            return type switch
             {
-                case IntegerType.U8:  return byte.MaxValue;
-                case IntegerType.S8:  return sbyte.MaxValue;
-                case IntegerType.U16: return ushort.MaxValue;
-                case IntegerType.S16: return short.MaxValue;
-                case IntegerType.U32: return uint.MaxValue;
-                case IntegerType.S32: return int.MaxValue;
-            }
-
-            throw new ArgumentException($"The type \"{type}\" is not a supported int type.");
+                IDstFmt.U16 => ushort.MaxValue,
+                IDstFmt.S16 => short.MaxValue,
+                IDstFmt.U32 => uint.MaxValue,
+                IDstFmt.S32 => int.MaxValue,
+                _ => throw new ArgumentException($"The type \"{type}\" is not a supported integer type.")
+            };
         }
 
-        public static Operand GetPredLogicalOp(
-            EmitterContext   context,
-            LogicalOperation logicalOp,
-            Operand          input,
-            Operand          pred)
+        public static Operand GetPredLogicalOp(EmitterContext context, BoolOp logicOp, Operand input, Operand pred)
         {
-            switch (logicalOp)
+            return logicOp switch
             {
-                case LogicalOperation.And:         return context.BitwiseAnd        (input, pred);
-                case LogicalOperation.Or:          return context.BitwiseOr         (input, pred);
-                case LogicalOperation.ExclusiveOr: return context.BitwiseExclusiveOr(input, pred);
-            }
-
-            return input;
+                BoolOp.And => context.BitwiseAnd(input, pred),
+                BoolOp.Or => context.BitwiseOr(input, pred),
+                BoolOp.Xor => context.BitwiseExclusiveOr(input, pred),
+                _ => input
+            };
         }
 
         public static void SetZnFlags(EmitterContext context, Operand dest, bool setCC, bool extended = false)

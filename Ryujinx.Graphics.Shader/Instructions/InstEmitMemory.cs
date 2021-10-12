@@ -15,369 +15,160 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Shared
         }
 
-        public static void Al2p(EmitterContext context)
-        {
-            OpCodeAl2p op = (OpCodeAl2p)context.CurrOp;
-
-            if (op.Rd.IsRZ)
-            {
-                return;
-            }
-
-            context.Copy(Register(op.Rd), context.IAdd(Register(op.Ra), Const(op.Immediate)));
-        }
-
-        public static void Ald(EmitterContext context)
-        {
-            OpCodeAttribute op = (OpCodeAttribute)context.CurrOp;
-
-            Operand primVertex = context.Copy(GetSrcC(context));
-
-            for (int index = 0; index < op.Count; index++)
-            {
-                Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
-
-                if (rd.IsRZ)
-                {
-                    break;
-                }
-
-                if (op.Phys)
-                {
-                    Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
-                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
-
-                    context.Copy(Register(rd), context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, primVertex));
-
-                    context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
-                }
-                else if (op.Rc.IsRZ)
-                {
-                    Operand src = Attribute(op.AttributeOffset + index * 4);
-
-                    context.FlagAttributeRead(src.Value);
-
-                    context.Copy(Register(rd), src);
-                }
-                else
-                {
-                    Operand src = Const(op.AttributeOffset + index * 4);
-
-                    context.FlagAttributeRead(src.Value);
-
-                    context.Copy(Register(rd), context.LoadAttribute(src, Const(0), primVertex));
-                }
-            }
-        }
-
-        public static void Ast(EmitterContext context)
-        {
-            OpCodeAttribute op = (OpCodeAttribute)context.CurrOp;
-
-            for (int index = 0; index < op.Count; index++)
-            {
-                if (op.Rd.Index + index > RegisterConsts.RegisterZeroIndex)
-                {
-                    break;
-                }
-
-                Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
-
-                if (op.Phys)
-                {
-                    Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
-                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
-
-                    context.StoreAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Register(rd));
-
-                    context.Config.SetUsedFeature(FeatureFlags.OaIndexing);
-                }
-                else
-                {
-                    Operand dest = Attribute(op.AttributeOffset + index * 4);
-
-                    context.FlagAttributeWritten(dest.Value);
-
-                    context.Copy(dest, Register(rd));
-                }
-            }
-        }
-
         public static void Atom(EmitterContext context)
         {
-            OpCodeAtom op = (OpCodeAtom)context.CurrOp;
+            InstAtom op = context.GetOp<InstAtom>();
 
-            ReductionType type = (ReductionType)op.RawOpCode.Extract(49, 2);
+            int sOffset = (op.Imm20 << 12) >> 12;
 
-            int sOffset = (op.RawOpCode.Extract(28, 20) << 12) >> 12;
+            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, new Register(op.SrcA, RegisterType.Gpr), op.E, sOffset);
 
-            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, op.Ra, op.Extended, sOffset);
+            Operand value = GetSrcReg(context, op.SrcB);
 
-            Operand value = GetSrcB(context);
+            Operand res = EmitAtomicOp(context, Instruction.MrGlobal, op.Op, op.Size, addrLow, addrHigh, value);
 
-            Operand res = EmitAtomicOp(
-                context,
-                Instruction.MrGlobal,
-                op.AtomicOp,
-                type,
-                addrLow,
-                addrHigh,
-                value);
-
-            context.Copy(GetDest(context), res);
+            context.Copy(GetDest(op.Dest), res);
         }
 
         public static void Atoms(EmitterContext context)
         {
-            OpCodeAtom op = (OpCodeAtom)context.CurrOp;
+            InstAtoms op = context.GetOp<InstAtoms>();
 
-            ReductionType type = op.RawOpCode.Extract(28, 2) switch
-            {
-                0 => ReductionType.U32,
-                1 => ReductionType.S32,
-                2 => ReductionType.U64,
-                _ => ReductionType.S64
-            };
+            Operand offset = context.ShiftRightU32(GetSrcReg(context, op.SrcA), Const(2));
 
-            Operand offset = context.ShiftRightU32(GetSrcA(context), Const(2));
-
-            int sOffset = (op.RawOpCode.Extract(30, 22) << 10) >> 10;
+            int sOffset = (op.Imm22 << 10) >> 10;
 
             offset = context.IAdd(offset, Const(sOffset));
 
-            Operand value = GetSrcB(context);
+            Operand value = GetSrcReg(context, op.SrcB);
 
-            Operand res = EmitAtomicOp(
-                context,
-                Instruction.MrShared,
-                op.AtomicOp,
-                type,
-                offset,
-                Const(0),
-                value);
-
-            context.Copy(GetDest(context), res);
-        }
-
-        public static void Bar(EmitterContext context)
-        {
-            OpCodeBarrier op = (OpCodeBarrier)context.CurrOp;
-
-            // TODO: Support other modes.
-            if (op.Mode == BarrierMode.Sync)
+            AtomSize size = op.AtomsSize switch
             {
-                context.Barrier();
-            }
-            else
-            {
-                context.Config.GpuAccessor.Log($"Invalid barrier mode: {op.Mode}.");
-            }
-        }
+                AtomsSize.S32 => AtomSize.S32,
+                AtomsSize.U64 => AtomSize.U64,
+                AtomsSize.S64 => AtomSize.S64,
+                _ => AtomSize.U32
+            };
 
-        public static void Ipa(EmitterContext context)
-        {
-            OpCodeIpa op = (OpCodeIpa)context.CurrOp;
+            Operand res = EmitAtomicOp(context, Instruction.MrShared, op.AtomOp, size, offset, Const(0), value);
 
-            context.FlagAttributeRead(op.AttributeOffset);
-
-            Operand res;
-
-            if (op.Idx)
-            {
-                Operand userAttrOffset = context.ISubtract(GetSrcA(context), Const(AttributeConsts.UserAttributeBase));
-                Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
-
-                res = context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Const(0));
-                res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
-
-                context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
-            }
-            else
-            {
-                res = Attribute(op.AttributeOffset);
-
-                if (op.AttributeOffset >= AttributeConsts.UserAttributeBase &&
-                    op.AttributeOffset <  AttributeConsts.UserAttributeEnd)
-                {
-                    int index = (op.AttributeOffset - AttributeConsts.UserAttributeBase) >> 4;
-
-                    if (context.Config.ImapTypes[index].GetFirstUsedType() == PixelImap.Perspective)
-                    {
-                        res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
-                    }
-                }
-            }
-
-            if (op.Mode == InterpolationMode.Default)
-            {
-                Operand srcB = GetSrcB(context);
-
-                res = context.FPMultiply(res, srcB);
-            }
-
-            res = context.FPSaturate(res, op.Saturate);
-
-            context.Copy(GetDest(context), res);
-        }
-
-        public static void Isberd(EmitterContext context)
-        {
-            // This instruction performs a load from ISBE memory,
-            // however it seems to be only used to get some vertex
-            // input data, so we instead propagate the offset so that
-            // it can be used on the attribute load.
-            context.Copy(GetDest(context), GetSrcA(context));
-        }
-
-        public static void Ld(EmitterContext context)
-        {
-            EmitLoad(context, MemoryRegion.Local);
+            context.Copy(GetDest(op.Dest), res);
         }
 
         public static void Ldc(EmitterContext context)
         {
-            OpCodeLdc op = (OpCodeLdc)context.CurrOp;
+            InstLdc op = context.GetOp<InstLdc>();
 
-            if (op.Size > IntegerSize.B64)
+            if (op.LsSize > LsSize2.B64)
             {
-                context.Config.GpuAccessor.Log($"Invalid LDC size: {op.Size}.");
+                context.Config.GpuAccessor.Log($"Invalid LDC size: {op.LsSize}.");
+                return;
             }
 
-            bool isSmallInt = op.Size < IntegerSize.B32;
+            bool isSmallInt = op.LsSize < LsSize2.B32;
 
-            int count = op.Size == IntegerSize.B64 ? 2 : 1;
+            int count = op.LsSize == LsSize2.B64 ? 2 : 1;
 
-            Operand slot = Const(op.Slot);
-            Operand srcA = GetSrcA(context);
+            Operand slot = Const(op.CbufSlot);
+            Operand srcA = GetSrcReg(context, op.SrcA);
 
-            if (op.IndexMode == CbIndexMode.Is ||
-                op.IndexMode == CbIndexMode.Isl)
+            if (op.AddressMode == AddressMode.Is || op.AddressMode == AddressMode.Isl)
             {
                 slot = context.IAdd(slot, context.BitfieldExtractU32(srcA, Const(16), Const(16)));
                 srcA = context.BitwiseAnd(srcA, Const(0xffff));
             }
 
-            Operand addr = context.IAdd(srcA, Const(op.Offset));
-
+            Operand addr = context.IAdd(srcA, Const(Imm16ToSInt(op.CbufOffset)));
             Operand wordOffset = context.ShiftRightU32(addr, Const(2));
-
             Operand bitOffset = GetBitOffset(context, addr);
 
             for (int index = 0; index < count; index++)
             {
-                Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
+                Register dest = new Register(op.Dest + index, RegisterType.Gpr);
 
-                if (rd.IsRZ)
+                if (dest.IsRZ)
                 {
                     break;
                 }
 
                 Operand offset = context.IAdd(wordOffset, Const(index));
-
                 Operand value = context.LoadConstant(slot, offset);
 
                 if (isSmallInt)
                 {
-                    value = ExtractSmallInt(context, op.Size, bitOffset, value);
+                    value = ExtractSmallInt(context, (LsSize)op.LsSize, bitOffset, value);
                 }
 
-                context.Copy(Register(rd), value);
+                context.Copy(Register(dest), value);
             }
         }
 
         public static void Ldg(EmitterContext context)
         {
-            EmitLoadGlobal(context);
+            InstLdg op = context.GetOp<InstLdg>();
+
+            EmitLdg(context, op.LsSize, op.SrcA, op.Dest, Imm24ToSInt(op.Imm24), op.E);
+        }
+
+        public static void Ldl(EmitterContext context)
+        {
+            InstLdl op = context.GetOp<InstLdl>();
+
+            EmitLoad(context, MemoryRegion.Local, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
         }
 
         public static void Lds(EmitterContext context)
         {
-            EmitLoad(context, MemoryRegion.Shared);
-        }
+            InstLds op = context.GetOp<InstLds>();
 
-        public static void Membar(EmitterContext context)
-        {
-            OpCodeMemoryBarrier op = (OpCodeMemoryBarrier)context.CurrOp;
-
-            if (op.Level == BarrierLevel.Cta)
-            {
-                context.GroupMemoryBarrier();
-            }
-            else
-            {
-                context.MemoryBarrier();
-            }
-        }
-
-        public static void Out(EmitterContext context)
-        {
-            OpCode op = context.CurrOp;
-
-            bool emit = op.RawOpCode.Extract(39);
-            bool cut  = op.RawOpCode.Extract(40);
-
-            if (!(emit || cut))
-            {
-                context.Config.GpuAccessor.Log("Invalid OUT encoding.");
-            }
-
-            if (emit)
-            {
-                context.EmitVertex();
-            }
-
-            if (cut)
-            {
-                context.EndPrimitive();
-            }
+            EmitLoad(context, MemoryRegion.Shared, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
         }
 
         public static void Red(EmitterContext context)
         {
-            OpCodeRed op = (OpCodeRed)context.CurrOp;
+            InstRed op = context.GetOp<InstRed>();
 
-            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, op.Ra, op.Extended, op.Offset);
+            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, new Register(op.SrcA, RegisterType.Gpr), op.E, op.Imm20);
 
-            EmitAtomicOp(
-                context,
-                Instruction.MrGlobal,
-                op.AtomicOp,
-                op.Type,
-                addrLow,
-                addrHigh,
-                GetDest(context));
-        }
-
-        public static void St(EmitterContext context)
-        {
-            EmitStore(context, MemoryRegion.Local);
+            EmitAtomicOp(context, Instruction.MrGlobal, (AtomOp)op.RedOp, op.RedSize, addrLow, addrHigh, GetDest(op.SrcB));
         }
 
         public static void Stg(EmitterContext context)
         {
-            EmitStoreGlobal(context);
+            InstStg op = context.GetOp<InstStg>();
+
+            EmitStg(context, op.LsSize, op.SrcA, op.Dest, Imm24ToSInt(op.Imm24), op.E);
+        }
+
+        public static void Stl(EmitterContext context)
+        {
+            InstStl op = context.GetOp<InstStl>();
+
+            EmitStore(context, MemoryRegion.Local, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
         }
 
         public static void Sts(EmitterContext context)
         {
-            EmitStore(context, MemoryRegion.Shared);
+            InstSts op = context.GetOp<InstSts>();
+
+            EmitStore(context, MemoryRegion.Shared, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
         }
 
         private static Operand EmitAtomicOp(
             EmitterContext context,
-            Instruction    mr,
-            AtomicOp       op,
-            ReductionType  type,
-            Operand        addrLow,
-            Operand        addrHigh,
-            Operand        value)
+            Instruction mr,
+            AtomOp op,
+            AtomSize type,
+            Operand addrLow,
+            Operand addrHigh,
+            Operand value)
         {
             Operand res = Const(0);
 
             switch (op)
             {
-                case AtomicOp.Add:
-                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                case AtomOp.Add:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
                         res = context.AtomicAdd(mr, addrLow, addrHigh, value);
                     }
@@ -386,8 +177,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomicOp.BitwiseAnd:
-                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                case AtomOp.And:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
                         res = context.AtomicAnd(mr, addrLow, addrHigh, value);
                     }
@@ -396,8 +187,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomicOp.BitwiseExclusiveOr:
-                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                case AtomOp.Xor:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
                         res = context.AtomicXor(mr, addrLow, addrHigh, value);
                     }
@@ -406,8 +197,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomicOp.BitwiseOr:
-                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                case AtomOp.Or:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
                         res = context.AtomicOr(mr, addrLow, addrHigh, value);
                     }
@@ -416,12 +207,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomicOp.Maximum:
-                    if (type == ReductionType.S32)
+                case AtomOp.Max:
+                    if (type == AtomSize.S32)
                     {
                         res = context.AtomicMaxS32(mr, addrLow, addrHigh, value);
                     }
-                    else if (type == ReductionType.U32)
+                    else if (type == AtomSize.U32)
                     {
                         res = context.AtomicMaxU32(mr, addrLow, addrHigh, value);
                     }
@@ -430,12 +221,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomicOp.Minimum:
-                    if (type == ReductionType.S32)
+                case AtomOp.Min:
+                    if (type == AtomSize.S32)
                     {
                         res = context.AtomicMinS32(mr, addrLow, addrHigh, value);
                     }
-                    else if (type == ReductionType.U32)
+                    else if (type == AtomSize.U32)
                     {
                         res = context.AtomicMinU32(mr, addrLow, addrHigh, value);
                     }
@@ -449,77 +240,82 @@ namespace Ryujinx.Graphics.Shader.Instructions
             return res;
         }
 
-        private static void EmitLoad(EmitterContext context, MemoryRegion region)
+        private static void EmitLoad(
+            EmitterContext context,
+            MemoryRegion region,
+            LsSize2 size,
+            Operand srcA,
+            int rd,
+            int offset)
         {
-            OpCodeMemory op = (OpCodeMemory)context.CurrOp;
-
-            if (op.Size > IntegerSize.B128)
+            if (size > LsSize2.B128)
             {
-                context.Config.GpuAccessor.Log($"Invalid load size: {op.Size}.");
+                context.Config.GpuAccessor.Log($"Invalid load size: {size}.");
+                return;
             }
 
-            bool isSmallInt = op.Size < IntegerSize.B32;
+            bool isSmallInt = size < LsSize2.B32;
 
             int count = 1;
 
-            switch (op.Size)
+            switch (size)
             {
-                case IntegerSize.B64:  count = 2; break;
-                case IntegerSize.B128: count = 4; break;
+                case LsSize2.B64: count = 2; break;
+                case LsSize2.B128: count = 4; break;
             }
 
-            Operand baseOffset = context.IAdd(GetSrcA(context), Const(op.Offset));
-
-            // Word offset = byte offset / 4 (one word = 4 bytes).
-            Operand wordOffset = context.ShiftRightU32(baseOffset, Const(2));
-
+            Operand baseOffset = context.IAdd(srcA, Const(offset));
+            Operand wordOffset = context.ShiftRightU32(baseOffset, Const(2)); // Word offset = byte offset / 4 (one word = 4 bytes).
             Operand bitOffset = GetBitOffset(context, baseOffset);
 
             for (int index = 0; index < count; index++)
             {
-                Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
+                Register dest = new Register(rd + index, RegisterType.Gpr);
 
-                if (rd.IsRZ)
+                if (dest.IsRZ)
                 {
                     break;
                 }
 
-                Operand offset = context.IAdd(wordOffset, Const(index));
-
+                Operand elemOffset = context.IAdd(wordOffset, Const(index));
                 Operand value = null;
 
                 switch (region)
                 {
-                    case MemoryRegion.Local:  value = context.LoadLocal (offset); break;
-                    case MemoryRegion.Shared: value = context.LoadShared(offset); break;
+                    case MemoryRegion.Local: value = context.LoadLocal(elemOffset); break;
+                    case MemoryRegion.Shared: value = context.LoadShared(elemOffset); break;
                 }
 
                 if (isSmallInt)
                 {
-                    value = ExtractSmallInt(context, op.Size, bitOffset, value);
+                    value = ExtractSmallInt(context, (LsSize)size, bitOffset, value);
                 }
 
-                context.Copy(Register(rd), value);
+                context.Copy(Register(dest), value);
             }
         }
 
-        private static void EmitLoadGlobal(EmitterContext context)
+        private static void EmitLdg(
+            EmitterContext context,
+            LsSize size,
+            int ra,
+            int rd,
+            int offset,
+            bool extended)
         {
-            OpCodeMemory op = (OpCodeMemory)context.CurrOp;
+            bool isSmallInt = size < LsSize.B32;
 
-            bool isSmallInt = op.Size < IntegerSize.B32;
+            int count = GetVectorCount(size);
 
-            int count = GetVectorCount(op.Size);
-
-            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, op.Ra, op.Extended, op.Offset);
+            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, new Register(ra, RegisterType.Gpr), extended, offset);
 
             Operand bitOffset = GetBitOffset(context, addrLow);
 
             for (int index = 0; index < count; index++)
             {
-                Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
+                Register dest = new Register(rd + index, RegisterType.Gpr);
 
-                if (rd.IsRZ)
+                if (dest.IsRZ)
                 {
                     break;
                 }
@@ -528,47 +324,47 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (isSmallInt)
                 {
-                    value = ExtractSmallInt(context, op.Size, bitOffset, value);
+                    value = ExtractSmallInt(context, size, bitOffset, value);
                 }
 
-                context.Copy(Register(rd), value);
+                context.Copy(Register(dest), value);
             }
         }
 
-        private static void EmitStore(EmitterContext context, MemoryRegion region)
+        private static void EmitStore(
+            EmitterContext context,
+            MemoryRegion region,
+            LsSize2 size,
+            Operand srcA,
+            int rd,
+            int offset)
         {
-            OpCodeMemory op = (OpCodeMemory)context.CurrOp;
-
-            if (op.Size > IntegerSize.B128)
+            if (size > LsSize2.B128)
             {
-                context.Config.GpuAccessor.Log($"Invalid store size: {op.Size}.");
+                context.Config.GpuAccessor.Log($"Invalid store size: {size}.");
+                return;
             }
 
-            bool isSmallInt = op.Size < IntegerSize.B32;
+            bool isSmallInt = size < LsSize2.B32;
 
             int count = 1;
 
-            switch (op.Size)
+            switch (size)
             {
-                case IntegerSize.B64:  count = 2; break;
-                case IntegerSize.B128: count = 4; break;
+                case LsSize2.B64: count = 2; break;
+                case LsSize2.B128: count = 4; break;
             }
 
-            Operand baseOffset = context.IAdd(GetSrcA(context), Const(op.Offset));
-
+            Operand baseOffset = context.IAdd(srcA, Const(offset));
             Operand wordOffset = context.ShiftRightU32(baseOffset, Const(2));
-
             Operand bitOffset = GetBitOffset(context, baseOffset);
 
             for (int index = 0; index < count; index++)
             {
-                bool isRz = op.Rd.IsRZ;
+                bool isRz = rd + index >= RegisterConsts.RegisterZeroIndex;
 
-                Register rd = new Register(isRz ? op.Rd.Index : op.Rd.Index + index, RegisterType.Gpr);
-
-                Operand value = Register(rd);
-
-                Operand offset = context.IAdd(wordOffset, Const(index));
+                Operand value = Register(isRz ? rd : rd + index, RegisterType.Gpr);
+                Operand elemOffset = context.IAdd(wordOffset, Const(index));
 
                 if (isSmallInt)
                 {
@@ -576,60 +372,68 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     switch (region)
                     {
-                        case MemoryRegion.Local:  word = context.LoadLocal (offset); break;
-                        case MemoryRegion.Shared: word = context.LoadShared(offset); break;
+                        case MemoryRegion.Local: word = context.LoadLocal(elemOffset); break;
+                        case MemoryRegion.Shared: word = context.LoadShared(elemOffset); break;
                     }
 
-                    value = InsertSmallInt(context, op.Size, bitOffset, word, value);
+                    value = InsertSmallInt(context, (LsSize)size, bitOffset, word, value);
                 }
 
                 switch (region)
                 {
-                    case MemoryRegion.Local:  context.StoreLocal (offset, value); break;
-                    case MemoryRegion.Shared: context.StoreShared(offset, value); break;
+                    case MemoryRegion.Local: context.StoreLocal(elemOffset, value); break;
+                    case MemoryRegion.Shared: context.StoreShared(elemOffset, value); break;
                 }
             }
         }
 
-        private static void EmitStoreGlobal(EmitterContext context)
+        private static void EmitStg(
+            EmitterContext context,
+            LsSize2 size,
+            int ra,
+            int rd,
+            int offset,
+            bool extended)
         {
-            OpCodeMemory op = (OpCodeMemory)context.CurrOp;
+            if (size > LsSize2.B128)
+            {
+                context.Config.GpuAccessor.Log($"Invalid store size: {size}.");
+                return;
+            }
 
-            bool isSmallInt = op.Size < IntegerSize.B32;
+            bool isSmallInt = size < LsSize2.B32;
 
-            int count = GetVectorCount(op.Size);
+            int count = GetVectorCount((LsSize)size);
 
-            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, op.Ra, op.Extended, op.Offset);
+            (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, new Register(ra, RegisterType.Gpr), extended, offset);
 
             Operand bitOffset = GetBitOffset(context, addrLow);
 
             for (int index = 0; index < count; index++)
             {
-                bool isRz = op.Rd.IsRZ;
+                bool isRz = rd + index >= RegisterConsts.RegisterZeroIndex;
 
-                Register rd = new Register(isRz ? op.Rd.Index : op.Rd.Index + index, RegisterType.Gpr);
-
-                Operand value = Register(rd);
+                Operand value = Register(isRz ? rd : rd + index, RegisterType.Gpr);
 
                 if (isSmallInt)
                 {
                     Operand word = context.LoadGlobal(addrLow, addrHigh);
 
-                    value = InsertSmallInt(context, op.Size, bitOffset, word, value);
+                    value = InsertSmallInt(context, (LsSize)size, bitOffset, word, value);
                 }
 
                 context.StoreGlobal(context.IAdd(addrLow, Const(index * 4)), addrHigh, value);
             }
         }
 
-        private static int GetVectorCount(IntegerSize size)
+        private static int GetVectorCount(LsSize size)
         {
             switch (size)
             {
-                case IntegerSize.B64:
+                case LsSize.B64:
                     return 2;
-                case IntegerSize.B128:
-                case IntegerSize.UB128:
+                case LsSize.B128:
+                case LsSize.UB128:
                     return 4;
             }
 
@@ -642,7 +446,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool extended,
             int offset)
         {
-            Operand addrLow = GetSrcA(context);
+            Operand addrLow = Register(ra);
             Operand addrHigh;
 
             if (extended && !ra.IsRZ)
@@ -678,18 +482,18 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static Operand ExtractSmallInt(
             EmitterContext context,
-            IntegerSize    size,
-            Operand        bitOffset,
-            Operand        value)
+            LsSize size,
+            Operand bitOffset,
+            Operand value)
         {
             value = context.ShiftRightU32(value, bitOffset);
 
             switch (size)
             {
-                case IntegerSize.U8:  value = ZeroExtendTo32(context, value, 8);  break;
-                case IntegerSize.U16: value = ZeroExtendTo32(context, value, 16); break;
-                case IntegerSize.S8:  value = SignExtendTo32(context, value, 8);  break;
-                case IntegerSize.S16: value = SignExtendTo32(context, value, 16); break;
+                case LsSize.U8: value = ZeroExtendTo32(context, value, 8); break;
+                case LsSize.U16: value = ZeroExtendTo32(context, value, 16); break;
+                case LsSize.S8: value = SignExtendTo32(context, value, 8); break;
+                case LsSize.S16: value = SignExtendTo32(context, value, 16); break;
             }
 
             return value;
@@ -697,21 +501,21 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static Operand InsertSmallInt(
             EmitterContext context,
-            IntegerSize    size,
-            Operand        bitOffset,
-            Operand        word,
-            Operand        value)
+            LsSize size,
+            Operand bitOffset,
+            Operand word,
+            Operand value)
         {
             switch (size)
             {
-                case IntegerSize.U8:
-                case IntegerSize.S8:
+                case LsSize.U8:
+                case LsSize.S8:
                     value = context.BitwiseAnd(value, Const(0xff));
                     value = context.BitfieldInsert(word, value, bitOffset, Const(8));
                     break;
 
-                case IntegerSize.U16:
-                case IntegerSize.S16:
+                case LsSize.U16:
+                case LsSize.S16:
                     value = context.BitwiseAnd(value, Const(0xffff));
                     value = context.BitfieldInsert(word, value, bitOffset, Const(16));
                     break;

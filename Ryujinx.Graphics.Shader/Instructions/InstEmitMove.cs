@@ -9,67 +9,85 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
-        public static void Mov(EmitterContext context)
+        public static void MovR(EmitterContext context)
         {
-            context.Copy(GetDest(context), GetSrcB(context));
+            InstMovR op = context.GetOp<InstMovR>();
+
+            context.Copy(GetDest(op.Dest), GetSrcReg(context, op.SrcA));
         }
 
-        public static void R2p(EmitterContext context)
+        public static void MovI(EmitterContext context)
         {
-            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+            InstMovI op = context.GetOp<InstMovI>();
 
-            bool isCC  = op.RawOpCode.Extract(40);
-            int  shift = op.RawOpCode.Extract(41, 2) * 8;
+            context.Copy(GetDest(op.Dest), GetSrcImm(context, op.Imm20));
+        }
 
-            Operand value = GetSrcA(context);
-            Operand mask  = GetSrcB(context);
+        public static void MovC(EmitterContext context)
+        {
+            InstMovC op = context.GetOp<InstMovC>();
 
-            Operand Test(Operand value, int bit)
-            {
-                return context.ICompareNotEqual(context.BitwiseAnd(value, Const(1 << bit)), Const(0));
-            }
+            context.Copy(GetDest(op.Dest), GetSrcCbuf(context, op.CbufSlot, op.CbufOffset));
+        }
 
-            if (isCC)
-            {
-                // TODO: Support Register to condition code flags copy.
-                context.Config.GpuAccessor.Log("R2P.CC not implemented.");
-            }
-            else
-            {
-                for (int bit = 0; bit < 7; bit++)
-                {
-                    Operand pred = Register(bit, RegisterType.Predicate);
+        public static void Mov32i(EmitterContext context)
+        {
+            InstMov32i op = context.GetOp<InstMov32i>();
 
-                    Operand res = context.ConditionalSelect(Test(mask, bit), Test(value, bit + shift), pred);
+            context.Copy(GetDest(op.Dest), GetSrcImm(context, op.Imm32));
+        }
 
-                    context.Copy(pred, res);
-                }
-            }
+        public static void R2pR(EmitterContext context)
+        {
+            InstR2pR op = context.GetOp<InstR2pR>();
+
+            Operand value = GetSrcReg(context, op.SrcA);
+            Operand mask = GetSrcReg(context, op.SrcB);
+
+            EmitR2p(context, value, mask, op.ByteSel, op.Ccpr);
+        }
+
+        public static void R2pI(EmitterContext context)
+        {
+            InstR2pI op = context.GetOp<InstR2pI>();
+
+            Operand value = GetSrcReg(context, op.SrcA);
+            Operand mask = GetSrcImm(context, Imm20ToSInt(op.Imm20));
+
+            EmitR2p(context, value, mask, op.ByteSel, op.Ccpr);
+        }
+
+        public static void R2pC(EmitterContext context)
+        {
+            InstR2pC op = context.GetOp<InstR2pC>();
+
+            Operand value = GetSrcReg(context, op.SrcA);
+            Operand mask = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+
+            EmitR2p(context, value, mask, op.ByteSel, op.Ccpr);
         }
 
         public static void S2r(EmitterContext context)
         {
-            // TODO: Better impl.
-            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
-
-            SystemRegister sysReg = (SystemRegister)op.RawOpCode.Extract(20, 8);
+            InstS2r op = context.GetOp<InstS2r>();
 
             Operand src;
 
-            switch (sysReg)
+            switch (op.SReg)
             {
-                case SystemRegister.LaneId: src = Attribute(AttributeConsts.LaneId); break;
-
-                // TODO: Use value from Y direction GPU register.
-                case SystemRegister.YDirection: src = ConstF(1); break;
-
-                case SystemRegister.ThreadKill: src = context.Config.Stage == ShaderStage.Fragment
-                    ? Attribute(AttributeConsts.ThreadKill)
-                    : Const(0);
+                case SReg.LaneId:
+                    src = Attribute(AttributeConsts.LaneId);
                     break;
 
-                case SystemRegister.ThreadId:
-                {
+                case SReg.YDirection:
+                    src = ConstF(1); // TODO: Use value from Y direction GPU register.
+                    break;
+
+                case SReg.ThreadKill:
+                    src = context.Config.Stage == ShaderStage.Fragment ? Attribute(AttributeConsts.ThreadKill) : Const(0);
+                    break;
+
+                case SReg.TId:
                     Operand tidX = Attribute(AttributeConsts.ThreadIdX);
                     Operand tidY = Attribute(AttributeConsts.ThreadIdY);
                     Operand tidZ = Attribute(AttributeConsts.ThreadIdZ);
@@ -78,62 +96,115 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     tidZ = context.ShiftLeft(tidZ, Const(26));
 
                     src = context.BitwiseOr(tidX, context.BitwiseOr(tidY, tidZ));
-
                     break;
-                }
 
-                case SystemRegister.ThreadIdX: src = Attribute(AttributeConsts.ThreadIdX); break;
-                case SystemRegister.ThreadIdY: src = Attribute(AttributeConsts.ThreadIdY); break;
-                case SystemRegister.ThreadIdZ: src = Attribute(AttributeConsts.ThreadIdZ); break;
-                case SystemRegister.CtaIdX:    src = Attribute(AttributeConsts.CtaIdX);    break;
-                case SystemRegister.CtaIdY:    src = Attribute(AttributeConsts.CtaIdY);    break;
-                case SystemRegister.CtaIdZ:    src = Attribute(AttributeConsts.CtaIdZ);    break;
-                case SystemRegister.EqMask:    src = Attribute(AttributeConsts.EqMask);    break;
-                case SystemRegister.LtMask:    src = Attribute(AttributeConsts.LtMask);    break;
-                case SystemRegister.LeMask:    src = Attribute(AttributeConsts.LeMask);    break;
-                case SystemRegister.GtMask:    src = Attribute(AttributeConsts.GtMask);    break;
-                case SystemRegister.GeMask:    src = Attribute(AttributeConsts.GeMask);    break;
+                case SReg.TIdX:
+                    src = Attribute(AttributeConsts.ThreadIdX);
+                    break;
+                case SReg.TIdY:
+                    src = Attribute(AttributeConsts.ThreadIdY);
+                    break;
+                case SReg.TIdZ:
+                    src = Attribute(AttributeConsts.ThreadIdZ);
+                    break;
 
-                default: src = Const(0); break;
+                case SReg.CtaIdX:
+                    src = Attribute(AttributeConsts.CtaIdX);
+                    break;
+                case SReg.CtaIdY:
+                    src = Attribute(AttributeConsts.CtaIdY);
+                    break;
+                case SReg.CtaIdZ:
+                    src = Attribute(AttributeConsts.CtaIdZ);
+                    break;
+
+                case SReg.EqMask:
+                    src = Attribute(AttributeConsts.EqMask);
+                    break;
+                case SReg.LtMask:
+                    src = Attribute(AttributeConsts.LtMask);
+                    break;
+                case SReg.LeMask:
+                    src = Attribute(AttributeConsts.LeMask);
+                    break;
+                case SReg.GtMask:
+                    src = Attribute(AttributeConsts.GtMask);
+                    break;
+                case SReg.GeMask:
+                    src = Attribute(AttributeConsts.GeMask);
+                    break;
+
+                default:
+                    src = Const(0);
+                    break;
             }
 
-            context.Copy(GetDest(context), src);
+            context.Copy(GetDest(op.Dest), src);
         }
 
-        public static void Sel(EmitterContext context)
+        public static void SelR(EmitterContext context)
         {
-            Operand pred = GetPredicate39(context);
+            InstSelR op = context.GetOp<InstSelR>();
 
-            Operand srcA = GetSrcA(context);
-            Operand srcB = GetSrcB(context);
+            Operand srcA = GetSrcReg(context, op.SrcA);
+            Operand srcB = GetSrcReg(context, op.SrcB);
+            Operand srcPred = GetPredicate(context, op.SrcPred, op.SrcPredInv);
 
-            Operand res = context.ConditionalSelect(pred, srcA, srcB);
-
-            context.Copy(GetDest(context), res);
+            EmitSel(context, srcA, srcB, srcPred, op.Dest);
         }
 
-        public static void Shfl(EmitterContext context)
+        public static void SelI(EmitterContext context)
         {
-            OpCodeShuffle op = (OpCodeShuffle)context.CurrOp;
+            InstSelI op = context.GetOp<InstSelI>();
 
-            Operand pred = Register(op.Predicate48);
+            Operand srcA = GetSrcReg(context, op.SrcA);
+            Operand srcB = GetSrcImm(context, Imm20ToSInt(op.Imm20));
+            Operand srcPred = GetPredicate(context, op.SrcPred, op.SrcPredInv);
 
-            Operand srcA = GetSrcA(context);
+            EmitSel(context, srcA, srcB, srcPred, op.Dest);
+        }
 
-            Operand srcB = op.IsBImmediate ? Const(op.ImmediateB) : Register(op.Rb);
-            Operand srcC = op.IsCImmediate ? Const(op.ImmediateC) : Register(op.Rc);
+        public static void SelC(EmitterContext context)
+        {
+            InstSelC op = context.GetOp<InstSelC>();
 
-            (Operand res, Operand valid) = op.ShuffleType switch
+            Operand srcA = GetSrcReg(context, op.SrcA);
+            Operand srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+            Operand srcPred = GetPredicate(context, op.SrcPred, op.SrcPredInv);
+
+            EmitSel(context, srcA, srcB, srcPred, op.Dest);
+        }
+
+        private static void EmitR2p(EmitterContext context, Operand value, Operand mask, ByteSel byteSel, bool ccpr)
+        {
+            Operand Test(Operand value, int bit)
             {
-                ShuffleType.Indexed   => context.Shuffle(srcA, srcB, srcC),
-                ShuffleType.Up        => context.ShuffleUp(srcA, srcB, srcC),
-                ShuffleType.Down      => context.ShuffleDown(srcA, srcB, srcC),
-                ShuffleType.Butterfly => context.ShuffleXor(srcA, srcB, srcC),
-                _                     => (null, null)
-            };
+                return context.ICompareNotEqual(context.BitwiseAnd(value, Const(1 << bit)), Const(0));
+            }
 
-            context.Copy(GetDest(context), res);
-            context.Copy(pred, valid);
+            if (ccpr)
+            {
+                // TODO: Support Register to condition code flags copy.
+                context.Config.GpuAccessor.Log("R2P.CC not implemented.");
+            }
+            else
+            {
+                int shift = (int)byteSel * 8;
+
+                for (int bit = 0; bit < RegisterConsts.PredsCount; bit++)
+                {
+                    Operand pred = Register(bit, RegisterType.Predicate);
+                    Operand res = context.ConditionalSelect(Test(mask, bit), Test(value, bit + shift), pred);
+                    context.Copy(pred, res);
+                }
+            }
+        }
+
+        private static void EmitSel(EmitterContext context, Operand srcA, Operand srcB, Operand srcPred, int rd)
+        {
+            Operand res = context.ConditionalSelect(srcPred, srcA, srcB);
+
+            context.Copy(GetDest(rd), res);
         }
     }
 }

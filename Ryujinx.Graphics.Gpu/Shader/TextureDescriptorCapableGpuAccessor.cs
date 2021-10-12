@@ -1,6 +1,7 @@
 ﻿using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -13,7 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _context = context;
         }
 
-        public abstract T MemoryRead<T>(ulong address) where T : unmanaged;
+        public abstract ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         public abstract ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot);
 

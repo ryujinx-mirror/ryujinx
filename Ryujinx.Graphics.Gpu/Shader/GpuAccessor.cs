@@ -1,6 +1,8 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -95,24 +97,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
-        /// Reads data from GPU memory.
+        /// Gets a span of the specified memory location, containing shader code.
         /// </summary>
-        /// <typeparam name="T">Type of the data to be read</typeparam>
         /// <param name="address">GPU virtual address of the data</param>
-        /// <returns>Data at the memory location</returns>
-        public override T MemoryRead<T>(ulong address)
+        /// <param name="minimumSize">Minimum size that the returned span may have</param>
+        /// <returns>Span of the memory location</returns>
+        public override ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize)
         {
-            return _channel.MemoryManager.Read<T>(address);
-        }
-
-        /// <summary>
-        /// Checks if a given memory address is mapped.
-        /// </summary>
-        /// <param name="address">GPU virtual address to be checked</param>
-        /// <returns>True if the address is mapped, false otherwise</returns>
-        public bool MemoryMapped(ulong address)
-        {
-            return _channel.MemoryManager.IsMapped(address);
+            int size = Math.Max(minimumSize, 0x1000 - (int)(address & 0xfff));
+            return MemoryMarshal.Cast<byte, ulong>(_channel.MemoryManager.GetSpan(address, size));
         }
 
         /// <summary>

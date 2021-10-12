@@ -60,14 +60,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
-        /// Reads data from GPU memory.
+        /// Gets a span of the specified memory location, containing shader code.
         /// </summary>
-        /// <typeparam name="T">Type of the data to be read</typeparam>
         /// <param name="address">GPU virtual address of the data</param>
-        /// <returns>Data at the memory location</returns>
-        public override T MemoryRead<T>(ulong address)
+        /// <param name="minimumSize">Minimum size that the returned span may have</param>
+        /// <returns>Span of the memory location</returns>
+        public override ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize)
         {
-            return MemoryMarshal.Cast<byte, T>(_data.Span.Slice((int)address))[0];
+            return MemoryMarshal.Cast<byte, ulong>(_data.Span.Slice((int)address));
         }
 
         /// <summary>

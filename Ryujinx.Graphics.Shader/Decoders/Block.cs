@@ -1,57 +1,56 @@
+using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
+    class PushOpInfo
+    {
+        public InstOp Op { get; }
+        public Dictionary<Block, Operand> Consumers;
+
+        public PushOpInfo(InstOp op)
+        {
+            Op = op;
+            Consumers = new Dictionary<Block, Operand>();
+        }
+    }
+
+    struct SyncTarget
+    {
+        public PushOpInfo PushOpInfo { get; }
+        public int PushOpId { get; }
+
+        public SyncTarget(PushOpInfo pushOpInfo, int pushOpId)
+        {
+            PushOpInfo = pushOpInfo;
+            PushOpId = pushOpId;
+        }
+    }
+
     class Block
     {
-        public ulong Address    { get; set; }
+        public ulong Address { get; set; }
         public ulong EndAddress { get; set; }
 
-        private Block _next;
-        private Block _branch;
+        public List<Block> Predecessors { get; }
+        public List<Block> Successors { get; }
 
-        public Block Next
-        {
-            get
-            {
-                return _next;
-            }
-            set
-            {
-                _next?.Predecessors.Remove(this);
-                value?.Predecessors.Add(this);
-                _next = value;
-            }
-        }
-
-        public Block Branch
-        {
-            get
-            {
-                return _branch;
-            }
-            set
-            {
-                _branch?.Predecessors.Remove(this);
-                value?.Predecessors.Add(this);
-                _branch = value;
-            }
-        }
-
-        public HashSet<Block> Predecessors { get; }
-
-        public List<OpCode>     OpCodes     { get; }
-        public List<OpCodePush> PushOpCodes { get; }
+        public List<InstOp> OpCodes { get; }
+        public List<PushOpInfo> PushOpCodes { get; }
+        public Dictionary<ulong, SyncTarget> SyncTargets { get; }
 
         public Block(ulong address)
         {
             Address = address;
 
-            Predecessors = new HashSet<Block>();
+            Predecessors = new List<Block>();
+            Successors = new List<Block>();
 
-            OpCodes     = new List<OpCode>();
-            PushOpCodes = new List<OpCodePush>();
+            OpCodes = new List<InstOp>();
+            PushOpCodes = new List<PushOpInfo>();
+            SyncTargets = new Dictionary<ulong, SyncTarget>();
         }
 
         public void Split(Block rightBlock)
@@ -64,36 +63,56 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
 
             int splitCount = OpCodes.Count - splitIndex;
-
             if (splitCount <= 0)
             {
                 throw new ArgumentException("Can't split at right block address.");
             }
 
             rightBlock.EndAddress = EndAddress;
-
-            rightBlock.Next   = Next;
-            rightBlock.Branch = Branch;
-
-            rightBlock.OpCodes.AddRange(OpCodes.GetRange(splitIndex, splitCount));
-
-            rightBlock.UpdatePushOps();
+            rightBlock.Successors.AddRange(Successors);
+            rightBlock.Predecessors.Add(this);
 
             EndAddress = rightBlock.Address;
 
-            Next   = rightBlock;
-            Branch = null;
+            Successors.Clear();
+            Successors.Add(rightBlock);
+
+            // Move ops.
+            rightBlock.OpCodes.AddRange(OpCodes.GetRange(splitIndex, splitCount));
 
             OpCodes.RemoveRange(splitIndex, splitCount);
 
-            UpdatePushOps();
+            // Update push consumers that points to this block.
+            foreach (SyncTarget syncTarget in SyncTargets.Values)
+            {
+                PushOpInfo pushOpInfo = syncTarget.PushOpInfo;
+
+                Operand local = pushOpInfo.Consumers[this];
+                pushOpInfo.Consumers.Remove(this);
+                pushOpInfo.Consumers.Add(rightBlock, local);
+            }
+
+            rightBlock.SyncTargets.Union(SyncTargets);
+            SyncTargets.Clear();
+
+            // Move push ops.
+            for (int i = 0; i < PushOpCodes.Count; i++)
+            {
+                if (PushOpCodes[i].Op.Address >= rightBlock.Address)
+                {
+                    int count = PushOpCodes.Count - i;
+                    rightBlock.PushOpCodes.AddRange(PushOpCodes.Skip(i));
+                    PushOpCodes.RemoveRange(i, count);
+                    break;
+                }
+            }
         }
 
-        private static int BinarySearch(List<OpCode> opCodes, ulong address)
+        private static int BinarySearch(List<InstOp> opCodes, ulong address)
         {
-            int left   = 0;
+            int left = 0;
             int middle = 0;
-            int right  = opCodes.Count - 1;
+            int right = opCodes.Count - 1;
 
             while (left <= right)
             {
@@ -101,7 +120,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                 middle = left + (size >> 1);
 
-                OpCode opCode = opCodes[middle];
+                InstOp opCode = opCodes[middle];
 
                 if (address == opCode.Address)
                 {
@@ -121,29 +140,25 @@ namespace Ryujinx.Graphics.Shader.Decoders
             return middle;
         }
 
-        public OpCode GetLastOp()
+        public InstOp GetLastOp()
         {
             if (OpCodes.Count != 0)
             {
                 return OpCodes[OpCodes.Count - 1];
             }
 
-            return null;
+            return default;
         }
 
-        public void UpdatePushOps()
+        public bool HasNext()
         {
-            PushOpCodes.Clear();
+            InstOp lastOp = GetLastOp();
+            return OpCodes.Count != 0 && !Decoder.IsUnconditionalBranch(ref lastOp);
+        }
 
-            for (int index = 0; index < OpCodes.Count; index++)
-            {
-                if (!(OpCodes[index] is OpCodePush op))
-                {
-                    continue;
-                }
-
-                PushOpCodes.Add(op);
-            }
+        public void AddPushOp(InstOp op)
+        {
+            PushOpCodes.Add(new PushOpInfo(op));
         }
     }
 }

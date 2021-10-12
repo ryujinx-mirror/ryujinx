@@ -1,6 +1,8 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
@@ -9,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     class EmitterContext
     {
         public Block  CurrBlock { get; set; }
-        public OpCode CurrOp    { get; set; }
+        public InstOp CurrOp    { get; set; }
 
         public ShaderConfig Config { get; }
 
@@ -28,6 +30,13 @@ namespace Ryujinx.Graphics.Shader.Translation
             _funcs = funcs;
             _operations = new List<Operation>();
             _labels = new Dictionary<ulong, Operand>();
+        }
+
+        public T GetOp<T>() where T : unmanaged
+        {
+            Debug.Assert(Unsafe.SizeOf<T>() == sizeof(ulong));
+            ulong op = CurrOp.RawOpCode;
+            return Unsafe.As<ulong, T>(ref op);
         }
 
         public Operand Add(Instruction inst, Operand dest = null, params Operand[] sources)

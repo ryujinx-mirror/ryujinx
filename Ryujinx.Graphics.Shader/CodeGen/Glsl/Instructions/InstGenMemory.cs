@@ -176,7 +176,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     texCall = "int(" + texCall + ")";
                 }
-            } 
+            }
             else
             {
                 texCall += ")" + (texOp.Inst == Instruction.ImageLoad ? GetMask(texOp.Index) : "");

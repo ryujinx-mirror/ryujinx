@@ -150,9 +150,12 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         for (int index = 0; index < block.OpCodes.Count; index++)
                         {
-                            if (block.OpCodes[index] is OpCodeTextureBase texture)
+                            InstOp op = block.OpCodes[index];
+
+                            if (op.Props.HasFlag(InstProps.Tex))
                             {
-                                config.TextureHandlesForCache.Add(texture.HandleOffset);
+                                int tidB = (int)((op.RawOpCode >> 36) & 0x1fff);
+                                config.TextureHandlesForCache.Add(tidB);
                             }
                         }
                     }
@@ -241,15 +244,15 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             for (int opIndex = 0; opIndex < block.OpCodes.Count; opIndex++)
             {
-                OpCode op = block.OpCodes[opIndex];
+                InstOp op = block.OpCodes[opIndex];
 
-                if ((context.Config.Options.Flags & TranslationFlags.DebugMode) != 0)
+                if (context.Config.Options.Flags.HasFlag(TranslationFlags.DebugMode))
                 {
                     string instName;
 
                     if (op.Emitter != null)
                     {
-                        instName = op.Emitter.Method.Name;
+                        instName = op.Name.ToString();
                     }
                     else
                     {
@@ -263,31 +266,36 @@ namespace Ryujinx.Graphics.Shader.Translation
                     context.Add(new CommentNode(dbgComment));
                 }
 
-                if (op.NeverExecute)
+                InstConditional opConditional = new InstConditional(op.RawOpCode);
+
+                bool noPred = op.Props.HasFlag(InstProps.NoPred);
+                if (!noPred && opConditional.Pred == RegisterConsts.PredicateTrueIndex && opConditional.PredInv)
                 {
                     continue;
                 }
 
                 Operand predSkipLbl = null;
 
-                bool skipPredicateCheck = op is OpCodeBranch opBranch && !opBranch.PushTarget;
-
-                if (op is OpCodeBranchPop opBranchPop)
+                if (op.Name == InstName.Sync || op.Name == InstName.Brk)
                 {
                     // If the instruction is a SYNC or BRK instruction with only one
                     // possible target address, then the instruction is basically
                     // just a simple branch, we can generate code similar to branch
                     // instructions, with the condition check on the branch itself.
-                    skipPredicateCheck = opBranchPop.Targets.Count < 2;
+                    noPred = block.SyncTargets.Count <= 1;
+                }
+                else if (op.Name == InstName.Bra)
+                {
+                    noPred = true;
                 }
 
-                if (!(op.Predicate.IsPT || skipPredicateCheck))
+                if (!(opConditional.Pred == RegisterConsts.PredicateTrueIndex || noPred))
                 {
                     Operand label;
 
-                    if (opIndex == block.OpCodes.Count - 1 && block.Next != null)
+                    if (opIndex == block.OpCodes.Count - 1 && block.HasNext())
                     {
-                        label = context.GetLabel(block.Next.Address);
+                        label = context.GetLabel(block.Successors[0].Address);
                     }
                     else
                     {
@@ -296,9 +304,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                         predSkipLbl = label;
                     }
 
-                    Operand pred = Register(op.Predicate);
+                    Operand pred = Register(opConditional.Pred, RegisterType.Predicate);
 
-                    if (op.InvertPredicate)
+                    if (opConditional.PredInv)
                     {
                         context.BranchIfTrue(label, pred);
                     }

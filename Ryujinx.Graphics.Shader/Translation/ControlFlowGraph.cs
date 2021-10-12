@@ -129,6 +129,31 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
+            // Remove unreachable blocks.
+            bool hasUnreachable;
+
+            do
+            {
+                hasUnreachable = false;
+
+                for (int blkIndex = 1; blkIndex < blocks.Count; blkIndex++)
+                {
+                    BasicBlock block = blocks[blkIndex];
+
+                    if (block.Predecessors.Count == 0)
+                    {
+                        block.Next = null;
+                        block.Branch = null;
+                        blocks.RemoveAt(blkIndex--);
+                        hasUnreachable = true;
+                    }
+                    else
+                    {
+                        block.Index = blkIndex;
+                    }
+                }
+            } while (hasUnreachable);
+
             return new ControlFlowGraph(blocks.ToArray());
         }
 

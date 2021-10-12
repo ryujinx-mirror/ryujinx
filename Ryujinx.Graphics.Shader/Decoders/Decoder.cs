@@ -1,8 +1,8 @@
-using Ryujinx.Graphics.Shader.Instructions;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
@@ -95,32 +95,33 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         {
                             // We should have blocks for all possible branch targets,
                             // including those from SSY/PBK instructions.
-                            foreach (OpCodePush pushOp in currBlock.PushOpCodes)
+                            foreach (PushOpInfo pushOp in currBlock.PushOpCodes)
                             {
-                                GetBlock(pushOp.GetAbsoluteAddress());
+                                GetBlock(pushOp.Op.GetAbsoluteAddress());
                             }
 
                             // Set child blocks. "Branch" is the block the branch instruction
                             // points to (when taken), "Next" is the block at the next address,
                             // executed when the branch is not taken. For Unconditional Branches
                             // or end of program, Next is null.
-                            OpCode lastOp = currBlock.GetLastOp();
+                            InstOp lastOp = currBlock.GetLastOp();
 
-                            if (lastOp is OpCodeBranch opBr)
+                            if (lastOp.Name == InstName.Cal)
                             {
-                                if (lastOp.Emitter == InstEmit.Cal)
-                                {
-                                    EnqueueFunction(opBr.GetAbsoluteAddress());
-                                }
-                                else
-                                {
-                                    currBlock.Branch = GetBlock(opBr.GetAbsoluteAddress());
-                                }
+                                EnqueueFunction(lastOp.GetAbsoluteAddress());
+                            }
+                            else if (lastOp.Name == InstName.Bra)
+                            {
+                                Block succBlock = GetBlock(lastOp.GetAbsoluteAddress());
+                                currBlock.Successors.Add(succBlock);
+                                succBlock.Predecessors.Add(currBlock);
                             }
 
-                            if (!IsUnconditionalBranch(lastOp))
+                            if (!IsUnconditionalBranch(ref lastOp))
                             {
-                                currBlock.Next = GetBlock(currBlock.EndAddress);
+                                Block succBlock = GetBlock(currBlock.EndAddress);
+                                currBlock.Successors.Insert(0, succBlock);
+                                succBlock.Predecessors.Add(currBlock);
                             }
                         }
 
@@ -146,33 +147,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         }
                     }
 
-                    // Try to find target for BRX (indirect branch) instructions.
-                    hasNewTarget = false;
-
-                    foreach (Block block in blocks)
-                    {
-                        if (block.GetLastOp() is OpCodeBranchIndir opBrIndir && opBrIndir.PossibleTargets.Count == 0)
-                        {
-                            ulong baseOffset = opBrIndir.Address + 8 + (ulong)opBrIndir.Offset;
-
-                            // An indirect branch could go anywhere,
-                            // try to get the possible target offsets from the constant buffer.
-                            (int cbBaseOffset, int cbOffsetsCount) = FindBrxTargetRange(block, opBrIndir.Ra.Index);
-
-                            if (cbOffsetsCount != 0)
-                            {
-                                hasNewTarget = true;
-                            }
-
-                            for (int i = 0; i < cbOffsetsCount; i++)
-                            {
-                                uint targetOffset = config.GpuAccessor.ConstantBuffer1Read(cbBaseOffset + i * 4);
-                                Block target = GetBlock(baseOffset + targetOffset);
-                                opBrIndir.PossibleTargets.Add(target);
-                                target.Predecessors.Add(block);
-                            }
-                        }
-                    }
+                    // Try to find targets for BRX (indirect branch) instructions.
+                    hasNewTarget = FindBrxTargets(config, blocks, GetBlock);
 
                     // If we discovered new branch targets from the BRX instruction,
                     // we need another round of decoding to decode the new blocks.
@@ -227,6 +203,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
             IGpuAccessor gpuAccessor = config.GpuAccessor;
 
             ulong address = block.Address;
+            int bufferOffset = 0;
+            ReadOnlySpan<ulong> buffer = ReadOnlySpan<ulong>.Empty;
+
+            InstOp op = default;
 
             do
             {
@@ -239,66 +219,75 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 if ((address & 0x1f) == 0)
                 {
                     address += 8;
-
+                    bufferOffset++;
                     continue;
                 }
 
-                ulong opAddress = address;
-
-                address += 8;
-
-                long opCode = gpuAccessor.MemoryRead<long>(startAddress + opAddress);
-
-                (InstEmitter emitter, OpCodeTable.MakeOp makeOp) = OpCodeTable.GetEmitter(opCode);
-
-                if (emitter == null)
+                if (bufferOffset >= buffer.Length)
                 {
-                    // TODO: Warning, illegal encoding.
-
-                    block.OpCodes.Add(new OpCode(null, opAddress, opCode));
-
-                    continue;
+                    buffer = gpuAccessor.GetCode(startAddress + address, 8);
+                    bufferOffset = 0;
                 }
 
-                if (makeOp == null)
-                {
-                    throw new ArgumentNullException(nameof(makeOp));
-                }
+                ulong opCode = buffer[bufferOffset++];
 
-                OpCode op = makeOp(emitter, opAddress, opCode);
+                op = InstTable.GetOp(address, opCode);
 
-                // We check these patterns to figure out the presence of bindless access
-                if ((op is OpCodeImage image && image.IsBindless) ||
-                    (op is OpCodeTxd txd && txd.IsBindless) ||
-                    (op is OpCodeTld4B) ||
-                    (emitter == InstEmit.TexB) ||
-                    (emitter == InstEmit.TldB) ||
-                    (emitter == InstEmit.TmmlB) ||
-                    (emitter == InstEmit.TxqB))
+                if (op.Props.HasFlag(InstProps.TexB))
                 {
                     config.SetUsedFeature(FeatureFlags.Bindless);
                 }
 
-                // Populate used attributes.
-                if (op is IOpCodeAttribute opAttr)
+                if (op.Name == InstName.Ald || op.Name == InstName.Ast || op.Name == InstName.Ipa)
                 {
-                    SetUserAttributeUses(config, opAttr);
+                    SetUserAttributeUses(config, op.Name, opCode);
+                }
+                else if (op.Name == InstName.Ssy || op.Name == InstName.Pbk)
+                {
+                    block.AddPushOp(op);
                 }
 
                 block.OpCodes.Add(op);
+
+                address += 8;
             }
-            while (!IsControlFlowChange(block.GetLastOp()));
+            while (!op.Props.HasFlag(InstProps.Bra));
 
             block.EndAddress = address;
-
-            block.UpdatePushOps();
         }
 
-        private static void SetUserAttributeUses(ShaderConfig config, IOpCodeAttribute opAttr)
+        private static void SetUserAttributeUses(ShaderConfig config, InstName name, ulong opCode)
         {
-            if (opAttr.Indexed)
+            int offset;
+            int count = 1;
+            bool isStore = false;
+            bool indexed = false;
+
+            if (name == InstName.Ast)
             {
-                if (opAttr.Emitter == InstEmit.Ast)
+                InstAst opAst = new InstAst(opCode);
+                count = (int)opAst.AlSize + 1;
+                offset = opAst.Imm11;
+                indexed = opAst.Phys;
+                isStore = true;
+            }
+            else if (name == InstName.Ald)
+            {
+                InstAld opAld = new InstAld(opCode);
+                count = (int)opAld.AlSize + 1;
+                indexed = opAld.Phys;
+                offset = opAld.Imm11;
+            }
+            else /* if (name == InstName.Ipa) */
+            {
+                InstIpa opIpa = new InstIpa(opCode);
+                offset = opIpa.Imm10;
+                indexed = opIpa.Idx;
+            }
+
+            if (indexed)
+            {
+                if (isStore)
                 {
                     config.SetAllOutputUserAttributes();
                 }
@@ -309,14 +298,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
             else
             {
-                for (int elemIndex = 0; elemIndex < opAttr.Count; elemIndex++)
+                for (int elemIndex = 0; elemIndex < count; elemIndex++)
                 {
-                    int attr = opAttr.AttributeOffset + elemIndex * 4;
+                    int attr = offset + elemIndex * 4;
                     if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
                     {
                         int index = (attr - AttributeConsts.UserAttributeBase) / 16;
 
-                        if (opAttr.Emitter == InstEmit.Ast)
+                        if (isStore)
                         {
                             config.SetOutputUserAttribute(index);
                         }
@@ -329,27 +318,57 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
         }
 
-        private static bool IsUnconditionalBranch(OpCode opCode)
+        public static bool IsUnconditionalBranch(ref InstOp op)
         {
-            return IsUnconditional(opCode) && IsControlFlowChange(opCode);
+            return IsUnconditional(ref op) && op.Props.HasFlag(InstProps.Bra);
         }
 
-        private static bool IsUnconditional(OpCode opCode)
+        private static bool IsUnconditional(ref InstOp op)
         {
-            if (opCode is OpCodeExit op && op.Condition != Condition.Always)
+            InstConditional condOp = new InstConditional(op.RawOpCode);
+
+            if (op.Name == InstName.Exit && condOp.Ccc != Ccc.T)
             {
                 return false;
             }
 
-            return opCode.Predicate.Index == RegisterConsts.PredicateTrueIndex && !opCode.InvertPredicate;
+            return condOp.Pred == RegisterConsts.PredicateTrueIndex && !condOp.PredInv;
         }
 
-        private static bool IsControlFlowChange(OpCode opCode)
+        private static bool FindBrxTargets(ShaderConfig config, IEnumerable<Block> blocks, Func<ulong, Block> getBlock)
         {
-            return (opCode is OpCodeBranch opBranch && !opBranch.PushTarget) ||
-                    opCode is OpCodeBranchIndir                              ||
-                    opCode is OpCodeBranchPop                                ||
-                    opCode is OpCodeExit;
+            bool hasNewTarget = false;
+
+            foreach (Block block in blocks)
+            {
+                InstOp lastOp = block.GetLastOp();
+                bool hasNext = block.HasNext();
+
+                if (lastOp.Name == InstName.Brx && block.Successors.Count == (hasNext ? 1 : 0))
+                {
+                    InstBrx opBrx = new InstBrx(lastOp.RawOpCode);
+                    ulong baseOffset = lastOp.GetAbsoluteAddress();
+
+                    // An indirect branch could go anywhere,
+                    // try to get the possible target offsets from the constant buffer.
+                    (int cbBaseOffset, int cbOffsetsCount) = FindBrxTargetRange(block, opBrx.SrcA);
+
+                    if (cbOffsetsCount != 0)
+                    {
+                        hasNewTarget = true;
+                    }
+
+                    for (int i = 0; i < cbOffsetsCount; i++)
+                    {
+                        uint targetOffset = config.GpuAccessor.ConstantBuffer1Read(cbBaseOffset + i * 4);
+                        Block target = getBlock(baseOffset + targetOffset);
+                        target.Predecessors.Add(block);
+                        block.Successors.Add(target);
+                    }
+                }
+            }
+
+            return hasNewTarget;
         }
 
         private static (int, int) FindBrxTargetRange(Block block, int brxReg)
@@ -369,41 +388,51 @@ namespace Ryujinx.Graphics.Shader.Decoders
             HashSet<Block> visited = new HashSet<Block>();
 
             var ldcLocation = FindFirstRegWrite(visited, new BlockLocation(block, block.OpCodes.Count - 1), brxReg);
-            if (ldcLocation.Block == null || ldcLocation.Block.OpCodes[ldcLocation.Index] is not OpCodeLdc opLdc)
+            if (ldcLocation.Block == null || ldcLocation.Block.OpCodes[ldcLocation.Index].Name != InstName.Ldc)
             {
                 return (0, 0);
             }
 
-            if (opLdc.Slot != 1 || opLdc.IndexMode != CbIndexMode.Default)
+            GetOp<InstLdc>(ldcLocation, out var opLdc);
+
+            if (opLdc.CbufSlot != 1 || opLdc.AddressMode != 0)
             {
                 return (0, 0);
             }
 
-            var shlLocation = FindFirstRegWrite(visited, ldcLocation, opLdc.Ra.Index);
-            if (shlLocation.Block == null || shlLocation.Block.OpCodes[shlLocation.Index] is not OpCodeAluImm opShl)
+            var shlLocation = FindFirstRegWrite(visited, ldcLocation, opLdc.SrcA);
+            if (shlLocation.Block == null || !shlLocation.IsImmInst(InstName.Shl))
             {
                 return (0, 0);
             }
 
-            if (opShl.Emitter != InstEmit.Shl || opShl.Immediate != 2)
+            GetOp<InstShlI>(shlLocation, out var opShl);
+
+            if (opShl.Imm20 != 2)
             {
                 return (0, 0);
             }
 
-            var imnmxLocation = FindFirstRegWrite(visited, shlLocation, opShl.Ra.Index);
-            if (imnmxLocation.Block == null || imnmxLocation.Block.OpCodes[imnmxLocation.Index] is not OpCodeAluImm opImnmx)
+            var imnmxLocation = FindFirstRegWrite(visited, shlLocation, opShl.SrcA);
+            if (imnmxLocation.Block == null || !imnmxLocation.IsImmInst(InstName.Imnmx))
             {
                 return (0, 0);
             }
 
-            bool isImnmxS32 = opImnmx.RawOpCode.Extract(48);
+            GetOp<InstImnmxI>(imnmxLocation, out var opImnmx);
 
-            if (opImnmx.Emitter != InstEmit.Imnmx || isImnmxS32 || !opImnmx.Predicate39.IsPT || opImnmx.InvertP)
+            if (opImnmx.Signed || opImnmx.SrcPred != RegisterConsts.PredicateTrueIndex || opImnmx.SrcPredInv)
             {
                 return (0, 0);
             }
 
-            return (opLdc.Offset, opImnmx.Immediate + 1);
+            return (opLdc.CbufOffset, opImnmx.Imm20 + 1);
+        }
+
+        private static void GetOp<T>(BlockLocation location, out T op) where T : unmanaged
+        {
+            ulong rawOp = location.Block.OpCodes[location.Index].RawOpCode;
+            op = Unsafe.As<ulong, T>(ref rawOp);
         }
 
         private struct BlockLocation
@@ -415,6 +444,12 @@ namespace Ryujinx.Graphics.Shader.Decoders
             {
                 Block = block;
                 Index = index;
+            }
+
+            public bool IsImmInst(InstName name)
+            {
+                InstOp op = Block.OpCodes[Index];
+                return op.Name == name && op.Props.HasFlag(InstProps.Ib);
             }
         }
 
@@ -447,18 +482,20 @@ namespace Ryujinx.Graphics.Shader.Decoders
             return new BlockLocation(null, 0);
         }
 
-        private static bool WritesToRegister(OpCode opCode, int regIndex)
+        private static bool WritesToRegister(InstOp op, int regIndex)
         {
             // Predicate instruction only ever writes to predicate, so we shouldn't check those.
-            if (opCode.Emitter == InstEmit.Fsetp ||
-                opCode.Emitter == InstEmit.Hsetp2 ||
-                opCode.Emitter == InstEmit.Isetp ||
-                opCode.Emitter == InstEmit.R2p)
+            if ((op.Props & (InstProps.Rd | InstProps.Rd2)) == 0)
             {
                 return false;
             }
 
-            return opCode is IOpCodeRd opRd && opRd.Rd.Index == regIndex;
+            if (op.Props.HasFlag(InstProps.Rd2) && (byte)(op.RawOpCode >> 28) == regIndex)
+            {
+                return true;
+            }
+
+            return (byte)op.RawOpCode == regIndex;
         }
 
         private enum MergeType
@@ -527,14 +564,13 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         private static void PropagatePushOp(Dictionary<ulong, Block> blocks, Block currBlock, int pushOpIndex)
         {
-            OpCodePush pushOp = currBlock.PushOpCodes[pushOpIndex];
+            PushOpInfo pushOpInfo = currBlock.PushOpCodes[pushOpIndex];
+            InstOp pushOp = pushOpInfo.Op;
 
             Block target = blocks[pushOp.GetAbsoluteAddress()];
 
             Stack<PathBlockState> workQueue = new Stack<PathBlockState>();
-
             HashSet<Block> visited = new HashSet<Block>();
-
             Stack<(ulong, MergeType)> branchStack = new Stack<(ulong, MergeType)>();
 
             void Push(PathBlockState pbs)
@@ -574,42 +610,30 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 int pushOpsCount = current.PushOpCodes.Count;
-
                 if (pushOpsCount != 0)
                 {
                     Push(new PathBlockState(branchStack.Count));
 
                     for (int index = pushOpIndex; index < pushOpsCount; index++)
                     {
-                        OpCodePush currentPushOp = current.PushOpCodes[index];
-                        MergeType pushMergeType = currentPushOp.Emitter == InstEmit.Ssy ? MergeType.Sync : MergeType.Brk;
+                        InstOp currentPushOp = current.PushOpCodes[index].Op;
+                        MergeType pushMergeType = currentPushOp.Name == InstName.Ssy ? MergeType.Sync : MergeType.Brk;
                         branchStack.Push((currentPushOp.GetAbsoluteAddress(), pushMergeType));
                     }
                 }
 
                 pushOpIndex = 0;
 
-                if (current.Next != null)
+                bool hasNext = current.HasNext();
+                if (hasNext)
                 {
-                    Push(new PathBlockState(current.Next));
+                    Push(new PathBlockState(current.Successors[0]));
                 }
 
-                if (current.Branch != null)
+                InstOp lastOp = current.GetLastOp();
+                if (lastOp.Name == InstName.Sync || lastOp.Name == InstName.Brk)
                 {
-                    Push(new PathBlockState(current.Branch));
-                }
-                else if (current.GetLastOp() is OpCodeBranchIndir brIndir)
-                {
-                    // By adding them in descending order (sorted by address), we process the blocks
-                    // in order (of ascending address), since we work with a LIFO.
-                    foreach (Block possibleTarget in brIndir.PossibleTargets.OrderByDescending(x => x.Address))
-                    {
-                        Push(new PathBlockState(possibleTarget));
-                    }
-                }
-                else if (current.GetLastOp() is OpCodeBranchPop op)
-                {
-                    MergeType popMergeType = op.Emitter == InstEmit.Sync ? MergeType.Sync : MergeType.Brk;
+                    MergeType popMergeType = lastOp.Name == InstName.Sync ? MergeType.Sync : MergeType.Brk;
 
                     bool found = true;
                     ulong targetAddress = 0UL;
@@ -641,17 +665,29 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         {
                             // If the entire stack was consumed, then the current pop instruction
                             // just consumed the address from our push instruction.
-                            if (op.Targets.TryAdd(pushOp, op.Targets.Count))
+                            if (current.SyncTargets.TryAdd(pushOp.Address, new SyncTarget(pushOpInfo, current.SyncTargets.Count)))
                             {
-                                pushOp.PopOps.Add(op, Local());
+                                pushOpInfo.Consumers.Add(current, Local());
                                 target.Predecessors.Add(current);
+                                current.Successors.Add(target);
                             }
                         }
                         else
                         {
-                            // Push the block itself into the work "queue" (well, it's a stack)
-                            // for processing.
+                            // Push the block itself into the work queue for processing.
                             Push(new PathBlockState(blocks[targetAddress]));
+                        }
+                    }
+                }
+                else
+                {
+                    // By adding them in descending order (sorted by address), we process the blocks
+                    // in order (of ascending address), since we work with a LIFO.
+                    foreach (Block possibleTarget in current.Successors.OrderByDescending(x => x.Address))
+                    {
+                        if (!hasNext || possibleTarget != current.Successors[0])
+                        {
+                            Push(new PathBlockState(possibleTarget));
                         }
                     }
                 }
