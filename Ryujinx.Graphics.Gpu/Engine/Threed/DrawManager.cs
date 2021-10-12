@@ -312,6 +312,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool oldDrawIndexed = _drawState.DrawIndexed;
 
             _drawState.DrawIndexed = true;
+            engine.ForceStateDirty(IndexBufferCountMethodOffset * 4);
 
             DrawEnd(engine, firstIndex, indexCount);
 

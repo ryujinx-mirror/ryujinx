@@ -144,6 +144,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Marks the specified register offset as dirty, forcing the associated state to update on the next draw.
+        /// </summary>
+        /// <param name="offset">Register offset</param>
+        public void ForceStateDirty(int offset)
+        {
+            _stateUpdater.SetDirty(offset);
+        }
+
+        /// <summary>
         /// Forces the shaders to be rebound on the next draw.
         /// </summary>
         public void ForceShaderUpdate()
