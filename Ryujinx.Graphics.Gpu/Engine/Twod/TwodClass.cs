@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 srcCopyTexture,
                 offset,
                 srcCopyTextureFormat,
-                true,
+                false,
                 srcHint);
 
             if (srcTexture == null)
