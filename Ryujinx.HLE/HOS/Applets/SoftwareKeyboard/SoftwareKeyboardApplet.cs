@@ -18,9 +18,10 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         private const string DefaultInputText = "Ryujinx";
 
-        private const int StandardBufferSize = 0x7D8;
-        private const int MaxUserWords       = 0x1388;
-        private const int MaxUiTextSize      = 100;
+        private const int StandardBufferSize    = 0x7D8;
+        private const int InteractiveBufferSize = 0x7D4;
+        private const int MaxUserWords          = 0x1388;
+        private const int MaxUiTextSize         = 100;
 
         private const Key CycleInputModesKey = Key.F6;
 
@@ -244,7 +245,7 @@ namespace Ryujinx.HLE.HOS.Applets
                 // back a validation status, which is handled in OnInteractiveDataPushIn.
                 _foregroundState = SoftwareKeyboardState.ValidationPending;
 
-                _interactiveSession.Push(BuildForegroundResponse());
+                PushForegroundResponse(true);
             }
             else
             {
@@ -253,7 +254,7 @@ namespace Ryujinx.HLE.HOS.Applets
                 // and poll it for completion.
                 _foregroundState = SoftwareKeyboardState.Complete;
 
-                _normalSession.Push(BuildForegroundResponse());
+                PushForegroundResponse(false);
 
                 AppletStateChanged?.Invoke(this, null);
             }
@@ -287,7 +288,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
                 // For now we assume success, so we push the final result
                 // to the standard output buffer and carry on our merry way.
-                _normalSession.Push(BuildForegroundResponse());
+                PushForegroundResponse(false);
 
                 AppletStateChanged?.Invoke(this, null);
 
@@ -297,7 +298,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 // If we have already completed, we push the result text
                 // back on the output buffer and poll the application.
-                _normalSession.Push(BuildForegroundResponse());
+                PushForegroundResponse(false);
 
                 AppletStateChanged?.Invoke(this, null);
             }
@@ -728,20 +729,37 @@ namespace Ryujinx.HLE.HOS.Applets
             _interactiveSession.Push(InlineResponses.DecidedCancel(state));
         }
 
-        private byte[] BuildForegroundResponse()
+        private void PushForegroundResponse(bool interactive)
         {
-            int bufferSize = StandardBufferSize;
+            int bufferSize = interactive ? InteractiveBufferSize : StandardBufferSize;
 
             using (MemoryStream stream = new MemoryStream(new byte[bufferSize]))
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 byte[] output = _encoding.GetBytes(_textValue);
 
-                // Result Code.
-                writer.Write(_lastResult == KeyboardResult.Accept ? 0U : 1U);
+                if (!interactive)
+                {
+                    // Result Code.
+                    writer.Write(_lastResult == KeyboardResult.Accept ? 0U : 1U);
+                }
+                else
+                {
+                    // In interactive mode, we write the length of the text as a long, rather than
+                    // a result code. This field is inclusive of the 64-bit size.
+                    writer.Write((long)output.Length + 8);
+                }
+
                 writer.Write(output);
 
-                return stream.ToArray();
+                if (!interactive)
+                {
+                    _normalSession.Push(stream.ToArray());
+                }
+                else
+                {
+                    _interactiveSession.Push(stream.ToArray());
+                }
             }
         }
 
