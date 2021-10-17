@@ -418,34 +418,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Config.GpuAccessor.Log("Shader instruction Setlmembase is not implemented.");
         }
 
-        public static void ShfLR(EmitterContext context)
-        {
-            InstShfLR op = context.GetOp<InstShfLR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction ShfLR is not implemented.");
-        }
-
-        public static void ShfRR(EmitterContext context)
-        {
-            InstShfRR op = context.GetOp<InstShfRR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction ShfRR is not implemented.");
-        }
-
-        public static void ShfLI(EmitterContext context)
-        {
-            InstShfLI op = context.GetOp<InstShfLI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction ShfLI is not implemented.");
-        }
-
-        public static void ShfRI(EmitterContext context)
-        {
-            InstShfRI op = context.GetOp<InstShfRI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction ShfRI is not implemented.");
-        }
-
         public static void St(EmitterContext context)
         {
             InstSt op = context.GetOp<InstSt>();
