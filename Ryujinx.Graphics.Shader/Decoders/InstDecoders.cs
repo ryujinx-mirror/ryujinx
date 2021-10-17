@@ -277,6 +277,16 @@ namespace Ryujinx.Graphics.Shader.Decoders
         S64 = 7,
     }
 
+    enum ISrcDstFmt
+    {
+        U8 = 0,
+        U16 = 1,
+        U32 = 2,
+        S8 = 4,
+        S16 = 5,
+        S32 = 6,
+    }
+
     enum RoundMode2
     {
         Round = 0,
@@ -2720,8 +2730,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsB => (_opcode & 0x2000000000000) != 0;
         public bool NegB => (_opcode & 0x200000000000) != 0;
         public ByteSel ByteSel => (ByteSel)((_opcode >> 41) & 0x3);
-        public IDstFmt IDstFmt => (IDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
-        public ISrcFmt SrcFmt => (ISrcFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
+        public ISrcDstFmt IDstFmt => (ISrcDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
+        public ISrcDstFmt ISrcFmt => (ISrcDstFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
     }
 
     struct InstI2iI
@@ -2737,8 +2747,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsB => (_opcode & 0x2000000000000) != 0;
         public bool NegB => (_opcode & 0x200000000000) != 0;
         public ByteSel ByteSel => (ByteSel)((_opcode >> 41) & 0x3);
-        public IDstFmt IDstFmt => (IDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
-        public ISrcFmt SrcFmt => (ISrcFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
+        public ISrcDstFmt IDstFmt => (ISrcDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
+        public ISrcDstFmt ISrcFmt => (ISrcDstFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
     }
 
     struct InstI2iC
@@ -2755,8 +2765,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsB => (_opcode & 0x2000000000000) != 0;
         public bool NegB => (_opcode & 0x200000000000) != 0;
         public ByteSel ByteSel => (ByteSel)((_opcode >> 41) & 0x3);
-        public IDstFmt IDstFmt => (IDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
-        public ISrcFmt SrcFmt => (ISrcFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
+        public ISrcDstFmt IDstFmt => (ISrcDstFmt)((int)((_opcode >> 10) & 0x4) | (int)((_opcode >> 8) & 0x3));
+        public ISrcDstFmt ISrcFmt => (ISrcDstFmt)((int)((_opcode >> 11) & 0x4) | (int)((_opcode >> 10) & 0x3));
     }
 
     struct InstIaddR

@@ -34,6 +34,34 @@ namespace Ryujinx.Graphics.Shader.Instructions
             };
         }
 
+        public static long GetIntMin(ISrcDstFmt type)
+        {
+            return type switch
+            {
+                ISrcDstFmt.U8 => byte.MinValue,
+                ISrcDstFmt.S8 => sbyte.MinValue,
+                ISrcDstFmt.U16 => ushort.MinValue,
+                ISrcDstFmt.S16 => short.MinValue,
+                ISrcDstFmt.U32 => uint.MinValue,
+                ISrcDstFmt.S32 => int.MinValue,
+                _ => throw new ArgumentException($"The type \"{type}\" is not a supported integer type.")
+            };
+        }
+
+        public static long GetIntMax(ISrcDstFmt type)
+        {
+            return type switch
+            {
+                ISrcDstFmt.U8 => byte.MaxValue,
+                ISrcDstFmt.S8 => sbyte.MaxValue,
+                ISrcDstFmt.U16 => ushort.MaxValue,
+                ISrcDstFmt.S16 => short.MaxValue,
+                ISrcDstFmt.U32 => uint.MaxValue,
+                ISrcDstFmt.S32 => int.MaxValue,
+                _ => throw new ArgumentException($"The type \"{type}\" is not a supported integer type.")
+            };
+        }
+
         public static Operand GetPredLogicalOp(EmitterContext context, BoolOp logicOp, Operand input, Operand pred)
         {
             return logicOp switch

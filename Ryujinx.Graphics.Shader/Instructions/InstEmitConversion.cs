@@ -98,7 +98,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcReg(context, op.SrcB);
 
-            EmitI2I(context, op.SrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
         }
 
         public static void I2iI(EmitterContext context)
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcImm(context, Imm20ToSInt(op.Imm20));
 
-            EmitI2I(context, op.SrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
         }
 
         public static void I2iC(EmitterContext context)
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
 
-            EmitI2I(context, op.SrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
         }
 
         private static void EmitF2F(
@@ -261,8 +261,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static void EmitI2I(
             EmitterContext context,
-            ISrcFmt srcType,
-            IDstFmt dstType,
+            ISrcDstFmt srcType,
+            ISrcDstFmt dstType,
             Operand src,
             ByteSel byteSelection,
             int rd,
@@ -270,30 +270,29 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool negate,
             bool saturate)
         {
-            if (srcType == ISrcFmt.U64 || dstType == IDstFmt.U64)
+            if ((srcType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32 || (dstType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32)
             {
                 context.Config.GpuAccessor.Log("Invalid I2I encoding.");
                 return;
             }
 
             bool srcIsSignedInt =
-                srcType == ISrcFmt.S8 ||
-                srcType == ISrcFmt.S16 ||
-                srcType == ISrcFmt.S32 ||
-                srcType == ISrcFmt.S64;
+                srcType == ISrcDstFmt.S8 ||
+                srcType == ISrcDstFmt.S16 ||
+                srcType == ISrcDstFmt.S32;
             bool dstIsSignedInt =
-                dstType == IDstFmt.S16 ||
-                dstType == IDstFmt.S32 ||
-                dstType == IDstFmt.S64;
+                dstType == ISrcDstFmt.S8 ||
+                dstType == ISrcDstFmt.S16 ||
+                dstType == ISrcDstFmt.S32;
             bool srcIsSmallInt =
-                srcType == ISrcFmt.U16 ||
-                srcType == ISrcFmt.S16 ||
-                srcType == ISrcFmt.U8 ||
-                srcType == ISrcFmt.S8;
+                srcType == ISrcDstFmt.U16 ||
+                srcType == ISrcDstFmt.S16 ||
+                srcType == ISrcDstFmt.U8 ||
+                srcType == ISrcDstFmt.S8;
 
             if (srcIsSmallInt)
             {
-                int size = srcType == ISrcFmt.U16 || srcType == ISrcFmt.S16 ? 16 : 8;
+                int size = srcType == ISrcDstFmt.U16 || srcType == ISrcDstFmt.S16 ? 16 : 8;
 
                 src = srcIsSignedInt
                     ? context.BitfieldExtractS32(src, Const((int)byteSelection * 8), Const(size))
