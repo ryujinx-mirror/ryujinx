@@ -27,6 +27,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             throw new ArgumentException($"Invalid node type \"{node?.GetType().Name ?? "null"}\".");
         }
 
+        public static string Negate(CodeGenContext context, AstOperation operation, InstInfo info)
+        {
+            IAstNode src = operation.GetSource(0);
+
+            VariableType type = GetSrcVarType(operation.Inst, 0);
+
+            string srcExpr = GetSoureExpr(context, src, type);
+
+            NumberFormatter.TryFormat(0, type, out string zero);
+
+            // Starting in the 496.13 NVIDIA driver, there's an issue with assigning variables to negated expressions.
+            // (-expr) does not work, but (0.0 - expr) does. This should be removed once the issue is resolved.
+
+            return $"{zero} - {Enclose(srcExpr, src, operation.Inst, info, false)}";
+        }
+
         private static string GetExpression(CodeGenContext context, AstOperation operation)
         {
             Instruction inst = operation.Inst;
@@ -120,7 +136,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else if ((info.Type & InstType.Special) != 0)
             {
-                switch (inst)
+                switch (inst & Instruction.Mask)
                 {
                     case Instruction.Ballot:
                         return Ballot(context, operation);
@@ -150,6 +166,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.Lod:
                         return Lod(context, operation);
+
+                    case Instruction.Negate:
+                        return Negate(context, operation, info);
 
                     case Instruction.PackDouble2x32:
                         return PackDouble2x32(context, operation);
