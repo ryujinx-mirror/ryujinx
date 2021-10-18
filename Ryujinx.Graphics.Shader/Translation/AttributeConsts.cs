@@ -2,36 +2,45 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class AttributeConsts
     {
-        public const int Layer         = 0x064;
-        public const int PointSize     = 0x06c;
-        public const int PositionX     = 0x070;
-        public const int PositionY     = 0x074;
-        public const int PositionZ     = 0x078;
-        public const int PositionW     = 0x07c;
-        public const int ClipDistance0 = 0x2c0;
-        public const int ClipDistance1 = 0x2c4;
-        public const int ClipDistance2 = 0x2c8;
-        public const int ClipDistance3 = 0x2cc;
-        public const int ClipDistance4 = 0x2d0;
-        public const int ClipDistance5 = 0x2d4;
-        public const int ClipDistance6 = 0x2d8;
-        public const int ClipDistance7 = 0x2dc;
-        public const int PointCoordX   = 0x2e0;
-        public const int PointCoordY   = 0x2e4;
-        public const int TessCoordX    = 0x2f0;
-        public const int TessCoordY    = 0x2f4;
-        public const int InstanceId    = 0x2f8;
-        public const int VertexId      = 0x2fc;
-        public const int FrontFacing   = 0x3fc;
+        public const int TessLevelOuter0 = 0x000;
+        public const int TessLevelOuter1 = 0x004;
+        public const int TessLevelOuter2 = 0x008;
+        public const int TessLevelOuter3 = 0x00c;
+        public const int TessLevelInner0 = 0x010;
+        public const int TessLevelInner1 = 0x014;
+        public const int Layer           = 0x064;
+        public const int PointSize       = 0x06c;
+        public const int PositionX       = 0x070;
+        public const int PositionY       = 0x074;
+        public const int PositionZ       = 0x078;
+        public const int PositionW       = 0x07c;
+        public const int ClipDistance0   = 0x2c0;
+        public const int ClipDistance1   = 0x2c4;
+        public const int ClipDistance2   = 0x2c8;
+        public const int ClipDistance3   = 0x2cc;
+        public const int ClipDistance4   = 0x2d0;
+        public const int ClipDistance5   = 0x2d4;
+        public const int ClipDistance6   = 0x2d8;
+        public const int ClipDistance7   = 0x2dc;
+        public const int PointCoordX     = 0x2e0;
+        public const int PointCoordY     = 0x2e4;
+        public const int TessCoordX      = 0x2f0;
+        public const int TessCoordY      = 0x2f4;
+        public const int InstanceId      = 0x2f8;
+        public const int VertexId        = 0x2fc;
+        public const int FrontFacing     = 0x3fc;
 
         public const int UserAttributesCount = 32;
         public const int UserAttributeBase   = 0x80;
         public const int UserAttributeEnd    = UserAttributeBase + UserAttributesCount * 16;
 
+        public const int LoadOutputMask = 1 << 30;
+        public const int Mask = 0x3fffffff;
+
 
         // Note: Those attributes are used internally by the translator
         // only, they don't exist on Maxwell.
-        public const int SpecialMask             = 0xff << 24;
+        public const int SpecialMask             = 0xf << 24;
         public const int FragmentOutputDepth     = 0x1000000;
         public const int FragmentOutputColorBase = 0x1000010;
         public const int FragmentOutputColorEnd  = FragmentOutputColorBase + 8 * 16;
@@ -49,12 +58,16 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public const int LaneId = 0x2000020;
 
-        public const int EqMask = 0x2000024;
-        public const int GeMask = 0x2000028;
-        public const int GtMask = 0x200002c;
-        public const int LeMask = 0x2000030;
-        public const int LtMask = 0x2000034;
+        public const int InvocationId = 0x2000024;
+        public const int PrimitiveId = 0x2000028;
+        public const int PatchVerticesIn = 0x200002c;
 
-        public const int ThreadKill = 0x2000038;
+        public const int EqMask = 0x2000030;
+        public const int GeMask = 0x2000034;
+        public const int GtMask = 0x2000038;
+        public const int LeMask = 0x200003c;
+        public const int LtMask = 0x2000040;
+
+        public const int ThreadKill = 0x2000044;
     }
 }

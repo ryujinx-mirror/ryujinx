@@ -96,6 +96,21 @@ namespace Ryujinx.Graphics.Shader
             return InputTopology.Points;
         }
 
+        bool QueryTessCw()
+        {
+            return false;
+        }
+
+        TessPatchType QueryTessPatchType()
+        {
+            return TessPatchType.Triangles;
+        }
+
+        TessSpacing QueryTessSpacing()
+        {
+            return TessSpacing.EqualSpacing;
+        }
+
         TextureFormat QueryTextureFormat(int handle, int cbufSlot = -1)
         {
             return TextureFormat.R8G8B8A8Unorm;

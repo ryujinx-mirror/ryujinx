@@ -168,9 +168,30 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 PrimitiveTopology.TriangleFan => InputTopology.Triangles,
                 PrimitiveTopology.TrianglesAdjacency or
                 PrimitiveTopology.TriangleStripAdjacency => InputTopology.TrianglesAdjacency,
-                _ => InputTopology.Points,
+                PrimitiveTopology.Patches => _state.TessellationMode.UnpackPatchType() == TessPatchType.Isolines
+                    ? InputTopology.Lines
+                    : InputTopology.Triangles,
+                _ => InputTopology.Points
             };
         }
+
+        /// <summary>
+        /// Queries the tessellation evaluation shader primitive winding order.
+        /// </summary>
+        /// <returns>True if the primitive winding order is clockwise, false if counter-clockwise</returns>
+        public bool QueryTessCw() => _state.TessellationMode.UnpackCw();
+
+        /// <summary>
+        /// Queries the tessellation evaluation shader abstract patch type.
+        /// </summary>
+        /// <returns>Abstract patch type</returns>
+        public TessPatchType QueryTessPatchType() => _state.TessellationMode.UnpackPatchType();
+
+        /// <summary>
+        /// Queries the tessellation evaluation shader spacing between tessellated vertices of the patch.
+        /// </summary>
+        /// <returns>Spacing between tessellated vertices of the patch</returns>
+        public TessSpacing QueryTessSpacing() => _state.TessellationMode.UnpackSpacing();
 
         /// <summary>
         /// Gets the texture descriptor for a given texture on the pool.

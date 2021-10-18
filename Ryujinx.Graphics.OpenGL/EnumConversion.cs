@@ -290,6 +290,23 @@ namespace Ryujinx.Graphics.OpenGL
             return TextureMinFilter.Nearest;
         }
 
+        public static OpenTK.Graphics.OpenGL.PolygonMode Convert(this GAL.PolygonMode mode)
+        {
+            switch (mode)
+            {
+                case GAL.PolygonMode.Point:
+                    return OpenTK.Graphics.OpenGL.PolygonMode.Point;
+                case GAL.PolygonMode.Line:
+                    return OpenTK.Graphics.OpenGL.PolygonMode.Line;
+                case GAL.PolygonMode.Fill:
+                    return OpenTK.Graphics.OpenGL.PolygonMode.Fill;
+            }
+
+            Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(GAL.PolygonMode)} enum value: {mode}.");
+
+            return OpenTK.Graphics.OpenGL.PolygonMode.Fill;
+        }
+
         public static PrimitiveType Convert(this PrimitiveTopology topology)
         {
             switch (topology)

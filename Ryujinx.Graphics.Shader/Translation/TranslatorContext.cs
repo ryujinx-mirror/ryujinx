@@ -32,10 +32,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static bool IsUserAttribute(Operand operand)
         {
-            return operand != null &&
-                   operand.Type == OperandType.Attribute &&
-                   operand.Value >= AttributeConsts.UserAttributeBase &&
-                   operand.Value < AttributeConsts.UserAttributeEnd;
+            if (operand != null && operand.Type.IsAttribute())
+            {
+                int value = operand.Value & AttributeConsts.Mask;
+                return value >= AttributeConsts.UserAttributeBase && value < AttributeConsts.UserAttributeEnd;
+            }
+
+            return false;
         }
 
         private static FunctionCode[] Combine(FunctionCode[] a, FunctionCode[] b, int aStart)
@@ -133,14 +136,16 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             if (nextStage != null)
             {
-                _config.MergeOutputUserAttributes(nextStage._config.UsedInputAttributes);
+                _config.MergeOutputUserAttributes(
+                    nextStage._config.UsedInputAttributes,
+                    nextStage._config.UsedInputAttributesPerPatch);
             }
 
             FunctionCode[] code = EmitShader(_cfg, _config, initializeOutputs: other == null, out _);
 
             if (other != null)
             {
-                other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes);
+                other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes, 0);
 
                 FunctionCode[] otherCode = EmitShader(other._cfg, other._config, initializeOutputs: true, out int aStart);
 

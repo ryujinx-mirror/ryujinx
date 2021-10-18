@@ -40,19 +40,33 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
                 }
-                else if (op.SrcB == RegisterConsts.RegisterZeroIndex)
+                else if (op.SrcB == RegisterConsts.RegisterZeroIndex || op.P)
                 {
-                    Operand src = Attribute(op.Imm11 + index * 4);
+                    int offset = op.Imm11 + index * 4;
 
-                    context.FlagAttributeRead(src.Value);
+                    context.FlagAttributeRead(offset);
+
+                    if (op.O)
+                    {
+                        offset |= AttributeConsts.LoadOutputMask;
+                    }
+
+                    Operand src = op.P ? AttributePerPatch(offset) : Attribute(offset);
 
                     context.Copy(Register(rd), src);
                 }
                 else
                 {
-                    Operand src = Const(op.Imm11 + index * 4);
+                    int offset = op.Imm11 + index * 4;
 
-                    context.FlagAttributeRead(src.Value);
+                    context.FlagAttributeRead(offset);
+
+                    if (op.O)
+                    {
+                        offset |= AttributeConsts.LoadOutputMask;
+                    }
+
+                    Operand src = Const(offset);
 
                     context.Copy(Register(rd), context.LoadAttribute(src, Const(0), primVertex));
                 }
@@ -83,9 +97,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
                 else
                 {
-                    Operand dest = Attribute(op.Imm11 + index * 4);
+                    // TODO: Support indirect stores using Ra.
 
-                    context.FlagAttributeWritten(dest.Value);
+                    int offset = op.Imm11 + index * 4;
+
+                    context.FlagAttributeWritten(offset);
+
+                    Operand dest = op.P ? AttributePerPatch(offset) : Attribute(offset);
 
                     context.Copy(dest, Register(rd));
                 }

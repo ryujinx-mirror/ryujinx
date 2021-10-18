@@ -120,6 +120,68 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(op.Dest), res);
         }
 
+        public static void Vsetp(EmitterContext context)
+        {
+            InstVsetp op = context.GetOp<InstVsetp>();
+
+            Operand srcA = Extend(context, GetSrcReg(context, op.SrcA), op.ASelect);
+
+            Operand srcB;
+
+            if (op.BVideo)
+            {
+                srcB = Extend(context, GetSrcReg(context, op.SrcB), op.BSelect);
+            }
+            else
+            {
+                int imm = op.Imm16;
+
+                if ((op.BSelect & VectorSelect.S8B0) != 0)
+                {
+                    imm = (imm << 16) >> 16;
+                }
+
+                srcB = Const(imm);
+            }
+
+            Operand p0Res;
+
+            bool signedA = (op.ASelect & VectorSelect.S8B0) != 0;
+            bool signedB = (op.BSelect & VectorSelect.S8B0) != 0;
+
+            if (signedA != signedB)
+            {
+                bool a32 = (op.ASelect & ~VectorSelect.S8B0) == VectorSelect.U32;
+                bool b32 = (op.BSelect & ~VectorSelect.S8B0) == VectorSelect.U32;
+
+                if (!a32 && !b32)
+                {
+                    // Both values are extended small integer and can always fit in a S32, just do a signed comparison.
+                    p0Res = GetIntComparison(context, op.VComp, srcA, srcB, isSigned: true, extended: false);
+                }
+                else
+                {
+                    // TODO: Mismatching sign case.
+                    p0Res = Const(0);
+                }
+            }
+            else
+            {
+                // Sign matches, just do a regular comparison.
+                p0Res = GetIntComparison(context, op.VComp, srcA, srcB, signedA, extended: false);
+            }
+
+            Operand p1Res = context.BitwiseNot(p0Res);
+
+            Operand pred = GetPredicate(context, op.SrcPred, op.SrcPredInv);
+
+            p0Res = InstEmitAluHelper.GetPredLogicalOp(context, op.BoolOp, p0Res, pred);
+            p1Res = InstEmitAluHelper.GetPredLogicalOp(context, op.BoolOp, p1Res, pred);
+
+            context.Copy(Register(op.DestPred, RegisterType.Predicate), p0Res);
+            context.Copy(Register(op.DestPredInv, RegisterType.Predicate), p1Res);
+        }
+
         private static Operand Extend(EmitterContext context, Operand src, VectorSelect type)
         {
             return type switch

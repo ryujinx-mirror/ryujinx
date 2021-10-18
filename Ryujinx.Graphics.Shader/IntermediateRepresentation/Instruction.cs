@@ -161,5 +161,11 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
             return false;
         }
+
+        public static bool IsTextureQuery(this Instruction inst)
+        {
+            inst &= Instruction.Mask;
+            return inst == Instruction.Lod || inst == Instruction.TextureSize;
+        }
     }
 }

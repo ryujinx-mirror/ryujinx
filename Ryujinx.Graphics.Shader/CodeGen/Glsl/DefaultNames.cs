@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string SamplerNamePrefix = "tex";
         public const string ImageNamePrefix   = "img";
 
+        public const string PerPatchAttributePrefix = "patch_attr_";
         public const string IAttributePrefix = "in_attr";
         public const string OAttributePrefix = "out_attr";
 

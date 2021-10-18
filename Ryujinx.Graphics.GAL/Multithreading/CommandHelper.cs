@@ -181,8 +181,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 SetLineParametersCommand.Run(ref GetCommand<SetLineParametersCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetLogicOpState] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetLogicOpStateCommand.Run(ref GetCommand<SetLogicOpStateCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.SetPatchParameters] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                SetPatchParametersCommand.Run(ref GetCommand<SetPatchParametersCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetPointParameters] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetPointParametersCommand.Run(ref GetCommand<SetPointParametersCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.SetPolygonMode] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                SetPolygonModeCommand.Run(ref GetCommand<SetPolygonModeCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetPrimitiveRestart] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetPrimitiveRestartCommand.Run(ref GetCommand<SetPrimitiveRestartCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetPrimitiveTopology] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>

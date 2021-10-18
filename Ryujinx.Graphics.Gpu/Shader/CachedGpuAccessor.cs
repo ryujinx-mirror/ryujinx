@@ -135,6 +135,33 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
+        /// Queries the tessellation evaluation shader primitive winding order.
+        /// </summary>
+        /// <returns>True if the primitive winding order is clockwise, false if counter-clockwise</returns>
+        public bool QueryTessCw()
+        {
+            return (_header.TessellationModePacked & 0x10) != 0;
+        }
+
+        /// <summary>
+        /// Queries the tessellation evaluation shader abstract patch type.
+        /// </summary>
+        /// <returns>Abstract patch type</returns>
+        public TessPatchType QueryTessPatchType()
+        {
+            return (TessPatchType)(_header.TessellationModePacked & 3);
+        }
+
+        /// <summary>
+        /// Queries the tessellation evaluation shader spacing between tessellated vertices of the patch.
+        /// </summary>
+        /// <returns>Spacing between tessellated vertices of the patch</returns>
+        public TessSpacing QueryTessSpacing()
+        {
+            return (TessSpacing)((_header.TessellationModePacked >> 2) & 3);
+        }
+
+        /// <summary>
         /// Gets the texture descriptor for a given texture on the pool.
         /// </summary>
         /// <param name="handle">Index of the texture (this is the word offset of the handle in the constant buffer)</param>

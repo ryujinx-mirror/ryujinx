@@ -216,27 +216,38 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return;
             }
 
-            void InitializeOutput(int baseAttr)
-            {
-                for (int c = 0; c < 4; c++)
-                {
-                    context.Copy(Attribute(baseAttr + c * 4), ConstF(c == 3 ? 1f : 0f));
-                }
-            }
-
             if (config.Stage == ShaderStage.Vertex)
             {
-                InitializeOutput(AttributeConsts.PositionX);
+                InitializeOutput(context, AttributeConsts.PositionX, perPatch: false);
             }
 
-            int usedAttribtes = context.Config.UsedOutputAttributes;
-            while (usedAttribtes != 0)
+            int usedAttributes = context.Config.UsedOutputAttributes;
+            while (usedAttributes != 0)
             {
-                int index = BitOperations.TrailingZeroCount(usedAttribtes);
+                int index = BitOperations.TrailingZeroCount(usedAttributes);
 
-                InitializeOutput(AttributeConsts.UserAttributeBase + index * 16);
+                InitializeOutput(context, AttributeConsts.UserAttributeBase + index * 16, perPatch: false);
 
-                usedAttribtes &= ~(1 << index);
+                usedAttributes &= ~(1 << index);
+            }
+
+            int usedAttributesPerPatch = context.Config.UsedOutputAttributesPerPatch;
+            while (usedAttributesPerPatch != 0)
+            {
+                int index = BitOperations.TrailingZeroCount(usedAttributesPerPatch);
+
+                InitializeOutput(context, AttributeConsts.UserAttributeBase + index * 16, perPatch: true);
+
+                usedAttributesPerPatch &= ~(1 << index);
+            }
+        }
+
+        private static void InitializeOutput(EmitterContext context, int baseAttr, bool perPatch)
+        {
+            for (int c = 0; c < 4; c++)
+            {
+                int attrOffset = baseAttr + c * 4;
+                context.Copy(perPatch ? AttributePerPatch(attrOffset) : Attribute(attrOffset), ConstF(c == 3 ? 1f : 0f));
             }
         }
 

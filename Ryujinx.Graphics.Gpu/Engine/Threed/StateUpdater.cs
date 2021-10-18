@@ -72,6 +72,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.VertexBufferState),
                     nameof(ThreedClassState.VertexBufferEndAddress)),
 
+                new StateUpdateCallbackEntry(UpdateTessellationState,
+                    nameof(ThreedClassState.TessOuterLevel),
+                    nameof(ThreedClassState.TessInnerLevel),
+                    nameof(ThreedClassState.PatchVertices)),
+
                 new StateUpdateCallbackEntry(UpdateTfBufferState, nameof(ThreedClassState.TfBufferState)),
                 new StateUpdateCallbackEntry(UpdateUserClipState, nameof(ThreedClassState.ClipDistanceEnable)),
 
@@ -99,6 +104,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.ViewportTransform),
                     nameof(ThreedClassState.ViewportExtents),
                     nameof(ThreedClassState.YControl)),
+
+                new StateUpdateCallbackEntry(UpdatePolygonMode,
+                    nameof(ThreedClassState.PolygonModeFront),
+                    nameof(ThreedClassState.PolygonModeBack)),
 
                 new StateUpdateCallbackEntry(UpdateDepthBiasState,
                     nameof(ThreedClassState.DepthBiasState),
@@ -257,6 +266,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _channel.BufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size, sb.Flags);
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates tessellation state based on the guest GPU state.
+        /// </summary>
+        private void UpdateTessellationState()
+        {
+            _context.Renderer.Pipeline.SetPatchParameters(
+                _state.State.PatchVertices,
+                _state.State.TessOuterLevel.ToSpan(),
+                _state.State.TessInnerLevel.ToSpan());
         }
 
         /// <summary>
@@ -542,6 +562,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             _context.Renderer.Pipeline.SetViewports(0, viewports);
+        }
+
+        /// <summary>
+        /// Updates polygon mode state based on current GPU state.
+        /// </summary>
+        private void UpdatePolygonMode()
+        {
+            _context.Renderer.Pipeline.SetPolygonMode(_state.State.PolygonModeFront, _state.State.PolygonModeBack);
         }
 
         /// <summary>
@@ -949,7 +977,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _state.State.TexturePoolState.MaximumId,
                 (int)_state.State.TextureBufferIndex,
                 _state.State.EarlyZForce,
-                _drawState.Topology);
+                _drawState.Topology,
+                _state.State.TessMode);
 
             ShaderBundle gs = _channel.MemoryManager.Physical.ShaderCache.GetGraphicsShader(ref _state.State, _channel, gas, addresses);
 

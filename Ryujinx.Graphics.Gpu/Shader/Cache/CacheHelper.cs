@@ -350,6 +350,26 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         }
 
         /// <summary>
+        /// Packs the tessellation parameters from the gpu accessor.
+        /// </summary>
+        /// <param name="gpuAccessor">The gpu accessor</param>
+        /// <returns>The packed tessellation parameters</returns>
+        private static byte GetTessellationModePacked(IGpuAccessor gpuAccessor)
+        {
+            byte value;
+
+            value = (byte)((int)gpuAccessor.QueryTessPatchType() & 3);
+            value |= (byte)(((int)gpuAccessor.QueryTessSpacing() & 3) << 2);
+
+            if (gpuAccessor.QueryTessCw())
+            {
+                value |= 0x10;
+            }
+
+            return value;
+        }
+
+        /// <summary>
         /// Create a new instance of <see cref="GuestGpuAccessorHeader"/> from an gpu accessor.
         /// </summary>
         /// <param name="gpuAccessor">The gpu accessor</param>
@@ -364,6 +384,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 ComputeLocalMemorySize = gpuAccessor.QueryComputeLocalMemorySize(),
                 ComputeSharedMemorySize = gpuAccessor.QueryComputeSharedMemorySize(),
                 PrimitiveTopology = gpuAccessor.QueryPrimitiveTopology(),
+                TessellationModePacked = GetTessellationModePacked(gpuAccessor),
                 StateFlags = GetGpuStateFlags(gpuAccessor)
             };
         }

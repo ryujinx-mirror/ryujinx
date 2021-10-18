@@ -282,6 +282,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public AstOperand GetOperandUse(Operand operand)
         {
+            // If this flag is set, we're reading from an output attribute instead.
+            if (operand.Type.IsAttribute() && (operand.Value & AttributeConsts.LoadOutputMask) != 0)
+            {
+                return GetOperandDef(operand);
+            }
+
             return GetOperand(operand);
         }
 

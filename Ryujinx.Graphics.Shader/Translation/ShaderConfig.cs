@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public bool GpPassthrough { get; }
 
+        public int ThreadsPerInputPrimitive { get; }
+
         public OutputTopology OutputTopology { get; }
 
         public int MaxOutputVertices { get; }
@@ -42,7 +44,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         private readonly TranslationCounts _counts;
 
         public int UsedInputAttributes { get; private set; }
+        public int UsedInputAttributesPerPatch { get; private set; }
         public int UsedOutputAttributes { get; private set; }
+        public int UsedOutputAttributesPerPatch { get; private set; }
         public int PassthroughAttributes { get; private set; }
 
         private int _usedConstantBuffers;
@@ -111,15 +115,16 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options, TranslationCounts counts) : this(gpuAccessor, options, counts)
         {
-            Stage             = header.Stage;
-            GpPassthrough     = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
-            OutputTopology    = header.OutputTopology;
-            MaxOutputVertices = header.MaxOutputVertexCount;
-            LocalMemorySize   = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;
-            ImapTypes         = header.ImapTypes;
-            OmapTargets       = header.OmapTargets;
-            OmapSampleMask    = header.OmapSampleMask;
-            OmapDepth         = header.OmapDepth;
+            Stage                    = header.Stage;
+            GpPassthrough            = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
+            ThreadsPerInputPrimitive = header.ThreadsPerInputPrimitive;
+            OutputTopology           = header.OutputTopology;
+            MaxOutputVertices        = header.MaxOutputVertexCount;
+            LocalMemorySize          = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;
+            ImapTypes                = header.ImapTypes;
+            OmapTargets              = header.OmapTargets;
+            OmapSampleMask           = header.OmapSampleMask;
+            OmapDepth                = header.OmapDepth;
         }
 
         public int GetDepthRegister()
@@ -169,7 +174,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public TextureFormat GetTextureFormatAtomic(int handle, int cbufSlot = -1)
         {
-            // Atomic image instructions do not support GL_EXT_shader_image_load_formatted, 
+            // Atomic image instructions do not support GL_EXT_shader_image_load_formatted,
             // and must have a type specified. Default to R32Sint if not available.
 
             var format = GpuAccessor.QueryTextureFormat(handle, cbufSlot);
@@ -219,17 +224,31 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        public void SetInputUserAttribute(int index)
+        public void SetInputUserAttribute(int index, bool perPatch)
         {
-            UsedInputAttributes |= 1 << index;
+            if (perPatch)
+            {
+                UsedInputAttributesPerPatch |= 1 << index;
+            }
+            else
+            {
+                UsedInputAttributes |= 1 << index;
+            }
         }
 
-        public void SetOutputUserAttribute(int index)
+        public void SetOutputUserAttribute(int index, bool perPatch)
         {
-            UsedOutputAttributes |= 1 << index;
+            if (perPatch)
+            {
+                UsedOutputAttributesPerPatch |= 1 << index;
+            }
+            else
+            {
+                UsedOutputAttributes |= 1 << index;
+            }
         }
 
-        public void MergeOutputUserAttributes(int mask)
+        public void MergeOutputUserAttributes(int mask, int maskPerPatch)
         {
             if (GpPassthrough)
             {
@@ -238,6 +257,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             else
             {
                 UsedOutputAttributes |= mask;
+                UsedOutputAttributesPerPatch |= maskPerPatch;
             }
         }
 

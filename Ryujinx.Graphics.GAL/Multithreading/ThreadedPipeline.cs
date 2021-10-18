@@ -179,9 +179,21 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
+        public void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel)
+        {
+            _renderer.New<SetPatchParametersCommand>().Set(vertices, defaultOuterLevel, defaultInnerLevel);
+            _renderer.QueueCommand();
+        }
+
         public void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin)
         {
             _renderer.New<SetPointParametersCommand>().Set(size, isProgramPointSize, enablePointSprite, origin);
+            _renderer.QueueCommand();
+        }
+
+        public void SetPolygonMode(PolygonMode frontMode, PolygonMode backMode)
+        {
+            _renderer.New<SetPolygonModeCommand>().Set(frontMode, backMode);
             _renderer.QueueCommand();
         }
 

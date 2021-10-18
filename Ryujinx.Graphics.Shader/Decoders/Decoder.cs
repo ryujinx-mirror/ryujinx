@@ -262,6 +262,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             int count = 1;
             bool isStore = false;
             bool indexed = false;
+            bool perPatch = false;
 
             if (name == InstName.Ast)
             {
@@ -269,14 +270,17 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 count = (int)opAst.AlSize + 1;
                 offset = opAst.Imm11;
                 indexed = opAst.Phys;
+                perPatch = opAst.P;
                 isStore = true;
             }
             else if (name == InstName.Ald)
             {
                 InstAld opAld = new InstAld(opCode);
                 count = (int)opAld.AlSize + 1;
-                indexed = opAld.Phys;
                 offset = opAld.Imm11;
+                indexed = opAld.Phys;
+                perPatch = opAld.P;
+                isStore = opAld.O;
             }
             else /* if (name == InstName.Ipa) */
             {
@@ -307,11 +311,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                         if (isStore)
                         {
-                            config.SetOutputUserAttribute(index);
+                            config.SetOutputUserAttribute(index, perPatch);
                         }
                         else
                         {
-                            config.SetInputUserAttribute(index);
+                            config.SetInputUserAttribute(index, perPatch);
                         }
                     }
                 }

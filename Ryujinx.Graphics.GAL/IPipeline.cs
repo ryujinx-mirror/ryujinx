@@ -55,10 +55,14 @@ namespace Ryujinx.Graphics.GAL
 
         void SetImage(int binding, ITexture texture, Format imageFormat);
 
+        void SetLineParameters(float width, bool smooth);
+
         void SetLogicOpState(bool enable, LogicalOp op);
 
-        void SetLineParameters(float width, bool smooth);
+        void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel);
         void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin);
+
+        void SetPolygonMode(PolygonMode frontMode, PolygonMode backMode);
 
         void SetPrimitiveRestart(bool enable, int index);
 

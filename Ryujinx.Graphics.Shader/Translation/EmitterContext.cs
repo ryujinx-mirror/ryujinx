@@ -216,7 +216,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     if (target.Enabled)
                     {
-                        Config.SetOutputUserAttribute(rtIndex);
+                        Config.SetOutputUserAttribute(rtIndex, perPatch: false);
                         regIndexBase += 4;
                     }
                 }

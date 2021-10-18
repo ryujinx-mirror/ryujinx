@@ -474,13 +474,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Config.GpuAccessor.Log("Shader instruction Vset is not implemented.");
         }
 
-        public static void Vsetp(EmitterContext context)
-        {
-            InstVsetp op = context.GetOp<InstVsetp>();
-
-            context.Config.GpuAccessor.Log("Shader instruction Vsetp is not implemented.");
-        }
-
         public static void Vshl(EmitterContext context)
         {
             InstVshl op = context.GetOp<InstVshl>();
