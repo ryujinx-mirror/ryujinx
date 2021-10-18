@@ -5,7 +5,7 @@ int Helper_AtomicMaxS32(int offset, int value)
     {
         oldValue = $SHARED_MEM$[offset];
         newValue = uint(max(int(oldValue), value));
-    } while (atomicCompSwap($SHARED_MEM$[offset], newValue, oldValue) != oldValue);
+    } while (atomicCompSwap($SHARED_MEM$[offset], oldValue, newValue) != oldValue);
     return int(oldValue);
 }
 
@@ -16,6 +16,6 @@ int Helper_AtomicMinS32(int offset, int value)
     {
         oldValue = $SHARED_MEM$[offset];
         newValue = uint(min(int(oldValue), value));
-    } while (atomicCompSwap($SHARED_MEM$[offset], newValue, oldValue) != oldValue);
+    } while (atomicCompSwap($SHARED_MEM$[offset], oldValue, newValue) != oldValue);
     return int(oldValue);
 }

@@ -120,7 +120,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.StoreGlobal,              VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreShared,              VariableType.None,   VariableType.S32,    VariableType.U32);
+            Add(Instruction.StoreShared16,            VariableType.None,   VariableType.S32,    VariableType.U32);
+            Add(Instruction.StoreShared8,             VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
+            Add(Instruction.StoreStorage16,           VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
+            Add(Instruction.StoreStorage8,            VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
             Add(Instruction.Subtract,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.SwizzleAdd,               VariableType.F32,    VariableType.F32,    VariableType.F32,    VariableType.S32);
             Add(Instruction.TextureSample,            VariableType.F32);

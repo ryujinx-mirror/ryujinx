@@ -627,6 +627,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.StoreGlobal, null, a, b, c);
         }
 
+        public static Operand StoreGlobal16(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.StoreGlobal16, null, a, b, c);
+        }
+
+        public static Operand StoreGlobal8(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.StoreGlobal8, null, a, b, c);
+        }
+
         public static Operand StoreLocal(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.StoreLocal, null, a, b);
@@ -635,6 +645,16 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand StoreShared(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.StoreShared, null, a, b);
+        }
+
+        public static Operand StoreShared16(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.StoreShared16, null, a, b);
+        }
+
+        public static Operand StoreShared8(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.StoreShared8, null, a, b);
         }
 
         public static Operand UnpackDouble2x32High(this EmitterContext context, Operand a)

@@ -20,7 +20,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             return (inst.IsAtomic() && IsGlobalMr(inst)) ||
                     inst == Instruction.LoadGlobal ||
-                    inst == Instruction.StoreGlobal;
+                    inst == Instruction.StoreGlobal ||
+                    inst == Instruction.StoreGlobal16 ||
+                    inst == Instruction.StoreGlobal8;
         }
 
         private static bool IsGlobalMr(Instruction inst)
