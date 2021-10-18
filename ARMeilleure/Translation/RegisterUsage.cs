@@ -203,12 +203,18 @@ namespace ARMeilleure.Translation
                 // It always needs a context load as it is the first block to run.
                 if (block.Predecessors.Count == 0 || hasContextLoad)
                 {
-                    arg = Local(OperandType.I64);
+                    long vecMask = globalInputs[block.Index].VecMask;
+                    long intMask = globalInputs[block.Index].IntMask;
 
-                    Operation loadArg = block.Operations.AddFirst(Operation(Instruction.LoadArgument, arg, Const(0)));
+                    if (vecMask != 0 || intMask != 0)
+                    {
+                        arg = Local(OperandType.I64);
 
-                    LoadLocals(block, globalInputs[block.Index].VecMask, RegisterType.Vector, mode, loadArg, arg);
-                    LoadLocals(block, globalInputs[block.Index].IntMask, RegisterType.Integer, mode, loadArg, arg);
+                        Operation loadArg = block.Operations.AddFirst(Operation(Instruction.LoadArgument, arg, Const(0)));
+
+                        LoadLocals(block, vecMask, RegisterType.Vector, mode, loadArg, arg);
+                        LoadLocals(block, intMask, RegisterType.Integer, mode, loadArg, arg);
+                    }
                 }
 
                 bool hasContextStore = HasContextStore(block);
@@ -220,15 +226,21 @@ namespace ARMeilleure.Translation
 
                 if (EndsWithReturn(block) || hasContextStore)
                 {
-                    if (arg == default)
+                    long vecMask = globalOutputs[block.Index].VecMask;
+                    long intMask = globalOutputs[block.Index].IntMask;
+
+                    if (vecMask != 0 || intMask != 0)
                     {
-                        arg = Local(OperandType.I64);
+                        if (arg == default)
+                        {
+                            arg = Local(OperandType.I64);
 
-                        block.Append(Operation(Instruction.LoadArgument, arg, Const(0)));
+                            block.Append(Operation(Instruction.LoadArgument, arg, Const(0)));
+                        }
+
+                        StoreLocals(block, intMask, RegisterType.Integer, mode, arg);
+                        StoreLocals(block, vecMask, RegisterType.Vector, mode, arg);
                     }
-
-                    StoreLocals(block, globalOutputs[block.Index].IntMask, RegisterType.Integer, mode, arg);
-                    StoreLocals(block, globalOutputs[block.Index].VecMask, RegisterType.Vector, mode, arg);
                 }
             }
         }

@@ -10,7 +10,7 @@ namespace ARMeilleure.Translation
         private BasicBlock[] _postOrderBlocks;
         private int[] _postOrderMap;
 
-        public int LocalsCount { get; }
+        public int LocalsCount { get; private set; }
         public BasicBlock Entry { get; }
         public IntrusiveList<BasicBlock> Blocks { get; }
         public BasicBlock[] PostOrderBlocks => _postOrderBlocks;
@@ -23,6 +23,15 @@ namespace ARMeilleure.Translation
             LocalsCount = localsCount;
 
             Update();
+        }
+
+        public Operand AllocateLocal(OperandType type)
+        {
+            Operand result = Operand.Factory.Local(type);
+
+            result.NumberLocal(++LocalsCount);
+
+            return result;
         }
 
         public void Update()

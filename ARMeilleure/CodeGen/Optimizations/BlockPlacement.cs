@@ -17,7 +17,7 @@ namespace ARMeilleure.CodeGen.Optimizations
             BasicBlock lastBlock = cfg.Blocks.Last;
 
             // Move cold blocks at the end of the list, so that they are emitted away from hot code.
-            for (block = cfg.Blocks.First; block != lastBlock; block = nextBlock)
+            for (block = cfg.Blocks.First; block != null; block = nextBlock)
             {
                 nextBlock = block.ListNext;
 
@@ -25,6 +25,11 @@ namespace ARMeilleure.CodeGen.Optimizations
                 {
                     cfg.Blocks.Remove(block);
                     cfg.Blocks.AddLast(block);
+                }
+
+                if (block == lastBlock)
+                {
+                    break;
                 }
             }
 
