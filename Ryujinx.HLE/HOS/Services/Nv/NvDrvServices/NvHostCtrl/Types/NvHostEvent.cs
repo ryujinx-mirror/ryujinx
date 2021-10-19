@@ -68,10 +68,17 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             }
         }
 
-        private void GpuSignaled()
+        private void GpuSignaled(SyncpointWaiterHandle waiterInformation)
         {
             lock (Lock)
             {
+                // If the signal does not match our current waiter,
+                // then it is from a past fence and we should just ignore it.
+                if (waiterInformation != null && waiterInformation != _waiterInformation)
+                {
+                    return;
+                }
+
                 ResetFailingState();
 
                 Signal();
@@ -82,9 +89,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         {
             lock (Lock)
             {
-                if (_waiterInformation != null)
+                NvHostEventState oldState = State;
+
+                State = NvHostEventState.Cancelling;
+
+                if (oldState == NvHostEventState.Waiting && _waiterInformation != null)
                 {
                     gpuContext.Synchronization.UnregisterCallback(Fence.Id, _waiterInformation);
+                    _waiterInformation = null;
 
                     if (_previousFailingFence.Id == Fence.Id && _previousFailingFence.Value == Fence.Value)
                     {
@@ -96,9 +108,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
                         _previousFailingFence = Fence;
                     }
-
-                    Signal();
                 }
+
+                State = NvHostEventState.Cancelled;
 
                 Event.WritableEvent.Clear();
             }
@@ -108,9 +120,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         {
             lock (Lock)
             {
-                Fence = fence;
-                State = NvHostEventState.Waiting;
-
                 // NOTE: nvservices code should always wait on the GPU side.
                 //       If we do this, we may get an abort or undefined behaviour when the GPU processing thread is blocked for a long period (for example, during shader compilation).
                 //       The reason for this is that the NVN code will try to wait until giving up.
@@ -123,12 +132,15 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
                     bool timedOut = Fence.Wait(gpuContext, Timeout.InfiniteTimeSpan);
 
-                    GpuSignaled();
+                    ResetFailingState();
 
                     return timedOut;
                 }
                 else
                 {
+                    Fence = fence;
+                    State = NvHostEventState.Waiting;
+
                     _waiterInformation = gpuContext.Synchronization.RegisterCallbackOnSyncpoint(Fence.Id, Fence.Value, GpuSignaled);
 
                     return true;

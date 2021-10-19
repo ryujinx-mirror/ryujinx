@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu;
+using Ryujinx.Graphics.Gpu.Synchronization;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
 using System;
 using System.Runtime.CompilerServices;
@@ -66,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return false;
         }
 
-        public void RegisterCallback(GpuContext gpuContext, Action callback)
+        public void RegisterCallback(GpuContext gpuContext, Action<SyncpointWaiterHandle> callback)
         {
             ref NvFence fence = ref NvFences[FenceCount - 1];
 
@@ -76,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
             else
             {
-                callback();
+                callback(null);
             }
         }
 

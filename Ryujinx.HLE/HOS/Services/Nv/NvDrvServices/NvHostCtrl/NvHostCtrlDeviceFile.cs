@@ -314,24 +314,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                     return NvInternalResult.InvalidInput;
                 }
 
-                lock (hostEvent.Lock)
-                {
+                hostEvent.Cancel(_device.Gpu);
 
-                    NvHostEventState oldState = hostEvent.State;
+                _device.System.HostSyncpoint.UpdateMin(hostEvent.Fence.Id);
 
-                    if (oldState == NvHostEventState.Waiting)
-                    {
-                        hostEvent.State = NvHostEventState.Cancelling;
-
-                        hostEvent.Cancel(_device.Gpu);
-                    }
-
-                    hostEvent.State = NvHostEventState.Cancelled;
-
-                    _device.System.HostSyncpoint.UpdateMin(hostEvent.Fence.Id);
-
-                    return NvInternalResult.Success;
-                }
+                return NvInternalResult.Success;
             }
         }
 
@@ -486,7 +473,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                 if (Event != null)
                 {
                     if (Event.State == NvHostEventState.Available ||
-                        Event.State == NvHostEventState.Signaled   ||
+                        Event.State == NvHostEventState.Signaled ||
                         Event.State == NvHostEventState.Cancelled)
                     {
                         eventIndex = index;

@@ -70,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
         /// <param name="callback">The callback to call when the threshold is reached</param>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown when id >= MaxHardwareSyncpoints</exception>
         /// <returns>The created SyncpointWaiterHandle object or null if already past threshold</returns>
-        public SyncpointWaiterHandle RegisterCallbackOnSyncpoint(uint id, uint threshold, Action callback)
+        public SyncpointWaiterHandle RegisterCallbackOnSyncpoint(uint id, uint threshold, Action<SyncpointWaiterHandle> callback)
         {
             if (id >= MaxHardwareSyncpoints)
             {
@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 
             using (ManualResetEvent waitEvent = new ManualResetEvent(false))
             {
-                var info = _syncpoints[id].RegisterCallback(threshold, () => waitEvent.Set());
+                var info = _syncpoints[id].RegisterCallback(threshold, (x) => waitEvent.Set());
 
                 if (info == null)
                 {
