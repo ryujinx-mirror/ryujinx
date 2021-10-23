@@ -845,6 +845,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             KProcess process = KernelStatic.GetCurrentProcess();
 
+            if (!process.MemoryManager.InsideAddrSpace(position, size))
+            {
+                return KernelResult.InvalidMemState;
+            }
+
             KernelResult result = process.MemoryManager.SetMemoryAttribute(
                 position,
                 size,
