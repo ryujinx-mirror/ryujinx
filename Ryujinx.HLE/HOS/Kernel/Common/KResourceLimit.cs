@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         private readonly long[] _current;
         private readonly long[] _limit;
         private readonly long[] _current2;
+        private readonly long[] _peak;
 
         private readonly object _lock;
 
@@ -23,6 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             _current  = new long[(int)LimitableResource.Count];
             _limit    = new long[(int)LimitableResource.Count];
             _current2 = new long[(int)LimitableResource.Count];
+            _peak     = new long[(int)LimitableResource.Count];
 
             _lock = new object();
 
@@ -79,6 +81,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                     _current[index] = newCurrent;
                     _current2[index] += amount;
 
+                    if (_current[index] > _peak[index])
+                    {
+                        _peak[index] = _current[index];
+                    }
+
                     success = true;
                 }
             }
@@ -122,6 +129,36 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             }
         }
 
+        public long GetCurrentValue(LimitableResource resource)
+        {
+            int index = GetIndex(resource);
+
+            lock (_lock)
+            {
+                return _current[index];
+            }
+        }
+
+        public long GetLimitValue(LimitableResource resource)
+        {
+            int index = GetIndex(resource);
+
+            lock (_lock)
+            {
+                return _limit[index];
+            }
+        }
+
+        public long GetPeakValue(LimitableResource resource)
+        {
+            int index = GetIndex(resource);
+
+            lock (_lock)
+            {
+                return _peak[index];
+            }
+        }
+
         public KernelResult SetLimitValue(LimitableResource resource, long limit)
         {
             int index = GetIndex(resource);
@@ -131,6 +168,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 if (_current[index] <= limit)
                 {
                     _limit[index] = limit;
+                    _peak[index] = _current[index];
 
                     return KernelResult.Success;
                 }

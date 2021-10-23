@@ -267,6 +267,31 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.GetSystemInfo(id, handle, subId, out value);
         }
 
+        public KernelResult GetResourceLimitLimitValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long limitValue)
+        {
+            return _syscall.GetResourceLimitLimitValue(handle, resource, out limitValue);
+        }
+
+        public KernelResult GetResourceLimitCurrentValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long limitValue)
+        {
+            return _syscall.GetResourceLimitCurrentValue(handle, resource, out limitValue);
+        }
+
+        public KernelResult GetResourceLimitPeakValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long peak)
+        {
+            return _syscall.GetResourceLimitPeakValue(handle, resource, out peak);
+        }
+
+        public KernelResult CreateResourceLimit64([R(1)] out int handle)
+        {
+            return _syscall.CreateResourceLimit(out handle);
+        }
+
+        public KernelResult SetResourceLimitLimitValue64([R(0)] int handle, [R(1)] LimitableResource resource, [R(2)] long limitValue)
+        {
+            return _syscall.SetResourceLimitLimitValue(handle, resource, limitValue);
+        }
+
         // Thread
 
         public KernelResult CreateThread64(
