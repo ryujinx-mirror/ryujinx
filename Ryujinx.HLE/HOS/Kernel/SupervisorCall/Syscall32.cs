@@ -88,6 +88,14 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
+        public KernelResult SetMemoryPermission32(
+            [R(0)] ulong position,
+            [R(1)] ulong size,
+            [R(2)] KMemoryPermission permission)
+        {
+            return _syscall.SetMemoryPermission(position, size, permission);
+        }
+
         public KernelResult SetMemoryAttribute32(
             [R(0)] uint position,
             [R(1)] uint size,

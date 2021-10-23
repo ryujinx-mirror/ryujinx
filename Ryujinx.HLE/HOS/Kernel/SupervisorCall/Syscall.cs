@@ -819,6 +819,38 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return process.MemoryManager.SetHeapSize(size, out position);
         }
 
+        public KernelResult SetMemoryPermission(ulong address, ulong size, KMemoryPermission permission)
+        {
+            if (!PageAligned(address))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (address + size <= address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            if (permission == KMemoryPermission.None || (permission | KMemoryPermission.Write) != KMemoryPermission.ReadAndWrite)
+            {
+                return KernelResult.InvalidPermission;
+            }
+
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            if (!currentProcess.MemoryManager.InsideAddrSpace(address, size))
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            return currentProcess.MemoryManager.SetMemoryPermission(address, size, permission);
+        }
+
         public KernelResult SetMemoryAttribute(
             ulong position,
             ulong size,

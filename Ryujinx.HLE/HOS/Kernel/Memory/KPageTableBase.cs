@@ -799,6 +799,52 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return KernelResult.Success;
         }
 
+        public KernelResult SetMemoryPermission(ulong address, ulong size, KMemoryPermission permission)
+        {
+            lock (_blockManager)
+            {
+                if (CheckRange(
+                    address,
+                    size,
+                    MemoryState.PermissionChangeAllowed,
+                    MemoryState.PermissionChangeAllowed,
+                    KMemoryPermission.None,
+                    KMemoryPermission.None,
+                    MemoryAttribute.Mask,
+                    MemoryAttribute.None,
+                    MemoryAttribute.IpcAndDeviceMapped,
+                    out MemoryState oldState,
+                    out KMemoryPermission oldPermission,
+                    out _))
+                {
+                    if (permission != oldPermission)
+                    {
+                        if (!_slabManager.CanAllocate(MaxBlocksNeededForInsertion))
+                        {
+                            return KernelResult.OutOfResource;
+                        }
+
+                        ulong pagesCount = size / PageSize;
+
+                        KernelResult result = Reprotect(address, pagesCount, permission);
+
+                        if (result != KernelResult.Success)
+                        {
+                            return result;
+                        }
+
+                        _blockManager.InsertBlock(address, pagesCount, oldState, permission);
+                    }
+
+                    return KernelResult.Success;
+                }
+                else
+                {
+                    return KernelResult.InvalidMemState;
+                }
+            }
+        }
+
         public ulong GetTotalHeapSize()
         {
             lock (_blockManager)

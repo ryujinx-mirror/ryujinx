@@ -25,6 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             Dictionary<int, string> svcFuncs64 = new Dictionary<int, string>
             {
                 { 0x01, nameof(Syscall64.SetHeapSize64)                    },
+                { 0x02, nameof(Syscall64.SetMemoryPermission64)            },
                 { 0x03, nameof(Syscall64.SetMemoryAttribute64)             },
                 { 0x04, nameof(Syscall64.MapMemory64)                      },
                 { 0x05, nameof(Syscall64.UnmapMemory64)                    },
@@ -94,6 +95,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             Dictionary<int, string> svcFuncs32 = new Dictionary<int, string>
             {
                 { 0x01, nameof(Syscall32.SetHeapSize32)                   },
+                { 0x02, nameof(Syscall32.SetMemoryPermission32)           },
                 { 0x03, nameof(Syscall32.SetMemoryAttribute32)            },
                 { 0x04, nameof(Syscall32.MapMemory32)                     },
                 { 0x05, nameof(Syscall32.UnmapMemory32)                   },
