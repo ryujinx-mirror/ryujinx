@@ -70,16 +70,30 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         }
 
         /// <inheritdoc/>
-        protected override KernelResult MapPages(ulong dstVa, ulong pagesCount, ulong srcPa, KMemoryPermission permission)
+        protected override KernelResult MapPages(ulong dstVa, ulong pagesCount, ulong srcPa, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
         {
             _cpuMemory.Map(dstVa, 0, pagesCount * PageSize);
+
+            if (shouldFillPages)
+            {
+                _cpuMemory.Fill(dstVa, pagesCount * PageSize, fillValue);
+            }
+
             return KernelResult.Success;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult MapPages(ulong address, KPageList pageList, KMemoryPermission permission)
+        protected override KernelResult MapPages(ulong address, KPageList pageList, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
         {
-            _cpuMemory.Map(address, 0, pageList.GetPagesCount() * PageSize);
+            ulong pagesCount = pageList.GetPagesCount();
+
+            _cpuMemory.Map(address, 0, pagesCount * PageSize);
+
+            if (shouldFillPages)
+            {
+                _cpuMemory.Fill(address, pagesCount * PageSize, fillValue);
+            }
+
             return KernelResult.Success;
         }
 
