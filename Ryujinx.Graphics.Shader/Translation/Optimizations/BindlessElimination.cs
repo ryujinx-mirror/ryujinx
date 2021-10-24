@@ -128,13 +128,16 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         int cbufOffset = src0.GetCbufOffset();
                         int cbufSlot = src0.GetCbufSlot();
 
-                        if (texOp.Inst == Instruction.ImageAtomic)
+                        if (texOp.Format == TextureFormat.Unknown)
                         {
-                            texOp.Format = config.GetTextureFormatAtomic(cbufOffset, cbufSlot);
-                        }
-                        else
-                        {
-                            texOp.Format = config.GetTextureFormat(cbufOffset, cbufSlot);
+                            if (texOp.Inst == Instruction.ImageAtomic)
+                            {
+                                texOp.Format = config.GetTextureFormatAtomic(cbufOffset, cbufSlot);
+                            }
+                            else
+                            {
+                                texOp.Format = config.GetTextureFormat(cbufOffset, cbufSlot);
+                            }
                         }
 
                         SetHandle(config, texOp, cbufOffset, cbufSlot, false);

@@ -264,8 +264,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             // TODO: FP and 64-bit formats.
-            TextureFormat format = !isBindless && (size == SuatomSize.Sd32 || size == SuatomSize.Sd64)
-                ? context.Config.GetTextureFormatAtomic(imm)
+            TextureFormat format = size == SuatomSize.Sd32 || size == SuatomSize.Sd64
+                ? (isBindless ? TextureFormat.Unknown : context.Config.GetTextureFormatAtomic(imm))
                 : GetTextureFormat(size);
 
             if (compareAndSwap)
@@ -516,8 +516,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             // TODO: FP and 64-bit formats.
-            TextureFormat format = !isBindless && (size == SuatomSize.Sd32 || size == SuatomSize.Sd64)
-                ? context.Config.GetTextureFormatAtomic(imm)
+            TextureFormat format = size == SuatomSize.Sd32 || size == SuatomSize.Sd64
+                ? (isBindless ? TextureFormat.Unknown : context.Config.GetTextureFormatAtomic(imm))
                 : GetTextureFormat(size);
 
             sourcesList.Add(Rb());
