@@ -143,13 +143,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvInternalResult Submit(Span<byte> arguments)
         {
-            SubmitArguments     submitHeader   = GetSpanAndSkip<SubmitArguments>(ref arguments, 1)[0];
-            Span<CommandBuffer> commandBuffers = GetSpanAndSkip<CommandBuffer>(ref arguments, submitHeader.CmdBufsCount);
-            Span<Reloc>         relocs         = GetSpanAndSkip<Reloc>(ref arguments, submitHeader.RelocsCount);
-            Span<uint>          relocShifts    = GetSpanAndSkip<uint>(ref arguments, submitHeader.RelocsCount);
-            Span<SyncptIncr>    syncptIncrs    = GetSpanAndSkip<SyncptIncr>(ref arguments, submitHeader.SyncptIncrsCount);
-            Span<SyncptIncr>    waitChecks     = GetSpanAndSkip<SyncptIncr>(ref arguments, submitHeader.SyncptIncrsCount); // ?
-            Span<Fence>         fences         = GetSpanAndSkip<Fence>(ref arguments, submitHeader.FencesCount);
+            SubmitArguments     submitHeader    = GetSpanAndSkip<SubmitArguments>(ref arguments, 1)[0];
+            Span<CommandBuffer> commandBuffers  = GetSpanAndSkip<CommandBuffer>(ref arguments, submitHeader.CmdBufsCount);
+            Span<Reloc>         relocs          = GetSpanAndSkip<Reloc>(ref arguments, submitHeader.RelocsCount);
+            Span<uint>          relocShifts     = GetSpanAndSkip<uint>(ref arguments, submitHeader.RelocsCount);
+            Span<SyncptIncr>    syncptIncrs     = GetSpanAndSkip<SyncptIncr>(ref arguments, submitHeader.SyncptIncrsCount);
+            Span<uint>          fenceThresholds = GetSpanAndSkip<uint>(ref arguments, submitHeader.FencesCount);
 
             lock (_device)
             {
@@ -159,8 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
                     uint id = syncptIncr.Id;
 
-                    fences[i].Id = id;
-                    fences[i].Thresh = Context.Device.System.HostSyncpoint.IncrementSyncpointMax(id, syncptIncr.Incrs);
+                    fenceThresholds[i] = Context.Device.System.HostSyncpoint.IncrementSyncpointMax(id, syncptIncr.Incrs);
                 }
 
                 foreach (CommandBuffer commandBuffer in commandBuffers)
@@ -172,14 +170,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                     _host1xContext.Host1x.Submit(MemoryMarshal.Cast<byte, int>(data), _contextId);
                 }
             }
-
-            fences[0].Thresh = Context.Device.System.HostSyncpoint.IncrementSyncpointMax(fences[0].Id, 1);
-
-            Span<int> tmpCmdBuff = stackalloc int[1];
-
-            tmpCmdBuff[0] = (4 << 28) | (int)fences[0].Id;
-
-            _host1xContext.Host1x.Submit(tmpCmdBuff, _contextId);
 
             return NvInternalResult.Success;
         }
