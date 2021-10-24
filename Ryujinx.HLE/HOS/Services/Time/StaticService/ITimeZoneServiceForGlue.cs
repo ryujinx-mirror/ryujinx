@@ -1,6 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
+using Ryujinx.HLE.Utilities;
 using System;
 using System.Text;
 
@@ -35,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 return ResultCode.PermissionDenied;
             }
 
-            string locationName = Encoding.ASCII.GetString(context.RequestData.ReadBytes(0x24)).TrimEnd('\0');
+            string locationName = StringUtils.ReadInlinedAsciiString(context.RequestData, 0x24);
 
             return _timeZoneContentManager.SetDeviceLocationName(locationName);
         }
@@ -97,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 throw new InvalidOperationException();
             }
 
-            string locationName = Encoding.ASCII.GetString(context.RequestData.ReadBytes(0x24)).TrimEnd('\0');
+            string locationName = StringUtils.ReadInlinedAsciiString(context.RequestData, 0x24);
 
             ResultCode resultCode = _timeZoneContentManager.LoadTimeZoneRule(out TimeZoneRule rules, locationName);
 

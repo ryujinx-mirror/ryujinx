@@ -36,6 +36,15 @@ namespace Ryujinx.HLE.Utilities
             return output;
         }
 
+        public static string ReadInlinedAsciiString(BinaryReader reader, int maxSize)
+        {
+            byte[] data = reader.ReadBytes(maxSize);
+
+            int stringSize = Array.IndexOf<byte>(data, 0);
+
+            return Encoding.ASCII.GetString(data, 0, stringSize < 0 ? maxSize : stringSize);
+        }
+
         public static byte[] HexToBytes(string hexString)
         {
             // Ignore last character if HexLength % 2 != 0.
@@ -107,7 +116,7 @@ namespace Ryujinx.HLE.Utilities
             }
         }
 
-        public static unsafe int CompareCStr(char* s1, char* s2)
+        public static int CompareCStr(ReadOnlySpan<char> s1, ReadOnlySpan<char> s2)
         {
             int s1Index = 0;
             int s2Index = 0;
@@ -121,7 +130,7 @@ namespace Ryujinx.HLE.Utilities
             return s2[s2Index] - s1[s1Index];
         }
 
-        public static unsafe int LengthCstr(char* s)
+        public static int LengthCstr(ReadOnlySpan<char> s)
         {
             int i = 0;
 

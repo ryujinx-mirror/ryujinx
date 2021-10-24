@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // SetupTimeZoneManager(nn::time::LocationName location_name, nn::time::SteadyClockTimePoint timezone_update_timepoint, u32 total_location_name_count, nn::time::TimeZoneRuleVersion timezone_rule_version, buffer<nn::time::TimeZoneBinary, 0x21> timezone_binary)
         public ResultCode SetupTimeZoneManager(ServiceCtx context)
         {
-            string               locationName            = Encoding.ASCII.GetString(context.RequestData.ReadBytes(0x24)).TrimEnd('\0');
+            string               locationName            = StringUtils.ReadInlinedAsciiString(context.RequestData, 0x24);
             SteadyClockTimePoint timeZoneUpdateTimePoint = context.RequestData.ReadStruct<SteadyClockTimePoint>();
             uint                 totalLocationNameCount  = context.RequestData.ReadUInt32();
             UInt128              timeZoneRuleVersion     = context.RequestData.ReadStruct<UInt128>();

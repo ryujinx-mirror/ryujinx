@@ -1,3 +1,4 @@
+using Ryujinx.HLE.Utilities;
 using System.IO;
 using System.Text;
 
@@ -30,10 +31,10 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                 reader.ReadBytes(2); // Padding
 
-                PlatformString = Encoding.ASCII.GetString(reader.ReadBytes(0x20)).TrimEnd('\0');
-                Hex            = Encoding.ASCII.GetString(reader.ReadBytes(0x40)).TrimEnd('\0');
-                VersionString  = Encoding.ASCII.GetString(reader.ReadBytes(0x18)).TrimEnd('\0');
-                VersionTitle   = Encoding.ASCII.GetString(reader.ReadBytes(0x80)).TrimEnd('\0');
+                PlatformString = StringUtils.ReadInlinedAsciiString(reader, 0x20);
+                Hex            = StringUtils.ReadInlinedAsciiString(reader, 0x40);
+                VersionString  = StringUtils.ReadInlinedAsciiString(reader, 0x18);
+                VersionTitle   = StringUtils.ReadInlinedAsciiString(reader, 0x80);
             }
         }
     }

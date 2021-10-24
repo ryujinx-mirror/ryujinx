@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
     {
         public KeyboardDevice(Switch device, bool active) : base(device, active) { }
 
-        public unsafe void Update(KeyboardInput keyState)
+        public void Update(KeyboardInput keyState)
         {
             ref RingLifo<KeyboardState> lifo = ref _device.Hid.SharedMemory.Keyboard;
 

@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
 
-            string locationName = Encoding.ASCII.GetString(context.RequestData.ReadBytes(0x24)).TrimEnd('\0');
+            string locationName = StringUtils.ReadInlinedAsciiString(context.RequestData, 0x24);
 
             ResultCode result;
 

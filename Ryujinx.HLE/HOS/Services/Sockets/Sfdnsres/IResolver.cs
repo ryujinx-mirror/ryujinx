@@ -218,11 +218,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
         private ResultCode GetHostByNameRequestImpl(ServiceCtx context, ulong inputBufferPosition, ulong inputBufferSize, ulong outputBufferPosition, ulong outputBufferSize, ulong optionsBufferPosition, ulong optionsBufferSize)
         {
-            byte[] rawName = new byte[inputBufferSize];
-
-            context.Memory.Read(inputBufferPosition, rawName);
-
-            string name = Encoding.ASCII.GetString(rawName).TrimEnd('\0');
+            string name = MemoryHelper.ReadAsciiString(context.Memory, inputBufferPosition, (int)inputBufferSize);
 
             // TODO: Use params.
             bool  enableNsdResolve = (context.RequestData.ReadInt32() & 1) != 0;
