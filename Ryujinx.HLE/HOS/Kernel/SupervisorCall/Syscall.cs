@@ -836,7 +836,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 return KernelResult.InvalidMemState;
             }
 
-            if (permission == KMemoryPermission.None || (permission | KMemoryPermission.Write) != KMemoryPermission.ReadAndWrite)
+            if (permission != KMemoryPermission.None && (permission | KMemoryPermission.Write) != KMemoryPermission.ReadAndWrite)
             {
                 return KernelResult.InvalidPermission;
             }
