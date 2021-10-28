@@ -18,6 +18,7 @@
         CanadianFrench,
         LatinAmericanSpanish,
         SimplifiedChinese,
-        TraditionalChinese
+        TraditionalChinese,
+        BrazilianPortuguese
     }
 }

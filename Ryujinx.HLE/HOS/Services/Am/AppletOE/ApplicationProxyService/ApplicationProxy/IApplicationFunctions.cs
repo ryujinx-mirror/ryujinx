@@ -151,7 +151,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             int  supportedLanguages  = (int)context.Device.Application.ControlData.Value.SupportedLanguages;
             int  firstSupported      = BitOperations.TrailingZeroCount(supportedLanguages);
 
-            if (firstSupported > (int)SystemState.TitleLanguage.Chinese)
+            if (firstSupported > (int)SystemState.TitleLanguage.BrazilianPortuguese)
             {
                 Logger.Warning?.Print(LogClass.ServiceAm, "Application has zero supported languages");
 
@@ -578,7 +578,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         {
             // NOTE: IStorage are pushed in the channel with IApplicationAccessor PushToFriendInvitationStorageChannel
             //       If _friendInvitationStorageChannelEvent is signaled, the event is cleared.
-            //       If an IStorage is available, returns it with ResultCode.Success. 
+            //       If an IStorage is available, returns it with ResultCode.Success.
             //       If not, just returns ResultCode.NotAvailable. Since we don't support friend feature for now, it's fine to do the same.
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);

@@ -16,6 +16,7 @@
         Russian,
         Korean,
         Taiwanese,
-        Chinese
+        Chinese,
+        BrazilianPortuguese
     }
 }

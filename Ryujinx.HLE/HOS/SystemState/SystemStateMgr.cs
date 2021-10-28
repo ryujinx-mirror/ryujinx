@@ -22,7 +22,8 @@ namespace Ryujinx.HLE.HOS.SystemState
             "fr-CA",
             "es-419",
             "zh-Hans",
-            "zh-Hant"
+            "zh-Hant",
+            "pt-BR"
         };
 
         internal long DesiredKeyboardLayout { get; private set; }

@@ -94,13 +94,14 @@ namespace Ryujinx.HLE.HOS.Applets.Error
                 SystemLanguage.LatinAmericanSpanish => "es-419",
                 SystemLanguage.SimplifiedChinese    => "zh-Hans",
                 SystemLanguage.TraditionalChinese   => "zh-Hant",
+                SystemLanguage.BrazilianPortuguese  => "pt-BR",
                 _                                   => "en-US"
             };
         }
 
-        public string CleanText(string value)
+        private static string CleanText(string value)
         {
-            return Regex.Replace(Encoding.Unicode.GetString(Encoding.UTF8.GetBytes(value)), @"[^\u0009\u000A\u000D\u0020-\u007E]", "");
+            return Regex.Replace(value, @"[^\u0000\u0009\u000A\u000D\u0020-\uFFFF]..", "").Replace("\0", "");
         }
 
         private string GetMessageText(uint module, uint description, string key)
@@ -112,13 +113,12 @@ namespace Ryujinx.HLE.HOS.Applets.Error
                 Nca         nca          = new Nca(_horizon.Device.FileSystem.KeySet, ncaFileStream);
                 IFileSystem romfs        = nca.OpenFileSystem(NcaSectionType.Data, _horizon.FsIntegrityCheckLevel);
                 string      languageCode = SystemLanguageToLanguageKey(_horizon.State.DesiredSystemLanguage);
-                string      filePath     = "/" + Path.Combine(module.ToString(), $"{description:0000}", $"{languageCode}_{key}").Replace(@"\", "/");
+                string      filePath     = $"/{module}/{description:0000}/{languageCode}_{key}";
 
                 if (romfs.FileExists(filePath))
                 {
                     romfs.OpenFile(out IFile binaryFile, filePath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                    StreamReader reader = new StreamReader(binaryFile.AsStream());
+                    StreamReader reader = new StreamReader(binaryFile.AsStream(), Encoding.Unicode);
 
                     return CleanText(reader.ReadToEnd());
                 }
@@ -149,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
             }
 
             string message = GetMessageText(module, description, "DlgMsg");
-        
+
             if (message == "")
             {
                 message = "An error has occured.\n\n"
