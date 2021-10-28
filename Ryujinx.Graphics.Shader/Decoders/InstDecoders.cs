@@ -404,11 +404,20 @@ namespace Ryujinx.Graphics.Shader.Decoders
         Attr = 3,
     }
 
-    enum CacheOp
+    enum CacheOpLd
     {
+        Ca = 0,
         Cg = 1,
         Ci = 2,
         Cv = 3,
+    }
+
+    enum CacheOpSt
+    {
+        Wb = 0,
+        Cg = 1,
+        Ci = 2,
+        Wt = 3,
     }
 
     enum LsSize
@@ -1163,19 +1172,19 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public CctltOp CctltOp => (CctltOp)((_opcode >> 0) & 0x3);
     }
 
-    struct InstContUnsup
+    struct InstCont
     {
         private ulong _opcode;
-        public InstContUnsup(ulong opcode) => _opcode = opcode;
+        public InstCont(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
     }
 
-    struct InstCsetUnsup
+    struct InstCset
     {
         private ulong _opcode;
-        public InstCsetUnsup(ulong opcode) => _opcode = opcode;
+        public InstCset(ulong opcode) => _opcode = opcode;
         public int Dest => (int)((_opcode >> 0) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3507,7 +3516,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int SrcPred => (int)((_opcode >> 58) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 56) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 56) & 0x3);
         public LsSize LsSize => (LsSize)((_opcode >> 53) & 0x7);
         public bool E => (_opcode & 0x10000000000000) != 0;
         public int Imm32 => (int)(_opcode >> 20);
@@ -3536,7 +3545,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public LsSize LsSize => (LsSize)((_opcode >> 48) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 46) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 46) & 0x3);
         public bool E => (_opcode & 0x200000000000) != 0;
         public int Imm24 => (int)((_opcode >> 20) & 0xFFFFFF);
     }
@@ -4502,7 +4511,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int SrcPred => (int)((_opcode >> 58) & 0x7);
-        public CacheOp Cop => (CacheOp)((_opcode >> 56) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 56) & 0x3);
         public LsSize LsSize => (LsSize)((_opcode >> 53) & 0x7);
         public bool E => (_opcode & 0x10000000000000) != 0;
         public int Imm32 => (int)(_opcode >> 20);
@@ -4517,7 +4526,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public LsSize2 LsSize => (LsSize2)((_opcode >> 48) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 46) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 46) & 0x3);
         public bool E => (_opcode & 0x200000000000) != 0;
         public int Imm24 => (int)((_opcode >> 20) & 0xFFFFFF);
     }
@@ -4531,7 +4540,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public LsSize2 LsSize => (LsSize2)((_opcode >> 48) & 0x7);
-        public CacheOp2 CacheOp => (CacheOp2)((_opcode >> 44) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 44) & 0x3);
         public int Imm24 => (int)((_opcode >> 20) & 0xFFFFFF);
     }
 
@@ -4653,7 +4662,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
         public int DestPred2 => (int)((_opcode >> 30) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 24) & 0x3);
         public bool Ba => (_opcode & 0x800000) != 0;
         public SuSize Size => (SuSize)((_opcode >> 20) & 0x7);
     }
@@ -4670,7 +4679,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int TidB => (int)((_opcode >> 36) & 0x1FFF);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
         public int DestPred2 => (int)((_opcode >> 30) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 24) & 0x3);
         public bool Ba => (_opcode & 0x800000) != 0;
         public SuSize Size => (SuSize)((_opcode >> 20) & 0x7);
     }
@@ -4687,7 +4696,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
         public int DestPred2 => (int)((_opcode >> 30) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 24) & 0x3);
         public SuRgba Rgba => (SuRgba)((_opcode >> 20) & 0xF);
     }
 
@@ -4703,7 +4712,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int TidB => (int)((_opcode >> 36) & 0x1FFF);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
         public int DestPred2 => (int)((_opcode >> 30) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpLd CacheOp => (CacheOpLd)((_opcode >> 24) & 0x3);
         public SuRgba Rgba => (SuRgba)((_opcode >> 20) & 0xF);
     }
 
@@ -4750,7 +4759,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool PredInv => (_opcode & 0x80000) != 0;
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 24) & 0x3);
         public bool Ba => (_opcode & 0x800000) != 0;
         public SuSize Size => (SuSize)((_opcode >> 20) & 0x7);
     }
@@ -4766,7 +4775,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public int TidB => (int)((_opcode >> 36) & 0x1FFF);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 24) & 0x3);
         public bool Ba => (_opcode & 0x800000) != 0;
         public SuSize Size => (SuSize)((_opcode >> 20) & 0x7);
     }
@@ -4782,7 +4791,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool PredInv => (_opcode & 0x80000) != 0;
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 24) & 0x3);
         public SuRgba Rgba => (SuRgba)((_opcode >> 20) & 0xF);
     }
 
@@ -4797,7 +4806,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Clamp Clamp => (Clamp)((_opcode >> 49) & 0x3);
         public int TidB => (int)((_opcode >> 36) & 0x1FFF);
         public SuDim Dim => (SuDim)((_opcode >> 33) & 0x7);
-        public CacheOp CacheOp => (CacheOp)((_opcode >> 24) & 0x3);
+        public CacheOpSt CacheOp => (CacheOpSt)((_opcode >> 24) & 0x3);
         public SuRgba Rgba => (SuRgba)((_opcode >> 20) & 0xF);
     }
 

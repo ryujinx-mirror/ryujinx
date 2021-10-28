@@ -37,6 +37,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
         /// <summary>
+        /// Queries host support for fragment shader ordering critical sections on the shader code.
+        /// </summary>
+        /// <returns>True if fragment shader interlock is supported, false otherwise</returns>
+        public bool QueryHostSupportsFragmentShaderInterlock() => _context.Capabilities.SupportsFragmentShaderInterlock;
+
+        /// <summary>
+        /// Queries host support for fragment shader ordering scoped critical sections on the shader code.
+        /// </summary>
+        /// <returns>True if fragment shader ordering is supported, false otherwise</returns>
+        public bool QueryHostSupportsFragmentShaderOrderingIntel() => _context.Capabilities.SupportsFragmentShaderOrderingIntel;
+
+        /// <summary>
         /// Queries host support for readable images without a explicit format declaration on the shader.
         /// </summary>
         /// <returns>True if formatted image load is supported, false otherwise</returns>

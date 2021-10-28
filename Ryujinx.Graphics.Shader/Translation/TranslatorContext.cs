@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     public class TranslatorContext
     {
-        private readonly Block[][] _cfg;
+        private readonly DecodedProgram _program;
         private ShaderConfig _config;
 
         public ulong Address { get; }
@@ -23,11 +23,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public IGpuAccessor GpuAccessor => _config.GpuAccessor;
 
-        internal TranslatorContext(ulong address, Block[][] cfg, ShaderConfig config)
+        internal TranslatorContext(ulong address, DecodedProgram program, ShaderConfig config)
         {
             Address = address;
+            _program = program;
             _config = config;
-            _cfg    = cfg;
         }
 
         private static bool IsUserAttribute(Operand operand)
@@ -141,13 +141,13 @@ namespace Ryujinx.Graphics.Shader.Translation
                     nextStage._config.UsedInputAttributesPerPatch);
             }
 
-            FunctionCode[] code = EmitShader(_cfg, _config, initializeOutputs: other == null, out _);
+            FunctionCode[] code = EmitShader(_program, _config, initializeOutputs: other == null, out _);
 
             if (other != null)
             {
                 other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes, 0);
 
-                FunctionCode[] otherCode = EmitShader(other._cfg, other._config, initializeOutputs: true, out int aStart);
+                FunctionCode[] otherCode = EmitShader(other._program, other._config, initializeOutputs: true, out int aStart);
 
                 code = Combine(otherCode, code, aStart);
 

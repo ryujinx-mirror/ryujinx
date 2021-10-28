@@ -117,7 +117,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 if (node is AstOperation operation)
                 {
-                    context.AppendLine(InstGen.GetExpression(context, operation) + ";");
+                    string expr = InstGen.GetExpression(context, operation);
+
+                    if (expr != null)
+                    {
+                        context.AppendLine(expr + ";");
+                    }
                 }
                 else if (node is AstAssignment assignment)
                 {

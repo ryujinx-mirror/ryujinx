@@ -7,14 +7,22 @@ namespace Ryujinx.Graphics.Shader.Decoders
         Rd2 = 1 << 1,
         Ra = 1 << 2,
         Rb = 1 << 3,
-        Ib = 1 << 4,
-        Rc = 1 << 5,
-        Pd = 1 << 6,
-        Pd2 = 1 << 7,
-        Pdn = 1 << 8,
-        Tex = 1 << 9,
-        TexB = 1 << 10,
-        Bra = 1 << 11,
-        NoPred = 1 << 12
+        Rb2 = 1 << 4,
+        Ib = 1 << 5,
+        Rc = 1 << 6,
+
+        Pd = 1 << 7,
+        LPd = 2 << 7,
+        SPd = 3 << 7,
+        TPd = 4 << 7,
+        VPd = 5 << 7,
+        PdMask = 7 << 7,
+
+        Pdn = 1 << 10,
+        Ps = 1 << 11,
+        Tex = 1 << 12,
+        TexB = 1 << 13,
+        Bra = 1 << 14,
+        NoPred = 1 << 15
     }
 }

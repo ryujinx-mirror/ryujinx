@@ -61,6 +61,16 @@ namespace Ryujinx.Graphics.Shader
             return 16;
         }
 
+        bool QueryHostSupportsFragmentShaderInterlock()
+        {
+            return true;
+        }
+
+        bool QueryHostSupportsFragmentShaderOrderingIntel()
+        {
+            return false;
+        }
+
         bool QueryHostSupportsImageLoadFormatted()
         {
             return true;

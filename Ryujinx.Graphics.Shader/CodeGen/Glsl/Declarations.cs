@@ -32,6 +32,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 context.AppendLine("#extension GL_ARB_compute_shader : enable");
             }
+            else if (context.Config.Stage == ShaderStage.Fragment)
+            {
+                if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderInterlock())
+                {
+                    context.AppendLine("#extension GL_ARB_fragment_shader_interlock : enable");
+                }
+                else if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderOrderingIntel())
+                {
+                    context.AppendLine("#extension GL_INTEL_fragment_shader_ordering : enable");
+                }
+            }
 
             if (context.Config.GpPassthrough)
             {
@@ -430,6 +441,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     indexExpr);
 
                 string imageTypeName = descriptor.Type.ToGlslImageType(descriptor.Format.GetComponentType());
+
+                if (descriptor.Flags.HasFlag(TextureUsageFlags.ImageCoherent))
+                {
+                    imageTypeName = "coherent " + imageTypeName;
+                }
 
                 string layout = descriptor.Format.ToGlslFormat();
 

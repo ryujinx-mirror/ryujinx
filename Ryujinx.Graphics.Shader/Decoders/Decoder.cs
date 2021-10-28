@@ -10,24 +10,25 @@ namespace Ryujinx.Graphics.Shader.Decoders
 {
     static class Decoder
     {
-        public static Block[][] Decode(ShaderConfig config, ulong startAddress)
+        public static DecodedProgram Decode(ShaderConfig config, ulong startAddress)
         {
-            List<Block[]> funcs = new List<Block[]>();
+            Queue<DecodedFunction> functionsQueue = new Queue<DecodedFunction>();
+            Dictionary<ulong, DecodedFunction> functionsVisited = new Dictionary<ulong, DecodedFunction>();
 
-            Queue<ulong> funcQueue = new Queue<ulong>();
-            HashSet<ulong> funcVisited = new HashSet<ulong>();
-
-            void EnqueueFunction(ulong funcAddress)
+            DecodedFunction EnqueueFunction(ulong address)
             {
-                if (funcVisited.Add(funcAddress))
+                if (!functionsVisited.TryGetValue(address, out DecodedFunction function))
                 {
-                    funcQueue.Enqueue(funcAddress);
+                    functionsVisited.Add(address, function = new DecodedFunction(address));
+                    functionsQueue.Enqueue(function);
                 }
+
+                return function;
             }
 
-            funcQueue.Enqueue(0);
+            DecodedFunction mainFunction = EnqueueFunction(0);
 
-            while (funcQueue.TryDequeue(out ulong funcAddress))
+            while (functionsQueue.TryDequeue(out DecodedFunction currentFunction))
             {
                 List<Block> blocks = new List<Block>();
                 Queue<Block> workQueue = new Queue<Block>();
@@ -46,7 +47,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     return block;
                 }
 
-                GetBlock(funcAddress);
+                GetBlock(currentFunction.Address);
 
                 bool hasNewTarget;
 
@@ -108,7 +109,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                             if (lastOp.Name == InstName.Cal)
                             {
-                                EnqueueFunction(lastOp.GetAbsoluteAddress());
+                                EnqueueFunction(lastOp.GetAbsoluteAddress()).AddCaller(currentFunction);
                             }
                             else if (lastOp.Name == InstName.Bra)
                             {
@@ -157,10 +158,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
                 while (hasNewTarget);
 
-                funcs.Add(blocks.ToArray());
+                currentFunction.SetBlocks(blocks.ToArray());
             }
 
-            return funcs.ToArray();
+            return new DecodedProgram(mainFunction, functionsVisited);
         }
 
         private static bool BinarySearch(List<Block> blocks, ulong address, out int index)

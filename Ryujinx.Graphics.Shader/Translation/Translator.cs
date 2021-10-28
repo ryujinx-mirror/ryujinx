@@ -4,7 +4,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation.Optimizations;
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -33,9 +33,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             counts ??= new TranslationCounts();
 
-            Block[][] cfg = DecodeShader(address, gpuAccessor, options, counts, out ShaderConfig config);
-
-            return new TranslatorContext(address, cfg, config);
+            return DecodeShader(address, gpuAccessor, options, counts);
         }
 
         internal static ShaderProgram Translate(FunctionCode[] functions, ShaderConfig config, out ShaderProgramInfo shaderProgramInfo)
@@ -112,35 +110,29 @@ namespace Ryujinx.Graphics.Shader.Translation
             return program;
         }
 
-        private static Block[][] DecodeShader(
-            ulong address,
-            IGpuAccessor gpuAccessor,
-            TranslationOptions options,
-            TranslationCounts counts,
-            out ShaderConfig config)
+        private static TranslatorContext DecodeShader(ulong address, IGpuAccessor gpuAccessor, TranslationOptions options, TranslationCounts counts)
         {
-            Block[][] cfg;
+            ShaderConfig config;
+            DecodedProgram program;
             ulong maxEndAddress = 0;
 
             if ((options.Flags & TranslationFlags.Compute) != 0)
             {
                 config = new ShaderConfig(gpuAccessor, options, counts);
 
-                cfg = Decoder.Decode(config, address);
+                program = Decoder.Decode(config, address);
             }
             else
             {
                 config = new ShaderConfig(new ShaderHeader(gpuAccessor, address), gpuAccessor, options, counts);
 
-                cfg = Decoder.Decode(config, address + HeaderSize);
+                program = Decoder.Decode(config, address + HeaderSize);
             }
 
-            for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
+            foreach (DecodedFunction function in program)
             {
-                for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
+                foreach (Block block in function.Blocks)
                 {
-                    Block block = cfg[funcIndex][blkIndex];
-
                     if (maxEndAddress < block.EndAddress)
                     {
                         maxEndAddress = block.EndAddress;
@@ -164,36 +156,36 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             config.SizeAdd((int)maxEndAddress + (options.Flags.HasFlag(TranslationFlags.Compute) ? 0 : HeaderSize));
 
-            return cfg;
+            return new TranslatorContext(address, program, config);
         }
 
-        internal static FunctionCode[] EmitShader(Block[][] cfg, ShaderConfig config, bool initializeOutputs, out int initializationOperations)
+        internal static FunctionCode[] EmitShader(DecodedProgram program, ShaderConfig config, bool initializeOutputs, out int initializationOperations)
         {
             initializationOperations = 0;
 
-            Dictionary<ulong, int> funcIds = new Dictionary<ulong, int>();
+            FunctionMatch.RunPass(program);
 
-            for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
+            foreach (DecodedFunction function in program.OrderBy(x => x.Address).Where(x => !x.IsCompilerGenerated))
             {
-                funcIds.Add(cfg[funcIndex][0].Address, funcIndex);
+                program.AddFunctionAndSetId(function);
             }
 
-            List<FunctionCode> funcs = new List<FunctionCode>();
+            FunctionCode[] functions = new FunctionCode[program.FunctionsWithIdCount];
 
-            for (int funcIndex = 0; funcIndex < cfg.Length; funcIndex++)
+            for (int index = 0; index < functions.Length; index++)
             {
-                EmitterContext context = new EmitterContext(config, funcIndex != 0, funcIds);
+                EmitterContext context = new EmitterContext(program, config, index != 0);
 
-                if (initializeOutputs && funcIndex == 0)
+                if (initializeOutputs && index == 0)
                 {
                     EmitOutputsInitialization(context, config);
                     initializationOperations = context.OperationsCount;
                 }
 
-                for (int blkIndex = 0; blkIndex < cfg[funcIndex].Length; blkIndex++)
-                {
-                    Block block = cfg[funcIndex][blkIndex];
+                DecodedFunction function = program.GetFunctionById(index);
 
+                foreach (Block block in function.Blocks)
+                {
                     context.CurrBlock = block;
 
                     context.MarkLabel(context.GetLabel(block.Address));
@@ -201,10 +193,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                     EmitOps(context, block);
                 }
 
-                funcs.Add(new FunctionCode(context.GetOperations()));
+                functions[index] = new FunctionCode(context.GetOperations());
             }
 
-            return funcs.ToArray();
+            return functions;
         }
 
         private static void EmitOutputsInitialization(EmitterContext context, ShaderConfig config)

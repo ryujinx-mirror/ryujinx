@@ -65,6 +65,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.EmitVertex,               InstType.CallNullary,    "EmitVertex");
             Add(Instruction.EndPrimitive,             InstType.CallNullary,    "EndPrimitive");
             Add(Instruction.ExponentB2,               InstType.CallUnary,      "exp2");
+            Add(Instruction.FSIBegin,                 InstType.Special);
+            Add(Instruction.FSIEnd,                   InstType.Special);
             Add(Instruction.FindFirstSetS32,          InstType.CallUnary,      "findMSB");
             Add(Instruction.FindFirstSetU32,          InstType.CallUnary,      "findMSB");
             Add(Instruction.Floor,                    InstType.CallUnary,      "floor");

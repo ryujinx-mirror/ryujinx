@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             return type switch
             {
+                OperandType.Argument => VariableType.S32,
                 OperandType.Attribute => VariableType.F32,
                 OperandType.AttributePerPatch => VariableType.F32,
                 OperandType.Constant => VariableType.S32,

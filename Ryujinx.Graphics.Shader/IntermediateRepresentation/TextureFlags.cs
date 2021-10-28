@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         LodLevel    = 1 << 5,
         Offset      = 1 << 6,
         Offsets     = 1 << 7,
+        Coherent    = 1 << 8,
 
         AtomicMask  = 15 << 16,
 

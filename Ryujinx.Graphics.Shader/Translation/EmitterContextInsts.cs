@@ -361,6 +361,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.SwizzleAdd, Local(), a, b, Const(mask));
         }
 
+        public static void FSIBegin(this EmitterContext context)
+        {
+            context.Add(Instruction.FSIBegin);
+        }
+
+        public static void FSIEnd(this EmitterContext context)
+        {
+            context.Add(Instruction.FSIEnd);
+        }
+
         public static Operand GroupMemoryBarrier(this EmitterContext context)
         {
             return context.Add(Instruction.GroupMemoryBarrier);

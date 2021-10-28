@@ -56,14 +56,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Cont(EmitterContext context)
         {
-            InstContUnsup op = context.GetOp<InstContUnsup>();
+            InstCont op = context.GetOp<InstCont>();
 
             context.Config.GpuAccessor.Log("Shader instruction ContUnsup is not implemented.");
         }
 
         public static void Cset(EmitterContext context)
         {
-            InstCsetUnsup op = context.GetOp<InstCsetUnsup>();
+            InstCset op = context.GetOp<InstCset>();
 
             context.Config.GpuAccessor.Log("Shader instruction CsetUnsup is not implemented.");
         }

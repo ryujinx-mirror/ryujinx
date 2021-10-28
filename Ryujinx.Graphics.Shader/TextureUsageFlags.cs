@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Shader
         // Integer sampled textures must be noted for resolution scaling.
         ResScaleUnsupported = 1 << 0,
         NeedsScaleValue = 1 << 1,
-        ImageStore = 1 << 2
+        ImageStore = 1 << 2,
+        ImageCoherent = 1 << 3
     }
 }

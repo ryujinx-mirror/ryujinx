@@ -4,6 +4,7 @@ using System;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenBallot;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenCall;
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenFSI;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenPacking;
@@ -143,6 +144,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.Call:
                         return Call(context, operation);
+
+                    case Instruction.FSIBegin:
+                        return FSIBegin(context);
+
+                    case Instruction.FSIEnd:
+                        return FSIEnd(context);
 
                     case Instruction.ImageLoad:
                     case Instruction.ImageStore:

@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.GAL
         public bool HasVectorIndexingBug { get; }
 
         public bool SupportsAstcCompression { get; }
+        public bool SupportsFragmentShaderInterlock { get; }
+        public bool SupportsFragmentShaderOrderingIntel { get; }
         public bool SupportsImageLoadFormatted { get; }
         public bool SupportsMismatchingViewFormat { get; }
         public bool SupportsNonConstantTextureOffset { get; }
@@ -22,6 +24,8 @@ namespace Ryujinx.Graphics.GAL
             bool hasFrontFacingBug,
             bool hasVectorIndexingBug,
             bool supportsAstcCompression,
+            bool supportsFragmentShaderInterlock,
+            bool supportsFragmentShaderOrderingIntel,
             bool supportsImageLoadFormatted,
             bool supportsMismatchingViewFormat,
             bool supportsNonConstantTextureOffset,
@@ -36,6 +40,8 @@ namespace Ryujinx.Graphics.GAL
             HasFrontFacingBug = hasFrontFacingBug;
             HasVectorIndexingBug = hasVectorIndexingBug;
             SupportsAstcCompression = supportsAstcCompression;
+            SupportsFragmentShaderInterlock = supportsFragmentShaderInterlock;
+            SupportsFragmentShaderOrderingIntel = supportsFragmentShaderOrderingIntel;
             SupportsImageLoadFormatted = supportsImageLoadFormatted;
             SupportsMismatchingViewFormat = supportsMismatchingViewFormat;
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;

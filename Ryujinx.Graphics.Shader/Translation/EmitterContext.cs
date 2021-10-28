@@ -10,24 +10,24 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     class EmitterContext
     {
-        public Block  CurrBlock { get; set; }
-        public InstOp CurrOp    { get; set; }
-
+        public DecodedProgram Program { get; }
         public ShaderConfig Config { get; }
 
         public bool IsNonMain { get; }
 
+        public Block CurrBlock { get; set; }
+        public InstOp CurrOp { get; set; }
+
         public int OperationsCount => _operations.Count;
 
-        private readonly IReadOnlyDictionary<ulong, int> _funcs;
         private readonly List<Operation> _operations;
         private readonly Dictionary<ulong, Operand> _labels;
 
-        public EmitterContext(ShaderConfig config, bool isNonMain, IReadOnlyDictionary<ulong, int> funcs)
+        public EmitterContext(DecodedProgram program, ShaderConfig config, bool isNonMain)
         {
+            Program = program;
             Config = config;
             IsNonMain = isNonMain;
-            _funcs = funcs;
             _operations = new List<Operation>();
             _labels = new Dictionary<ulong, Operand>();
         }
@@ -154,11 +154,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             return label;
         }
 
-        public int GetFunctionId(ulong address)
-        {
-            return _funcs[address];
-        }
-
         public void PrepareForReturn()
         {
             if (!IsNonMain && Config.Stage == ShaderStage.Fragment)
@@ -195,7 +190,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                             Operand isBgra = Attribute(AttributeConsts.FragmentOutputIsBgraBase + rtIndex * 4);
 
                             Operand lblIsBgra = Label();
-                            Operand lblEnd    = Label();
+                            Operand lblEnd = Label();
 
                             this.BranchIfTrue(lblIsBgra, isBgra);
 

@@ -315,15 +315,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool isImage = inst == Instruction.ImageLoad || inst == Instruction.ImageStore || inst == Instruction.ImageAtomic;
             bool isWrite = inst == Instruction.ImageStore || inst == Instruction.ImageAtomic;
             bool accurateType = inst != Instruction.Lod;
+            bool coherent = flags.HasFlag(TextureFlags.Coherent);
 
             if (isImage)
             {
-                SetUsedTextureOrImage(_usedImages, cbufSlot, handle, type, format, true, isWrite, false);
+                SetUsedTextureOrImage(_usedImages, cbufSlot, handle, type, format, true, isWrite, false, coherent);
             }
             else
             {
                 bool intCoords = flags.HasFlag(TextureFlags.IntCoords) || inst == Instruction.TextureSize;
-                SetUsedTextureOrImage(_usedTextures, cbufSlot, handle, type, TextureFormat.Unknown, intCoords, false, accurateType);
+                SetUsedTextureOrImage(_usedTextures, cbufSlot, handle, type, TextureFormat.Unknown, intCoords, false, accurateType, coherent);
             }
         }
 
@@ -335,7 +336,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             TextureFormat format,
             bool intCoords,
             bool write,
-            bool accurateType)
+            bool accurateType,
+            bool coherent)
         {
             var dimensions = type.GetDimensions();
             var isIndexed = type.HasFlag(SamplerType.Indexed);
@@ -359,6 +361,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             if (write)
             {
                 usageFlags |= TextureUsageFlags.ImageStore;
+            }
+
+            if (coherent)
+            {
+                usageFlags |= TextureUsageFlags.ImageCoherent;
             }
 
             int arraySize = isIndexed ? SamplerArraySize : 1;

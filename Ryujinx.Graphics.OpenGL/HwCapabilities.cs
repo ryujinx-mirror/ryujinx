@@ -6,7 +6,10 @@ namespace Ryujinx.Graphics.OpenGL
     static class HwCapabilities
     {
         private static readonly Lazy<bool> _supportsAstcCompression           = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
+        private static readonly Lazy<bool> _supportsFragmentShaderInterlock   = new Lazy<bool>(() => HasExtension("GL_ARB_fragment_shader_interlock"));
+        private static readonly Lazy<bool> _supportsFragmentShaderOrdering    = new Lazy<bool>(() => HasExtension("GL_INTEL_fragment_shader_ordering"));
         private static readonly Lazy<bool> _supportsImageLoadFormatted        = new Lazy<bool>(() => HasExtension("GL_EXT_shader_image_load_formatted"));
+        private static readonly Lazy<bool> _supportsIndirectParameters        = new Lazy<bool>(() => HasExtension("GL_ARB_indirect_parameters"));
         private static readonly Lazy<bool> _supportsParallelShaderCompile     = new Lazy<bool>(() => HasExtension("GL_ARB_parallel_shader_compile"));
         private static readonly Lazy<bool> _supportsPolygonOffsetClamp        = new Lazy<bool>(() => HasExtension("GL_EXT_polygon_offset_clamp"));
         private static readonly Lazy<bool> _supportsQuads                     = new Lazy<bool>(SupportsQuadsCheck);
@@ -14,7 +17,6 @@ namespace Ryujinx.Graphics.OpenGL
         private static readonly Lazy<bool> _supportsShaderBallot              = new Lazy<bool>(() => HasExtension("GL_ARB_shader_ballot"));
         private static readonly Lazy<bool> _supportsTextureShadowLod          = new Lazy<bool>(() => HasExtension("GL_EXT_texture_shadow_lod"));
         private static readonly Lazy<bool> _supportsViewportSwizzle           = new Lazy<bool>(() => HasExtension("GL_NV_viewport_swizzle"));
-        private static readonly Lazy<bool> _supportsIndirectParameters        = new Lazy<bool>(() => HasExtension("GL_ARB_indirect_parameters"));
 
         private static readonly Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
         private static readonly Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
@@ -41,7 +43,10 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool UsePersistentBufferForFlush       => _gpuVendor.Value == GpuVendor.AmdWindows || _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static bool SupportsAstcCompression           => _supportsAstcCompression.Value;
+        public static bool SupportsFragmentShaderInterlock   => _supportsFragmentShaderInterlock.Value;
+        public static bool SupportsFragmentShaderOrdering    => _supportsFragmentShaderOrdering.Value;
         public static bool SupportsImageLoadFormatted        => _supportsImageLoadFormatted.Value;
+        public static bool SupportsIndirectParameters        => _supportsIndirectParameters.Value;
         public static bool SupportsParallelShaderCompile     => _supportsParallelShaderCompile.Value;
         public static bool SupportsPolygonOffsetClamp        => _supportsPolygonOffsetClamp.Value;
         public static bool SupportsQuads                     => _supportsQuads.Value;
@@ -49,7 +54,6 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsShaderBallot              => _supportsShaderBallot.Value;
         public static bool SupportsTextureShadowLod          => _supportsTextureShadowLod.Value;
         public static bool SupportsViewportSwizzle           => _supportsViewportSwizzle.Value;
-        public static bool SupportsIndirectParameters        => _supportsIndirectParameters.Value;
 
         public static bool SupportsMismatchingViewFormat    => _gpuVendor.Value != GpuVendor.AmdWindows && _gpuVendor.Value != GpuVendor.IntelWindows;
         public static bool SupportsNonConstantTextureOffset => _gpuVendor.Value == GpuVendor.Nvidia;

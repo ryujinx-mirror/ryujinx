@@ -67,7 +67,24 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstCal op = context.GetOp<InstCal>();
 
-            context.Call(context.GetFunctionId(context.CurrOp.GetAbsoluteAddress()), false);
+            DecodedFunction function = context.Program.GetFunctionByAddress(context.CurrOp.GetAbsoluteAddress());
+
+            if (function.IsCompilerGenerated)
+            {
+                switch (function.Type)
+                {
+                    case FunctionType.BuiltInFSIBegin:
+                        context.FSIBegin();
+                        break;
+                    case FunctionType.BuiltInFSIEnd:
+                        context.FSIEnd();
+                        break;
+                }
+            }
+            else
+            {
+                context.Call(function.Id, false);
+            }
         }
 
         public static void Exit(EmitterContext context)
