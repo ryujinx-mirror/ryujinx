@@ -34,8 +34,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
             _horizon = horizon;
         }
 
-        public ResultCode Start(AppletSession normalSession,
-                                AppletSession interactiveSession)
+        public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
         {
             _normalSession   = normalSession;
             _commonArguments = IApplet.ReadStruct<CommonArguments>(_normalSession.Pop());
@@ -176,11 +175,9 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
             byte[] messageTextBuffer = new byte[0x800];
             byte[] detailsTextBuffer = new byte[0x800];
-            unsafe
-            {
-                Marshal.Copy((IntPtr)applicationErrorArg.MessageText, messageTextBuffer, 0, 0x800);
-                Marshal.Copy((IntPtr)applicationErrorArg.DetailsText, detailsTextBuffer, 0, 0x800);
-            }
+
+            applicationErrorArg.MessageText.ToSpan().CopyTo(messageTextBuffer);
+            applicationErrorArg.DetailsText.ToSpan().CopyTo(detailsTextBuffer);
 
             string messageText = Encoding.ASCII.GetString(messageTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());
             string detailsText = Encoding.ASCII.GetString(detailsTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());

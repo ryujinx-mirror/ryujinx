@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
     /// <summary>
     /// A structure with configuration options of the software keyboard when starting a new input request in inline mode.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack=1, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
     struct SoftwareKeyboardCalc
     {
         public const int InputTextLength = SoftwareKeyboardCalcEx.InputTextLength;

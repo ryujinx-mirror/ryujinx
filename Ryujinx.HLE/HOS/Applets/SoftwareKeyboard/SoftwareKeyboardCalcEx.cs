@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
     /// A structure with configuration options of the software keyboard when starting a new input request in inline mode.
     /// This is the extended version of the structure with extended appear options.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack=1, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
     struct SoftwareKeyboardCalcEx
     {
         /// <summary>

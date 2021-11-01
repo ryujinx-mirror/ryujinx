@@ -66,8 +66,7 @@ namespace Ryujinx.HLE.HOS.Applets
             _device = system.Device;
         }
 
-        public ResultCode Start(AppletSession normalSession,
-                                AppletSession interactiveSession)
+        public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
         {
             lock (_lock)
             {

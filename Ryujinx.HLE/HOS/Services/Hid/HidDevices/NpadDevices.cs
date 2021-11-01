@@ -328,17 +328,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         private void UpdateUnusedInputIfNotEqual(ref RingLifo<NpadCommonState> currentlyUsed, ref RingLifo<NpadCommonState> possiblyUnused)
         {
-            bool isEquals;
-
-            unsafe
-            {
-                var aPointer = Unsafe.AsPointer(ref currentlyUsed);
-                var bPointer = Unsafe.AsPointer(ref possiblyUnused);
-
-                isEquals = aPointer == bPointer;
-            }
-
-            if (!isEquals)
+            if (!Unsafe.AreSame(ref currentlyUsed, ref possiblyUnused))
             {
                 NpadCommonState newState = new NpadCommonState();
 
@@ -357,17 +347,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         private void UpdateUnusedSixInputIfNotEqual(ref RingLifo<SixAxisSensorState> currentlyUsed, ref RingLifo<SixAxisSensorState> possiblyUnused)
         {
-            bool isEquals;
-
-            unsafe
-            {
-                var aPointer = Unsafe.AsPointer(ref currentlyUsed);
-                var bPointer = Unsafe.AsPointer(ref possiblyUnused);
-
-                isEquals = aPointer == bPointer;
-            }
-
-            if (!isEquals)
+            if (!Unsafe.AreSame(ref currentlyUsed, ref possiblyUnused))
             {
                 SixAxisSensorState newState = new SixAxisSensorState();
 
