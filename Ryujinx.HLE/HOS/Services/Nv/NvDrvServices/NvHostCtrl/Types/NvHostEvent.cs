@@ -130,11 +130,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
                 {
                     Logger.Warning?.Print(LogClass.ServiceNv, "GPU processing thread is too slow, waiting on CPU...");
 
-                    bool timedOut = Fence.Wait(gpuContext, Timeout.InfiniteTimeSpan);
+                    Fence.Wait(gpuContext, Timeout.InfiniteTimeSpan);
 
                     ResetFailingState();
 
-                    return timedOut;
+                    return false;
                 }
                 else
                 {

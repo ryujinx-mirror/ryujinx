@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
 {
     public class SyncpointWaiterHandle
     {
-        internal uint   Threshold;
+        internal uint Threshold;
         internal Action<SyncpointWaiterHandle> Callback;
     }
 }
