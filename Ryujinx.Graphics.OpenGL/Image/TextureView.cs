@@ -48,13 +48,15 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 pixelInternalFormat = format.PixelInternalFormat;
             }
 
+            int levels = Info.GetLevelsClamped();
+
             GL.TextureView(
                 Handle,
                 target,
                 _parent.Handle,
                 pixelInternalFormat,
                 FirstLevel,
-                Info.Levels,
+                levels,
                 FirstLayer,
                 Info.GetLayers());
 
@@ -81,7 +83,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             GL.TexParameter(target, TextureParameterName.TextureSwizzleRgba, swizzleRgba);
 
-            int maxLevel = Info.Levels - 1;
+            int maxLevel = levels - 1;
 
             if (maxLevel < 0)
             {
@@ -122,8 +124,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public unsafe ReadOnlySpan<byte> GetData()
         {
             int size = 0;
+            int levels = Info.GetLevelsClamped();
 
-            for (int level = 0; level < Info.Levels; level++)
+            for (int level = 0; level < levels; level++)
             {
                 size += Info.GetMipSize(level);
             }
@@ -227,7 +230,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 faces = 6;
             }
 
-            for (int level = 0; level < Info.Levels; level++)
+            int levels = Info.GetLevelsClamped();
+
+            for (int level = 0; level < levels; level++)
             {
                 for (int face = 0; face < faces; face++)
                 {
@@ -465,10 +470,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             int width  = Info.Width;
             int height = Info.Height;
             int depth  = Info.Depth;
+            int levels = Info.GetLevelsClamped();
 
             int offset = 0;
 
-            for (int level = 0; level < Info.Levels; level++)
+            for (int level = 0; level < levels; level++)
             {
                 int mipSize = Info.GetMipSize(level);
 
