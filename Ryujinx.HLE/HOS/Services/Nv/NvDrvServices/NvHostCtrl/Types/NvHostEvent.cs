@@ -1,6 +1,8 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Gpu.Synchronization;
+using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
 using System;
@@ -8,11 +10,12 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 {
-    class NvHostEvent : IDisposable
+    class NvHostEvent
     {
         public NvFence          Fence;
         public NvHostEventState State;
         public KEvent           Event;
+        public int              EventHandle;
 
         private uint                  _eventId;
         private NvHostSyncpt          _syncpointManager;
@@ -21,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private NvFence _previousFailingFence;
         private uint    _failingCount;
 
-        public object Lock = new object();
+        public readonly object Lock = new object();
 
         /// <summary>
         /// Max failing count until waiting on CPU.
@@ -36,6 +39,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             State = NvHostEventState.Available;
 
             Event = new KEvent(system.KernelContext);
+
+            if (KernelStatic.GetCurrentProcess().HandleTable.GenerateHandle(Event.ReadableEvent, out EventHandle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             _eventId = eventId;
 
@@ -165,10 +173,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
             return res;
         }
 
-        public void Dispose()
+        public void CloseEvent(ServiceCtx context)
         {
-            Event.ReadableEvent.DecrementReferenceCount();
-            Event.WritableEvent.DecrementReferenceCount();
+            if (EventHandle != 0)
+            {
+                context.Process.HandleTable.CloseHandle(EventHandle);
+                EventHandle = 0;
+            }
         }
     }
 }

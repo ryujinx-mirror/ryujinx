@@ -542,6 +542,18 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
         {
             _host1xContext.Host1x.DestroyContext(_contextId);
             Channel.Dispose();
+
+            for (int i = 0; i < MaxModuleSyncpoint; i++)
+            {
+                if (ChannelSyncpoints[i] != 0)
+                {
+                    _device.System.HostSyncpoint.ReleaseSyncpoint(ChannelSyncpoints[i]);
+                    ChannelSyncpoints[i] = 0;
+                }
+            }
+
+            _device.System.HostSyncpoint.ReleaseSyncpoint(_channelSyncpoint.Id);
+            _channelSyncpoint.Id = 0;
         }
 
         private static Host1xContext GetHost1XContext(GpuContext gpu, long pid)
