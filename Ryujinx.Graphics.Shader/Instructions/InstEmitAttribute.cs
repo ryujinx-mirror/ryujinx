@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
                 else if (op.SrcB == RegisterConsts.RegisterZeroIndex || op.P)
                 {
-                    int offset = op.Imm11 + index * 4;
+                    int offset = FixedFuncToUserAttribute(context.Config, op.Imm11 + index * 4, op.O);
 
                     context.FlagAttributeRead(offset);
 
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
                 else
                 {
-                    int offset = op.Imm11 + index * 4;
+                    int offset = FixedFuncToUserAttribute(context.Config, op.Imm11 + index * 4, op.O);
 
                     context.FlagAttributeRead(offset);
 
@@ -101,6 +101,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     int offset = op.Imm11 + index * 4;
 
+                    if (!context.Config.IsUsedOutputAttribute(offset))
+                    {
+                        return;
+                    }
+
+                    offset = FixedFuncToUserAttribute(context.Config, offset, isOutput: true);
+
                     context.FlagAttributeWritten(offset);
 
                     Operand dest = op.P ? AttributePerPatch(offset) : Attribute(offset);
@@ -118,6 +125,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand res;
 
+            bool isFixedFunc = false;
+
             if (op.Idx)
             {
                 Operand userAttrOffset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
@@ -130,7 +139,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                res = Attribute(op.Imm10);
+                isFixedFunc = TryFixedFuncToUserAttributeIpa(context, op.Imm10, out res);
 
                 if (op.Imm10 >= AttributeConsts.UserAttributeBase && op.Imm10 < AttributeConsts.UserAttributeEnd)
                 {
@@ -143,7 +152,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
             }
 
-            if (op.IpaOp == IpaOp.Multiply)
+            if (op.IpaOp == IpaOp.Multiply && !isFixedFunc)
             {
                 Operand srcB = GetSrcReg(context, op.SrcB);
 
@@ -203,6 +212,73 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.EndPrimitive();
             }
+        }
+
+        private static bool TryFixedFuncToUserAttributeIpa(EmitterContext context, int attr, out Operand selectedAttr)
+        {
+            if (attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.BackColorDiffuseR)
+            {
+                // TODO: If two sided rendering is enabled, then this should return
+                // FrontColor if the fragment is front facing, and back color otherwise.
+                int index = (attr - AttributeConsts.FrontColorDiffuseR) >> 4;
+                int userAttrIndex = context.Config.GetFreeUserAttribute(isOutput: false, index);
+                Operand frontAttr = Attribute(AttributeConsts.UserAttributeBase + userAttrIndex * 16 + (attr & 0xf));
+
+                context.Config.SetInputUserAttributeFixedFunc(userAttrIndex);
+
+                selectedAttr = frontAttr;
+                return true;
+            }
+            else if (attr >= AttributeConsts.BackColorDiffuseR && attr < AttributeConsts.ClipDistance0)
+            {
+                selectedAttr = ConstF(((attr >> 2) & 3) == 3 ? 1f : 0f);
+                return true;
+            }
+            else if (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)
+            {
+                selectedAttr = Attribute(FixedFuncToUserAttribute(context.Config, attr, AttributeConsts.TexCoordBase, 4, isOutput: false));
+                return true;
+            }
+
+            selectedAttr = Attribute(attr);
+            return false;
+        }
+
+        private static int FixedFuncToUserAttribute(ShaderConfig config, int attr, bool isOutput)
+        {
+            if (attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.ClipDistance0)
+            {
+                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.FrontColorDiffuseR, 0, isOutput);
+            }
+            else if (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)
+            {
+                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.TexCoordBase, 4, isOutput);
+            }
+
+            return attr;
+        }
+
+        private static int FixedFuncToUserAttribute(ShaderConfig config, int attr, int baseAttr, int baseIndex, bool isOutput)
+        {
+            int index = (attr - baseAttr) >> 4;
+            int userAttrIndex = config.GetFreeUserAttribute(isOutput, index);
+
+            if ((uint)userAttrIndex < Constants.MaxAttributes)
+            {
+                userAttrIndex += baseIndex;
+                attr = AttributeConsts.UserAttributeBase + userAttrIndex * 16 + (attr & 0xf);
+
+                if (isOutput)
+                {
+                    config.SetOutputUserAttributeFixedFunc(userAttrIndex);
+                }
+                else
+                {
+                    config.SetInputUserAttributeFixedFunc(userAttrIndex);
+                }
+            }
+
+            return attr;
         }
     }
 }

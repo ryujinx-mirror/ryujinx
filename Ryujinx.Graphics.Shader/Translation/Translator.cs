@@ -232,6 +232,22 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 usedAttributesPerPatch &= ~(1 << index);
             }
+
+            if (config.NextUsesFixedFuncAttributes)
+            {
+                for (int i = 0; i < 4 + AttributeConsts.TexCoordCount; i++)
+                {
+                    int index = config.GetFreeUserAttribute(isOutput: true, i);
+                    if (index < 0)
+                    {
+                        break;
+                    }
+
+                    InitializeOutput(context, AttributeConsts.UserAttributeBase + index * 16, perPatch: false);
+
+                    config.SetOutputUserAttributeFixedFunc(index);
+                }
+            }
         }
 
         private static void InitializeOutput(EmitterContext context, int baseAttr, bool perPatch)

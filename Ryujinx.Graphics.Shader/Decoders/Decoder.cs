@@ -319,6 +319,13 @@ namespace Ryujinx.Graphics.Shader.Decoders
                             config.SetInputUserAttribute(index, perPatch);
                         }
                     }
+
+                    if (!isStore &&
+                        ((attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.ClipDistance0) ||
+                        (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)))
+                    {
+                        config.SetUsedFeature(FeatureFlags.FixedFuncAttr);
+                    }
                 }
             }
         }

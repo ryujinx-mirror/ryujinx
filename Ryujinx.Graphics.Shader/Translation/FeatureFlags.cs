@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         RtLayer = 1 << 4,
         CbIndexing = 1 << 5,
         IaIndexing = 1 << 6,
-        OaIndexing = 1 << 7
+        OaIndexing = 1 << 7,
+        FixedFuncAttr = 1 << 8
     }
 }

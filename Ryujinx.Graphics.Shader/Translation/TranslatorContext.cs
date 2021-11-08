@@ -136,9 +136,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             if (nextStage != null)
             {
-                _config.MergeOutputUserAttributes(
-                    nextStage._config.UsedInputAttributes,
-                    nextStage._config.UsedInputAttributesPerPatch);
+                _config.MergeFromtNextStage(nextStage._config);
             }
 
             FunctionCode[] code = EmitShader(_program, _config, initializeOutputs: other == null, out _);

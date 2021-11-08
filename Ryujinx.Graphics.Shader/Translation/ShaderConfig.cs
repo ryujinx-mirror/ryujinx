@@ -43,11 +43,14 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly TranslationCounts _counts;
 
+        public bool NextUsesFixedFuncAttributes { get; private set; }
         public int UsedInputAttributes { get; private set; }
-        public int UsedInputAttributesPerPatch { get; private set; }
         public int UsedOutputAttributes { get; private set; }
+        public int UsedInputAttributesPerPatch { get; private set; }
         public int UsedOutputAttributesPerPatch { get; private set; }
         public int PassthroughAttributes { get; private set; }
+        private int _nextUsedInputAttributes;
+        private int _thisUsedInputAttributes;
 
         private int _usedConstantBuffers;
         private int _usedStorageBuffers;
@@ -224,6 +227,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
+        public void SetInputUserAttributeFixedFunc(int index)
+        {
+            UsedInputAttributes |= 1 << index;
+        }
+
+        public void SetOutputUserAttributeFixedFunc(int index)
+        {
+            UsedOutputAttributes |= 1 << index;
+        }
+
         public void SetInputUserAttribute(int index, bool perPatch)
         {
             if (perPatch)
@@ -232,7 +245,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else
             {
-                UsedInputAttributes |= 1 << index;
+                int mask = 1 << index;
+
+                UsedInputAttributes |= mask;
+                _thisUsedInputAttributes |= mask;
             }
         }
 
@@ -248,8 +264,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
+        public void MergeFromtNextStage(ShaderConfig config)
+        {
+            NextUsesFixedFuncAttributes = config.UsedFeatures.HasFlag(FeatureFlags.FixedFuncAttr);
+            MergeOutputUserAttributes(config.UsedInputAttributes, config.UsedInputAttributesPerPatch);
+        }
+
         public void MergeOutputUserAttributes(int mask, int maskPerPatch)
         {
+            _nextUsedInputAttributes = mask;
+
             if (GpPassthrough)
             {
                 PassthroughAttributes = mask & ~UsedOutputAttributes;
@@ -259,6 +283,47 @@ namespace Ryujinx.Graphics.Shader.Translation
                 UsedOutputAttributes |= mask;
                 UsedOutputAttributesPerPatch |= maskPerPatch;
             }
+        }
+
+        public bool IsUsedOutputAttribute(int attr)
+        {
+            // The check for fixed function attributes on the next stage is conservative,
+            // returning false if the output is just not used by the next stage is also valid.
+            if (NextUsesFixedFuncAttributes &&
+                attr >= AttributeConsts.UserAttributeBase &&
+                attr < AttributeConsts.UserAttributeEnd)
+            {
+                int index = (attr - AttributeConsts.UserAttributeBase) >> 4;
+                return (_nextUsedInputAttributes & (1 << index)) != 0;
+            }
+
+            return true;
+        }
+
+        public int GetFreeUserAttribute(bool isOutput, int index)
+        {
+            int useMask = isOutput ? _nextUsedInputAttributes : _thisUsedInputAttributes;
+            int bit = -1;
+
+            while (useMask != -1)
+            {
+                bit = BitOperations.TrailingZeroCount(~useMask);
+
+                if (bit == 32)
+                {
+                    bit = -1;
+                    break;
+                }
+                else if (index < 1)
+                {
+                    break;
+                }
+
+                useMask |= 1 << bit;
+                index--;
+            }
+
+            return bit;
         }
 
         public void SetAllInputUserAttributes()
