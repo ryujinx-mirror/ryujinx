@@ -95,9 +95,28 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     if (context.Config.Stage != ShaderStage.Compute && context.Config.Stage != ShaderStage.Fragment)
                     {
                         Operand primitiveId = Attribute(AttributeConsts.PrimitiveId);
-                        Operand patchVerticesIn = Attribute(AttributeConsts.PatchVerticesIn);
+                        Operand patchVerticesIn;
 
-                        patchVerticesIn = context.ShiftLeft(patchVerticesIn, Const(16));
+                        if (context.Config.Stage == ShaderStage.TessellationEvaluation)
+                        {
+                            patchVerticesIn = context.ShiftLeft(Attribute(AttributeConsts.PatchVerticesIn), Const(16));
+                        }
+                        else
+                        {
+                            InputTopology inputTopology = context.Config.GpuAccessor.QueryPrimitiveTopology();
+
+                            int inputVertices = inputTopology switch
+                            {
+                                InputTopology.Points => 1,
+                                InputTopology.Lines or
+                                InputTopology.LinesAdjacency => 2,
+                                InputTopology.Triangles or
+                                InputTopology.TrianglesAdjacency => 3,
+                                _ => 1
+                            };
+
+                            patchVerticesIn = Const(inputVertices << 16);
+                        }
 
                         src = context.BitwiseOr(primitiveId, patchVerticesIn);
                     }

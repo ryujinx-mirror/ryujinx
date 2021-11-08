@@ -18,12 +18,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             // TODO: Bindless texture support. For now we just return 0/do nothing.
             if (isBindless)
             {
-                return texOp.Inst switch
+                switch (texOp.Inst)
                 {
-                    Instruction.ImageStore => "// imageStore(bindless)",
-                    Instruction.ImageLoad => NumberFormatter.FormatFloat(0),
-                    _ => NumberFormatter.FormatInt(0)
-                };
+                    case Instruction.ImageStore:
+                        return "// imageStore(bindless)";
+                    case Instruction.ImageLoad:
+                        NumberFormatter.TryFormat(0, texOp.Format.GetComponentType(), out string imageConst);
+                        return imageConst;
+                    default:
+                        return NumberFormatter.FormatInt(0);
+                }
             }
 
             bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
