@@ -10,11 +10,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             {
                 if (sourceBlock.Operations.Count > 0)
                 {
-                    Operation lastOp = sourceBlock.Operations.Last.Value as Operation;
-
-                    if (lastOp != null &&
-                        ((sourceBlock.Next == block && lastOp.Inst == Instruction.BranchIfFalse) ||
-                        (sourceBlock.Branch == block && lastOp.Inst == Instruction.BranchIfTrue)))
+                    if (sourceBlock.GetLastOp() is Operation lastOp && IsConditionalBranch(lastOp.Inst) && sourceBlock.Next == block)
                     {
                         return lastOp;
                     }
@@ -22,6 +18,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return null;
+        }
+
+        private static bool IsConditionalBranch(Instruction inst)
+        {
+            return inst == Instruction.BranchIfFalse || inst == Instruction.BranchIfTrue;
         }
 
         private static bool BlockConditionsMatch(BasicBlock currentBlock, BasicBlock queryBlock)
