@@ -202,6 +202,22 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets a texture and a sampler from their respective pools from a texture ID and a sampler ID.
+        /// </summary>
+        /// <param name="textureId">ID of the texture</param>
+        /// <param name="samplerId">ID of the sampler</param>
+        public (Texture, Sampler) GetTextureAndSampler(int textureId, int samplerId)
+        {
+            ulong texturePoolAddress = _texturePoolAddress;
+
+            TexturePool texturePool = texturePoolAddress != 0
+                ? _texturePoolCache.FindOrCreate(_channel, texturePoolAddress, _texturePoolMaximumId)
+                : null;
+
+            return (texturePool.Get(textureId), _samplerPool.Get(samplerId));
+        }
+
+        /// <summary>
         /// Updates the texture scale for a given texture or image.
         /// </summary>
         /// <param name="texture">Start GPU virtual address of the pool</param>

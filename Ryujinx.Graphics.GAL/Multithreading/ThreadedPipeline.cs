@@ -83,6 +83,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
+        public void DrawTexture(ITexture texture, ISampler sampler, Extents2DF srcRegion, Extents2DF dstRegion)
+        {
+            _renderer.New<DrawTextureCommand>().Set(Ref(texture), Ref(sampler), srcRegion, dstRegion);
+            _renderer.QueueCommand();
+        }
+
         public void EndHostConditionalRendering()
         {
             _renderer.New<EndHostConditionalRenderingCommand>();

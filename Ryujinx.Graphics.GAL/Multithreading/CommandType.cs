@@ -53,6 +53,7 @@
         DispatchCompute,
         Draw,
         DrawIndexed,
+        DrawTexture,
         EndHostConditionalRendering,
         EndTransformFeedback,
         MultiDrawIndirectCount,

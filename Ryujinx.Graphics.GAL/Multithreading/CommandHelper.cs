@@ -143,6 +143,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 DrawCommand.Run(ref GetCommand<DrawCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.DrawIndexed] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 DrawIndexedCommand.Run(ref GetCommand<DrawIndexedCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.DrawTexture] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                DrawTextureCommand.Run(ref GetCommand<DrawTextureCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.EndHostConditionalRendering] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 EndHostConditionalRenderingCommand.Run(renderer);
             _lookup[(int)CommandType.EndTransformFeedback] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>

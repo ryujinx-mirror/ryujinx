@@ -6,6 +6,7 @@ namespace Ryujinx.Graphics.OpenGL
     static class HwCapabilities
     {
         private static readonly Lazy<bool> _supportsAstcCompression           = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
+        private static readonly Lazy<bool> _supportsDrawTexture               = new Lazy<bool>(() => HasExtension("GL_NV_draw_texture"));
         private static readonly Lazy<bool> _supportsFragmentShaderInterlock   = new Lazy<bool>(() => HasExtension("GL_ARB_fragment_shader_interlock"));
         private static readonly Lazy<bool> _supportsFragmentShaderOrdering    = new Lazy<bool>(() => HasExtension("GL_INTEL_fragment_shader_ordering"));
         private static readonly Lazy<bool> _supportsImageLoadFormatted        = new Lazy<bool>(() => HasExtension("GL_EXT_shader_image_load_formatted"));
@@ -43,6 +44,7 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool UsePersistentBufferForFlush       => _gpuVendor.Value == GpuVendor.AmdWindows || _gpuVendor.Value == GpuVendor.Nvidia;
 
         public static bool SupportsAstcCompression           => _supportsAstcCompression.Value;
+        public static bool SupportsDrawTexture               => _supportsDrawTexture.Value;
         public static bool SupportsFragmentShaderInterlock   => _supportsFragmentShaderInterlock.Value;
         public static bool SupportsFragmentShaderOrdering    => _supportsFragmentShaderOrdering.Value;
         public static bool SupportsImageLoadFormatted        => _supportsImageLoadFormatted.Value;

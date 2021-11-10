@@ -309,6 +309,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets a texture and a sampler from their respective pools from a texture ID and a sampler ID.
+        /// </summary>
+        /// <param name="textureId">ID of the texture</param>
+        /// <param name="samplerId">ID of the sampler</param>
+        public (Texture, Sampler) GetGraphicsTextureAndSampler(int textureId, int samplerId)
+        {
+            return _gpBindingsManager.GetTextureAndSampler(textureId, samplerId);
+        }
+
+        /// <summary>
         /// Commits bindings on the compute pipeline.
         /// </summary>
         public void CommitComputeBindings()
