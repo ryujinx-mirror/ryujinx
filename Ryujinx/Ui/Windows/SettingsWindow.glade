@@ -526,7 +526,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">Enable or disable "direct keyboard access (HID) support" (Provides games access to your keyboard as a text entry device)</property>
+                                <property name="tooltip-text" translatable="yes">Enable or disable "direct mouse access (HID) support" (Provides games access to your mouse as a pointing device)</property>
                                 <property name="draw-indicator">True</property>
                               </object>
                               <packing>
