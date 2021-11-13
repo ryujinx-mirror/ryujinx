@@ -373,7 +373,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _context.Renderer.Pipeline.DrawTexture(
                 texture?.HostTexture,
-                sampler?.HostSampler,
+                sampler?.GetHostSampler(texture),
                 new Extents2DF(srcX0, srcY0, srcX1, srcY1),
                 new Extents2DF(dstX0, dstY0, dstX1, dstY1));
         }

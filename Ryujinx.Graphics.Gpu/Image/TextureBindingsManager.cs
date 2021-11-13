@@ -399,7 +399,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 Sampler sampler = samplerPool?.Get(samplerId);
 
-                ISampler hostSampler = sampler?.HostSampler;
+                ISampler hostSampler = sampler?.GetHostSampler(texture);
 
                 if (_textureState[stageIndex][index].Sampler != hostSampler || _rebind)
                 {
