@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             };
         }
 
-        public static RegisterInfo GetRegisterInfo(string amiiboId)
+        public static RegisterInfo GetRegisterInfo(string amiiboId, string nickname)
         {
             VirtualAmiiboFile amiiboFile = LoadAmiiboFile(amiiboId);
 
@@ -72,8 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             charInfo.SetFromStoreData(StoreData.BuildDefault(utilityImpl, 0));
 
-            // TODO: Maybe change the "no name" by the player name when user profile will be implemented.
-            // charInfo.Nickname = Nickname.FromString("Nickname");
+            charInfo.Nickname = Nickname.FromString(nickname);
 
             RegisterInfo registerInfo = new RegisterInfo()
             {
@@ -85,7 +84,6 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 Reserved1       = new Array64<byte>(),
                 Reserved2       = new Array58<byte>()
             };
-
             Encoding.ASCII.GetBytes("Ryujinx").CopyTo(registerInfo.Nickname.ToSpan());
 
             return registerInfo;
