@@ -939,7 +939,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                         tempDest = context.FPMultiply(tempDest, ConstF(256.0f));
 
-                        Operand fixedPointValue = context.FPConvertToS32(tempDest);
+                        Operand fixedPointValue = context.FP32ConvertToS32(tempDest);
 
                         context.Copy(GetDest(), fixedPointValue);
                     }

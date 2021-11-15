@@ -286,7 +286,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 Operand res = Local();
 
-                node.List.AddBefore(node, new Operation(Instruction.ConvertFPToS32, res, value));
+                node.List.AddBefore(node, new Operation(Instruction.ConvertFP32ToS32, res, value));
 
                 return res;
             }
@@ -295,7 +295,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 Operand res = Local();
 
-                node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP, res, value));
+                node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP32, res, value));
 
                 return res;
             }
@@ -501,7 +501,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             // as replacement for SNORM (which is not supported).
             INode[] uses = texOp.Dest.UseOps.ToArray();
 
-            Operation convOp = new Operation(Instruction.ConvertS32ToFP, Local(), texOp.Dest);
+            Operation convOp = new Operation(Instruction.ConvertS32ToFP32, Local(), texOp.Dest);
             Operation normOp = new Operation(Instruction.FP32 | Instruction.Multiply, Local(), convOp.Dest, ConstF(1f / maxPositive));
 
             node = node.List.AddAfter(node, convOp);

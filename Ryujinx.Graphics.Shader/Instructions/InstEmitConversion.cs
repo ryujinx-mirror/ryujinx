@@ -179,27 +179,40 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return;
             }
 
+            Instruction fpType = srcType.ToInstFPType();
+
             bool isSignedInt = dstType == IDstFmt.S16 || dstType == IDstFmt.S32 || dstType == IDstFmt.S64;
             bool isSmallInt = dstType == IDstFmt.U16 || dstType == IDstFmt.S16;
 
-            Operand srcB = context.FPAbsNeg(src, absolute, negate);
+            Operand srcB = context.FPAbsNeg(src, absolute, negate, fpType);
 
             srcB = roundingMode switch
             {
-                RoundMode2.Round => context.FPRound(srcB),
-                RoundMode2.Floor => context.FPFloor(srcB),
-                RoundMode2.Ceil => context.FPCeiling(srcB),
-                RoundMode2.Trunc => context.FPTruncate(srcB),
+                RoundMode2.Round => context.FPRound(srcB, fpType),
+                RoundMode2.Floor => context.FPFloor(srcB, fpType),
+                RoundMode2.Ceil => context.FPCeiling(srcB, fpType),
+                RoundMode2.Trunc => context.FPTruncate(srcB, fpType),
                 _ => srcB
             };
 
             if (!isSignedInt)
             {
                 // Negative float to uint cast is undefined, so we clamp the value before conversion.
-                srcB = context.FPMaximum(srcB, ConstF(0));
+                srcB = context.FPMaximum(srcB, ConstF(0), fpType);
             }
 
-            srcB = isSignedInt ? context.FPConvertToS32(srcB) : context.FPConvertToU32(srcB);
+            if (srcType == DstFmt.F64)
+            {
+                srcB = isSignedInt
+                    ? context.FP64ConvertToS32(srcB)
+                    : context.FP64ConvertToU32(srcB);
+            }
+            else
+            {
+                srcB = isSignedInt
+                    ? context.FP32ConvertToS32(srcB)
+                    : context.FP32ConvertToU32(srcB);
+            }
 
             if (isSmallInt)
             {
@@ -252,7 +265,18 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     : context.BitfieldExtractU32(srcB, Const((int)byteSelection * 8), Const(size));
             }
 
-            srcB = isSignedInt ? context.IConvertS32ToFP(srcB) : context.IConvertU32ToFP(srcB);
+            if (dstType == DstFmt.F64)
+            {
+                srcB = isSignedInt
+                    ? context.IConvertS32ToFP64(srcB)
+                    : context.IConvertU32ToFP64(srcB);
+            }
+            else
+            {
+                srcB = isSignedInt
+                    ? context.IConvertS32ToFP32(srcB)
+                    : context.IConvertU32ToFP32(srcB);
+            }
 
             WriteFP(context, dstType, srcB, rd);
 

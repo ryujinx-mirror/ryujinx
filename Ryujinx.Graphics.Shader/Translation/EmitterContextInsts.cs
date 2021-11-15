@@ -241,14 +241,24 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(fpType | Instruction.CompareLess, Local(), a, b);
         }
 
-        public static Operand FPConvertToS32(this EmitterContext context, Operand a)
+        public static Operand FP32ConvertToS32(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.ConvertFPToS32, Local(), a);
+            return context.Add(Instruction.ConvertFP32ToS32, Local(), a);
         }
 
-        public static Operand FPConvertToU32(this EmitterContext context, Operand a)
+        public static Operand FP32ConvertToU32(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.ConvertFPToU32, Local(), a);
+            return context.Add(Instruction.ConvertFP32ToU32, Local(), a);
+        }
+
+        public static Operand FP64ConvertToS32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.ConvertFP64ToS32, Local(), a);
+        }
+
+        public static Operand FP64ConvertToU32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.ConvertFP64ToU32, Local(), a);
         }
 
         public static Operand FPCosine(this EmitterContext context, Operand a)
@@ -281,9 +291,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.FP32 | Instruction.LogarithmB2, Local(), a);
         }
 
-        public static Operand FPMaximum(this EmitterContext context, Operand a, Operand b)
+        public static Operand FPMaximum(this EmitterContext context, Operand a, Operand b, Instruction fpType = Instruction.FP32)
         {
-            return context.Add(Instruction.FP32 | Instruction.Maximum, Local(), a, b);
+            return context.Add(fpType | Instruction.Maximum, Local(), a, b);
         }
 
         public static Operand FPMinimum(this EmitterContext context, Operand a, Operand b)
@@ -461,14 +471,24 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.CompareNotEqual, Local(), a, b);
         }
 
-        public static Operand IConvertS32ToFP(this EmitterContext context, Operand a)
+        public static Operand IConvertS32ToFP32(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.ConvertS32ToFP, Local(), a);
+            return context.Add(Instruction.ConvertS32ToFP32, Local(), a);
         }
 
-        public static Operand IConvertU32ToFP(this EmitterContext context, Operand a)
+        public static Operand IConvertS32ToFP64(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.ConvertU32ToFP, Local(), a);
+            return context.Add(Instruction.ConvertS32ToFP64, Local(), a);
+        }
+
+        public static Operand IConvertU32ToFP32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.ConvertU32ToFP32, Local(), a);
+        }
+
+        public static Operand IConvertU32ToFP64(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.ConvertU32ToFP64, Local(), a);
         }
 
         public static Operand IMaximumS32(this EmitterContext context, Operand a, Operand b)

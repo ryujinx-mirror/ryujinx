@@ -53,10 +53,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ConditionalSelect,        InstType.OpTernary,      "?:",              12);
             Add(Instruction.ConvertFP32ToFP64,        InstType.CallUnary,      "double");
             Add(Instruction.ConvertFP64ToFP32,        InstType.CallUnary,      "float");
-            Add(Instruction.ConvertFPToS32,           InstType.CallUnary,      "int");
-            Add(Instruction.ConvertFPToU32,           InstType.CallUnary,      "uint");
-            Add(Instruction.ConvertS32ToFP,           InstType.CallUnary,      "float");
-            Add(Instruction.ConvertU32ToFP,           InstType.CallUnary,      "float");
+            Add(Instruction.ConvertFP32ToS32,         InstType.CallUnary,      "int");
+            Add(Instruction.ConvertFP32ToU32,         InstType.CallUnary,      "uint");
+            Add(Instruction.ConvertFP64ToS32,         InstType.CallUnary,      "int");
+            Add(Instruction.ConvertFP64ToU32,         InstType.CallUnary,      "uint");
+            Add(Instruction.ConvertS32ToFP32,         InstType.CallUnary,      "float");
+            Add(Instruction.ConvertS32ToFP64,         InstType.CallUnary,      "double");
+            Add(Instruction.ConvertU32ToFP32,         InstType.CallUnary,      "float");
+            Add(Instruction.ConvertU32ToFP64,         InstType.CallUnary,      "double");
             Add(Instruction.Cosine,                   InstType.CallUnary,      "cos");
             Add(Instruction.Ddx,                      InstType.CallUnary,      "dFdx");
             Add(Instruction.Ddy,                      InstType.CallUnary,      "dFdy");

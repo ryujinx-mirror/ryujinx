@@ -66,10 +66,14 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ConditionalSelect,        VariableType.Scalar, VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.ConvertFP32ToFP64,        VariableType.F64,    VariableType.F32);
             Add(Instruction.ConvertFP64ToFP32,        VariableType.F32,    VariableType.F64);
-            Add(Instruction.ConvertFPToS32,           VariableType.S32,    VariableType.F32);
-            Add(Instruction.ConvertFPToU32,           VariableType.U32,    VariableType.F32);
-            Add(Instruction.ConvertS32ToFP,           VariableType.F32,    VariableType.S32);
-            Add(Instruction.ConvertU32ToFP,           VariableType.F32,    VariableType.U32);
+            Add(Instruction.ConvertFP32ToS32,         VariableType.S32,    VariableType.F32);
+            Add(Instruction.ConvertFP32ToU32,         VariableType.U32,    VariableType.F32);
+            Add(Instruction.ConvertFP64ToS32,         VariableType.S32,    VariableType.F64);
+            Add(Instruction.ConvertFP64ToU32,         VariableType.U32,    VariableType.F64);
+            Add(Instruction.ConvertS32ToFP32,         VariableType.F32,    VariableType.S32);
+            Add(Instruction.ConvertS32ToFP64,         VariableType.F64,    VariableType.S32);
+            Add(Instruction.ConvertU32ToFP32,         VariableType.F32,    VariableType.U32);
+            Add(Instruction.ConvertU32ToFP64,         VariableType.F64,    VariableType.U32);
             Add(Instruction.Cosine,                   VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.Ddx,                      VariableType.F32,    VariableType.F32);
             Add(Instruction.Ddy,                      VariableType.F32,    VariableType.F32);
