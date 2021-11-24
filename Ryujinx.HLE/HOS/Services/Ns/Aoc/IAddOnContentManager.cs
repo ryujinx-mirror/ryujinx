@@ -15,6 +15,8 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
         private ulong _addOnContentBaseId;
 
+        private List<ulong> _mountedAocTitleIds = new List<ulong>();
+
         public IAddOnContentManager(ServiceCtx context)
         {
             _addOnContentListChangedEvent = new KEvent(context.Device.System.KernelContext);
@@ -134,6 +136,53 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             }
 
             return GetAddOnContentListChangedEventImpl(context);
+        }
+
+        [CommandHipc(11)] // 13.0.0+
+        // NotifyMountAddOnContent(pid, u64 title_id)
+        public ResultCode NotifyMountAddOnContent(ServiceCtx context)
+        {
+            long pid = context.Request.HandleDesc.PId;
+
+            // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
+
+            ulong aocTitleId = context.RequestData.ReadUInt64();
+
+            if (_mountedAocTitleIds.Count <= 0x7F)
+            {
+                _mountedAocTitleIds.Add(aocTitleId);
+            }
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(12)] // 13.0.0+
+        // NotifyUnmountAddOnContent(pid, u64 title_id)
+        public ResultCode NotifyUnmountAddOnContent(ServiceCtx context)
+        {
+            long pid = context.Request.HandleDesc.PId;
+
+            // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
+
+            ulong aocTitleId = context.RequestData.ReadUInt64();
+
+            _mountedAocTitleIds.Remove(aocTitleId);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(50)] // 13.0.0+
+        // CheckAddOnContentMountStatus(pid)
+        public ResultCode CheckAddOnContentMountStatus(ServiceCtx context)
+        {
+            long pid = context.Request.HandleDesc.PId;
+
+            // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
+            //       Then it does some internal checks and returns InvalidBufferSize if they fail.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
+
+            return ResultCode.Success;
         }
 
         [CommandHipc(100)] // 7.0.0+

@@ -81,6 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         [CommandHipc(100)]
         [CommandHipc(140)] // 6.0.0+
+        [CommandHipc(160)] // 13.0.0+
         // InitializeApplicationInfo(u64 pid_placeholder, pid)
         public ResultCode InitializeApplicationInfo(ServiceCtx context)
         {

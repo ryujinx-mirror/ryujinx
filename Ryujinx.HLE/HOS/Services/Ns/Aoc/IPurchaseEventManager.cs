@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
             context.Memory.Read(inBufferPosition, buffer);
 
-            // NOTE: Service use the pid to call arp:r GetApplicationLaunchProperty and store it in internal field.
+            // NOTE: Service uses the pid to call arp:r GetApplicationLaunchProperty and store it in internal field.
             //       Then it seems to use the buffer content and compare it with a stored linked instrusive list.
             //       Since we don't support purchase from eShop, we can stub it.
 
@@ -44,6 +44,23 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(purchasedEventReadableHandle);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(3)]
+        // PopPurchasedProductInfo(nn::ec::detail::PurchasedProductInfo)
+        public ResultCode PopPurchasedProductInfo(ServiceCtx context)
+        {
+            byte[] purchasedProductInfo = new byte[0x80];
+
+            context.ResponseData.Write(purchasedProductInfo);
+
+            // NOTE: Service finds info using internal array then convert it into nn::ec::detail::PurchasedProductInfo.
+            //       Returns 0x320A4 if the internal array size is null.
+            //       Since we don't support purchase from eShop, we can stub it.
+
+            Logger.Debug?.PrintStub(LogClass.ServiceNs); // NOTE: Uses Debug to avoid spamming.
 
             return ResultCode.Success;
         }
