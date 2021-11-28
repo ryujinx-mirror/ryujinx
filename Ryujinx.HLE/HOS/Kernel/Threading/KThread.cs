@@ -187,6 +187,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (is64Bits)
             {
+                Context.SetX(18, KSystemControl.GenerateRandom() | 1);
                 Context.SetX(31, stackTop);
             }
             else

@@ -58,6 +58,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             return DramMemoryMap.DramBase + GetDramSize(size);
         }
 
+        public static ulong GenerateRandom()
+        {
+            // TODO
+            return 0;
+        }
+
         public static ulong GetDramSize(MemorySize size)
         {
             return size switch
