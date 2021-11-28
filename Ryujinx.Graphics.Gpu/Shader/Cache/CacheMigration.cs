@@ -1,11 +1,11 @@
-﻿using Ryujinx.Common;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 
 namespace Ryujinx.Graphics.Gpu.Shader.Cache
 {
@@ -35,27 +35,36 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             return false;
         }
 
+        private class StreamZipEntryDataSource : IStaticDataSource
+        {
+            private readonly ZipFile Archive;
+            private readonly ZipEntry Entry;
+            public StreamZipEntryDataSource(ZipFile archive, ZipEntry entry)
+            {
+                Archive = archive;
+                Entry = entry;
+            }
+
+            public Stream GetSource()
+            {
+                return Archive.GetInputStream(Entry);
+            }
+        }
+
         /// <summary>
         /// Move a file with the name of a given hash to another in the cache archive.
         /// </summary>
         /// <param name="archive">The archive in use</param>
         /// <param name="oldKey">The old key</param>
         /// <param name="newKey">The new key</param>
-        private static void MoveEntry(ZipArchive archive, Hash128 oldKey, Hash128 newKey)
+        private static void MoveEntry(ZipFile archive, Hash128 oldKey, Hash128 newKey)
         {
-            ZipArchiveEntry oldGuestEntry = archive.GetEntry($"{oldKey}");
+            ZipEntry oldGuestEntry = archive.GetEntry($"{oldKey}");
 
             if (oldGuestEntry != null)
             {
-                ZipArchiveEntry newGuestEntry = archive.CreateEntry($"{newKey}");
-
-                using (Stream oldStream = oldGuestEntry.Open())
-                using (Stream newStream = newGuestEntry.Open())
-                {
-                    oldStream.CopyTo(newStream);
-                }
-
-                oldGuestEntry.Delete();
+                archive.Add(new StreamZipEntryDataSource(archive, oldGuestEntry), $"{newKey}", CompressionMethod.Deflated);
+                archive.Delete(oldGuestEntry);
             }
         }
 
@@ -81,8 +90,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 string guestArchivePath = CacheHelper.GetArchivePath(guestBaseCacheDirectory);
                 string hostArchivePath = CacheHelper.GetArchivePath(hostBaseCacheDirectory);
 
-                ZipArchive guestArchive = ZipFile.Open(guestArchivePath, ZipArchiveMode.Update);
-                ZipArchive hostArchive = ZipFile.Open(hostArchivePath, ZipArchiveMode.Update);
+                ZipFile guestArchive = new ZipFile(File.Open(guestArchivePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
+                ZipFile hostArchive = new ZipFile(File.Open(hostArchivePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
 
                 CacheHelper.EnsureArchiveUpToDate(guestBaseCacheDirectory, guestArchive, guestEntries);
                 CacheHelper.EnsureArchiveUpToDate(hostBaseCacheDirectory, hostArchive, hostEntries);
@@ -129,8 +138,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 File.WriteAllBytes(guestManifestPath, newGuestManifestContent);
                 File.WriteAllBytes(hostManifestPath, newHostManifestContent);
 
-                guestArchive.Dispose();
-                hostArchive.Dispose();
+                guestArchive.CommitUpdate();
+                hostArchive.CommitUpdate();
+
+                guestArchive.Close();
+                hostArchive.Close();
             }
         }
 

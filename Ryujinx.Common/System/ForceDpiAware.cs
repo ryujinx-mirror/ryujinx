@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Common.System
 {
@@ -19,7 +20,7 @@ namespace Ryujinx.Common.System
         public static void Windows()
         {
             // Make process DPI aware for proper window sizing on high-res screens.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Environment.OSVersion.Version.Major >= 6)
+            if (OperatingSystem.IsWindowsVersionAtLeast(6))
             {
                 SetProcessDPIAware();
             }
@@ -27,16 +28,22 @@ namespace Ryujinx.Common.System
 
         public static double GetWindowScaleFactor()
         {
-            double userDpiScale;
+            double userDpiScale = 96.0;
 
             try
             {
-                userDpiScale = Graphics.FromHwnd(IntPtr.Zero).DpiX;
+                if (OperatingSystem.IsWindows())
+                {
+                    userDpiScale = Graphics.FromHwnd(IntPtr.Zero).DpiX;
+                }
+                else
+                {
+                    // TODO: Linux support
+                }
             }
             catch (Exception e)
             {
                 Logger.Warning?.Print(LogClass.Application, $"Couldn't determine monitor DPI: {e.Message}");
-                userDpiScale = 96.0;
             }
 
             return Math.Min(userDpiScale / _standardDpiScale, _maxScaleFactor);

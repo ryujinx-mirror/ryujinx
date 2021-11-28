@@ -1,11 +1,11 @@
-﻿using Ryujinx.Common;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <summary>
         /// Main storage of the cache collection.
         /// </summary>
-        private ZipArchive _cacheArchive;
+        private ZipFile _cacheArchive;
 
         /// <summary>
         /// Indicates if the cache collection supports modification.
@@ -324,7 +324,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             EnsureArchiveUpToDate();
 
             // Open the zip in readonly to avoid anyone modifying/corrupting it during normal operations.
-            _cacheArchive = ZipFile.Open(GetArchivePath(), ZipArchiveMode.Read);
+            _cacheArchive = new ZipFile(File.OpenRead(GetArchivePath()));
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
             // First close previous opened instance if found.
             if (_cacheArchive != null)
             {
-                _cacheArchive.Dispose();
+                _cacheArchive.Close();
             }
 
             string archivePath = GetArchivePath();
@@ -355,8 +355,18 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 return;
             }
 
+            if (!File.Exists(archivePath))
+            {
+                using (ZipFile newZip = ZipFile.Create(archivePath))
+                {
+                    // Workaround for SharpZipLib issue #395
+                    newZip.BeginUpdate();
+                    newZip.CommitUpdate();
+                }
+            }
+
             // Open the zip in read/write.
-            _cacheArchive = ZipFile.Open(archivePath, ZipArchiveMode.Update);
+            _cacheArchive = new ZipFile(File.Open(archivePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None));
 
             Logger.Info?.Print(LogClass.Gpu, $"Updating cache collection archive {archivePath}...");
 
@@ -366,7 +376,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 CacheHelper.EnsureArchiveUpToDate(_cacheDirectory, _cacheArchive, _hashTable);
 
                 // Close the instance to force a flush.
-                _cacheArchive.Dispose();
+                _cacheArchive.Close();
                 _cacheArchive = null;
 
                 string cacheTempDataPath = GetCacheTempDataPath();

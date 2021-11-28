@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
       - name: Ensure NuGet Source
         uses: fabriciomurta/ensure-nuget-source@v1
       - name: Get git short hash
@@ -63,10 +63,10 @@ jobs:
       - name: Test
         run: dotnet test -c "${{ matrix.configuration }}"
       - name: Publish Ryujinx
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
         if: github.event_name == 'pull_request'
       - name: Publish Ryujinx.Headless.SDL2
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v2

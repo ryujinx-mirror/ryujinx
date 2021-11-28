@@ -144,6 +144,20 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             }), cancelled);
         }
 
+        public void Reset(Action action)
+        {
+            // Create a dedicated cancel token for each task.
+            var cancelled = new TRef<bool>(false);
+
+            Reset(new Thread(() =>
+            {
+                while (!Volatile.Read(ref cancelled.Value))
+                {
+                    action();
+                }
+            }), cancelled);
+        }
+
         private static bool SleepWithSubstep(SleepSubstepData substepData, TRef<bool> cancelled)
         {
             for (int i = 0; i < substepData.SleepCount; i++)

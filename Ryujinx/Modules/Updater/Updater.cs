@@ -4,7 +4,6 @@ using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
 using Mono.Unix;
 using Newtonsoft.Json.Linq;
-using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
@@ -13,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -92,10 +92,10 @@ namespace Ryujinx.Modules
             // Get latest version number from Appveyor
             try
             {
-                using (WebClient jsonClient = new WebClient())
+                using (HttpClient jsonClient = new HttpClient())
                 {
                     // Fetch latest build information
-                    string  fetchedJson = await jsonClient.DownloadStringTaskAsync($"{AppveyorApiUrl}/projects/gdkchan/ryujinx/branch/master");
+                    string  fetchedJson = await jsonClient.GetStringAsync($"{AppveyorApiUrl}/projects/gdkchan/ryujinx/branch/master");
                     JObject jsonRoot    = JObject.Parse(fetchedJson);
                     JToken  buildToken  = jsonRoot["build"];
 
@@ -149,15 +149,15 @@ namespace Ryujinx.Modules
             }
 
             // Fetch build size information to learn chunk sizes.
-            using (WebClient buildSizeClient = new WebClient()) 
-            { 
+            using (HttpClient buildSizeClient = new HttpClient())
+            {
                 try
                 {
-                    buildSizeClient.Headers.Add("Range", "bytes=0-0");
-                    await buildSizeClient.DownloadDataTaskAsync(new Uri(_buildUrl));
+                    buildSizeClient.DefaultRequestHeaders.Add("Range", "bytes=0-0");
 
-                    string contentRange = buildSizeClient.ResponseHeaders["Content-Range"];
-                    _buildSize = long.Parse(contentRange.Substring(contentRange.IndexOf('/') + 1));
+                    HttpResponseMessage message = await buildSizeClient.GetAsync(new Uri(_buildUrl), HttpCompletionOption.ResponseHeadersRead);
+
+                    _buildSize = message.Content.Headers.ContentRange.Length.Value;
                 }
                 catch (Exception ex)
                 {
@@ -220,7 +220,10 @@ namespace Ryujinx.Modules
 
             for (int i = 0; i < ConnectionCount; i++)
             {
+#pragma warning disable SYSLIB0014
+                // TODO: WebClient is obsolete and need to be replaced with a more complex logic using HttpClient.
                 using (WebClient client = new WebClient())
+#pragma warning restore SYSLIB0014
                 {
                     webClients.Add(client);
 
@@ -307,31 +310,56 @@ namespace Ryujinx.Modules
             }
         }
 
-        private static void DoUpdateWithSingleThread(UpdateDialog updateDialog, string downloadUrl, string updateFile)
+        private static void DoUpdateWithSingleThreadWorker(UpdateDialog updateDialog, string downloadUrl, string updateFile)
         {
-            // Single-Threaded Updater
-            using (WebClient client = new WebClient())
+            using (HttpClient client = new HttpClient())
             {
-                client.DownloadProgressChanged += (_, args) =>
-                {
-                    updateDialog.ProgressBar.Value = args.ProgressPercentage;
-                };
+                // We do not want to timeout while downloading
+                client.Timeout = TimeSpan.FromDays(1);
 
-                client.DownloadDataCompleted += (_, args) =>
+                using (HttpResponseMessage response = client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).Result)
+                using (Stream remoteFileStream = response.Content.ReadAsStreamAsync().Result)
                 {
-                    File.WriteAllBytes(updateFile, args.Result);
-                    InstallUpdate(updateDialog, updateFile);
-                };
+                    using (Stream updateFileStream = File.Open(updateFile, FileMode.Create))
+                    {
+                        long totalBytes = response.Content.Headers.ContentLength.Value;
+                        long byteWritten = 0;
 
-                client.DownloadDataAsync(new Uri(downloadUrl));
+                        byte[] buffer = new byte[32 * 1024];
+
+                        while (true)
+                        {
+                            int readSize = remoteFileStream.Read(buffer);
+
+                            if (readSize == 0)
+                            {
+                                break;
+                            }
+
+                            byteWritten += readSize;
+
+                            updateDialog.ProgressBar.Value = ((double)byteWritten / totalBytes) * 100;
+                            updateFileStream.Write(buffer, 0, readSize);
+                        }
+                    }
+                }
+
+                InstallUpdate(updateDialog, updateFile);
             }
         }
-        
+
+        private static void DoUpdateWithSingleThread(UpdateDialog updateDialog, string downloadUrl, string updateFile)
+        {
+            Thread worker = new Thread(() => DoUpdateWithSingleThreadWorker(updateDialog, downloadUrl, updateFile));
+            worker.Name = "Updater.SingleThreadWorker";
+            worker.Start();
+        }
+
         private static void SetUnixPermissions()
         {
-            string ryuBin = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx");
+            string ryuBin = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx");
 
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!OperatingSystem.IsWindows())
             {
                 UnixFileInfo unixFileInfo = new UnixFileInfo(ryuBin);
                 unixFileInfo.FileAccessPermissions |= FileAccessPermissions.UserExecute;

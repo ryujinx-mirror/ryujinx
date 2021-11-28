@@ -1,6 +1,7 @@
 ﻿using Gtk;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -128,7 +128,7 @@ namespace Ryujinx.Ui.Windows
             {
                 amiiboJsonString = File.ReadAllText(_amiiboJsonPath);
 
-                if (await NeedsUpdate(JsonSerializer.Deserialize<AmiiboJson>(amiiboJsonString).LastUpdated))
+                if (await NeedsUpdate(JsonHelper.Deserialize<AmiiboJson>(amiiboJsonString).LastUpdated))
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
@@ -147,7 +147,7 @@ namespace Ryujinx.Ui.Windows
                 }
             }
 
-            _amiiboList = JsonSerializer.Deserialize<AmiiboJson>(amiiboJsonString).Amiibo;
+            _amiiboList = JsonHelper.Deserialize<AmiiboJson>(amiiboJsonString).Amiibo;
             _amiiboList = _amiiboList.OrderBy(amiibo => amiibo.AmiiboSeries).ToList();
 
             if (LastScannedAmiiboShowAll)

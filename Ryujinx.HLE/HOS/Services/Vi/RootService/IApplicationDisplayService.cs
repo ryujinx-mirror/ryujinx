@@ -396,7 +396,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             if (!applet.DrawTo(surfaceInfo, context.Memory, layerBuffPosition))
             {
-                Logger.Error?.Print(LogClass.ServiceVi, $"Applet did not draw on indirect layer handle {layerHandle}");
+                Logger.Warning?.Print(LogClass.ServiceVi, $"Applet did not draw on indirect layer handle {layerHandle}");
 
                 return ResultCode.Success;
             }

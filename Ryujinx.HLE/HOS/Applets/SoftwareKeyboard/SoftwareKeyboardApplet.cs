@@ -170,7 +170,9 @@ namespace Ryujinx.HLE.HOS.Applets
         {
             _npads?.Update();
 
-            return _keyboardRenderer?.DrawTo(surfaceInfo, destination, position) ?? false;
+            _keyboardRenderer?.SetSurfaceInfo(surfaceInfo);
+
+            return _keyboardRenderer?.DrawTo(destination, position) ?? false;
         }
 
         private void ExecuteForegroundKeyboard()

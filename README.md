@@ -35,7 +35,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
 If you wish to build the emulator yourself  you will need to:
 
-**Step one:** Install the X64 version of [.NET 5.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/5.0).
+**Step one:** Install the X64 version of [.NET 6.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
 
 **Step two (choose one):**  
 **(Variant one)**

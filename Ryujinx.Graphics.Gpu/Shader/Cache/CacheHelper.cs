@@ -1,4 +1,5 @@
-﻿using Ryujinx.Common;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
@@ -9,7 +10,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -192,19 +192,19 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <param name="entry">The given hash</param>
         /// <returns>The cached file if present or null</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ReadFromArchive(ZipArchive archive, Hash128 entry)
+        public static byte[] ReadFromArchive(ZipFile archive, Hash128 entry)
         {
             if (archive != null)
             {
-                ZipArchiveEntry archiveEntry = archive.GetEntry($"{entry}");
+                ZipEntry archiveEntry = archive.GetEntry($"{entry}");
 
                 if (archiveEntry != null)
                 {
                     try
                     {
-                        byte[] result = new byte[archiveEntry.Length];
+                        byte[] result = new byte[archiveEntry.Size];
 
-                        using (Stream archiveStream = archiveEntry.Open())
+                        using (Stream archiveStream = archive.GetInputStream(archiveEntry))
                         {
                             archiveStream.Read(result);
 
@@ -538,8 +538,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
         /// <param name="archive">The archive to use</param>
         /// <param name="entries">The entries in the cache</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void EnsureArchiveUpToDate(string baseCacheDirectory, ZipArchive archive, HashSet<Hash128> entries)
+        public static void EnsureArchiveUpToDate(string baseCacheDirectory, ZipFile archive, HashSet<Hash128> entries)
         {
+            List<string> filesToDelete = new List<string>();
+
+            archive.BeginUpdate();
+
             foreach (Hash128 hash in entries)
             {
                 string cacheTempFilePath = GenCacheTempFilePath(baseCacheDirectory, hash);
@@ -548,14 +552,24 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 {
                     string cacheHash = $"{hash}";
 
-                    ZipArchiveEntry entry = archive.GetEntry(cacheHash);
+                    ZipEntry entry = archive.GetEntry(cacheHash);
 
-                    entry?.Delete();
+                    if (entry != null)
+                    {
+                        archive.Delete(entry);
+                    }
 
-                    archive.CreateEntryFromFile(cacheTempFilePath, cacheHash);
-
-                    File.Delete(cacheTempFilePath);
+                    // We enforce deflate compression here to avoid possible incompatibilities on older version of Ryujinx that use System.IO.Compression.
+                    archive.Add(new StaticDiskDataSource(cacheTempFilePath), cacheHash, CompressionMethod.Deflated);
+                    filesToDelete.Add(cacheTempFilePath);
                 }
+            }
+
+            archive.CommitUpdate();
+
+            foreach (string filePath in filesToDelete)
+            {
+                File.Delete(filePath);
             }
         }
 
