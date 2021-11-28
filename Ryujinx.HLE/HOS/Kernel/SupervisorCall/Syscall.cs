@@ -506,6 +506,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 return KernelResult.UserCopyFailed;
             }
 
+            if (timeout > 0)
+            {
+                timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+            }
+
             return ReplyAndReceive(handles, replyTargetHandle, timeout, out handleIndex);
         }
 
@@ -547,6 +552,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             if (result == KernelResult.Success)
             {
+                if (timeout > 0)
+                {
+                    timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+                }
+
                 while ((result = _context.Synchronization.WaitFor(syncObjs, timeout, out handleIndex)) == KernelResult.Success)
                 {
                     KServerSession session = currentProcess.HandleTable.GetObject<KServerSession>(handles[handleIndex]);
@@ -644,6 +654,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             if (result == KernelResult.Success)
             {
+                if (timeout > 0)
+                {
+                    timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+                }
+
                 while ((result = _context.Synchronization.WaitFor(syncObjs, timeout, out handleIndex)) == KernelResult.Success)
                 {
                     KServerSession session = currentProcess.HandleTable.GetObject<KServerSession>(handles[handleIndex]);
@@ -2117,7 +2132,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
             else
             {
-                KernelStatic.GetCurrentThread().Sleep(timeout);
+                KernelStatic.GetCurrentThread().Sleep(timeout + KTimeManager.DefaultTimeIncrementNanoseconds);
             }
         }
 
@@ -2458,6 +2473,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
+            if (timeout > 0)
+            {
+                timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+            }
+
             KernelResult result = _context.Synchronization.WaitFor(syncObjs, timeout, out handleIndex);
 
             if (result == KernelResult.PortRemoteClosed)
@@ -2541,6 +2561,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
+            if (timeout > 0)
+            {
+                timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+            }
+
             return currentProcess.AddressArbiter.WaitProcessWideKeyAtomic(
                 mutexAddress,
                 condVarAddress,
@@ -2570,6 +2595,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            if (timeout > 0)
+            {
+                timeout += KTimeManager.DefaultTimeIncrementNanoseconds;
+            }
 
             return type switch
             {
