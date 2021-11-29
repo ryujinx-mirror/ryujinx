@@ -335,7 +335,14 @@ namespace Ryujinx.HLE.HOS
                 {
                     foreach (DlcNca dlcNca in dlcContainer.DlcNcaList)
                     {
-                        _device.Configuration.ContentManager.AddAocItem(dlcNca.TitleId, dlcContainer.Path, dlcNca.Path, dlcNca.Enabled);
+                        if (File.Exists(dlcContainer.Path))
+                        {
+                            _device.Configuration.ContentManager.AddAocItem(dlcNca.TitleId, dlcContainer.Path, dlcNca.Path, dlcNca.Enabled);
+                        }
+                        else
+                        {
+                            Logger.Warning?.Print(LogClass.Application, $"Cannot find AddOnContent file {dlcContainer.Path}. It may have been moved or renamed.");
+                        }
                     }
                 }
             }
