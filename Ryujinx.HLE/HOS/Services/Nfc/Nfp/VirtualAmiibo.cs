@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Memory;
-using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
@@ -173,7 +172,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             if (File.Exists(filePath))
             {
-                virtualAmiiboFile = JsonHelper.DeserializeFromFile<VirtualAmiiboFile>(filePath);
+                virtualAmiiboFile = JsonSerializer.Deserialize<VirtualAmiiboFile>(File.ReadAllText(filePath), new JsonSerializerOptions(JsonSerializerDefaults.General));
             }
             else
             {
