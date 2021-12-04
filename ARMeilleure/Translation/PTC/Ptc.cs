@@ -960,10 +960,10 @@ namespace ARMeilleure.Translation.PTC
         {
             uint osPlatform = 0u;
 
-            osPlatform |= (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) ? 1u : 0u) << 0;
-            osPlatform |= (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)   ? 1u : 0u) << 1;
-            osPlatform |= (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)     ? 1u : 0u) << 2;
-            osPlatform |= (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1u : 0u) << 3;
+            osPlatform |= (OperatingSystem.IsFreeBSD() ? 1u : 0u) << 0;
+            osPlatform |= (OperatingSystem.IsLinux()   ? 1u : 0u) << 1;
+            osPlatform |= (OperatingSystem.IsMacOS()   ? 1u : 0u) << 2;
+            osPlatform |= (OperatingSystem.IsWindows() ? 1u : 0u) << 3;
 
             return osPlatform;
         }

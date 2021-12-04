@@ -28,7 +28,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 
@@ -473,7 +472,7 @@ namespace Ryujinx.Headless.SDL2
 
         private static void ExecutionEntrypoint()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 _windowsMultimediaTimerResolution = new WindowsMultimediaTimerResolution(1);
             }
@@ -490,8 +489,11 @@ namespace Ryujinx.Headless.SDL2
             _emulationContext.Dispose();
             _window.Dispose();
 
-            _windowsMultimediaTimerResolution?.Dispose();
-            _windowsMultimediaTimerResolution = null;
+            if (OperatingSystem.IsWindows())
+            {
+                _windowsMultimediaTimerResolution?.Dispose();
+                _windowsMultimediaTimerResolution = null;
+            }
         }
 
         private static bool LoadApplication(Options options)

@@ -95,7 +95,7 @@ namespace ARMeilleure.Signal
             {
                 if (_initialized) return;
 
-                bool unix = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                bool unix = OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
                 ref SignalHandlerConfig config = ref GetConfigRef();
 
                 if (unix)

@@ -51,17 +51,17 @@ namespace Ryujinx.Modules
             int artifactIndex = -1;
 
             // Detect current platform
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (OperatingSystem.IsMacOS())
             {
                 _platformExt  = "osx_x64.zip";
                 artifactIndex = 1;
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            else if (OperatingSystem.IsWindows())
             {
                 _platformExt  = "win_x64.zip";
                 artifactIndex = 2;
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (OperatingSystem.IsLinux())
             {
                 _platformExt  = "linux_x64.tar.gz";
                 artifactIndex = 0;
@@ -372,7 +372,7 @@ namespace Ryujinx.Modules
             updateDialog.MainText.Text     = "Extracting Update...";
             updateDialog.ProgressBar.Value = 0;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (OperatingSystem.IsLinux())
             {
                 using (Stream         inStream   = File.OpenRead(updateFile))
                 using (Stream         gzipStream = new GZipInputStream(inStream))
@@ -545,7 +545,7 @@ namespace Ryujinx.Modules
         {
             var files = Directory.EnumerateFiles(HomeDir); // All files directly in base dir.
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 foreach (string dir in WindowsDependencyDirs)
                 {

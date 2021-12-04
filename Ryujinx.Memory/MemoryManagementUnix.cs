@@ -3,9 +3,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Memory
 {
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     static class MemoryManagementUnix
     {
         private struct UnixSharedMemory

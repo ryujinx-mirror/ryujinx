@@ -39,7 +39,7 @@ namespace ARMeilleure.Translation.Cache
 
                 _cacheAllocator = new CacheMemoryAllocator(CacheSize);
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (OperatingSystem.IsWindows())
                 {
                     JitUnwindWindows.InstallFunctionTableHandler(_jitRegion.Pointer, CacheSize, _jitRegion.Pointer + Allocate(PageSize));
                 }

@@ -61,7 +61,7 @@ namespace Ryujinx
                 }
             }
 
-            // Enforce loading of Mono.Posix.NETStandard to avoid .NET runtime lazy loading it during an update.
+            // Enforce loading of Mono.Posix to avoid .NET runtime lazy loading it during an update.
             Assembly.Load("Mono.Posix.NETStandard");
 
             // Make process DPI aware for proper window sizing on high-res screens.

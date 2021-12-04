@@ -19,13 +19,13 @@ namespace Ryujinx.Ui
 
         private NativeWindowBase RetrieveNativeWindow()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 IntPtr windowHandle = gdk_win32_window_get_handle(Window.Handle);
 
                 return new SimpleWin32Window(new NativeHandle(windowHandle));
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (OperatingSystem.IsLinux())
             {
                 IntPtr displayHandle = gdk_x11_display_get_xdisplay(Display.Handle);
                 IntPtr windowHandle = gdk_x11_window_get_xid(Window.Handle);
