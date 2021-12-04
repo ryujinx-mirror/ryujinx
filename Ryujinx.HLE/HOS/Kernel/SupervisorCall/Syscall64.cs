@@ -247,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             _syscall.OutputDebugString(strPtr, size);
         }
 
-        public KernelResult GetInfo64([R(1)] uint id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
+        public KernelResult GetInfo64([R(1)] InfoType id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
         {
             return _syscall.GetInfo(id, handle, subId, out value);
         }

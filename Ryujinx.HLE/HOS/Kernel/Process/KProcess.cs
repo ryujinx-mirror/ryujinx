@@ -60,6 +60,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public KProcessCapabilities Capabilities { get; private set; }
 
         public ulong TitleId { get; private set; }
+        public bool IsApplication { get; private set; }
         public long Pid { get; private set; }
 
         private long _creationTimestamp;
@@ -193,6 +194,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _memRegion = memRegion;
             _contextFactory = contextFactory ?? new ProcessContextFactory();
             _customThreadStart = customThreadStart;
+            IsApplication = creationInfo.Flags.HasFlag(ProcessCreationFlags.IsApplication);
 
             ulong personalMmHeapSize = GetPersonalMmHeapSize((ulong)creationInfo.SystemResourcePagesCount, memRegion);
 

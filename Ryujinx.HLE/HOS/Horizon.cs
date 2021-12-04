@@ -404,7 +404,7 @@ namespace Ryujinx.HLE.HOS
                     lock (KernelContext.Processes)
                     {
                         // Terminate application.
-                        foreach (KProcess process in KernelContext.Processes.Values.Where(x => x.Flags.HasFlag(ProcessCreationFlags.IsApplication)))
+                        foreach (KProcess process in KernelContext.Processes.Values.Where(x => x.IsApplication))
                         {
                             process.Terminate();
                             process.DecrementReferenceCount();
@@ -415,7 +415,7 @@ namespace Ryujinx.HLE.HOS
 
                         // Terminate HLE services (must be done after the application is already terminated,
                         // otherwise the application will receive errors due to service termination).
-                        foreach (KProcess process in KernelContext.Processes.Values.Where(x => !x.Flags.HasFlag(ProcessCreationFlags.IsApplication)))
+                        foreach (KProcess process in KernelContext.Processes.Values.Where(x => !x.IsApplication))
                         {
                             process.Terminate();
                             process.DecrementReferenceCount();
@@ -461,7 +461,7 @@ namespace Ryujinx.HLE.HOS
             {
                 foreach (KProcess process in KernelContext.Processes.Values)
                 {
-                    if (process.Flags.HasFlag(ProcessCreationFlags.IsApplication))
+                    if (process.IsApplication)
                     {
                         // Only game process should be paused.
                         process.SetActivity(pause);

@@ -257,7 +257,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetInfo32(
             [R(0)] uint subIdLow,
-            [R(1)] uint id,
+            [R(1)] InfoType id,
             [R(2)] int handle,
             [R(3)] uint subIdHigh,
             [R(1)] out uint valueLow,
