@@ -181,14 +181,19 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.EndPrimitive);
         }
 
-        public static Operand FindFirstSetS32(this EmitterContext context, Operand a)
+        public static Operand FindLSB(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.FindFirstSetS32, Local(), a);
+            return context.Add(Instruction.FindLSB, Local(), a);
         }
 
-        public static Operand FindFirstSetU32(this EmitterContext context, Operand a)
+        public static Operand FindMSBS32(this EmitterContext context, Operand a)
         {
-            return context.Add(Instruction.FindFirstSetU32, Local(), a);
+            return context.Add(Instruction.FindMSBS32, Local(), a);
+        }
+
+        public static Operand FindMSBU32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.FindMSBU32, Local(), a);
         }
 
         public static Operand FP32ConvertToFP64(this EmitterContext context, Operand a)

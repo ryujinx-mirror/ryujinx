@@ -166,13 +166,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             Operand srcB = context.BitwiseNot(src, invert);
 
-            Operand res = isSigned
-                ? context.FindFirstSetS32(srcB)
-                : context.FindFirstSetU32(srcB);
+            Operand res;
 
             if (sh)
             {
-                res = context.BitwiseExclusiveOr(res, Const(31));
+                res = context.FindLSB(context.BitfieldReverse(srcB));
+            }
+            else
+            {
+                res = isSigned
+                    ? context.FindMSBS32(srcB)
+                    : context.FindMSBU32(srcB);
             }
 
             context.Copy(GetDest(rd), res);
