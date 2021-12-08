@@ -219,9 +219,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand GetDest()
             {
-                if (dest > RegisterConsts.RegisterZeroIndex)
+                if (dest >= RegisterConsts.RegisterZeroIndex)
                 {
-                    return Const(0);
+                    return null;
                 }
 
                 return Register(dest++, RegisterType.Gpr);
