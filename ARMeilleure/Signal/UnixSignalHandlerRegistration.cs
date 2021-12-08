@@ -1,5 +1,4 @@
-﻿using Mono.Unix.Native;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Signal
@@ -21,6 +20,7 @@ namespace ARMeilleure.Signal
 
     static class UnixSignalHandlerRegistration
     {
+        private const int SIGSEGV = 11;
         private const int SA_SIGINFO = 0x00000004;
 
         [DllImport("libc", SetLastError = true)]
@@ -39,7 +39,7 @@ namespace ARMeilleure.Signal
 
             sigemptyset(ref sig.sa_mask);
 
-            int result = sigaction((int)Signum.SIGSEGV, ref sig, out SigAction old);
+            int result = sigaction(SIGSEGV, ref sig, out SigAction old);
 
             if (result != 0)
             {
@@ -51,7 +51,7 @@ namespace ARMeilleure.Signal
 
         public static bool RestoreExceptionHandler(SigAction oldAction)
         {
-            return sigaction((int)Signum.SIGSEGV, ref oldAction, out SigAction _) == 0;
+            return sigaction(SIGSEGV, ref oldAction, out SigAction _) == 0;
         }
     }
 }

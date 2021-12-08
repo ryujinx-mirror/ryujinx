@@ -2,7 +2,6 @@ using Gtk;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
-using Mono.Unix;
 using Newtonsoft.Json.Linq;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
@@ -355,14 +354,16 @@ namespace Ryujinx.Modules
             worker.Start();
         }
 
+        [DllImport("libc", SetLastError = true)]
+        private static extern int chmod(string path, uint mode);
+
         private static void SetUnixPermissions()
         {
             string ryuBin = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx");
 
             if (!OperatingSystem.IsWindows())
             {
-                UnixFileInfo unixFileInfo = new UnixFileInfo(ryuBin);
-                unixFileInfo.FileAccessPermissions |= FileAccessPermissions.UserExecute;
+                chmod(ryuBin, 0777);
             }
         }
 

@@ -25,7 +25,6 @@
     <PackageReference Include="OpenTK.Graphics" Version="4.5.0" />
     <PackageReference Include="SPB" Version="0.0.3-build15" />
     <PackageReference Include="SharpZipLib" Version="1.3.3" />
-    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" />
   </ItemGroup>
 
   <ItemGroup>
