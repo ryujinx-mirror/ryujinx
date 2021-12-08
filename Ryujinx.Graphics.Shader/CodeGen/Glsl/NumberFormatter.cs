@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static bool TryFormat(int value, VariableType dstType, out string formatted)
         {
-            if (dstType == VariableType.F32 || dstType == VariableType.F64)
+            if (dstType == VariableType.F32)
             {
                 return TryFormatFloat(BitConverter.Int32BitsToSingle(value), out formatted);
             }

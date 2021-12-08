@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ImageLoad,                VariableType.F32);
             Add(Instruction.ImageStore,               VariableType.None);
             Add(Instruction.ImageAtomic,              VariableType.S32);
-            Add(Instruction.IsNan,                    VariableType.Bool,   VariableType.F32);
+            Add(Instruction.IsNan,                    VariableType.Bool,   VariableType.Scalar);
             Add(Instruction.LoadAttribute,            VariableType.F32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadConstant,             VariableType.F32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadGlobal,               VariableType.U32,    VariableType.S32,    VariableType.S32);

@@ -35,8 +35,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             VariableType type = GetSrcVarType(operation.Inst, 0);
 
             string srcExpr = GetSoureExpr(context, src, type);
+            string zero;
 
-            NumberFormatter.TryFormat(0, type, out string zero);
+            if (type == VariableType.F64)
+            {
+                zero = "0.0";
+            }
+            else
+            {
+                NumberFormatter.TryFormat(0, type, out zero);
+            }
 
             // Starting in the 496.13 NVIDIA driver, there's an issue with assigning variables to negated expressions.
             // (-expr) does not work, but (0.0 - expr) does. This should be removed once the issue is resolved.

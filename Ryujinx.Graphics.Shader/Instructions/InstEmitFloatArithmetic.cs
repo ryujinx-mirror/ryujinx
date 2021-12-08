@@ -528,18 +528,5 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(rd), GetHalfPacked(context, swizzle, res, rd));
         }
-
-        private static void SetDest(EmitterContext context, Operand value, int rd, bool isFP64)
-        {
-            if (isFP64)
-            {
-                context.Copy(GetDest(rd), context.UnpackDouble2x32Low(value));
-                context.Copy(GetDest2(rd), context.UnpackDouble2x32High(value));
-            }
-            else
-            {
-                context.Copy(GetDest(rd), value);
-            }
-        }
     }
 }

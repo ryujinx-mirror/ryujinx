@@ -98,7 +98,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcReg(context, op.SrcB);
 
-            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat, op.WriteCC);
         }
 
         public static void I2iI(EmitterContext context)
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcImm(context, Imm20ToSInt(op.Imm20));
 
-            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat, op.WriteCC);
         }
 
         public static void I2iC(EmitterContext context)
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             var src = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
 
-            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat);
+            EmitI2I(context, op.ISrcFmt, op.IDstFmt, src, op.ByteSel, op.Dest, op.AbsB, op.NegB, op.Sat, op.WriteCC);
         }
 
         private static void EmitF2F(
@@ -176,7 +176,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (dstType == IDstFmt.U64)
             {
                 context.Config.GpuAccessor.Log("Unimplemented 64-bits F2I.");
-                return;
             }
 
             Instruction fpType = srcType.ToInstFPType();
@@ -198,7 +197,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (!isSignedInt)
             {
                 // Negative float to uint cast is undefined, so we clamp the value before conversion.
-                srcB = context.FPMaximum(srcB, ConstF(0), fpType);
+                Operand c0 = srcType == DstFmt.F64 ? context.PackDouble2x32(0.0) : ConstF(0);
+
+                srcB = context.FPMaximum(srcB, c0, fpType);
             }
 
             if (srcType == DstFmt.F64)
@@ -292,7 +293,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
             int rd,
             bool absolute,
             bool negate,
-            bool saturate)
+            bool saturate,
+            bool writeCC)
         {
             if ((srcType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32 || (dstType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32)
             {
@@ -337,7 +339,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(rd), src);
 
-            // TODO: CC.
+            SetZnFlags(context, src, writeCC);
         }
 
         private static Operand UnpackReg(EmitterContext context, DstFmt floatType, bool h, int reg)

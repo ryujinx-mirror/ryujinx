@@ -11,6 +11,156 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
+        public static void DsetR(EmitterContext context)
+        {
+            InstDsetR op = context.GetOp<InstDsetR>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcReg(context, op.SrcB, isFP64: true);
+
+            EmitFset(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.Dest,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.BVal,
+                op.WriteCC,
+                isFP64: true);
+        }
+
+        public static void DsetI(EmitterContext context)
+        {
+            InstDsetI op = context.GetOp<InstDsetI>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcImm(context, Imm20ToFloat(op.Imm20), isFP64: true);
+
+            EmitFset(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.Dest,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.BVal,
+                op.WriteCC,
+                isFP64: true);
+        }
+
+        public static void DsetC(EmitterContext context)
+        {
+            InstDsetC op = context.GetOp<InstDsetC>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset, isFP64: true);
+
+            EmitFset(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.Dest,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                op.BVal,
+                op.WriteCC,
+                isFP64: true);
+        }
+
+        public static void DsetpR(EmitterContext context)
+        {
+            InstDsetpR op = context.GetOp<InstDsetpR>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcReg(context, op.SrcB, isFP64: true);
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                writeCC: false,
+                isFP64: true);
+        }
+
+        public static void DsetpI(EmitterContext context)
+        {
+            InstDsetpI op = context.GetOp<InstDsetpI>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcImm(context, Imm20ToFloat(op.Imm20), isFP64: true);
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                writeCC: false,
+                isFP64: true);
+        }
+
+        public static void DsetpC(EmitterContext context)
+        {
+            InstDsetpC op = context.GetOp<InstDsetpC>();
+
+            var srcA = GetSrcReg(context, op.SrcA, isFP64: true);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset, isFP64: true);
+
+            EmitFsetp(
+                context,
+                op.FComp,
+                op.Bop,
+                srcA,
+                srcB,
+                op.SrcPred,
+                op.SrcPredInv,
+                op.DestPred,
+                op.DestPredInv,
+                op.AbsA,
+                op.AbsB,
+                op.NegA,
+                op.NegB,
+                writeCC: false,
+                isFP64: true);
+        }
+
         public static void FcmpR(EmitterContext context)
         {
             InstFcmpR op = context.GetOp<InstFcmpR>();
@@ -240,12 +390,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool negateA,
             bool negateB,
             bool boolFloat,
-            bool writeCC)
+            bool writeCC,
+            bool isFP64 = false)
         {
-            srcA = context.FPAbsNeg(srcA, absoluteA, negateA);
-            srcB = context.FPAbsNeg(srcB, absoluteB, negateB);
+            Instruction fpType = isFP64 ? Instruction.FP64 : Instruction.FP32;
 
-            Operand res = GetFPComparison(context, cmpOp, srcA, srcB);
+            srcA = context.FPAbsNeg(srcA, absoluteA, negateA, fpType);
+            srcB = context.FPAbsNeg(srcB, absoluteB, negateB, fpType);
+
+            Operand res = GetFPComparison(context, cmpOp, srcA, srcB, fpType);
             Operand pred = GetPredicate(context, srcPred, srcPredInv);
 
             res = GetPredLogicalOp(context, logicOp, res, pred);
@@ -282,12 +435,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool absoluteB,
             bool negateA,
             bool negateB,
-            bool writeCC)
+            bool writeCC,
+            bool isFP64 = false)
         {
-            srcA = context.FPAbsNeg(srcA, absoluteA, negateA);
-            srcB = context.FPAbsNeg(srcB, absoluteB, negateB);
+            Instruction fpType = isFP64 ? Instruction.FP64 : Instruction.FP32;
 
-            Operand p0Res = GetFPComparison(context, cmpOp, srcA, srcB);
+            srcA = context.FPAbsNeg(srcA, absoluteA, negateA, fpType);
+            srcB = context.FPAbsNeg(srcB, absoluteB, negateB, fpType);
+
+            Operand p0Res = GetFPComparison(context, cmpOp, srcA, srcB, fpType);
             Operand p1Res = context.BitwiseNot(p0Res);
             Operand pred = GetPredicate(context, srcPred, srcPredInv);
 
@@ -367,7 +523,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(Register(destPredInv, RegisterType.Predicate), p1Res);
         }
 
-        private static Operand GetFPComparison(EmitterContext context, FComp cond, Operand srcA, Operand srcB)
+        private static Operand GetFPComparison(EmitterContext context, FComp cond, Operand srcA, Operand srcB, Instruction fpType = Instruction.FP32)
         {
             Operand res;
 
@@ -381,7 +537,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (cond == FComp.Nan || cond == FComp.Num)
             {
-                res = context.BitwiseOr(context.IsNan(srcA), context.IsNan(srcB));
+                res = context.BitwiseOr(context.IsNan(srcA, fpType), context.IsNan(srcB, fpType));
 
                 if (cond == FComp.Num)
                 {
@@ -404,12 +560,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     default: throw new ArgumentException($"Unexpected condition \"{cond}\".");
                 }
 
-                res = context.Add(inst | Instruction.FP32, Local(), srcA, srcB);
+                res = context.Add(inst | fpType, Local(), srcA, srcB);
 
                 if ((cond & FComp.Nan) != 0)
                 {
-                    res = context.BitwiseOr(res, context.IsNan(srcA));
-                    res = context.BitwiseOr(res, context.IsNan(srcB));
+                    res = context.BitwiseOr(res, context.IsNan(srcA, fpType));
+                    res = context.BitwiseOr(res, context.IsNan(srcB, fpType));
                 }
             }
 

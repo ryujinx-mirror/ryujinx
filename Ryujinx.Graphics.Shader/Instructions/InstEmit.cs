@@ -75,69 +75,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Config.GpuAccessor.Log("Shader instruction Cs2r is not implemented.");
         }
 
-        public static void DmnmxR(EmitterContext context)
-        {
-            InstDmnmxR op = context.GetOp<InstDmnmxR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DmnmxR is not implemented.");
-        }
-
-        public static void DmnmxI(EmitterContext context)
-        {
-            InstDmnmxI op = context.GetOp<InstDmnmxI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DmnmxI is not implemented.");
-        }
-
-        public static void DmnmxC(EmitterContext context)
-        {
-            InstDmnmxC op = context.GetOp<InstDmnmxC>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DmnmxC is not implemented.");
-        }
-
-        public static void DsetR(EmitterContext context)
-        {
-            InstDsetR op = context.GetOp<InstDsetR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetR is not implemented.");
-        }
-
-        public static void DsetI(EmitterContext context)
-        {
-            InstDsetI op = context.GetOp<InstDsetI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetI is not implemented.");
-        }
-
-        public static void DsetC(EmitterContext context)
-        {
-            InstDsetC op = context.GetOp<InstDsetC>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetC is not implemented.");
-        }
-
-        public static void DsetpR(EmitterContext context)
-        {
-            InstDsetpR op = context.GetOp<InstDsetpR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetpR is not implemented.");
-        }
-
-        public static void DsetpI(EmitterContext context)
-        {
-            InstDsetpI op = context.GetOp<InstDsetpI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetpI is not implemented.");
-        }
-
-        public static void DsetpC(EmitterContext context)
-        {
-            InstDsetpC op = context.GetOp<InstDsetpC>();
-
-            context.Config.GpuAccessor.Log("Shader instruction DsetpC is not implemented.");
-        }
-
         public static void FchkR(EmitterContext context)
         {
             InstFchkR op = context.GetOp<InstFchkR>();

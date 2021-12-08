@@ -61,11 +61,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     res = context.FPReciprocalSquareRoot(res);
                     break;
 
+                case MufuOp.Rcp64h:
+                    res = context.PackDouble2x32(OperandHelper.Const(0), res);
+                    res = context.UnpackDouble2x32High(context.FPReciprocal(res, Instruction.FP64));
+                    break;
+
+                case MufuOp.Rsq64h:
+                    res = context.PackDouble2x32(OperandHelper.Const(0), res);
+                    res = context.UnpackDouble2x32High(context.FPReciprocalSquareRoot(res, Instruction.FP64));
+                    break;
+
                 case MufuOp.Sqrt:
                     res = context.FPSquareRoot(res);
                     break;
 
-                default: /* TODO */ break;
+                default:
+                    context.Config.GpuAccessor.Log($"Invalid MUFU operation \"{op.MufuOp}\".");
+                    break;
             }
 
             context.Copy(GetDest(op.Dest), context.FPSaturate(res, op.Sat));

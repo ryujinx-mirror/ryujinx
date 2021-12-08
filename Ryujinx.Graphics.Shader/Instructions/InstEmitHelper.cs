@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if (isFP64)
             {
-                return context.FP32ConvertToFP64(Const(imm));
+                return context.PackDouble2x32(Const(0), Const(imm));
             }
             else
             {
@@ -216,6 +216,19 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             return local;
+        }
+
+        public static void SetDest(EmitterContext context, Operand value, int rd, bool isFP64)
+        {
+            if (isFP64)
+            {
+                context.Copy(GetDest(rd), context.UnpackDouble2x32Low(value));
+                context.Copy(GetDest2(rd), context.UnpackDouble2x32High(value));
+            }
+            else
+            {
+                context.Copy(GetDest(rd), value);
+            }
         }
 
         public static int Imm16ToSInt(int imm16)
