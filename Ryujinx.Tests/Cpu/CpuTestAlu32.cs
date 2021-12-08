@@ -111,6 +111,25 @@ namespace Ryujinx.Tests.Cpu
 
             CompareAgainstUnicorn();
         }
+
+        [Test, Pairwise]
+        public void Uhadd8([Values(0u, 0xdu)] uint rd,
+                           [Values(1u)] uint rm,
+                           [Values(2u)] uint rn,
+                           [Random(RndCnt)] uint w0,
+                           [Random(RndCnt)] uint w1,
+                           [Random(RndCnt)] uint w2)
+        {
+            uint opcode = 0xE6700F90u; //UHADD8 R0, R0, R0
+
+            opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
+
+            uint sp = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, r0: w0, r1: w1, r2: w2, sp: sp);
+
+            CompareAgainstUnicorn();
+        }
 #endif
     }
 }

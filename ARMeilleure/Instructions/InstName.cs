@@ -541,6 +541,7 @@ namespace ARMeilleure.Instructions
         Trap,
         Tst,
         Ubfx,
+        Uhadd8,
         Umaal,
         Umlal,
         Umull,
