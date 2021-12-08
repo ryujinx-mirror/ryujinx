@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -22,6 +23,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         // modification check method.
         // This method uses much more memory so we want to avoid it if possible.
         private const int ByteComparisonSwitchThreshold = 4;
+
+        private const int MinLevelsForForceAnisotropy = 5;
 
         private struct TexturePoolOwner
         {
@@ -48,6 +51,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Texture information.
         /// </summary>
         public TextureInfo Info { get; private set; }
+
+        /// <summary>
+        /// Set when anisotropic filtering can be forced on the given texture.
+        /// </summary>
+        public bool CanForceAnisotropy { get; private set; }
 
         /// <summary>
         /// Host scale factor.
@@ -1130,6 +1138,24 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Determine if this texture can have anisotropic filtering forced.
+        /// Filtered textures that we might want to force anisotropy on should have a lot of mip levels.
+        /// </summary>
+        /// <returns>True if anisotropic filtering can be forced, false otherwise</returns>
+        private bool CanTextureForceAnisotropy()
+        {
+            if (!(Target == Target.Texture2D || Target == Target.Texture2DArray))
+            {
+                return false;
+            }
+
+            int maxSize = Math.Max(Info.Width, Info.Height);
+            int maxLevels = BitOperations.Log2((uint)maxSize) + 1;
+
+            return Info.Levels >= Math.Min(MinLevelsForForceAnisotropy, maxLevels);
+        }
+
+        /// <summary>
         /// Check if this texture and the specified target have the same number of dimensions.
         /// For the purposes of this comparison, 2D and 2D Multisample textures are not considered to have
         /// the same number of dimensions. Same for Cubemap and 3D textures.
@@ -1219,6 +1245,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             Info = info;
             Target = info.Target;
+            CanForceAnisotropy = CanTextureForceAnisotropy();
 
             _depth  = info.GetDepth();
             _layers = info.GetLayers();
