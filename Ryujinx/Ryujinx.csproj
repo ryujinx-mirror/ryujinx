@@ -44,9 +44,6 @@
     <None Update="alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Config.json" Condition="'$(Configuration)' == 'Debug' OR '$(Configuration)' == 'Profile Debug'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
