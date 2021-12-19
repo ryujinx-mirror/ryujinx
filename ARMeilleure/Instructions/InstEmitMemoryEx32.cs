@@ -16,6 +16,11 @@ namespace ARMeilleure.Instructions
             EmitClearExclusive(context);
         }
 
+        public static void Csdb(ArmEmitterContext context)
+        {
+            // Execute as no-op.
+        }
+
         public static void Dmb(ArmEmitterContext context) => EmitBarrier(context);
 
         public static void Dsb(ArmEmitterContext context) => EmitBarrier(context);

@@ -36,6 +36,7 @@ namespace ARMeilleure.Instructions
         Crc32ch,
         Crc32cw,
         Crc32cx,
+        Csdb,
         Csel,
         Csinc,
         Csinv,
