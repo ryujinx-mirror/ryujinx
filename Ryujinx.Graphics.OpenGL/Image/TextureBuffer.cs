@@ -56,6 +56,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public void SetStorage(BufferRange buffer)
         {
             if (_buffer != BufferHandle.Null &&
+                _buffer == buffer.Handle &&
                 buffer.Offset == _bufferOffset &&
                 buffer.Size == _bufferSize &&
                 _renderer.BufferCount == _bufferCount)

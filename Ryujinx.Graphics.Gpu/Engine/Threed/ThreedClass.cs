@@ -34,6 +34,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 { nameof(ThreedClassState.LaunchDma), new RwCallback(LaunchDma, null) },
                 { nameof(ThreedClassState.LoadInlineData), new RwCallback(LoadInlineData, null) },
                 { nameof(ThreedClassState.SyncpointAction), new RwCallback(IncrementSyncpoint, null) },
+                { nameof(ThreedClassState.InvalidateSamplerCacheNoWfi), new RwCallback(InvalidateSamplerCacheNoWfi, null) },
+                { nameof(ThreedClassState.InvalidateTextureHeaderCacheNoWfi), new RwCallback(InvalidateTextureHeaderCacheNoWfi, null) },
                 { nameof(ThreedClassState.TextureBarrier), new RwCallback(TextureBarrier, null) },
                 { nameof(ThreedClassState.TextureBarrierTiled), new RwCallback(TextureBarrierTiled, null) },
                 { nameof(ThreedClassState.DrawTextureSrcY), new RwCallback(DrawTexture, null) },
@@ -225,6 +227,24 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _context.CreateHostSyncIfNeeded();
             _context.Renderer.UpdateCounters(); // Poll the query counters, the game may want an updated result.
             _context.Synchronization.IncrementSyncpoint(syncpointId);
+        }
+
+        /// <summary>
+        /// Invalidates the cache with the sampler descriptors from the sampler pool.
+        /// </summary>
+        /// <param name="argument">Method call argument (unused)</param>
+        private void InvalidateSamplerCacheNoWfi(int argument)
+        {
+            _context.AdvanceSequence();
+        }
+
+        /// <summary>
+        /// Invalidates the cache with the texture descriptors from the texture pool.
+        /// </summary>
+        /// <param name="argument">Method call argument (unused)</param>
+        private void InvalidateTextureHeaderCacheNoWfi(int argument)
+        {
+            _context.AdvanceSequence();
         }
 
         /// <summary>

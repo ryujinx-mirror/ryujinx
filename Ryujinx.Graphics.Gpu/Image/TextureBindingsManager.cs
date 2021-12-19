@@ -377,18 +377,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
 
-                if (_textureState[stageIndex][index].Texture != hostTexture || _rebind)
-                {
-                    if (UpdateScale(texture, bindingInfo, index, stage))
-                    {
-                        hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
-                    }
-
-                    _textureState[stageIndex][index].Texture = hostTexture;
-
-                    _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTexture);
-                }
-
                 if (hostTexture != null && texture.Target == Target.TextureBuffer)
                 {
                     // Ensure that the buffer texture is using the correct buffer as storage.
@@ -396,16 +384,30 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // to ensure we're not using a old buffer that was already deleted.
                     _channel.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, bindingInfo.Format, false);
                 }
-
-                Sampler sampler = samplerPool?.Get(samplerId);
-
-                ISampler hostSampler = sampler?.GetHostSampler(texture);
-
-                if (_textureState[stageIndex][index].Sampler != hostSampler || _rebind)
+                else
                 {
-                    _textureState[stageIndex][index].Sampler = hostSampler;
+                    if (_textureState[stageIndex][index].Texture != hostTexture || _rebind)
+                    {
+                        if (UpdateScale(texture, bindingInfo, index, stage))
+                        {
+                            hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
+                        }
 
-                    _context.Renderer.Pipeline.SetSampler(bindingInfo.Binding, hostSampler);
+                        _textureState[stageIndex][index].Texture = hostTexture;
+
+                        _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTexture);
+                    }
+
+                    Sampler sampler = samplerPool?.Get(samplerId);
+
+                    ISampler hostSampler = sampler?.GetHostSampler(texture);
+
+                    if (_textureState[stageIndex][index].Sampler != hostSampler || _rebind)
+                    {
+                        _textureState[stageIndex][index].Sampler = hostSampler;
+
+                        _context.Renderer.Pipeline.SetSampler(bindingInfo.Binding, hostSampler);
+                    }
                 }
             }
         }
@@ -464,28 +466,31 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     _channel.BufferManager.SetBufferTextureStorage(hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, format, true);
                 }
-                else if (isStore)
+                else
                 {
-                    texture?.SignalModified();
-                }
-
-                if (_imageState[stageIndex][index].Texture != hostTexture || _rebind)
-                {
-                    if (UpdateScale(texture, bindingInfo, baseScaleIndex + index, stage))
+                    if (isStore)
                     {
-                        hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
+                        texture?.SignalModified();
                     }
 
-                    _imageState[stageIndex][index].Texture = hostTexture;
-
-                    Format format = bindingInfo.Format;
-
-                    if (format == 0 && texture != null)
+                    if (_imageState[stageIndex][index].Texture != hostTexture || _rebind)
                     {
-                        format = texture.Format;
-                    }
+                        if (UpdateScale(texture, bindingInfo, baseScaleIndex + index, stage))
+                        {
+                            hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
+                        }
 
-                    _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTexture, format);
+                        _imageState[stageIndex][index].Texture = hostTexture;
+
+                        Format format = bindingInfo.Format;
+
+                        if (format == 0 && texture != null)
+                        {
+                            format = texture.Format;
+                        }
+
+                        _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTexture, format);
+                    }
                 }
             }
         }
