@@ -26,7 +26,8 @@ namespace Ryujinx.HLE.HOS
         public HorizonClient NsClient          { get; private set; }
         public HorizonClient SdbClient         { get; private set; }
 
-        internal LibHacIReader ArpIReader { get; private set; }
+        private SharedRef<LibHacIReader> _arpIReader;
+        internal LibHacIReader ArpIReader => _arpIReader.Get;
 
         public LibHacHorizonManager()
         {
@@ -42,8 +43,8 @@ namespace Ryujinx.HLE.HOS
 
         public void InitializeArpServer()
         {
-            ArpIReader = new LibHacIReader();
-            RyujinxClient.Sm.RegisterService(new LibHacArpServiceObject(ArpIReader), "arp:r").ThrowIfFailure();
+            _arpIReader.Reset(new LibHacIReader());
+            RyujinxClient.Sm.RegisterService(new LibHacArpServiceObject(ref _arpIReader), "arp:r").ThrowIfFailure();
         }
 
         public void InitializeBcatServer()

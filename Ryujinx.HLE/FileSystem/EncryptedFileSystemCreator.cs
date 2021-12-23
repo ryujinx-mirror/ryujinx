@@ -3,25 +3,23 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSrv.FsCreator;
-using LibHac.FsSystem;
 
 namespace Ryujinx.HLE.FileSystem
 {
     public class EncryptedFileSystemCreator : IEncryptedFileSystemCreator
     {
-        public Result Create(out ReferenceCountedDisposable<IFileSystem> encryptedFileSystem, ReferenceCountedDisposable<IFileSystem> baseFileSystem,
-            EncryptedFsKeyId keyId, in EncryptionSeed encryptionSeed)
-        {
-            UnsafeHelpers.SkipParamInit(out encryptedFileSystem);
 
-            if (keyId < EncryptedFsKeyId.Save || keyId > EncryptedFsKeyId.CustomStorage)
+        public Result Create(ref SharedRef<IFileSystem> outEncryptedFileSystem,
+            ref SharedRef<IFileSystem> baseFileSystem, IEncryptedFileSystemCreator.KeyId idIndex,
+            in EncryptionSeed encryptionSeed)
+        {
+            if (idIndex < IEncryptedFileSystemCreator.KeyId.Save || idIndex > IEncryptedFileSystemCreator.KeyId.CustomStorage)
             {
                 return ResultFs.InvalidArgument.Log();
             }
 
-            // Force all-zero keys for now since people can open the emulator with different keys or sd seeds sometimes
-            var fs = new AesXtsFileSystem(baseFileSystem, new byte[0x32], 0x4000);
-            encryptedFileSystem = new ReferenceCountedDisposable<IFileSystem>(fs);
+            // Todo: Reenable when AesXtsFileSystem is fixed
+            outEncryptedFileSystem = SharedRef<IFileSystem>.CreateMove(ref baseFileSystem);
 
             return Result.Success;
         }

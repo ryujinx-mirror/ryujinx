@@ -1,3 +1,4 @@
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Kernel;
 using System;
@@ -32,11 +33,11 @@ namespace Ryujinx.HLE.Loaders.Executables
         public int Version              { get; }
         public string Name              { get; }
 
-        public KipExecutable(IStorage inStorage)
+        public KipExecutable(in SharedRef<IStorage> inStorage)
         {
             KipReader reader = new KipReader();
 
-            reader.Initialize(inStorage).ThrowIfFailure();
+            reader.Initialize(in inStorage).ThrowIfFailure();
 
             TextOffset = (uint)reader.Segments[0].MemoryOffset;
             RoOffset   = (uint)reader.Segments[1].MemoryOffset;

@@ -74,9 +74,11 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
                                 Nca         nca   = new Nca(_device.System.KeySet, ncaFileStream);
                                 IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
-                                romfs.OpenFile(out IFile fontFile, ("/" + fontFilename).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                using var fontFile = new UniqueRef<IFile>();
 
-                                data = DecryptFont(fontFile.AsStream());
+                                romfs.OpenFile(ref fontFile.Ref(), ("/" + fontFilename).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                                data = DecryptFont(fontFile.Get.AsStream());
                             }
 
                             FontInfo info = new FontInfo((int)fontOffset, data.Length);

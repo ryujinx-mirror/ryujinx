@@ -1,15 +1,16 @@
 using LibHac;
+using LibHac.Common;
 using LibHac.Sf;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     class IDirectory : DisposableIpcService
     {
-        private ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDirectory> _baseDirectory;
+        private SharedRef<LibHac.FsSrv.Sf.IDirectory> _baseDirectory;
 
-        public IDirectory(ReferenceCountedDisposable<LibHac.FsSrv.Sf.IDirectory> directory)
+        public IDirectory(ref SharedRef<LibHac.FsSrv.Sf.IDirectory> directory)
         {
-            _baseDirectory = directory;
+            _baseDirectory = SharedRef<LibHac.FsSrv.Sf.IDirectory>.CreateMove(ref directory);
         }
 
         [CommandHipc(0)]
@@ -21,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             byte[] entryBuffer = new byte[bufferLen];
 
-            Result result = _baseDirectory.Target.Read(out long entriesRead, new OutBuffer(entryBuffer));
+            Result result = _baseDirectory.Get.Read(out long entriesRead, new OutBuffer(entryBuffer));
 
             context.Memory.Write(bufferPosition, entryBuffer);
             context.ResponseData.Write(entriesRead);
@@ -33,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // GetEntryCount() -> u64
         public ResultCode GetEntryCount(ServiceCtx context)
         {
-            Result result = _baseDirectory.Target.GetEntryCount(out long entryCount);
+            Result result = _baseDirectory.Get.GetEntryCount(out long entryCount);
 
             context.ResponseData.Write(entryCount);
 
@@ -44,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             if (isDisposing)
             {
-                _baseDirectory?.Dispose();
+                _baseDirectory.Destroy();
             }
         }
     }

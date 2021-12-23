@@ -1,5 +1,6 @@
 ﻿using LibHac;
 using LibHac.Bcat;
+using LibHac.Common;
 using Ryujinx.Common;
 using System.Runtime.InteropServices;
 
@@ -7,11 +8,19 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {
     class IDeliveryCacheDirectoryService : DisposableIpcService
     {
-        private LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService _base;
+        private SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService> _base;
 
-        public IDeliveryCacheDirectoryService(LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService baseService)
+        public IDeliveryCacheDirectoryService(ref SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService> baseService)
         {
-            _base = baseService;
+            _base = SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService>.CreateMove(ref baseService);
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _base.Destroy();
+            }
         }
 
         [CommandHipc(0)]
@@ -20,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         {
             DirectoryName directoryName = context.RequestData.ReadStruct<DirectoryName>();
 
-            Result result = _base.Open(ref directoryName);
+            Result result = _base.Get.Open(ref directoryName);
 
             return (ResultCode)result.Value;
         }
@@ -34,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 
             byte[] data = new byte[size];
 
-            Result result = _base.Read(out int entriesRead, MemoryMarshal.Cast<byte, DeliveryCacheDirectoryEntry>(data));
+            Result result = _base.Get.Read(out int entriesRead, MemoryMarshal.Cast<byte, DeliveryCacheDirectoryEntry>(data));
 
             context.Memory.Write(position, data);
 
@@ -47,19 +56,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // GetCount() -> u32
         public ResultCode GetCount(ServiceCtx context)
         {
-            Result result = _base.GetCount(out int count);
+            Result result = _base.Get.GetCount(out int count);
 
             context.ResponseData.Write(count);
 
             return (ResultCode)result.Value;
-        }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            if (isDisposing)
-            {
-                _base?.Dispose();
-            }
         }
     }
 }

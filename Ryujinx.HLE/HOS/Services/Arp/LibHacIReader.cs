@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.Common;
 using LibHac.Ncm;
 using LibHac.Ns;
 using System;
@@ -21,6 +22,8 @@ namespace Ryujinx.HLE.HOS.Services.Arp
 
             return Result.Success;
         }
+
+        public void Dispose() { }
 
         public Result GetApplicationLaunchPropertyWithApplicationId(out LibHac.Arp.ApplicationLaunchProperty launchProperty, ApplicationId applicationId)
         {
@@ -51,16 +54,21 @@ namespace Ryujinx.HLE.HOS.Services.Arp
 
     internal class LibHacArpServiceObject : LibHac.Sm.IServiceObject
     {
-        private LibHacIReader _serviceObject;
+        private SharedRef<LibHacIReader> _serviceObject;
 
-        public LibHacArpServiceObject(LibHacIReader serviceObject)
+        public LibHacArpServiceObject(ref SharedRef<LibHacIReader> serviceObject)
         {
-            _serviceObject = serviceObject;
+            _serviceObject = SharedRef<LibHacIReader>.CreateCopy(in serviceObject);
         }
 
-        public Result GetServiceObject(out object serviceObject)
+        public void Dispose()
         {
-            serviceObject = _serviceObject;
+            _serviceObject.Destroy();
+        }
+
+        public Result GetServiceObject(ref SharedRef<IDisposable> serviceObject)
+        {
+            serviceObject.SetByCopy(in _serviceObject);
 
             return Result.Success;
         }

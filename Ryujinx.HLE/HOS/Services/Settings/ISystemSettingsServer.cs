@@ -310,13 +310,15 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
 
-                Result result = firmwareRomFs.OpenFile(out IFile firmwareFile, "/file".ToU8Span(), OpenMode.Read);
+                using var firmwareFile = new UniqueRef<IFile>();
+
+                Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref(), "/file".ToU8Span(), OpenMode.Read);
                 if (result.IsFailure())
                 {
                     return null;
                 }
 
-                result = firmwareFile.GetSize(out long fileSize);
+                result = firmwareFile.Get.GetSize(out long fileSize);
                 if (result.IsFailure())
                 {
                     return null;
@@ -324,7 +326,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 byte[] data = new byte[fileSize];
 
-                result = firmwareFile.Read(out _, 0, data);
+                result = firmwareFile.Get.Read(out _, 0, data);
                 if (result.IsFailure())
                 {
                     return null;

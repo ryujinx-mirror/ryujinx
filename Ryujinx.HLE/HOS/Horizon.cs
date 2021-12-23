@@ -1,3 +1,4 @@
+using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
@@ -306,9 +307,9 @@ namespace Ryujinx.HLE.HOS
 
         public void LoadKip(string kipPath)
         {
-            using IStorage kipFile = new LocalStorage(kipPath, FileAccess.Read);
+            using var kipFile = new SharedRef<IStorage>(new LocalStorage(kipPath, FileAccess.Read));
 
-            ProgramLoader.LoadKip(KernelContext, new KipExecutable(kipFile));
+            ProgramLoader.LoadKip(KernelContext, new KipExecutable(in kipFile));
         }
 
         public void ChangeDockedModeState(bool newState)

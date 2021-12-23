@@ -1,16 +1,25 @@
 ﻿using LibHac;
 using LibHac.Bcat;
+using LibHac.Common;
 using Ryujinx.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {
     class IDeliveryCacheFileService : DisposableIpcService
     {
-        private LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService _base;
+        private SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService> _base;
 
-        public IDeliveryCacheFileService(LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService baseService)
+        public IDeliveryCacheFileService(ref SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService> baseService)
         {
-            _base = baseService;
+            _base = SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService>.CreateMove(ref baseService);
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _base.Destroy();
+            }
         }
 
         [CommandHipc(0)]
@@ -20,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             DirectoryName directoryName = context.RequestData.ReadStruct<DirectoryName>();
             FileName fileName = context.RequestData.ReadStruct<FileName>();
 
-            Result result = _base.Open(ref directoryName, ref fileName);
+            Result result = _base.Get.Open(ref directoryName, ref fileName);
 
             return (ResultCode)result.Value;
         }
@@ -36,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 
             byte[] data = new byte[size];
 
-            Result result = _base.Read(out long bytesRead, offset, data);
+            Result result = _base.Get.Read(out long bytesRead, offset, data);
 
             context.Memory.Write(position, data);
 
@@ -49,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // GetSize() -> u64
         public ResultCode GetSize(ServiceCtx context)
         {
-            Result result = _base.GetSize(out long size);
+            Result result = _base.Get.GetSize(out long size);
 
             context.ResponseData.Write(size);
 
@@ -60,19 +69,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // GetDigest() -> nn::bcat::Digest
         public ResultCode GetDigest(ServiceCtx context)
         {
-            Result result = _base.GetDigest(out Digest digest);
+            Result result = _base.Get.GetDigest(out Digest digest);
 
             context.ResponseData.WriteStruct(digest);
 
             return (ResultCode)result.Value;
-        }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            if (isDisposing)
-            {
-                _base?.Dispose();
-            }
         }
     }
 }

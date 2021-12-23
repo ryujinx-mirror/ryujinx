@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.Common;
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator;
 using Ryujinx.HLE.HOS.Services.Arp;
@@ -9,14 +10,22 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
     [Service("bcat:m", "bcat:m")]
     [Service("bcat:u", "bcat:u")]
     [Service("bcat:s", "bcat:s")]
-    class IServiceCreator : IpcService
+    class IServiceCreator : DisposableIpcService
     {
-        private LibHac.Bcat.Impl.Ipc.IServiceCreator _base;
+        private SharedRef<LibHac.Bcat.Impl.Ipc.IServiceCreator> _base;
 
         public IServiceCreator(ServiceCtx context, string serviceName)
         {
             var applicationClient = context.Device.System.LibHacHorizonManager.ApplicationClient;
-            applicationClient.Sm.GetService(out _base, serviceName).ThrowIfFailure();
+            applicationClient.Sm.GetService(ref _base, serviceName).ThrowIfFailure();
+        }
+
+        protected override void Dispose(bool isDisposing)
+        {
+            if (isDisposing)
+            {
+                _base.Destroy();
+            }
         }
 
         [CommandHipc(0)]
@@ -43,11 +52,13 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
         {
             ulong pid = context.RequestData.ReadUInt64();
 
-            Result rc = _base.CreateDeliveryCacheStorageService(out LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService serv, pid);
+            using var serv = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService>();
+
+            Result rc = _base.Get.CreateDeliveryCacheStorageService(ref serv.Ref(), pid);
 
             if (rc.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheStorageService(context, serv));
+                MakeObject(context, new IDeliveryCacheStorageService(context, ref serv.Ref()));
             }
 
             return (ResultCode)rc.Value;
@@ -59,12 +70,13 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
         {
             ApplicationId applicationId = context.RequestData.ReadStruct<ApplicationId>();
 
-            Result rc = _base.CreateDeliveryCacheStorageServiceWithApplicationId(out LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService serv,
-               applicationId);
+            using var service = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService>();
+
+            Result rc = _base.Get.CreateDeliveryCacheStorageServiceWithApplicationId(ref service.Ref(), applicationId);
 
             if (rc.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheStorageService(context, serv));
+                MakeObject(context, new IDeliveryCacheStorageService(context, ref service.Ref()));
             }
 
             return (ResultCode)rc.Value;
