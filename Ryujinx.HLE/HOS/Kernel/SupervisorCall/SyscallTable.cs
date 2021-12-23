@@ -467,9 +467,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private static void PrintResult(KernelResult result, string svcName)
         {
-            if (result != KernelResult.Success   &&
-                result != KernelResult.TimedOut  &&
+            if (result != KernelResult.Success &&
+                result != KernelResult.TimedOut &&
                 result != KernelResult.Cancelled &&
+                result != KernelResult.PortRemoteClosed &&
                 result != KernelResult.InvalidState)
             {
                 Logger.Warning?.Print(LogClass.KernelSvc, $"{svcName} returned error {result}.");
