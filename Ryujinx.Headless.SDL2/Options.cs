@@ -109,6 +109,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("memory-manager-mode", Required = false, Default = MemoryManagerMode.HostMappedUnsafe, HelpText = "The selected memory manager mode.")]
         public MemoryManagerMode MemoryManagerMode { get; set; }
 
+        [Option("audio-volume", Required = false, Default = 1.0f, HelpText ="The audio level (0 to 1).")]
+        public float AudioVolume { get; set; }
+
         // Logging
 
         [Option("enable-file-logging", Required = false, Default = false, HelpText = "Enables logging to a file on disk.")]

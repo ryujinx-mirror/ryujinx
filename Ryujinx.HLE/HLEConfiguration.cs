@@ -140,6 +140,11 @@ namespace Ryujinx.HLE
         public AspectRatio AspectRatio { get; set; }
 
         /// <summary>
+        /// The audio volume level.
+        /// </summary>
+        public float AudioVolume { get; set; }
+
+        /// <summary>
         /// An action called when HLE force a refresh of output after docked mode changed.
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
@@ -164,7 +169,8 @@ namespace Ryujinx.HLE
                                 string                 timeZone,
                                 MemoryManagerMode      memoryManagerMode,
                                 bool                   ignoreMissingServices,
-                                AspectRatio            aspectRatio)
+                                AspectRatio            aspectRatio,
+                                float                  audioVolume)
         {
             VirtualFileSystem      = virtualFileSystem;
             LibHacHorizonManager   = libHacHorizonManager;
@@ -187,6 +193,7 @@ namespace Ryujinx.HLE
             MemoryManagerMode      = memoryManagerMode;
             IgnoreMissingServices  = ignoreMissingServices;
             AspectRatio            = aspectRatio;
+            AudioVolume            = audioVolume;
         }
     }
 }

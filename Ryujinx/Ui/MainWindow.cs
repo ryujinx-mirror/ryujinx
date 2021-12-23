@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -132,6 +132,7 @@ namespace Ryujinx.Ui
         [GUI] ProgressBar     _progressBar;
         [GUI] Box             _viewBox;
         [GUI] Label           _vSyncStatus;
+        [GUI] Label           _volumeStatus;
         [GUI] Box             _listStatusBox;
         [GUI] Label           _loadingStatusLabel;
         [GUI] ProgressBar     _loadingStatusBar;
@@ -205,6 +206,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
             ConfigurationState.Instance.Graphics.AspectRatio.Event         += UpdateAspectRatioState;
             ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
+            ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState; 
 
             if (ConfigurationState.Instance.Ui.StartFullscreen)
             {
@@ -303,6 +305,11 @@ namespace Ryujinx.Ui
             {
                 _emulationContext.System.ChangeDockedModeState(e.NewValue);
             }
+        }
+
+        private void UpdateAudioVolumeState(object sender, ReactiveEventArgs<float> e)
+        {
+            _emulationContext?.SetVolume(e.NewValue);
         }
 
         private void WindowStateEvent_Changed(object o, WindowStateEventArgs args)
@@ -562,7 +569,8 @@ namespace Ryujinx.Ui
                                                                           ConfigurationState.Instance.System.TimeZone,
                                                                           ConfigurationState.Instance.System.MemoryManagerMode,
                                                                           ConfigurationState.Instance.System.IgnoreMissingServices,
-                                                                          ConfigurationState.Instance.Graphics.AspectRatio);
+                                                                          ConfigurationState.Instance.Graphics.AspectRatio,
+                                                                          ConfigurationState.Instance.System.AudioVolume);
 
             _emulationContext = new HLE.Switch(configuration);
         }
@@ -1108,11 +1116,12 @@ namespace Ryujinx.Ui
         {
             Application.Invoke(delegate
             {
-                _gameStatus.Text  = args.GameStatus;
-                _fifoStatus.Text  = args.FifoStatus;
-                _gpuName.Text     = args.GpuName;
-                _dockedMode.Text  = args.DockedMode;
-                _aspectRatio.Text = args.AspectRatio;
+                _gameStatus.Text   = args.GameStatus;
+                _fifoStatus.Text   = args.FifoStatus;
+                _gpuName.Text      = args.GpuName;
+                _dockedMode.Text   = args.DockedMode;
+                _aspectRatio.Text  = args.AspectRatio;
+                _volumeStatus.Text = GetVolumeLabelText(args.Volume);
 
                 if (args.VSyncEnabled)
                 {
@@ -1171,6 +1180,28 @@ namespace Ryujinx.Ui
         private void DockedMode_Clicked(object sender, ButtonReleaseEventArgs args)
         {
             ConfigurationState.Instance.System.EnableDockedMode.Value = !ConfigurationState.Instance.System.EnableDockedMode.Value;
+        }
+
+        private string GetVolumeLabelText(float volume)
+        {
+            string icon = volume == 0 ? "🔇" : "🔊";
+
+            return $"{icon} {(int)(volume * 100)}%";
+        }
+
+        private void VolumeStatus_Clicked(object sender, ButtonReleaseEventArgs args)
+        {
+            if (_emulationContext != null)
+            {
+                if (_emulationContext.IsAudioMuted())
+                {
+                    _emulationContext.SetVolume(ConfigurationState.Instance.System.AudioVolume);
+                }
+                else
+                {
+                    _emulationContext.SetVolume(0);
+                }
+            }
         }
 
         private void AspectRatio_Clicked(object sender, ButtonReleaseEventArgs args)

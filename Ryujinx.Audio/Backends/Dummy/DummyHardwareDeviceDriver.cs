@@ -35,7 +35,7 @@ namespace Ryujinx.Audio.Backends.Dummy
             _pauseEvent = new ManualResetEvent(true);
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
         {
             if (sampleRate == 0)
             {
@@ -49,7 +49,7 @@ namespace Ryujinx.Audio.Backends.Dummy
 
             if (direction == Direction.Output)
             {
-                return new DummyHardwareDeviceSessionOutput(this, memoryManager, sampleFormat, sampleRate, channelCount);
+                return new DummyHardwareDeviceSessionOutput(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
             }
             else
             {

@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         {
             var memoryManager = context.Process.HandleTable.GetKProcess((int)processHandle).CpuMemory;
 
-            ResultCode result = (ResultCode)_impl.OpenAudioRenderer(out AudioRenderSystem renderer, memoryManager, ref parameter, appletResourceUserId, workBufferTransferMemory.Address, workBufferTransferMemory.Size, processHandle);
+            ResultCode result = (ResultCode)_impl.OpenAudioRenderer(out AudioRenderSystem renderer, memoryManager, ref parameter, appletResourceUserId, workBufferTransferMemory.Address, workBufferTransferMemory.Size, processHandle, context.Device.Configuration.AudioVolume);
 
             if (result == ResultCode.Success)
             {

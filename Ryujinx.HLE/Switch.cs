@@ -146,6 +146,21 @@ namespace Ryujinx.HLE
             Gpu.Window.Present(swapBuffersCallback);
         }
 
+        public void SetVolume(float volume)
+        {
+            System.SetVolume(volume);
+        }
+
+        public float GetVolume()
+        {
+            return System.GetVolume();
+        }
+
+        public bool IsAudioMuted()
+        {
+            return System.GetVolume() == 0;
+        }
+
         public void DisposeGpu()
         {
             Gpu.Dispose();

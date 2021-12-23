@@ -26,6 +26,18 @@ namespace Ryujinx.Audio.Integration
     public interface IHardwareDevice : IDisposable
     {
         /// <summary>
+        /// Sets the volume level for this device.
+        /// </summary>
+        /// <param name="volume">The volume level to set.</param>
+        void SetVolume(float volume);
+
+        /// <summary>
+        /// Gets the volume level for this device.
+        /// </summary>
+        /// <returns>The volume level of this device.</returns>
+        float GetVolume();
+
+        /// <summary>
         /// Get the supported sample rate of this device.
         /// </summary>
         /// <returns>The supported sample rate of this device.</returns>

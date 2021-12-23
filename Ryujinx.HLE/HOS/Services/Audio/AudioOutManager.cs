@@ -20,11 +20,11 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return _impl.ListAudioOuts();
         }
 
-        public ResultCode OpenAudioOut(ServiceCtx context, out string outputDeviceName, out AudioOutputConfiguration outputConfiguration, out IAudioOut obj, string inputDeviceName, ref AudioInputConfiguration parameter, ulong appletResourceUserId, uint processHandle)
+        public ResultCode OpenAudioOut(ServiceCtx context, out string outputDeviceName, out AudioOutputConfiguration outputConfiguration, out IAudioOut obj, string inputDeviceName, ref AudioInputConfiguration parameter, ulong appletResourceUserId, uint processHandle, float volume)
         {
             var memoryManager = context.Process.HandleTable.GetKProcess((int)processHandle).CpuMemory;
 
-            ResultCode result = (ResultCode)_impl.OpenAudioOut(out outputDeviceName, out outputConfiguration, out AudioOutputSystem outSystem, memoryManager, inputDeviceName, SampleFormat.PcmInt16, ref parameter, appletResourceUserId, processHandle);
+            ResultCode result = (ResultCode)_impl.OpenAudioOut(out outputDeviceName, out outputConfiguration, out AudioOutputSystem outSystem, memoryManager, inputDeviceName, SampleFormat.PcmInt16, ref parameter, appletResourceUserId, processHandle, volume);
 
             if (result == ResultCode.Success)
             {

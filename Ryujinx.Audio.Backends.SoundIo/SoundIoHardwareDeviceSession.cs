@@ -19,21 +19,21 @@ namespace Ryujinx.Audio.Backends.SoundIo
         private ManualResetEvent _updateRequiredEvent;
         private int _disposeState;
 
-        public SoundIoHardwareDeviceSession(SoundIoHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
+        public SoundIoHardwareDeviceSession(SoundIoHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, float requestedVolume) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
         {
             _driver = driver;
             _updateRequiredEvent = _driver.GetUpdateRequiredEvent();
             _queuedBuffers = new ConcurrentQueue<SoundIoAudioBuffer>();
             _ringBuffer = new DynamicRingBuffer();
 
-            SetupOutputStream();
+            SetupOutputStream(requestedVolume);
         }
 
-        private void SetupOutputStream()
+        private void SetupOutputStream(float requestedVolume)
         {
             _outputStream = _driver.OpenStream(RequestedSampleFormat, RequestedSampleRate, RequestedChannelCount);
             _outputStream.WriteCallback += Update;
-
+            _outputStream.Volume = requestedVolume;
             // TODO: Setup other callbacks (errors, ect).
 
             _outputStream.Open();

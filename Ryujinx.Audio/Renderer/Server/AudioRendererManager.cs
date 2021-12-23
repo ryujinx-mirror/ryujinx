@@ -186,12 +186,12 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// Start the <see cref="AudioProcessor"/> and worker thread.
         /// </summary>
-        private void StartLocked()
+        private void StartLocked(float volume)
         {
             _isRunning = true;
 
             // TODO: virtual device mapping (IAudioDevice)
-            Processor.Start(_deviceDriver);
+            Processor.Start(_deviceDriver, volume);
 
             _workerThread = new Thread(SendCommands)
             {
@@ -263,7 +263,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// Register a new <see cref="AudioRenderSystem"/>.
         /// </summary>
         /// <param name="renderer">The <see cref="AudioRenderSystem"/> to register.</param>
-        private void Register(AudioRenderSystem renderer)
+        private void Register(AudioRenderSystem renderer, float volume)
         {
             lock (_sessionLock)
             {
@@ -274,7 +274,7 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 if (!_isRunning)
                 {
-                    StartLocked();
+                    StartLocked(volume);
                 }
             }
         }
@@ -314,7 +314,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <param name="workBufferSize">The guest work buffer size.</param>
         /// <param name="processHandle">The process handle of the application.</param>
         /// <returns>A <see cref="ResultCode"/> reporting an error or a success.</returns>
-        public ResultCode OpenAudioRenderer(out AudioRenderSystem renderer, IVirtualMemoryManager memoryManager, ref AudioRendererConfiguration parameter, ulong appletResourceUserId, ulong workBufferAddress, ulong workBufferSize, uint processHandle)
+        public ResultCode OpenAudioRenderer(out AudioRenderSystem renderer, IVirtualMemoryManager memoryManager, ref AudioRendererConfiguration parameter, ulong appletResourceUserId, ulong workBufferAddress, ulong workBufferSize, uint processHandle, float volume)
         {
             int sessionId = AcquireSessionId();
 
@@ -326,7 +326,7 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 renderer = audioRenderer;
 
-                Register(renderer);
+                Register(renderer, volume);
             }
             else
             {
@@ -336,6 +336,21 @@ namespace Ryujinx.Audio.Renderer.Server
             }
 
             return result;
+        }
+
+        public float GetVolume()
+        {
+            if (Processor != null)
+            {
+                return Processor.GetVolume();
+            }
+
+            return 0f;
+        }
+
+        public void SetVolume(float volume)
+        {
+            Processor?.SetVolume(volume);
         }
 
         public void Dispose()

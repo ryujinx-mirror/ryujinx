@@ -76,6 +76,17 @@ namespace Ryujinx.Audio.Renderer.Utils
             _stream.Flush();
         }
 
+        public void SetVolume(float volume)
+        {
+            // Do nothing, volume is not used for FileHardwareDevice at the moment.
+        }
+
+        public float GetVolume()
+        {
+            // FileHardwareDevice does not incorporate volume.
+            return 0;
+        }
+
         public uint GetChannelCount()
         {
             return _channelCount;

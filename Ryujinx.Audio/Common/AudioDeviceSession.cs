@@ -106,7 +106,7 @@ namespace Ryujinx.Audio.Common
             _bufferAppendedCount = 0;
             _bufferRegisteredCount = 0;
             _bufferReleasedCount = 0;
-            _volume = 1.0f;
+            _volume = deviceSession.GetVolume();
             _state = AudioDeviceState.Stopped;
         }
 

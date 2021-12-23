@@ -243,6 +243,7 @@ namespace Ryujinx.HLE.HOS
             AudioOutputManager = new AudioOutputManager();
             AudioInputManager = new AudioInputManager();
             AudioRendererManager = new AudioRendererManager();
+            AudioRendererManager.SetVolume(Device.Configuration.AudioVolume);
             AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry();
 
             IWritableEvent[] audioOutputRegisterBufferEvents = new IWritableEvent[Constants.AudioOutSessionCountMax];
@@ -255,6 +256,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             AudioOutputManager.Initialize(Device.AudioDeviceDriver, audioOutputRegisterBufferEvents);
+            AudioOutputManager.SetVolume(Device.Configuration.AudioVolume);
 
             IWritableEvent[] audioInputRegisterBufferEvents = new IWritableEvent[Constants.AudioInSessionCountMax];
 
@@ -324,6 +326,17 @@ namespace Ryujinx.HLE.HOS
 
                 Device.Configuration.RefreshInputConfig?.Invoke();
             }
+        }
+
+        public void SetVolume(float volume)
+        {
+            AudioOutputManager.SetVolume(volume);
+            AudioRendererManager.SetVolume(volume);
+        }
+
+        public float GetVolume()
+        {
+            return AudioOutputManager.GetVolume() == 0 ? AudioRendererManager.GetVolume() : AudioOutputManager.GetVolume();
         }
 
         public void ReturnFocus()
