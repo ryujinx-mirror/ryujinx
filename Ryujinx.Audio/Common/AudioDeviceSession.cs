@@ -175,7 +175,7 @@ namespace Ryujinx.Audio.Common
 
             for (int i = 0; i < buffersToFlush.Length; i++)
             {
-                buffersToFlush[i] = _buffers[_hardwareBufferIndex];
+                buffersToFlush[i] = _buffers[hardwareBufferIndex];
 
                 _bufferAppendedCount--;
                 _bufferRegisteredCount++;
