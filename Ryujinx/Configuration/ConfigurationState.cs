@@ -546,6 +546,7 @@ namespace Ryujinx.Configuration
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
             System.AudioBackend.Value              = AudioBackend.SDL2;
+            System.AudioVolume.Value               = 1;
             System.MemoryManagerMode.Value         = MemoryManagerMode.HostMappedUnsafe;
             System.ExpandRam.Value                 = false;
             System.IgnoreMissingServices.Value     = false;
