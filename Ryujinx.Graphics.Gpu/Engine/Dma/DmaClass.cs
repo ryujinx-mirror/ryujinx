@@ -222,6 +222,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                                 target.Info.Height,
                                 1,
                                 1,
+                                xCount * srcBpp,
                                 srcStride,
                                 target.Info.FormatInfo.BytesPerPixel,
                                 srcSpan);

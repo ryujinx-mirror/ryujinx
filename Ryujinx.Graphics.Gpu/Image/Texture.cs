@@ -760,6 +760,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Info.FormatInfo.BlockWidth,
                     Info.FormatInfo.BlockHeight,
                     Info.Stride,
+                    Info.Stride,
                     Info.FormatInfo.BytesPerPixel,
                     data);
             }
