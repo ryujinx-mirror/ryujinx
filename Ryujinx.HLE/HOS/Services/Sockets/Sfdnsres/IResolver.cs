@@ -155,7 +155,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             ulong responseBufferPosition = context.Request.ReceiveBuff[0].Position;
             ulong responseBufferSize     = context.Request.ReceiveBuff[0].Size;
 
-            return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, 0, 0);
+            return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, false, 0, 0);
         }
 
         [CommandHipc(8)]
@@ -213,7 +213,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             (ulong responseBufferPosition, ulong responseBufferSize) = context.Request.GetBufferType0x22();
             (ulong optionsBufferPosition,  ulong optionsBufferSize)  = context.Request.GetBufferType0x21();
 
-            return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, optionsBufferPosition, optionsBufferSize);
+            return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, true, optionsBufferPosition, optionsBufferSize);
         }
 
         private ResultCode GetHostByNameRequestImpl(ServiceCtx context, ulong inputBufferPosition, ulong inputBufferSize, ulong outputBufferPosition, ulong outputBufferSize, ulong optionsBufferPosition, ulong optionsBufferSize)
@@ -391,7 +391,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return bufferPosition - originalBufferPosition;
         }
 
-        private ResultCode GetAddrInfoRequestImpl(ServiceCtx context, ulong responseBufferPosition, ulong responseBufferSize, ulong optionsBufferPosition, ulong optionsBufferSize)
+        private ResultCode GetAddrInfoRequestImpl(
+            ServiceCtx context,
+            ulong responseBufferPosition,
+            ulong responseBufferSize,
+            bool withOptions,
+            ulong optionsBufferPosition,
+            ulong optionsBufferSize)
         {
             bool enableNsdResolve = (context.RequestData.ReadInt32() & 1) != 0;
             uint cancelHandle     = context.RequestData.ReadUInt32();
@@ -402,7 +408,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             // NOTE: We ignore hints for now.
             DeserializeAddrInfos(context.Memory, (ulong)context.Request.SendBuff[2].Position, (ulong)context.Request.SendBuff[2].Size);
 
-            if (optionsBufferSize > 0)
+            if (withOptions)
             {
                 // TODO: Find unknown, Parse and use options.
                 uint unknown = context.RequestData.ReadUInt32();
@@ -457,9 +463,19 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 serializedSize = SerializeAddrInfos(context, responseBufferPosition, responseBufferSize, hostEntry, port);
             }
 
-            context.ResponseData.Write((int)netDbErrorCode);
-            context.ResponseData.Write((int)errno);
-            context.ResponseData.Write(serializedSize);
+            if (withOptions)
+            {
+                context.ResponseData.Write(serializedSize);
+                context.ResponseData.Write((int)errno);
+                context.ResponseData.Write((int)netDbErrorCode);
+                context.ResponseData.Write(0);
+            }
+            else
+            {
+                context.ResponseData.Write((int)netDbErrorCode);
+                context.ResponseData.Write((int)errno);
+                context.ResponseData.Write(serializedSize);
+            }
 
             return ResultCode.Success;
         }

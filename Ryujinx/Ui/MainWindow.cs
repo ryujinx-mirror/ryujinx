@@ -206,7 +206,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
             ConfigurationState.Instance.Graphics.AspectRatio.Event         += UpdateAspectRatioState;
             ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
-            ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState; 
+            ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState;
 
             if (ConfigurationState.Instance.Ui.StartFullscreen)
             {
@@ -434,7 +434,7 @@ namespace Ryujinx.Ui
                 else
                 {
                     Logger.Warning?.Print(LogClass.Audio, "SDL2 is not supported, trying to fall back to OpenAL.");
-                
+
                     if (OpenALHardwareDeviceDriver.IsSupported)
                     {
                         Logger.Warning?.Print(LogClass.Audio, "Found OpenAL, changing configuration.");
@@ -447,7 +447,7 @@ namespace Ryujinx.Ui
                     else
                     {
                         Logger.Warning?.Print(LogClass.Audio, "OpenAL is not supported, trying to fall back to SoundIO.");
-                         
+
                         if (SoundIoHardwareDeviceDriver.IsSupported)
                         {
                             Logger.Warning?.Print(LogClass.Audio, "Found SoundIO, changing configuration.");
@@ -460,8 +460,8 @@ namespace Ryujinx.Ui
                         else
                         {
                             Logger.Warning?.Print(LogClass.Audio, "SoundIO is not supported, falling back to dummy audio out.");
-                        }           
-                    }   
+                        }
+                    }
                 }
             }
             else if (ConfigurationState.Instance.System.AudioBackend.Value == AudioBackend.SoundIo)
@@ -499,7 +499,7 @@ namespace Ryujinx.Ui
                         else
                         {
                             Logger.Warning?.Print(LogClass.Audio, "OpenAL is not supported, falling back to dummy audio out.");
-                        }           
+                        }
                     }
                 }
             }
@@ -525,7 +525,7 @@ namespace Ryujinx.Ui
                     else
                     {
                         Logger.Warning?.Print(LogClass.Audio, "SDL2 is not supported, trying to fall back to SoundIO.");
-                        
+
                         if (SoundIoHardwareDeviceDriver.IsSupported)
                         {
                             Logger.Warning?.Print(LogClass.Audio, "Found SoundIO, changing configuration.");
@@ -563,6 +563,7 @@ namespace Ryujinx.Ui
                                                                           ConfigurationState.Instance.Graphics.EnableVsync,
                                                                           ConfigurationState.Instance.System.EnableDockedMode,
                                                                           ConfigurationState.Instance.System.EnablePtc,
+                                                                          ConfigurationState.Instance.System.EnableInternetAccess,
                                                                           fsIntegrityCheckLevel,
                                                                           ConfigurationState.Instance.System.FsGlobalAccessLogMode,
                                                                           ConfigurationState.Instance.System.SystemTimeOffset,

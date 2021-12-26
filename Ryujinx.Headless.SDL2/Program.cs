@@ -459,6 +459,7 @@ namespace Ryujinx.Headless.SDL2
                                                                   (bool)options.EnableVsync,
                                                                   (bool)options.EnableDockedMode,
                                                                   (bool)options.EnablePtc,
+                                                                  (bool)options.EnableInternetAccess,
                                                                   (bool)options.EnableFsIntegrityChecks ? LibHac.FsSystem.IntegrityCheckLevel.ErrorOnInvalid : LibHac.FsSystem.IntegrityCheckLevel.None,
                                                                   options.FsGlobalAccessLogMode,
                                                                   options.SystemTimeOffset,

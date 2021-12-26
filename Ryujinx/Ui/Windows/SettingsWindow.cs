@@ -52,6 +52,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] CheckButton     _vSyncToggle;
         [GUI] CheckButton     _shaderCacheToggle;
         [GUI] CheckButton     _ptcToggle;
+        [GUI] CheckButton     _internetToggle;
         [GUI] CheckButton     _fsicToggle;
         [GUI] RadioButton     _mmSoftware;
         [GUI] RadioButton     _mmHost;
@@ -224,6 +225,11 @@ namespace Ryujinx.Ui.Windows
             if (ConfigurationState.Instance.System.EnablePtc)
             {
                 _ptcToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.EnableInternetAccess)
+            {
+                _internetToggle.Click();
             }
 
             if (ConfigurationState.Instance.System.EnableFsIntegrityChecks)
@@ -496,6 +502,7 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;
             ConfigurationState.Instance.Graphics.EnableShaderCache.Value       = _shaderCacheToggle.Active;
             ConfigurationState.Instance.System.EnablePtc.Value                 = _ptcToggle.Active;
+            ConfigurationState.Instance.System.EnableInternetAccess.Value      = _internetToggle.Active;
             ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;
             ConfigurationState.Instance.System.MemoryManagerMode.Value         = memoryMode;
             ConfigurationState.Instance.System.ExpandRam.Value                 = _expandRamToggle.Active;

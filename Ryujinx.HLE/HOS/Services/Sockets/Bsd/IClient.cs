@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             _isPrivileged = isPrivileged;
         }
 
-        private LinuxError ConvertError(WsaError errorCode)
+        private static LinuxError ConvertError(WsaError errorCode)
         {
             if (!_errorMap.TryGetValue(errorCode, out LinuxError errno))
             {
@@ -114,6 +114,56 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
 
             return errno;
+        }
+
+        private static SocketFlags ConvertBsdSocketFlags(BsdSocketFlags bsdSocketFlags)
+        {
+            BsdSocketFlags SupportedFlags =
+                BsdSocketFlags.Oob |
+                BsdSocketFlags.Peek |
+                BsdSocketFlags.DontRoute |
+                BsdSocketFlags.Trunc |
+                BsdSocketFlags.CTrunc;
+
+            SocketFlags socketFlags = SocketFlags.None;
+
+            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Oob))
+            {
+                socketFlags |= SocketFlags.OutOfBand;
+            }
+
+            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Peek))
+            {
+                socketFlags |= SocketFlags.Peek;
+            }
+
+            if (bsdSocketFlags.HasFlag(BsdSocketFlags.DontRoute))
+            {
+                socketFlags |= SocketFlags.DontRoute;
+            }
+
+            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Trunc))
+            {
+                socketFlags |= SocketFlags.Truncated;
+            }
+
+            if (bsdSocketFlags.HasFlag(BsdSocketFlags.CTrunc))
+            {
+                socketFlags |= SocketFlags.ControlDataTruncated;
+            }
+
+            bsdSocketFlags &= ~(BsdSocketFlags.Oob |
+                BsdSocketFlags.Peek |
+                BsdSocketFlags.DontRoute |
+                BsdSocketFlags.Trunc |
+                BsdSocketFlags.CTrunc);
+
+            if (bsdSocketFlags != BsdSocketFlags.None)
+            {
+                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported socket flags: {bsdSocketFlags}");
+            }
+
+            return socketFlags;
         }
 
         private ResultCode WriteWinSock2Error(ServiceCtx context, WsaError errorCode)
@@ -463,8 +513,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // Recv(u32 socket, u32 flags) -> (i32 ret, u32 bsd_errno, array<i8, 0x22> message)
         public ResultCode Recv(ServiceCtx context)
         {
-            int         socketFd    = context.RequestData.ReadInt32();
-            SocketFlags socketFlags = (SocketFlags)context.RequestData.ReadInt32();
+            int            socketFd    = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
             (ulong receivePosition, ulong receiveLength) = context.Request.GetBufferType0x22();
 
@@ -474,18 +524,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                if (socketFlags != SocketFlags.None && (socketFlags & SocketFlags.OutOfBand) == 0
-                    && (socketFlags & SocketFlags.Peek) == 0)
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported Recv flags: {socketFlags}");
-                    return WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
-                }
-
                 byte[] receivedBuffer = new byte[receiveLength];
 
                 try
                 {
-                    result = socket.Handle.Receive(receivedBuffer, socketFlags);
+                    result = socket.Handle.Receive(receivedBuffer, ConvertBsdSocketFlags(socketFlags));
                     errno  = SetResultErrno(socket.Handle, result);
 
                     context.Memory.Write(receivePosition, receivedBuffer);
@@ -503,8 +546,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // RecvFrom(u32 sock, u32 flags) -> (i32 ret, u32 bsd_errno, u32 addrlen, buffer<i8, 0x22, 0> message, buffer<nn::socket::sockaddr_in, 0x22, 0x10>)
         public ResultCode RecvFrom(ServiceCtx context)
         {
-            int         socketFd    = context.RequestData.ReadInt32();
-            SocketFlags socketFlags = (SocketFlags)context.RequestData.ReadInt32();
+            int            socketFd    = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
             (ulong receivePosition,     ulong receiveLength)   = context.Request.GetBufferType0x22();
             (ulong sockAddrOutPosition, ulong sockAddrOutSize) = context.Request.GetBufferType0x22(1);
@@ -515,20 +558,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                if (socketFlags != SocketFlags.None && (socketFlags & SocketFlags.OutOfBand) == 0
-                    && (socketFlags & SocketFlags.Peek) == 0)
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported Recv flags: {socketFlags}");
-
-                    return WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
-                }
-
                 byte[]   receivedBuffer = new byte[receiveLength];
                 EndPoint endPoint       = new IPEndPoint(IPAddress.Any, 0);
 
                 try
                 {
-                    result = socket.Handle.ReceiveFrom(receivedBuffer, receivedBuffer.Length, socketFlags, ref endPoint);
+                    result = socket.Handle.ReceiveFrom(receivedBuffer, receivedBuffer.Length, ConvertBsdSocketFlags(socketFlags), ref endPoint);
                     errno  = SetResultErrno(socket.Handle, result);
 
                     context.Memory.Write(receivePosition, receivedBuffer);
@@ -547,8 +582,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // Send(u32 socket, u32 flags, buffer<i8, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
         public ResultCode Send(ServiceCtx context)
         {
-            int         socketFd    = context.RequestData.ReadInt32();
-            SocketFlags socketFlags = (SocketFlags)context.RequestData.ReadInt32();
+            int            socketFd    = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
             (ulong sendPosition, ulong sendSize) = context.Request.GetBufferType0x21();
 
@@ -558,21 +593,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                if (socketFlags != SocketFlags.None && socketFlags != SocketFlags.OutOfBand
-                    && socketFlags != SocketFlags.Peek && socketFlags != SocketFlags.DontRoute)
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported Send flags: {socketFlags}");
-
-                    return WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
-                }
-
                 byte[] sendBuffer = new byte[sendSize];
 
                 context.Memory.Read(sendPosition, sendBuffer);
 
                 try
                 {
-                    result = socket.Handle.Send(sendBuffer, socketFlags);
+                    result = socket.Handle.Send(sendBuffer, ConvertBsdSocketFlags(socketFlags));
                     errno  = SetResultErrno(socket.Handle, result);
                 }
                 catch (SocketException exception)
@@ -589,8 +616,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // SendTo(u32 socket, u32 flags, buffer<i8, 0x21, 0>, buffer<nn::socket::sockaddr_in, 0x21, 0x10>) -> (i32 ret, u32 bsd_errno)
         public ResultCode SendTo(ServiceCtx context)
         {
-            int         socketFd    = context.RequestData.ReadInt32();
-            SocketFlags socketFlags = (SocketFlags)context.RequestData.ReadInt32();
+            int            socketFd    = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
             (ulong sendPosition,   ulong sendSize)   = context.Request.GetBufferType0x21();
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21(1);
@@ -601,14 +628,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                if (socketFlags != SocketFlags.None && socketFlags != SocketFlags.OutOfBand
-                    && socketFlags != SocketFlags.Peek && socketFlags != SocketFlags.DontRoute)
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported Send flags: {socketFlags}");
-
-                    return WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
-                }
-
                 byte[] sendBuffer = new byte[sendSize];
 
                 context.Memory.Read(sendPosition, sendBuffer);
@@ -617,7 +636,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
                 try
                 {
-                    result = socket.Handle.SendTo(sendBuffer, sendBuffer.Length, socketFlags, endPoint);
+                    result = socket.Handle.SendTo(sendBuffer, sendBuffer.Length, ConvertBsdSocketFlags(socketFlags), endPoint);
                     errno  = SetResultErrno(socket.Handle, result);
                 }
                 catch (SocketException exception)
@@ -737,7 +756,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 }
                 catch (SocketException exception)
                 {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
+                    if (!socket.Handle.Blocking && exception.ErrorCode == (int)WsaError.WSAEWOULDBLOCK)
+                    {
+                        errno = LinuxError.EINPROGRESS;
+                    }
+                    else
+                    {
+                        errno = ConvertError((WsaError)exception.ErrorCode);
+                    }
                 }
             }
 
@@ -794,9 +820,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // GetSockOpt(u32 socket, u32 level, u32 option_name) -> (i32 ret, u32 bsd_errno, u32, buffer<unknown, 0x22, 0>)
         public ResultCode GetSockOpt(ServiceCtx context)
         {
-            int socketFd   = context.RequestData.ReadInt32();
-            int level      = context.RequestData.ReadInt32();
-            int optionName = context.RequestData.ReadInt32();
+            int socketFd                 = context.RequestData.ReadInt32();
+            SocketOptionLevel level      = (SocketOptionLevel)context.RequestData.ReadInt32();
+            SocketOptionName  optionName = (SocketOptionName)context.RequestData.ReadInt32();
 
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x22();
 
@@ -805,16 +831,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                errno = LinuxError.ENOPROTOOPT;
-
-                if (level == 0xFFFF)
-                {
-                    errno = HandleGetSocketOption(context, socket, (SocketOptionName)optionName, bufferPosition, bufferSize);
-                }
-                else
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt Level: {(SocketOptionLevel)level}");
-                }
+                errno = HandleGetSocketOption(context, socket, optionName, level, bufferPosition, bufferSize);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -916,7 +933,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return WriteBsdResult(context, result, errno);
         }
 
-        private LinuxError HandleGetSocketOption(ServiceCtx context, BsdSocket socket, SocketOptionName optionName, ulong optionValuePosition, ulong optionValueSize)
+        private static LinuxError HandleGetSocketOption(
+            ServiceCtx context,
+            BsdSocket socket,
+            SocketOptionName optionName,
+            SocketOptionLevel level,
+            ulong optionValuePosition,
+            ulong optionValueSize)
         {
             try
             {
@@ -936,19 +959,19 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                     case SocketOptionName.SendTimeout:
                     case SocketOptionName.Type:
                     case SocketOptionName.Linger:
-                        socket.Handle.GetSocketOption(SocketOptionLevel.Socket, optionName, optionValue);
+                        socket.Handle.GetSocketOption(level, optionName, optionValue);
                         context.Memory.Write(optionValuePosition, optionValue);
 
                         return LinuxError.SUCCESS;
 
                     case (SocketOptionName)0x200:
-                        socket.Handle.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, optionValue);
+                        socket.Handle.GetSocketOption(level, SocketOptionName.ReuseAddress, optionValue);
                         context.Memory.Write(optionValuePosition, optionValue);
 
                         return LinuxError.SUCCESS;
 
                     default:
-                        Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt OptionName: {optionName}");
+                        Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt OptionName: {optionName}");
 
                         return LinuxError.EOPNOTSUPP;
                 }
@@ -959,7 +982,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
         }
 
-        private LinuxError HandleSetSocketOption(ServiceCtx context, BsdSocket socket, SocketOptionName optionName, ulong optionValuePosition, ulong optionValueSize)
+        private static LinuxError HandleSetSocketOption(
+            ServiceCtx context,
+            BsdSocket socket,
+            SocketOptionName optionName,
+            SocketOptionLevel level,
+            ulong optionValuePosition,
+            ulong optionValueSize)
         {
             try
             {
@@ -977,17 +1006,17 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                     case SocketOptionName.SendTimeout:
                     case SocketOptionName.Type:
                     case SocketOptionName.ReuseAddress:
-                        socket.Handle.SetSocketOption(SocketOptionLevel.Socket, optionName, context.Memory.Read<int>((ulong)optionValuePosition));
+                        socket.Handle.SetSocketOption(level, optionName, context.Memory.Read<int>((ulong)optionValuePosition));
 
                         return LinuxError.SUCCESS;
 
                     case (SocketOptionName)0x200:
-                        socket.Handle.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, context.Memory.Read<int>((ulong)optionValuePosition));
+                        socket.Handle.SetSocketOption(level, SocketOptionName.ReuseAddress, context.Memory.Read<int>((ulong)optionValuePosition));
 
                         return LinuxError.SUCCESS;
 
                     case SocketOptionName.Linger:
-                        socket.Handle.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger,
+                        socket.Handle.SetSocketOption(level, SocketOptionName.Linger,
                             new LingerOption(context.Memory.Read<int>((ulong)optionValuePosition) != 0, context.Memory.Read<int>((ulong)optionValuePosition + 4)));
 
                         return LinuxError.SUCCESS;
@@ -1008,9 +1037,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // SetSockOpt(u32 socket, u32 level, u32 option_name, buffer<unknown, 0x21, 0> option_value) -> (i32 ret, u32 bsd_errno)
         public ResultCode SetSockOpt(ServiceCtx context)
         {
-            int socketFd   = context.RequestData.ReadInt32();
-            int level      = context.RequestData.ReadInt32();
-            int optionName = context.RequestData.ReadInt32();
+            int               socketFd   = context.RequestData.ReadInt32();
+            SocketOptionLevel level      = (SocketOptionLevel)context.RequestData.ReadInt32();
+            SocketOptionName  optionName = (SocketOptionName)context.RequestData.ReadInt32();
 
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
 
@@ -1019,16 +1048,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                errno = LinuxError.ENOPROTOOPT;
-
-                if (level == 0xFFFF)
-                {
-                    errno = HandleSetSocketOption(context, socket, (SocketOptionName)optionName, bufferPos, bufferSize);
-                }
-                else
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt Level: {(SocketOptionLevel)level}");
-                }
+                errno = HandleSetSocketOption(context, socket, optionName, level, bufferPos, bufferSize);
             }
 
             return WriteBsdResult(context, 0, errno);

@@ -49,7 +49,7 @@ namespace Ryujinx.HLE
                 throw new ArgumentNullException(nameof(configuration.AudioDeviceDriver));
             }
 
-            if (configuration.UserChannelPersistence== null)
+            if (configuration.UserChannelPersistence == null)
             {
                 throw new ArgumentNullException(nameof(configuration.UserChannelPersistence));
             }

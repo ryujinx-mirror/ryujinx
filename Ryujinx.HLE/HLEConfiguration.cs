@@ -99,6 +99,11 @@ namespace Ryujinx.HLE
         internal readonly bool EnablePtc;
 
         /// <summary>
+        /// Control if the guest application should be told that there is a Internet connection available.
+        /// </summary>
+        internal readonly bool EnableInternetAccess;
+
+        /// <summary>
         /// Control LibHac's integrity check level.
         /// </summary>
         /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
@@ -122,8 +127,8 @@ namespace Ryujinx.HLE
         /// <remarks>This cannot be changed after <see cref="Switch"/> instantiation.</remarks>
         internal readonly string TimeZone;
 
-
         /// <summary>
+        /// Type of the memory manager used on CPU emulation.
         /// </summary>
         public MemoryManagerMode MemoryManagerMode { internal get; set; }
 
@@ -163,6 +168,7 @@ namespace Ryujinx.HLE
                                 bool                   enableVsync,
                                 bool                   enableDockedMode,
                                 bool                   enablePtc,
+                                bool                   enableInternetAccess,
                                 IntegrityCheckLevel    fsIntegrityCheckLevel,
                                 int                    fsGlobalAccessLogMode,
                                 long                   systemTimeOffset,
@@ -186,6 +192,7 @@ namespace Ryujinx.HLE
             EnableVsync            = enableVsync;
             EnableDockedMode       = enableDockedMode;
             EnablePtc              = enablePtc;
+            EnableInternetAccess   = enableInternetAccess;
             FsIntegrityCheckLevel  = fsIntegrityCheckLevel;
             FsGlobalAccessLogMode  = fsGlobalAccessLogMode;
             SystemTimeOffset       = systemTimeOffset;

@@ -206,6 +206,11 @@ namespace Ryujinx.Configuration
             public ReactiveObject<bool> EnablePtc { get; private set; }
 
             /// <summary>
+            /// Enables or disables guest Internet access
+            /// </summary>
+            public ReactiveObject<bool> EnableInternetAccess { get; private set; }
+
+            /// <summary>
             /// Enables integrity checks on Game content files
             /// </summary>
             public ReactiveObject<bool> EnableFsIntegrityChecks { get; private set; }
@@ -250,6 +255,8 @@ namespace Ryujinx.Configuration
                 EnableDockedMode.Event        += static (sender, e) => LogValueChange(sender, e, nameof(EnableDockedMode));
                 EnablePtc                     = new ReactiveObject<bool>();
                 EnablePtc.Event               += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc));
+                EnableInternetAccess          = new ReactiveObject<bool>();
+                EnableInternetAccess.Event    += static (sender, e) => LogValueChange(sender, e, nameof(EnableInternetAccess));
                 EnableFsIntegrityChecks       = new ReactiveObject<bool>();
                 EnableFsIntegrityChecks.Event += static (sender, e) => LogValueChange(sender, e, nameof(EnableFsIntegrityChecks));
                 FsGlobalAccessLogMode         = new ReactiveObject<int>();
@@ -276,7 +283,7 @@ namespace Ryujinx.Configuration
             /// Enable or disable keyboard support (Independent from controllers binding)
             /// </summary>
             public ReactiveObject<bool> EnableKeyboard { get; private set; }
-            
+
             /// <summary>
             /// Enable or disable mouse support (Independent from controllers binding)
             /// </summary>
@@ -464,6 +471,7 @@ namespace Ryujinx.Configuration
                 EnableVsync               = Graphics.EnableVsync,
                 EnableShaderCache         = Graphics.EnableShaderCache,
                 EnablePtc                 = System.EnablePtc,
+                EnableInternetAccess      = System.EnableInternetAccess,
                 EnableFsIntegrityChecks   = System.EnableFsIntegrityChecks,
                 FsGlobalAccessLogMode     = System.FsGlobalAccessLogMode,
                 AudioBackend              = System.AudioBackend,
@@ -534,6 +542,7 @@ namespace Ryujinx.Configuration
             Graphics.EnableVsync.Value             = true;
             Graphics.EnableShaderCache.Value       = true;
             System.EnablePtc.Value                 = true;
+            System.EnableInternetAccess.Value      = false;
             System.EnableFsIntegrityChecks.Value   = true;
             System.FsGlobalAccessLogMode.Value     = 0;
             System.AudioBackend.Value              = AudioBackend.SDL2;
@@ -956,6 +965,15 @@ namespace Ryujinx.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 34)
+            {
+                Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 34.");
+
+                configurationFileFormat.EnableInternetAccess = false;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;
             Graphics.BackendThreading.Value        = configurationFileFormat.BackendThreading;
             Graphics.ResScale.Value                = configurationFileFormat.ResScale;
@@ -984,6 +1002,7 @@ namespace Ryujinx.Configuration
             Graphics.EnableVsync.Value             = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value       = configurationFileFormat.EnableShaderCache;
             System.EnablePtc.Value                 = configurationFileFormat.EnablePtc;
+            System.EnableInternetAccess.Value      = configurationFileFormat.EnableInternetAccess;
             System.EnableFsIntegrityChecks.Value   = configurationFileFormat.EnableFsIntegrityChecks;
             System.FsGlobalAccessLogMode.Value     = configurationFileFormat.FsGlobalAccessLogMode;
             System.AudioBackend.Value              = configurationFileFormat.AudioBackend;

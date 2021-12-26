@@ -21,9 +21,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
             Port    = port;
             Address = default;
 
-            address.GetAddressBytes().AsSpan().CopyTo(Address.ToSpan());
-
-            Address.ToSpan().Reverse();
+            Span<byte> outAddress = Address.ToSpan();
+            address.TryWriteBytes(outAddress, out _);
+            outAddress.Reverse();
         }
     }
 }
