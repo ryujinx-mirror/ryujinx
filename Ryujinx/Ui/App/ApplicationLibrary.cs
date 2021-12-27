@@ -10,6 +10,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Configuration.System;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Npdm;
 using System;
 using System.Collections.Generic;
@@ -125,7 +126,7 @@ namespace Ryujinx.Ui.App
 
             foreach (string appDir in appDirs)
             {
-                
+
                 if (!Directory.Exists(appDir))
                 {
                     Logger.Warning?.Print(LogClass.Application, $"The \"game_dirs\" section in \"Config.json\" contains an invalid directory: \"{appDir}\"");
@@ -552,7 +553,7 @@ namespace Ryujinx.Ui.App
 
         private void GetNameIdDeveloper(ref ApplicationControlProperty controlData, out string titleName, out string titleId, out string publisher)
         {
-            _ = Enum.TryParse(_desiredTitleLanguage.ToString(), out LibHac.Settings.Language desiredTitleLanguage);
+            _ = Enum.TryParse(_desiredTitleLanguage.ToString(), out TitleLanguage desiredTitleLanguage);
 
             if (controlData.Titles.Length > (int)desiredTitleLanguage)
             {
