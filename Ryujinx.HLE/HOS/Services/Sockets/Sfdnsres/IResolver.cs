@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             ulong outputBufferPosition = context.Request.ReceiveBuff[0].Position;
             ulong outputBufferSize     = context.Request.ReceiveBuff[0].Size;
 
-            return GetHostByNameRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, 0, 0);
+            return GetHostByNameRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, false, 0, 0);
         }
 
         [CommandHipc(3)]
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             ulong outputBufferPosition = context.Request.ReceiveBuff[0].Position;
             ulong outputBufferSize     = context.Request.ReceiveBuff[0].Size;
 
-            return GetHostByAddrRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, 0, 0);
+            return GetHostByAddrRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, false, 0, 0);
         }
 
         [CommandHipc(4)]
@@ -192,7 +192,15 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             (ulong outputBufferPosition,  ulong outputBufferSize)  = context.Request.GetBufferType0x22();
             (ulong optionsBufferPosition, ulong optionsBufferSize) = context.Request.GetBufferType0x21();
 
-            return GetHostByNameRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, optionsBufferPosition, optionsBufferSize);
+            return GetHostByNameRequestImpl(
+                context,
+                inputBufferPosition,
+                inputBufferSize,
+                outputBufferPosition,
+                outputBufferSize,
+                true,
+                optionsBufferPosition,
+                optionsBufferSize);
         }
 
         [CommandHipc(11)] // 5.0.0+
@@ -203,20 +211,36 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             (ulong outputBufferPosition,  ulong outputBufferSize)  = context.Request.GetBufferType0x22();
             (ulong optionsBufferPosition, ulong optionsBufferSize) = context.Request.GetBufferType0x21();
 
-            return GetHostByAddrRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, optionsBufferPosition, optionsBufferSize);
+            return GetHostByAddrRequestImpl(
+                context,
+                inputBufferPosition,
+                inputBufferSize,
+                outputBufferPosition,
+                outputBufferSize,
+                true,
+                optionsBufferPosition,
+                optionsBufferSize);
         }
 
         [CommandHipc(12)] // 5.0.0+
         // GetAddrInfoRequestWithOptions(bool enable_nsd_resolve, u32, u64 pid_placeholder, pid, buffer<i8, 5, 0> host, buffer<i8, 5, 0> service, buffer<packed_addrinfo, 5, 0> hints, buffer<unknown, 21, 0>) -> (i32 ret, u32 bsd_errno, u32 unknown, u32 packed_addrinfo_size, buffer<packed_addrinfo, 22, 0> response)
         public ResultCode GetAddrInfoRequestWithOptions(ServiceCtx context)
         {
-            (ulong responseBufferPosition, ulong responseBufferSize) = context.Request.GetBufferType0x22();
-            (ulong optionsBufferPosition,  ulong optionsBufferSize)  = context.Request.GetBufferType0x21();
+            (ulong outputBufferPosition,  ulong outputBufferSize)  = context.Request.GetBufferType0x22();
+            (ulong optionsBufferPosition, ulong optionsBufferSize) = context.Request.GetBufferType0x21();
 
-            return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, true, optionsBufferPosition, optionsBufferSize);
+            return GetAddrInfoRequestImpl(context, outputBufferPosition, outputBufferSize, true, optionsBufferPosition, optionsBufferSize);
         }
 
-        private ResultCode GetHostByNameRequestImpl(ServiceCtx context, ulong inputBufferPosition, ulong inputBufferSize, ulong outputBufferPosition, ulong outputBufferSize, ulong optionsBufferPosition, ulong optionsBufferSize)
+        private static ResultCode GetHostByNameRequestImpl(
+            ServiceCtx context,
+            ulong inputBufferPosition,
+            ulong inputBufferSize,
+            ulong outputBufferPosition,
+            ulong outputBufferSize,
+            bool withOptions,
+            ulong optionsBufferPosition,
+            ulong optionsBufferSize)
         {
             string name = MemoryHelper.ReadAsciiString(context.Memory, inputBufferPosition, (int)inputBufferSize);
 
@@ -225,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             int   timeOut          = context.RequestData.ReadInt32();
             ulong pidPlaceholder   = context.RequestData.ReadUInt64();
 
-            if (optionsBufferSize > 0)
+            if (withOptions)
             {
                 // TODO: Parse and use options.
             }
@@ -283,14 +307,20 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 }
             }
 
-            context.ResponseData.Write((int)netDbErrorCode);
-            context.ResponseData.Write((int)errno);
-            context.ResponseData.Write(serializedSize);
+            WriteResponse(context, withOptions, serializedSize, errno, netDbErrorCode);
 
             return ResultCode.Success;
         }
 
-        private ResultCode GetHostByAddrRequestImpl(ServiceCtx context, ulong inputBufferPosition, ulong inputBufferSize, ulong outputBufferPosition, ulong outputBufferSize, ulong optionsBufferPosition, ulong optionsBufferSize)
+        private static ResultCode GetHostByAddrRequestImpl(
+            ServiceCtx context,
+            ulong inputBufferPosition,
+            ulong inputBufferSize,
+            ulong outputBufferPosition,
+            ulong outputBufferSize,
+            bool withOptions,
+            ulong optionsBufferPosition,
+            ulong optionsBufferSize)
         {
             byte[] rawIp = new byte[inputBufferSize];
 
@@ -302,7 +332,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             int   timeOut        = context.RequestData.ReadInt32();
             ulong pidPlaceholder = context.RequestData.ReadUInt64();
 
-            if (optionsBufferSize > 0)
+            if (withOptions)
             {
                 // TODO: Parse and use options.
             }
@@ -338,14 +368,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 serializedSize = SerializeHostEntries(context, outputBufferPosition, outputBufferSize, hostEntry, GetIpv4Addresses(hostEntry));
             }
 
-            context.ResponseData.Write((int)netDbErrorCode);
-            context.ResponseData.Write((int)errno);
-            context.ResponseData.Write(serializedSize);
+            WriteResponse(context, withOptions, serializedSize, errno, netDbErrorCode);
 
             return ResultCode.Success;
         }
 
-        private ulong SerializeHostEntries(ServiceCtx context, ulong outputBufferPosition, ulong outputBufferSize, IPHostEntry hostEntry, IEnumerable<IPAddress> addresses = null)
+        private static ulong SerializeHostEntries(ServiceCtx context, ulong outputBufferPosition, ulong outputBufferSize, IPHostEntry hostEntry, IEnumerable<IPAddress> addresses = null)
         {
             ulong originalBufferPosition = outputBufferPosition;
             ulong bufferPosition         = originalBufferPosition;
@@ -391,7 +419,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return bufferPosition - originalBufferPosition;
         }
 
-        private ResultCode GetAddrInfoRequestImpl(
+        private static ResultCode GetAddrInfoRequestImpl(
             ServiceCtx context,
             ulong responseBufferPosition,
             ulong responseBufferSize,
@@ -415,8 +443,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             }
 
             ulong pidPlaceHolder = context.RequestData.ReadUInt64();
-
-            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { enableNsdResolve, cancelHandle, pidPlaceHolder, host, service });
 
             IPHostEntry hostEntry = null;
 
@@ -463,24 +489,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 serializedSize = SerializeAddrInfos(context, responseBufferPosition, responseBufferSize, hostEntry, port);
             }
 
-            if (withOptions)
-            {
-                context.ResponseData.Write(serializedSize);
-                context.ResponseData.Write((int)errno);
-                context.ResponseData.Write((int)netDbErrorCode);
-                context.ResponseData.Write(0);
-            }
-            else
-            {
-                context.ResponseData.Write((int)netDbErrorCode);
-                context.ResponseData.Write((int)errno);
-                context.ResponseData.Write(serializedSize);
-            }
+            WriteResponse(context, withOptions, serializedSize, errno, netDbErrorCode);
 
             return ResultCode.Success;
         }
 
-        private void DeserializeAddrInfos(IVirtualMemoryManager memory, ulong address, ulong size)
+        private static void DeserializeAddrInfos(IVirtualMemoryManager memory, ulong address, ulong size)
         {
             ulong endAddress = address + size;
 
@@ -496,23 +510,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 address += (ulong)Unsafe.SizeOf<AddrInfoSerializedHeader>() + header.AddressLength;
 
                 // ai_canonname
-                string canonname = string.Empty;
-
-                while (true)
-                {
-                    byte chr = memory.Read<byte>(address++);
-
-                    if (chr == 0)
-                    {
-                        break;
-                    }
-
-                    canonname += (char)chr;
-                }
+                string canonname = MemoryHelper.ReadAsciiString(memory, address);
             }
         }
 
-        private ulong SerializeAddrInfos(ServiceCtx context, ulong responseBufferPosition, ulong responseBufferSize, IPHostEntry hostEntry, int port)
+        private static ulong SerializeAddrInfos(ServiceCtx context, ulong responseBufferPosition, ulong responseBufferSize, IPHostEntry hostEntry, int port)
         {
             ulong originalBufferPosition = (ulong)responseBufferPosition;
             ulong bufferPosition         = originalBufferPosition;
@@ -550,12 +552,34 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return bufferPosition - originalBufferPosition;
         }
 
-        private IEnumerable<IPAddress> GetIpv4Addresses(IPHostEntry hostEntry)
+        private static void WriteResponse(
+            ServiceCtx context,
+            bool withOptions,
+            ulong serializedSize,
+            GaiError errno,
+            NetDbError netDbErrorCode)
+        {
+            if (withOptions)
+            {
+                context.ResponseData.Write((int)serializedSize);
+                context.ResponseData.Write((int)errno);
+                context.ResponseData.Write((int)netDbErrorCode);
+                context.ResponseData.Write(0);
+            }
+            else
+            {
+                context.ResponseData.Write((int)netDbErrorCode);
+                context.ResponseData.Write((int)errno);
+                context.ResponseData.Write((int)serializedSize);
+            }
+        }
+
+        private static IEnumerable<IPAddress> GetIpv4Addresses(IPHostEntry hostEntry)
         {
             return hostEntry.AddressList.Where(x => x.AddressFamily == AddressFamily.InterNetwork);
         }
 
-        private NetDbError ConvertSocketErrorCodeToNetDbError(int errorCode)
+        private static NetDbError ConvertSocketErrorCodeToNetDbError(int errorCode)
         {
             return errorCode switch
             {
@@ -567,7 +591,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             };
         }
 
-        private GaiError ConvertSocketErrorCodeToGaiError(int errorCode, GaiError errno)
+        private static GaiError ConvertSocketErrorCodeToGaiError(int errorCode, GaiError errno)
         {
             return errorCode switch
             {
