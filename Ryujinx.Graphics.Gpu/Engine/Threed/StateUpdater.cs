@@ -64,7 +64,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.ShaderState)),
 
                 new StateUpdateCallbackEntry(UpdateRasterizerState, nameof(ThreedClassState.RasterizeEnable)),
-                new StateUpdateCallbackEntry(UpdateScissorState, nameof(ThreedClassState.ScissorState)),
+
+                new StateUpdateCallbackEntry(UpdateScissorState,
+                    nameof(ThreedClassState.ScissorState),
+                    nameof(ThreedClassState.ScreenScissorState)),
 
                 new StateUpdateCallbackEntry(UpdateVertexBufferState,
                     nameof(ThreedClassState.VertexBufferDrawState),
@@ -425,6 +428,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     int y = scissor.Y1;
                     int width = scissor.X2 - x;
                     int height = scissor.Y2 - y;
+
+                    if (_state.State.YControl.HasFlag(YControl.NegateY))
+                    {
+                        ref var screenScissor = ref _state.State.ScreenScissorState;
+                        y = screenScissor.Height - height - y;
+
+                        if (y < 0)
+                        {
+                            height += y;
+                            y = 0;
+                        }
+                    }
 
                     float scale = _channel.TextureManager.RenderTargetScale;
                     if (scale != 1f)
