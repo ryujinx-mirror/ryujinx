@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
     [Service("bsd:u", false)]
     class IClient : IpcService
     {
-        private static Dictionary<WsaError, LinuxError> _errorMap = new Dictionary<WsaError, LinuxError>
+        private static readonly Dictionary<WsaError, LinuxError> _errorMap = new()
         {
             // WSAEINTR
             {WsaError.WSAEINTR,           LinuxError.EINTR},
@@ -97,6 +97,50 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             {0, 0}
         };
 
+        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _soSocketOptionMap = new()
+        {
+            { BsdSocketOption.SoDebug,       SocketOptionName.Debug },
+            { BsdSocketOption.SoReuseAddr,   SocketOptionName.ReuseAddress },
+            { BsdSocketOption.SoKeepAlive,   SocketOptionName.KeepAlive },
+            { BsdSocketOption.SoDontRoute,   SocketOptionName.DontRoute },
+            { BsdSocketOption.SoBroadcast,   SocketOptionName.Broadcast },
+            { BsdSocketOption.SoUseLoopBack, SocketOptionName.UseLoopback },
+            { BsdSocketOption.SoLinger,      SocketOptionName.Linger },
+            { BsdSocketOption.SoOobInline,   SocketOptionName.OutOfBandInline },
+            { BsdSocketOption.SoReusePort,   SocketOptionName.ReuseAddress },
+            { BsdSocketOption.SoSndBuf,      SocketOptionName.SendBuffer },
+            { BsdSocketOption.SoRcvBuf,      SocketOptionName.ReceiveBuffer },
+            { BsdSocketOption.SoSndLoWat,    SocketOptionName.SendLowWater },
+            { BsdSocketOption.SoRcvLoWat,    SocketOptionName.ReceiveLowWater },
+            { BsdSocketOption.SoSndTimeo,    SocketOptionName.SendTimeout },
+            { BsdSocketOption.SoRcvTimeo,    SocketOptionName.ReceiveTimeout },
+            { BsdSocketOption.SoError,       SocketOptionName.Error },
+            { BsdSocketOption.SoType,        SocketOptionName.Type }
+        };
+
+        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _ipSocketOptionMap = new()
+        {
+            { BsdSocketOption.IpOptions,              SocketOptionName.IPOptions },
+            { BsdSocketOption.IpHdrIncl,              SocketOptionName.HeaderIncluded },
+            { BsdSocketOption.IpTtl,                  SocketOptionName.IpTimeToLive },
+            { BsdSocketOption.IpMulticastIf,          SocketOptionName.MulticastInterface },
+            { BsdSocketOption.IpMulticastTtl,         SocketOptionName.MulticastTimeToLive },
+            { BsdSocketOption.IpMulticastLoop,        SocketOptionName.MulticastLoopback },
+            { BsdSocketOption.IpAddMembership,        SocketOptionName.AddMembership },
+            { BsdSocketOption.IpDropMembership,       SocketOptionName.DropMembership },
+            { BsdSocketOption.IpDontFrag,             SocketOptionName.DontFragment },
+            { BsdSocketOption.IpAddSourceMembership,  SocketOptionName.AddSourceMembership },
+            { BsdSocketOption.IpDropSourceMembership, SocketOptionName.DropSourceMembership }
+        };
+
+        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _tcpSocketOptionMap = new()
+        {
+            { BsdSocketOption.TcpNoDelay,   SocketOptionName.NoDelay },
+            { BsdSocketOption.TcpKeepIdle,  SocketOptionName.TcpKeepAliveTime },
+            { BsdSocketOption.TcpKeepIntvl, SocketOptionName.TcpKeepAliveInterval },
+            { BsdSocketOption.TcpKeepCnt,   SocketOptionName.TcpKeepAliveRetryCount }
+        };
+
         private bool _isPrivileged;
 
         private List<BsdSocket> _sockets = new List<BsdSocket>();
@@ -118,13 +162,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
         private static SocketFlags ConvertBsdSocketFlags(BsdSocketFlags bsdSocketFlags)
         {
-            BsdSocketFlags SupportedFlags =
-                BsdSocketFlags.Oob |
-                BsdSocketFlags.Peek |
-                BsdSocketFlags.DontRoute |
-                BsdSocketFlags.Trunc |
-                BsdSocketFlags.CTrunc;
-
             SocketFlags socketFlags = SocketFlags.None;
 
             if (bsdSocketFlags.HasFlag(BsdSocketFlags.Oob))
@@ -164,6 +201,25 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
 
             return socketFlags;
+        }
+
+        private static bool TryConvertSocketOption(BsdSocketOption option, SocketOptionLevel level, out SocketOptionName name)
+        {
+            var table = level switch
+            {
+                SocketOptionLevel.Socket => _soSocketOptionMap,
+                SocketOptionLevel.IP => _ipSocketOptionMap,
+                SocketOptionLevel.Tcp => _tcpSocketOptionMap,
+                _ => null
+            };
+
+            if (table == null)
+            {
+                name = default;
+                return false;
+            }
+
+            return table.TryGetValue(option, out name);
         }
 
         private ResultCode WriteWinSock2Error(ServiceCtx context, WsaError errorCode)
@@ -820,9 +876,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // GetSockOpt(u32 socket, u32 level, u32 option_name) -> (i32 ret, u32 bsd_errno, u32, buffer<unknown, 0x22, 0>)
         public ResultCode GetSockOpt(ServiceCtx context)
         {
-            int socketFd                 = context.RequestData.ReadInt32();
-            SocketOptionLevel level      = (SocketOptionLevel)context.RequestData.ReadInt32();
-            SocketOptionName  optionName = (SocketOptionName)context.RequestData.ReadInt32();
+            int               socketFd = context.RequestData.ReadInt32();
+            SocketOptionLevel level    = (SocketOptionLevel)context.RequestData.ReadInt32();
+            BsdSocketOption   option   = (BsdSocketOption)context.RequestData.ReadInt32();
 
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x22();
 
@@ -831,7 +887,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                errno = HandleGetSocketOption(context, socket, optionName, level, bufferPosition, bufferSize);
+                errno = HandleGetSocketOption(context, socket, option, level, bufferPosition, bufferSize);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -936,45 +992,26 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         private static LinuxError HandleGetSocketOption(
             ServiceCtx context,
             BsdSocket socket,
-            SocketOptionName optionName,
+            BsdSocketOption option,
             SocketOptionLevel level,
             ulong optionValuePosition,
             ulong optionValueSize)
         {
             try
             {
+                if (!TryConvertSocketOption(option, level, out SocketOptionName optionName))
+                {
+                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt Option: {option} Level: {level}");
+
+                    return LinuxError.EOPNOTSUPP;
+                }
+
                 byte[] optionValue = new byte[optionValueSize];
 
-                switch (optionName)
-                {
-                    case SocketOptionName.Broadcast:
-                    case SocketOptionName.DontLinger:
-                    case SocketOptionName.Debug:
-                    case SocketOptionName.Error:
-                    case SocketOptionName.KeepAlive:
-                    case SocketOptionName.OutOfBandInline:
-                    case SocketOptionName.ReceiveBuffer:
-                    case SocketOptionName.ReceiveTimeout:
-                    case SocketOptionName.SendBuffer:
-                    case SocketOptionName.SendTimeout:
-                    case SocketOptionName.Type:
-                    case SocketOptionName.Linger:
-                        socket.Handle.GetSocketOption(level, optionName, optionValue);
-                        context.Memory.Write(optionValuePosition, optionValue);
+                socket.Handle.GetSocketOption(level, optionName, optionValue);
+                context.Memory.Write(optionValuePosition, optionValue);
 
-                        return LinuxError.SUCCESS;
-
-                    case (SocketOptionName)0x200:
-                        socket.Handle.GetSocketOption(level, SocketOptionName.ReuseAddress, optionValue);
-                        context.Memory.Write(optionValuePosition, optionValue);
-
-                        return LinuxError.SUCCESS;
-
-                    default:
-                        Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt OptionName: {optionName}");
-
-                        return LinuxError.EOPNOTSUPP;
-                }
+                return LinuxError.SUCCESS;
             }
             catch (SocketException exception)
             {
@@ -985,47 +1022,34 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         private static LinuxError HandleSetSocketOption(
             ServiceCtx context,
             BsdSocket socket,
-            SocketOptionName optionName,
+            BsdSocketOption option,
             SocketOptionLevel level,
             ulong optionValuePosition,
             ulong optionValueSize)
         {
             try
             {
-                switch (optionName)
+                if (!TryConvertSocketOption(option, level, out SocketOptionName optionName))
                 {
-                    case SocketOptionName.Broadcast:
-                    case SocketOptionName.DontLinger:
-                    case SocketOptionName.Debug:
-                    case SocketOptionName.Error:
-                    case SocketOptionName.KeepAlive:
-                    case SocketOptionName.OutOfBandInline:
-                    case SocketOptionName.ReceiveBuffer:
-                    case SocketOptionName.ReceiveTimeout:
-                    case SocketOptionName.SendBuffer:
-                    case SocketOptionName.SendTimeout:
-                    case SocketOptionName.Type:
-                    case SocketOptionName.ReuseAddress:
-                        socket.Handle.SetSocketOption(level, optionName, context.Memory.Read<int>((ulong)optionValuePosition));
+                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt Option: {option} Level: {level}");
 
-                        return LinuxError.SUCCESS;
-
-                    case (SocketOptionName)0x200:
-                        socket.Handle.SetSocketOption(level, SocketOptionName.ReuseAddress, context.Memory.Read<int>((ulong)optionValuePosition));
-
-                        return LinuxError.SUCCESS;
-
-                    case SocketOptionName.Linger:
-                        socket.Handle.SetSocketOption(level, SocketOptionName.Linger,
-                            new LingerOption(context.Memory.Read<int>((ulong)optionValuePosition) != 0, context.Memory.Read<int>((ulong)optionValuePosition + 4)));
-
-                        return LinuxError.SUCCESS;
-
-                    default:
-                        Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt OptionName: {optionName}");
-
-                        return LinuxError.EOPNOTSUPP;
+                    return LinuxError.EOPNOTSUPP;
                 }
+
+                int value = context.Memory.Read<int>((ulong)optionValuePosition);
+
+                if (option == BsdSocketOption.SoLinger)
+                {
+                    int value2 = context.Memory.Read<int>((ulong)optionValuePosition + 4);
+
+                    socket.Handle.SetSocketOption(level, SocketOptionName.Linger, new LingerOption(value != 0, value2));
+                }
+                else
+                {
+                    socket.Handle.SetSocketOption(level, optionName, value);
+                }
+
+                return LinuxError.SUCCESS;
             }
             catch (SocketException exception)
             {
@@ -1037,9 +1061,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         // SetSockOpt(u32 socket, u32 level, u32 option_name, buffer<unknown, 0x21, 0> option_value) -> (i32 ret, u32 bsd_errno)
         public ResultCode SetSockOpt(ServiceCtx context)
         {
-            int               socketFd   = context.RequestData.ReadInt32();
-            SocketOptionLevel level      = (SocketOptionLevel)context.RequestData.ReadInt32();
-            SocketOptionName  optionName = (SocketOptionName)context.RequestData.ReadInt32();
+            int               socketFd = context.RequestData.ReadInt32();
+            SocketOptionLevel level    = (SocketOptionLevel)context.RequestData.ReadInt32();
+            BsdSocketOption   option   = (BsdSocketOption)context.RequestData.ReadInt32();
 
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
 
@@ -1048,7 +1072,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (socket != null)
             {
-                errno = HandleSetSocketOption(context, socket, optionName, level, bufferPos, bufferSize);
+                errno = HandleSetSocketOption(context, socket, option, level, bufferPos, bufferSize);
             }
 
             return WriteBsdResult(context, 0, errno);

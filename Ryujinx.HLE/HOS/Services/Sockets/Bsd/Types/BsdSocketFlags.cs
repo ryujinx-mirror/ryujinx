@@ -1,5 +1,3 @@
-using System.Net.Sockets;
-
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
     enum BsdSocketFlags
