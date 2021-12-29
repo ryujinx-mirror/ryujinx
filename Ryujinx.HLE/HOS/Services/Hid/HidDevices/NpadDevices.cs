@@ -1,14 +1,13 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Ryujinx.Common;
-using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {

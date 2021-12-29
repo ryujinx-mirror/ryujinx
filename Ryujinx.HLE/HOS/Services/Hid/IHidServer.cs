@@ -5,9 +5,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
-using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -642,9 +640,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // SetSupportedNpadIdType(nn::applet::AppletResourceUserId, array<NpadIdType, 9>)
         public ResultCode SetSupportedNpadIdType(ServiceCtx context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            ulong arrayPosition = context.Request.PtrBuff[0].Position;
-            ulong arraySize = context.Request.PtrBuff[0].Size;
+            long  appletResourceUserId = context.RequestData.ReadInt64();
+            ulong arrayPosition        = context.Request.PtrBuff[0].Position;
+            ulong arraySize            = context.Request.PtrBuff[0].Size;
 
             ReadOnlySpan<NpadIdType> supportedPlayerIds = MemoryMarshal.Cast<byte, NpadIdType>(context.Memory.GetSpan(arrayPosition, (int)arraySize));
 
@@ -667,38 +665,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // ActivateNpad(nn::applet::AppletResourceUserId)
         public ResultCode ActivateNpad(ServiceCtx context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-
-            context.Device.Hid.Npads.Active = true;
-
-            // Initialize entries to avoid issues with some games.
-
-            List<GamepadInput> emptyGamepadInputs = new List<GamepadInput>();
-            List<SixAxisInput> emptySixAxisInputs = new List<SixAxisInput>();
-
-            for (int player = 0; player < NpadDevices.MaxControllers; player++)
-            {
-                GamepadInput gamepadInput = new GamepadInput();
-                SixAxisInput sixaxisInput = new SixAxisInput();
-
-                gamepadInput.PlayerId = (PlayerIndex)player;
-                sixaxisInput.PlayerId = (PlayerIndex)player;
-
-                sixaxisInput.Orientation = new float[9];
-
-                emptyGamepadInputs.Add(gamepadInput);
-                emptySixAxisInputs.Add(sixaxisInput);
-            }
-
-            for (int entry = 0; entry < Hid.SharedMemEntryCount; entry++)
-            {
-                context.Device.Hid.Npads.Update(emptyGamepadInputs);
-                context.Device.Hid.Npads.UpdateSixAxis(emptySixAxisInputs);
-            }
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId });
-
-            return ResultCode.Success;
+            return ActiveNpadImpl(context);
         }
 
         [CommandHipc(104)]
@@ -773,11 +740,19 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         [CommandHipc(109)] // 5.0.0+
-        // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, int revision)
+        // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, ulong revision)
         public ResultCode ActivateNpadWithRevision(ServiceCtx context)
         {
-            int  revision             = context.RequestData.ReadInt32();
+            ulong revision = context.RequestData.ReadUInt64();
+
+            return ActiveNpadImpl(context, revision);
+        }
+
+        private ResultCode ActiveNpadImpl(ServiceCtx context, ulong revision = 0)
+        {
             long appletResourceUserId = context.RequestData.ReadInt64();
+
+            context.Device.Hid.Npads.Active = true;
 
             // Initialize entries to avoid issues with some games.
 
@@ -974,7 +949,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // IsUnintendedHomeButtonInputProtectionEnabled(uint Unknown0, nn::applet::AppletResourceUserId) ->  bool IsEnabled
         public ResultCode IsUnintendedHomeButtonInputProtectionEnabled(ServiceCtx context)
         {
-            uint  unknown0            = context.RequestData.ReadUInt32();
+            uint unknown0             = context.RequestData.ReadUInt32();
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             context.ResponseData.Write(_unintendedHomeButtonInputProtectionEnabled);
@@ -989,7 +964,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode EnableUnintendedHomeButtonInputProtection(ServiceCtx context)
         {
             _unintendedHomeButtonInputProtectionEnabled = context.RequestData.ReadBoolean();
-            uint  unknown0                              = context.RequestData.ReadUInt32();
+            uint unknown0                               = context.RequestData.ReadUInt32();
             long appletResourceUserId                   = context.RequestData.ReadInt64();
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, unknown0, _unintendedHomeButtonInputProtectionEnabled });
@@ -1027,8 +1002,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode GetVibrationDeviceInfo(ServiceCtx context)
         {
             HidVibrationDeviceHandle deviceHandle = context.RequestData.ReadStruct<HidVibrationDeviceHandle>();
-            NpadStyleIndex deviceType = (NpadStyleIndex)deviceHandle.DeviceType;
-            NpadIdType npadIdType = (NpadIdType)deviceHandle.PlayerId;
+            NpadStyleIndex           deviceType   = (NpadStyleIndex)deviceHandle.DeviceType;
+            NpadIdType               npadIdType   = (NpadIdType)deviceHandle.PlayerId;
 
             if (deviceType < NpadStyleIndex.System || deviceType >= NpadStyleIndex.FullKey)
             {
@@ -1092,9 +1067,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             HidVibrationDeviceHandle deviceHandle = new HidVibrationDeviceHandle
             {
                 DeviceType = context.RequestData.ReadByte(),
-                PlayerId = context.RequestData.ReadByte(),
-                Position = context.RequestData.ReadByte(),
-                Reserved = context.RequestData.ReadByte()
+                PlayerId   = context.RequestData.ReadByte(),
+                Position   = context.RequestData.ReadByte(),
+                Reserved   = context.RequestData.ReadByte()
             };
 
             HidVibrationValue vibrationValue = new HidVibrationValue
@@ -1123,9 +1098,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             HidVibrationDeviceHandle deviceHandle = new HidVibrationDeviceHandle
             {
                 DeviceType = context.RequestData.ReadByte(),
-                PlayerId = context.RequestData.ReadByte(),
-                Position = context.RequestData.ReadByte(),
-                Reserved = context.RequestData.ReadByte()
+                PlayerId   = context.RequestData.ReadByte(),
+                Position   = context.RequestData.ReadByte(),
+                Reserved   = context.RequestData.ReadByte()
             };
 
             long appletResourceUserId = context.RequestData.ReadInt64();
@@ -1185,8 +1160,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.Memory.Read(context.Request.PtrBuff[1].Position, vibrationValueBuffer);
 
-            Span<HidVibrationDeviceHandle> deviceHandles = MemoryMarshal.Cast<byte, HidVibrationDeviceHandle>(vibrationDeviceHandleBuffer);
-            Span<HidVibrationValue> vibrationValues = MemoryMarshal.Cast<byte, HidVibrationValue>(vibrationValueBuffer);
+            Span<HidVibrationDeviceHandle> deviceHandles   = MemoryMarshal.Cast<byte, HidVibrationDeviceHandle>(vibrationDeviceHandleBuffer);
+            Span<HidVibrationValue>        vibrationValues = MemoryMarshal.Cast<byte, HidVibrationValue>(vibrationValueBuffer);
 
             if (!deviceHandles.IsEmpty && vibrationValues.Length == deviceHandles.Length)
             {
