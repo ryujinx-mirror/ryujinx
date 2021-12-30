@@ -46,6 +46,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public KAddressArbiter AddressArbiter { get; private set; }
 
         public long[] RandomEntropy { get; private set; }
+        public KThread[] PinnedThreads { get; private set; }
 
         private bool _signaled;
 
@@ -102,6 +103,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             Capabilities = new KProcessCapabilities();
 
             RandomEntropy = new long[KScheduler.CpuCoresCount];
+            PinnedThreads = new KThread[KScheduler.CpuCoresCount];
 
             // TODO: Remove once we no longer need to initialize it externally.
             HandleTable = new KHandleTable(context);
@@ -749,7 +751,24 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
-            if (currentThread.IsSchedulable)
+            if (currentThread.Owner != null &&
+                currentThread.GetUserDisableCount() != 0 &&
+                currentThread.Owner.PinnedThreads[currentThread.CurrentCore] == null)
+            {
+                KernelContext.CriticalSection.Enter();
+
+                currentThread.Owner.PinThread(currentThread);
+
+                currentThread.SetUserInterruptFlag();
+
+                if (currentThread.IsSchedulable)
+                {
+                    KernelContext.Schedulers[currentThread.CurrentCore].Schedule();
+                }
+
+                KernelContext.CriticalSection.Leave();
+            }
+            else if (currentThread.IsSchedulable)
             {
                 KernelContext.Schedulers[currentThread.CurrentCore].Schedule();
             }
@@ -952,6 +971,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             {
                 KernelContext.CriticalSection.Enter();
 
+                if (currentThread != null && PinnedThreads[currentThread.CurrentCore] == currentThread)
+                {
+                    UnpinThread(currentThread);
+                }
+
                 foreach (KThread thread in _threads)
                 {
                     if ((thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
@@ -1138,6 +1162,36 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             KernelContext.CriticalSection.Leave();
 
             return KernelResult.InvalidState;
+        }
+
+        public void PinThread(KThread thread)
+        {
+            if (!thread.TerminationRequested)
+            {
+                PinnedThreads[thread.CurrentCore] = thread;
+
+                thread.Pin();
+
+                KernelContext.ThreadReselectionRequested = true;
+            }
+        }
+
+        public void UnpinThread(KThread thread)
+        {
+            if (!thread.TerminationRequested)
+            {
+                thread.Unpin();
+
+                PinnedThreads[thread.CurrentCore] = null;
+
+                KernelContext.ThreadReselectionRequested = true;
+            }
+        }
+
+        public bool IsExceptionUserThread(KThread thread)
+        {
+            // TODO
+            return false;
         }
     }
 }

@@ -491,5 +491,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             return _syscall.SignalToAddress(address, type, value, count);
         }
+
+        public KernelResult SynchronizePreemptionState32()
+        {
+            return _syscall.SynchronizePreemptionState();
+        }
     }
 }

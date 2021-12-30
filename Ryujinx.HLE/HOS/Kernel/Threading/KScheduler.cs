@@ -36,6 +36,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         private readonly KThread _idleThread;
 
         public KThread PreviousThread => _previousThread;
+        public KThread CurrentThread => _currentThread;
         public long LastContextSwitchTime { get; private set; }
         public long TotalIdleTimeTicks => _idleThread.TotalTimeRunning;
 
@@ -86,6 +87,26 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             for (int core = 0; core < CpuCoresCount; core++)
             {
                 KThread thread = context.PriorityQueue.ScheduledThreads(core).FirstOrDefault();
+
+                if (thread != null &&
+                    thread.Owner != null &&
+                    thread.Owner.PinnedThreads[core] != null &&
+                    thread.Owner.PinnedThreads[core] != thread)
+                {
+                    KThread candidate = thread.Owner.PinnedThreads[core];
+
+                    if (candidate.KernelWaitersCount == 0 && !thread.Owner.IsExceptionUserThread(candidate))
+                    {
+                        if (candidate.SchedFlags == ThreadSchedState.Running)
+                        {
+                            thread = candidate;
+                        }
+                        else
+                        {
+                            thread = null;
+                        }
+                    }
+                }
 
                 scheduledCoresMask |= context.Schedulers[core].SelectThread(thread);
             }

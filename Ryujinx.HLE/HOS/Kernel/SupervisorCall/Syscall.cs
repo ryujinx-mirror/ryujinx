@@ -2655,6 +2655,13 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             };
         }
 
+        public KernelResult SynchronizePreemptionState()
+        {
+            KernelStatic.GetCurrentThread().SynchronizePreemptionState();
+
+            return KernelResult.Success;
+        }
+
         private bool IsPointingInsideKernel(ulong address)
         {
             return (address + 0x1000000000) < 0xffffff000;
