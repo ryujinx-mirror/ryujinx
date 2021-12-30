@@ -120,6 +120,45 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
+        [CommandHipc(10120)] // 10.0.0+
+        // nn::friends::IsFriendListCacheAvailable(nn::account::Uid userId) -> bool
+        public ResultCode IsFriendListCacheAvailable(ServiceCtx context)
+        {
+            UserId userId = context.RequestData.ReadStruct<UserId>();
+
+            if (userId.IsNull)
+            {
+                return ResultCode.InvalidArgument;
+            }
+
+            // TODO: Service mount the friends:/ system savedata and try to load friend.cache file, returns true if exists, false otherwise. 
+            // NOTE: If no cache is available, guest then calls nn::friends::EnsureFriendListAvailable, we can avoid that by faking the cache check.
+            context.ResponseData.Write(true);
+
+            // TODO: Since we don't support friend features, it's fine to stub it for now.
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString() });
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(10121)] // 10.0.0+
+        // nn::friends::EnsureFriendListAvailable(nn::account::Uid userId)
+        public ResultCode EnsureFriendListAvailable(ServiceCtx context)
+        {
+            UserId userId = context.RequestData.ReadStruct<UserId>();
+
+            if (userId.IsNull)
+            {
+                return ResultCode.InvalidArgument;
+            }
+
+            // TODO: Service mount the friends:/ system savedata and create a friend.cache file for the given user id.
+            //       Since we don't support friend features, it's fine to stub it for now.
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString() });
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(10400)]
         // nn::friends::GetBlockedUserListIds(int offset, nn::account::Uid userId) -> (u32, buffer<nn::account::NetworkServiceAccountId, 0xa>)
         public ResultCode GetBlockedUserListIds(ServiceCtx context)
