@@ -330,6 +330,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
+        [CommandHipc(60)] // 2.0.0+
+        // SetMediaPlaybackStateForApplication(bool enabled)
+        public ResultCode SetMediaPlaybackStateForApplication(ServiceCtx context)
+        {
+            bool enabled = context.RequestData.ReadBoolean();
+
+            // NOTE: Service stores the "enabled" value in a private field, when enabled is false, it stores nn::os::GetSystemTick() too.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { enabled });
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(66)] // 3.0.0+
         // InitializeGamePlayRecording(u64, handle<copy>)
         public ResultCode InitializeGamePlayRecording(ServiceCtx context)
