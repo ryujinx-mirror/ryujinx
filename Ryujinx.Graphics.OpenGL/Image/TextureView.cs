@@ -72,7 +72,16 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 (int)Info.SwizzleA.Convert()
             };
 
-            if (Info.Format.IsBgr())
+            if (Info.Format == Format.A1B5G5R5Unorm)
+            {
+                int temp = swizzleRgba[0];
+                int temp2 = swizzleRgba[1];
+                swizzleRgba[0] = swizzleRgba[3];
+                swizzleRgba[1] = swizzleRgba[2];
+                swizzleRgba[2] = temp2;
+                swizzleRgba[3] = temp;
+            }
+            else if (Info.Format.IsBgr())
             {
                 // Swap B <-> R for BGRA formats, as OpenGL has no support for them
                 // and we need to manually swap the components on read/write on the GPU.
