@@ -58,6 +58,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             { 0x25385, new FormatInfo(Format.D32FloatS8Uint,    1,  1,  8,  2) },
             { 0x253b0, new FormatInfo(Format.D32FloatS8Uint,    1,  1,  8,  2) },
             { 0xa4908, new FormatInfo(Format.R8G8B8A8Srgb,      1,  1,  4,  4) },
+            { 0x2491e, new FormatInfo(Format.R4G4Unorm,         1,  1,  1,  2) },
             { 0x24912, new FormatInfo(Format.R4G4B4A4Unorm,     1,  1,  2,  4) },
             { 0x24914, new FormatInfo(Format.R5G5B5A1Unorm,     1,  1,  2,  4) },
             { 0x24915, new FormatInfo(Format.R5G6B5Unorm,       1,  1,  2,  3) },

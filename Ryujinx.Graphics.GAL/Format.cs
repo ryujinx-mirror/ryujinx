@@ -58,6 +58,7 @@ namespace Ryujinx.Graphics.GAL
         D32FloatS8Uint,
         R8G8B8X8Srgb,
         R8G8B8A8Srgb,
+        R4G4Unorm,
         R4G4B4A4Unorm,
         R5G5B5X1Unorm,
         R5G5B5A1Unorm,

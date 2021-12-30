@@ -101,21 +101,22 @@ namespace Ryujinx.Graphics.OpenGL
         public Capabilities GetCapabilities()
         {
             return new Capabilities(
-                HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows,
-                HwCapabilities.Vendor == HwCapabilities.GpuVendor.AmdWindows,
-                HwCapabilities.SupportsAstcCompression,
-                HwCapabilities.SupportsFragmentShaderInterlock,
-                HwCapabilities.SupportsFragmentShaderOrdering,
-                HwCapabilities.SupportsImageLoadFormatted,
-                HwCapabilities.SupportsMismatchingViewFormat,
-                HwCapabilities.SupportsNonConstantTextureOffset,
-                HwCapabilities.SupportsShaderBallot,
-                HwCapabilities.SupportsTextureShadowLod,
-                HwCapabilities.SupportsViewportSwizzle,
-                HwCapabilities.SupportsIndirectParameters,
-                HwCapabilities.MaximumComputeSharedMemorySize,
-                HwCapabilities.MaximumSupportedAnisotropy,
-                HwCapabilities.StorageBufferOffsetAlignment);
+                hasFrontFacingBug: HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows,
+                hasVectorIndexingBug: HwCapabilities.Vendor == HwCapabilities.GpuVendor.AmdWindows,
+                supportsAstcCompression: HwCapabilities.SupportsAstcCompression,
+                supportsR4G4Format: false,
+                supportsFragmentShaderInterlock: HwCapabilities.SupportsFragmentShaderInterlock,
+                supportsFragmentShaderOrderingIntel: HwCapabilities.SupportsFragmentShaderOrdering,
+                supportsImageLoadFormatted: HwCapabilities.SupportsImageLoadFormatted,
+                supportsMismatchingViewFormat: HwCapabilities.SupportsMismatchingViewFormat,
+                supportsNonConstantTextureOffset: HwCapabilities.SupportsNonConstantTextureOffset,
+                supportsShaderBallot: HwCapabilities.SupportsShaderBallot,
+                supportsTextureShadowLod: HwCapabilities.SupportsTextureShadowLod,
+                supportsViewportSwizzle: HwCapabilities.SupportsViewportSwizzle,
+                supportsIndirectParameters: HwCapabilities.SupportsIndirectParameters,
+                maximumComputeSharedMemorySize: HwCapabilities.MaximumComputeSharedMemorySize,
+                maximumSupportedAnisotropy: HwCapabilities.MaximumSupportedAnisotropy,
+                storageBufferOffsetAlignment: HwCapabilities.StorageBufferOffsetAlignment);
         }
 
         public void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data)

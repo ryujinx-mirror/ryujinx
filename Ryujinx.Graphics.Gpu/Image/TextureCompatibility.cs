@@ -66,6 +66,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
+            if (!caps.SupportsR4G4Format && info.FormatInfo.Format == Format.R4G4Unorm)
+            {
+                return new FormatInfo(Format.R4G4B4A4Unorm, 1, 1, 2, 4);
+            }
+
             if (info.Target == Target.Texture3D)
             {
                 // The host API does not support 3D BC4/BC5 compressed formats.

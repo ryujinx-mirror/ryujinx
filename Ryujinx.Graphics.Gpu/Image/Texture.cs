@@ -785,7 +785,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // Handle compressed cases not supported by the host:
             // - ASTC is usually not supported on desktop cards.
             // - BC4/BC5 is not supported on 3D textures.
-            if (!_context.Capabilities.SupportsAstcCompression && Info.FormatInfo.Format.IsAstc())
+            if (!_context.Capabilities.SupportsAstcCompression && Format.IsAstc())
             {
                 if (!AstcDecoder.TryDecodeToRgba8P(
                     data.ToArray(),
@@ -805,11 +805,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 data = decoded;
             }
-            else if (Target == Target.Texture3D && Info.FormatInfo.Format.IsBc4())
+            else if (!_context.Capabilities.SupportsR4G4Format && Format == Format.R4G4Unorm)
+            {
+                data = PixelConverter.ConvertR4G4ToR4G4B4A4(data);
+            }
+            else if (Target == Target.Texture3D && Format.IsBc4())
             {
                 data = BCnDecoder.DecodeBC4(data, width, height, depth, levels, layers, Info.FormatInfo.Format == Format.Bc4Snorm);
             }
-            else if (Target == Target.Texture3D && Info.FormatInfo.Format.IsBc5())
+            else if (Target == Target.Texture3D && Format.IsBc5())
             {
                 data = BCnDecoder.DecodeBC5(data, width, height, depth, levels, layers, Info.FormatInfo.Format == Format.Bc5Snorm);
             }
