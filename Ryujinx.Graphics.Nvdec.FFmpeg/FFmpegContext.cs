@@ -18,11 +18,35 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg
         public FFmpegContext(AVCodecID codecId)
         {
             _codec = ffmpeg.avcodec_find_decoder(codecId);
-            _context = ffmpeg.avcodec_alloc_context3(_codec);
+            if (_codec == null)
+            {
+                Logger.Error?.PrintMsg(LogClass.FFmpeg, $"Codec wasn't found. Make sure you have the {codecId} codec present in your FFmpeg installation.");
 
-            ffmpeg.avcodec_open2(_context, _codec, null);
+                return;
+            }
+
+            _context = ffmpeg.avcodec_alloc_context3(_codec);
+            if (_context == null)
+            {
+                Logger.Error?.PrintMsg(LogClass.FFmpeg, "Codec context couldn't be allocated.");
+
+                return;
+            }
+
+            if (ffmpeg.avcodec_open2(_context, _codec, null) != 0)
+            {
+                Logger.Error?.PrintMsg(LogClass.FFmpeg, "Codec couldn't be opened.");
+
+                return;
+            }
 
             _packet = ffmpeg.av_packet_alloc();
+            if (_packet == null)
+            {
+                Logger.Error?.PrintMsg(LogClass.FFmpeg, "Packet couldn't be allocated.");
+
+                return;
+            }
 
             _decodeFrame = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(_codec->decode.Pointer);
         }
