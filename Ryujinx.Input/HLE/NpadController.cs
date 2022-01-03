@@ -381,8 +381,8 @@ namespace Ryujinx.Input.HLE
                 (float leftAxisX, float leftAxisY) = State.GetStick(StickInputId.Left);
                 (float rightAxisX, float rightAxisY) = State.GetStick(StickInputId.Right);
 
-                state.LStick = ClampToCircle(ApplyDeadzone(leftAxisX, leftAxisY, controllerConfig.DeadzoneLeft));
-                state.RStick = ClampToCircle(ApplyDeadzone(rightAxisX, rightAxisY, controllerConfig.DeadzoneRight));
+                state.LStick = ClampToCircle(ApplyDeadzone(leftAxisX, leftAxisY, controllerConfig.DeadzoneLeft), controllerConfig.RangeLeft);
+                state.RStick = ClampToCircle(ApplyDeadzone(rightAxisX, rightAxisY, controllerConfig.DeadzoneRight), controllerConfig.RangeRight);
             }
 
             return state;
@@ -412,9 +412,9 @@ namespace Ryujinx.Input.HLE
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static JoystickPosition ClampToCircle(JoystickPosition position)
+        private static JoystickPosition ClampToCircle(JoystickPosition position, float range)
         {
-            Vector2 point = new Vector2(position.Dx, position.Dy);
+            Vector2 point = new Vector2(position.Dx, position.Dy) * range;
 
             if (point.Length() > short.MaxValue)
             {

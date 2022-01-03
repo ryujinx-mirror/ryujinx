@@ -196,6 +196,8 @@ namespace Ryujinx.Headless.SDL2
                         ControllerType   = ControllerType.JoyconPair,
                         DeadzoneLeft     = 0.1f,
                         DeadzoneRight    = 0.1f,
+                        RangeLeft        = 1.0f,
+                        RangeRight       = 1.0f,
                         TriggerThreshold = 0.5f,
                         LeftJoycon = new LeftJoyconCommonConfig<ConfigGamepadInputId>
                         {
@@ -298,6 +300,18 @@ namespace Ryujinx.Headless.SDL2
             string inputTypeName = isKeyboard ? "Keyboard" : "Gamepad";
 
             Logger.Info?.Print(LogClass.Application, $"{config.PlayerIndex} configured with {inputTypeName} \"{config.Id}\"");
+
+            // If both stick ranges are 0 (usually indicative of an outdated profile load) then both sticks will be set to 1.0.
+            if (config is StandardControllerInputConfig controllerConfig)
+            {
+                if (controllerConfig.RangeLeft <= 0.0f && controllerConfig.RangeRight <= 0.0f)
+                {
+                    controllerConfig.RangeLeft  = 1.0f;
+                    controllerConfig.RangeRight = 1.0f;
+                    
+                    Logger.Info?.Print(LogClass.Application, $"{config.PlayerIndex} stick range reset. Save the profile now to update your configuration");
+                }
+            }
 
             return config;
         }
