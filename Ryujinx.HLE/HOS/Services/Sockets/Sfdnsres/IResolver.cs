@@ -1,5 +1,6 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
+using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager;
 using Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Proxy;
 using Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types;
 using Ryujinx.Memory;
@@ -242,7 +243,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             ulong optionsBufferPosition,
             ulong optionsBufferSize)
         {
-            string name = MemoryHelper.ReadAsciiString(context.Memory, inputBufferPosition, (int)inputBufferSize);
+            string host = MemoryHelper.ReadAsciiString(context.Memory, inputBufferPosition, (int)inputBufferSize);
 
             // TODO: Use params.
             bool  enableNsdResolve = (context.RequestData.ReadInt32() & 1) != 0;
@@ -260,20 +261,28 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             GaiError   errno          = GaiError.Overflow;
             ulong      serializedSize = 0;
 
-            if (name.Length <= byte.MaxValue)
+            if (host.Length <= byte.MaxValue)
             {
-                string targetHost = name;
-
-                if (DnsBlacklist.IsHostBlocked(name))
+                if (enableNsdResolve)
                 {
-                    Logger.Info?.Print(LogClass.ServiceSfdnsres, $"DNS Blocked: {name}");
+                    if (FqdnResolver.Resolve(host, out string newAddress) == Nsd.ResultCode.Success)
+                    {
+                        host = newAddress;
+                    }
+                }
+
+                string targetHost = host;
+
+                if (DnsBlacklist.IsHostBlocked(host))
+                {
+                    Logger.Info?.Print(LogClass.ServiceSfdnsres, $"DNS Blocked: {host}");
 
                     netDbErrorCode = NetDbError.HostNotFound;
                     errno          = GaiError.NoData;
                 }
                 else
                 {
-                    Logger.Info?.Print(LogClass.ServiceSfdnsres, $"Trying to resolve: {name}");
+                    Logger.Info?.Print(LogClass.ServiceSfdnsres, $"Trying to resolve: {host}");
 
                     try
                     {
@@ -452,6 +461,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             if (host.Length <= byte.MaxValue)
             {
+                if (enableNsdResolve)
+                {
+                    if (FqdnResolver.Resolve(host, out string newAddress) == Nsd.ResultCode.Success)
+                    {
+                        host = newAddress;
+                    }
+                }
+
                 string targetHost = host;
 
                 if (DnsBlacklist.IsHostBlocked(host))
