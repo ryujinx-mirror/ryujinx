@@ -8,7 +8,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Proxy
 
         private static readonly Regex[] BlockedHosts = new Regex[]
         {
-            new Regex(@"^g(.*)\-lp1\.s\.n\.srv\.nintendo\.net$", RegexOpts),
+            new Regex(@"^(.*)\-lp1\.(n|s)\.n\.srv\.nintendo\.net$", RegexOpts),
+            new Regex(@"^(.*)\-lp1\.(znc|p)\.srv\.nintendo\.net$", RegexOpts),
             new Regex(@"^(.*)\-sb\-api\.accounts\.nintendo\.com$", RegexOpts),
             new Regex(@"^(.*)\-sb\.accounts\.nintendo\.com$", RegexOpts),
             new Regex(@"^accounts\.nintendo\.com$", RegexOpts)
