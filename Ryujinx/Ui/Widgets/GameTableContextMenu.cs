@@ -469,6 +469,11 @@ namespace Ryujinx.Ui.Widgets
             new DlcWindow(_virtualFileSystem, _titleIdText, _titleName).Show();
         }
 
+        private void ManageCheats_Clicked(object sender, EventArgs args)
+        {
+            new CheatWindow(_virtualFileSystem, _titleId, _titleName).Show();
+        }
+
         private void OpenTitleModDir_Clicked(object sender, EventArgs args)
         {
             string modsBasePath  = _virtualFileSystem.ModLoader.GetModsBasePath();

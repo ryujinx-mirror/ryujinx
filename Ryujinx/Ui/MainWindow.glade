@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.21.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkApplicationWindow" id="_mainWin">
@@ -364,7 +364,15 @@
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Hide UI (SHOWUIKEY to show)</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="HideUi_Pressed" swapped="no" />
+                        <signal name="activate" handler="HideUi_Pressed" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="_manageCheats">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Manage Cheats</property>
+                        <signal name="activate" handler="ManageCheats_Pressed" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -485,7 +493,7 @@
                         <property name="can_focus">True</property>
                         <property name="reorderable">True</property>
                         <property name="hover_selection">True</property>
-                        <signal name="row_activated" handler="Row_Activated" swapped="no"/>
+                        <signal name="row-activated" handler="Row_Activated" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="_gameTableSelection"/>
                         </child>
@@ -519,7 +527,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="margin_left">5</property>
-                        <signal name="button_release_event" handler="RefreshList_Pressed" swapped="no"/>
+                        <signal name="button-release-event" handler="RefreshList_Pressed" swapped="no"/>
                         <child>
                           <object class="GtkImage">
                             <property name="name">RefreshList</property>
@@ -582,7 +590,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="button_release_event" handler="VSyncStatus_Clicked" swapped="no"/>
+                        <signal name="button-release-event" handler="VSyncStatus_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_vSyncStatus">
                             <property name="visible">True</property>
@@ -615,7 +623,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="button_release_event" handler="DockedMode_Clicked" swapped="no"/>
+                        <signal name="button-release-event" handler="DockedMode_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_dockedMode">
                             <property name="visible">True</property>
@@ -647,7 +655,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="button_release_event" handler="VolumeStatus_Clicked" swapped="no"/>
+                        <signal name="button-release-event" handler="VolumeStatus_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_volumeStatus">
                             <property name="visible">True</property>
@@ -655,7 +663,6 @@
                             <property name="halign">start</property>
                             <property name="margin_left">5</property>
                             <property name="margin_right">5</property>
-                            <property name="label" translatable="yes"></property>
                           </object>
                         </child>
                       </object>
@@ -680,7 +687,7 @@
                       <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="button_release_event" handler="AspectRatio_Clicked" swapped="no"/>
+                        <signal name="button-release-event" handler="AspectRatio_Clicked" swapped="no"/>
                         <child>
                           <object class="GtkLabel" id="_aspectRatio">
                             <property name="visible">True</property>
@@ -861,6 +868,9 @@
           </packing>
         </child>
       </object>
+    </child>
+    <child type="titlebar">
+      <placeholder/>
     </child>
   </object>
 </interface>

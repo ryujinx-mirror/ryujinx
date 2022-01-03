@@ -1553,6 +1553,20 @@ namespace Ryujinx.Ui
             ToggleExtraWidgets(false);
         }
 
+        private void ManageCheats_Pressed(object sender, EventArgs args)
+        {
+           var window = new CheatWindow(_virtualFileSystem, _emulationContext.Application.TitleId, _emulationContext.Application.TitleName);
+
+            window.Destroyed += CheatWindow_Destroyed;
+            window.Show();
+        }
+
+        private void CheatWindow_Destroyed(object sender, EventArgs e)
+        {
+            _emulationContext.EnableCheats();
+            (sender as CheatWindow).Destroyed -= CheatWindow_Destroyed;
+        }
+
         private void ManageUserProfiles_Pressed(object sender, EventArgs args)
         {
             UserProfilesManagerWindow userProfilesManagerWindow = new UserProfilesManagerWindow(_accountManager, _contentManager, _virtualFileSystem);

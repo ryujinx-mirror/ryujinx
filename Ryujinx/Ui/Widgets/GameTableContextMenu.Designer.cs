@@ -9,6 +9,7 @@ namespace Ryujinx.Ui.Widgets
         private MenuItem _openSaveBcatDirMenuItem;
         private MenuItem _manageTitleUpdatesMenuItem;
         private MenuItem _manageDlcMenuItem;
+        private MenuItem _manageCheatMenuItem;
         private MenuItem _openTitleModDirMenuItem;
         private Menu     _extractSubMenu;
         private MenuItem _extractMenuItem;
@@ -68,6 +69,15 @@ namespace Ryujinx.Ui.Widgets
                 TooltipText = "Open the DLC management window"
             };
             _manageDlcMenuItem.Activated += ManageDlc_Clicked;
+
+            //
+            // _manageCheatMenuItem
+            //
+            _manageCheatMenuItem = new MenuItem("Manage Cheats")
+            {
+                TooltipText = "Open the Cheat management window"
+            };
+            _manageCheatMenuItem.Activated += ManageCheats_Clicked;
 
             //
             // _openTitleModDirMenuItem
@@ -187,6 +197,7 @@ namespace Ryujinx.Ui.Widgets
             Add(new SeparatorMenuItem());
             Add(_manageTitleUpdatesMenuItem);
             Add(_manageDlcMenuItem);
+            Add(_manageCheatMenuItem);
             Add(_openTitleModDirMenuItem);
             Add(new SeparatorMenuItem());
             Add(_manageCacheMenuItem);

@@ -156,6 +156,11 @@ namespace Ryujinx.HLE
             return System.GetVolume();
         }
 
+        public void EnableCheats()
+        {
+            FileSystem.ModLoader.EnableCheats(Application.TitleId, TamperMachine);
+        }
+
         public bool IsAudioMuted()
         {
             return System.GetVolume() == 0;

@@ -20,6 +20,7 @@ namespace Ryujinx.HLE.HOS
         private Thread _tamperThread = null;
         private ConcurrentQueue<ITamperProgram> _programs = new ConcurrentQueue<ITamperProgram>();
         private long _pressedKeys = 0;
+        private Dictionary<string, ITamperProgram> _programDictionary = new Dictionary<string, ITamperProgram>();
 
         private void Activate()
         {
@@ -31,7 +32,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        internal void InstallAtmosphereCheat(string name, IEnumerable<string> rawInstructions, ProcessTamperInfo info, ulong exeAddress)
+        internal void InstallAtmosphereCheat(string name, string buildId, IEnumerable<string> rawInstructions, ProcessTamperInfo info, ulong exeAddress)
         {
             if (!CanInstallOnPid(info.Process.Pid))
             {
@@ -47,6 +48,7 @@ namespace Ryujinx.HLE.HOS
                 program.TampersCodeMemory = false;
 
                 _programs.Enqueue(program);
+                _programDictionary.TryAdd($"{buildId}-{name}", program);
             }
 
             Activate();
@@ -63,6 +65,22 @@ namespace Ryujinx.HLE.HOS
             }
 
             return true;
+        }
+
+        public void EnableCheats(string[] enabledCheats)
+        {
+            foreach (var program in _programDictionary.Values)
+            {
+                program.IsEnabled = false;
+            }
+
+            foreach (var cheat in enabledCheats)
+            {
+                if (_programDictionary.TryGetValue(cheat, out var program))
+                {
+                    program.IsEnabled = true;
+                }
+            }
         }
 
         private bool IsProcessValid(ITamperedProcess process)
@@ -105,6 +123,8 @@ namespace Ryujinx.HLE.HOS
             if (!_programs.TryDequeue(out ITamperProgram program))
             {
                 // No more programs in the queue.
+                _programDictionary.Clear();
+
                 return false;
             }
 

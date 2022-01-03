@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.HOS.Tamper
         public string Name { get; }
         public bool TampersCodeMemory { get; set; } = false;
         public ITamperedProcess Process { get; }
+        public bool IsEnabled { get; set; }
 
         public AtmosphereProgram(string name, ITamperedProcess process, Parameter<long> pressedKeys, IOperation entryPoint)
         {
@@ -22,8 +23,11 @@ namespace Ryujinx.HLE.HOS.Tamper
 
         public void Execute(ControllerKeys pressedKeys)
         {
-            _pressedKeys.Value = (long)pressedKeys;
-            _entryPoint.Execute();
+            if (IsEnabled)
+            {
+                _pressedKeys.Value = (long)pressedKeys;
+                _entryPoint.Execute();
+            }
         }
     }
 }

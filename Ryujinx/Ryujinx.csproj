@@ -81,6 +81,7 @@
     <None Remove="Ui\Resources\Logo_Ryujinx.png" />
     <None Remove="Ui\Resources\Logo_Twitter.png" />
     <None Remove="Ui\Widgets\ProfileDialog.glade" />
+    <None Remove="Ui\Windows\CheatWindow.glade" />
     <None Remove="Ui\Windows\ControllerWindow.glade" />
     <None Remove="Ui\Windows\DlcWindow.glade" />
     <None Remove="Ui\Windows\SettingsWindow.glade" />
@@ -106,6 +107,7 @@
     <EmbeddedResource Include="Ui\Resources\Logo_Ryujinx.png" />
     <EmbeddedResource Include="Ui\Resources\Logo_Twitter.png" />
     <EmbeddedResource Include="Ui\Widgets\ProfileDialog.glade" />
+    <EmbeddedResource Include="Ui\Windows\CheatWindow.glade" />
     <EmbeddedResource Include="Ui\Windows\ControllerWindow.glade" />
     <EmbeddedResource Include="Ui\Windows\DlcWindow.glade" />
     <EmbeddedResource Include="Ui\Windows\SettingsWindow.glade" />

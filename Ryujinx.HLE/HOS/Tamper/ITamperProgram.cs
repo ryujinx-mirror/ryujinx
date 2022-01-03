@@ -4,6 +4,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     interface ITamperProgram
     {
+        bool IsEnabled { get; set; }
         string Name { get; }
         bool TampersCodeMemory { get; set; }
         ITamperedProcess Process { get; }
