@@ -865,6 +865,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 0x0E21C800u, // FCVTAS V0.2S, V0.2S
                 0x2E21C800u, // FCVTAU V0.2S, V0.2S
+                0x0E21B800u, // FCVTMS V0.2S, V0.2S
                 0x0E21A800u, // FCVTNS V0.2S, V0.2S
                 0x2E21A800u, // FCVTNU V0.2S, V0.2S
                 0x0EA1B800u, // FCVTZS V0.2S, V0.2S
@@ -878,6 +879,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 0x4E61C800u, // FCVTAS V0.2D, V0.2D
                 0x6E61C800u, // FCVTAU V0.2D, V0.2D
+                0x4E61B800u, // FCVTMS V0.2D, V0.2D
                 0x4E61A800u, // FCVTNS V0.2D, V0.2D
                 0x6E61A800u, // FCVTNU V0.2D, V0.2D
                 0x4EE1B800u, // FCVTZS V0.2D, V0.2D
