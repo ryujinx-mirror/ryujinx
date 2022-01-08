@@ -1,18 +1,55 @@
+using Ryujinx.Common.Memory;
+using System.Runtime.CompilerServices;
+
 namespace Ryujinx.Graphics.Shader
 {
-    public static class SupportBuffer
+    public struct Vector4<T>
     {
-        public const int FieldSize = 16; // Each field takes 16 bytes on default layout, even bool.
+        public T X;
+        public T Y;
+        public T Z;
+        public T W;
+    }
 
-        public const int FragmentAlphaTestOffset = 0;
-        public const int FragmentIsBgraOffset = FieldSize;
+    public struct SupportBuffer
+    {
+        public static int FieldSize;
+        public static int RequiredSize;
+
+        public static int FragmentAlphaTestOffset;
+        public static int FragmentIsBgraOffset;
+        public static int FragmentRenderScaleCountOffset;
+        public static int GraphicsRenderScaleOffset;
+        public static int ComputeRenderScaleOffset;
+
         public const int FragmentIsBgraCount = 8;
-        public const int FragmentRenderScaleOffset = FragmentIsBgraOffset + FragmentIsBgraCount * FieldSize;
-        public const int ComputeRenderScaleOffset = FragmentRenderScaleOffset + FieldSize; // Skip first scale that is used for the render target
-
         // One for the render target, 32 for the textures, and 8 for the images.
         public const int RenderScaleMaxCount = 1 + 32 + 8;
 
-        public const int RequiredSize = FragmentRenderScaleOffset + RenderScaleMaxCount * FieldSize;
+        private static int OffsetOf<T>(ref SupportBuffer storage, ref T target)
+        {
+            return (int)Unsafe.ByteOffset(ref Unsafe.As<SupportBuffer, T>(ref storage), ref target);
+        }
+
+        static SupportBuffer()
+        {
+            FieldSize = Unsafe.SizeOf<Vector4<float>>();
+            RequiredSize = Unsafe.SizeOf<SupportBuffer>();
+
+            SupportBuffer instance = new SupportBuffer();
+
+            FragmentAlphaTestOffset = OffsetOf(ref instance, ref instance.FragmentAlphaTest);
+            FragmentIsBgraOffset = OffsetOf(ref instance, ref instance.FragmentIsBgra);
+            FragmentRenderScaleCountOffset = OffsetOf(ref instance, ref instance.FragmentRenderScaleCount);
+            GraphicsRenderScaleOffset = OffsetOf(ref instance, ref instance.RenderScale);
+            ComputeRenderScaleOffset = GraphicsRenderScaleOffset + FieldSize;
+        }
+
+        public Vector4<int> FragmentAlphaTest;
+        public Array8<Vector4<int>> FragmentIsBgra;
+        public Vector4<int> FragmentRenderScaleCount;
+
+        // Render scale max count: 1 + 32 + 8. First scale is fragment output scale, others are textures/image inputs.
+        public Array41<Vector4<float>> RenderScale;
     }
 }

@@ -413,7 +413,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 usageFlags |= TextureUsageFlags.NeedsScaleValue;
 
-                var canScale = (Stage == ShaderStage.Fragment || Stage == ShaderStage.Compute) && !isIndexed && !write && dimensions == 2;
+                var canScale = Stage.SupportsRenderScale() && !isIndexed && !write && dimensions == 2;
 
                 if (!canScale)
                 {

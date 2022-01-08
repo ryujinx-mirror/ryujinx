@@ -353,9 +353,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return false;
         }
 
-        public void UpdateRenderScale(ShaderStage stage, ReadOnlySpan<float> scales, int textureCount, int imageCount)
+        public void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount)
         {
-            _renderer.New<UpdateRenderScaleCommand>().Set(stage, _renderer.CopySpan(scales.Slice(0, textureCount + imageCount)), textureCount, imageCount);
+            _renderer.New<UpdateRenderScaleCommand>().Set(_renderer.CopySpan(scales.Slice(0, totalCount)), totalCount, fragmentCount);
             _renderer.QueueCommand();
         }
     }

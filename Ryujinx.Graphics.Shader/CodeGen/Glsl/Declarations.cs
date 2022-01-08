@@ -208,7 +208,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             bool isFragment = context.Config.Stage == ShaderStage.Fragment;
 
-            if (isFragment || context.Config.Stage == ShaderStage.Compute)
+            if (isFragment || context.Config.Stage == ShaderStage.Compute || context.Config.Stage == ShaderStage.Vertex)
             {
                 if (isFragment && context.Config.GpuAccessor.QueryEarlyZForce())
                 {
@@ -227,7 +227,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                         scaleElements++; // Also includes render target scale, for gl_FragCoord.
                     }
 
-                    DeclareSupportUniformBlock(context, isFragment, scaleElements);
+                    DeclareSupportUniformBlock(context, context.Config.Stage, scaleElements);
 
                     if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
                     {
@@ -237,7 +237,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (isFragment)
                 {
-                    DeclareSupportUniformBlock(context, true, 0);
+                    DeclareSupportUniformBlock(context, context.Config.Stage, 0);
                 }
             }
 
@@ -591,8 +591,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             context.AppendLine($"patch out vec4 {name};");
         }
 
-        private static void DeclareSupportUniformBlock(CodeGenContext context, bool isFragment, int scaleElements)
+        private static void DeclareSupportUniformBlock(CodeGenContext context, ShaderStage stage, int scaleElements)
         {
+            bool isFragment = stage == ShaderStage.Fragment;
             if (!isFragment && scaleElements == 0)
             {
                 return;
@@ -601,20 +602,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             context.AppendLine($"layout (binding = 0, std140) uniform {DefaultNames.SupportBlockName}");
             context.EnterScope();
 
-            if (isFragment)
+            switch (stage)
             {
-                context.AppendLine($"uint {DefaultNames.SupportBlockAlphaTestName};");
-                context.AppendLine($"bool {DefaultNames.SupportBlockIsBgraName}[{SupportBuffer.FragmentIsBgraCount}];");
-            }
-            else
-            {
-                context.AppendLine($"uint s_reserved[{SupportBuffer.ComputeRenderScaleOffset / SupportBuffer.FieldSize}];");
+                case ShaderStage.Fragment:
+                case ShaderStage.Vertex:
+                    context.AppendLine($"uint {DefaultNames.SupportBlockAlphaTestName};");
+                    context.AppendLine($"bool {DefaultNames.SupportBlockIsBgraName}[{SupportBuffer.FragmentIsBgraCount}];");
+                    context.AppendLine($"int {DefaultNames.SupportBlockFragmentScaleCount};");
+                    break;
+                case ShaderStage.Compute:
+                    context.AppendLine($"uint s_reserved[{SupportBuffer.ComputeRenderScaleOffset / SupportBuffer.FieldSize}];");
+                    break;
             }
 
-            if (scaleElements != 0)
-            {
-                context.AppendLine($"float {DefaultNames.SupportBlockRenderScaleName}[{scaleElements}];");
-            }
+            context.AppendLine($"float {DefaultNames.SupportBlockRenderScaleName}[{SupportBuffer.RenderScaleMaxCount}];");
 
             context.LeaveScope(";");
             context.AppendLine();

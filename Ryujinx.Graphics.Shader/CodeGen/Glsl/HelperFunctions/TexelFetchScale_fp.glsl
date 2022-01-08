@@ -7,7 +7,7 @@
     }
     if (scale < 0.0) // If less than 0, try interpolate between texels by using the screen position.
     {
-        return ivec2(vec2(inputVec) * (-scale) + mod(gl_FragCoord.xy, -scale));
+        return ivec2(vec2(inputVec) * (-scale) + mod(gl_FragCoord.xy, 0.0 - scale));
     }
     else
     {

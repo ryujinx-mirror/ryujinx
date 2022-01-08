@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string SupportBlockName = "support_block";
         public const string SupportBlockAlphaTestName = "s_alpha_test";
         public const string SupportBlockIsBgraName = "s_is_bgra";
+        public const string SupportBlockFragmentScaleCount = "s_frag_scale_count";
         public const string SupportBlockRenderScaleName = "s_render_scale";
 
         public const string BlockSuffix = "block";

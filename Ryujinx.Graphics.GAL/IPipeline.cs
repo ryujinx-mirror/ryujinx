@@ -104,6 +104,6 @@ namespace Ryujinx.Graphics.GAL
         bool TryHostConditionalRendering(ICounterEvent value, ICounterEvent compare, bool isEqual);
         void EndHostConditionalRendering();
 
-        void UpdateRenderScale(ShaderStage stage, ReadOnlySpan<float> scales, int textureCount, int imageCount);
+        void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount);
     }
 }
