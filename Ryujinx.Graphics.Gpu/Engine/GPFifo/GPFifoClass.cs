@@ -136,7 +136,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             }
             else if (operation == SyncpointbOperation.Incr)
             {
-                _context.CreateHostSyncIfNeeded();
+                _context.CreateHostSyncIfNeeded(true);
                 _context.Synchronization.IncrementSyncpoint(syncpointId);
             }
 
@@ -152,7 +152,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             _parent.PerformDeferredDraws();
             _context.Renderer.Pipeline.Barrier();
 
-            _context.CreateHostSyncIfNeeded();
+            _context.CreateHostSyncIfNeeded(false);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         {
             _context.Renderer.Pipeline.CommandBufferBarrier();
 
-            _context.CreateHostSyncIfNeeded();
+            _context.CreateHostSyncIfNeeded(false);
         }
 
         /// <summary>

@@ -52,11 +52,18 @@ namespace Ryujinx.Graphics.Gpu
         internal ulong SyncNumber { get; private set; }
 
         /// <summary>
-        /// Actions to be performed when a CPU waiting sync point is triggered.
+        /// Actions to be performed when a CPU waiting syncpoint or barrier is triggered.
         /// If there are more than 0 items when this happens, a host sync object will be generated for the given <see cref="SyncNumber"/>,
         /// and the SyncNumber will be incremented.
         /// </summary>
         internal List<Action> SyncActions { get; }
+
+        /// <summary>
+        /// Actions to be performed when a CPU waiting syncpoint is triggered.
+        /// If there are more than 0 items when this happens, a host sync object will be generated for the given <see cref="SyncNumber"/>,
+        /// and the SyncNumber will be incremented.
+        /// </summary>
+        internal List<Action> SyncpointActions { get; }
 
         /// <summary>
         /// Queue with deferred actions that must run on the render thread.
@@ -79,6 +86,7 @@ namespace Ryujinx.Graphics.Gpu
         public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
 
         private readonly Lazy<Capabilities> _caps;
+        private Thread _gpuThread;
 
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
@@ -97,6 +105,7 @@ namespace Ryujinx.Graphics.Gpu
             HostInitalized = new ManualResetEvent(false);
 
             SyncActions = new List<Action>();
+            SyncpointActions = new List<Action>();
 
             DeferredActions = new Queue<Action>();
 
@@ -185,6 +194,23 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
+        /// Sets the current thread as the main GPU thread.
+        /// </summary>
+        public void SetGpuThread()
+        {
+            _gpuThread = Thread.CurrentThread;
+        }
+
+        /// <summary>
+        /// Checks if the current thread is the GPU thread.
+        /// </summary>
+        /// <returns>True if the thread is the GPU thread, false otherwise</returns>
+        public bool IsGpuThread()
+        {
+            return _gpuThread == Thread.CurrentThread;
+        }
+
+        /// <summary>
         /// Processes the queue of shaders that must save their binaries to the disk cache.
         /// </summary>
         public void ProcessShaderCacheQueue()
@@ -209,18 +235,27 @@ namespace Ryujinx.Graphics.Gpu
         /// This will also ensure a host sync object is created, and <see cref="SyncNumber"/> is incremented.
         /// </summary>
         /// <param name="action">The action to be performed on sync object creation</param>
-        public void RegisterSyncAction(Action action)
+        /// <param name="syncpointOnly">True if the sync action should only run when syncpoints are incremented</param>
+        public void RegisterSyncAction(Action action, bool syncpointOnly = false)
         {
-            SyncActions.Add(action);
+            if (syncpointOnly)
+            {
+                SyncpointActions.Add(action);
+            }
+            else
+            {
+                SyncActions.Add(action);
+            }
         }
 
         /// <summary>
         /// Creates a host sync object if there are any pending sync actions. The actions will then be called.
         /// If no actions are present, a host sync object is not created.
         /// </summary>
-        public void CreateHostSyncIfNeeded()
+        /// <param name="syncpoint">True if host sync is being created by a syncpoint</param>
+        public void CreateHostSyncIfNeeded(bool syncpoint)
         {
-            if (SyncActions.Count > 0)
+            if (SyncActions.Count > 0 || (syncpoint && SyncpointActions.Count > 0))
             {
                 Renderer.CreateSync(SyncNumber);
 
@@ -231,7 +266,13 @@ namespace Ryujinx.Graphics.Gpu
                     action();
                 }
 
+                foreach (Action action in SyncpointActions)
+                {
+                    action();
+                }
+
                 SyncActions.Clear();
+                SyncpointActions.Clear();
             }
         }
 

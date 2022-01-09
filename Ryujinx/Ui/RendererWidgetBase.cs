@@ -386,6 +386,7 @@ namespace Ryujinx.Ui
 
             Device.Gpu.Renderer.RunLoop(() =>
             {
+                Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache();
                 Translator.IsReadyForTranslation.Set();
 

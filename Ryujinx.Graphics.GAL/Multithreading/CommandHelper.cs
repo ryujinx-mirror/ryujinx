@@ -111,6 +111,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 TextureCreateViewCommand.Run(ref GetCommand<TextureCreateViewCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.TextureGetData] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 TextureGetDataCommand.Run(ref GetCommand<TextureGetDataCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.TextureGetDataSlice] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                TextureGetDataSliceCommand.Run(ref GetCommand<TextureGetDataSliceCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.TextureRelease] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 TextureReleaseCommand.Run(ref GetCommand<TextureReleaseCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.TextureSetData] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>

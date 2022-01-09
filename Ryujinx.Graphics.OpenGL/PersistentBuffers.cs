@@ -94,6 +94,21 @@ namespace Ryujinx.Graphics.OpenGL
             return new ReadOnlySpan<byte>(_bufferMap.ToPointer(), size);
         }
 
+        public unsafe ReadOnlySpan<byte> GetTextureData(TextureView view, int size, int layer, int level)
+        {
+            EnsureBuffer(size);
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, _copyBufferHandle);
+
+            int offset = view.WriteToPbo2D(0, layer, level);
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+
+            Sync();
+
+            return new ReadOnlySpan<byte>(_bufferMap.ToPointer(), size).Slice(offset);
+        }
+
         public unsafe ReadOnlySpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
         {
             EnsureBuffer(size);

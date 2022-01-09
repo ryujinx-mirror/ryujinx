@@ -136,6 +136,38 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets a writable region from GPU mapped memory.
+        /// </summary>
+        /// <param name="range">Range</param>
+        /// <param name="tracked">True if write tracking is triggered on the span</param>
+        /// <returns>A writable region with the data at the specified memory location</returns>
+        public WritableRegion GetWritableRegion(MultiRange range, bool tracked = false)
+        {
+            if (range.Count == 1)
+            {
+                MemoryRange subrange = range.GetSubRange(0);
+
+                return GetWritableRegion(subrange.Address, (int)subrange.Size, tracked);
+            }
+            else
+            {
+                Memory<byte> memory = new byte[range.GetSize()];
+
+                int offset = 0;
+                for (int i = 0; i < range.Count; i++)
+                {
+                    MemoryRange subrange = range.GetSubRange(i);
+
+                    GetSpan(subrange.Address, (int)subrange.Size).CopyTo(memory.Span.Slice(offset, (int)subrange.Size));
+
+                    offset += (int)subrange.Size;
+                }
+
+                return new WritableRegion(new MultiRangeWritableBlock(range, this), 0, memory, tracked);
+            }
+        }
+
+        /// <summary>
         /// Reads data from the application process.
         /// </summary>
         /// <typeparam name="T">Type of the structure</typeparam>

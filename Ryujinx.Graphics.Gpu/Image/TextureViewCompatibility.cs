@@ -7,6 +7,7 @@
     enum TextureViewCompatibility
     {
         Incompatible = 0,
+        LayoutIncompatible,
         CopyOnly,
         Full
     }

@@ -89,6 +89,24 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
             }
         }
 
+        public ReadOnlySpan<byte> GetData(int layer, int level)
+        {
+            if (_renderer.IsGpuThread())
+            {
+                ResultBox<PinnedSpan<byte>> box = new ResultBox<PinnedSpan<byte>>();
+                _renderer.New<TextureGetDataSliceCommand>().Set(Ref(this), Ref(box), layer, level);
+                _renderer.InvokeCommand();
+
+                return box.Result.Get();
+            }
+            else
+            {
+                ThreadedHelpers.SpinUntilNonNull(ref Base);
+
+                return Base.GetData(layer, level);
+            }
+        }
+
         public void SetData(ReadOnlySpan<byte> data)
         {
             _renderer.New<TextureSetDataCommand>().Set(Ref(this), Ref(data.ToArray()));

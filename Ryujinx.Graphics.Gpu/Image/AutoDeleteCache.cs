@@ -41,14 +41,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Texture oldestTexture = _textures.First.Value;
 
-                if (oldestTexture.IsModified && !oldestTexture.CheckModified(false))
+                if (!oldestTexture.CheckModified(false))
                 {
                     // The texture must be flushed if it falls out of the auto delete cache.
                     // Flushes out of the auto delete cache do not trigger write tracking,
                     // as it is expected that other overlapping textures exist that have more up-to-date contents.
 
                     oldestTexture.Group.SynchronizeDependents(oldestTexture);
-                    oldestTexture.Flush(false);
+                    oldestTexture.FlushModified(false);
                 }
 
                 _textures.RemoveFirst();
@@ -93,9 +93,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // Remove our reference to this texture.
-            if (flush && texture.IsModified)
+            if (flush)
             {
-                texture.Flush(false);
+                texture.FlushModified(false);
             }
 
             _textures.Remove(texture.CacheNode);

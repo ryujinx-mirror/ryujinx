@@ -154,6 +154,24 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
         }
 
+        public unsafe ReadOnlySpan<byte> GetData(int layer, int level)
+        {
+            int size = Info.GetMipSize(level);
+
+            if (HwCapabilities.UsePersistentBufferForFlush)
+            {
+                return _renderer.PersistentBuffers.Default.GetTextureData(this, size, layer, level);
+            }
+            else
+            {
+                IntPtr target = _renderer.PersistentBuffers.Default.GetHostArray(size);
+
+                int offset = WriteTo2D(target, layer, level);
+
+                return new ReadOnlySpan<byte>(target.ToPointer(), size).Slice(offset);
+            }
+        }
+
         public void WriteToPbo(int offset, bool forceBgra)
         {
             WriteTo(IntPtr.Zero + offset, forceBgra);
@@ -182,25 +200,29 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             int mipSize = Info.GetMipSize2D(level);
 
-            // The GL function returns all layers. Must return the offset of the layer we're interested in.
-            int resultOffset = target switch
-            {
-                TextureTarget.TextureCubeMapArray => (layer / 6) * mipSize,
-                TextureTarget.Texture1DArray => layer * mipSize,
-                TextureTarget.Texture2DArray => layer * mipSize,
-                _ => 0
-            };
-
             if (format.IsCompressed)
             {
-                GL.GetCompressedTexImage(target, level, data);
+                GL.GetCompressedTextureSubImage(Handle, level, 0, 0, layer, Math.Max(1, Info.Width >> level), Math.Max(1, Info.Height >> level), 1, mipSize, data);
+            }
+            else if (format.PixelFormat != PixelFormat.DepthStencil)
+            {
+                GL.GetTextureSubImage(Handle, level, 0, 0, layer, Math.Max(1, Info.Width >> level), Math.Max(1, Info.Height >> level), 1, pixelFormat, pixelType, mipSize, data);
             }
             else
             {
                 GL.GetTexImage(target, level, pixelFormat, pixelType, data);
+
+                // The GL function returns all layers. Must return the offset of the layer we're interested in.
+                return target switch
+                {
+                    TextureTarget.TextureCubeMapArray => (layer / 6) * mipSize,
+                    TextureTarget.Texture1DArray => layer * mipSize,
+                    TextureTarget.Texture2DArray => layer * mipSize,
+                    _ => 0
+                };
             }
 
-            return resultOffset;
+            return 0;
         }
 
         private void WriteTo(IntPtr data, bool forceBgra = false)

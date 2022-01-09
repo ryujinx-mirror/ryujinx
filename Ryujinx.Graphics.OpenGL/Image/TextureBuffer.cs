@@ -43,6 +43,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             return Buffer.GetData(_renderer, _buffer, _bufferOffset, _bufferSize);
         }
 
+        public ReadOnlySpan<byte> GetData(int layer, int level)
+        {
+            return GetData();
+        }
+
         public void SetData(ReadOnlySpan<byte> data)
         {
             Buffer.SetData(_buffer, _bufferOffset, data.Slice(0, Math.Min(data.Length, _bufferSize)));

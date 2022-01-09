@@ -36,6 +36,7 @@
         TextureCopyToSlice,
         TextureCreateView,
         TextureGetData,
+        TextureGetDataSlice,
         TextureRelease,
         TextureSetData,
         TextureSetDataSlice,

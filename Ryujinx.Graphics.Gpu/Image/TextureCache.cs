@@ -7,8 +7,10 @@ using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
+using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
 using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -72,14 +74,26 @@ namespace Ryujinx.Graphics.Gpu.Image
             Texture[] overlaps = new Texture[10];
             int overlapCount;
 
+            MultiRange unmapped;
+
+            try
+            {
+                unmapped = ((MemoryManager)sender).GetPhysicalRegions(e.Address, e.Size);
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                // This event fires on Map in case any mappings are overwritten. In that case, there may not be an existing mapping.
+                return;
+            }
+
             lock (_textures)
             {
-                overlapCount = _textures.FindOverlaps(((MemoryManager)sender).Translate(e.Address), e.Size, ref overlaps);
+                overlapCount = _textures.FindOverlaps(unmapped, ref overlaps);
             }
 
             for (int i = 0; i < overlapCount; i++)
             {
-                overlaps[i].Unmapped();
+                overlaps[i].Unmapped(unmapped);
             }
         }
 
@@ -494,12 +508,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             int fullyCompatible = 0;
 
-            // Evaluate compatibility of overlaps
+            // Evaluate compatibility of overlaps, add temporary references
 
             for (int index = 0; index < overlapsCount; index++)
             {
                 Texture overlap = _textureOverlaps[index];
-                TextureViewCompatibility overlapCompatibility = overlap.IsViewCompatible(info, range.Value, sizeInfo.LayerSize, out int firstLayer, out int firstLevel);
+                TextureViewCompatibility overlapCompatibility = overlap.IsViewCompatible(info, range.Value, sizeInfo.LayerSize, _context.Capabilities, out int firstLayer, out int firstLevel);
 
                 if (overlapCompatibility == TextureViewCompatibility.Full)
                 {
@@ -514,6 +528,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
 
                 _overlapInfo[index] = new OverlapInfo(overlapCompatibility, firstLayer, firstLevel);
+                overlap.IncrementReferenceCount();
             }
 
             // Search through the overlaps to find a compatible view and establish any copy dependencies.
@@ -544,7 +559,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Only copy compatible. If there's another choice for a FULLY compatible texture, choose that instead.
 
                     texture = new Texture(_context, _physicalMemory, info, sizeInfo, range.Value, scaleMode);
-                    texture.InitializeGroup(true, true);
+
+                    texture.InitializeGroup(true, true, new List<TextureIncompatibleOverlap>());
                     texture.InitializeData(false, false);
 
                     overlap.SynchronizeMemory();
@@ -564,7 +580,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Texture overlap = _textureOverlaps[index];
                     OverlapInfo oInfo = _overlapInfo[index];
 
-                    if (oInfo.Compatibility != TextureViewCompatibility.Incompatible && overlap.Group != texture.Group)
+                    if (oInfo.Compatibility <= TextureViewCompatibility.LayoutIncompatible)
+                    {
+                        if (!overlap.IsView && texture.DataOverlaps(overlap))
+                        {
+                            texture.Group.RegisterIncompatibleOverlap(new TextureIncompatibleOverlap(overlap.Group, oInfo.Compatibility), true);
+                        }
+                    }
+                    else if (overlap.Group != texture.Group)
                     {
                         overlap.SynchronizeMemory();
                         overlap.CreateCopyDependency(texture, oInfo.FirstLayer, oInfo.FirstLevel, true);
@@ -591,78 +614,82 @@ namespace Ryujinx.Graphics.Gpu.Image
                 bool hasLayerViews = false;
                 bool hasMipViews = false;
 
+                var incompatibleOverlaps = new List<TextureIncompatibleOverlap>();
+
                 for (int index = 0; index < overlapsCount; index++)
                 {
                     Texture overlap = _textureOverlaps[index];
                     bool overlapInCache = overlap.CacheNode != null;
 
-                    TextureViewCompatibility compatibility = texture.IsViewCompatible(overlap.Info, overlap.Range, overlap.LayerSize, out int firstLayer, out int firstLevel);
+                    TextureViewCompatibility compatibility = texture.IsViewCompatible(overlap.Info, overlap.Range, overlap.LayerSize, _context.Capabilities, out int firstLayer, out int firstLevel);
 
                     if (overlap.IsView && compatibility == TextureViewCompatibility.Full)
                     {
                         compatibility = TextureViewCompatibility.CopyOnly;
                     }
 
-                    if (compatibility != TextureViewCompatibility.Incompatible)
+                    if (compatibility > TextureViewCompatibility.LayoutIncompatible)
                     {
+                        _overlapInfo[viewCompatible] = new OverlapInfo(compatibility, firstLayer, firstLevel);
+                        _textureOverlaps[index] = _textureOverlaps[viewCompatible];
+                        _textureOverlaps[viewCompatible] = overlap;
+
                         if (compatibility == TextureViewCompatibility.Full)
                         {
-                            if (viewCompatible == fullyCompatible)
-                            {
-                                _overlapInfo[viewCompatible] = new OverlapInfo(compatibility, firstLayer, firstLevel);
-                                _textureOverlaps[viewCompatible++] = overlap;
-                            }
-                            else
+                            if (viewCompatible != fullyCompatible)
                             {
                                 // Swap overlaps so that the fully compatible views have priority.
 
                                 _overlapInfo[viewCompatible] = _overlapInfo[fullyCompatible];
-                                _textureOverlaps[viewCompatible++] = _textureOverlaps[fullyCompatible];
+                                _textureOverlaps[viewCompatible] = _textureOverlaps[fullyCompatible];
 
                                 _overlapInfo[fullyCompatible] = new OverlapInfo(compatibility, firstLayer, firstLevel);
                                 _textureOverlaps[fullyCompatible] = overlap;
                             }
+
                             fullyCompatible++;
                         }
-                        else
-                        {
-                            _overlapInfo[viewCompatible] = new OverlapInfo(compatibility, firstLayer, firstLevel);
-                            _textureOverlaps[viewCompatible++] = overlap;
-                        }
+
+                        viewCompatible++;
 
                         hasLayerViews |= overlap.Info.GetSlices() < texture.Info.GetSlices();
                         hasMipViews |= overlap.Info.Levels < texture.Info.Levels;
                     }
                     else
                     {
+                        bool dataOverlaps = texture.DataOverlaps(overlap);
+                        
+                        if (!overlap.IsView && dataOverlaps && !incompatibleOverlaps.Exists(incompatible => incompatible.Group == overlap.Group))
+                        {
+                            incompatibleOverlaps.Add(new TextureIncompatibleOverlap(overlap.Group, compatibility));
+                        }
+
                         bool removeOverlap;
                         bool modified = overlap.CheckModified(false);
 
                         if (overlapInCache || !setData)
                         {
-                            if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
-                            {
-                                // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
-                                continue;
-                            }
-
-                            if (!texture.DataOverlaps(overlap))
+                            if (!dataOverlaps)
                             {
                                 // Allow textures to overlap if their data does not actually overlap.
                                 // This typically happens when mip level subranges of a layered texture are used. (each texture fills the gaps of the others)
                                 continue;
                             }
 
+                            if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
+                            {
+                                // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
+                                continue;
+                            }
+
                             // The overlap texture is going to contain garbage data after we draw, or is generally incompatible.
-                            // If the texture cannot be entirely contained in the new address space, and one of its view children is compatible with us,
-                            // it must be flushed before removal, so that the data is not lost.
+                            // The texture group will obtain copy dependencies for any subresources that are compatible between the two textures,
+                            // but sometimes its data must be flushed regardless.
 
                             // If the texture was modified since its last use, then that data is probably meant to go into this texture.
                             // If the data has been modified by the CPU, then it also shouldn't be flushed.
 
-                            bool viewCompatibleChild = overlap.HasViewCompatibleChild(texture);
-
-                            bool flush = overlapInCache && !modified && !texture.Range.Contains(overlap.Range) && viewCompatibleChild;
+                            bool flush = overlapInCache && !modified && overlap.AlwaysFlushOnOverlap;
 
                             setData |= modified || flush;
 
@@ -671,7 +698,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                                 _cache.Remove(overlap, flush);
                             }
 
-                            removeOverlap = modified && !viewCompatibleChild;
+                            removeOverlap = modified;
                         }
                         else
                         {
@@ -687,11 +714,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                 }
 
-                texture.InitializeGroup(hasLayerViews, hasMipViews);
+                texture.InitializeGroup(hasLayerViews, hasMipViews, incompatibleOverlaps);
 
                 // We need to synchronize before copying the old view data to the texture,
                 // otherwise the copied data would be overwritten by a future synchronization.
                 texture.InitializeData(false, setData);
+
+                texture.Group.InitializeOverlaps();
 
                 for (int index = 0; index < viewCompatible; index++)
                 {
@@ -752,6 +781,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             ShrinkOverlapsBufferIfNeeded();
+
+            for (int i = 0; i < overlapsCount; i++)
+            {
+                _textureOverlaps[i].DecrementReferenceCount();
+            }
 
             return texture;
         }
@@ -824,14 +858,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             int addressMatches = _textures.FindOverlaps(address, ref _textureOverlaps);
+            Texture textureMatch = null;
 
             for (int i = 0; i < addressMatches; i++)
             {
                 Texture texture = _textureOverlaps[i];
                 FormatInfo format = texture.Info.FormatInfo;
 
-                if (texture.Info.DepthOrLayers > 1)
+                if (texture.Info.DepthOrLayers > 1 || texture.Info.Levels > 1 || texture.Info.FormatInfo.IsCompressed)
                 {
+                    // Don't support direct buffer copies to anything that isn't a single 2D image, uncompressed.
                     continue;
                 }
 
@@ -859,11 +895,18 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (match)
                 {
-                    return texture;
+                    if (textureMatch == null)
+                    {
+                        textureMatch = texture;
+                    }
+                    else if (texture.Group != textureMatch.Group)
+                    {
+                        return null; // It's ambiguous which texture should match between multiple choices, so leave it up to the slow path.
+                    }
                 }
             }
 
-            return null;
+            return textureMatch;
         }
 
         /// <summary>

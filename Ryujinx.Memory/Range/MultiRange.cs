@@ -284,6 +284,11 @@ namespace Ryujinx.Memory.Range
         /// <returns>Total size in bytes</returns>
         public ulong GetSize()
         {
+            if (HasSingleRange)
+            {
+                return _singleRange.Size;
+            }
+
             ulong sum = 0;
 
             foreach (MemoryRange range in _ranges)

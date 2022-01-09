@@ -2,12 +2,34 @@
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
+using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// An overlapping texture group with a given view compatibility.
+    /// </summary>
+    struct TextureIncompatibleOverlap
+    {
+        public readonly TextureGroup Group;
+        public readonly TextureViewCompatibility Compatibility;
+
+        /// <summary>
+        /// Create a new texture incompatible overlap.
+        /// </summary>
+        /// <param name="group">The group that is incompatible</param>
+        /// <param name="compatibility">The view compatibility for the group</param>
+        public TextureIncompatibleOverlap(TextureGroup group, TextureViewCompatibility compatibility)
+        {
+            Group = group;
+            Compatibility = compatibility;
+        }
+    }
+
     /// <summary>
     /// A texture group represents a group of textures that belong to the same storage.
     /// When views are created, this class will track memory accesses for them separately.
@@ -28,6 +50,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// must be signalled to the group, rather than skipping ones still to be flushed.
         /// </summary>
         public bool HasCopyDependencies { get; set; }
+
+        /// <summary>
+        /// Indicates if this texture has any incompatible overlaps alive.
+        /// </summary>
+        public bool HasIncompatibleOverlaps => _incompatibleOverlaps.Count > 0;
 
         private readonly GpuContext _context;
         private readonly PhysicalMemory _physicalMemory;
@@ -50,12 +77,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         private bool[] _loadNeeded;
 
         /// <summary>
+        /// Other texture groups that have incompatible overlaps with this one.
+        /// </summary>
+        private List<TextureIncompatibleOverlap> _incompatibleOverlaps;
+        private bool _incompatibleOverlapsDirty = true;
+        private bool _flushIncompatibleOverlaps;
+
+        /// <summary>
         /// Create a new texture group.
         /// </summary>
         /// <param name="context">GPU context that the texture group belongs to</param>
         /// <param name="physicalMemory">Physical memory where the <paramref name="storage"/> texture is mapped</param>
         /// <param name="storage">The storage texture for this group</param>
-        public TextureGroup(GpuContext context, PhysicalMemory physicalMemory, Texture storage)
+        /// <param name="incompatibleOverlaps">Groups that overlap with this one but are incompatible</param>
+        public TextureGroup(GpuContext context, PhysicalMemory physicalMemory, Texture storage, List<TextureIncompatibleOverlap> incompatibleOverlaps)
         {
             Storage = storage;
             _context = context;
@@ -64,6 +99,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             _is3D = storage.Info.Target == Target.Texture3D;
             _layers = storage.Info.GetSlices();
             _levels = storage.Info.Levels;
+
+            _incompatibleOverlaps = incompatibleOverlaps;
+            _flushIncompatibleOverlaps = TextureCompatibility.IsFormatHostIncompatible(storage.Info, context.Capabilities);
         }
 
         /// <summary>
@@ -80,6 +118,86 @@ namespace Ryujinx.Graphics.Gpu.Image
             (_hasLayerViews, _hasMipViews) = PropagateGranularity(hasLayerViews, hasMipViews);
 
             RecalculateHandleRegions();
+        }
+
+        /// <summary>
+        /// Initialize all incompatible overlaps in the list, registering them with the other texture groups
+        /// and creating copy dependencies when partially compatible.
+        /// </summary>
+        public void InitializeOverlaps()
+        {
+            foreach (TextureIncompatibleOverlap overlap in _incompatibleOverlaps)
+            {
+                if (overlap.Compatibility == TextureViewCompatibility.LayoutIncompatible)
+                {
+                    CreateCopyDependency(overlap.Group, false);
+                }
+
+                overlap.Group._incompatibleOverlaps.Add(new TextureIncompatibleOverlap(this, overlap.Compatibility));
+                overlap.Group._incompatibleOverlapsDirty = true;
+            }
+
+            if (_incompatibleOverlaps.Count > 0)
+            {
+                SignalIncompatibleOverlapModified();
+            }
+        }
+
+        /// <summary>
+        /// Signal that the group is dirty to all views and the storage.
+        /// </summary>
+        private void SignalAllDirty()
+        {
+            Storage.SignalGroupDirty();
+            if (_views != null)
+            {
+                foreach (Texture texture in _views)
+                {
+                    texture.SignalGroupDirty();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Signal that an incompatible overlap has been modified.
+        /// If this group must flush incompatible overlaps, the group is signalled as dirty too.
+        /// </summary>
+        private void SignalIncompatibleOverlapModified()
+        {
+            _incompatibleOverlapsDirty = true;
+
+            if (_flushIncompatibleOverlaps)
+            {
+                SignalAllDirty();
+            }
+        }
+
+
+        /// <summary>
+        /// Flushes incompatible overlaps if the storage format requires it, and they have been modified.
+        /// This allows unsupported host formats to accept data written to format aliased textures.
+        /// </summary>
+        /// <returns>True if data was flushed, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool FlushIncompatibleOverlapsIfNeeded()
+        {
+            if (_flushIncompatibleOverlaps && _incompatibleOverlapsDirty)
+            {
+                bool flushed = false;
+
+                foreach (var overlap in _incompatibleOverlaps)
+                {
+                    flushed |= overlap.Group.Storage.FlushModified(true);
+                }
+
+                _incompatibleOverlapsDirty = false;
+
+                return flushed;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -124,6 +242,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="texture">The texture being used</param>
         public void SynchronizeMemory(Texture texture)
         {
+            FlushIncompatibleOverlapsIfNeeded();
+
             EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
             {
                 bool dirty = false;
@@ -136,7 +256,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     bool modified = group.Modified;
                     bool handleDirty = false;
-                    bool handleModified = false;
                     bool handleUnmapped = false;
 
                     foreach (CpuRegionHandle handle in group.Handles)
@@ -149,22 +268,28 @@ namespace Ryujinx.Graphics.Gpu.Image
                         else
                         {
                             handleUnmapped |= handle.Unmapped;
-                            handleModified |= modified;
                         }
+                    }
+
+                    // If the modified flag is still present, prefer the data written from gpu.
+                    // A write from CPU will do a flush before writing its data, which should unset this.
+                    if (modified)
+                    {
+                        handleDirty = false;
                     }
 
                     // Evaluate if any copy dependencies need to be fulfilled. A few rules:
                     // If the copy handle needs to be synchronized, prefer our own state.
                     // If we need to be synchronized and there is a copy present, prefer the copy. 
 
-                    if (group.NeedsCopy && group.Copy())
+                    if (group.NeedsCopy && group.Copy(_context))
                     {
                         anyModified |= true; // The copy target has been modified.
                         handleDirty = false;
                     }
                     else
                     {
-                        anyModified |= handleModified;
+                        anyModified |= modified;
                         dirty |= handleDirty;
                     }
 
@@ -218,7 +343,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         for (int level = 0; level < info.Levels; level++)
                         {
                             int offset = _allOffsets[offsetIndex];
-                            int endOffset = (offsetIndex + 1 == _allOffsets.Length) ? (int)Storage.Size : _allOffsets[offsetIndex + 1];
+                            int endOffset = Math.Min(offset + _sliceSizes[info.BaseLevel + level], (int)Storage.Size);
                             int size = endOffset - offset;
 
                             ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
@@ -252,24 +377,169 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Determines whether flushes in this texture group should be tracked.
+        /// Incompatible overlaps may need data from this texture to flush tracked for it to be visible to them.
+        /// </summary>
+        /// <returns>True if flushes should be tracked, false otherwise</returns>
+        private bool ShouldFlushTriggerTracking()
+        {
+            foreach (var overlap in _incompatibleOverlaps)
+            {
+                if (overlap.Group._flushIncompatibleOverlaps)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets data from the host GPU, and flushes a slice to guest memory.
+        /// </summary>
+        /// <remarks>
+        /// This method should be used to retrieve data that was modified by the host GPU.
+        /// This is not cheap, avoid doing that unless strictly needed.
+        /// When possible, the data is written directly into guest memory, rather than copied.
+        /// </remarks>
+        /// <param name="tracked">True if writing the texture data is tracked, false otherwise</param>
+        /// <param name="sliceIndex">The index of the slice to flush</param>
+        /// <param name="texture">The specific host texture to flush. Defaults to the storage texture</param>
+        private void FlushTextureDataSliceToGuest(bool tracked, int sliceIndex, ITexture texture = null)
+        {
+            (int layer, int level) = GetLayerLevelForView(sliceIndex);
+
+            int offset = _allOffsets[sliceIndex];
+            int endOffset = Math.Min(offset + _sliceSizes[level], (int)Storage.Size);
+            int size = endOffset - offset;
+
+            using WritableRegion region = _physicalMemory.GetWritableRegion(Storage.Range.GetSlice((ulong)offset, (ulong)size), tracked);
+
+            Storage.GetTextureDataSliceFromGpu(region.Memory.Span, layer, level, tracked, texture);
+        }
+
+        /// <summary>
+        /// Gets and flushes a number of slices of the storage texture to guest memory.
+        /// </summary>
+        /// <param name="tracked">True if writing the texture data is tracked, false otherwise</param>
+        /// <param name="sliceStart">The first slice to flush</param>
+        /// <param name="sliceEnd">The slice to finish flushing on (exclusive)</param>
+        /// <param name="texture">The specific host texture to flush. Defaults to the storage texture</param>
+        private void FlushSliceRange(bool tracked, int sliceStart, int sliceEnd, ITexture texture = null)
+        {
+            for (int i = sliceStart; i < sliceEnd; i++)
+            {
+                FlushTextureDataSliceToGuest(tracked, i, texture);
+            }
+        }
+
+        /// <summary>
+        /// Flush modified ranges for a given texture.
+        /// </summary>
+        /// <param name="texture">The texture being used</param>
+        /// <param name="tracked">True if the flush writes should be tracked, false otherwise</param>
+        /// <returns>True if data was flushed, false otherwise</returns>
+        public bool FlushModified(Texture texture, bool tracked)
+        {
+            tracked = tracked || ShouldFlushTriggerTracking();
+            bool flushed = false;
+
+            EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
+            {
+                int startSlice = 0;
+                int endSlice = 0;
+                bool allModified = true;
+
+                for (int i = 0; i < regionCount; i++)
+                {
+                    TextureGroupHandle group = _handles[baseHandle + i];
+
+                    if (group.Modified)
+                    {
+                        if (endSlice < group.BaseSlice)
+                        {
+                            if (endSlice > startSlice)
+                            {
+                                FlushSliceRange(tracked, startSlice, endSlice);
+                                flushed = true;
+                            }
+
+                            startSlice = group.BaseSlice;
+                        }
+
+                        endSlice = group.BaseSlice + group.SliceCount;
+
+                        if (tracked)
+                        {
+                            group.Modified = false;
+
+                            foreach (Texture texture in group.Overlaps)
+                            {
+                                texture.SignalModifiedDirty();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        allModified = false;
+                    }
+                }
+
+                if (endSlice > startSlice)
+                {
+                    if (allModified && !split)
+                    {
+                        texture.Flush(tracked);
+                    }
+                    else
+                    {
+                        FlushSliceRange(tracked, startSlice, endSlice);
+                    }
+
+                    flushed = true;
+                }
+            });
+
+            Storage.SignalModifiedDirty();
+
+            return flushed;
+        }
+
+        /// <summary>
+        /// Clears competing modified flags for all incompatible ranges, if they have possibly been modified.
+        /// </summary>
+        /// <param name="texture">The texture that has been modified</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ClearIncompatibleOverlaps(Texture texture)
+        {
+            if (_incompatibleOverlapsDirty)
+            {
+                foreach (TextureIncompatibleOverlap incompatible in _incompatibleOverlaps)
+                {
+                    incompatible.Group.ClearModified(texture.Range, this);
+
+                    incompatible.Group.SignalIncompatibleOverlapModified();
+                }
+
+                _incompatibleOverlapsDirty = false;
+            }
+        }
+
+        /// <summary>
         /// Signal that a texture in the group has been modified by the GPU.
         /// </summary>
         /// <param name="texture">The texture that has been modified</param>
-        /// <param name="registerAction">True if the flushing read action should be registered, false otherwise</param>
-        public void SignalModified(Texture texture, bool registerAction)
+        public void SignalModified(Texture texture)
         {
+            ClearIncompatibleOverlaps(texture);
+
             EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
             {
                 for (int i = 0; i < regionCount; i++)
                 {
                     TextureGroupHandle group = _handles[baseHandle + i];
 
-                    group.SignalModified();
-
-                    if (registerAction)
-                    {
-                        RegisterAction(group);
-                    }
+                    group.SignalModified(_context);
                 }
             });
         }
@@ -279,21 +549,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="texture">The texture that has been modified</param>
         /// <param name="bound">True if this texture is being bound, false if unbound</param>
-        /// <param name="registerAction">True if the flushing read action should be registered, false otherwise</param>
-        public void SignalModifying(Texture texture, bool bound, bool registerAction)
+        public void SignalModifying(Texture texture, bool bound)
         {
+            ClearIncompatibleOverlaps(texture);
+
             EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
             {
                 for (int i = 0; i < regionCount; i++)
                 {
                     TextureGroupHandle group = _handles[baseHandle + i];
 
-                    group.SignalModifying(bound);
-
-                    if (registerAction)
-                    {
-                        RegisterAction(group);
-                    }
+                    group.SignalModifying(bound, _context);
                 }
             });
         }
@@ -371,7 +637,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (_is3D)
             {
                 // Future mip levels come after all layers of the last mip level. Each mipmap has less layers (depth) than the last.
-                
+
                 if (!_hasLayerViews)
                 {
                     // When there are no layer views, the mips are at a consistent offset.
@@ -485,7 +751,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
 
                     baseLayer = handleIndex;
-                } 
+                }
                 else
                 {
                     baseLayer = 0;
@@ -634,7 +900,19 @@ namespace Ryujinx.Graphics.Gpu.Image
                 size = _sliceSizes[firstLevel];
             }
 
-            var groupHandle = new TextureGroupHandle(this, _allOffsets[viewStart], (ulong)size, _views, firstLayer, firstLevel, result.ToArray());
+            offset = _allOffsets[viewStart];
+            ulong maxSize = Storage.Size - (ulong)offset;
+
+            var groupHandle = new TextureGroupHandle(
+                this,
+                offset,
+                Math.Min(maxSize, (ulong)size),
+                _views,
+                firstLayer,
+                firstLevel,
+                viewStart,
+                views,
+                result.ToArray());
 
             foreach (CpuRegionHandle handle in result)
             {
@@ -694,11 +972,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            Storage.SignalGroupDirty();
-            foreach (Texture texture in views)
-            {
-                texture.SignalGroupDirty();
-            }
+            SignalAllDirty();
         }
 
         /// <summary>
@@ -706,7 +980,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="oldHandles">The set of handles to inherit state from</param>
         /// <param name="handles">The set of handles inheriting the state</param>
-        private void InheritHandles(TextureGroupHandle[] oldHandles, TextureGroupHandle[] handles)
+        /// <param name="relativeOffset">The offset of the old handles in relation to the new ones</param>
+        private void InheritHandles(TextureGroupHandle[] oldHandles, TextureGroupHandle[] handles, int relativeOffset)
         {
             foreach (var group in handles)
             {
@@ -716,7 +991,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     foreach (var oldGroup in oldHandles)
                     {
-                        if (group.OverlapsWith(oldGroup.Offset, oldGroup.Size))
+                        if (group.OverlapsWith(oldGroup.Offset + relativeOffset, oldGroup.Size))
                         {
                             foreach (var oldHandle in oldGroup.Handles)
                             {
@@ -725,13 +1000,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                                     dirty |= oldHandle.Dirty;
                                 }
                             }
-                            
-                            group.Inherit(oldGroup);
+
+                            group.Inherit(oldGroup, group.Offset == oldGroup.Offset + relativeOffset);
                         }
                     }
 
                     if (dirty && !handle.Dirty)
-                    { 
+                    {
                         handle.Reprotect(true);
                     }
 
@@ -740,6 +1015,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                         handle.RegisterAction((address, size) => FlushAction(group, address, size));
                     }
                 }
+            }
+
+            foreach (var oldGroup in oldHandles)
+            {
+                oldGroup.Modified = false;
             }
         }
 
@@ -760,7 +1040,16 @@ namespace Ryujinx.Graphics.Gpu.Image
                 RecalculateHandleRegions();
             }
 
-            InheritHandles(other._handles, _handles);
+            foreach (TextureIncompatibleOverlap incompatible in other._incompatibleOverlaps)
+            {
+                RegisterIncompatibleOverlap(incompatible, false);
+
+                incompatible.Group._incompatibleOverlaps.RemoveAll(overlap => overlap.Group == other);
+            }
+
+            int relativeOffset = Storage.Range.FindOffset(other.Storage.Range);
+
+            InheritHandles(other._handles, _handles, relativeOffset);
         }
 
         /// <summary>
@@ -782,7 +1071,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                 }
 
-                InheritHandles(_handles, handles);
+                InheritHandles(_handles, handles, 0);
 
                 foreach (var oldGroup in _handles)
                 {
@@ -815,7 +1104,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     cpuRegionHandles[i] = GenerateHandle(currentRange.Address, currentRange.Size);
                 }
 
-                var groupHandle = new TextureGroupHandle(this, 0, Storage.Size, _views, 0, 0, cpuRegionHandles);
+                var groupHandle = new TextureGroupHandle(this, 0, Storage.Size, _views, 0, 0, 0, _allOffsets.Length, cpuRegionHandles);
 
                 foreach (CpuRegionHandle handle in cpuRegionHandles)
                 {
@@ -855,7 +1144,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
 
                     handles = handlesList.ToArray();
-                } 
+                }
                 else
                 {
                     handles = new TextureGroupHandle[layerHandles * levelHandles];
@@ -953,34 +1242,172 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (copyTo)
                 {
-                    otherHandle.Copy(handle);
+                    otherHandle.Copy(_context, handle);
                 }
                 else
                 {
-                    handle.Copy(otherHandle);
+                    handle.Copy(_context, otherHandle);
                 }
             }
         }
 
         /// <summary>
-        /// A flush has been requested on a tracked region. Find an appropriate view to flush.
+        /// Creates a copy dependency to another texture group, where handles overlap.
+        /// Scans through all handles to find compatible patches in the other group.
+        /// </summary>
+        /// <param name="other">The texture group that overlaps this one</param>
+        /// <param name="copyTo">True if this texture is first copied to the given one, false for the opposite direction</param>
+        public void CreateCopyDependency(TextureGroup other, bool copyTo)
+        {
+            for (int i = 0; i < _allOffsets.Length; i++)
+            {
+                (int layer, int level) = GetLayerLevelForView(i);
+                MultiRange handleRange = Storage.Range.GetSlice((ulong)_allOffsets[i], 1);
+                ulong handleBase = handleRange.GetSubRange(0).Address;
+
+                for (int j = 0; j < other._handles.Length; j++)
+                {
+                    (int otherLayer, int otherLevel) = other.GetLayerLevelForView(j);
+                    MultiRange otherHandleRange = other.Storage.Range.GetSlice((ulong)other._allOffsets[j], 1);
+                    ulong otherHandleBase = otherHandleRange.GetSubRange(0).Address;
+
+                    if (handleBase == otherHandleBase)
+                    {
+                        // Check if the two sizes are compatible.
+                        TextureInfo info = Storage.Info;
+                        TextureInfo otherInfo = other.Storage.Info;
+
+                        if (TextureCompatibility.ViewLayoutCompatible(info, otherInfo, level, otherLevel) && 
+                            TextureCompatibility.CopySizeMatches(info, otherInfo, level, otherLevel))
+                        {
+                            // These textures are copy compatible. Create the dependency.
+
+                            EnsureFullSubdivision();
+                            other.EnsureFullSubdivision();
+
+                            TextureGroupHandle handle = _handles[i];
+                            TextureGroupHandle otherHandle = other._handles[j];
+
+                            handle.CreateCopyDependency(otherHandle, copyTo);
+
+                            // If "copyTo" is true, this texture must copy to the other.
+                            // Otherwise, it must copy to this texture.
+
+                            if (copyTo)
+                            {
+                                otherHandle.Copy(_context, handle);
+                            }
+                            else
+                            {
+                                handle.Copy(_context, otherHandle);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Registers another texture group as an incompatible overlap, if not already registered.
+        /// </summary>
+        /// <param name="other">The texture group to add to the incompatible overlaps list</param>
+        /// <param name="copy">True if the overlap should register copy dependencies</param>
+        public void RegisterIncompatibleOverlap(TextureIncompatibleOverlap other, bool copy)
+        {
+            if (!_incompatibleOverlaps.Exists(overlap => overlap.Group == other.Group))
+            {
+                if (copy && other.Compatibility == TextureViewCompatibility.LayoutIncompatible)
+                {
+                    // Any of the group's views may share compatibility, even if the parents do not fully.
+                    CreateCopyDependency(other.Group, false);
+                }
+
+                _incompatibleOverlaps.Add(other);
+                other.Group._incompatibleOverlaps.Add(new TextureIncompatibleOverlap(this, other.Compatibility));
+            }
+
+            other.Group.SignalIncompatibleOverlapModified();
+            SignalIncompatibleOverlapModified();
+        }
+
+        /// <summary>
+        /// Clear modified flags in the given range.
+        /// This will stop any GPU written data from flushing or copying to dependent textures.
+        /// </summary>
+        /// <param name="range">The range to clear modified flags in</param>
+        /// <param name="ignore">Ignore handles that have a copy dependency to the specified group</param>
+        public void ClearModified(MultiRange range, TextureGroup ignore = null)
+        {
+            TextureGroupHandle[] handles = _handles;
+
+            foreach (TextureGroupHandle handle in handles)
+            {
+                // Handles list is not modified by another thread, only replaced, so this is thread safe.
+                // Remove modified flags from all overlapping handles, so that the textures don't flush to unmapped/remapped GPU memory.
+
+                MultiRange subRange = Storage.Range.GetSlice((ulong)handle.Offset, (ulong)handle.Size);
+
+                if (range.OverlapsWith(subRange))
+                {
+                    if ((ignore == null || !handle.HasDependencyTo(ignore)) && handle.Modified)
+                    {
+                        handle.Modified = false;
+                        Storage.SignalModifiedDirty();
+
+                        lock (handle.Overlaps)
+                        {
+                            foreach (Texture texture in handle.Overlaps)
+                            {
+                                texture.SignalModifiedDirty();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Storage.SignalModifiedDirty();
+
+            if (_views != null)
+            {
+                foreach (Texture texture in _views)
+                {
+                    texture.SignalModifiedDirty();
+                }
+            }
+        }
+
+        /// <summary>
+        /// A flush has been requested on a tracked region. Flush texture data for the given handle.
         /// </summary>
         /// <param name="handle">The handle this flush action is for</param>
         /// <param name="address">The address of the flushing memory access</param>
         /// <param name="size">The size of the flushing memory access</param>
         public void FlushAction(TextureGroupHandle handle, ulong address, ulong size)
         {
-            Storage.ExternalFlush(address, size);
-
-            lock (handle.Overlaps)
+            if (!handle.Modified)
             {
-                foreach (Texture overlap in handle.Overlaps)
-                {
-                    overlap.ExternalFlush(address, size);
-                }
+                return;
             }
 
-            handle.Modified = false;
+            _context.Renderer.BackgroundContextAction(() =>
+            {
+                handle.Sync(_context);
+
+                Storage.SignalModifiedDirty();
+
+                lock (handle.Overlaps)
+                {
+                    foreach (Texture texture in handle.Overlaps)
+                    {
+                        texture.SignalModifiedDirty();
+                    }
+                }
+
+                if (TextureCompatibility.CanTextureFlush(Storage.Info, _context.Capabilities))
+                {
+                    FlushSliceRange(false, handle.BaseSlice, handle.BaseSlice + handle.SliceCount, Storage.GetFlushTexture());
+                }
+            });
         }
 
         /// <summary>
@@ -991,6 +1418,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             foreach (TextureGroupHandle group in _handles)
             {
                 group.Dispose();
+            }
+
+            foreach (TextureIncompatibleOverlap incompatible in _incompatibleOverlaps)
+            {
+                incompatible.Group._incompatibleOverlaps.RemoveAll(overlap => overlap.Group == this);
             }
         }
     }

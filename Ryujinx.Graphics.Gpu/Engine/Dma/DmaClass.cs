@@ -232,8 +232,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                             data = LayoutConverter.ConvertBlockLinearToLinear(
                                 src.Width,
                                 src.Height,
+                                src.Depth,
                                 1,
-                                target.Info.Levels,
+                                1,
                                 1,
                                 1,
                                 1,
@@ -245,6 +246,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                                 srcSpan);
                         }
 
+                        target.SynchronizeMemory();
                         target.SetData(data);
                         target.SignalModified();
 
