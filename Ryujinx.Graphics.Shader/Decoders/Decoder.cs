@@ -95,7 +95,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         if (currBlock.OpCodes.Count != 0)
                         {
                             // We should have blocks for all possible branch targets,
-                            // including those from SSY/PBK instructions.
+                            // including those from PBK/PCNT/SSY instructions.
                             foreach (PushOpInfo pushOp in currBlock.PushOpCodes)
                             {
                                 GetBlock(pushOp.Op.GetAbsoluteAddress());
@@ -243,7 +243,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 {
                     SetUserAttributeUses(config, op.Name, opCode);
                 }
-                else if (op.Name == InstName.Ssy || op.Name == InstName.Pbk)
+                else if (op.Name == InstName.Pbk || op.Name == InstName.Pcnt || op.Name == InstName.Ssy)
                 {
                     block.AddPushOp(op);
                 }
@@ -512,8 +512,9 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         private enum MergeType
         {
-            Brk = 0,
-            Sync = 1
+            Brk,
+            Cont,
+            Sync
         }
 
         private struct PathBlockState
@@ -629,7 +630,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     for (int index = pushOpIndex; index < pushOpsCount; index++)
                     {
                         InstOp currentPushOp = current.PushOpCodes[index].Op;
-                        MergeType pushMergeType = currentPushOp.Name == InstName.Ssy ? MergeType.Sync : MergeType.Brk;
+                        MergeType pushMergeType = GetMergeTypeFromPush(currentPushOp.Name);
                         branchStack.Push((currentPushOp.GetAbsoluteAddress(), pushMergeType));
                     }
                 }
@@ -643,9 +644,9 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 InstOp lastOp = current.GetLastOp();
-                if (lastOp.Name == InstName.Sync || lastOp.Name == InstName.Brk)
+                if (IsPopBranch(lastOp.Name))
                 {
-                    MergeType popMergeType = lastOp.Name == InstName.Sync ? MergeType.Sync : MergeType.Brk;
+                    MergeType popMergeType = GetMergeTypeFromPop(lastOp.Name);
 
                     bool found = true;
                     ulong targetAddress = 0UL;
@@ -662,7 +663,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         (targetAddress, mergeType) = branchStack.Pop();
 
                         // Push the target address (this will be used to push the address
-                        // back into the SSY/PBK stack when we return from that block),
+                        // back into the PBK/PCNT/SSY stack when we return from that block),
                         Push(new PathBlockState(targetAddress, mergeType));
                     }
                     while (mergeType != popMergeType);
@@ -704,6 +705,31 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                 }
             }
+        }
+
+        public static bool IsPopBranch(InstName name)
+        {
+            return name == InstName.Brk || name == InstName.Cont || name == InstName.Sync;
+        }
+
+        private static MergeType GetMergeTypeFromPush(InstName name)
+        {
+            return name switch
+            {
+                InstName.Pbk => MergeType.Brk,
+                InstName.Pcnt => MergeType.Cont,
+                _ => MergeType.Sync
+            };
+        }
+
+        private static MergeType GetMergeTypeFromPop(InstName name)
+        {
+            return name switch
+            {
+                InstName.Brk => MergeType.Brk,
+                InstName.Cont => MergeType.Cont,
+                _ => MergeType.Sync
+            };
         }
     }
 }

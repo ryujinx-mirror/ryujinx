@@ -138,6 +138,46 @@ namespace Ryujinx.Graphics.Shader.Instructions
             EmitImad(context, srcA, srcB, srcC, op.Dest, op.AvgMode, op.ASigned, op.BSigned, op.Hilo);
         }
 
+        public static void ImulR(EmitterContext context)
+        {
+            InstImulR op = context.GetOp<InstImulR>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcReg(context, op.SrcB);
+
+            EmitImad(context, srcA, srcB, Const(0), op.Dest, AvgMode.NoNeg, op.ASigned, op.BSigned, op.Hilo);
+        }
+
+        public static void ImulI(EmitterContext context)
+        {
+            InstImulI op = context.GetOp<InstImulI>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcImm(context, Imm20ToSInt(op.Imm20));
+
+            EmitImad(context, srcA, srcB, Const(0), op.Dest, AvgMode.NoNeg, op.ASigned, op.BSigned, op.Hilo);
+        }
+
+        public static void ImulC(EmitterContext context)
+        {
+            InstImulC op = context.GetOp<InstImulC>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcCbuf(context, op.CbufSlot, op.CbufOffset);
+
+            EmitImad(context, srcA, srcB, Const(0), op.Dest, AvgMode.NoNeg, op.ASigned, op.BSigned, op.Hilo);
+        }
+
+        public static void Imul32i(EmitterContext context)
+        {
+            InstImul32i op = context.GetOp<InstImul32i>();
+
+            var srcA = GetSrcReg(context, op.SrcA);
+            var srcB = GetSrcImm(context, op.Imm32);
+
+            EmitImad(context, srcA, srcB, Const(0), op.Dest, AvgMode.NoNeg, op.ASigned, op.BSigned, op.Hilo);
+        }
+
         public static void IscaddR(EmitterContext context)
         {
             InstIscaddR op = context.GetOp<InstIscaddR>();
@@ -366,7 +406,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: CC, X, corner cases.
         }
 
-        public static void EmitImad(
+        private static void EmitImad(
             EmitterContext context,
             Operand srcA,
             Operand srcB,
@@ -407,7 +447,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 res = context.IMultiply(srcA, srcB);
             }
 
-            res = context.IAdd(res, srcC);
+            if (srcC.Type != OperandType.Constant || srcC.Value != 0)
+            {
+                res = context.IAdd(res, srcC);
+            }
 
             // TODO: CC, X, SAT, and more?
 

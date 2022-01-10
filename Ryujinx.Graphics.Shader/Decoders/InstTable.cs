@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Add("1110111110000xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cctll,       InstEmit.Cctll,       InstProps.Ra);
             Add("1110101111110xx0000000000000xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cctlt,       InstEmit.Cctlt);
             Add("1110101111101xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cctlt,       InstEmit.Cctlt,       InstProps.Rc);
-            Add("111000110101xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cont,        InstEmit.Cont);
+            Add("111000110101xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cont,        InstEmit.Cont,        InstProps.Bra);
             Add("0101000010011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cset,        InstEmit.Cset,        InstProps.Rd  | InstProps.Ps);
             Add("0101000010100xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Csetp,       InstEmit.Csetp,       InstProps.Pd  | InstProps.Pdn | InstProps.Ps);
             Add("0101000011001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Cs2r,        InstEmit.Cs2r,        InstProps.Rd);
@@ -101,7 +101,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Add("0011001x1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ffma,        InstEmit.FfmaI,       InstProps.Rd  | InstProps.Ra  | InstProps.Ib  | InstProps.Rc);
             Add("010010011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ffma,        InstEmit.FfmaC,       InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
             Add("010100011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ffma,        InstEmit.FfmaRc,      InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
-            Add("000011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ffma32i,     InstEmit.Ffma32i,     InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
+            Add("000011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ffma32i,     InstEmit.Ffma32i,     InstProps.Rd  | InstProps.Ra);
             Add("0101110000110xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Flo,         InstEmit.FloR,        InstProps.Rd  | InstProps.Rb);
             Add("0011100x00110xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Flo,         InstEmit.FloI,        InstProps.Rd  | InstProps.Ib);
             Add("0100110000110xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Flo,         InstEmit.FloC,        InstProps.Rd);
@@ -129,6 +129,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Add("01110xxx0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hfma2,       InstEmit.Hfma2I,      InstProps.Rd  | InstProps.Ra  | InstProps.Ib  | InstProps.Rc);
             Add("01110xxx1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hfma2,       InstEmit.Hfma2C,      InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
             Add("01100xxx1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hfma2,       InstEmit.Hfma2Rc,     InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
+            Add("0010100xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hfma2,       InstEmit.Hfma232i,    InstProps.Rd  | InstProps.Ra);
             Add("0101110100001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hmul2,       InstEmit.Hmul2R,      InstProps.Rd  | InstProps.Ra  | InstProps.Rb);
             Add("0111100x0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hmul2,       InstEmit.Hmul2I,      InstProps.Rd  | InstProps.Ra  | InstProps.Ib);
             Add("0111100x1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Hmul2,       InstEmit.Hmul2C,      InstProps.Rd  | InstProps.Ra);

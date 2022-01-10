@@ -295,7 +295,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 Operand predSkipLbl = null;
 
-                if (op.Name == InstName.Sync || op.Name == InstName.Brk)
+                if (Decoder.IsPopBranch(op.Name))
                 {
                     // If the instruction is a SYNC or BRK instruction with only one
                     // possible target address, then the instruction is basically

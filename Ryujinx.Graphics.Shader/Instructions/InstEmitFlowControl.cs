@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstBrk op = context.GetOp<InstBrk>();
 
-            EmitBrkOrSync(context);
+            EmitBrkContSync(context);
         }
 
         public static void Brx(EmitterContext context)
@@ -87,6 +87,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
+        public static void Cont(EmitterContext context)
+        {
+            InstCont op = context.GetOp<InstCont>();
+
+            EmitBrkContSync(context);
+        }
+
         public static void Exit(EmitterContext context)
         {
             InstExit op = context.GetOp<InstExit>();
@@ -116,7 +123,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstPbk op = context.GetOp<InstPbk>();
 
-            EmitPbkOrSsy(context);
+            EmitPbkPcntSsy(context);
+        }
+
+        public static void Pcnt(EmitterContext context)
+        {
+            InstPcnt op = context.GetOp<InstPcnt>();
+
+            EmitPbkPcntSsy(context);
         }
 
         public static void Ret(EmitterContext context)
@@ -137,17 +151,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstSsy op = context.GetOp<InstSsy>();
 
-            EmitPbkOrSsy(context);
+            EmitPbkPcntSsy(context);
         }
 
         public static void Sync(EmitterContext context)
         {
             InstSync op = context.GetOp<InstSync>();
 
-            EmitBrkOrSync(context);
+            EmitBrkContSync(context);
         }
 
-        private static void EmitPbkOrSsy(EmitterContext context)
+        private static void EmitPbkPcntSsy(EmitterContext context)
         {
             var consumers = context.CurrBlock.PushOpCodes.First(x => x.Op.Address == context.CurrOp.Address).Consumers;
 
@@ -162,7 +176,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        private static void EmitBrkOrSync(EmitterContext context)
+        private static void EmitBrkContSync(EmitterContext context)
         {
             var targets = context.CurrBlock.SyncTargets;
 
