@@ -196,6 +196,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             int width = target == Target.TextureBuffer ? descriptor.UnpackBufferTextureWidth() : descriptor.UnpackWidth();
             int height = descriptor.UnpackHeight();
 
+            if (target == Target.Texture2DMultisample || target == Target.Texture2DMultisampleArray)
+            {
+                // This is divided back before the backend texture is created.
+                width *= samplesInX;
+                height *= samplesInY;
+            }
+
             // We use 2D targets for 1D textures as that makes texture cache
             // management easier. We don't know the target for render target
             // and copies, so those would normally use 2D targets, which are
