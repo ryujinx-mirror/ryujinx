@@ -339,6 +339,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             var scissor = _state.State.ScreenScissorState;
             Size sizeHint = new Size(scissor.X + scissor.Width, scissor.Y + scissor.Height, 1);
 
+            int clipRegionWidth = int.MaxValue;
+            int clipRegionHeight = int.MaxValue;
+
             bool changedScale = false;
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
@@ -363,6 +366,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     sizeHint);
 
                 changedScale |= _channel.TextureManager.SetRenderTargetColor(index, color);
+
+                if (color != null)
+                {
+                    if (clipRegionWidth > color.Width)
+                    {
+                        clipRegionWidth = color.Width;
+                    }
+
+                    if (clipRegionHeight > color.Height)
+                    {
+                        clipRegionHeight = color.Height;
+                    }
+                }
             }
 
             bool dsEnable = _state.State.RtDepthStencilEnable;
@@ -381,6 +397,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     samplesInX,
                     samplesInY,
                     sizeHint);
+
+                if (depthStencil != null)
+                {
+                    if (clipRegionWidth > depthStencil.Width)
+                    {
+                        clipRegionWidth = depthStencil.Width;
+                    }
+
+                    if (clipRegionHeight > depthStencil.Height)
+                    {
+                        clipRegionHeight = depthStencil.Height;
+                    }
+                }
             }
 
             changedScale |= _channel.TextureManager.SetRenderTargetDepthStencil(depthStencil);
@@ -398,6 +427,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     UpdateScissorState();
                 }
             }
+
+            _channel.TextureManager.SetClipRegion(clipRegionWidth, clipRegionHeight);
         }
 
         /// <summary>
@@ -414,7 +445,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <summary>
         /// Updates host scissor test state based on current GPU state.
         /// </summary>
-        private void UpdateScissorState()
+        public void UpdateScissorState()
         {
             for (int index = 0; index < Constants.TotalViewports; index++)
             {

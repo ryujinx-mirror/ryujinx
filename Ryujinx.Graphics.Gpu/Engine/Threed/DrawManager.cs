@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.Types;
+using System;
 using System.Text;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
@@ -489,14 +490,62 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 return;
             }
 
-            // Scissor and rasterizer discard also affect clears.
-            engine.UpdateState((1UL << StateUpdater.RasterizerStateIndex) | (1UL << StateUpdater.ScissorStateIndex));
-
             int index = (argument >> 6) & 0xf;
 
             engine.UpdateRenderTargetState(useControl: false, singleUse: index);
 
-            _channel.TextureManager.UpdateRenderTargets();
+            // If there is a mismatch on the host clip region and the one explicitly defined by the guest
+            // on the screen scissor state, then we need to force only one texture to be bound to avoid
+            // host clipping.
+            var screenScissorState = _state.State.ScreenScissorState;
+
+            // Must happen after UpdateRenderTargetState to have up-to-date clip region values.
+            bool clipMismatch = (screenScissorState.X | screenScissorState.Y) != 0 ||
+                                screenScissorState.Width != _channel.TextureManager.ClipRegionWidth ||
+                                screenScissorState.Height != _channel.TextureManager.ClipRegionHeight;
+
+            bool clearAffectedByStencilMask = (_state.State.ClearFlags & 1) != 0;
+            bool clearAffectedByScissor = (_state.State.ClearFlags & 0x100) != 0;
+            bool needsCustomScissor = !clearAffectedByScissor || clipMismatch;
+
+            // Scissor and rasterizer discard also affect clears.
+            ulong updateMask = 1UL << StateUpdater.RasterizerStateIndex;
+
+            if (!needsCustomScissor)
+            {
+                updateMask |= 1UL << StateUpdater.ScissorStateIndex;
+            }
+
+            engine.UpdateState(updateMask);
+
+            if (needsCustomScissor)
+            {
+                int scissorX = screenScissorState.X;
+                int scissorY = screenScissorState.Y;
+                int scissorW = screenScissorState.Width;
+                int scissorH = screenScissorState.Height;
+
+                if (clearAffectedByScissor)
+                {
+                    ref var scissorState = ref _state.State.ScissorState[0];
+
+                    scissorX = Math.Max(scissorX, scissorState.X1);
+                    scissorY = Math.Max(scissorY, scissorState.Y1);
+                    scissorW = Math.Min(scissorW, scissorState.X2 - scissorState.X1);
+                    scissorH = Math.Min(scissorH, scissorState.Y2 - scissorState.Y1);
+                }
+
+                _context.Renderer.Pipeline.SetScissor(0, true, scissorX, scissorY, scissorW, scissorH);
+            }
+
+            if (clipMismatch)
+            {
+                _channel.TextureManager.UpdateRenderTarget(index);
+            }
+            else
+            {
+                _channel.TextureManager.UpdateRenderTargets();
+            }
 
             bool clearDepth = (argument & 1) != 0;
             bool clearStencil = (argument & 2) != 0;
@@ -521,7 +570,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (clearStencil)
                 {
-                    stencilMask = _state.State.StencilTestState.FrontMask;
+                    stencilMask = clearAffectedByStencilMask ? _state.State.StencilTestState.FrontMask : 0xff;
+                }
+
+                if (clipMismatch)
+                {
+                    _channel.TextureManager.UpdateRenderTargetDepthStencil();
                 }
 
                 _context.Renderer.Pipeline.ClearRenderTargetDepthStencil(
@@ -529,6 +583,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     clearDepth,
                     stencilValue,
                     stencilMask);
+            }
+
+            if (needsCustomScissor)
+            {
+                engine.UpdateScissorState();
             }
 
             engine.UpdateRenderTargetState(useControl: true);

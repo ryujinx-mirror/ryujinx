@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Shader;
 using System;
 
 namespace Ryujinx.Graphics.GAL
@@ -15,9 +14,9 @@ namespace Ryujinx.Graphics.GAL
 
         void ClearRenderTargetDepthStencil(
             float depthValue,
-            bool  depthMask,
-            int   stencilValue,
-            int   stencilMask);
+            bool depthMask,
+            int stencilValue,
+            int stencilMask);
 
         void CommandBufferBarrier();
 

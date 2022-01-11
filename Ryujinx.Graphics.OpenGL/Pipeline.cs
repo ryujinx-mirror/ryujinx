@@ -6,7 +6,6 @@ using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader;
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -1058,14 +1057,17 @@ namespace Ryujinx.Graphics.OpenGL
 
                 _framebuffer.AttachColor(index, color);
 
-                int isBgra = color != null && color.Format.IsBgr() ? 1 : 0;
-
-                if (_fpIsBgra[index].X != isBgra)
+                if (color != null)
                 {
-                    _fpIsBgra[index].X = isBgra;
-                    isBgraChanged = true;
+                    int isBgra = color.Format.IsBgr() ? 1 : 0;
 
-                    RestoreComponentMask(index);
+                    if (_fpIsBgra[index].X != isBgra)
+                    {
+                        _fpIsBgra[index].X = isBgra;
+                        isBgraChanged = true;
+
+                        RestoreComponentMask(index);
+                    }
                 }
             }
 

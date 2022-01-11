@@ -754,7 +754,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public int DrawTextureTextureId;
         public int DrawTextureSrcX;
         public int DrawTextureSrcY;
-        public fixed uint Reserved10B0[44];
+        public fixed uint Reserved10B0[18];
+        public uint ClearFlags;
+        public fixed uint Reserved10FC[25];
         public Array16<VertexAttribState> VertexAttribState;
         public fixed uint Reserved11A0[31];
         public RtControl RtControl;

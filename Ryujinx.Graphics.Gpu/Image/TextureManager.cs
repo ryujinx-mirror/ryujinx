@@ -19,6 +19,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private Texture _rtDepthStencil;
         private ITexture _rtHostDs;
 
+        public int ClipRegionWidth { get; private set; }
+        public int ClipRegionHeight { get; private set; }
+
         /// <summary>
         /// The scaling factor applied to all currently bound render targets.
         /// </summary>
@@ -208,6 +211,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return changesScale || ScaleNeedsUpdated(depthStencil);
+        }
+
+        /// <summary>
+        /// Sets the host clip region, which should be the intersection of all render target texture sizes.
+        /// </summary>
+        /// <param name="width">Width of the clip region, defined as the minimum width across all bound textures</param>
+        /// <param name="height">Height of the clip region, defined as the minimum height across all bound textures</param>
+        public void SetClipRegion(int width, int height)
+        {
+            ClipRegionWidth = width;
+            ClipRegionHeight = height;
         }
 
         /// <summary>
@@ -407,6 +421,35 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
             }
+        }
+
+        /// <summary>
+        /// Update host framebuffer attachments based on currently bound render target buffers.
+        /// </summary>
+        /// <remarks>
+        /// All attachments other than <paramref name="index"/> will be unbound.
+        /// </remarks>
+        /// <param name="index">Index of the render target color to be updated</param>
+        public void UpdateRenderTarget(int index)
+        {
+            new Span<ITexture>(_rtHostColors).Fill(null);
+            _rtHostColors[index] = _rtColors[index]?.HostTexture;
+
+            _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, null);
+        }
+
+        /// <summary>
+        /// Update host framebuffer attachments based on currently bound render target buffers.
+        /// </summary>
+        /// <remarks>
+        /// All color attachments will be unbound.
+        /// </remarks>
+        public void UpdateRenderTargetDepthStencil()
+        {
+            new Span<ITexture>(_rtHostColors).Fill(null);
+            _rtHostDs = _rtDepthStencil?.HostTexture;
+
+            _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
         }
 
         /// <summary>

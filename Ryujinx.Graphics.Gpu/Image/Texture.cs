@@ -48,6 +48,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         public Target Target { get; private set; }
 
         /// <summary>
+        /// Texture width.
+        /// </summary>
+        public int Width { get; private set; }
+
+        /// <summary>
+        /// Texture height.
+        /// </summary>
+        public int Height { get; private set; }
+
+        /// <summary>
         /// Texture information.
         /// </summary>
         public TextureInfo Info { get; private set; }
@@ -926,7 +936,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 FlushTextureDataToGuest(tracked);
             }
         }
-        
+
         /// <summary>
         /// Gets a host texture to use for flushing the texture, at 1x resolution.
         /// If the HostTexture is already at 1x resolution, it is returned directly.
@@ -1322,6 +1332,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             Info = info;
             Target = info.Target;
+            Width = info.Width;
+            Height = info.Height;
             CanForceAnisotropy = CanTextureForceAnisotropy();
 
             _depth  = info.GetDepth();
