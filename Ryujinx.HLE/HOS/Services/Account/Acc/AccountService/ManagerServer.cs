@@ -1,7 +1,11 @@
-﻿using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
+﻿using Microsoft.IdentityModel.Tokens;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +21,51 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         public ManagerServer(UserId userId)
         {
             _userId = userId;
+        }
+
+        private static string GenerateIdToken()
+        {
+            using RSA provider = RSA.Create(2048);
+
+            RSAParameters parameters = provider.ExportParameters(true);
+
+            RsaSecurityKey secKey = new RsaSecurityKey(parameters);
+
+            SigningCredentials credentials = new SigningCredentials(secKey, "RS256");
+
+            credentials.Key.KeyId = parameters.ToString();
+
+            var header = new JwtHeader(credentials)
+            {
+                { "jku", "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com/1.0.0/certificates" }
+            };
+
+            byte[] rawUserId = new byte[0x10];
+            RandomNumberGenerator.Fill(rawUserId);
+
+            byte[] deviceId = new byte[0x10];
+            RandomNumberGenerator.Fill(deviceId);
+
+            byte[] deviceAccountId = new byte[0x10];
+            RandomNumberGenerator.Fill(deviceId);
+
+            var payload = new JwtPayload
+            {
+                { "sub", BitConverter.ToString(rawUserId).Replace("-", "").ToLower() },
+                { "aud", "ed9e2f05d286f7b8" },
+                { "di", BitConverter.ToString(deviceId).Replace("-", "").ToLower() },
+                { "sn", "XAW10000000000" },
+                { "bs:did", BitConverter.ToString(deviceAccountId).Replace("-", "").ToLower() },
+                { "iss", "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com" },
+                { "typ", "id_token" },
+                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                { "jti", Guid.NewGuid().ToString() },
+                { "exp", (DateTimeOffset.UtcNow + TimeSpan.FromHours(3)).ToUnixTimeSeconds() }
+            };
+
+            JwtSecurityToken securityToken = new JwtSecurityToken(header, payload);
+
+            return new JwtSecurityTokenHandler().WriteToken(securityToken);
         }
 
         public ResultCode CheckAvailability(ServiceCtx context)
@@ -92,11 +141,10 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             }
             */
 
-            int idTokenCacheSize = 0;
+            byte[] tokenData = Encoding.ASCII.GetBytes(GenerateIdToken());
 
-            MemoryHelper.FillWithZeros(context.Memory, bufferPosition, (int)bufferSize);
-
-            context.ResponseData.Write(idTokenCacheSize);
+            context.Memory.Write(bufferPosition, tokenData);
+            context.ResponseData.Write(tokenData.Length);
 
             return ResultCode.Success;
         }
