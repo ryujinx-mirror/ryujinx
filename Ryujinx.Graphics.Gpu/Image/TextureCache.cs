@@ -582,7 +582,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     if (oInfo.Compatibility <= TextureViewCompatibility.LayoutIncompatible)
                     {
-                        if (!overlap.IsView && texture.DataOverlaps(overlap))
+                        if (!overlap.IsView && texture.DataOverlaps(overlap, oInfo.Compatibility))
                         {
                             texture.Group.RegisterIncompatibleOverlap(new TextureIncompatibleOverlap(overlap.Group, oInfo.Compatibility), true);
                         }
@@ -657,7 +657,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                     else
                     {
-                        bool dataOverlaps = texture.DataOverlaps(overlap);
+                        bool dataOverlaps = texture.DataOverlaps(overlap, compatibility);
                         
                         if (!overlap.IsView && dataOverlaps && !incompatibleOverlaps.Exists(incompatible => incompatible.Group == overlap.Group))
                         {
@@ -673,12 +673,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                             {
                                 // Allow textures to overlap if their data does not actually overlap.
                                 // This typically happens when mip level subranges of a layered texture are used. (each texture fills the gaps of the others)
-                                continue;
-                            }
-
-                            if (info.GobBlocksInZ > 1 && info.GobBlocksInZ == overlap.Info.GobBlocksInZ)
-                            {
-                                // Allow overlapping slices of 3D textures. Could be improved in future by making sure the textures don't overlap.
                                 continue;
                             }
 

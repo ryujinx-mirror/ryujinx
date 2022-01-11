@@ -1382,9 +1382,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Determine if any of this texture's data overlaps with another.
         /// </summary>
         /// <param name="texture">The texture to check against</param>
+        /// <param name="compatibility">The view compatibility of the two textures</param>
         /// <returns>True if any slice of the textures overlap, false otherwise</returns>
-        public bool DataOverlaps(Texture texture)
+        public bool DataOverlaps(Texture texture, TextureViewCompatibility compatibility)
         {
+            if (compatibility == TextureViewCompatibility.LayoutIncompatible && Info.GobBlocksInZ > 1 && Info.GobBlocksInZ == texture.Info.GobBlocksInZ)
+            {
+                // Allow overlapping slices of layout compatible 3D textures with matching GobBlocksInZ, as they are interleaved.
+                return false;
+            }
+
             if (texture._sizeInfo.AllOffsets.Length == 1 && _sizeInfo.AllOffsets.Length == 1)
             {
                 return Range.OverlapsWith(texture.Range);
