@@ -1,11 +1,12 @@
-﻿using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common;
+using Ryujinx.Common.Logging;
+using Ryujinx.Memory;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
@@ -13,221 +14,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
     [Service("bsd:u", false)]
     class IClient : IpcService
     {
-        private static readonly Dictionary<WsaError, LinuxError> _errorMap = new()
+        private static readonly List<IPollManager> _pollManagers = new List<IPollManager>
         {
-            // WSAEINTR
-            {WsaError.WSAEINTR,           LinuxError.EINTR},
-            // WSAEWOULDBLOCK
-            {WsaError.WSAEWOULDBLOCK,     LinuxError.EWOULDBLOCK},
-            // WSAEINPROGRESS
-            {WsaError.WSAEINPROGRESS,     LinuxError.EINPROGRESS},
-            // WSAEALREADY
-            {WsaError.WSAEALREADY,        LinuxError.EALREADY},
-            // WSAENOTSOCK
-            {WsaError.WSAENOTSOCK,        LinuxError.ENOTSOCK},
-            // WSAEDESTADDRREQ
-            {WsaError.WSAEDESTADDRREQ,    LinuxError.EDESTADDRREQ},
-            // WSAEMSGSIZE
-            {WsaError.WSAEMSGSIZE,        LinuxError.EMSGSIZE},
-            // WSAEPROTOTYPE
-            {WsaError.WSAEPROTOTYPE,      LinuxError.EPROTOTYPE},
-            // WSAENOPROTOOPT
-            {WsaError.WSAENOPROTOOPT,     LinuxError.ENOPROTOOPT},
-            // WSAEPROTONOSUPPORT
-            {WsaError.WSAEPROTONOSUPPORT, LinuxError.EPROTONOSUPPORT},
-            // WSAESOCKTNOSUPPORT
-            {WsaError.WSAESOCKTNOSUPPORT, LinuxError.ESOCKTNOSUPPORT},
-            // WSAEOPNOTSUPP
-            {WsaError.WSAEOPNOTSUPP,      LinuxError.EOPNOTSUPP},
-            // WSAEPFNOSUPPORT
-            {WsaError.WSAEPFNOSUPPORT,    LinuxError.EPFNOSUPPORT},
-            // WSAEAFNOSUPPORT
-            {WsaError.WSAEAFNOSUPPORT,    LinuxError.EAFNOSUPPORT},
-            // WSAEADDRINUSE
-            {WsaError.WSAEADDRINUSE,      LinuxError.EADDRINUSE},
-            // WSAEADDRNOTAVAIL
-            {WsaError.WSAEADDRNOTAVAIL,   LinuxError.EADDRNOTAVAIL},
-            // WSAENETDOWN
-            {WsaError.WSAENETDOWN,        LinuxError.ENETDOWN},
-            // WSAENETUNREACH
-            {WsaError.WSAENETUNREACH,     LinuxError.ENETUNREACH},
-            // WSAENETRESET
-            {WsaError.WSAENETRESET,       LinuxError.ENETRESET},
-            // WSAECONNABORTED
-            {WsaError.WSAECONNABORTED,    LinuxError.ECONNABORTED},
-            // WSAECONNRESET
-            {WsaError.WSAECONNRESET,      LinuxError.ECONNRESET},
-            // WSAENOBUFS
-            {WsaError.WSAENOBUFS,         LinuxError.ENOBUFS},
-            // WSAEISCONN
-            {WsaError.WSAEISCONN,         LinuxError.EISCONN},
-            // WSAENOTCONN
-            {WsaError.WSAENOTCONN,        LinuxError.ENOTCONN},
-            // WSAESHUTDOWN
-            {WsaError.WSAESHUTDOWN,       LinuxError.ESHUTDOWN},
-            // WSAETOOMANYREFS
-            {WsaError.WSAETOOMANYREFS,    LinuxError.ETOOMANYREFS},
-            // WSAETIMEDOUT
-            {WsaError.WSAETIMEDOUT,       LinuxError.ETIMEDOUT},
-            // WSAECONNREFUSED
-            {WsaError.WSAECONNREFUSED,    LinuxError.ECONNREFUSED},
-            // WSAELOOP
-            {WsaError.WSAELOOP,           LinuxError.ELOOP},
-            // WSAENAMETOOLONG
-            {WsaError.WSAENAMETOOLONG,    LinuxError.ENAMETOOLONG},
-            // WSAEHOSTDOWN
-            {WsaError.WSAEHOSTDOWN,       LinuxError.EHOSTDOWN},
-            // WSAEHOSTUNREACH
-            {WsaError.WSAEHOSTUNREACH,    LinuxError.EHOSTUNREACH},
-            // WSAENOTEMPTY
-            {WsaError.WSAENOTEMPTY,       LinuxError.ENOTEMPTY},
-            // WSAEUSERS
-            {WsaError.WSAEUSERS,          LinuxError.EUSERS},
-            // WSAEDQUOT
-            {WsaError.WSAEDQUOT,          LinuxError.EDQUOT},
-            // WSAESTALE
-            {WsaError.WSAESTALE,          LinuxError.ESTALE},
-            // WSAEREMOTE
-            {WsaError.WSAEREMOTE,         LinuxError.EREMOTE},
-            // WSAEINVAL
-            {WsaError.WSAEINVAL,          LinuxError.EINVAL},
-            // WSAEFAULT
-            {WsaError.WSAEFAULT,          LinuxError.EFAULT},
-            // NOERROR
-            {0, 0}
+            EventFileDescriptorPollManager.Instance,
+            ManagedSocketPollManager.Instance
         };
 
-        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _soSocketOptionMap = new()
-        {
-            { BsdSocketOption.SoDebug,       SocketOptionName.Debug },
-            { BsdSocketOption.SoReuseAddr,   SocketOptionName.ReuseAddress },
-            { BsdSocketOption.SoKeepAlive,   SocketOptionName.KeepAlive },
-            { BsdSocketOption.SoDontRoute,   SocketOptionName.DontRoute },
-            { BsdSocketOption.SoBroadcast,   SocketOptionName.Broadcast },
-            { BsdSocketOption.SoUseLoopBack, SocketOptionName.UseLoopback },
-            { BsdSocketOption.SoLinger,      SocketOptionName.Linger },
-            { BsdSocketOption.SoOobInline,   SocketOptionName.OutOfBandInline },
-            { BsdSocketOption.SoReusePort,   SocketOptionName.ReuseAddress },
-            { BsdSocketOption.SoSndBuf,      SocketOptionName.SendBuffer },
-            { BsdSocketOption.SoRcvBuf,      SocketOptionName.ReceiveBuffer },
-            { BsdSocketOption.SoSndLoWat,    SocketOptionName.SendLowWater },
-            { BsdSocketOption.SoRcvLoWat,    SocketOptionName.ReceiveLowWater },
-            { BsdSocketOption.SoSndTimeo,    SocketOptionName.SendTimeout },
-            { BsdSocketOption.SoRcvTimeo,    SocketOptionName.ReceiveTimeout },
-            { BsdSocketOption.SoError,       SocketOptionName.Error },
-            { BsdSocketOption.SoType,        SocketOptionName.Type }
-        };
-
-        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _ipSocketOptionMap = new()
-        {
-            { BsdSocketOption.IpOptions,              SocketOptionName.IPOptions },
-            { BsdSocketOption.IpHdrIncl,              SocketOptionName.HeaderIncluded },
-            { BsdSocketOption.IpTtl,                  SocketOptionName.IpTimeToLive },
-            { BsdSocketOption.IpMulticastIf,          SocketOptionName.MulticastInterface },
-            { BsdSocketOption.IpMulticastTtl,         SocketOptionName.MulticastTimeToLive },
-            { BsdSocketOption.IpMulticastLoop,        SocketOptionName.MulticastLoopback },
-            { BsdSocketOption.IpAddMembership,        SocketOptionName.AddMembership },
-            { BsdSocketOption.IpDropMembership,       SocketOptionName.DropMembership },
-            { BsdSocketOption.IpDontFrag,             SocketOptionName.DontFragment },
-            { BsdSocketOption.IpAddSourceMembership,  SocketOptionName.AddSourceMembership },
-            { BsdSocketOption.IpDropSourceMembership, SocketOptionName.DropSourceMembership }
-        };
-
-        private static readonly Dictionary<BsdSocketOption, SocketOptionName> _tcpSocketOptionMap = new()
-        {
-            { BsdSocketOption.TcpNoDelay,   SocketOptionName.NoDelay },
-            { BsdSocketOption.TcpKeepIdle,  SocketOptionName.TcpKeepAliveTime },
-            { BsdSocketOption.TcpKeepIntvl, SocketOptionName.TcpKeepAliveInterval },
-            { BsdSocketOption.TcpKeepCnt,   SocketOptionName.TcpKeepAliveRetryCount }
-        };
-
+        private BsdContext _context;
         private bool _isPrivileged;
-
-        private List<BsdSocket> _sockets = new List<BsdSocket>();
 
         public IClient(ServiceCtx context, bool isPrivileged) : base(context.Device.System.BsdServer)
         {
             _isPrivileged = isPrivileged;
         }
 
-        private static LinuxError ConvertError(WsaError errorCode)
-        {
-            if (!_errorMap.TryGetValue(errorCode, out LinuxError errno))
-            {
-                errno = (LinuxError)errorCode;
-            }
-
-            return errno;
-        }
-
-        private static SocketFlags ConvertBsdSocketFlags(BsdSocketFlags bsdSocketFlags)
-        {
-            SocketFlags socketFlags = SocketFlags.None;
-
-            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Oob))
-            {
-                socketFlags |= SocketFlags.OutOfBand;
-            }
-
-            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Peek))
-            {
-                socketFlags |= SocketFlags.Peek;
-            }
-
-            if (bsdSocketFlags.HasFlag(BsdSocketFlags.DontRoute))
-            {
-                socketFlags |= SocketFlags.DontRoute;
-            }
-
-            if (bsdSocketFlags.HasFlag(BsdSocketFlags.Trunc))
-            {
-                socketFlags |= SocketFlags.Truncated;
-            }
-
-            if (bsdSocketFlags.HasFlag(BsdSocketFlags.CTrunc))
-            {
-                socketFlags |= SocketFlags.ControlDataTruncated;
-            }
-
-            bsdSocketFlags &= ~(BsdSocketFlags.Oob |
-                BsdSocketFlags.Peek |
-                BsdSocketFlags.DontRoute |
-                BsdSocketFlags.Trunc |
-                BsdSocketFlags.CTrunc);
-
-            if (bsdSocketFlags != BsdSocketFlags.None)
-            {
-                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported socket flags: {bsdSocketFlags}");
-            }
-
-            return socketFlags;
-        }
-
-        private static bool TryConvertSocketOption(BsdSocketOption option, SocketOptionLevel level, out SocketOptionName name)
-        {
-            var table = level switch
-            {
-                SocketOptionLevel.Socket => _soSocketOptionMap,
-                SocketOptionLevel.IP => _ipSocketOptionMap,
-                SocketOptionLevel.Tcp => _tcpSocketOptionMap,
-                _ => null
-            };
-
-            if (table == null)
-            {
-                name = default;
-                return false;
-            }
-
-            return table.TryGetValue(option, out name);
-        }
-
-        private ResultCode WriteWinSock2Error(ServiceCtx context, WsaError errorCode)
-        {
-            return WriteBsdResult(context, -1, ConvertError(errorCode));
-        }
-
-        private ResultCode WriteBsdResult(ServiceCtx context, int result, LinuxError errorCode = 0)
+        private ResultCode WriteBsdResult(ServiceCtx context, int result, LinuxError errorCode = LinuxError.SUCCESS)
         {
             if (errorCode != LinuxError.SUCCESS)
             {
@@ -240,100 +41,96 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return ResultCode.Success;
         }
 
-        private BsdSocket RetrieveSocket(int socketFd)
+        private static AddressFamily ConvertBsdAddressFamily(BsdAddressFamily family)
         {
-            if (socketFd >= 0 && _sockets.Count > socketFd)
+            switch (family)
             {
-                return _sockets[socketFd];
+                case BsdAddressFamily.Unspecified:
+                    return AddressFamily.Unspecified;
+                case BsdAddressFamily.InterNetwork:
+                    return AddressFamily.InterNetwork;
+                case BsdAddressFamily.InterNetworkV6:
+                    return AddressFamily.InterNetworkV6;
+                case BsdAddressFamily.Unknown:
+                    return AddressFamily.Unknown;
+                default:
+                    throw new NotImplementedException(family.ToString());
             }
-
-            return null;
         }
 
-        private LinuxError SetResultErrno(Socket socket, int result)
+        private LinuxError SetResultErrno(IFileDescriptor socket, int result)
         {
             return result == 0 && !socket.Blocking ? LinuxError.EWOULDBLOCK : LinuxError.SUCCESS;
         }
 
-        private AddressFamily ConvertFromBsd(int domain)
-        {
-            if (domain == 2)
-            {
-                return AddressFamily.InterNetwork;
-            }
-
-            // FIXME: AF_ROUTE ignored, is that really needed?
-            return AddressFamily.Unknown;
-        }
-
         private ResultCode SocketInternal(ServiceCtx context, bool exempt)
         {
-            AddressFamily domain   = (AddressFamily)context.RequestData.ReadInt32();
-            SocketType    type     = (SocketType)context.RequestData.ReadInt32();
-            ProtocolType  protocol = (ProtocolType)context.RequestData.ReadInt32();
+            BsdAddressFamily domain   = (BsdAddressFamily)context.RequestData.ReadInt32();
+            BsdSocketType    type     = (BsdSocketType)context.RequestData.ReadInt32();
+            ProtocolType     protocol = (ProtocolType)context.RequestData.ReadInt32();
 
-            if (domain == AddressFamily.Unknown)
+            BsdSocketCreationFlags creationFlags = (BsdSocketCreationFlags)((int)type >> (int)BsdSocketCreationFlags.FlagsShift);
+            type &= BsdSocketType.TypeMask;
+
+            if (domain == BsdAddressFamily.Unknown)
             {
                 return WriteBsdResult(context, -1, LinuxError.EPROTONOSUPPORT);
             }
-            else if ((type == SocketType.Seqpacket || type == SocketType.Raw) && !_isPrivileged)
+            else if ((type == BsdSocketType.Seqpacket || type == BsdSocketType.Raw) && !_isPrivileged)
             {
-                if (domain != AddressFamily.InterNetwork || type != SocketType.Raw || protocol != ProtocolType.Icmp)
+                if (domain != BsdAddressFamily.InterNetwork || type != BsdSocketType.Raw || protocol != ProtocolType.Icmp)
                 {
                     return WriteBsdResult(context, -1, LinuxError.ENOENT);
                 }
             }
 
-            BsdSocket newBsdSocket = new BsdSocket
-            {
-                Family   = (int)domain,
-                Type     = (int)type,
-                Protocol = (int)protocol,
-                Handle   = new Socket(domain, type, protocol)
-            };
+            AddressFamily netDomain = ConvertBsdAddressFamily(domain);
 
-            _sockets.Add(newBsdSocket);
+            if (protocol == ProtocolType.IP)
+            {
+                if (type == BsdSocketType.Stream)
+                {
+                    protocol = ProtocolType.Tcp;
+                }
+                else if (type == BsdSocketType.Dgram)
+                {
+                    protocol = ProtocolType.Udp;
+                }
+            }
+
+            ISocket newBsdSocket = new ManagedSocket(netDomain, (SocketType)type, protocol);
+            newBsdSocket.Blocking = !creationFlags.HasFlag(BsdSocketCreationFlags.NonBlocking);
+
+            LinuxError errno = LinuxError.SUCCESS;
+
+            int newSockFd = _context.RegisterFileDescriptor(newBsdSocket);
+
+            if (newSockFd == -1)
+            {
+                errno = LinuxError.EBADF;
+            }
 
             if (exempt)
             {
-                newBsdSocket.Handle.Disconnect(true);
+                newBsdSocket.Disconnect();
             }
 
-            return WriteBsdResult(context, _sockets.Count - 1);
+            return WriteBsdResult(context, newSockFd, errno);
         }
 
-        private IPEndPoint ParseSockAddr(ServiceCtx context, ulong bufferPosition, ulong bufferSize)
+        private void WriteSockAddr(ServiceCtx context, ulong bufferPosition, ISocket socket, bool isRemote)
         {
-            int size   = context.Memory.Read<byte>(bufferPosition);
-            int family = context.Memory.Read<byte>(bufferPosition + 1);
-            int port   = BinaryPrimitives.ReverseEndianness(context.Memory.Read<ushort>(bufferPosition + 2));
+            IPEndPoint endPoint = isRemote ? socket.RemoteEndPoint : socket.LocalEndPoint;
 
-            byte[] rawIp = new byte[4];
-
-            context.Memory.Read(bufferPosition + 4, rawIp);
-
-            return new IPEndPoint(new IPAddress(rawIp), port);
-        }
-
-        private void WriteSockAddr(ServiceCtx context, ulong bufferPosition, IPEndPoint endPoint)
-        {
-            context.Memory.Write(bufferPosition, (byte)0);
-            context.Memory.Write(bufferPosition + 1, (byte)endPoint.AddressFamily);
-            context.Memory.Write(bufferPosition + 2, BinaryPrimitives.ReverseEndianness((ushort)endPoint.Port));
-            context.Memory.Write(bufferPosition + 4, endPoint.Address.GetAddressBytes());
-        }
-
-        private void WriteSockAddr(ServiceCtx context, ulong bufferPosition, BsdSocket socket, bool isRemote)
-        {
-            IPEndPoint endPoint = (isRemote ? socket.Handle.RemoteEndPoint : socket.Handle.LocalEndPoint) as IPEndPoint;
-
-            WriteSockAddr(context, bufferPosition, endPoint);
+            context.Memory.Write(bufferPosition, BsdSockAddr.FromIPEndPoint(endPoint));
         }
 
         [CommandHipc(0)]
         // Initialize(nn::socket::BsdBufferConfig config, u64 pid, u64 transferMemorySize, KObject<copy, transfer_memory>, pid) -> u32 bsd_errno
         public ResultCode RegisterClient(ServiceCtx context)
         {
+            _context = BsdContext.GetOrRegister(context.Request.HandleDesc.PId);
+
             /*
             typedef struct  {
                 u32 version;                // Observed 1 on 2.0 LibAppletWeb, 2 on 3.0.
@@ -424,7 +221,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
 
-
             if (timeout < -1 || fdsCount < 0 || (ulong)(fdsCount * 8) > bufferSize)
             {
                 return WriteBsdResult(context, -1, LinuxError.EINVAL);
@@ -434,75 +230,94 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             for (int i = 0; i < fdsCount; i++)
             {
-                int socketFd = context.Memory.Read<int>(bufferPosition + (ulong)i * 8);
+                PollEventData pollEventData = context.Memory.Read<PollEventData>(bufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()));
 
-                BsdSocket socket = RetrieveSocket(socketFd);
+                IFileDescriptor fileDescriptor = _context.RetrieveFileDescriptor(pollEventData.SocketFd);
 
-                if (socket == null)
+                if (fileDescriptor == null)
                 {
-                    return WriteBsdResult(context, -1, LinuxError.EBADF);}
+                    return WriteBsdResult(context, -1, LinuxError.EBADF);
+                }
 
-                PollEvent.EventTypeMask inputEvents  = (PollEvent.EventTypeMask)context.Memory.Read<short>(bufferPosition + (ulong)i * 8 + 4);
-                PollEvent.EventTypeMask outputEvents = (PollEvent.EventTypeMask)context.Memory.Read<short>(bufferPosition + (ulong)i * 8 + 6);
-
-                events[i] = new PollEvent(socketFd, socket, inputEvents, outputEvents);
+                events[i] = new PollEvent(pollEventData, fileDescriptor);
             }
 
-            List<Socket> readEvents  = new List<Socket>();
-            List<Socket> writeEvents = new List<Socket>();
-            List<Socket> errorEvents = new List<Socket>();
+            List<PollEvent> discoveredEvents = new List<PollEvent>();
+            List<PollEvent>[] eventsByPollManager = new List<PollEvent>[_pollManagers.Count];
 
-            foreach (PollEvent Event in events)
+            for (int i = 0; i < eventsByPollManager.Length; i++)
             {
-                bool isValidEvent = false;
+                eventsByPollManager[i] = new List<PollEvent>();
 
-                if ((Event.InputEvents & PollEvent.EventTypeMask.Input) != 0)
+                foreach (PollEvent evnt in events)
                 {
-                    readEvents.Add(Event.Socket.Handle);
-                    errorEvents.Add(Event.Socket.Handle);
-
-                    isValidEvent = true;
-                }
-
-                if ((Event.InputEvents & PollEvent.EventTypeMask.UrgentInput) != 0)
-                {
-                    readEvents.Add(Event.Socket.Handle);
-                    errorEvents.Add(Event.Socket.Handle);
-
-                    isValidEvent = true;
-                }
-
-                if ((Event.InputEvents & PollEvent.EventTypeMask.Output) != 0)
-                {
-                    writeEvents.Add(Event.Socket.Handle);
-                    errorEvents.Add(Event.Socket.Handle);
-
-                    isValidEvent = true;
-                }
-
-                if ((Event.InputEvents & PollEvent.EventTypeMask.Error) != 0)
-                {
-                    errorEvents.Add(Event.Socket.Handle);
-                    isValidEvent = true;
-                }
-
-                if (!isValidEvent)
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported Poll input event type: {Event.InputEvents}");
-                    return WriteBsdResult(context, -1, LinuxError.EINVAL);
+                    if (_pollManagers[i].IsCompatible(evnt))
+                    {
+                        eventsByPollManager[i].Add(evnt);
+                        discoveredEvents.Add(evnt);
+                    }
                 }
             }
+
+            foreach (PollEvent evnt in events)
+            {
+                if (!discoveredEvents.Contains(evnt))
+                {
+                    Logger.Error?.Print(LogClass.ServiceBsd, $"Poll operation is not supported for {evnt.FileDescriptor.GetType().Name}!");
+
+                    return WriteBsdResult(context, -1, LinuxError.EBADF);
+                }
+            }
+
+            int updateCount = 0;
+
+            LinuxError errno = LinuxError.SUCCESS;
 
             if (fdsCount != 0)
             {
-                try
+                bool IsUnexpectedLinuxError(LinuxError error)
                 {
-                    System.Net.Sockets.Socket.Select(readEvents, writeEvents, errorEvents, timeout);
+                    return errno != LinuxError.SUCCESS && errno != LinuxError.ETIMEDOUT;
                 }
-                catch (SocketException exception)
+
+                // Hybrid approach
+                long budgetLeftMilliseconds;
+
+                if (timeout == -1)
                 {
-                    return WriteWinSock2Error(context, (WsaError)exception.ErrorCode);
+                    budgetLeftMilliseconds = PerformanceCounter.ElapsedMilliseconds + uint.MaxValue;
                 }
+                else
+                {
+                    budgetLeftMilliseconds = PerformanceCounter.ElapsedMilliseconds + timeout;
+                }
+
+                do
+                {
+                    for (int i = 0; i < eventsByPollManager.Length; i++)
+                    {
+                        if (eventsByPollManager[i].Count == 0)
+                        {
+                            continue;
+                        }
+
+                        errno = _pollManagers[i].Poll(eventsByPollManager[i], 0, out updateCount);
+
+                        if (IsUnexpectedLinuxError(errno))
+                        {
+                            break;
+                        }
+
+                        if (updateCount > 0)
+                        {
+                            break;
+                        }
+                    }
+
+                    // If we are here, that mean nothing was availaible, sleep for 50ms
+                    context.Device.System.KernelContext.Syscall.SleepThread(50 * 1000000);
+                }
+                while (PerformanceCounter.ElapsedMilliseconds < budgetLeftMilliseconds);
             }
             else if (timeout == -1)
             {
@@ -511,47 +326,16 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
             else
             {
-                // FIXME: We should make the KThread sleep but we can't do much about it yet.
-                Thread.Sleep(timeout);
+                context.Device.System.KernelContext.Syscall.SleepThread(timeout);
             }
 
+            // TODO: Spanify
             for (int i = 0; i < fdsCount; i++)
             {
-                PollEvent Event = events[i];
-                context.Memory.Write(bufferPosition + (ulong)i * 8, Event.SocketFd);
-                context.Memory.Write(bufferPosition + (ulong)i * 8 + 4, (short)Event.InputEvents);
-
-                PollEvent.EventTypeMask outputEvents = 0;
-
-                Socket socket = Event.Socket.Handle;
-
-                if (errorEvents.Contains(socket))
-                {
-                    outputEvents |= PollEvent.EventTypeMask.Error;
-
-                    if (!socket.Connected || !socket.IsBound)
-                    {
-                        outputEvents |= PollEvent.EventTypeMask.Disconnected;
-                    }
-                }
-
-                if (readEvents.Contains(socket))
-                {
-                    if ((Event.InputEvents & PollEvent.EventTypeMask.Input) != 0)
-                    {
-                        outputEvents |= PollEvent.EventTypeMask.Input;
-                    }
-                }
-
-                if (writeEvents.Contains(socket))
-                {
-                    outputEvents |= PollEvent.EventTypeMask.Output;
-                }
-
-                context.Memory.Write(bufferPosition + (ulong)i * 8 + 6, (short)outputEvents);
+                context.Memory.Write(bufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()), events[i].Data);
             }
 
-            return WriteBsdResult(context, readEvents.Count + writeEvents.Count + errorEvents.Count, LinuxError.SUCCESS);
+            return WriteBsdResult(context, updateCount, errno);
         }
 
         [CommandHipc(7)]
@@ -574,24 +358,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             (ulong receivePosition, ulong receiveLength) = context.Request.GetBufferType0x22();
 
+            WritableRegion receiveRegion = context.Memory.GetWritableRegion(receivePosition, (int)receiveLength);
+
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
             int        result = -1;
 
             if (socket != null)
             {
-                byte[] receivedBuffer = new byte[receiveLength];
+                errno = socket.Receive(out result, receiveRegion.Memory.Span, socketFlags);
 
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.Receive(receivedBuffer, ConvertBsdSocketFlags(socketFlags));
-                    errno  = SetResultErrno(socket.Handle, result);
+                    SetResultErrno(socket, result);
 
-                    context.Memory.Write(receivePosition, receivedBuffer);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
+                    receiveRegion.Dispose();
                 }
             }
 
@@ -605,29 +386,26 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int            socketFd    = context.RequestData.ReadInt32();
             BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
-            (ulong receivePosition,     ulong receiveLength)   = context.Request.GetBufferType0x22();
+            (ulong receivePosition,     ulong receiveLength)   = context.Request.GetBufferType0x22(0);
             (ulong sockAddrOutPosition, ulong sockAddrOutSize) = context.Request.GetBufferType0x22(1);
 
+            WritableRegion receiveRegion = context.Memory.GetWritableRegion(receivePosition, (int)receiveLength);
+
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
             int        result = -1;
 
             if (socket != null)
             {
-                byte[]   receivedBuffer = new byte[receiveLength];
-                EndPoint endPoint       = new IPEndPoint(IPAddress.Any, 0);
+                errno = socket.ReceiveFrom(out result, receiveRegion.Memory.Span, receiveRegion.Memory.Span.Length, socketFlags, out IPEndPoint endPoint);
 
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.ReceiveFrom(receivedBuffer, receivedBuffer.Length, ConvertBsdSocketFlags(socketFlags), ref endPoint);
-                    errno  = SetResultErrno(socket.Handle, result);
+                    SetResultErrno(socket, result);
 
-                    context.Memory.Write(receivePosition, receivedBuffer);
-                    WriteSockAddr(context, sockAddrOutPosition, (IPEndPoint)endPoint);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
+                    receiveRegion.Dispose();
+
+                    context.Memory.Write(sockAddrOutPosition, BsdSockAddr.FromIPEndPoint(endPoint));
                 }
             }
 
@@ -643,26 +421,20 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             (ulong sendPosition, ulong sendSize) = context.Request.GetBufferType0x21();
 
+            ReadOnlySpan<byte> sendBuffer = context.Memory.GetSpan(sendPosition, (int)sendSize);
+
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
             int        result = -1;
 
             if (socket != null)
             {
-                byte[] sendBuffer = new byte[sendSize];
+                errno = socket.Send(out result, sendBuffer, socketFlags);
 
-                context.Memory.Read(sendPosition, sendBuffer);
-
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.Send(sendBuffer, ConvertBsdSocketFlags(socketFlags));
-                    errno  = SetResultErrno(socket.Handle, result);
+                    SetResultErrno(socket, result);
                 }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
-                }
-
             }
 
             return WriteBsdResult(context, result, errno);
@@ -675,31 +447,25 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int            socketFd    = context.RequestData.ReadInt32();
             BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
 
-            (ulong sendPosition,   ulong sendSize)   = context.Request.GetBufferType0x21();
+            (ulong sendPosition,   ulong sendSize)   = context.Request.GetBufferType0x21(0);
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21(1);
 
+            ReadOnlySpan<byte> sendBuffer = context.Memory.GetSpan(sendPosition, (int)sendSize);
+
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
             int        result = -1;
 
             if (socket != null)
             {
-                byte[] sendBuffer = new byte[sendSize];
+                IPEndPoint endPoint = context.Memory.Read<BsdSockAddr>(bufferPosition).ToIPEndPoint();
 
-                context.Memory.Read(sendPosition, sendBuffer);
+                errno = socket.SendTo(out result, sendBuffer, sendBuffer.Length, socketFlags, endPoint);
 
-                EndPoint endPoint = ParseSockAddr(context, bufferPosition, bufferSize);
-
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.SendTo(sendBuffer, sendBuffer.Length, ConvertBsdSocketFlags(socketFlags), endPoint);
-                    errno  = SetResultErrno(socket.Handle, result);
+                    SetResultErrno(socket, result);
                 }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
-                }
-
             }
 
             return WriteBsdResult(context, result, errno);
@@ -714,22 +480,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x22();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = LinuxError.SUCCESS;
-
-                Socket newSocket = null;
-
-                try
-                {
-                    newSocket = socket.Handle.Accept();
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
-                }
+                errno = socket.Accept(out ISocket newSocket);
 
                 if (newSocket == null && errno == LinuxError.SUCCESS)
                 {
@@ -737,19 +492,18 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 }
                 else if (errno == LinuxError.SUCCESS)
                 {
-                    BsdSocket newBsdSocket = new BsdSocket
+                    int newSockFd = _context.RegisterFileDescriptor(newSocket);
+
+                    if (newSockFd == -1)
                     {
-                        Family   = (int)newSocket.AddressFamily,
-                        Type     = (int)newSocket.SocketType,
-                        Protocol = (int)newSocket.ProtocolType,
-                        Handle   = newSocket
-                    };
+                        errno = LinuxError.EBADF;
+                    }
+                    else
+                    {
+                        WriteSockAddr(context, bufferPos, newSocket, true);
+                    }
 
-                    _sockets.Add(newBsdSocket);
-
-                    WriteSockAddr(context, bufferPos, newBsdSocket, true);
-
-                    WriteBsdResult(context, _sockets.Count - 1, errno);
+                    WriteBsdResult(context, newSockFd, errno);
 
                     context.ResponseData.Write(0x10);
 
@@ -766,25 +520,16 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             int socketFd = context.RequestData.ReadInt32();
 
-            (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
+            (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = LinuxError.SUCCESS;
+                IPEndPoint endPoint = context.Memory.Read<BsdSockAddr>(bufferPosition).ToIPEndPoint();
 
-                try
-                {
-                    IPEndPoint endPoint = ParseSockAddr(context, bufferPos, bufferSize);
-
-                    socket.Handle.Bind(endPoint);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
-                }
+                errno = socket.Bind(endPoint);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -796,31 +541,16 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             int socketFd = context.RequestData.ReadInt32();
 
-            (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
+            (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = LinuxError.SUCCESS;
-                try
-                {
-                    IPEndPoint endPoint = ParseSockAddr(context, bufferPos, bufferSize);
+                IPEndPoint endPoint = context.Memory.Read<BsdSockAddr>(bufferPosition).ToIPEndPoint();
 
-                    socket.Handle.Connect(endPoint);
-                }
-                catch (SocketException exception)
-                {
-                    if (!socket.Handle.Blocking && exception.ErrorCode == (int)WsaError.WSAEWOULDBLOCK)
-                    {
-                        errno = LinuxError.EINPROGRESS;
-                    }
-                    else
-                    {
-                        errno = ConvertError((WsaError)exception.ErrorCode);
-                    }
-                }
+                errno = socket.Connect(endPoint);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -832,18 +562,18 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             int socketFd = context.RequestData.ReadInt32();
 
-            (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x22();
+            (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x22();
 
-            LinuxError  errno  = LinuxError.EBADF;
-            BsdSocket socket = RetrieveSocket(socketFd);
+            LinuxError errno  = LinuxError.EBADF;
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
                 errno = LinuxError.SUCCESS;
 
-                WriteSockAddr(context, bufferPos, socket, true);
+                WriteSockAddr(context, bufferPosition, socket, true);
                 WriteBsdResult(context, 0, errno);
-                context.ResponseData.Write(0x10);
+                context.ResponseData.Write(Unsafe.SizeOf<BsdSockAddr>());
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -858,7 +588,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x22();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
@@ -866,7 +596,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
                 WriteSockAddr(context, bufferPos, socket, false);
                 WriteBsdResult(context, 0, errno);
-                context.ResponseData.Write(0x10);
+                context.ResponseData.Write(Unsafe.SizeOf<BsdSockAddr>());
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -881,13 +611,19 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             BsdSocketOption   option   = (BsdSocketOption)context.RequestData.ReadInt32();
 
             (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x22();
+            WritableRegion optionValue = context.Memory.GetWritableRegion(bufferPosition, (int)bufferSize);
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = HandleGetSocketOption(context, socket, option, level, bufferPosition, bufferSize);
+                errno = socket.GetSocketOption(option, level, optionValue.Memory.Span);
+
+                if (errno == LinuxError.SUCCESS)
+                {
+                    optionValue.Dispose();
+                }
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -901,20 +637,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int backlog  = context.RequestData.ReadInt32();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = LinuxError.SUCCESS;
-
-                try
-                {
-                    socket.Handle.Listen(backlog);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
-                }
+                errno = socket.Listen(backlog);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -929,7 +656,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int      bufferCount = context.RequestData.ReadInt32();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
@@ -965,7 +692,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             int        result = 0;
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
@@ -973,11 +700,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
                 if (cmd == 0x3)
                 {
-                    result = !socket.Handle.Blocking ? 0x800 : 0;
+                    result = !socket.Blocking ? 0x800 : 0;
                 }
                 else if (cmd == 0x4 && arg == 0x800)
                 {
-                    socket.Handle.Blocking = false;
+                    socket.Blocking = false;
                     result = 0;
                 }
                 else
@@ -987,74 +714,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
 
             return WriteBsdResult(context, result, errno);
-        }
-
-        private static LinuxError HandleGetSocketOption(
-            ServiceCtx context,
-            BsdSocket socket,
-            BsdSocketOption option,
-            SocketOptionLevel level,
-            ulong optionValuePosition,
-            ulong optionValueSize)
-        {
-            try
-            {
-                if (!TryConvertSocketOption(option, level, out SocketOptionName optionName))
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt Option: {option} Level: {level}");
-
-                    return LinuxError.EOPNOTSUPP;
-                }
-
-                byte[] optionValue = new byte[optionValueSize];
-
-                socket.Handle.GetSocketOption(level, optionName, optionValue);
-                context.Memory.Write(optionValuePosition, optionValue);
-
-                return LinuxError.SUCCESS;
-            }
-            catch (SocketException exception)
-            {
-                return ConvertError((WsaError)exception.ErrorCode);
-            }
-        }
-
-        private static LinuxError HandleSetSocketOption(
-            ServiceCtx context,
-            BsdSocket socket,
-            BsdSocketOption option,
-            SocketOptionLevel level,
-            ulong optionValuePosition,
-            ulong optionValueSize)
-        {
-            try
-            {
-                if (!TryConvertSocketOption(option, level, out SocketOptionName optionName))
-                {
-                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt Option: {option} Level: {level}");
-
-                    return LinuxError.EOPNOTSUPP;
-                }
-
-                int value = context.Memory.Read<int>((ulong)optionValuePosition);
-
-                if (option == BsdSocketOption.SoLinger)
-                {
-                    int value2 = context.Memory.Read<int>((ulong)optionValuePosition + 4);
-
-                    socket.Handle.SetSocketOption(level, SocketOptionName.Linger, new LingerOption(value != 0, value2));
-                }
-                else
-                {
-                    socket.Handle.SetSocketOption(level, optionName, value);
-                }
-
-                return LinuxError.SUCCESS;
-            }
-            catch (SocketException exception)
-            {
-                return ConvertError((WsaError)exception.ErrorCode);
-            }
         }
 
         [CommandHipc(21)]
@@ -1067,12 +726,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
 
+            ReadOnlySpan<byte> optionValue = context.Memory.GetSpan(bufferPos, (int)bufferSize);
+
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
-                errno = HandleSetSocketOption(context, socket, option, level, bufferPos, bufferSize);
+                errno = socket.SetSocketOption(option, level, optionValue);
             }
 
             return WriteBsdResult(context, 0, errno);
@@ -1086,7 +747,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int how      = context.RequestData.ReadInt32();
 
             LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            ISocket    socket = _context.RetrieveSocket(socketFd);
 
             if (socket != null)
             {
@@ -1094,16 +755,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
                 if (how >= 0 && how <= 2)
                 {
-                    errno = LinuxError.SUCCESS;
-
-                    try
-                    {
-                        socket.Handle.Shutdown((SocketShutdown)how);
-                    }
-                    catch (SocketException exception)
-                    {
-                        errno = ConvertError((WsaError)exception.ErrorCode);
-                    }
+                    errno = socket.Shutdown((BsdSocketShutdownFlags)how);
                 }
             }
 
@@ -1120,54 +772,33 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             if (how >= 0 && how <= 2)
             {
-                errno = LinuxError.SUCCESS;
-
-                foreach (BsdSocket socket in _sockets)
-                {
-                    if (socket != null)
-                    {
-                        try
-                        {
-                            socket.Handle.Shutdown((SocketShutdown)how);
-                        }
-                        catch (SocketException exception)
-                        {
-                            errno = ConvertError((WsaError)exception.ErrorCode);
-                            break;
-                        }
-                    }
-                }
+                errno = _context.ShutdownAllSockets((BsdSocketShutdownFlags)how);
             }
 
             return WriteBsdResult(context, 0, errno);
         }
 
         [CommandHipc(24)]
-        // Write(u32 socket, buffer<i8, 0x21, 0> message) -> (i32 ret, u32 bsd_errno)
+        // Write(u32 fd, buffer<i8, 0x21, 0> message) -> (i32 ret, u32 bsd_errno)
         public ResultCode Write(ServiceCtx context)
         {
-            int socketFd = context.RequestData.ReadInt32();
+            int fd = context.RequestData.ReadInt32();
 
             (ulong sendPosition, ulong sendSize) = context.Request.GetBufferType0x21();
 
-            LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
-            int        result = -1;
+            ReadOnlySpan<byte> sendBuffer = context.Memory.GetSpan(sendPosition, (int)sendSize);
 
-            if (socket != null)
+            LinuxError      errno  = LinuxError.EBADF;
+            IFileDescriptor file   = _context.RetrieveFileDescriptor(fd);
+            int             result = -1;
+
+            if (file != null)
             {
-                byte[] sendBuffer = new byte[sendSize];
+                errno = file.Write(out result, sendBuffer);
 
-                context.Memory.Read(sendPosition, sendBuffer);
-
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.Send(sendBuffer);
-                    errno  = SetResultErrno(socket.Handle, result);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
+                    SetResultErrno(file, result);
                 }
             }
 
@@ -1175,30 +806,28 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         }
 
         [CommandHipc(25)]
-        // Read(u32 socket) -> (i32 ret, u32 bsd_errno, buffer<i8, 0x22, 0> message)
+        // Read(u32 fd) -> (i32 ret, u32 bsd_errno, buffer<i8, 0x22, 0> message)
         public ResultCode Read(ServiceCtx context)
         {
-            int socketFd = context.RequestData.ReadInt32();
+            int fd = context.RequestData.ReadInt32();
 
             (ulong receivePosition, ulong receiveLength) = context.Request.GetBufferType0x22();
 
-            LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
-            int        result = -1;
+            WritableRegion receiveRegion = context.Memory.GetWritableRegion(receivePosition, (int)receiveLength);
 
-            if (socket != null)
+            LinuxError      errno  = LinuxError.EBADF;
+            IFileDescriptor file   = _context.RetrieveFileDescriptor(fd);
+            int             result = -1;
+
+            if (file != null)
             {
-                byte[] receivedBuffer = new byte[receiveLength];
+                errno = file.Read(out result, receiveRegion.Memory.Span);
 
-                try
+                if (errno == LinuxError.SUCCESS)
                 {
-                    result = socket.Handle.Receive(receivedBuffer);
-                    errno  = SetResultErrno(socket.Handle, result);
-                    context.Memory.Write(receivePosition, receivedBuffer);
-                }
-                catch (SocketException exception)
-                {
-                    errno = ConvertError((WsaError)exception.ErrorCode);
+                    SetResultErrno(file, result);
+
+                    receiveRegion.Dispose();
                 }
             }
 
@@ -1206,20 +835,15 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         }
 
         [CommandHipc(26)]
-        // Close(u32 socket) -> (i32 ret, u32 bsd_errno)
+        // Close(u32 fd) -> (i32 ret, u32 bsd_errno)
         public ResultCode Close(ServiceCtx context)
         {
-            int socketFd = context.RequestData.ReadInt32();
+            int fd = context.RequestData.ReadInt32();
 
-            LinuxError errno  = LinuxError.EBADF;
-            BsdSocket  socket = RetrieveSocket(socketFd);
+            LinuxError errno = LinuxError.EBADF;
 
-            if (socket != null)
+            if (_context.CloseFileDescriptor(fd))
             {
-                socket.Handle.Close();
-
-                _sockets[socketFd] = null;
-
                 errno = LinuxError.SUCCESS;
             }
 
@@ -1227,26 +851,46 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         }
 
         [CommandHipc(27)]
-        // DuplicateSocket(u32 socket, u64 reserved) -> (i32 ret, u32 bsd_errno)
+        // DuplicateSocket(u32 fd, u64 reserved) -> (i32 ret, u32 bsd_errno)
         public ResultCode DuplicateSocket(ServiceCtx context)
         {
-            int   socketFd = context.RequestData.ReadInt32();
+            int   fd       = context.RequestData.ReadInt32();
             ulong reserved = context.RequestData.ReadUInt64();
 
-            LinuxError errno     = LinuxError.ENOENT;
-            int        newSockFd = -1;
+            LinuxError errno = LinuxError.ENOENT;
+            int newSockFd = -1;
 
             if (_isPrivileged)
             {
-                errno = LinuxError.EBADF;
+                errno = LinuxError.SUCCESS;
 
-                BsdSocket oldSocket = RetrieveSocket(socketFd);
+                newSockFd = _context.DuplicateFileDescriptor(fd);
 
-                if (oldSocket != null)
+                if (newSockFd == -1)
                 {
-                    _sockets.Add(oldSocket);
-                    newSockFd = _sockets.Count - 1;
+                    errno = LinuxError.EBADF;
                 }
+            }
+
+            return WriteBsdResult(context, newSockFd, errno);
+        }
+
+        [CommandHipc(31)] // 7.0.0+
+        // EventFd(u64 initval, nn::socket::EventFdFlags flags) -> (i32 ret, u32 bsd_errno)
+        public ResultCode EventFd(ServiceCtx context)
+        {
+            ulong initialValue = context.RequestData.ReadUInt64();
+            EventFdFlags flags = (EventFdFlags)context.RequestData.ReadUInt32();
+
+            EventFileDescriptor newEventFile = new EventFileDescriptor(initialValue, flags);
+
+            LinuxError errno = LinuxError.SUCCESS;
+
+            int newSockFd = _context.RegisterFileDescriptor(newEventFile);
+
+            if (newSockFd == -1)
+            {
+                errno = LinuxError.EBADF;
             }
 
             return WriteBsdResult(context, newSockFd, errno);
