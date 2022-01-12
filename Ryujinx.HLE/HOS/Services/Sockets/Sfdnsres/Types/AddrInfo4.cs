@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
@@ -16,14 +17,34 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
 
         public AddrInfo4(IPAddress address, short port)
         {
-            Length  = 0;
+            Length  = (byte)Unsafe.SizeOf<Array4<byte>>();
             Family  = (byte)AddressFamily.InterNetwork;
             Port    = port;
-            Address = default;
+            Address = new Array4<byte>();
 
-            Span<byte> outAddress = Address.ToSpan();
-            address.TryWriteBytes(outAddress, out _);
-            outAddress.Reverse();
+            address.TryWriteBytes(Address.ToSpan(), out _);
+        }
+
+        public void ToNetworkOrder()
+        {
+            Port = IPAddress.HostToNetworkOrder(Port);
+
+            RawIpv4AddressNetworkEndianSwap(ref Address);
+        }
+
+        public void ToHostOrder()
+        {
+            Port = IPAddress.NetworkToHostOrder(Port);
+
+            RawIpv4AddressNetworkEndianSwap(ref Address);
+        }
+
+        public static void RawIpv4AddressNetworkEndianSwap(ref Array4<byte> address)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                address.ToSpan().Reverse();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager;
 using Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Proxy;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
@@ -268,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             NetDbError netDbErrorCode = NetDbError.Success;
             GaiError   errno          = GaiError.Overflow;
-            ulong      serializedSize = 0;
+            int        serializedSize = 0;
 
             if (host.Length <= byte.MaxValue)
             {
@@ -368,7 +370,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             NetDbError netDbErrorCode = NetDbError.Success;
             GaiError   errno          = GaiError.AddressFamily;
-            ulong      serializedSize = 0;
+            int        serializedSize = 0;
 
             if (rawIp.Length == 4)
             {
@@ -400,7 +402,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.Success;
         }
 
-        private static ulong SerializeHostEntries(ServiceCtx context, ulong outputBufferPosition, ulong outputBufferSize, IPHostEntry hostEntry, IEnumerable<IPAddress> addresses = null)
+        private static int SerializeHostEntries(ServiceCtx context, ulong outputBufferPosition, ulong outputBufferSize, IPHostEntry hostEntry, IEnumerable<IPAddress> addresses = null)
         {
             ulong originalBufferPosition = outputBufferPosition;
             ulong bufferPosition         = originalBufferPosition;
@@ -443,7 +445,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 }
             }
 
-            return bufferPosition - originalBufferPosition;
+            return (int)(bufferPosition - originalBufferPosition);
         }
 
         private static ResultCode GetAddrInfoRequestImpl(
@@ -470,7 +472,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             }
 
             // NOTE: We ignore hints for now.
-            DeserializeAddrInfos(context.Memory, (ulong)context.Request.SendBuff[2].Position, (ulong)context.Request.SendBuff[2].Size);
+            List<AddrInfoSerialized> hints = DeserializeAddrInfos(context.Memory, context.Request.SendBuff[2].Position, context.Request.SendBuff[2].Size);
 
             if (withOptions)
             {
@@ -484,7 +486,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             NetDbError netDbErrorCode = NetDbError.Success;
             GaiError   errno          = GaiError.AddressFamily;
-            ulong      serializedSize = 0;
+            int        serializedSize = 0;
 
             if (host.Length <= byte.MaxValue)
             {
@@ -538,74 +540,73 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.Success;
         }
 
-        private static void DeserializeAddrInfos(IVirtualMemoryManager memory, ulong address, ulong size)
+        private static List<AddrInfoSerialized> DeserializeAddrInfos(IVirtualMemoryManager memory, ulong address, ulong size)
         {
-            ulong endAddress = address + size;
+            List<AddrInfoSerialized> result = new List<AddrInfoSerialized>();
 
-            while (address < endAddress)
+            ReadOnlySpan<byte> data = memory.GetSpan(address, (int)size);
+
+            while (!data.IsEmpty)
             {
-                AddrInfoSerializedHeader header = memory.Read<AddrInfoSerializedHeader>(address);
+                AddrInfoSerialized info = AddrInfoSerialized.Read(data, out data);
 
-                if (header.Magic != SfdnsresContants.AddrInfoMagic)
+                if (info == null)
                 {
                     break;
                 }
 
-                address += (ulong)Unsafe.SizeOf<AddrInfoSerializedHeader>() + header.AddressLength;
-
-                // ai_canonname
-                string canonname = MemoryHelper.ReadAsciiString(memory, address);
+                result.Add(info);
             }
+
+            return result;
         }
 
-        private static ulong SerializeAddrInfos(ServiceCtx context, ulong responseBufferPosition, ulong responseBufferSize, IPHostEntry hostEntry, int port)
+        private static int SerializeAddrInfos(ServiceCtx context, ulong responseBufferPosition, ulong responseBufferSize, IPHostEntry hostEntry, int port)
         {
-            ulong originalBufferPosition = (ulong)responseBufferPosition;
+            ulong originalBufferPosition = responseBufferPosition;
             ulong bufferPosition         = originalBufferPosition;
 
-            string hostName = hostEntry.HostName + '\0';
+            byte[] hostName = Encoding.ASCII.GetBytes(hostEntry.HostName + '\0');
 
-            for (int i = 0; i < hostEntry.AddressList.Length; i++)
+            using (WritableRegion region = context.Memory.GetWritableRegion(responseBufferPosition, (int)responseBufferSize))
             {
-                IPAddress ip = hostEntry.AddressList[i];
+                Span<byte> data = region.Memory.Span;
 
-                if (ip.AddressFamily != AddressFamily.InterNetwork)
+                for (int i = 0; i < hostEntry.AddressList.Length; i++)
                 {
-                    continue;
+                    IPAddress ip = hostEntry.AddressList[i];
+
+                    if (ip.AddressFamily != AddressFamily.InterNetwork)
+                    {
+                        continue;
+                    }
+
+                    // NOTE: 0 = Any
+                    AddrInfoSerializedHeader header = new AddrInfoSerializedHeader(ip, 0);
+                    AddrInfo4 addr = new AddrInfo4(ip, (short)port);
+                    AddrInfoSerialized info = new AddrInfoSerialized(header, addr, null, hostEntry.HostName);
+
+                    data = info.Write(data);
                 }
 
-                AddrInfoSerializedHeader header = new AddrInfoSerializedHeader(ip, 0);
+                uint sentinel = 0;
+                MemoryMarshal.Write(data, ref sentinel);
+                data = data[sizeof(uint)..];
 
-                // NOTE: 0 = Any
-                context.Memory.Write(bufferPosition, header);
-                bufferPosition += (ulong)Unsafe.SizeOf<AddrInfoSerializedHeader>();
-
-                // addrinfo_in
-                context.Memory.Write(bufferPosition, new AddrInfo4(ip, (short)port));
-                bufferPosition += header.AddressLength;
-
-                // ai_canonname
-                context.Memory.Write(bufferPosition, Encoding.ASCII.GetBytes(hostName));
-                bufferPosition += (ulong)hostName.Length;
+                return region.Memory.Span.Length - data.Length;
             }
-
-            // Termination zero value.
-            context.Memory.Write(bufferPosition, 0);
-            bufferPosition += sizeof(int);
-
-            return bufferPosition - originalBufferPosition;
         }
 
         private static void WriteResponse(
             ServiceCtx context,
             bool withOptions,
-            ulong serializedSize,
+            int serializedSize,
             GaiError errno,
             NetDbError netDbErrorCode)
         {
             if (withOptions)
             {
-                context.ResponseData.Write((int)serializedSize);
+                context.ResponseData.Write(serializedSize);
                 context.ResponseData.Write((int)errno);
                 context.ResponseData.Write((int)netDbErrorCode);
                 context.ResponseData.Write(0);
