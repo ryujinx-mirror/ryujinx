@@ -1,4 +1,5 @@
 using Gtk;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
@@ -114,7 +115,7 @@ namespace Ryujinx.Ui.Windows
             builder.Autoconnect(this);
 
             _timeZoneContentManager = new TimeZoneContentManager();
-            _timeZoneContentManager.InitializeInstance(virtualFileSystem, contentManager, LibHac.FsSystem.IntegrityCheckLevel.None);
+            _timeZoneContentManager.InitializeInstance(virtualFileSystem, contentManager, IntegrityCheckLevel.None);
 
             _validTzRegions = new HashSet<string>(_timeZoneContentManager.LocationNameCache.Length, StringComparer.Ordinal); // Zone regions are identifiers. Must match exactly.
 

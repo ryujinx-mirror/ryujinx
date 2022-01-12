@@ -1,11 +1,10 @@
-﻿using LibHac.FsSystem;
+﻿using LibHac.Tools.FsSystem;
 using Ryujinx.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;

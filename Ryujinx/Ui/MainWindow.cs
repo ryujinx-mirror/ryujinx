@@ -11,10 +11,10 @@ using ARMeilleure.Translation.PTC;
 using Gtk;
 
 using LibHac.Common;
+using LibHac.Common.Keys;
 using LibHac.FsSystem;
-using LibHac.FsSystem.NcaUtils;
 using LibHac.Ns;
-
+using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;
@@ -129,13 +129,13 @@ namespace Ryujinx.Ui
         [GUI] Label           _gpuName;
         [GUI] Label           _progressLabel;
         [GUI] Label           _firmwareVersionLabel;
-        [GUI] ProgressBar     _progressBar;
+        [GUI] Gtk.ProgressBar _progressBar;
         [GUI] Box             _viewBox;
         [GUI] Label           _vSyncStatus;
         [GUI] Label           _volumeStatus;
         [GUI] Box             _listStatusBox;
         [GUI] Label           _loadingStatusLabel;
-        [GUI] ProgressBar     _loadingStatusBar;
+        [GUI] Gtk.ProgressBar _loadingStatusBar;
 
 #pragma warning restore CS0649, IDE0044, CS0169
 
@@ -1470,7 +1470,7 @@ namespace Ryujinx.Ui
                         thread.Start();
                     }
                 }
-                catch (LibHac.MissingKeyException ex)
+                catch (MissingKeyException ex)
                 {
                     Logger.Error?.Print(LogClass.Application, ex.ToString());
                     UserErrorDialog.CreateUserErrorDialog(UserError.FirmwareParsingFailed);

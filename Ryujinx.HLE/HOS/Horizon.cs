@@ -3,6 +3,7 @@ using LibHac.Common.Keys;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Audio;
 using Ryujinx.Audio.Input;
 using Ryujinx.Audio.Integration;

@@ -1,10 +1,13 @@
-using LibHac;
 using LibHac.Common;
+using LibHac.Common.Keys;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
-using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
+using LibHac.Tools.Fs;
+using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem.NcaUtils;
+using LibHac.Tools.Ncm;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Time;
@@ -839,7 +842,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                                             LibHac.Crypto.Sha256.GenerateSha256Hash(content, hash);
 
-                                            if (LibHac.Utilities.ArraysEqual(hash.ToArray(), meta.ContentEntries[0].Hash))
+                                            if (LibHac.Common.Utilities.ArraysEqual(hash.ToArray(), meta.ContentEntries[0].Hash))
                                             {
                                                 updateNcas.Remove(metaEntry.TitleId);
                                             }
@@ -978,7 +981,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                                 LibHac.Crypto.Sha256.GenerateSha256Hash(content, hash);
 
-                                if (LibHac.Utilities.ArraysEqual(hash.ToArray(), meta.ContentEntries[0].Hash))
+                                if (LibHac.Common.Utilities.ArraysEqual(hash.ToArray(), meta.ContentEntries[0].Hash))
                                 {
                                     updateNcas.Remove(metaEntry.TitleId);
                                 }

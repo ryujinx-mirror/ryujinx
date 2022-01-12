@@ -1,5 +1,5 @@
-using LibHac;
 using LibHac.Fs;
+using LibHac.Tools.Ro;
 using System;
 
 namespace Ryujinx.HLE.Loaders.Executables

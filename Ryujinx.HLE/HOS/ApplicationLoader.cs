@@ -6,10 +6,12 @@ using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
-using LibHac.FsSystem.NcaUtils;
 using LibHac.Loader;
 using LibHac.Ncm;
 using LibHac.Ns;
+using LibHac.Tools.Fs;
+using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
@@ -765,7 +767,7 @@ namespace Ryujinx.HLE.HOS
 
             ref ApplicationControlProperty control = ref ControlData.Value;
 
-            if (LibHac.Utilities.IsZeros(ControlData.ByteSpan))
+            if (LibHac.Common.Utilities.IsZeros(ControlData.ByteSpan))
             {
                 // If the current application doesn't have a loaded control property, create a dummy one
                 // and set the savedata sizes so a user savedata will be created.

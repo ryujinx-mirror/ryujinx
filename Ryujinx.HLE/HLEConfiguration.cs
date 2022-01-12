@@ -1,4 +1,4 @@
-﻿using LibHac.FsSystem;
+﻿using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Graphics.GAL;

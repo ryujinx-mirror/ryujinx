@@ -1,7 +1,7 @@
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.FsSystem;
 using LibHac.Loader;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Common.Logging;
 using System;
 using System.Text;

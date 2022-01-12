@@ -1,6 +1,7 @@
 ﻿using ARMeilleure.Translation;
 using ARMeilleure.Translation.PTC;
 using CommandLine;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
@@ -474,7 +475,7 @@ namespace Ryujinx.Headless.SDL2
                                                                   (bool)options.EnableDockedMode,
                                                                   (bool)options.EnablePtc,
                                                                   (bool)options.EnableInternetAccess,
-                                                                  (bool)options.EnableFsIntegrityChecks ? LibHac.FsSystem.IntegrityCheckLevel.ErrorOnInvalid : LibHac.FsSystem.IntegrityCheckLevel.None,
+                                                                  (bool)options.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
                                                                   options.FsGlobalAccessLogMode,
                                                                   options.SystemTimeOffset,
                                                                   options.SystemTimeZone,
