@@ -10,6 +10,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Tools.Ncm;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
+using Ryujinx.HLE.HOS.Services.Ssl;
 using Ryujinx.HLE.HOS.Services.Time;
 using Ryujinx.HLE.Utilities;
 using System;
@@ -195,6 +196,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 if (device != null)
                 {
                     TimeManager.Instance.InitializeTimeZone(device);
+                    BuiltInCertificateManager.Instance.Initialize(device);
                     device.System.SharedFontManager.Initialize();
                 }
             }
