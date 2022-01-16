@@ -761,14 +761,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 currentThread.SetUserInterruptFlag();
 
-                if (currentThread.IsSchedulable)
-                {
-                    KernelContext.Schedulers[currentThread.CurrentCore].Schedule();
-                }
-
                 KernelContext.CriticalSection.Leave();
             }
-            else if (currentThread.IsSchedulable)
+
+            if (currentThread.IsSchedulable)
             {
                 KernelContext.Schedulers[currentThread.CurrentCore].Schedule();
             }
