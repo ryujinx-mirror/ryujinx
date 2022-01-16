@@ -477,8 +477,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     {
                         x = (int)(x * scale);
                         y = (int)(y * scale);
-                        width = (int)Math.Ceiling(width * scale);
-                        height = (int)Math.Ceiling(height * scale);
+                        width = (int)MathF.Ceiling(width * scale);
+                        height = (int)MathF.Ceiling(height * scale);
                     }
 
                     _context.Renderer.Pipeline.SetScissor(index, true, x, y, width, height);

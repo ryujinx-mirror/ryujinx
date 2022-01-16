@@ -535,6 +535,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     scissorH = Math.Min(scissorH, scissorState.Y2 - scissorState.Y1);
                 }
 
+                float scale = _channel.TextureManager.RenderTargetScale;
+                if (scale != 1f)
+                {
+                    scissorX = (int)(scissorX * scale);
+                    scissorY = (int)(scissorY * scale);
+                    scissorW = (int)MathF.Ceiling(scissorW * scale);
+                    scissorH = (int)MathF.Ceiling(scissorH * scale);
+                }
+
                 _context.Renderer.Pipeline.SetScissor(0, true, scissorX, scissorY, scissorW, scissorH);
             }
 
