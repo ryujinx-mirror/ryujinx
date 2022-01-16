@@ -101,7 +101,7 @@ namespace ARMeilleure.Instructions
 
             Operand address = GetAddress(context);
 
-            InstEmitMemoryHelper.EmitStore(context, address, op.Rt, op.Size);
+            EmitStore(context, address, op.Rt, op.Size);
 
             EmitWBackIfNeeded(context, address);
         }
@@ -113,8 +113,8 @@ namespace ARMeilleure.Instructions
             Operand address = GetAddress(context);
             Operand address2 = GetAddress(context, 1L << op.Size);
 
-            InstEmitMemoryHelper.EmitStore(context, address,  op.Rt,  op.Size);
-            InstEmitMemoryHelper.EmitStore(context, address2, op.Rt2, op.Size);
+            EmitStore(context, address,  op.Rt,  op.Size);
+            EmitStore(context, address2, op.Rt2, op.Size);
 
             EmitWBackIfNeeded(context, address);
         }
