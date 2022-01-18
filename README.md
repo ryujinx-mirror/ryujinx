@@ -1,57 +1,80 @@
 
-<h1>
-    <img src="https://i.imgur.com/G6Mleco.png"> Ryujinx
-    <a href="https://ci.appveyor.com/project/gdkchan/ryujinx?branch=master" target="_blank">
-        <img src="https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s/branch/master?svg=true">
-    </a>
-    <a href="https://discord.gg/Ryujinx">
-        <img src="https://img.shields.io/discord/410208534861447168.svg">
-    </a>
+<h1 align="center">
+  <br>
+  <a href="https://ryujinx.org/"><img src="https://i.imgur.com/WcCj6Rt.png" alt="Ryujinx" width="150"></a>
+  <br>
+  <b>Ryujinx</b>
+  <br>
+  <sub><sup><b>(REE-YOU-JI-NX)</b></sup></sub>
+  <br>
+
 </h1>
 
 <p align="center">
-    <i>An experimental Switch emulator written in C#</i><br />
-    <br />
+       Ryujinx is an open-source Nintendo Switch emulator, created by gdkchan, written in C#.
+       This emulator aims at providing excellent accuracy and performance, a user-friendly interface and consistent builds.
+    It was written from scratch and development on the project began in September 2017. Ryujinx is available on Github under the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/LICENSE.txt" target="_blank">MIT license</a>. <br /> 
+
+</p>
+<p align="center">
+    <a href="https://ci.appveyor.com/project/gdkchan/ryujinx?branch=master">
+        <img src="https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s/branch/master?svg=true"
+            alt="">
+    </a>
+    <a href="https://discord.com/invite/VkQYXAZ">
+        <img src="https://img.shields.io/discord/410208534861447168?color=5865F2&label=Ryujinx&logo=discord&logoColor=white"
+            alt="Discord">
+    </a>
+    <br>
+    <br>
     <img src="https://raw.githubusercontent.com/Ryujinx/Ryujinx-Website/master/static/public/shell_fullsize.png">
 </p>
 
 <h5 align="center">
-    As of September 2021, Ryujinx has been tested on nearly 3,400 titles: ~3,000 boot past menus and into gameplay, with approximately 2,400 of those being considered playable. See the compatibility list <a href="https://github.com/Ryujinx/Ryujinx-Games-List/issues" target="_blank">here</a>.
+  
 </h5>
 
+## Compatibility
+
+As of January 2022, Ryujinx has been tested on approximately 3,500 titles; over 3,200 boot past menus and into gameplay, with roughly 2,500 of those being considered playable.
+You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues). Anyone is free to submit an updated test on an existing game entry; simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue. Use the search function to see if a game has been tested already!
+                  
 ## Usage
 
-To run this emulator, we recommend that your PC have at least 8GB of RAM; less than this amount can result in unpredictable behavior and may cause crashes or unacceptable performance.
+To run this emulator, your PC must be equipped with at least 8GB of RAM; failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
 
 See our [Setup & Configuration Guide](https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide) on how to set up the emulator.
+
+For our Local Wireless and LAN builds, see our [Multiplayer: Local Play/Local Wireless Guide
+](https://github.com/Ryujinx/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide).
 
 ## Latest build
 
 These builds are compiled automatically for each commit on the master branch. While we strive to ensure optimal stability and performance prior to pushing an update, our automated builds **may be unstable or completely broken.**
 
+If you want to see details on updates to the emulator, you can visit our [Changelog](https://github.com/Ryujinx/Ryujinx/wiki/Changelog).
+
 The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
+
 
 ## Building
 
-If you wish to build the emulator yourself  you will need to:
+If you wish to build the emulator yourself, follow these steps:
 
-**Step one:** Install the X64 version of [.NET 6.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
+### Step 1
+Install the X64 version of [.NET 6.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
 
-**Step two (choose one):**  
-**(Variant one)**
+### Step 2
+Either use `git clone https://github.com/Ryujinx/Ryujinx` on the command line to clone the repository or use Code --> Download zip button to get the files.
 
-After the installation of the .NET SDK is done; go ahead and copy the Clone link from GitHub from here (via Clone or Download --> Copy HTTPS Link. You can Git Clone the repo by using Git Bash or Git CMD.
+### Step 3
 
-**(Variant two):**
-
-Download the ZIP Tarball. Then extract it to a directory of your choice.
-
-**Step three:**
-
-Build the App using a Command prompt in the project directory. You can quickly access it by holding shift in explorer (in the Ryujinx directory) then right clicking, and typing the following command:  
-Run `dotnet build -c Release` inside the Ryujinx project folder to build Ryujinx binaries.
+To build Ryujinx, open a command prompt inside the project directory. You can quickly access it on Windows by holding shift in File Explorer, then right clicking and selecting `Open command window here`. Then type the following command:
+`dotnet build -c Release -o build`
+the built files will be found in the newly created build directory.
 
 Ryujinx system files are stored in the `Ryujinx` folder. This folder is located in the user folder, which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
+
 
 ## Features
 
@@ -82,31 +105,35 @@ Ryujinx system files are stored in the `Ryujinx` folder. This folder is located 
 
    The emulator has settings for enabling or disabling some logging, remapping controllers, and more. You can configure all of them through the graphical interface or manually through the config file, `Config.json`, found in the user folder which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
 
-## Compatibility
-
-You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues). Anyone is free to submit an updated test on an existing game entry; simply follow the new issue template and testing guidelines, and post as a reply to the applicable game issue.
-
-Don't hesitate to open a new issue if a game isn't already on there!
-
-## Help
-
-If you are having problems launching homebrew or a particular game marked status-playable or status-ingame in our compatibility list, you can contact us through our [Discord server](https://discord.gg/Ryujinx). We'll take note of whatever is causing the app/game to not work, put it on the watch list and fix it at a later date.
-
-If you need help with setting up Ryujinx, you can ask questions in the #support channel of our [Discord server](https://discord.gg/Ryujinx).
 
 ## Contact
 
-If you have contributions, need support, have suggestions, or just want to get in touch with the team, join our [Discord server](https://discord.gg/Ryujinx)!
+If you have contributions, suggestions, need emulator support or just want to get in touch with the team, join our [Discord server](https://discord.com/invite/Ryujinx). You may also review our [FAQ](https://github.com/Ryujinx/Ryujinx/wiki/Frequently-Asked-Questions).
 
-If you'd like to donate, please take a look at our [Patreon](https://www.patreon.com/ryujinx).
+## Donations
+                  
+If you'd like to support the project financially, Ryujinx has an active Patreon campaign.
+
+<a href="https://www.patreon.com/ryujinx">
+    <img src="https://images.squarespace-cdn.com/content/v1/560c1d39e4b0b4fae0c9cf2a/1567548955044-WVD994WZP76EWF15T0L3/Patreon+Button.png?format=500w" width="150">
+</a>
+
+All the developers working on the project do so on their free time, but the project has several expenses:
+* Hackable Nintendo Switch consoles to reverse-engineer the hardware
+* Additional computer hardware for testing purposes (e.g. GPUs to diagnose graphical bugs, etc.) 
+* Licenses for various software development tools (e.g. Jetbrains, LDN servers, IDA)
+* Web hosting and infrastructure maintenance
+ 
+All funds received through Patreon are considered a donation to support the project. Patrons receive early access to progress reports and exclusive access to developer interviews.
 
 ## License
 
-This software is licensed under the terms of the MIT license.
-The Ryujinx.Audio project is licensed under the terms of the LGPLv3 license.
+This software is licensed under the terms of the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/LICENSE.txt" target="_blank">MIT license.</a></i><br /> 
+The Ryujinx.Audio project is licensed under the terms of the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/Ryujinx.Audio/LICENSE.txt
+" target="_blank">LGPLv3 license.</a></i><br />
 This project makes use of code authored by the libvpx project, licensed under BSD and the ffmpeg project, licensed under LGPLv3.
 See [LICENSE.txt](LICENSE.txt) and [THIRDPARTY.md](Ryujinx/THIRDPARTY.md) for more details.
- 
 ## Credits
 
+- [LibHac](https://github.com/Thealexbarney/LibHac) is used for our file-system. 
 - [AmiiboAPI](https://www.amiiboapi.com) is used in our Amiibo emulation.
