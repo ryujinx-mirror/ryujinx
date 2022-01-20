@@ -61,6 +61,11 @@ namespace Ryujinx.Graphics.Shader
             return 16;
         }
 
+        bool QueryHostSupportsBgraFormat()
+        {
+            return true;
+        }
+
         bool QueryHostSupportsFragmentShaderInterlock()
         {
             return true;

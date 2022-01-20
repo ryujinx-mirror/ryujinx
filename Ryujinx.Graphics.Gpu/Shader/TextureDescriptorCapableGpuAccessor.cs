@@ -37,6 +37,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
         /// <summary>
+        /// Queries host support for texture formats with BGRA component order (such as BGRA8).
+        /// </summary>
+        /// <returns>True if BGRA formats are supported, false otherwise</returns>
+        public bool QueryHostSupportsBgraFormat() => _context.Capabilities.SupportsBgraFormat;
+
+        /// <summary>
         /// Queries host support for fragment shader ordering critical sections on the shader code.
         /// </summary>
         /// <returns>True if fragment shader interlock is supported, false otherwise</returns>
