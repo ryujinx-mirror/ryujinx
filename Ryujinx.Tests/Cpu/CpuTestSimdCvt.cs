@@ -201,6 +201,7 @@ namespace Ryujinx.Tests.Cpu
                 0x1E250000u, // FCVTAU W0, S0
                 0x1E300000u, // FCVTMS W0, S0
                 0x1E310000u, // FCVTMU W0, S0
+                0x1E200000u, // FCVTNS W0, S0
                 0x1E280000u, // FCVTPS W0, S0
                 0x1E290000u, // FCVTPU W0, S0
                 0x1E380000u, // FCVTZS W0, S0
@@ -216,6 +217,7 @@ namespace Ryujinx.Tests.Cpu
                 0x9E250000u, // FCVTAU X0, S0
                 0x9E300000u, // FCVTMS X0, S0
                 0x9E310000u, // FCVTMU X0, S0
+                0x9E200000u, // FCVTNS X0, S0
                 0x9E280000u, // FCVTPS X0, S0
                 0x9E290000u, // FCVTPU X0, S0
                 0x9E380000u, // FCVTZS X0, S0
@@ -231,6 +233,7 @@ namespace Ryujinx.Tests.Cpu
                 0x1E650000u, // FCVTAU W0, D0
                 0x1E700000u, // FCVTMS W0, D0
                 0x1E710000u, // FCVTMU W0, D0
+                0x1E600000u, // FCVTNS W0, D0
                 0x1E680000u, // FCVTPS W0, D0
                 0x1E690000u, // FCVTPU W0, D0
                 0x1E780000u, // FCVTZS W0, D0
@@ -246,6 +249,7 @@ namespace Ryujinx.Tests.Cpu
                 0x9E650000u, // FCVTAU X0, D0
                 0x9E700000u, // FCVTMS X0, D0
                 0x9E710000u, // FCVTMU X0, D0
+                0x9E600000u, // FCVTNS X0, D0
                 0x9E680000u, // FCVTPS X0, D0
                 0x9E690000u, // FCVTPU X0, D0
                 0x9E780000u, // FCVTZS X0, D0

@@ -314,6 +314,18 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fcvtns_Gp(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvts_Gp(context, FPRoundingMode.ToNearest, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_s_Gp(context, (op1) => EmitRoundMathCall(context, MidpointRounding.ToEven, op1));
+            }
+        }
+
         public static void Fcvtns_S(ArmEmitterContext context)
         {
             if (Optimizations.UseSse41)
