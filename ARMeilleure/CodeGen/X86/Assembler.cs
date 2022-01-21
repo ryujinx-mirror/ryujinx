@@ -358,6 +358,12 @@ namespace ARMeilleure.CodeGen.X86
             WriteInstruction(dest, source, type, X86Instruction.Lea);
         }
 
+        public void LockOr(Operand dest, Operand source, OperandType type)
+        {
+            WriteByte(LockPrefix);
+            WriteInstruction(dest, source, type, X86Instruction.Or);
+        }
+
         public void Mov(Operand dest, Operand source, OperandType type)
         {
             WriteInstruction(dest, source, type, X86Instruction.Mov);

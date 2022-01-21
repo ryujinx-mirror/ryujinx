@@ -26,6 +26,7 @@ namespace ARMeilleure.IntermediateRepresentation
         Load16,
         Load8,
         LoadArgument,
+        MemoryBarrier,
         Multiply,
         Multiply64HighSI,
         Multiply64HighUI,

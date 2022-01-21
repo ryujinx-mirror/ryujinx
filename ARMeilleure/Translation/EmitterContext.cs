@@ -325,6 +325,11 @@ namespace ARMeilleure.Translation
             Add(Instruction.LoadFromContext);
         }
 
+        public void MemoryBarrier()
+        {
+            Add(Instruction.MemoryBarrier);
+        }
+
         public Operand Multiply(Operand op1, Operand op2)
         {
             return Add(Instruction.Multiply, Local(op1.Type), op1, op2);

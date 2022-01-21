@@ -49,6 +49,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.Load,                    GenerateLoad);
             Add(Instruction.Load16,                  GenerateLoad16);
             Add(Instruction.Load8,                   GenerateLoad8);
+            Add(Instruction.MemoryBarrier,           GenerateMemoryBarrier);
             Add(Instruction.Multiply,                GenerateMultiply);
             Add(Instruction.Multiply64HighSI,        GenerateMultiply64HighSI);
             Add(Instruction.Multiply64HighUI,        GenerateMultiply64HighUI);
@@ -538,7 +539,7 @@ namespace ARMeilleure.CodeGen.X86
                     context.Assembler.Lea(dest, memOp, dest.Type);
                 }
             }
-            else 
+            else
             {
                 ValidateBinOp(dest, src1, src2);
 
@@ -974,6 +975,11 @@ namespace ARMeilleure.CodeGen.X86
             Debug.Assert(value.Type.IsInteger());
 
             context.Assembler.Movzx8(value, address, value.Type);
+        }
+
+        private static void GenerateMemoryBarrier(CodeGenContext context, Operation operation)
+        {
+            context.Assembler.LockOr(MemoryOp(OperandType.I64, Register(X86Register.Rsp)), Const(0), OperandType.I32);
         }
 
         private static void GenerateMultiply(CodeGenContext context, Operation operation)
