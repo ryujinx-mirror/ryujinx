@@ -268,10 +268,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return handle;
         }
 
-        public IProgram CreateProgram(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors)
+        public IProgram CreateProgram(IShader[] shaders)
         {
             var program = new ThreadedProgram(this);
-            SourceProgramRequest request = new SourceProgramRequest(program, shaders, transformFeedbackDescriptors);
+            SourceProgramRequest request = new SourceProgramRequest(program, shaders);
             Programs.Add(request);
 
             New<CreateProgramCommand>().Set(Ref((IProgramRequest)request));

@@ -191,6 +191,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     context.AppendLine();
                 }
+
+                if (context.Config.Stage != ShaderStage.Compute &&
+                    context.Config.Stage != ShaderStage.Fragment &&
+                    context.Config.TransformFeedbackEnabled)
+                {
+                    var tfOutput = context.GetTransformFeedbackOutput(AttributeConsts.PositionX);
+                    if (tfOutput.Valid)
+                    {
+                        context.AppendLine($"layout (xfb_buffer = {tfOutput.Buffer}, xfb_offset = {tfOutput.Offset}, xfb_stride = {tfOutput.Stride}) out gl_PerVertex");
+                        context.EnterScope();
+                        context.AppendLine("vec4 gl_Position;");
+                        context.LeaveScope(context.Config.Stage == ShaderStage.TessellationControl ? " gl_out[];" : ";");
+                    }
+                }
             }
             else
             {
@@ -514,7 +528,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             string pass = (context.Config.PassthroughAttributes & (1 << attr)) != 0 ? "passthrough, " : string.Empty;
             string name = $"{DefaultNames.IAttributePrefix}{attr}";
 
-            if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
+            if (context.Config.TransformFeedbackEnabled && context.Config.Stage != ShaderStage.Vertex)
             {
                 for (int c = 0; c < 4; c++)
                 {
@@ -559,13 +573,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             string suffix = OperandManager.IsArrayAttribute(context.Config.Stage, isOutAttr: true) ? "[]" : string.Empty;
             string name = $"{DefaultNames.OAttributePrefix}{attr}{suffix}";
 
-            if ((context.Config.Options.Flags & TranslationFlags.Feedback) != 0)
+            if (context.Config.TransformFeedbackEnabled && context.Config.Stage != ShaderStage.Fragment)
             {
                 for (int c = 0; c < 4; c++)
                 {
                     char swzMask = "xyzw"[c];
 
-                    context.AppendLine($"layout (location = {attr}, component = {c}) out float {name}_{swzMask};");
+                    string xfb = string.Empty;
+
+                    var tfOutput = context.GetTransformFeedbackOutput(attr, c);
+                    if (tfOutput.Valid)
+                    {
+                        xfb = $", xfb_buffer = {tfOutput.Buffer}, xfb_offset = {tfOutput.Offset}, xfb_stride = {tfOutput.Stride}";
+                    }
+
+                    context.AppendLine($"layout (location = {attr}, component = {c}{xfb}) out float {name}_{swzMask};");
                 }
             }
             else

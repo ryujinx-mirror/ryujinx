@@ -39,6 +39,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public TessMode TessellationMode { get; }
 
         /// <summary>
+        /// Transform feedback information, if the shader uses transform feedback. Otherwise, should be null.
+        /// </summary>
+        public TransformFeedbackDescriptor[] TransformFeedbackDescriptors { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the GPU accessor state.
         /// </summary>
         /// <param name="texturePoolGpuVa">GPU virtual address of the texture pool</param>
@@ -61,6 +66,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             EarlyZForce = earlyZForce;
             Topology = topology;
             TessellationMode = tessellationMode;
+            TransformFeedbackDescriptors = null;
         }
     }
 }

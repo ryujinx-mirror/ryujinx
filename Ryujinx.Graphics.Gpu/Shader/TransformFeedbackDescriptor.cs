@@ -1,8 +1,8 @@
 using System;
 
-namespace Ryujinx.Graphics.GAL
+namespace Ryujinx.Graphics.Gpu.Shader
 {
-    public struct TransformFeedbackDescriptor
+    struct TransformFeedbackDescriptor
     {
         public int BufferIndex { get; }
         public int Stride      { get; }

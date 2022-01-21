@@ -103,6 +103,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return _info.Functions[id];
         }
 
+        public TransformFeedbackOutput GetTransformFeedbackOutput(int location, int component)
+        {
+            int index = (AttributeConsts.UserAttributeBase / 4) + location * 4 + component;
+            return _info.TransformFeedbackOutputs[index];
+        }
+
+        public TransformFeedbackOutput GetTransformFeedbackOutput(int location)
+        {
+            int index = location / 4;
+            return _info.TransformFeedbackOutputs[index];
+        }
+
         private void UpdateIndentation()
         {
             _indentation = GetIndentation(_level);

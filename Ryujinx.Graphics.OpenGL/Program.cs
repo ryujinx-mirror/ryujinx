@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.OpenGL
         private ProgramLinkStatus _status = ProgramLinkStatus.Incomplete;
         private IShader[] _shaders;
 
-        public Program(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors)
+        public Program(IShader[] shaders)
         {
             Handle = GL.CreateProgram();
 
@@ -40,54 +40,6 @@ namespace Ryujinx.Graphics.OpenGL
                 int shaderHandle = ((Shader)shaders[index]).Handle;
 
                 GL.AttachShader(Handle, shaderHandle);
-            }
-
-            if (transformFeedbackDescriptors != null)
-            {
-                List<string> varyings = new List<string>();
-
-                int cbi = 0;
-
-                foreach (var tfd in transformFeedbackDescriptors.OrderBy(x => x.BufferIndex))
-                {
-                    if (tfd.VaryingLocations.Length == 0)
-                    {
-                        continue;
-                    }
-
-                    while (cbi < tfd.BufferIndex)
-                    {
-                        varyings.Add("gl_NextBuffer");
-
-                        cbi++;
-                    }
-
-                    int stride = Math.Min(128 * 4, (tfd.Stride + 3) & ~3);
-
-                    int j = 0;
-
-                    for (; j < tfd.VaryingLocations.Length && j * 4 < stride; j++)
-                    {
-                        byte location = tfd.VaryingLocations[j];
-
-                        varyings.Add(Varying.GetName(location) ?? "gl_SkipComponents1");
-
-                        j += Varying.GetSize(location) - 1;
-                    }
-
-                    int feedbackBytes = j * 4;
-
-                    while (feedbackBytes < stride)
-                    {
-                        int bytes = Math.Min(16, stride - feedbackBytes);
-
-                        varyings.Add($"gl_SkipComponents{(bytes / 4)}");
-
-                        feedbackBytes += bytes;
-                    }
-                }
-
-                GL.TransformFeedbackVaryings(Handle, varyings.Count, varyings.ToArray(), TransformFeedbackMode.InterleavedAttribs);
             }
 
             GL.LinkProgram(Handle);

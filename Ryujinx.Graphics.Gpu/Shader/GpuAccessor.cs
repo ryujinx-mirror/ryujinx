@@ -223,6 +223,35 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
+        /// Queries transform feedback enable state.
+        /// </summary>
+        /// <returns>True if the shader uses transform feedback, false otherwise</returns>
+        public bool QueryTransformFeedbackEnabled()
+        {
+            return _state.TransformFeedbackDescriptors != null;
+        }
+
+        /// <summary>
+        /// Queries the varying locations that should be written to the transform feedback buffer.
+        /// </summary>
+        /// <param name="bufferIndex">Index of the transform feedback buffer</param>
+        /// <returns>Varying locations for the specified buffer</returns>
+        public ReadOnlySpan<byte> QueryTransformFeedbackVaryingLocations(int bufferIndex)
+        {
+            return _state.TransformFeedbackDescriptors[bufferIndex].VaryingLocations;
+        }
+
+        /// <summary>
+        /// Queries the stride (in bytes) of the per vertex data written into the transform feedback buffer.
+        /// </summary>
+        /// <param name="bufferIndex">Index of the transform feedback buffer</param>
+        /// <returns>Stride for the specified buffer</returns>
+        public int QueryTransformFeedbackStride(int bufferIndex)
+        {
+            return _state.TransformFeedbackDescriptors[bufferIndex].Stride;
+        }
+
+        /// <summary>
         /// Queries if host state forces early depth testing.
         /// </summary>
         /// <returns>True if early depth testing is forced</returns>

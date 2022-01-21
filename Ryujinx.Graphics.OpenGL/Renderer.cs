@@ -66,9 +66,9 @@ namespace Ryujinx.Graphics.OpenGL
             return Buffer.Create(size);
         }
 
-        public IProgram CreateProgram(IShader[] shaders, TransformFeedbackDescriptor[] transformFeedbackDescriptors)
+        public IProgram CreateProgram(IShader[] shaders)
         {
-            return new Program(shaders, transformFeedbackDescriptors);
+            return new Program(shaders);
         }
 
         public ISampler CreateSampler(SamplerCreateInfo info)

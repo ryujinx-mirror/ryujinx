@@ -13,6 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private readonly ReadOnlyMemory<byte> _cb1Data;
         private readonly GuestGpuAccessorHeader _header;
         private readonly Dictionary<int, GuestTextureDescriptor> _textureDescriptors;
+        private readonly TransformFeedbackDescriptor[] _tfd;
 
         /// <summary>
         /// Creates a new instance of the cached GPU state accessor for shader translation.
@@ -27,7 +28,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             ReadOnlyMemory<byte> data,
             ReadOnlyMemory<byte> cb1Data,
             GuestGpuAccessorHeader header,
-            IReadOnlyDictionary<int, GuestTextureDescriptor> guestTextureDescriptors) : base(context)
+            IReadOnlyDictionary<int, GuestTextureDescriptor> guestTextureDescriptors,
+            TransformFeedbackDescriptor[] tfd) : base(context)
         {
             _data = data;
             _cb1Data = cb1Data;
@@ -38,6 +40,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 _textureDescriptors.Add(guestTextureDescriptor.Key, guestTextureDescriptor.Value);
             }
+
+            _tfd = tfd;
         }
 
         /// <summary>
@@ -175,6 +179,35 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             return textureDescriptor;
+        }
+
+        /// <summary>
+        /// Queries transform feedback enable state.
+        /// </summary>
+        /// <returns>True if the shader uses transform feedback, false otherwise</returns>
+        public bool QueryTransformFeedbackEnabled()
+        {
+            return _tfd != null;
+        }
+
+        /// <summary>
+        /// Queries the varying locations that should be written to the transform feedback buffer.
+        /// </summary>
+        /// <param name="bufferIndex">Index of the transform feedback buffer</param>
+        /// <returns>Varying locations for the specified buffer</returns>
+        public ReadOnlySpan<byte> QueryTransformFeedbackVaryingLocations(int bufferIndex)
+        {
+            return _tfd[bufferIndex].VaryingLocations;
+        }
+
+        /// <summary>
+        /// Queries the stride (in bytes) of the per vertex data written into the transform feedback buffer.
+        /// </summary>
+        /// <param name="bufferIndex">Index of the transform feedback buffer</param>
+        /// <returns>Stride for the specified buffer</returns>
+        public int QueryTransformFeedbackStride(int bufferIndex)
+        {
+            return _tfd[bufferIndex].Stride;
         }
 
         /// <summary>

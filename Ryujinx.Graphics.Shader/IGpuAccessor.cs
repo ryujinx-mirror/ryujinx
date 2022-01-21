@@ -131,6 +131,21 @@ namespace Ryujinx.Graphics.Shader
             return TextureFormat.R8G8B8A8Unorm;
         }
 
+        bool QueryTransformFeedbackEnabled()
+        {
+            return false;
+        }
+
+        ReadOnlySpan<byte> QueryTransformFeedbackVaryingLocations(int bufferIndex)
+        {
+            return ReadOnlySpan<byte>.Empty;
+        }
+
+        int QueryTransformFeedbackStride(int bufferIndex)
+        {
+            return 0;
+        }
+
         bool QueryEarlyZForce()
         {
             return false;
