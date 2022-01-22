@@ -36,7 +36,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "::set-output name=build_version::${{ env.RYUJINX_BASE_VERSION }}.$((${{ github.run_number }} + 7181))"
+          echo "::set-output name=build_version::${{ env.RYUJINX_BASE_VERSION }}.${{ github.run_number }}"
           echo "::set-output name=git_short_hash::$(git rev-parse --short "${{ github.sha }}")"
         shell: bash
       - name: Configure for release
