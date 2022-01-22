@@ -1,5 +1,6 @@
 using ARMeilleure.Translation.PTC;
 using Gtk;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
@@ -68,7 +69,7 @@ namespace Ryujinx
             // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);
 
-            Version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            Version = ReleaseInformations.GetVersion();
 
             Console.Title = $"Ryujinx Console {Version}";
 

@@ -30,7 +30,7 @@ namespace Ryujinx.Common.Logging
                 files[i].Delete();
             }
 
-            string version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            string version = ReleaseInformations.GetVersion();
 
             // Get path for the current time
             path = Path.Combine(logDir.FullName, $"Ryujinx_{version}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.log");

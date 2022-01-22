@@ -3,13 +3,13 @@ name: Build job
 on:
   workflow_dispatch:
     inputs: {}
-  push:
-    branches: [ master ]
-    paths-ignore:
-      - '.github/*'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '*.yml'
-      - 'README.md'
+  #push:
+  #  branches: [ master ]
+  #  paths-ignore:
+  #    - '.github/*'
+  #    - '.github/ISSUE_TEMPLATE/**'
+  #    - '*.yml'
+  #    - 'README.md'
   pull_request:
     branches: [ master ]
     paths-ignore:
@@ -59,14 +59,14 @@ jobs:
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
-        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="1.0.0" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
+        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="1.1.0" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
       - name: Test
         run: dotnet test -c "${{ matrix.configuration }}"
       - name: Publish Ryujinx
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.1.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
         if: github.event_name == 'pull_request'
       - name: Publish Ryujinx.Headless.SDL2
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="1.1.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v2

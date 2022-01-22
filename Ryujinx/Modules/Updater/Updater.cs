@@ -3,6 +3,7 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json.Linq;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
@@ -29,16 +30,25 @@ namespace Ryujinx.Modules
         private static readonly string UpdatePublishDir = Path.Combine(UpdateDir, "publish");
         private static readonly int    ConnectionCount  = 4;
 
-        private static string _jobId;
         private static string _buildVer;
         private static string _platformExt;
         private static string _buildUrl;
         private static long   _buildSize;
-        
-        private const string AppveyorApiUrl = "https://ci.appveyor.com/api";
+
+        private const string GitHubApiURL = "https://api.github.com";
 
         // On Windows, GtkSharp.Dependencies adds these extra dirs that must be cleaned during updates.
         private static readonly string[] WindowsDependencyDirs = new string[] { "bin", "etc", "lib", "share" };
+
+        private static HttpClient ConstructHttpClient()
+        {
+            HttpClient result = new HttpClient();
+
+            // Required by GitHub to interract with APIs.
+            result.DefaultRequestHeaders.Add("User-Agent", "Ryujinx-Updater/1.0.0");
+
+            return result;
+        }
 
         public static async Task BeginParse(MainWindow mainWindow, bool showVersionUpToDate)
         {
@@ -88,22 +98,45 @@ namespace Ryujinx.Modules
                 return;
             }
 
-            // Get latest version number from Appveyor
+            // Get latest version number from GitHub API
             try
             {
-                using (HttpClient jsonClient = new HttpClient())
+                using (HttpClient jsonClient = ConstructHttpClient())
                 {
+                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformations.ReleaseChannelOwner}/{ReleaseInformations.ReleaseChannelRepo}/releases/latest";
+
                     // Fetch latest build information
-                    string  fetchedJson = await jsonClient.GetStringAsync($"{AppveyorApiUrl}/projects/gdkchan/ryujinx/branch/master");
+                    string  fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
                     JObject jsonRoot    = JObject.Parse(fetchedJson);
-                    JToken  buildToken  = jsonRoot["build"];
+                    JToken  assets      = jsonRoot["assets"];
 
-                    _jobId    = (string)buildToken["jobs"][0]["jobId"];
-                    _buildVer = (string)buildToken["version"];
-                    _buildUrl = $"{AppveyorApiUrl}/buildjobs/{_jobId}/artifacts/ryujinx-{_buildVer}-{_platformExt}";
+                    _buildVer = (string)jsonRoot["name"];
 
-                    // If build not done, assume no new update are availaible.
-                    if ((string)buildToken["jobs"][0]["status"] != "success")
+                    foreach (JToken asset in assets)
+                    {
+                        string assetName = (string)asset["name"];
+                        string assetState = (string)asset["state"];
+                        string downloadURL = (string)asset["browser_download_url"];
+
+                        if (!assetName.StartsWith("ryujinx-headless-sdl2") && assetName.EndsWith(_platformExt))
+                        {
+                            _buildUrl = downloadURL;
+
+                            if (assetState != "uploaded")
+                            {
+                                if (showVersionUpToDate)
+                                {
+                                    GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
+                                }
+
+                                return;
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if (_buildUrl == null)
                     {
                         if (showVersionUpToDate)
                         {
@@ -117,7 +150,7 @@ namespace Ryujinx.Modules
             catch (Exception exception)
             {
                 Logger.Error?.Print(LogClass.Application, exception.Message);
-                GtkDialog.CreateErrorDialog("An error occurred when trying to get release information from AppVeyor. This can be caused if a new release is being compiled by AppVeyor. Try again in a few minutes.");
+                GtkDialog.CreateErrorDialog("An error occurred when trying to get release information from GitHub Release. This can be caused if a new release is being compiled by GitHub Actions. Try again in a few minutes.");
 
                 return;
             }
@@ -128,8 +161,8 @@ namespace Ryujinx.Modules
             }
             catch
             {
-                GtkDialog.CreateWarningDialog("Failed to convert the received Ryujinx version from AppVeyor.", "Cancelling Update!");
-                Logger.Error?.Print(LogClass.Application, "Failed to convert the received Ryujinx version from AppVeyor!");
+                GtkDialog.CreateWarningDialog("Failed to convert the received Ryujinx version from GitHub Release.", "Cancelling Update!");
+                Logger.Error?.Print(LogClass.Application, "Failed to convert the received Ryujinx version from GitHub Release!");
 
                 return;
             }
@@ -148,7 +181,7 @@ namespace Ryujinx.Modules
             }
 
             // Fetch build size information to learn chunk sizes.
-            using (HttpClient buildSizeClient = new HttpClient())
+            using (HttpClient buildSizeClient = ConstructHttpClient())
             {
                 try
                 {
@@ -520,7 +553,7 @@ namespace Ryujinx.Modules
                 return false;
             }
 
-            if (Program.Version.Contains("dirty"))
+            if (Program.Version.Contains("dirty") || !ReleaseInformations.IsValid())
             {
                 if (showWarnings)
                 {
