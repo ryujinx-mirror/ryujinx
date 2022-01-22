@@ -834,13 +834,31 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 data = PixelConverter.ConvertR4G4ToR4G4B4A4(data);
             }
-            else if (Target == Target.Texture3D && Format.IsBc4())
+            else if (!_context.Capabilities.Supports3DTextureCompression && Target == Target.Texture3D)
             {
-                data = BCnDecoder.DecodeBC4(data, width, height, depth, levels, layers, Info.FormatInfo.Format == Format.Bc4Snorm);
-            }
-            else if (Target == Target.Texture3D && Format.IsBc5())
-            {
-                data = BCnDecoder.DecodeBC5(data, width, height, depth, levels, layers, Info.FormatInfo.Format == Format.Bc5Snorm);
+                switch (Format)
+                {
+                    case Format.Bc1RgbaSrgb:
+                    case Format.Bc1RgbaUnorm:
+                        data = BCnDecoder.DecodeBC1(data, width, height, depth, levels, layers);
+                        break;
+                    case Format.Bc2Srgb:
+                    case Format.Bc2Unorm:
+                        data = BCnDecoder.DecodeBC2(data, width, height, depth, levels, layers);
+                        break;
+                    case Format.Bc3Srgb:
+                    case Format.Bc3Unorm:
+                        data = BCnDecoder.DecodeBC3(data, width, height, depth, levels, layers);
+                        break;
+                    case Format.Bc4Snorm:
+                    case Format.Bc4Unorm:
+                        data = BCnDecoder.DecodeBC4(data, width, height, depth, levels, layers, Format == Format.Bc4Snorm);
+                        break;
+                    case Format.Bc5Snorm:
+                    case Format.Bc5Unorm:
+                        data = BCnDecoder.DecodeBC5(data, width, height, depth, levels, layers, Format == Format.Bc5Snorm);
+                        break;
+                }
             }
 
             return data;

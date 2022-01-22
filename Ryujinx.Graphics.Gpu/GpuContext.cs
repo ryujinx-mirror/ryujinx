@@ -78,14 +78,27 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Host hardware capabilities.
         /// </summary>
-        internal Capabilities Capabilities => _caps.Value;
+        internal ref Capabilities Capabilities
+        {
+            get
+            {
+                if (!_capsLoaded)
+                {
+                    _caps = Renderer.GetCapabilities();
+                    _capsLoaded = true;
+                }
+
+                return ref _caps;
+            }
+        }
 
         /// <summary>
         /// Event for signalling shader cache loading progress.
         /// </summary>
         public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
 
-        private readonly Lazy<Capabilities> _caps;
+        private bool _capsLoaded;
+        private Capabilities _caps;
         private Thread _gpuThread;
 
         /// <summary>
@@ -110,8 +123,6 @@ namespace Ryujinx.Graphics.Gpu
             DeferredActions = new Queue<Action>();
 
             PhysicalMemoryRegistry = new ConcurrentDictionary<long, PhysicalMemory>();
-
-            _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
         }
 
         /// <summary>

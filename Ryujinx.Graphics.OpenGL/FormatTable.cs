@@ -80,11 +80,9 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.R10G10B10A2Uint,     new FormatInfo(4, false, false, All.Rgb10A2ui,         PixelFormat.RgbaInteger,    PixelType.UnsignedInt2101010Reversed));
             Add(Format.R11G11B10Float,      new FormatInfo(3, false, false, All.R11fG11fB10f,      PixelFormat.Rgb,            PixelType.UnsignedInt10F11F11FRev));
             Add(Format.R9G9B9E5Float,       new FormatInfo(3, false, false, All.Rgb9E5,            PixelFormat.Rgb,            PixelType.UnsignedInt5999Rev));
-            Add(Format.Bc1RgbUnorm,         new FormatInfo(3, true,  false, All.CompressedRgbS3tcDxt1Ext));
             Add(Format.Bc1RgbaUnorm,        new FormatInfo(4, true,  false, All.CompressedRgbaS3tcDxt1Ext));
             Add(Format.Bc2Unorm,            new FormatInfo(4, true,  false, All.CompressedRgbaS3tcDxt3Ext));
             Add(Format.Bc3Unorm,            new FormatInfo(4, true,  false, All.CompressedRgbaS3tcDxt5Ext));
-            Add(Format.Bc1RgbSrgb,          new FormatInfo(3, false, false, All.CompressedSrgbS3tcDxt1Ext));
             Add(Format.Bc1RgbaSrgb,         new FormatInfo(4, true,  false, All.CompressedSrgbAlphaS3tcDxt1Ext));
             Add(Format.Bc2Srgb,             new FormatInfo(4, false, false, All.CompressedSrgbAlphaS3tcDxt3Ext));
             Add(Format.Bc3Srgb,             new FormatInfo(4, false, false, All.CompressedSrgbAlphaS3tcDxt5Ext));
