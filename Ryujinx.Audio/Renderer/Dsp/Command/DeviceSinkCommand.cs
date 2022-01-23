@@ -52,7 +52,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             InputCount = sink.Parameter.InputCount;
             InputBufferIndices = new ushort[InputCount];
 
-            for (int i = 0; i < InputCount; i++)
+            for (int i = 0; i < Math.Min(InputCount, Constants.ChannelCountMax); i++)
             {
                 InputBufferIndices[i] = (ushort)(bufferOffset + sink.Parameter.Input[i]);
             }
