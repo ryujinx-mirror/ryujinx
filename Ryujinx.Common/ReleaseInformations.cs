@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.Common
+﻿using System.Reflection;
+
+namespace Ryujinx.Common
 {
     // DO NOT EDIT, filled by CI
     public static class ReleaseInformations
@@ -25,7 +27,7 @@
             }
             else
             {
-                return "1.0.0-dirty";
+                return Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
             }
         }
     }
