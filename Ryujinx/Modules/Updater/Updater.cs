@@ -396,7 +396,7 @@ namespace Ryujinx.Modules
 
             if (!OperatingSystem.IsWindows())
             {
-                chmod(ryuBin, 0777);
+                chmod(ryuBin, 493);
             }
         }
 
