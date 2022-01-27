@@ -1,6 +1,4 @@
-﻿using Ryujinx.Common;
-using Ryujinx.Graphics.GAL;
-using System.Runtime.InteropServices;
+﻿using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -9,9 +7,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// </summary>
     class SemaphoreUpdater
     {
-        private const int NsToTicksFractionNumerator = 384;
-        private const int NsToTicksFractionDenominator = 625;
-
         /// <summary>
         /// GPU semaphore operation.
         /// </summary>
@@ -154,14 +149,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             ulong gpuVa = _state.State.SemaphoreAddress.Pack();
 
-            ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
-
-            if (GraphicsConfig.FastGpuTime)
-            {
-                // Divide by some amount to report time as if operations were performed faster than they really are.
-                // This can prevent some games from switching to a lower resolution because rendering is too slow.
-                ticks /= 256;
-            }
+            ulong ticks = _context.GetTimestamp();
 
             ICounterEvent counter = null;
 
@@ -196,28 +184,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             _channel.MemoryManager.CounterCache.AddOrUpdate(gpuVa, counter);
-        }
-
-        /// <summary>
-        /// Converts a nanoseconds timestamp value to Maxwell time ticks.
-        /// </summary>
-        /// <remarks>
-        /// The frequency is 614400000 Hz.
-        /// </remarks>
-        /// <param name="nanoseconds">Timestamp in nanoseconds</param>
-        /// <returns>Maxwell ticks</returns>
-        private static ulong ConvertNanosecondsToTicks(ulong nanoseconds)
-        {
-            // We need to divide first to avoid overflows.
-            // We fix up the result later by calculating the difference and adding
-            // that to the result.
-            ulong divided = nanoseconds / NsToTicksFractionDenominator;
-
-            ulong rounded = divided * NsToTicksFractionDenominator;
-
-            ulong errorBias = (nanoseconds - rounded) * NsToTicksFractionNumerator / NsToTicksFractionDenominator;
-
-            return divided * NsToTicksFractionNumerator + errorBias;
         }
     }
 }

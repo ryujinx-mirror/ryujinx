@@ -115,7 +115,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 }
                 else /* if (type == LaunchDmaSemaphoreType.ReleaseFourWordSemaphore) */
                 {
-                    Logger.Warning?.Print(LogClass.Gpu, "DMA semaphore type ReleaseFourWordSemaphore was used, but is not currently implemented.");
+                    _channel.MemoryManager.Write(address + 8, _context.GetTimestamp());
+                    _channel.MemoryManager.Write(address, (ulong)_state.State.SetSemaphorePayload);
                 }
             }
         }

@@ -75,6 +75,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
             SemaphoredOperation operation = _state.State.SemaphoredOperation;
 
+            if (_state.State.SemaphoredReleaseSize == SemaphoredReleaseSize.SixteenBytes)
+            {
+                _parent.MemoryManager.Write(address + 4, 0);
+                _parent.MemoryManager.Write(address + 8, _context.GetTimestamp());
+            }
+
             // TODO: Acquire operations (Wait), interrupts for invalid combinations.
             if (operation == SemaphoredOperation.Release)
             {

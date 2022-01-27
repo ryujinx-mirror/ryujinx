@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Memory;
@@ -15,6 +16,9 @@ namespace Ryujinx.Graphics.Gpu
     /// </summary>
     public sealed class GpuContext : IDisposable
     {
+        private const int NsToTicksFractionNumerator = 384;
+        private const int NsToTicksFractionDenominator = 625;
+
         /// <summary>
         /// Event signaled when the host emulation context is ready to be used by the gpu context.
         /// </summary>
@@ -178,6 +182,46 @@ namespace Ryujinx.Graphics.Gpu
                 physicalMemory.ShaderCache.ShaderCacheStateChanged -= ShaderCacheStateUpdate;
                 physicalMemory.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Converts a nanoseconds timestamp value to Maxwell time ticks.
+        /// </summary>
+        /// <remarks>
+        /// The frequency is 614400000 Hz.
+        /// </remarks>
+        /// <param name="nanoseconds">Timestamp in nanoseconds</param>
+        /// <returns>Maxwell ticks</returns>
+        private static ulong ConvertNanosecondsToTicks(ulong nanoseconds)
+        {
+            // We need to divide first to avoid overflows.
+            // We fix up the result later by calculating the difference and adding
+            // that to the result.
+            ulong divided = nanoseconds / NsToTicksFractionDenominator;
+
+            ulong rounded = divided * NsToTicksFractionDenominator;
+
+            ulong errorBias = (nanoseconds - rounded) * NsToTicksFractionNumerator / NsToTicksFractionDenominator;
+
+            return divided * NsToTicksFractionNumerator + errorBias;
+        }
+
+        /// <summary>
+        /// Gets the value of the GPU timer.
+        /// </summary>
+        /// <returns>The current GPU timestamp</returns>
+        public ulong GetTimestamp()
+        {
+            ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
+
+            if (GraphicsConfig.FastGpuTime)
+            {
+                // Divide by some amount to report time as if operations were performed faster than they really are.
+                // This can prevent some games from switching to a lower resolution because rendering is too slow.
+                ticks /= 256;
+            }
+
+            return ticks;
         }
 
         /// <summary>
