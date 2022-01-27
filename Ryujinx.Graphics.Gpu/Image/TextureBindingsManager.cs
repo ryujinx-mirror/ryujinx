@@ -49,6 +49,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private readonly float[] _scales;
         private bool _scaleChanged;
+        private int _lastFragmentTotal;
 
         /// <summary>
         /// Constructs a new instance of the texture bindings manager.
@@ -288,25 +289,29 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         private void CommitRenderScale()
         {
+            // Stage 0 total: Compute or Vertex.
+            int total = _textureBindingsCount[0] + _imageBindingsCount[0];
+
+            int fragmentIndex = (int)ShaderStage.Fragment - 1;
+            int fragmentTotal = _isCompute ? 0 : (_textureBindingsCount[fragmentIndex] + _imageBindingsCount[fragmentIndex]);
+
+            if (total != 0 && fragmentTotal != _lastFragmentTotal)
+            {
+                // Must update scales in the support buffer if:
+                // - Vertex stage has bindings.
+                // - Fragment stage binding count has been updated since last render scale update.
+
+                _scaleChanged = true;
+            }
+
             if (_scaleChanged)
             {
-                int fragmentTotal = 0;
-                int total;
-
                 if (!_isCompute)
                 {
-                    int fragmentIndex = (int)ShaderStage.Fragment - 1;
-                    fragmentTotal = _textureBindingsCount[fragmentIndex] + _imageBindingsCount[fragmentIndex];
-
-                    int vertexIndex = (int)ShaderStage.Vertex - 1;
-                    int vertexTotal = _textureBindingsCount[vertexIndex] + _imageBindingsCount[vertexIndex];
-
-                    total = fragmentTotal + vertexTotal;
+                    total += fragmentTotal; // Add the fragment bindings to the total.
                 }
-                else
-                {
-                    total = _textureBindingsCount[0] + _imageBindingsCount[0];
-                }
+
+                _lastFragmentTotal = fragmentTotal;
 
                 _context.Renderer.Pipeline.UpdateRenderScale(_scales, total, fragmentTotal);
 
