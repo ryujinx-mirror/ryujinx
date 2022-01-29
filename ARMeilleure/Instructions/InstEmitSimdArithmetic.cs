@@ -3613,7 +3613,7 @@ namespace ARMeilleure.Instructions
             Operand masked = context.AddIntrinsic(Intrinsic.X86Pand, value, expMask);
             Operand isNaNInf = context.AddIntrinsic(Intrinsic.X86Pcmpeqd, masked, expMask);
 
-            value = context.AddIntrinsic(Intrinsic.X86Paddw, value, roundMask);
+            value = context.AddIntrinsic(Intrinsic.X86Paddd, value, roundMask);
             value = context.AddIntrinsic(Intrinsic.X86Pand, value, truncMask);
 
             return context.AddIntrinsic(Intrinsic.X86Blendvps, value, oValue, isNaNInf);
