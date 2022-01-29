@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult ConnectToNamedPort64([R(1)] ulong namePtr, [R(1)] out int handle)
         {
-            return _syscall.ConnectToNamedPort(namePtr, out handle);
+            return _syscall.ConnectToNamedPort(out handle, namePtr);
         }
 
         public KernelResult SendSyncRequest64([R(0)] int handle)
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(3)] int handle,
             [R(1)] out int doneEventHandle)
         {
-            return _syscall.SendAsyncRequestWithUserBuffer(messagePtr, messageSize, handle, out doneEventHandle);
+            return _syscall.SendAsyncRequestWithUserBuffer(out doneEventHandle, messagePtr, messageSize, handle);
         }
 
         public KernelResult CreateSession64(
@@ -45,12 +45,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(1)] out int serverSessionHandle,
             [R(2)] out int clientSessionHandle)
         {
-            return _syscall.CreateSession(isLight, namePtr, out serverSessionHandle, out clientSessionHandle);
+            return _syscall.CreateSession(out serverSessionHandle, out clientSessionHandle, isLight, namePtr);
         }
 
         public KernelResult AcceptSession64([R(1)] int portHandle, [R(1)] out int sessionHandle)
         {
-            return _syscall.AcceptSession(portHandle, out sessionHandle);
+            return _syscall.AcceptSession(out sessionHandle, portHandle);
         }
 
         public KernelResult ReplyAndReceive64(
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(4)] long timeout,
             [R(1)] out int handleIndex)
         {
-            return _syscall.ReplyAndReceive(handlesPtr, handlesCount, replyTargetHandle, timeout, out handleIndex);
+            return _syscall.ReplyAndReceive(out handleIndex, handlesPtr, handlesCount, replyTargetHandle, timeout);
         }
 
         public KernelResult ReplyAndReceiveWithUserBuffer64(
@@ -73,13 +73,13 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(1)] out int handleIndex)
         {
             return _syscall.ReplyAndReceiveWithUserBuffer(
+                out handleIndex,
                 handlesPtr,
                 messagePtr,
                 messageSize,
                 handlesCount,
                 replyTargetHandle,
-                timeout,
-                out handleIndex);
+                timeout);
         }
 
         public KernelResult CreatePort64(
@@ -89,41 +89,41 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(1)] out int serverPortHandle,
             [R(2)] out int clientPortHandle)
         {
-            return _syscall.CreatePort(maxSessions, isLight, namePtr, out serverPortHandle, out clientPortHandle);
+            return _syscall.CreatePort(out serverPortHandle, out clientPortHandle, maxSessions, isLight, namePtr);
         }
 
         public KernelResult ManageNamedPort64([R(1)] ulong namePtr, [R(2)] int maxSessions, [R(1)] out int handle)
         {
-            return _syscall.ManageNamedPort(namePtr, maxSessions, out handle);
+            return _syscall.ManageNamedPort(out handle, namePtr, maxSessions);
         }
 
         public KernelResult ConnectToPort64([R(1)] int clientPortHandle, [R(1)] out int clientSessionHandle)
         {
-            return _syscall.ConnectToPort(clientPortHandle, out clientSessionHandle);
+            return _syscall.ConnectToPort(out clientSessionHandle, clientPortHandle);
         }
 
         // Memory
 
-        public KernelResult SetHeapSize64([R(1)] ulong size, [R(1)] out ulong position)
+        public KernelResult SetHeapSize64([R(1)] ulong size, [R(1)] out ulong address)
         {
-            return _syscall.SetHeapSize(size, out position);
+            return _syscall.SetHeapSize(out address, size);
         }
 
         public KernelResult SetMemoryPermission64(
-            [R(0)] ulong position,
+            [R(0)] ulong address,
             [R(1)] ulong size,
             [R(2)] KMemoryPermission permission)
         {
-            return _syscall.SetMemoryPermission(position, size, permission);
+            return _syscall.SetMemoryPermission(address, size, permission);
         }
 
         public KernelResult SetMemoryAttribute64(
-            [R(0)] ulong position,
+            [R(0)] ulong address,
             [R(1)] ulong size,
             [R(2)] MemoryAttribute attributeMask,
             [R(3)] MemoryAttribute attributeValue)
         {
-            return _syscall.SetMemoryAttribute(position, size, attributeMask, attributeValue);
+            return _syscall.SetMemoryAttribute(address, size, attributeMask, attributeValue);
         }
 
         public KernelResult MapMemory64([R(0)] ulong dst, [R(1)] ulong src, [R(2)] ulong size)
@@ -136,9 +136,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.UnmapMemory(dst, src, size);
         }
 
-        public KernelResult QueryMemory64([R(0)] ulong infoPtr, [R(2)] ulong position, [R(1)] out ulong pageInfo)
+        public KernelResult QueryMemory64([R(0)] ulong infoPtr, [R(2)] ulong address, [R(1)] out ulong pageInfo)
         {
-            return _syscall.QueryMemory(infoPtr, position, out pageInfo);
+            return _syscall.QueryMemory(infoPtr, out pageInfo, address);
         }
 
         public KernelResult MapSharedMemory64([R(0)] int handle, [R(1)] ulong address, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(3)] KMemoryPermission permission,
             [R(1)] out int handle)
         {
-            return _syscall.CreateTransferMemory(address, size, permission, out handle);
+            return _syscall.CreateTransferMemory(out handle, address, size, permission);
         }
 
         public KernelResult MapTransferMemory64([R(0)] int handle, [R(1)] ulong address, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
@@ -234,7 +234,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetProcessId64([R(1)] int handle, [R(1)] out long pid)
         {
-            return _syscall.GetProcessId(handle, out pid);
+            return _syscall.GetProcessId(out pid, handle);
         }
 
         public void Break64([R(0)] ulong reason, [R(1)] ulong x1, [R(2)] ulong info)
@@ -247,9 +247,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             _syscall.OutputDebugString(strPtr, size);
         }
 
-        public KernelResult GetInfo64([R(1)] InfoType id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
+        public KernelResult GetInfo64([R(1)] InfoType id, [R(2)] int handle, [R(3)] long subId, [R(1)] out ulong value)
         {
-            return _syscall.GetInfo(id, handle, subId, out value);
+            return _syscall.GetInfo(out value, id, handle, subId);
         }
 
         public KernelResult CreateEvent64([R(1)] out int wEventHandle, [R(2)] out int rEventHandle)
@@ -259,27 +259,27 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetProcessList64([R(1)] ulong address, [R(2)] int maxCount, [R(1)] out int count)
         {
-            return _syscall.GetProcessList(address, maxCount, out count);
+            return _syscall.GetProcessList(out count, address, maxCount);
         }
 
         public KernelResult GetSystemInfo64([R(1)] uint id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
         {
-            return _syscall.GetSystemInfo(id, handle, subId, out value);
+            return _syscall.GetSystemInfo(out value, id, handle, subId);
         }
 
         public KernelResult GetResourceLimitLimitValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long limitValue)
         {
-            return _syscall.GetResourceLimitLimitValue(handle, resource, out limitValue);
+            return _syscall.GetResourceLimitLimitValue(out limitValue, handle, resource);
         }
 
         public KernelResult GetResourceLimitCurrentValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long limitValue)
         {
-            return _syscall.GetResourceLimitCurrentValue(handle, resource, out limitValue);
+            return _syscall.GetResourceLimitCurrentValue(out limitValue, handle, resource);
         }
 
         public KernelResult GetResourceLimitPeakValue64([R(1)] int handle, [R(2)] LimitableResource resource, [R(1)] out long peak)
         {
-            return _syscall.GetResourceLimitPeakValue(handle, resource, out peak);
+            return _syscall.GetResourceLimitPeakValue(out peak, handle, resource);
         }
 
         public KernelResult CreateResourceLimit64([R(1)] out int handle)
@@ -302,7 +302,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(5)] int cpuCore,
             [R(1)] out int handle)
         {
-            return _syscall.CreateThread(entrypoint, argsPtr, stackTop, priority, cpuCore, out handle);
+            return _syscall.CreateThread(out handle, entrypoint, argsPtr, stackTop, priority, cpuCore);
         }
 
         public KernelResult StartThread64([R(0)] int handle)
@@ -322,7 +322,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetThreadPriority64([R(1)] int handle, [R(1)] out int priority)
         {
-            return _syscall.GetThreadPriority(handle, out priority);
+            return _syscall.GetThreadPriority(out priority, handle);
         }
 
         public KernelResult SetThreadPriority64([R(0)] int handle, [R(1)] int priority)
@@ -330,12 +330,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.SetThreadPriority(handle, priority);
         }
 
-        public KernelResult GetThreadCoreMask64([R(2)] int handle, [R(1)] out int preferredCore, [R(2)] out long affinityMask)
+        public KernelResult GetThreadCoreMask64([R(2)] int handle, [R(1)] out int preferredCore, [R(2)] out ulong affinityMask)
         {
-            return _syscall.GetThreadCoreMask(handle, out preferredCore, out affinityMask);
+            return _syscall.GetThreadCoreMask(out preferredCore, out affinityMask, handle);
         }
 
-        public KernelResult SetThreadCoreMask64([R(0)] int handle, [R(1)] int preferredCore, [R(2)] long affinityMask)
+        public KernelResult SetThreadCoreMask64([R(0)] int handle, [R(1)] int preferredCore, [R(2)] ulong affinityMask)
         {
             return _syscall.SetThreadCoreMask(handle, preferredCore, affinityMask);
         }
@@ -347,7 +347,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetThreadId64([R(1)] int handle, [R(1)] out long threadUid)
         {
-            return _syscall.GetThreadId(handle, out threadUid);
+            return _syscall.GetThreadId(out threadUid, handle);
         }
 
         public KernelResult SetThreadActivity64([R(0)] int handle, [R(1)] bool pause)
@@ -364,7 +364,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult WaitSynchronization64([R(1)] ulong handlesPtr, [R(2)] int handlesCount, [R(3)] long timeout, [R(1)] out int handleIndex)
         {
-            return _syscall.WaitSynchronization(handlesPtr, handlesCount, timeout, out handleIndex);
+            return _syscall.WaitSynchronization(out handleIndex, handlesPtr, handlesCount, timeout);
         }
 
         public KernelResult CancelSynchronization64([R(0)] int handle)

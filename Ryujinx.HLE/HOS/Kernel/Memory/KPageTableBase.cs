@@ -2682,7 +2682,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return Context.MemoryManager.MemoryRegions[(int)_memRegion];
         }
 
-        public long GetMmUsedPages()
+        public ulong GetMmUsedPages()
         {
             lock (_blockManager)
             {
@@ -2690,9 +2690,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
-        private long GetMmUsedSize()
+        private ulong GetMmUsedSize()
         {
-            return _blockManager.BlocksCount * KMemoryBlockSize;
+            return (ulong)(_blockManager.BlocksCount * KMemoryBlockSize);
         }
 
         public bool IsInvalidRegion(ulong address, ulong size)

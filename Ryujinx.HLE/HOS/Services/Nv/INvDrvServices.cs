@@ -323,7 +323,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             _clientMemory = context.Process.HandleTable.GetKProcess(clientHandle).CpuMemory;
 
-            context.Device.System.KernelContext.Syscall.GetProcessId(clientHandle, out _owner);
+            context.Device.System.KernelContext.Syscall.GetProcessId(out _owner, clientHandle);
 
             context.ResponseData.Write((uint)NvResult.Success);
 

@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KAddressArbiter AddressArbiter { get; private set; }
 
-        public long[] RandomEntropy { get; private set; }
+        public ulong[] RandomEntropy { get; private set; }
         public KThread[] PinnedThreads { get; private set; }
 
         private bool _signaled;
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Capabilities = new KProcessCapabilities();
 
-            RandomEntropy = new long[KScheduler.CpuCoresCount];
+            RandomEntropy = new ulong[KScheduler.CpuCoresCount];
             PinnedThreads = new KThread[KScheduler.CpuCoresCount];
 
             // TODO: Remove once we no longer need to initialize it externally.
@@ -868,12 +868,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public bool IsCpuCoreAllowed(int core)
         {
-            return (Capabilities.AllowedCpuCoresMask & (1L << core)) != 0;
+            return (Capabilities.AllowedCpuCoresMask & (1UL << core)) != 0;
         }
 
         public bool IsPriorityAllowed(int priority)
         {
-            return (Capabilities.AllowedThreadPriosMask & (1L << priority)) != 0;
+            return (Capabilities.AllowedThreadPriosMask & (1UL << priority)) != 0;
         }
 
         public override bool IsSignaled()

@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
-            if (!KernelTransfer.UserToKernelInt32(_context, mutexAddress, out int mutexValue))
+            if (!KernelTransfer.UserToKernel(out int mutexValue, mutexAddress))
             {
                 _context.CriticalSection.Leave();
 
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KernelResult result = KernelResult.Success;
 
-            if (!KernelTransfer.KernelToUserInt32(_context, mutexAddress, mutexValue))
+            if (!KernelTransfer.KernelToUser(mutexAddress, mutexValue))
             {
                 result = KernelResult.InvalidMemState;
             }
@@ -123,9 +123,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             (int mutexValue, _) = MutexUnlock(currentThread, mutexAddress);
 
-            KernelTransfer.KernelToUserInt32(_context, condVarAddress, 1);
+            KernelTransfer.KernelToUser(condVarAddress, 1);
 
-            if (!KernelTransfer.KernelToUserInt32(_context, mutexAddress, mutexValue))
+            if (!KernelTransfer.KernelToUser(mutexAddress, mutexValue))
             {
                 _context.CriticalSection.Leave();
 
@@ -201,7 +201,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (!_condVarThreads.Any(x => x.CondVarAddress == address))
             {
-                KernelTransfer.KernelToUserInt32(_context, address, 0);
+                KernelTransfer.KernelToUser(address, 0);
             }
 
             _context.CriticalSection.Leave();
@@ -290,7 +290,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.TimedOut;
 
-            if (!KernelTransfer.UserToKernelInt32(_context, address, out int currentValue))
+            if (!KernelTransfer.UserToKernel(out int currentValue, address))
             {
                 _context.CriticalSection.Leave();
 
@@ -363,7 +363,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
-            if (!KernelTransfer.UserToKernelInt32(_context, address, out int currentValue))
+            if (!KernelTransfer.UserToKernel(out int currentValue, address))
             {
                 _context.CriticalSection.Leave();
 

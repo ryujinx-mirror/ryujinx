@@ -26,6 +26,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         KernelStack            = 0x00002013,
         CodeReadOnly           = 0x00402214,
         CodeWritable           = 0x00402015,
+        UserMask               = 0xff,
         Mask                   = 0xffffffff,
 
         PermissionChangeAllowed          = 1 << 8,

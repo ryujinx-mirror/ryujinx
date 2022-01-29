@@ -210,7 +210,7 @@ namespace Ryujinx.HLE.HOS.Services
             }
             else
             {
-                context.Device.System.KernelContext.Syscall.CreateSession(false, 0, out int serverSessionHandle, out int clientSessionHandle);
+                context.Device.System.KernelContext.Syscall.CreateSession(out int serverSessionHandle, out int clientSessionHandle, false, 0);
 
                 obj.Server.AddSessionObj(serverSessionHandle, obj);
 

@@ -2,6 +2,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.SupervisorCall;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -27,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public KThreadContext ThreadContext { get; private set; }
 
         public int DynamicPriority { get; set; }
-        public long AffinityMask { get; set; }
+        public ulong AffinityMask { get; set; }
 
         public long ThreadUid { get; private set; }
 
@@ -88,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public bool IsPinned { get; private set; }
 
-        private long _originalAffinityMask;
+        private ulong _originalAffinityMask;
         private int _originalPreferredCore;
         private int _originalBasePriority;
         private int _coreMigrationDisableCount;
@@ -147,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             ThreadContext = new KThreadContext();
 
             PreferredCore = cpuCore;
-            AffinityMask |= 1L << cpuCore;
+            AffinityMask |= 1UL << cpuCore;
 
             SchedFlags = type == ThreadType.Dummy
                 ? ThreadSchedState.Running
@@ -629,6 +630,89 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
         }
 
+        public KernelResult GetThreadContext3(out ThreadContext context)
+        {
+            context = default;
+
+            lock (ActivityOperationLock)
+            {
+                KernelContext.CriticalSection.Enter();
+
+                if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) == 0)
+                {
+                    KernelContext.CriticalSection.Leave();
+
+                    return KernelResult.InvalidState;
+                }
+
+                if (!TerminationRequested)
+                {
+                    context = GetCurrentContext();
+                }
+
+                KernelContext.CriticalSection.Leave();
+            }
+
+            return KernelResult.Success;
+        }
+
+        private static uint GetPsr(ARMeilleure.State.ExecutionContext context)
+        {
+            return (context.GetPstateFlag(ARMeilleure.State.PState.NFlag) ? (1U << (int)ARMeilleure.State.PState.NFlag) : 0U) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.ZFlag) ? (1U << (int)ARMeilleure.State.PState.ZFlag) : 0U) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.CFlag) ? (1U << (int)ARMeilleure.State.PState.CFlag) : 0U) |
+                   (context.GetPstateFlag(ARMeilleure.State.PState.VFlag) ? (1U << (int)ARMeilleure.State.PState.VFlag) : 0U);
+        }
+
+        private ThreadContext GetCurrentContext()
+        {
+            const int MaxRegistersAArch32 = 15;
+            const int MaxFpuRegistersAArch32 = 16;
+
+            ThreadContext context = new ThreadContext();
+
+            if (Owner.Flags.HasFlag(ProcessCreationFlags.Is64Bit))
+            {
+                for (int i = 0; i < context.Registers.Length; i++)
+                {
+                    context.Registers[i] = Context.GetX(i);
+                }
+
+                for (int i = 0; i < context.FpuRegisters.Length; i++)
+                {
+                    context.FpuRegisters[i] = Context.GetV(i);
+                }
+
+                context.Fp = Context.GetX(29);
+                context.Lr = Context.GetX(30);
+                context.Sp = Context.GetX(31);
+                context.Pc = (ulong)LastPc;
+                context.Pstate = GetPsr(Context);
+                context.Tpidr = (ulong)Context.Tpidr;
+            }
+            else
+            {
+                for (int i = 0; i < MaxRegistersAArch32; i++)
+                {
+                    context.Registers[i] = (uint)Context.GetX(i);
+                }
+
+                for (int i = 0; i < MaxFpuRegistersAArch32; i++)
+                {
+                    context.FpuRegisters[i] = Context.GetV(i);
+                }
+
+                context.Pc = (uint)LastPc;
+                context.Pstate = GetPsr(Context);
+                context.Tpidr = (uint)Context.Tpidr;
+            }
+
+            context.Fpcr = (uint)Context.Fpcr;
+            context.Fpsr = (uint)Context.Fpsr;
+
+            return context;
+        }
+
         public void CancelSynchronization()
         {
             KernelContext.CriticalSection.Enter();
@@ -660,7 +744,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             KernelContext.CriticalSection.Leave();
         }
 
-        public KernelResult SetCoreAndAffinityMask(int newCore, long newAffinityMask)
+        public KernelResult SetCoreAndAffinityMask(int newCore, ulong newAffinityMask)
         {
             lock (ActivityOperationLock)
             {
@@ -673,7 +757,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 {
                     newCore = isCoreMigrationDisabled ? _originalPreferredCore : PreferredCore;
 
-                    if ((newAffinityMask & (1 << newCore)) == 0)
+                    if ((newAffinityMask & (1UL << newCore)) == 0)
                     {
                         KernelContext.CriticalSection.Leave();
 
@@ -688,7 +772,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
                 else
                 {
-                    long oldAffinityMask = AffinityMask;
+                    ulong oldAffinityMask = AffinityMask;
 
                     PreferredCore = newCore;
                     AffinityMask = newAffinityMask;
@@ -701,7 +785,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         {
                             if (PreferredCore < 0)
                             {
-                                ActiveCore = sizeof(ulong) * 8 - 1 - BitOperations.LeadingZeroCount((ulong)AffinityMask);
+                                ActiveCore = sizeof(ulong) * 8 - 1 - BitOperations.LeadingZeroCount(AffinityMask);
                             }
                             else
                             {
@@ -733,7 +817,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     int coreNumber = GetEffectiveRunningCore();
                     bool isPinnedThreadCurrentlyRunning = coreNumber >= 0;
 
-                    if (isPinnedThreadCurrentlyRunning && ((1 << coreNumber) & AffinityMask) == 0)
+                    if (isPinnedThreadCurrentlyRunning && ((1UL << coreNumber) & AffinityMask) == 0)
                     {
                         if (IsPinned)
                         {
@@ -1077,7 +1161,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             KernelContext.ThreadReselectionRequested = true;
         }
 
-        private void AdjustSchedulingForNewAffinity(long oldAffinityMask, int oldCore)
+        private void AdjustSchedulingForNewAffinity(ulong oldAffinityMask, int oldCore)
         {
             if (SchedFlags != ThreadSchedState.Running || DynamicPriority >= KScheduler.PrioritiesCount || !IsSchedulable)
             {
@@ -1259,7 +1343,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             ActiveCore = CurrentCore;
             PreferredCore = CurrentCore;
-            AffinityMask = 1 << CurrentCore;
+            AffinityMask = 1UL << CurrentCore;
 
             if (activeCore != CurrentCore || _originalAffinityMask != AffinityMask)
             {
@@ -1282,7 +1366,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             IsPinned = false;
             _coreMigrationDisableCount--;
 
-            long affinityMask = AffinityMask;
+            ulong affinityMask = AffinityMask;
             int activeCore = ActiveCore;
 
             PreferredCore = _originalPreferredCore;
@@ -1290,7 +1374,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             
             if (AffinityMask != affinityMask)
             {
-                if ((AffinityMask & 1 << ActiveCore) != 0)
+                if ((AffinityMask & 1UL << ActiveCore) != 0)
                 {
                     if (PreferredCore >= 0)
                     {
