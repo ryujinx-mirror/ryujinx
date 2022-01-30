@@ -17,8 +17,8 @@
 
 </p>
 <p align="center">
-    <a href="https://ci.appveyor.com/project/gdkchan/ryujinx?branch=master">
-        <img src="https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s/branch/master?svg=true"
+    <a href="https://github.com/Ryujinx/Ryujinx/actions/workflows/release.yml">
+        <img src="https://github.com/Ryujinx/Ryujinx/actions/workflows/release.yml/badge.svg"
             alt="">
     </a>
     <a href="https://discord.com/invite/VkQYXAZ">
