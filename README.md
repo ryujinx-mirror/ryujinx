@@ -5,7 +5,7 @@
   <br>
   <b>Ryujinx</b>
   <br>
-  <sub><sup><b>(REE-YOU-JI-NX)</b></sup></sub>
+  <sub><sup><b>(REE-YOU-JINX)</b></sup></sub>
   <br>
 
 </h1>
