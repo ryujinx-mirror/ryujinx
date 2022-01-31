@@ -369,14 +369,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (color != null)
                 {
-                    if (clipRegionWidth > color.Width)
+                    if (clipRegionWidth > color.Width / samplesInX)
                     {
-                        clipRegionWidth = color.Width;
+                        clipRegionWidth = color.Width / samplesInX;
                     }
 
-                    if (clipRegionHeight > color.Height)
+                    if (clipRegionHeight > color.Height / samplesInY)
                     {
-                        clipRegionHeight = color.Height;
+                        clipRegionHeight = color.Height / samplesInY;
                     }
                 }
             }
@@ -400,14 +400,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (depthStencil != null)
                 {
-                    if (clipRegionWidth > depthStencil.Width)
+                    if (clipRegionWidth > depthStencil.Width / samplesInX)
                     {
-                        clipRegionWidth = depthStencil.Width;
+                        clipRegionWidth = depthStencil.Width / samplesInX;
                     }
 
-                    if (clipRegionHeight > depthStencil.Height)
+                    if (clipRegionHeight > depthStencil.Height / samplesInY)
                     {
-                        clipRegionHeight = depthStencil.Height;
+                        clipRegionHeight = depthStencil.Height / samplesInY;
                     }
                 }
             }
