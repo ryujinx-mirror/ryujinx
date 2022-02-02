@@ -776,6 +776,7 @@ namespace Ryujinx.HLE.HOS
                 // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
                 control.UserAccountSaveDataSize = 0x4000;
                 control.UserAccountSaveDataJournalSize = 0x4000;
+                control.SaveDataOwnerId = applicationId;
 
                 Logger.Warning?.Print(LogClass.Application,
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");

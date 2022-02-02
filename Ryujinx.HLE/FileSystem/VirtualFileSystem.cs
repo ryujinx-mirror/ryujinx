@@ -505,7 +505,9 @@ namespace Ryujinx.HLE.FileSystem
 
             bool canFixBySaveDataId = extraData.Attribute.StaticSaveDataId == 0 && info.StaticSaveDataId != 0;
 
-            if (!canFixByProgramId && !canFixBySaveDataId)
+            bool hasEmptyOwnerId = extraData.OwnerId == 0 && info.Type != LibHac.Fs.SaveDataType.System;
+
+            if (!canFixByProgramId && !canFixBySaveDataId && !hasEmptyOwnerId)
             {
                 wasFixNeeded = false;
                 return Result.Success;
