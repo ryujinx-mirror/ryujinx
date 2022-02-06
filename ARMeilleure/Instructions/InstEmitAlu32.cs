@@ -387,6 +387,11 @@ namespace ARMeilleure.Instructions
             EmitDiv(context, false);
         }
 
+        public static void Shadd8(ArmEmitterContext context)
+        {
+            EmitHadd8(context, false);
+        }
+
         public static void Ssat(ArmEmitterContext context)
         {
             OpCode32Sat op = (OpCode32Sat)context.CurrOp;
@@ -474,20 +479,7 @@ namespace ARMeilleure.Instructions
 
         public static void Uhadd8(ArmEmitterContext context)
         {
-            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
-
-            Operand m = GetIntA32(context, op.Rm);
-            Operand n = GetIntA32(context, op.Rn);
-
-            Operand xor, res;
-
-            res = context.BitwiseAnd(m, n);
-            xor = context.BitwiseExclusiveOr(m, n);
-            xor = context.ShiftRightUI(xor, Const(1));
-            xor = context.BitwiseAnd(xor, Const(0x7F7F7F7Fu));
-            res = context.Add(res, xor);
-
-            SetIntA32(context, op.Rd, res);
+            EmitHadd8(context, true);
         }
 
         public static void Usat(ArmEmitterContext context)
@@ -657,6 +649,36 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, zero);
 
             context.MarkLabel(lblEnd);
+        }
+
+        private static void EmitHadd8(ArmEmitterContext context, bool unsigned)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            Operand m = GetIntA32(context, op.Rm);
+            Operand n = GetIntA32(context, op.Rn);
+
+            Operand xor, res, carry;
+
+            // This relies on the equality x+y == ((x&y) << 1) + (x^y).
+            // Note that x^y always contains the LSB of the result.
+            // Since we want to calculate (x+y)/2, we can instead calculate (x&y) + ((x^y)>>1).
+            // We mask by 0x7F to remove the LSB so that it doesn't leak into the field below.
+
+            res = context.BitwiseAnd(m, n);
+            carry = context.BitwiseExclusiveOr(m, n);
+            xor = context.ShiftRightUI(carry, Const(1));
+            xor = context.BitwiseAnd(xor, Const(0x7F7F7F7Fu));
+            res = context.Add(res, xor);
+
+            if (!unsigned)
+            {
+                // Propagates the sign bit from (x^y)>>1 upwards by one.
+                carry = context.BitwiseAnd(carry, Const(0x80808080u));
+                res = context.BitwiseExclusiveOr(res, carry);
+            }
+
+            SetIntA32(context, op.Rd, res);
         }
 
         private static void EmitSat(ArmEmitterContext context, int intMin, int intMax)

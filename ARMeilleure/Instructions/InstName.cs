@@ -516,6 +516,7 @@ namespace ARMeilleure.Instructions
         Rsb,
         Rsc,
         Sbfx,
+        Shadd8,
         Smla__,
         Smlal,
         Smlal__,
