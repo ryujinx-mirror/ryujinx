@@ -97,6 +97,25 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
+        public void Shsub8([Values(0u, 0xdu)] uint rd,
+                           [Values(1u)] uint rm,
+                           [Values(2u)] uint rn,
+                           [Random(RndCnt)] uint w0,
+                           [Random(RndCnt)] uint w1,
+                           [Random(RndCnt)] uint w2)
+        {
+            uint opcode = 0xE6300FF0u; // SHSUB8 R0, R0, R0
+
+            opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
+
+            uint sp = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, r0: w0, r1: w1, r2: w2, sp: sp);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
         public void Ssat_Usat([ValueSource("_Ssat_Usat_")] uint opcode,
                               [Values(0u, 0xdu)] uint rd,
                               [Values(1u, 0xdu)] uint rn,
@@ -140,6 +159,25 @@ namespace Ryujinx.Tests.Cpu
                            [Random(RndCnt)] uint w2)
         {
             uint opcode = 0xE6700F90u; // UHADD8 R0, R0, R0
+
+            opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
+
+            uint sp = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, r0: w0, r1: w1, r2: w2, sp: sp);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Uhsub8([Values(0u, 0xdu)] uint rd,
+                           [Values(1u)] uint rm,
+                           [Values(2u)] uint rn,
+                           [Random(RndCnt)] uint w0,
+                           [Random(RndCnt)] uint w1,
+                           [Random(RndCnt)] uint w2)
+        {
+            uint opcode = 0xE6700FF0u; // UHSUB8 R0, R0, R0
 
             opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
 
