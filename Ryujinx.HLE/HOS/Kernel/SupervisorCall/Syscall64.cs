@@ -232,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.GetSystemTick();
         }
 
-        public KernelResult GetProcessId64([R(1)] int handle, [R(1)] out long pid)
+        public KernelResult GetProcessId64([R(1)] int handle, [R(1)] out ulong pid)
         {
             return _syscall.GetProcessId(out pid, handle);
         }
@@ -345,7 +345,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.GetCurrentProcessorNumber();
         }
 
-        public KernelResult GetThreadId64([R(1)] int handle, [R(1)] out long threadUid)
+        public KernelResult GetThreadId64([R(1)] int handle, [R(1)] out ulong threadUid)
         {
             return _syscall.GetThreadId(out threadUid, handle);
         }

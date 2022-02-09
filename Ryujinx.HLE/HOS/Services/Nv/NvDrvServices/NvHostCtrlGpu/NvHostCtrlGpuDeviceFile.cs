@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
         private KEvent _errorEvent;
         private KEvent _unknownEvent;
 
-        public NvHostCtrlGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
+        public NvHostCtrlGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
             _errorEvent   = new KEvent(context.Device.System.KernelContext);
             _unknownEvent = new KEvent(context.Device.System.KernelContext);

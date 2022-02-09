@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // CountAddOnContent(pid) -> u32
         public ResultCode CountAddOnContent(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // ListAddOnContent(u32 start_index, u32 buffer_size, pid) -> (u32 count, buffer<u32>)
         public ResultCode ListAddOnContent(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // GetAddOnContentBaseId(pid) -> u64
         public ResultCode GetAddOnContentBaseId(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // PrepareAddOnContent(u32 index, pid)
         public ResultCode PrepareAddOnContent(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // GetAddOnContentListChangedEventWithProcessId(pid) -> handle<copy>
         public ResultCode GetAddOnContentListChangedEventWithProcessId(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // NotifyMountAddOnContent(pid, u64 title_id)
         public ResultCode NotifyMountAddOnContent(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // NotifyUnmountAddOnContent(pid, u64 title_id)
         public ResultCode NotifyUnmountAddOnContent(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
 
@@ -175,7 +175,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         // CheckAddOnContentMountStatus(pid)
         public ResultCode CheckAddOnContentMountStatus(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             // NOTE: Service call arp:r GetApplicationLaunchProperty to get TitleId using the PId.
             //       Then it does some internal checks and returns InvalidBufferSize if they fail.

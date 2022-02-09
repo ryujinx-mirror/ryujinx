@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS
             _gpu = gpu;
         }
 
-        public IProcessContext Create(KernelContext context, long pid, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler, bool for64Bit)
+        public IProcessContext Create(KernelContext context, ulong pid, ulong addressSpaceSize, InvalidAccessHandler invalidAccessHandler, bool for64Bit)
         {
             MemoryManagerMode mode = context.Device.Configuration.MemoryManagerMode;
 

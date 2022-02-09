@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             public IGraphicBufferProducer Producer;
             public BufferItemConsumer     Consumer;
             public BufferQueueCore        Core;
-            public long                   Owner;
+            public ulong                  Owner;
         }
 
         private class TextureCallbackInformation
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
         }
 
-        public IGraphicBufferProducer OpenLayer(long pid, long layerId)
+        public IGraphicBufferProducer OpenLayer(ulong pid, long layerId)
         {
             bool needCreate;
 
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return GetProducerByLayerId(layerId);
         }
 
-        public IGraphicBufferProducer CreateLayer(long pid, out long layerId)
+        public IGraphicBufferProducer CreateLayer(ulong pid, out long layerId)
         {
             layerId = 1;
 
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return GetProducerByLayerId(layerId);
         }
 
-        private void CreateLayerFromId(long pid, long layerId)
+        private void CreateLayerFromId(ulong pid, long layerId)
         {
             lock (Lock)
             {

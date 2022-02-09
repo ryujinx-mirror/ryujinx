@@ -1,5 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Services.Sockets.Bsd;
 using Ryujinx.HLE.HOS.Services.Ssl.Types;
 using System.Text;
 
@@ -9,12 +8,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
     {
         private uint _connectionCount;
 
-        private readonly long _processId;
+        private readonly ulong _processId;
         private readonly SslVersion _sslVersion;
         private ulong _serverCertificateId;
         private ulong _clientCertificateId;
 
-        public ISslContext(long processId, SslVersion sslVersion)
+        public ISslContext(ulong processId, SslVersion sslVersion)
         {
             _processId = processId;
             _sslVersion = sslVersion;

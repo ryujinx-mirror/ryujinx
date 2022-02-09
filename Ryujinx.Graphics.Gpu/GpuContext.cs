@@ -77,7 +77,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Registry with physical memories that can be used with this GPU context, keyed by owner process ID.
         /// </summary>
-        internal ConcurrentDictionary<long, PhysicalMemory> PhysicalMemoryRegistry { get; }
+        internal ConcurrentDictionary<ulong, PhysicalMemory> PhysicalMemoryRegistry { get; }
 
         /// <summary>
         /// Host hardware capabilities.
@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Gpu
 
             DeferredActions = new Queue<Action>();
 
-            PhysicalMemoryRegistry = new ConcurrentDictionary<long, PhysicalMemory>();
+            PhysicalMemoryRegistry = new ConcurrentDictionary<ulong, PhysicalMemory>();
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="pid">ID of the process that owns the memory manager</param>
         /// <returns>The memory manager</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="pid"/> is invalid</exception>
-        public MemoryManager CreateMemoryManager(long pid)
+        public MemoryManager CreateMemoryManager(ulong pid)
         {
             if (!PhysicalMemoryRegistry.TryGetValue(pid, out var physicalMemory))
             {
@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="pid">ID of the process that owns <paramref name="cpuMemory"/></param>
         /// <param name="cpuMemory">Virtual memory owned by the process</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="pid"/> was already registered</exception>
-        public void RegisterProcess(long pid, Cpu.IVirtualMemoryManagerTracked cpuMemory)
+        public void RegisterProcess(ulong pid, Cpu.IVirtualMemoryManagerTracked cpuMemory)
         {
             var physicalMemory = new PhysicalMemory(this, cpuMemory);
             if (!PhysicalMemoryRegistry.TryAdd(pid, physicalMemory))
@@ -175,7 +175,7 @@ namespace Ryujinx.Graphics.Gpu
         /// Unregisters a process, indicating that its memory will no longer be used, and that caches can be freed.
         /// </summary>
         /// <param name="pid">ID of the process</param>
-        public void UnregisterProcess(long pid)
+        public void UnregisterProcess(ulong pid)
         {
             if (PhysicalMemoryRegistry.TryRemove(pid, out var physicalMemory))
             {

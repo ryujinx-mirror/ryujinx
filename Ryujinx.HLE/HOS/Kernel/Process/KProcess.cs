@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public ulong TitleId { get; private set; }
         public bool IsApplication { get; private set; }
-        public long Pid { get; private set; }
+        public ulong Pid { get; private set; }
 
         private long _creationTimestamp;
         private ulong _entrypoint;
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Pid = KernelContext.NewKipId();
 
-            if (Pid == 0 || (ulong)Pid >= KernelConstants.InitialProcessId)
+            if (Pid == 0 || Pid >= KernelConstants.InitialProcessId)
             {
                 throw new InvalidOperationException($"Invalid KIP Id {Pid}.");
             }
@@ -239,7 +239,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Pid = KernelContext.NewProcessId();
 
-            if (Pid == -1 || (ulong)Pid < KernelConstants.InitialProcessId)
+            if (Pid == ulong.MaxValue || Pid < KernelConstants.InitialProcessId)
             {
                 throw new InvalidOperationException($"Invalid Process Id {Pid}.");
             }

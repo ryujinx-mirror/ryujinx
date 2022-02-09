@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         // Process
 
-        public KernelResult GetProcessId(out long pid, int handle)
+        public KernelResult GetProcessId(out ulong pid, int handle)
         {
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
@@ -2280,7 +2280,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return KernelStatic.GetCurrentThread().CurrentCore;
         }
 
-        public KernelResult GetThreadId(out long threadUid, int handle)
+        public KernelResult GetThreadId(out ulong threadUid, int handle)
         {
             KProcess process = KernelStatic.GetCurrentProcess();
 

@@ -9,14 +9,14 @@ namespace Ryujinx.HLE.HOS
 {
     class ArmProcessContext<T> : IProcessContext where T : class, IVirtualMemoryManagerTracked, IMemoryManager
     {
-        private readonly long _pid;
+        private readonly ulong _pid;
         private readonly GpuContext _gpuContext;
         private readonly CpuContext _cpuContext;
         private T _memoryManager;
 
         public IVirtualMemoryManager AddressSpace => _memoryManager;
 
-        public ArmProcessContext(long pid, GpuContext gpuContext, T memoryManager, bool for64Bit)
+        public ArmProcessContext(ulong pid, GpuContext gpuContext, T memoryManager, bool for64Bit)
         {
             if (memoryManager is IRefCounted rc)
             {

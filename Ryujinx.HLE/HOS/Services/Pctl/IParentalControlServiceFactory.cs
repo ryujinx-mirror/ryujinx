@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
         // CreateService(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public ResultCode CreateService(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             MakeObject(context, new IParentalControlService(context, pid, true, _permissionFlag));
 
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
         // CreateServiceWithoutInitialize(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public ResultCode CreateServiceWithoutInitialize(ServiceCtx context)
         {
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             MakeObject(context, new IParentalControlService(context, pid, false, _permissionFlag));
 

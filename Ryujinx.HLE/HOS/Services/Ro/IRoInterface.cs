@@ -418,7 +418,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return (ResultCode)result;
         }
 
-        private ResultCode IsInitialized(long pid)
+        private ResultCode IsInitialized(ulong pid)
         {
             if (_owner != null && _owner.Pid == pid)
             {

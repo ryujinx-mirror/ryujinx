@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public int DynamicPriority { get; set; }
         public ulong AffinityMask { get; set; }
 
-        public long ThreadUid { get; private set; }
+        public ulong ThreadUid { get; private set; }
 
         private long _totalTimeRunning;
 

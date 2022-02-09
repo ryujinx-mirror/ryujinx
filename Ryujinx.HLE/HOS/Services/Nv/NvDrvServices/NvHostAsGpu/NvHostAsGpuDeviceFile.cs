@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
         private readonly AddressSpaceContext _asContext;
         private readonly NvMemoryAllocator _memoryAllocator;
 
-        public NvHostAsGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
+        public NvHostAsGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
             _asContext = new AddressSpaceContext(context.Device.Gpu.CreateMemoryManager(owner));
             _memoryAllocator = new NvMemoryAllocator();

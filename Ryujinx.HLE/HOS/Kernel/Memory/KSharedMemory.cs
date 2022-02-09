@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
     {
         private readonly SharedMemoryStorage _storage;
 
-        private readonly long _ownerPid;
+        private readonly ulong _ownerPid;
 
         private readonly KMemoryPermission _ownerPermission;
         private readonly KMemoryPermission _userPermission;
@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public KSharedMemory(
             KernelContext context,
             SharedMemoryStorage storage,
-            long ownerPid,
+            ulong ownerPid,
             KMemoryPermission ownerPermission,
             KMemoryPermission userPermission) : base(context)
         {

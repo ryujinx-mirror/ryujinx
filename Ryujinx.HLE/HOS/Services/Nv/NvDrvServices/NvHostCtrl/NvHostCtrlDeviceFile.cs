@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private Switch        _device;
         private NvHostEvent[] _events;
 
-        public NvHostCtrlDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
+        public NvHostCtrlDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
             if (NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object productionModeSetting))
             {

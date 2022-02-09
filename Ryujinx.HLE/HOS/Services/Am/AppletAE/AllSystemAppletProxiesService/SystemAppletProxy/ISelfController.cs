@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class ISelfController : IpcService
     {
-        private readonly long _pid;
+        private readonly ulong _pid;
 
         private KEvent _libraryAppletLaunchableEvent;
         private int    _libraryAppletLaunchableEventHandle;
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private uint _screenShotImageOrientation = 0;
         private uint _idleTimeDetectionExtension = 0;
 
-        public ISelfController(ServiceCtx context, long pid)
+        public ISelfController(ServiceCtx context, ulong pid)
         {
             _libraryAppletLaunchableEvent = new KEvent(context.Device.System.KernelContext);
             _pid = pid;

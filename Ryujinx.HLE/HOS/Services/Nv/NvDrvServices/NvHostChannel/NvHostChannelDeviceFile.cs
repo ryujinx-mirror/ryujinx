@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 {
     class NvHostChannelDeviceFile : NvDeviceFile
     {
-        private static readonly ConcurrentDictionary<long, Host1xContext> _host1xContextRegistry = new();
+        private static readonly ConcurrentDictionary<ulong, Host1xContext> _host1xContextRegistry = new();
 
         private const uint MaxModuleSyncpoint = 16;
 
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvFence _channelSyncpoint;
 
-        public NvHostChannelDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, owner)
+        public NvHostChannelDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
             _device        = context.Device;
             _memory        = memory;
@@ -556,9 +556,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             _channelSyncpoint.Id = 0;
         }
 
-        private static Host1xContext GetHost1XContext(GpuContext gpu, long pid)
+        private static Host1xContext GetHost1XContext(GpuContext gpu, ulong pid)
         {
-            return _host1xContextRegistry.GetOrAdd(pid, (long key) => new Host1xContext(gpu, key));
+            return _host1xContextRegistry.GetOrAdd(pid, (ulong key) => new Host1xContext(gpu, key));
         }
 
         public static void Destroy()

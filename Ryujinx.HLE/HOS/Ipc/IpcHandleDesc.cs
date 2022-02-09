@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Ipc
     {
         public bool HasPId { get; private set; }
 
-        public long PId { get; private set; }
+        public ulong PId { get; private set; }
 
         public int[] ToCopy { get; private set; }
         public int[] ToMove { get; private set; }
@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Ipc
             ToCopy = new int[(word >> 1) & 0xf];
             ToMove = new int[(word >> 5) & 0xf];
 
-            PId = HasPId ? reader.ReadInt64() : 0;
+            PId = HasPId ? reader.ReadUInt64() : 0;
 
             for (int index = 0; index < ToCopy.Length; index++)
             {
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Ipc
             ToMove = move ?? throw new ArgumentNullException(nameof(move));
         }
 
-        public IpcHandleDesc(int[] copy, int[] move, long pId) : this(copy, move)
+        public IpcHandleDesc(int[] copy, int[] move, ulong pId) : this(copy, move)
         {
             PId = pId;
 

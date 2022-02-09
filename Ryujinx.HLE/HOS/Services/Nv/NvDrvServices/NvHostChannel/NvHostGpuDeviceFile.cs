@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
         private int _smExceptionBptPauseReportEventHandle;
         private int _errorNotifierEventHandle;
 
-        public NvHostGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, long owner) : base(context, memory, owner)
+        public NvHostGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, memory, owner)
         {
             _smExceptionBptIntReportEvent   = CreateEvent(context, out _smExceptionBptIntReportEventHandle);
             _smExceptionBptPauseReportEvent = CreateEvent(context, out _smExceptionBptPauseReportEventHandle);

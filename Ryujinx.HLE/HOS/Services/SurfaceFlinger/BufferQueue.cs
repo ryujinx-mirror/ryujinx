@@ -2,7 +2,7 @@
 {
     static class BufferQueue
     {
-        public static BufferQueueCore CreateBufferQueue(Switch device, long pid, out BufferQueueProducer producer, out BufferQueueConsumer consumer)
+        public static BufferQueueCore CreateBufferQueue(Switch device, ulong pid, out BufferQueueProducer producer, out BufferQueueConsumer consumer)
         {
             BufferQueueCore core = new BufferQueueCore(device, pid);
 

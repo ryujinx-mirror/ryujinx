@@ -5,9 +5,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
 {
     class IApplicationProxy : IpcService
     {
-        private readonly long _pid;
+        private readonly ulong _pid;
 
-        public IApplicationProxy(long pid)
+        public IApplicationProxy(ulong pid)
         {
             _pid = pid;
         }

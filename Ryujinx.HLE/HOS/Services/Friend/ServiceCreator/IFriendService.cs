@@ -318,7 +318,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 
             // Pid placeholder
             context.RequestData.ReadInt64();
-            long pid = context.Request.HandleDesc.PId;
+            ulong pid = context.Request.HandleDesc.PId;
 
             ulong playHistoryRegistrationKeyPosition = context.Request.PtrBuff[0].Position;
             ulong PlayHistoryRegistrationKeySize     = context.Request.PtrBuff[0].Size;

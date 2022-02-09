@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
     class BsdContext
     {
-        private static ConcurrentDictionary<long, BsdContext> _registry = new ConcurrentDictionary<long, BsdContext>();
+        private static ConcurrentDictionary<ulong, BsdContext> _registry = new ConcurrentDictionary<ulong, BsdContext>();
 
         private readonly object _lock = new object();
 
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return LinuxError.SUCCESS;
         }
 
-        public static BsdContext GetOrRegister(long processId)
+        public static BsdContext GetOrRegister(ulong processId)
         {
             BsdContext context = GetContext(processId);
 
@@ -137,7 +137,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return context;
         }
 
-        public static BsdContext GetContext(long processId)
+        public static BsdContext GetContext(ulong processId)
         {
             if (!_registry.TryGetValue(processId, out BsdContext processContext))
             {

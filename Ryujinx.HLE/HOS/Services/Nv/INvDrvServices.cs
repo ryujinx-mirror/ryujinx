@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         public static IdDictionary DeviceFileIdRegistry = new IdDictionary();
 
         private IVirtualMemoryManager _clientMemory;
-        private long _owner;
+        private ulong _owner;
 
         private bool _transferMemInitialized = false;
 
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         {
             if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
             {
-                ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(long) });
+                ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(ulong) });
 
                 NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context, _clientMemory, _owner });
 

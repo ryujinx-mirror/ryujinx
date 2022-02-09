@@ -235,12 +235,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             resultHigh = (uint)(result >> 32);
         }
 
-        public KernelResult GetProcessId32([R(1)] int handle, [R(1)] out int pidLow, [R(2)] out int pidHigh)
+        public KernelResult GetProcessId32([R(1)] int handle, [R(1)] out uint pidLow, [R(2)] out uint pidHigh)
         {
-            KernelResult result = _syscall.GetProcessId(out long pid, handle);
+            KernelResult result = _syscall.GetProcessId(out ulong pid, handle);
 
-            pidLow = (int)(pid & uint.MaxValue);
-            pidHigh = (int)(pid >> 32);
+            pidLow = (uint)(pid & uint.MaxValue);
+            pidHigh = (uint)(pid >> 32);
 
             return result;
         }
@@ -413,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult GetThreadId32([R(1)] int handle, [R(1)] out uint threadUidLow, [R(2)] out uint threadUidHigh)
         {
-            long threadUid;
+            ulong threadUid;
 
             KernelResult result = _syscall.GetThreadId(out threadUid, handle);
 
