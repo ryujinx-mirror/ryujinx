@@ -9,13 +9,17 @@ namespace ARMeilleure.CodeGen.X86
 {
     static class X86Optimizer
     {
+        private const int MaxConstantUses = 10000;
+
         public static void RunPass(ControlFlowGraph cfg)
         {
             var constants = new Dictionary<ulong, Operand>();
 
             Operand GetConstantCopy(BasicBlock block, Operation operation, Operand source)
             {
-                if (!constants.TryGetValue(source.Value, out var constant))
+                // If the constant has many uses, we also force a new constant mov to be added, in order
+                // to avoid overflow of the counts field (that is limited to 16 bits).
+                if (!constants.TryGetValue(source.Value, out var constant) || constant.UsesCount > MaxConstantUses)
                 {
                     constant = Local(source.Type);
 
@@ -23,7 +27,7 @@ namespace ARMeilleure.CodeGen.X86
 
                     block.Operations.AddBefore(operation, copyOp);
 
-                    constants.Add(source.Value, constant);
+                    constants[source.Value] = constant;
                 }
 
                 return constant;
