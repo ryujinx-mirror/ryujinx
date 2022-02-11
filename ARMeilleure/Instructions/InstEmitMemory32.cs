@@ -153,7 +153,7 @@ namespace ARMeilleure.Instructions
         {
             OpCode32Mem op = (OpCode32Mem)context.CurrOp;
 
-            Operand n = context.Copy(GetIntA32(context, op.Rn));
+            Operand n = context.Copy(GetIntA32AlignedPC(context, op.Rn));
             Operand m = GetMemM(context, setCarry: false);
 
             Operand temp = default;
