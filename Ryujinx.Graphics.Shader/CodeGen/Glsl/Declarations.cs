@@ -490,7 +490,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
             else
             {
-                int usedAttributes = context.Config.UsedInputAttributes;
+                int usedAttributes = context.Config.UsedInputAttributes | context.Config.PassthroughAttributes;
                 while (usedAttributes != 0)
                 {
                     int index = BitOperations.TrailingZeroCount(usedAttributes);
