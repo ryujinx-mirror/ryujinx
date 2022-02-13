@@ -1209,7 +1209,7 @@ namespace Ryujinx.Ui
         {
             AspectRatio aspectRatio = ConfigurationState.Instance.Graphics.AspectRatio.Value;
 
-            ConfigurationState.Instance.Graphics.AspectRatio.Value = ((int)aspectRatio + 1) > Enum.GetNames(typeof(AspectRatio)).Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
+            ConfigurationState.Instance.Graphics.AspectRatio.Value = ((int)aspectRatio + 1) > Enum.GetNames<AspectRatio>().Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
         }
 
         private void Row_Clicked(object sender, ButtonReleaseEventArgs args)

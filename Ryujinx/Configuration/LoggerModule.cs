@@ -58,7 +58,7 @@ namespace Ryujinx.Configuration
         {
             bool noFilter = e.NewValue.Length == 0;
 
-            foreach (var logClass in EnumExtensions.GetValues<LogClass>())
+            foreach (var logClass in Enum.GetValues<LogClass>())
             {
                 Logger.SetEnable(logClass, noFilter);
             }

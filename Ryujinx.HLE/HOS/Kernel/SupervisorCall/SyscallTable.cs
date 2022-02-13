@@ -433,7 +433,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             generator.Emit(OpCodes.Ret);
 
-            return (Action<T, ExecutionContext>)method.CreateDelegate(typeof(Action<T, ExecutionContext>));
+            return method.CreateDelegate<Action<T, ExecutionContext>>();
         }
 
         private static void CheckIfTypeIsSupported(Type type, string svcName)

@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         public Counters()
         {
-            int count = Enum.GetNames(typeof(CounterType)).Length;
+            int count = Enum.GetNames<CounterType>().Length;
 
             _counterQueues = new CounterQueue[count];
         }

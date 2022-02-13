@@ -150,7 +150,7 @@ namespace Ryujinx.Input.GTK3
 
         static GTK3MappingHelper()
         {
-            var inputKeys = Enum.GetValues(typeof(Key));
+            var inputKeys = Enum.GetValues<Key>();
 
             // GtkKey is not contiguous and quite large, so use a dictionary instead of an array.
             _gtkKeyMapping = new Dictionary<GtkKey, Key>();

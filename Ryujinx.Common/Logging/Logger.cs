@@ -94,7 +94,7 @@ namespace Ryujinx.Common.Logging
 
         static Logger()
         {
-            m_EnabledClasses = new bool[Enum.GetNames(typeof(LogClass)).Length];
+            m_EnabledClasses = new bool[Enum.GetNames<LogClass>().Length];
 
             for (int index = 0; index < m_EnabledClasses.Length; index++)
             {

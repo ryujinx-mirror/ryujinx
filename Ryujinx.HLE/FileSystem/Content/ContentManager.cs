@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 _contentDictionary = new SortedDictionary<(ulong, NcaContentType), string>();
                 _locationEntries   = new Dictionary<StorageId, LinkedList<LocationEntry>>();
 
-                foreach (StorageId storageId in Enum.GetValues(typeof(StorageId)))
+                foreach (StorageId storageId in Enum.GetValues<StorageId>())
                 {
                     string contentDirectory    = null;
                     string contentPathString   = null;

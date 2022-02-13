@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.SystemState
                 SystemLanguage.TraditionalChinese => TitleLanguage.Taiwanese,
                 SystemLanguage.Chinese or
                 SystemLanguage.SimplifiedChinese  => TitleLanguage.Chinese,
-                _                                 => Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), language)),
+                _                                 => Enum.Parse<TitleLanguage>(Enum.GetName<SystemLanguage>(language)),
             };
         }
 

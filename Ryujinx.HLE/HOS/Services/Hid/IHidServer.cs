@@ -1021,7 +1021,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
                 HidVibrationDeviceType vibrationDeviceType = HidVibrationDeviceType.None;
 
-                if (Enum.IsDefined(typeof(NpadStyleIndex), deviceType))
+                if (Enum.IsDefined<NpadStyleIndex>(deviceType))
                 {
                     vibrationDeviceType = HidVibrationDeviceType.LinearResonantActuator;
                 }

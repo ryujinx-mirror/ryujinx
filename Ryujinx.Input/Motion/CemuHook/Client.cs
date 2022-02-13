@@ -27,8 +27,8 @@ namespace Ryujinx.Input.Motion.CemuHook
         private readonly Dictionary<int, Dictionary<int, MotionInput>> _motionData;
         private readonly Dictionary<int, UdpClient> _clients;
 
-        private readonly bool[] _clientErrorStatus = new bool[Enum.GetValues(typeof(PlayerIndex)).Length];
-        private readonly long[] _clientRetryTimer  = new long[Enum.GetValues(typeof(PlayerIndex)).Length];
+        private readonly bool[] _clientErrorStatus = new bool[Enum.GetValues<PlayerIndex>().Length];
+        private readonly long[] _clientRetryTimer  = new long[Enum.GetValues<PlayerIndex>().Length];
         private NpadManager _npadManager;
 
         public Client(NpadManager npadManager)
