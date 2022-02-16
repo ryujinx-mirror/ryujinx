@@ -558,7 +558,16 @@ namespace Ryujinx.Audio.Renderer.Server
 
             if (_rendererContext.BehaviourContext.IsEffectInfoVersion2Supported())
             {
-                Memory<EffectResultState> dspResultState = _effectContext.GetDspStateMemory(effectId);
+                Memory<EffectResultState> dspResultState;
+
+                if (effect.Parameter.StatisticsEnabled)
+                {
+                    dspResultState = _effectContext.GetDspStateMemory(effectId);
+                }
+                else
+                {
+                    dspResultState = Memory<EffectResultState>.Empty;
+                }
 
                 _commandBuffer.GenerateLimiterEffectVersion2(bufferOffset, effect.Parameter, effect.State, dspResultState, effect.IsEnabled, workBuffer, nodeId);
             }

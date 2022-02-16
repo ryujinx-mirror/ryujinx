@@ -100,9 +100,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 {
                     for (int sampleIndex = 0; sampleIndex < context.SampleCount; sampleIndex++)
                     {
-                        float inputSample = *((float*)inputBuffers[channelIndex] + sampleIndex);
+                        float rawInputSample = *((float*)inputBuffers[channelIndex] + sampleIndex);
 
-                        float sampleInputMax = Math.Abs(inputSample * Parameter.InputGain);
+                        float inputSample = (rawInputSample / short.MaxValue) * Parameter.InputGain;
+
+                        float sampleInputMax = Math.Abs(inputSample);
 
                         float inputCoefficient = Parameter.ReleaseCoefficient;
 
@@ -131,7 +133,9 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                         ref float delayedSample = ref state.DelayedSampleBuffer[channelIndex * Parameter.DelayBufferSampleCountMax + state.DelayedSampleBufferPosition[channelIndex]];
 
-                        *((float*)outputBuffers[channelIndex] + sampleIndex) = delayedSample * state.CompressionGain[channelIndex] * Parameter.OutputGain;
+                        float outputSample = delayedSample * state.CompressionGain[channelIndex] * Parameter.OutputGain;
+
+                        *((float*)outputBuffers[channelIndex] + sampleIndex) = outputSample * short.MaxValue;
 
                         delayedSample = inputSample;
 
