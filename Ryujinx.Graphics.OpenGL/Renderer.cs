@@ -66,9 +66,9 @@ namespace Ryujinx.Graphics.OpenGL
             return Buffer.Create(size);
         }
 
-        public IProgram CreateProgram(IShader[] shaders)
+        public IProgram CreateProgram(IShader[] shaders, ShaderInfo info)
         {
-            return new Program(shaders);
+            return new Program(shaders, info.FragmentOutputMap);
         }
 
         public ISampler CreateSampler(SamplerCreateInfo info)
@@ -202,9 +202,9 @@ namespace Ryujinx.Graphics.OpenGL
             _sync.Dispose();
         }
 
-        public IProgram LoadProgramBinary(byte[] programBinary)
+        public IProgram LoadProgramBinary(byte[] programBinary, bool hasFragmentShader, ShaderInfo info)
         {
-            return new Program(programBinary);
+            return new Program(programBinary, hasFragmentShader, info.FragmentOutputMap);
         }
 
         public void CreateSync(ulong id)

@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Version of the codegen (to be changed when codegen or guest format change).
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 3106;
+        private const ulong ShaderCodeGenVersion = 3063;
 
         // Progress reporting helpers
         private volatile int _shaderCount;
@@ -188,7 +188,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             {
                                 hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
                                 hostProgramBinary = hostProgramBinarySpan.ToArray();
-                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
+                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary, false, new ShaderInfo(-1));
                             }
 
                             ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
@@ -252,7 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                                         // Compile shader and create program as the shader program binary got invalidated.
                                         shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, program.Code);
-                                        hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader });
+                                        hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, new ShaderInfo(-1));
 
                                         task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
                                         {
@@ -303,7 +303,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
                             {
                                 hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
                                 hostProgramBinary = hostProgramBinarySpan.ToArray();
-                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary);
+
+                                bool hasFragmentShader = false;
+                                int fragmentOutputMap = -1;
+                                int fragmentIndex = (int)ShaderStage.Fragment - 1;
+
+                                if (hostShaderEntries[fragmentIndex] != null && hostShaderEntries[fragmentIndex].Header.InUse)
+                                {
+                                    hasFragmentShader = true;
+                                    fragmentOutputMap = hostShaderEntries[fragmentIndex].Header.FragmentOutputMap;
+                                }
+
+                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary, hasFragmentShader, new ShaderInfo(fragmentOutputMap));
                             }
 
                             ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
@@ -426,7 +437,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             hostShaders.Add(hostShader);
                                         }
 
-                                        hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray());
+                                        int fragmentIndex = (int)ShaderStage.Fragment - 1;
+                                        int fragmentOutputMap = -1;
+
+                                        if (shaders[fragmentIndex] != null)
+                                        {
+                                            fragmentOutputMap = shaders[fragmentIndex].Info.FragmentOutputMap;
+                                        }
+
+                                        hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), new ShaderInfo(fragmentOutputMap));
 
                                         task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
                                         {
@@ -617,7 +636,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
 
-                IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader });
+                IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, new ShaderInfo(-1));
 
                 cpShader = new ShaderBundle(hostProgram, shader);
 
@@ -755,7 +774,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     hostShaders.Add(hostShader);
                 }
 
-                IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray());
+                int fragmentIndex = (int)ShaderStage.Fragment - 1;
+                int fragmentOutputMap = -1;
+
+                if (shaders[fragmentIndex] != null)
+                {
+                    fragmentOutputMap = shaders[fragmentIndex].Info.FragmentOutputMap;
+                }
+
+                IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), new ShaderInfo(fragmentOutputMap));
 
                 gpShaders = new ShaderBundle(hostProgram, shaders);
 

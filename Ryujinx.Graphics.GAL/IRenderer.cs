@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.GAL
 
         BufferHandle CreateBuffer(int size);
 
-        IProgram CreateProgram(IShader[] shaders);
+        IProgram CreateProgram(IShader[] shaders, ShaderInfo info);
 
         ISampler CreateSampler(SamplerCreateInfo info);
         ITexture CreateTexture(TextureCreateInfo info, float scale);
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.GAL
 
         Capabilities GetCapabilities();
 
-        IProgram LoadProgramBinary(byte[] programBinary);
+        IProgram LoadProgramBinary(byte[] programBinary, bool hasFragmentShader, ShaderInfo info);
 
         void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data);
 

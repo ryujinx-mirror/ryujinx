@@ -172,11 +172,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 for (int rtIndex = 0; rtIndex < 8; rtIndex++)
                 {
-                    OmapTarget target = Config.OmapTargets[rtIndex];
-
                     for (int component = 0; component < 4; component++)
                     {
-                        if (!target.ComponentEnabled(component))
+                        bool componentEnabled = (Config.OmapTargets & (1 << (rtIndex * 4 + component))) != 0;
+                        if (!componentEnabled)
                         {
                             continue;
                         }
@@ -210,7 +209,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                         }
                     }
 
-                    if (target.Enabled)
+                    bool targetEnabled = (Config.OmapTargets & (0xf << (rtIndex * 4))) != 0;
+                    if (targetEnabled)
                     {
                         Config.SetOutputUserAttribute(rtIndex, perPatch: false);
                         regIndexBase += 4;

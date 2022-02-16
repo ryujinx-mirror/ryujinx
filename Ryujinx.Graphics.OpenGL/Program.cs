@@ -1,11 +1,8 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Shader.CodeGen.Glsl;
 using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -29,7 +26,10 @@ namespace Ryujinx.Graphics.OpenGL
         private ProgramLinkStatus _status = ProgramLinkStatus.Incomplete;
         private IShader[] _shaders;
 
-        public Program(IShader[] shaders)
+        public bool HasFragmentShader;
+        public int FragmentOutputMap { get; }
+
+        public Program(IShader[] shaders, int fragmentOutputMap)
         {
             Handle = GL.CreateProgram();
 
@@ -37,17 +37,23 @@ namespace Ryujinx.Graphics.OpenGL
 
             for (int index = 0; index < shaders.Length; index++)
             {
-                int shaderHandle = ((Shader)shaders[index]).Handle;
+                Shader shader = (Shader)shaders[index];
 
-                GL.AttachShader(Handle, shaderHandle);
+                if (shader.IsFragment)
+                {
+                    HasFragmentShader = true;
+                }
+
+                GL.AttachShader(Handle, shader.Handle);
             }
 
             GL.LinkProgram(Handle);
 
             _shaders = shaders;
+            FragmentOutputMap = fragmentOutputMap;
         }
 
-        public Program(ReadOnlySpan<byte> code)
+        public Program(ReadOnlySpan<byte> code, bool hasFragmentShader, int fragmentOutputMap)
         {
             BinaryFormat binaryFormat = (BinaryFormat)BinaryPrimitives.ReadInt32LittleEndian(code.Slice(code.Length - 4, 4));
 
@@ -60,6 +66,9 @@ namespace Ryujinx.Graphics.OpenGL
                     GL.ProgramBinary(Handle, binaryFormat, (IntPtr)ptr, code.Length - 4);
                 }
             }
+
+            HasFragmentShader = hasFragmentShader;
+            FragmentOutputMap = fragmentOutputMap;
         }
 
         public void Bind()
