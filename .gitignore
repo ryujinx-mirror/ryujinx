@@ -74,6 +74,9 @@ _TeamCity*
 # DotCover is a Code Coverage Tool
 *.dotCover
 
+# Rider is a Visual Studio alternative
+.idea/*
+
 # NCrunch
 *.ncrunch*
 .*crunch*.local.xml
