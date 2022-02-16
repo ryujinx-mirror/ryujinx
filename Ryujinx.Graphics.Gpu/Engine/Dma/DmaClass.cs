@@ -85,9 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 }
 
                 int alignWidth = Constants.StrideAlignment / bpp;
-                return tex.RegionX == 0 &&
-                       tex.RegionY == 0 &&
-                       stride / bpp == BitUtils.AlignUp(xCount, alignWidth);
+                return stride / bpp == BitUtils.AlignUp(xCount, alignWidth);
             }
             else
             {
@@ -161,6 +159,20 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 var dst = Unsafe.As<uint, DmaTexture>(ref _state.State.SetDstBlockSize);
                 var src = Unsafe.As<uint, DmaTexture>(ref _state.State.SetSrcBlockSize);
 
+                int srcRegionX = 0, srcRegionY = 0, dstRegionX = 0, dstRegionY = 0;
+
+                if (!srcLinear)
+                {
+                    srcRegionX = src.RegionX;
+                    srcRegionY = src.RegionY;
+                }
+
+                if (!dstLinear)
+                {
+                    dstRegionX = dst.RegionX;
+                    dstRegionY = dst.RegionY;
+                }
+
                 int srcStride = (int)_state.State.PitchIn;
                 int dstStride = (int)_state.State.PitchOut;
 
@@ -182,8 +194,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     dst.MemoryLayout.UnpackGobBlocksInZ(),
                     dstBpp);
 
-                (int srcBaseOffset, int srcSize) = srcCalculator.GetRectangleRange(src.RegionX, src.RegionY, xCount, yCount);
-                (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dst.RegionX, dst.RegionY, xCount, yCount);
+                (int srcBaseOffset, int srcSize) = srcCalculator.GetRectangleRange(srcRegionX, srcRegionY, xCount, yCount);
+                (int dstBaseOffset, int dstSize) = dstCalculator.GetRectangleRange(dstRegionX, dstRegionY, xCount, yCount);
 
                 if (srcLinear && srcStride < 0)
                 {
@@ -272,13 +284,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
 
                         for (int y = 0; y < yCount; y++)
                         {
-                            srcCalculator.SetY(src.RegionY + y);
-                            dstCalculator.SetY(dst.RegionY + y);
+                            srcCalculator.SetY(srcRegionY + y);
+                            dstCalculator.SetY(dstRegionY + y);
 
                             for (int x = 0; x < xCount; x++)
                             {
-                                int srcOffset = srcCalculator.GetOffset(src.RegionX + x);
-                                int dstOffset = dstCalculator.GetOffset(dst.RegionX + x);
+                                int srcOffset = srcCalculator.GetOffset(srcRegionX + x);
+                                int dstOffset = dstCalculator.GetOffset(dstRegionX + x);
 
                                 *(T*)(dstBase + dstOffset) = *(T*)(srcBase + srcOffset);
                             }
