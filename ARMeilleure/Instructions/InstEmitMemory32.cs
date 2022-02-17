@@ -32,7 +32,7 @@ namespace ARMeilleure.Instructions
 
         public static void Ldm(ArmEmitterContext context)
         {
-            OpCode32MemMult op = (OpCode32MemMult)context.CurrOp;
+            IOpCode32MemMult op = (IOpCode32MemMult)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
 
@@ -95,7 +95,7 @@ namespace ARMeilleure.Instructions
 
         public static void Stm(ArmEmitterContext context)
         {
-            OpCode32MemMult op = (OpCode32MemMult)context.CurrOp;
+            IOpCode32MemMult op = (IOpCode32MemMult)context.CurrOp;
 
             Operand n = context.Copy(GetIntA32(context, op.Rn));
 
@@ -151,7 +151,7 @@ namespace ARMeilleure.Instructions
 
         private static void EmitLoadOrStore(ArmEmitterContext context, int size, AccessType accType)
         {
-            OpCode32Mem op = (OpCode32Mem)context.CurrOp;
+            IOpCode32Mem op = (IOpCode32Mem)context.CurrOp;
 
             Operand n = context.Copy(GetIntA32AlignedPC(context, op.Rn));
             Operand m = GetMemM(context, setCarry: false);
@@ -254,6 +254,12 @@ namespace ARMeilleure.Instructions
                     Store(op.Rt, 0, size);
                 }
             }
+        }
+
+        public static void Adr(ArmEmitterContext context)
+        {
+            IOpCode32Adr op = (IOpCode32Adr)context.CurrOp;
+            SetIntA32(context, op.Rd, Const(op.Immediate));
         }
     }
 }

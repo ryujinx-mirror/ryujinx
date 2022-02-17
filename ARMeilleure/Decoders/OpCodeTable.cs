@@ -1,5 +1,4 @@
 using ARMeilleure.Instructions;
-using ARMeilleure.State;
 using System;
 using System.Collections.Generic;
 
@@ -29,9 +28,9 @@ namespace ARMeilleure.Decoders
             }
         }
 
-        private static List<InstInfo> AllInstA32 = new List<InstInfo>();
-        private static List<InstInfo> AllInstT32 = new List<InstInfo>();
-        private static List<InstInfo> AllInstA64 = new List<InstInfo>();
+        private static List<InstInfo> AllInstA32 = new();
+        private static List<InstInfo> AllInstT32 = new();
+        private static List<InstInfo> AllInstA64 = new();
 
         private static InstInfo[][] InstA32FastLookup = new InstInfo[FastLookupSize][];
         private static InstInfo[][] InstT32FastLookup = new InstInfo[FastLookupSize][];
@@ -628,7 +627,7 @@ namespace ARMeilleure.Decoders
             SetA64("0>001110<<0xxxxx011110xxxxxxxxxx", InstName.Zip2_V,          InstEmit.Zip2_V,          OpCodeSimdReg.Create);
 #endregion
 
-#region "OpCode Table (AArch32)"
+#region "OpCode Table (AArch32, A32)"
             // Base
             SetA32("<<<<0010101xxxxxxxxxxxxxxxxxxxxx", InstName.Adc,     InstEmit32.Adc,     OpCode32AluImm.Create);
             SetA32("<<<<0000101xxxxxxxxxxxxxxxx0xxxx", InstName.Adc,     InstEmit32.Adc,     OpCode32AluRsImm.Create);
@@ -649,7 +648,6 @@ namespace ARMeilleure.Decoders
             SetA32("1111101xxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Blx,     InstEmit32.Blx,     OpCode32BImm.Create);
             SetA32("<<<<000100101111111111110011xxxx", InstName.Blx,     InstEmit32.Blxr,    OpCode32BReg.Create);
             SetA32("<<<<000100101111111111110001xxxx", InstName.Bx,      InstEmit32.Bx,      OpCode32BReg.Create);
-            SetT32("xxxxxxxxxxxxxxxx010001110xxxx000", InstName.Bx,      InstEmit32.Bx,      OpCodeT16BReg.Create);
             SetA32("11110101011111111111000000011111", InstName.Clrex,   InstEmit32.Clrex,   OpCode32.Create);
             SetA32("<<<<000101101111xxxx11110001xxxx", InstName.Clz,     InstEmit32.Clz,     OpCode32AluReg.Create);
             SetA32("<<<<00110111xxxx0000xxxxxxxxxxxx", InstName.Cmn,     InstEmit32.Cmn,     OpCode32AluImm.Create);
@@ -702,7 +700,6 @@ namespace ARMeilleure.Decoders
             SetA32("<<<<0001101x0000xxxxxxxxxxx0xxxx", InstName.Mov,     InstEmit32.Mov,     OpCode32AluRsImm.Create);
             SetA32("<<<<0001101x0000xxxxxxxx0xx1xxxx", InstName.Mov,     InstEmit32.Mov,     OpCode32AluRsReg.Create);
             SetA32("<<<<00110000xxxxxxxxxxxxxxxxxxxx", InstName.Mov,     InstEmit32.Mov,     OpCode32AluImm16.Create);
-            SetT32("xxxxxxxxxxxxxxxx00100xxxxxxxxxxx", InstName.Mov,     InstEmit32.Mov,     OpCodeT16AluImm8.Create);
             SetA32("<<<<00110100xxxxxxxxxxxxxxxxxxxx", InstName.Movt,    InstEmit32.Movt,    OpCode32AluImm16.Create);
             SetA32("<<<<1110xxx1xxxxxxxx111xxxx1xxxx", InstName.Mrc,     InstEmit32.Mrc,     OpCode32System.Create);
             SetA32("<<<<11000101xxxxxxxx111xxxxxxxxx", InstName.Mrrc,    InstEmit32.Mrrc,    OpCode32System.Create);
@@ -975,12 +972,85 @@ namespace ARMeilleure.Decoders
             SetA32("111100111x11<<10xxxx00011xx0xxxx", InstName.Vzip,     InstEmit32.Vzip,     OpCode32SimdCmpZ.Create);
 #endregion
 
-            FillFastLookupTable(InstA32FastLookup, AllInstA32);
-            FillFastLookupTable(InstT32FastLookup, AllInstT32);
-            FillFastLookupTable(InstA64FastLookup, AllInstA64);
+#region "OpCode Table (AArch32, T16/T32)"
+            // T16
+            SetT16("000<<xxxxxxxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftImm.Create);
+            SetT16("0001100xxxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AddSubReg.Create);
+            SetT16("0001101xxxxxxxxx", InstName.Sub,    InstEmit32.Sub,     OpCodeT16AddSubReg.Create);
+            SetT16("0001110xxxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AddSubImm3.Create);
+            SetT16("0001111xxxxxxxxx", InstName.Sub,    InstEmit32.Sub,     OpCodeT16AddSubImm3.Create);
+            SetT16("00100xxxxxxxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16AluImm8.Create);
+            SetT16("00101xxxxxxxxxxx", InstName.Cmp,    InstEmit32.Cmp,     OpCodeT16AluImm8.Create);
+            SetT16("00110xxxxxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AluImm8.Create);
+            SetT16("00111xxxxxxxxxxx", InstName.Sub,    InstEmit32.Sub,     OpCodeT16AluImm8.Create);
+            SetT16("0100000000xxxxxx", InstName.And,    InstEmit32.And,     OpCodeT16AluRegLow.Create);
+            SetT16("0100000001xxxxxx", InstName.Eor,    InstEmit32.Eor,     OpCodeT16AluRegLow.Create);
+            SetT16("0100000010xxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftReg.Create);
+            SetT16("0100000011xxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftReg.Create);
+            SetT16("0100000100xxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftReg.Create);
+            SetT16("0100000101xxxxxx", InstName.Adc,    InstEmit32.Adc,     OpCodeT16AluRegLow.Create);
+            SetT16("0100000110xxxxxx", InstName.Sbc,    InstEmit32.Sbc,     OpCodeT16AluRegLow.Create);
+            SetT16("0100000111xxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftReg.Create);
+            SetT16("0100001000xxxxxx", InstName.Tst,    InstEmit32.Tst,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001001xxxxxx", InstName.Rsb,    InstEmit32.Rsb,     OpCodeT16AluImmZero.Create);
+            SetT16("0100001010xxxxxx", InstName.Cmp,    InstEmit32.Cmp,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001011xxxxxx", InstName.Cmn,    InstEmit32.Cmn,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001100xxxxxx", InstName.Orr,    InstEmit32.Orr,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001101xxxxxx", InstName.Mul,    InstEmit32.Mul,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001110xxxxxx", InstName.Bic,    InstEmit32.Bic,     OpCodeT16AluRegLow.Create);
+            SetT16("0100001111xxxxxx", InstName.Mvn,    InstEmit32.Mvn,     OpCodeT16AluRegLow.Create);
+            SetT16("01000100xxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AluRegHigh.Create);
+            SetT16("01000101xxxxxxxx", InstName.Cmp,    InstEmit32.Cmp,     OpCodeT16AluRegHigh.Create);
+            SetT16("01000110xxxxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16AluRegHigh.Create);
+            SetT16("010001110xxxx000", InstName.Bx,     InstEmit32.Bx,      OpCodeT16BReg.Create);
+            SetT16("010001111xxxx000", InstName.Blx,    InstEmit32.Blx,     OpCodeT16BReg.Create);
+            SetT16("01001xxxxxxxxxxx", InstName.Ldr,    InstEmit32.Ldr,     OpCodeT16MemLit.Create);
+            SetT16("0101000xxxxxxxxx", InstName.Str,    InstEmit32.Str,     OpCodeT16MemReg.Create);
+            SetT16("0101001xxxxxxxxx", InstName.Strh,   InstEmit32.Strh,    OpCodeT16MemReg.Create);
+            SetT16("0101010xxxxxxxxx", InstName.Strb,   InstEmit32.Strb,    OpCodeT16MemReg.Create);
+            SetT16("0101011xxxxxxxxx", InstName.Ldrsb,  InstEmit32.Ldrsb,   OpCodeT16MemReg.Create);
+            SetT16("0101100xxxxxxxxx", InstName.Ldr,    InstEmit32.Ldr,     OpCodeT16MemReg.Create);
+            SetT16("0101101xxxxxxxxx", InstName.Ldrh,   InstEmit32.Ldrh,    OpCodeT16MemReg.Create);
+            SetT16("0101110xxxxxxxxx", InstName.Ldrb,   InstEmit32.Ldrb,    OpCodeT16MemReg.Create);
+            SetT16("0101111xxxxxxxxx", InstName.Ldrsh,  InstEmit32.Ldrsh,   OpCodeT16MemReg.Create);
+            SetT16("01100xxxxxxxxxxx", InstName.Str,    InstEmit32.Str,     OpCodeT16MemImm5.Create);
+            SetT16("01101xxxxxxxxxxx", InstName.Ldr,    InstEmit32.Ldr,     OpCodeT16MemImm5.Create);
+            SetT16("01110xxxxxxxxxxx", InstName.Strb,   InstEmit32.Strb,    OpCodeT16MemImm5.Create);
+            SetT16("01111xxxxxxxxxxx", InstName.Ldrb,   InstEmit32.Ldrb,    OpCodeT16MemImm5.Create);
+            SetT16("10000xxxxxxxxxxx", InstName.Strh,   InstEmit32.Strh,    OpCodeT16MemImm5.Create);
+            SetT16("10001xxxxxxxxxxx", InstName.Ldrh,   InstEmit32.Ldrh,    OpCodeT16MemImm5.Create);
+            SetT16("10010xxxxxxxxxxx", InstName.Str,    InstEmit32.Str,     OpCodeT16MemSp.Create);
+            SetT16("10011xxxxxxxxxxx", InstName.Ldr,    InstEmit32.Ldr,     OpCodeT16MemSp.Create);
+            SetT16("10100xxxxxxxxxxx", InstName.Adr,    InstEmit32.Adr,     OpCodeT16Adr.Create);
+            SetT16("10101xxxxxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16SpRel.Create);
+            SetT16("101100000xxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AddSubSp.Create);
+            SetT16("101100001xxxxxxx", InstName.Sub,    InstEmit32.Sub,     OpCodeT16AddSubSp.Create);
+            SetT16("1011001000xxxxxx", InstName.Sxth,   InstEmit32.Sxth,    OpCodeT16AluUx.Create);
+            SetT16("1011001001xxxxxx", InstName.Sxtb,   InstEmit32.Sxtb,    OpCodeT16AluUx.Create);
+            SetT16("1011001010xxxxxx", InstName.Uxth,   InstEmit32.Uxth,    OpCodeT16AluUx.Create);
+            SetT16("1011001011xxxxxx", InstName.Uxtb,   InstEmit32.Uxtb,    OpCodeT16AluUx.Create);
+            SetT16("101100x1xxxxxxxx", InstName.Cbz,    InstEmit32.Cbz,     OpCodeT16BImmCmp.Create);
+            SetT16("1011010xxxxxxxxx", InstName.Push,   InstEmit32.Stm,     OpCodeT16MemStack.Create);
+            SetT16("1011101000xxxxxx", InstName.Rev,    InstEmit32.Rev,     OpCodeT16AluRegLow.Create);
+            SetT16("1011101001xxxxxx", InstName.Rev16,  InstEmit32.Rev16,   OpCodeT16AluRegLow.Create);
+            SetT16("1011101011xxxxxx", InstName.Revsh,  InstEmit32.Revsh,   OpCodeT16AluRegLow.Create);
+            SetT16("101110x1xxxxxxxx", InstName.Cbnz,   InstEmit32.Cbnz,    OpCodeT16BImmCmp.Create);
+            SetT16("1011110xxxxxxxxx", InstName.Pop,    InstEmit32.Ldm,     OpCodeT16MemStack.Create);
+            SetT16("10111111xxxx0000", InstName.Nop,    InstEmit32.Nop,     OpCodeT16.Create);
+            SetT16("10111111xxxx>>>>", InstName.It,     InstEmit32.It,      OpCodeT16IfThen.Create);
+            SetT16("11000xxxxxxxxxxx", InstName.Stm,    InstEmit32.Stm,     OpCodeT16MemMult.Create);
+            SetT16("11001xxxxxxxxxxx", InstName.Ldm,    InstEmit32.Ldm,     OpCodeT16MemMult.Create);
+            SetT16("1101<<<xxxxxxxxx", InstName.B,      InstEmit32.B,       OpCodeT16BImm8.Create);
+            SetT16("11011111xxxxxxxx", InstName.Svc,    InstEmit32.Svc,     OpCodeT16Exception.Create);
+            SetT16("11100xxxxxxxxxxx", InstName.B,      InstEmit32.B,       OpCodeT16BImm11.Create);
+#endregion
+
+            FillFastLookupTable(InstA32FastLookup, AllInstA32, ToFastLookupIndexA);
+            FillFastLookupTable(InstT32FastLookup, AllInstT32, ToFastLookupIndexT);
+            FillFastLookupTable(InstA64FastLookup, AllInstA64, ToFastLookupIndexA);
         }
 
-        private static void FillFastLookupTable(InstInfo[][] table, List<InstInfo> allInsts)
+        private static void FillFastLookupTable(InstInfo[][] table, List<InstInfo> allInsts, Func<int, int> ToFastLookupIndex)
         {
             List<InstInfo>[] temp = new List<InstInfo>[FastLookupSize];
 
@@ -1011,20 +1081,27 @@ namespace ARMeilleure.Decoders
 
         private static void SetA32(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
         {
-            Set(encoding, ExecutionMode.Aarch32Arm, new InstDescriptor(name, emitter), makeOp);
+            Set(encoding, AllInstA32, new InstDescriptor(name, emitter), makeOp);
+        }
+
+        private static void SetT16(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
+        {
+            encoding = "xxxxxxxxxxxxxxxx" + encoding;
+            Set(encoding, AllInstT32, new InstDescriptor(name, emitter), makeOp);
         }
 
         private static void SetT32(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
         {
-            Set(encoding, ExecutionMode.Aarch32Thumb, new InstDescriptor(name, emitter), makeOp);
+            encoding = encoding.Substring(16) + encoding.Substring(0, 16);
+            Set(encoding, AllInstT32, new InstDescriptor(name, emitter), makeOp);
         }
 
         private static void SetA64(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
         {
-            Set(encoding, ExecutionMode.Aarch64, new InstDescriptor(name, emitter), makeOp);
+            Set(encoding, AllInstA64, new InstDescriptor(name, emitter), makeOp);
         }
 
-        private static void Set(string encoding, ExecutionMode mode, InstDescriptor inst, MakeOp makeOp)
+        private static void Set(string encoding, List<InstInfo> list, InstDescriptor inst, MakeOp makeOp)
         {
             int bit   = encoding.Length - 1;
             int value = 0;
@@ -1073,7 +1150,7 @@ namespace ARMeilleure.Decoders
 
             if (xBits == 0)
             {
-                InsertInst(new InstInfo(xMask, value, inst, makeOp), mode);
+                list.Add(new InstInfo(xMask, value, inst, makeOp));
 
                 return;
             }
@@ -1089,34 +1166,24 @@ namespace ARMeilleure.Decoders
 
                 if (mask != blacklisted)
                 {
-                    InsertInst(new InstInfo(xMask, value | mask, inst, makeOp), mode);
+                    list.Add(new InstInfo(xMask, value | mask, inst, makeOp));
                 }
-            }
-        }
-
-        private static void InsertInst(InstInfo info, ExecutionMode mode)
-        {
-            switch (mode)
-            {
-                case ExecutionMode.Aarch32Arm:   AllInstA32.Add(info); break;
-                case ExecutionMode.Aarch32Thumb: AllInstT32.Add(info); break;
-                case ExecutionMode.Aarch64:      AllInstA64.Add(info); break;
             }
         }
 
         public static (InstDescriptor inst, MakeOp makeOp) GetInstA32(int opCode)
         {
-            return GetInstFromList(InstA32FastLookup[ToFastLookupIndex(opCode)], opCode);
+            return GetInstFromList(InstA32FastLookup[ToFastLookupIndexA(opCode)], opCode);
         }
 
         public static (InstDescriptor inst, MakeOp makeOp) GetInstT32(int opCode)
         {
-            return GetInstFromList(InstT32FastLookup[ToFastLookupIndex(opCode)], opCode);
+            return GetInstFromList(InstT32FastLookup[ToFastLookupIndexT(opCode)], opCode);
         }
 
         public static (InstDescriptor inst, MakeOp makeOp) GetInstA64(int opCode)
         {
-            return GetInstFromList(InstA64FastLookup[ToFastLookupIndex(opCode)], opCode);
+            return GetInstFromList(InstA64FastLookup[ToFastLookupIndexA(opCode)], opCode);
         }
 
         private static (InstDescriptor inst, MakeOp makeOp) GetInstFromList(InstInfo[] insts, int opCode)
@@ -1132,9 +1199,14 @@ namespace ARMeilleure.Decoders
             return (new InstDescriptor(InstName.Und, InstEmit.Und), null);
         }
 
-        private static int ToFastLookupIndex(int value)
+        private static int ToFastLookupIndexA(int value)
         {
             return ((value >> 10) & 0x00F) | ((value >> 18) & 0xFF0);
+        }
+
+        private static int ToFastLookupIndexT(int value)
+        {
+            return (value >> 4) & 0xFFF;
         }
     }
 }

@@ -195,12 +195,13 @@ namespace ARMeilleure.Decoders
             ulong          limitAddress)
         {
             ulong address = block.Address;
+            int itBlockSize = 0;
 
             OpCode opCode;
 
             do
             {
-                if (address >= limitAddress)
+                if (address >= limitAddress && itBlockSize == 0)
                 {
                     break;
                 }
@@ -210,6 +211,15 @@ namespace ARMeilleure.Decoders
                 block.OpCodes.Add(opCode);
 
                 address += (ulong)opCode.OpCodeSizeInBytes;
+
+                if (opCode is OpCodeT16IfThen it)
+                {
+                    itBlockSize = it.IfThenBlockSize;
+                }
+                else if (itBlockSize > 0)
+                {
+                    itBlockSize--;
+                }
             }
             while (!(IsBranch(opCode) || IsException(opCode)));
 
@@ -345,7 +355,14 @@ namespace ARMeilleure.Decoders
             }
             else
             {
-                return new OpCode(inst, address, opCode);
+                if (mode == ExecutionMode.Aarch32Thumb)
+                {
+                    return new OpCodeT16(inst, address, opCode);
+                }
+                else
+                {
+                    return new OpCode(inst, address, opCode);
+                }
             }
         }
     }

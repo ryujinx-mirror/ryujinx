@@ -10,7 +10,7 @@
         public bool NHigh { get; }
         public bool MHigh { get; }
 
-        public bool SetFlags { get; }
+        public bool? SetFlags { get; }
         public DataOp DataOp { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32AluUmull(inst, address, opCode);

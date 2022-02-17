@@ -41,8 +41,8 @@ namespace Ryujinx.Tests.Unicorn
 
         public uint PC
         {
-            get => GetRegister(Arm32Register.PC);
-            set => SetRegister(Arm32Register.PC, value);
+            get => GetRegister(Arm32Register.PC) & 0xfffffffeu;
+            set => SetRegister(Arm32Register.PC, (value & 0xfffffffeu) | (ThumbFlag ? 1u : 0u));
         }
 
         public uint CPSR
@@ -85,6 +85,16 @@ namespace Ryujinx.Tests.Unicorn
         {
             get => (CPSR & 0x80000000u) != 0;
             set => CPSR = (CPSR & ~0x80000000u) | (value ? 0x80000000u : 0u);
+        }
+
+        public bool ThumbFlag
+        {
+            get => (CPSR & 0x00000020u) != 0;
+            set
+            {
+                CPSR = (CPSR & ~0x00000020u) | (value ? 0x00000020u : 0u);
+                SetRegister(Arm32Register.PC, (GetRegister(Arm32Register.PC) & 0xfffffffeu) | (value ? 1u : 0u));
+            }
         }
 
         public UnicornAArch32()

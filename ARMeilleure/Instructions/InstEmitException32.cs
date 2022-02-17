@@ -20,11 +20,11 @@ namespace ARMeilleure.Instructions
 
         private static void EmitExceptionCall(ArmEmitterContext context, string name)
         {
-            OpCode32Exception op = (OpCode32Exception)context.CurrOp;
+            IOpCode32Exception op = (IOpCode32Exception)context.CurrOp;
 
             context.StoreToContext();
 
-            context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
+            context.Call(typeof(NativeInterface).GetMethod(name), Const(((IOpCode)op).Address), Const(op.Id));
 
             context.LoadFromContext();
 

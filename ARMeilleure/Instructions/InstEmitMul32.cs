@@ -33,7 +33,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.Add(a, context.Multiply(n, m));
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -250,13 +250,13 @@ namespace ARMeilleure.Instructions
             Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
             Operand lo = context.ConvertI64ToI32(res);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
 
-            EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
-            EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
+            EmitGenericAluStoreA32(context, op.RdHi, ShouldSetFlags(context), hi);
+            EmitGenericAluStoreA32(context, op.RdLo, ShouldSetFlags(context), lo);
         }
 
         public static void Smulw_(ArmEmitterContext context)
@@ -320,13 +320,13 @@ namespace ARMeilleure.Instructions
             Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
             Operand lo = context.ConvertI64ToI32(res);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
 
-            EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
-            EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
+            EmitGenericAluStoreA32(context, op.RdHi, ShouldSetFlags(context), hi);
+            EmitGenericAluStoreA32(context, op.RdLo, ShouldSetFlags(context), lo);
         }
 
         private static void EmitMlal(ArmEmitterContext context, bool signed)
@@ -356,13 +356,13 @@ namespace ARMeilleure.Instructions
             Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
             Operand lo = context.ConvertI64ToI32(res);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
 
-            EmitGenericAluStoreA32(context, op.RdHi, op.SetFlags, hi);
-            EmitGenericAluStoreA32(context, op.RdLo, op.SetFlags, lo);
+            EmitGenericAluStoreA32(context, op.RdHi, ShouldSetFlags(context), hi);
+            EmitGenericAluStoreA32(context, op.RdLo, ShouldSetFlags(context), lo);
         }
 
         private static void UpdateQFlag(ArmEmitterContext context, Operand q)

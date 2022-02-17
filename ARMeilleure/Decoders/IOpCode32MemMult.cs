@@ -9,5 +9,7 @@ namespace ARMeilleure.Decoders
         int PostOffset { get; }
 
         bool IsLoad { get; }
+
+        int Offset { get; }
     }
 }

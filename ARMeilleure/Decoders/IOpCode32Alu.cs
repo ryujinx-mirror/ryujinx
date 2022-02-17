@@ -5,6 +5,6 @@ namespace ARMeilleure.Decoders
         int Rd { get; }
         int Rn { get; }
 
-        bool SetFlags { get; }
+        bool? SetFlags { get; }
     }
 }

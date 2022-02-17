@@ -7,5 +7,9 @@ namespace ARMeilleure.Decoders
 
         bool WBack { get; }
         bool IsLoad { get; }
+        bool Index { get; }
+        bool Add { get; }
+
+        int Immediate { get; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace ARMeilleure.Decoders
 {
-    class OpCode32AluRsReg : OpCode32Alu
+    class OpCode32AluRsReg : OpCode32Alu, IOpCode32AluRsReg
     {
         public int Rm { get; }
         public int Rs { get; }

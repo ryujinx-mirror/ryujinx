@@ -20,7 +20,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.Add(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -44,7 +44,7 @@ namespace ARMeilleure.Instructions
 
             res = context.Add(res, carry);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -64,7 +64,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.BitwiseAnd(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -110,7 +110,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.BitwiseAnd(n, context.BitwiseNot(m));
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -161,7 +161,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.BitwiseExclusiveOr(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -175,7 +175,7 @@ namespace ARMeilleure.Instructions
 
             Operand m = GetAluM(context);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, m);
             }
@@ -204,7 +204,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.Multiply(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -219,7 +219,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.BitwiseNot(m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -236,7 +236,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.BitwiseOr(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
             }
@@ -315,7 +315,7 @@ namespace ARMeilleure.Instructions
 
             res = context.Subtract(res, borrow);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -335,7 +335,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.Subtract(m, n);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -359,7 +359,7 @@ namespace ARMeilleure.Instructions
 
             res = context.Subtract(res, borrow);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -420,7 +420,7 @@ namespace ARMeilleure.Instructions
 
             Operand res = context.Subtract(n, m);
 
-            if (op.SetFlags)
+            if (ShouldSetFlags(context))
             {
                 EmitNZFlagsCheck(context, res);
 
@@ -836,7 +836,7 @@ namespace ARMeilleure.Instructions
         {
             IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
 
-            EmitGenericAluStoreA32(context, op.Rd, op.SetFlags, value);
+            EmitGenericAluStoreA32(context, op.Rd, ShouldSetFlags(context), value);
         }
     }
 }
