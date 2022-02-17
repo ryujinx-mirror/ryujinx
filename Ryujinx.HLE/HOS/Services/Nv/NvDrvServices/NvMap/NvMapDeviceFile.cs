@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
             arguments.Handle = CreateHandleFromMap(new NvMapHandle(size));
 
-            Logger.Info?.Print(LogClass.ServiceNv, $"Created map {arguments.Handle} with size 0x{size:x8}!");
+            Logger.Debug?.Print(LogClass.ServiceNv, $"Created map {arguments.Handle} with size 0x{size:x8}!");
 
             return NvInternalResult.Success;
         }
@@ -265,7 +265,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
             {
                 DeleteMapWithHandle(pid, handle);
 
-                Logger.Info?.Print(LogClass.ServiceNv, $"Deleted map {handle}!");
+                Logger.Debug?.Print(LogClass.ServiceNv, $"Deleted map {handle}!");
 
                 return true;
             }
