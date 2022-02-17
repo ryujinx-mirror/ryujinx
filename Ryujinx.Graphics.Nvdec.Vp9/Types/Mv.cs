@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
         public short Row;
         public short Col;
 
-        private static readonly byte[] LogInBase2 = new byte[]
+        private static ReadOnlySpan<byte> LogInBase2 => new byte[]
         {
             0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
             4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,

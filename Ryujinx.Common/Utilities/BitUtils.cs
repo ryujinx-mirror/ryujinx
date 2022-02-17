@@ -1,8 +1,10 @@
+using System;
+
 namespace Ryujinx.Common
 {
     public static class BitUtils
     {
-        private static readonly byte[] ClzNibbleTbl = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+        private static ReadOnlySpan<byte> ClzNibbleTbl => new byte[] { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public static uint AlignUp(uint value, int size)
         {

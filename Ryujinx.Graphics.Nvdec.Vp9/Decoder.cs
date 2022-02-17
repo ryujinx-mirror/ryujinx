@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
         public ISurface CreateSurface(int width, int height) => new Surface(width, height);
 
-        private static readonly byte[] LiteralToFilter = new byte[]
+        private static ReadOnlySpan<byte> LiteralToFilter => new byte[]
         {
             Constants.EightTapSmooth,
             Constants.EightTap,
