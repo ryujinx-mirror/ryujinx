@@ -369,7 +369,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             inst &= Instruction.Mask;
             bool isImage = inst == Instruction.ImageLoad || inst == Instruction.ImageStore || inst == Instruction.ImageAtomic;
             bool isWrite = inst == Instruction.ImageStore || inst == Instruction.ImageAtomic;
-            bool accurateType = inst != Instruction.Lod;
+            bool accurateType = inst != Instruction.Lod && inst != Instruction.TextureSize;
             bool coherent = flags.HasFlag(TextureFlags.Coherent);
 
             if (isImage)
