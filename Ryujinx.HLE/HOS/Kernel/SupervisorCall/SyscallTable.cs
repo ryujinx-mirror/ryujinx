@@ -479,7 +479,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
             else
             {
-                Logger.Debug?.Print(LogClass.KernelSvc, $"{svcName} returned result {result}.");
+                Logger.Trace?.Print(LogClass.KernelSvc, $"{svcName} returned result {result}.");
             }
         }
     }

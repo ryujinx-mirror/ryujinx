@@ -135,6 +135,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("enable-error-logs", Required = false, Default = true, HelpText = "Enables printing error log messages.")]
         public bool? LoggingEnableError { get; set; }
 
+        [Option("enable-trace-logs", Required = false, Default = false, HelpText = "Enables printing trace log messages.")]
+        public bool? LoggingEnableTrace { get; set; }
+
         [Option("enable-guest-logs", Required = false, Default = true, HelpText = "Enables printing guest log messages.")]
         public bool? LoggingEnableGuest { get; set; }
 

@@ -35,6 +35,7 @@ namespace Ryujinx.Ui.Windows
         private float _previousVolumeLevel;
 
 #pragma warning disable CS0649, IDE0044
+        [GUI] CheckButton     _traceLogToggle;
         [GUI] CheckButton     _errorLogToggle;
         [GUI] CheckButton     _warningLogToggle;
         [GUI] CheckButton     _infoLogToggle;
@@ -141,6 +142,11 @@ namespace Ryujinx.Ui.Windows
             };
 
             // Setup Currents.
+            if (ConfigurationState.Instance.Logger.EnableTrace)
+            {
+                _traceLogToggle.Click();
+            }
+
             if (ConfigurationState.Instance.Logger.EnableFileLog)
             {
                 _fileLogToggle.Click();
@@ -487,6 +493,7 @@ namespace Ryujinx.Ui.Windows
             }
 
             ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableTrace.Value               = _traceLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
             ConfigurationState.Instance.Logger.EnableStub.Value                = _stubLogToggle.Active;

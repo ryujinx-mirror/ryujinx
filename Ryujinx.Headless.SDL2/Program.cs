@@ -389,6 +389,7 @@ namespace Ryujinx.Headless.SDL2
             Logger.SetEnable(LogLevel.Info, (bool)option.LoggingEnableInfo);
             Logger.SetEnable(LogLevel.Warning, (bool)option.LoggingEnableWarning);
             Logger.SetEnable(LogLevel.Error, (bool)option.LoggingEnableError);
+            Logger.SetEnable(LogLevel.Trace, (bool)option.LoggingEnableTrace);
             Logger.SetEnable(LogLevel.Guest, (bool)option.LoggingEnableGuest);
             Logger.SetEnable(LogLevel.AccessLog, (bool)option.LoggingEnableFsAccessLog);
 

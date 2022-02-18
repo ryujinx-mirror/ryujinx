@@ -90,6 +90,7 @@ namespace Ryujinx.Common.Logging
         public static Log? Guest     { get; private set; }
         public static Log? AccessLog { get; private set; }
         public static Log? Stub      { get; private set; }
+        public static Log? Trace     { get; private set; }
         public static Log  Notice    { get; } // Always enabled
 
         static Logger()
@@ -117,6 +118,7 @@ namespace Ryujinx.Common.Logging
             Error = new Log(LogLevel.Error);
             Warning = new Log(LogLevel.Warning);
             Info = new Log(LogLevel.Info);
+            Trace = new Log(LogLevel.Trace);
         }
 
         public static void RestartTime()
@@ -172,7 +174,7 @@ namespace Ryujinx.Common.Logging
 
         public static IReadOnlyCollection<LogLevel> GetEnabledLevels()
         {
-            var logs = new Log?[] { Debug, Info, Warning, Error, Guest, AccessLog, Stub };
+            var logs = new Log?[] { Debug, Info, Warning, Error, Guest, AccessLog, Stub, Trace };
             List<LogLevel> levels = new List<LogLevel>(logs.Length);
             foreach (var log in logs)
             {
@@ -196,6 +198,7 @@ namespace Ryujinx.Common.Logging
                 case LogLevel.Guest     : Guest     = enabled ? new Log(LogLevel.Guest)    : new Log?(); break;
                 case LogLevel.AccessLog : AccessLog = enabled ? new Log(LogLevel.AccessLog): new Log?(); break;
                 case LogLevel.Stub      : Stub      = enabled ? new Log(LogLevel.Stub)     : new Log?(); break;
+                case LogLevel.Trace     : Trace     = enabled ? new Log(LogLevel.Trace)    : new Log?(); break;
                 default: throw new ArgumentException("Unknown Log Level");
             }
         }
