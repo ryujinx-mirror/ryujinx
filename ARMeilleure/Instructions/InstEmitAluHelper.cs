@@ -14,7 +14,7 @@ namespace ARMeilleure.Instructions
     {
         public static bool ShouldSetFlags(ArmEmitterContext context)
         {
-            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
+            IOpCode32HasSetFlags op = (IOpCode32HasSetFlags)context.CurrOp;
 
             if (op.SetFlags == null)
             {
