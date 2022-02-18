@@ -15,11 +15,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetAppletResourceUserId() -> nn::applet::AppletResourceUserId
         public ResultCode GetAppletResourceUserId(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.ServiceAm);
-
             long appletResourceUserId = context.Device.System.AppletState.AppletResourceUserIds.Add(_pid);
 
             context.ResponseData.Write(appletResourceUserId);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { appletResourceUserId });
 
             return ResultCode.Success;
         }
