@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
+using System.Numerics;
 
 namespace Ryujinx.HLE.HOS.Kernel.Process
 {
@@ -130,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return KernelResult.Success;
             }
 
-            int codeMask = 1 << (32 - BitUtils.CountLeadingZeros32(code + 1));
+            int codeMask = 1 << (32 - BitOperations.LeadingZeroCount((uint)code + 1));
 
             // Check if the property was already set.
             if (((mask0 & codeMask) & 0x1e008) != 0)

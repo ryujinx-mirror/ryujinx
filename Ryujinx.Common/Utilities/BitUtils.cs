@@ -1,11 +1,10 @@
 using System;
+using System.Numerics;
 
 namespace Ryujinx.Common
 {
     public static class BitUtils
     {
-        private static ReadOnlySpan<byte> ClzNibbleTbl => new byte[] { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
-
         public static uint AlignUp(uint value, int size)
         {
             return (uint)AlignUp((int)value, size);
@@ -76,60 +75,7 @@ namespace Ryujinx.Common
 
         public static int Pow2RoundDown(int value)
         {
-            return IsPowerOfTwo32(value) ? value : Pow2RoundUp(value) >> 1;
-        }
-
-        public static bool IsPowerOfTwo32(int value)
-        {
-            return value != 0 && (value & (value - 1)) == 0;
-        }
-
-        public static bool IsPowerOfTwo64(long value)
-        {
-            return value != 0 && (value & (value - 1)) == 0;
-        }
-
-        public static int CountLeadingZeros32(int value)
-        {
-            return (int)CountLeadingZeros((ulong)value, 32);
-        }
-
-        public static int CountLeadingZeros64(long value)
-        {
-            return (int)CountLeadingZeros((ulong)value, 64);
-        }
-
-        private static ulong CountLeadingZeros(ulong value, int size)
-        {
-            if (value == 0ul)
-            {
-                return (ulong)size;
-            }
-
-            int nibbleIdx = size;
-            int preCount, count = 0;
-
-            do
-            {
-                nibbleIdx -= 4;
-                preCount = ClzNibbleTbl[(int)(value >> nibbleIdx) & 0b1111];
-                count += preCount;
-            }
-            while (preCount == 4);
-
-            return (ulong)count;
-        }
-
-        public static int CountTrailingZeros32(int value)
-        {
-            int count = 0;
-
-            while (((value >> count) & 1) == 0)
-            {
-                count++;
-            }
-
-            return count;
+            return BitOperations.IsPow2(value) ? value : Pow2RoundUp(value) >> 1;
         }
 
         public static long ReverseBits64(long value)
