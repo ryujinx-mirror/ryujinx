@@ -36,6 +36,11 @@ namespace Ryujinx.HLE.HOS
             _cpuContext.Execute(context, codeAddress);
         }
 
+        public void InvalidateCacheRegion(ulong address, ulong size)
+        {
+            _cpuContext.InvalidateCacheRegion(address, size);
+        }
+
         public void Dispose()
         {
             if (_memoryManager is IRefCounted rc)

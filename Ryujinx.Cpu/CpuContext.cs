@@ -28,5 +28,10 @@ namespace Ryujinx.Cpu
         {
             _translator.Execute(context, address);
         }
+
+        public void InvalidateCacheRegion(ulong address, ulong size)
+        {
+            _translator.InvalidateJitCacheRegion(address, size);
+        }
     }
 }

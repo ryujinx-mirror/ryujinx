@@ -585,7 +585,7 @@ namespace ARMeilleure.Translation.PTC
 
                     translator.RegisterFunction(infoEntry.Address, func);
 
-                    bool isAddressUnique = translator.Functions.TryAdd(infoEntry.Address, func);
+                    bool isAddressUnique = translator.Functions.TryAdd(infoEntry.Address, infoEntry.GuestSize, func);
 
                     Debug.Assert(isAddressUnique, $"The address 0x{infoEntry.Address:X16} is not unique.");
                 }
@@ -815,7 +815,7 @@ namespace ARMeilleure.Translation.PTC
 
                     TranslatedFunction func = translator.Translate(address, item.funcProfile.Mode, item.funcProfile.HighCq);
 
-                    bool isAddressUnique = translator.Functions.TryAdd(address, func);
+                    bool isAddressUnique = translator.Functions.TryAdd(address, func.GuestSize, func);
 
                     Debug.Assert(isAddressUnique, $"The address 0x{address:X16} is not unique.");
 

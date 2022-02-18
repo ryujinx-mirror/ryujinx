@@ -9,5 +9,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         IVirtualMemoryManager AddressSpace { get; }
 
         void Execute(ExecutionContext context, ulong codeAddress);
+        void InvalidateCacheRegion(ulong address, ulong size);
     }
 }

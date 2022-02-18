@@ -12,7 +12,8 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit
     {
-        private const int DczSizeLog2 = 4;
+        private const int DczSizeLog2 = 4; // Log2 size in words
+        public const int DczSizeInBytes = 4 << DczSizeLog2;
 
         public static void Hint(ArmEmitterContext context)
         {
@@ -87,7 +88,7 @@ namespace ARMeilleure.Instructions
                     // DC ZVA
                     Operand t = GetIntOrZR(context, op.Rt);
 
-                    for (long offset = 0; offset < (4 << DczSizeLog2); offset += 8)
+                    for (long offset = 0; offset < DczSizeInBytes; offset += 8)
                     {
                         Operand address = context.Add(t, Const(offset));
 
@@ -98,7 +99,12 @@ namespace ARMeilleure.Instructions
                 }
 
                 // No-op
-                case 0b11_011_0111_1110_001: //DC CIVAC
+                case 0b11_011_0111_1110_001: // DC CIVAC
+                    break;
+
+                case 0b11_011_0111_0101_001: // IC IVAU
+                    Operand target = Register(op.Rt, RegisterType.Integer, OperandType.I64);
+                    context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.InvalidateCacheLine)), target);
                     break;
             }
         }
