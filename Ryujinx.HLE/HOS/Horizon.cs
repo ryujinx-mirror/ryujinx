@@ -76,6 +76,7 @@ namespace Ryujinx.HLE.HOS
         internal ServerBase BsdServer { get; private set; }
         internal ServerBase AudRenServer { get; private set; }
         internal ServerBase AudOutServer { get; private set; }
+        internal ServerBase FsServer { get; private set; }
         internal ServerBase HidServer { get; private set; }
         internal ServerBase NvDrvServer { get; private set; }
         internal ServerBase TimeServer { get; private set; }
@@ -298,6 +299,7 @@ namespace Ryujinx.HLE.HOS
             BsdServer = new ServerBase(KernelContext, "BsdServer");
             AudRenServer = new ServerBase(KernelContext, "AudioRendererServer");
             AudOutServer = new ServerBase(KernelContext, "AudioOutServer");
+            FsServer = new ServerBase(KernelContext, "FsServer");
             HidServer = new ServerBase(KernelContext, "HidServer");
             NvDrvServer = new ServerBase(KernelContext, "NvservicesServer");
             TimeServer = new ServerBase(KernelContext, "TimeServer");
