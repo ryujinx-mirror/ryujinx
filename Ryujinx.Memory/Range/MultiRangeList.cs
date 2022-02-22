@@ -29,6 +29,12 @@ namespace Ryujinx.Memory.Range
             for (int i = 0; i < range.Count; i++)
             {
                 var subrange = range.GetSubRange(i);
+
+                if (IsInvalid(ref subrange))
+                {
+                    continue;
+                }
+
                 _items.Add(subrange.Address, subrange.EndAddress, item);
             }
 
@@ -49,6 +55,12 @@ namespace Ryujinx.Memory.Range
             for (int i = 0; i < range.Count; i++)
             {
                 var subrange = range.GetSubRange(i);
+
+                if (IsInvalid(ref subrange))
+                {
+                    continue;
+                }
+
                 removed += _items.Remove(subrange.Address, item);
             }
 
@@ -86,6 +98,12 @@ namespace Ryujinx.Memory.Range
             for (int i = 0; i < range.Count; i++)
             {
                 var subrange = range.GetSubRange(i);
+
+                if (IsInvalid(ref subrange))
+                {
+                    continue;
+                }
+
                 overlapCount = _items.Get(subrange.Address, subrange.EndAddress, ref output, overlapCount);
             }
 
@@ -122,6 +140,17 @@ namespace Ryujinx.Memory.Range
             }
 
             return overlapCount;
+        }
+
+        /// <summary>
+        /// Checks if a given sub-range of memory is invalid.
+        /// Those are used to represent unmapped memory regions (holes in the region mapping).
+        /// </summary>
+        /// <param name="subRange">Memory range to checl</param>
+        /// <returns>True if the memory range is considered invalid, false otherwise</returns>
+        private static bool IsInvalid(ref MemoryRange subRange)
+        {
+            return subRange.Address == ulong.MaxValue;
         }
 
         /// <summary>

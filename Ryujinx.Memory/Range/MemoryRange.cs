@@ -50,6 +50,13 @@ namespace Ryujinx.Memory.Range
             ulong otherAddress = other.Address;
             ulong otherEndAddress = other.EndAddress;
 
+            // If any of the ranges if invalid (address + size overflows),
+            // then they are never considered to overlap.
+            if (thisEndAddress < thisAddress || otherEndAddress < otherAddress)
+            {
+                return false;
+            }
+
             return thisAddress < otherEndAddress && otherAddress < thisEndAddress;
         }
 
