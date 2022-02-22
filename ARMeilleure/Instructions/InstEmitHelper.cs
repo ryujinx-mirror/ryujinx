@@ -186,7 +186,7 @@ namespace ARMeilleure.Instructions
 
             SetFlag(context, PState.TFlag, mode);
 
-            Operand addr = context.ConditionalSelect(mode, pc, context.BitwiseAnd(pc, Const(~3)));
+            Operand addr = context.ConditionalSelect(mode, context.BitwiseAnd(pc, Const(~1)), context.BitwiseAnd(pc, Const(~3)));
 
             InstEmitFlowHelper.EmitVirtualJump(context, addr, isReturn);
         }

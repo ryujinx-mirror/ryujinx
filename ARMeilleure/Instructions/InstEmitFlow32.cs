@@ -71,7 +71,7 @@ namespace ARMeilleure.Instructions
 
             SetFlag(context, PState.TFlag, bitOne);
 
-            EmitVirtualCall(context, addr);
+            EmitBxWritePc(context, addr);
         }
 
         public static void Bx(ArmEmitterContext context)
