@@ -29,6 +29,14 @@ namespace Ryujinx.Graphics.Gpu
         public static bool FastGpuTime = true;
 
         /// <summary>
+        /// Enables or disables fast 2d engine texture copies entirely on CPU when possible.
+        /// Reduces stuttering and # of textures in games that copy textures around for streaming, 
+        /// as textures will not need to be created for the copy, and the data does not need to be 
+        /// flushed from GPU.
+        /// </summary>
+        public static bool Fast2DCopy = true;
+
+        /// <summary>
         /// Enables or disables the Just-in-Time compiler for GPU Macro code.
         /// </summary>
         public static bool EnableMacroJit = true;

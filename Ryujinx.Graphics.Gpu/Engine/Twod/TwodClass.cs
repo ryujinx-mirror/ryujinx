@@ -1,11 +1,15 @@
-﻿using Ryujinx.Graphics.Device;
+﻿using Ryujinx.Common;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Texture;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Twod
 {
@@ -43,6 +47,180 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
         /// <param name="offset">Register byte offset</param>
         /// <param name="data">Data to be written</param>
         public void Write(int offset, int data) => _state.Write(offset, data);
+
+        /// <summary>
+        /// Determines if data is compatible between the source and destination texture.
+        /// The two textures must have the same size, layout, and bytes per pixel.
+        /// </summary>
+        /// <param name="lhs">Info for the first texture</param>
+        /// <param name="rhs">Info for the second texture</param>
+        /// <param name="lhsFormat">Format of the first texture</param>
+        /// <param name="rhsFormat">Format of the second texture</param>
+        /// <returns>True if the data is compatible, false otherwise</returns>
+        private bool IsDataCompatible(TwodTexture lhs, TwodTexture rhs, FormatInfo lhsFormat, FormatInfo rhsFormat)
+        {
+            if (lhsFormat.BytesPerPixel != rhsFormat.BytesPerPixel ||
+                lhs.Height != rhs.Height ||
+                lhs.Depth != rhs.Depth ||
+                lhs.LinearLayout != rhs.LinearLayout ||
+                lhs.MemoryLayout.Packed != rhs.MemoryLayout.Packed)
+            {
+                return false;
+            }
+
+            if (lhs.LinearLayout)
+            {
+                return lhs.Stride == rhs.Stride;
+            }
+            else
+            {
+                return lhs.Width == rhs.Width;
+            }
+        }
+
+        /// <summary>
+        /// Determine if the given region covers the full texture, also considering width alignment.
+        /// </summary>
+        /// <param name="texture">The texture to check</param>
+        /// <param name="formatInfo"></param>
+        /// <param name="x1">Region start x</param>
+        /// <param name="y1">Region start y</param>
+        /// <param name="x2">Region end x</param>
+        /// <param name="y2">Region end y</param>
+        /// <returns>True if the region covers the full texture, false otherwise</returns>
+        private bool IsCopyRegionComplete(TwodTexture texture, FormatInfo formatInfo, int x1, int y1, int x2, int y2)
+        {
+            if (x1 != 0 || y1 != 0 || y2 != texture.Height)
+            {
+                return false;
+            }
+
+            int width;
+            int widthAlignment;
+
+            if (texture.LinearLayout)
+            {
+                widthAlignment = 1;
+                width = texture.Stride / formatInfo.BytesPerPixel;
+            }
+            else
+            {
+                widthAlignment = Constants.GobAlignment / formatInfo.BytesPerPixel;
+                width = texture.Width;
+            }
+
+            return width == BitUtils.AlignUp(x2, widthAlignment);
+        }
+
+        /// <summary>
+        /// Performs a full data copy between two textures, reading and writing guest memory directly.
+        /// The textures must have a matching layout, size, and bytes per pixel.
+        /// </summary>
+        /// <param name="src">The source texture</param>
+        /// <param name="dst">The destination texture</param>
+        /// <param name="w">Copy width</param>
+        /// <param name="h">Copy height</param>
+        /// <param name="bpp">Bytes per pixel</param>
+        private void UnscaledFullCopy(TwodTexture src, TwodTexture dst, int w, int h, int bpp)
+        {
+            var srcCalculator = new OffsetCalculator(
+                w,
+                h,
+                src.Stride,
+                src.LinearLayout,
+                src.MemoryLayout.UnpackGobBlocksInY(),
+                src.MemoryLayout.UnpackGobBlocksInZ(),
+                bpp);
+
+            (int _, int srcSize) = srcCalculator.GetRectangleRange(0, 0, w, h);
+
+            var memoryManager = _channel.MemoryManager;
+
+            ulong srcGpuVa = src.Address.Pack();
+            ulong dstGpuVa = dst.Address.Pack();
+
+            ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa, srcSize, true);
+
+            int width;
+            int height = src.Height;
+            if (src.LinearLayout)
+            {
+                width = src.Stride / bpp;
+            }
+            else
+            {
+                width = src.Width;
+            }
+
+            // If the copy is not equal to the width and height of the texture, we will need to copy partially.
+            // It's worth noting that it has already been established that the src and dst are the same size.
+
+            if (w == width && h == height)
+            {
+                memoryManager.Write(dstGpuVa, srcSpan);
+            }
+            else
+            {
+                using WritableRegion dstRegion = memoryManager.GetWritableRegion(dstGpuVa, srcSize, true);
+                Span<byte> dstSpan = dstRegion.Memory.Span;
+
+                if (src.LinearLayout)
+                {
+                    int stride = src.Stride;
+                    int offset = 0;
+                    int lineSize = width * bpp;
+
+                    for (int y = 0; y < height; y++)
+                    {
+                        srcSpan.Slice(offset, lineSize).CopyTo(dstSpan.Slice(offset));
+
+                        offset += stride;
+                    }
+                }
+                else
+                {
+                    // Copy with the block linear layout in mind.
+                    // Recreate the offset calculate with bpp 1 for copy.
+
+                    int stride = w * bpp;
+
+                    srcCalculator = new OffsetCalculator(
+                        stride,
+                        h,
+                        0,
+                        false,
+                        src.MemoryLayout.UnpackGobBlocksInY(),
+                        src.MemoryLayout.UnpackGobBlocksInZ(),
+                        1);
+
+                    int strideTrunc = BitUtils.AlignDown(stride, 16);
+
+                    ReadOnlySpan<Vector128<byte>> srcVec = MemoryMarshal.Cast<byte, Vector128<byte>>(srcSpan);
+                    Span<Vector128<byte>> dstVec = MemoryMarshal.Cast<byte, Vector128<byte>>(dstSpan);
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        int x = 0;
+
+                        srcCalculator.SetY(y);
+
+                        for (; x < strideTrunc; x += 16)
+                        {
+                            int offset = srcCalculator.GetOffset(x) >> 4;
+
+                            dstVec[offset] = srcVec[offset];
+                        }
+
+                        for (; x < stride; x++)
+                        {
+                            int offset = srcCalculator.GetOffset(x);
+
+                            dstSpan[offset] = srcSpan[offset];
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Performs the blit operation, triggered by the register write.
@@ -114,16 +292,31 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 srcX1 = 0;
             }
 
+            FormatInfo dstCopyTextureFormat = dstCopyTexture.Format.Convert();
+
+            bool canDirectCopy = GraphicsConfig.Fast2DCopy &&
+                srcX2 == dstX2 && srcY2 == dstY2 &&
+                IsDataCompatible(srcCopyTexture, dstCopyTexture, srcCopyTextureFormat, dstCopyTextureFormat) &&
+                IsCopyRegionComplete(srcCopyTexture, srcCopyTextureFormat, srcX1, srcY1, srcX2, srcY2) &&
+                IsCopyRegionComplete(dstCopyTexture, dstCopyTextureFormat, dstX1, dstY1, dstX2, dstY2);
+
             var srcTexture = memoryManager.Physical.TextureCache.FindOrCreateTexture(
                 memoryManager,
                 srcCopyTexture,
                 offset,
                 srcCopyTextureFormat,
+                !canDirectCopy,
                 false,
                 srcHint);
 
             if (srcTexture == null)
             {
+                if (canDirectCopy)
+                {
+                    // Directly copy the data on CPU.
+                    UnscaledFullCopy(srcCopyTexture, dstCopyTexture, srcX2, srcY2, srcCopyTextureFormat.BytesPerPixel);
+                }
+
                 return;
             }
 
@@ -132,7 +325,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             // When the source texture that was found has a depth format,
             // we must enforce the target texture also has a depth format,
             // as copies between depth and color formats are not allowed.
-            FormatInfo dstCopyTextureFormat;
 
             if (srcTexture.Format.IsDepthOrStencil())
             {
@@ -148,6 +340,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 dstCopyTexture,
                 0,
                 dstCopyTextureFormat,
+                true,
                 srcTexture.ScaleMode == TextureScaleMode.Scaled,
                 dstHint);
 

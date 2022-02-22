@@ -194,6 +194,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             TwodTexture copyTexture,
             ulong offset,
             FormatInfo formatInfo,
+            bool shouldCreate,
             bool preferScaling = true,
             Size? sizeHint = null)
         {
@@ -232,6 +233,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (preferScaling)
             {
                 flags |= TextureSearchFlags.WithUpscale;
+            }
+
+            if (!shouldCreate)
+            {
+                flags |= TextureSearchFlags.NoCreate;
             }
 
             Texture texture = FindOrCreateTexture(memoryManager, flags, info, 0, sizeHint);
@@ -479,6 +485,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 texture.SynchronizeMemory();
 
                 return texture;
+            }
+            else if (flags.HasFlag(TextureSearchFlags.NoCreate))
+            {
+                return null;
             }
 
             // Calculate texture sizes, used to find all overlapping textures.

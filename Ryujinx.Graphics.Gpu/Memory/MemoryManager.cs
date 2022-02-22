@@ -154,14 +154,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Gets a writable region from GPU mapped memory.
         /// </summary>
-        /// <param name="address">Start address of the range</param>
+        /// <param name="va">Start address of the range</param>
         /// <param name="size">Size in bytes to be range</param>
+        /// <param name="tracked">True if write tracking is triggered on the span</param>
         /// <returns>A writable region with the data at the specified memory location</returns>
-        public WritableRegion GetWritableRegion(ulong va, int size)
+        public WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
             if (IsContiguous(va, size))
             {
-                return Physical.GetWritableRegion(Translate(va), size);
+                return Physical.GetWritableRegion(Translate(va), size, tracked);
             }
             else
             {
@@ -169,7 +170,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 GetSpan(va, size).CopyTo(memory.Span);
 
-                return new WritableRegion(this, va, memory);
+                return new WritableRegion(this, va, memory, tracked);
             }
         }
 
