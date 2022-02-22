@@ -112,12 +112,12 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
         private ReadOnlySpan<float> GetFdnDelayTimesByLateMode(ReverbLateMode lateMode)
         {
-            return FdnDelayTimes.AsSpan().Slice((int)lateMode * 4, 4);
+            return FdnDelayTimes.AsSpan((int)lateMode * 4, 4);
         }
 
         private ReadOnlySpan<float> GetDecayDelayTimesByLateMode(ReverbLateMode lateMode)
         {
-            return DecayDelayTimes.AsSpan().Slice((int)lateMode * 4, 4);
+            return DecayDelayTimes.AsSpan((int)lateMode * 4, 4);
         }
 
         public ReverbState(ref ReverbParameter parameter, ulong workBuffer, bool isLongSizePreDelaySupported)

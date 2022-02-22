@@ -206,7 +206,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                     program = new ShaderProgram(entry.Header.Stage, "");
                                     shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
 
-                                    byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+                                    byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
 
                                     ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
 
@@ -244,7 +244,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                             return true; // Exit early, the decoding step failed.
                                         }
 
-                                        byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+                                        byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
 
                                         ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
 
@@ -394,8 +394,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                                         }
 
                                         // NOTE: Vertex B comes first in the shader cache.
-                                        byte[] code = entry.Code.AsSpan().Slice(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-                                        byte[] code2 = entry.Header.SizeA != 0 ? entry.Code.AsSpan().Slice(entry.Header.Size, entry.Header.SizeA).ToArray() : null;
+                                        byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
+                                        byte[] code2 = entry.Header.SizeA != 0 ? entry.Code.AsSpan(entry.Header.Size, entry.Header.SizeA).ToArray() : null;
 
                                         shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
 

@@ -12,9 +12,9 @@ namespace Ryujinx.HLE.Loaders.Executables
     class NsoExecutable : IExecutable
     {
         public byte[] Program { get; }
-        public Span<byte> Text => Program.AsSpan().Slice((int)TextOffset, (int)TextSize);
-        public Span<byte> Ro   => Program.AsSpan().Slice((int)RoOffset,   (int)RoSize);
-        public Span<byte> Data => Program.AsSpan().Slice((int)DataOffset, (int)DataSize);
+        public Span<byte> Text => Program.AsSpan((int)TextOffset, (int)TextSize);
+        public Span<byte> Ro   => Program.AsSpan((int)RoOffset,   (int)RoSize);
+        public Span<byte> Data => Program.AsSpan((int)DataOffset, (int)DataSize);
 
         public uint TextOffset { get; }
         public uint RoOffset   { get; }
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         {
             reader.GetSegmentSize(segmentType, out uint uncompressedSize).ThrowIfFailure();
 
-            var span = Program.AsSpan().Slice((int)offset, (int)uncompressedSize);
+            var span = Program.AsSpan((int)offset, (int)uncompressedSize);
 
             reader.ReadSegment(segmentType, span).ThrowIfFailure();
 

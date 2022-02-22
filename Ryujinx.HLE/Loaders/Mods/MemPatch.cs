@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.Loaders.Mods
 
                 Logger.Info?.Print(LogClass.ModLoader, $"Patching address offset {patchOffset:x} <= {BitConverter.ToString(patch).Replace('-', ' ')} len={patchSize}");
 
-                patch.AsSpan().Slice(0, patchSize).CopyTo(memory.Slice(patchOffset, patchSize));
+                patch.AsSpan(0, patchSize).CopyTo(memory.Slice(patchOffset, patchSize));
 
                 count++;
             }

@@ -7,9 +7,9 @@ namespace Ryujinx.HLE.Loaders.Executables
     class NroExecutable : Nro, IExecutable
     {
         public byte[] Program { get; }
-        public Span<byte> Text => Program.AsSpan().Slice((int)TextOffset, (int)Header.NroSegments[0].Size);
-        public Span<byte> Ro   => Program.AsSpan().Slice((int)RoOffset,   (int)Header.NroSegments[1].Size);
-        public Span<byte> Data => Program.AsSpan().Slice((int)DataOffset, (int)Header.NroSegments[2].Size);
+        public Span<byte> Text => Program.AsSpan((int)TextOffset, (int)Header.NroSegments[0].Size);
+        public Span<byte> Ro   => Program.AsSpan((int)RoOffset,   (int)Header.NroSegments[1].Size);
+        public Span<byte> Data => Program.AsSpan((int)DataOffset, (int)Header.NroSegments[2].Size);
 
         public uint TextOffset => Header.NroSegments[0].FileOffset;
         public uint RoOffset   => Header.NroSegments[1].FileOffset;

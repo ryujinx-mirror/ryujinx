@@ -124,7 +124,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.GetProgramBinary(Handle, size, out _, out BinaryFormat binFormat, data);
 
-            BinaryPrimitives.WriteInt32LittleEndian(data.AsSpan().Slice(size, 4), (int)binFormat);
+            BinaryPrimitives.WriteInt32LittleEndian(data.AsSpan(size, 4), (int)binFormat);
 
             return data;
         }

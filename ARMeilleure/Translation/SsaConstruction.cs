@@ -113,7 +113,7 @@ namespace ARMeilleure.Translation
                     }
                 }
 
-                Array.Clear(localDefs, 0, localDefs.Length);
+                Array.Clear(localDefs);
             }
 
             // Second pass, rename variables with definitions on different blocks.

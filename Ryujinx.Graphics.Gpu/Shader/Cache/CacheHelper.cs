@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                 dataSpan[i++] = hash;
             }
 
-            manifestHeader.UpdateChecksum(data.AsSpan().Slice(Unsafe.SizeOf<CacheManifestHeader>()));
+            manifestHeader.UpdateChecksum(data.AsSpan(Unsafe.SizeOf<CacheManifestHeader>()));
 
             MemoryMarshal.Write(data, ref manifestHeader);
 
@@ -447,12 +447,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
                 if (cb1DataAddress != 0 && cb1DataSize != 0)
                 {
-                    memoryManager.Physical.GetSpan(cb1DataAddress, cb1DataSize).CopyTo(code.AsSpan().Slice(size, cb1DataSize));
+                    memoryManager.Physical.GetSpan(cb1DataAddress, cb1DataSize).CopyTo(code.AsSpan(size, cb1DataSize));
                 }
 
                 if (translatorContext2 != null)
                 {
-                    memoryManager.GetSpan(translatorContext2.Address, sizeA).CopyTo(code.AsSpan().Slice(size + cb1DataSize, sizeA));
+                    memoryManager.GetSpan(translatorContext2.Address, sizeA).CopyTo(code.AsSpan(size + cb1DataSize, sizeA));
                 }
 
                 GuestGpuAccessorHeader gpuAccessorHeader = CreateGuestGpuAccessorCache(context.GpuAccessor);
