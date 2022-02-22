@@ -12,7 +12,7 @@ namespace ARMeilleure.Instructions
     {
         public static bool IsThumb(OpCode op)
         {
-            return op is OpCodeT16;
+            return op is OpCodeT16 || op is OpCodeT32;
         }
 
         public static Operand GetExtendedM(ArmEmitterContext context, int rm, IntType type)

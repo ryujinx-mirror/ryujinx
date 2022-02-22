@@ -263,6 +263,11 @@ namespace ARMeilleure.Decoders
             // so we must consider such operations as a branch in potential aswell.
             if (opCode is IOpCode32Alu opAlu && opAlu.Rd == RegisterAlias.Aarch32Pc)
             {
+                if (opCode is OpCodeT32)
+                {
+                    return opCode.Instruction.Name != InstName.Tst && opCode.Instruction.Name != InstName.Teq &&
+                           opCode.Instruction.Name != InstName.Cmp && opCode.Instruction.Name != InstName.Cmn;
+                }
                 return true;
             }
 

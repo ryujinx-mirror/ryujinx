@@ -244,6 +244,23 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, res);
         }
 
+        public static void Orn(ArmEmitterContext context)
+        {
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
+
+            Operand n = GetAluN(context);
+            Operand m = GetAluM(context);
+
+            Operand res = context.BitwiseOr(n, context.BitwiseNot(m));
+
+            if (ShouldSetFlags(context))
+            {
+                EmitNZFlagsCheck(context, res);
+            }
+
+            EmitAluStore(context, res);
+        }
+
         public static void Pkh(ArmEmitterContext context)
         {
             OpCode32AluRsImm op = (OpCode32AluRsImm)context.CurrOp;

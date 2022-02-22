@@ -1,6 +1,7 @@
 using ARMeilleure.Instructions;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace ARMeilleure.Decoders
 {
@@ -972,8 +973,7 @@ namespace ARMeilleure.Decoders
             SetA32("111100111x11<<10xxxx00011xx0xxxx", InstName.Vzip,     InstEmit32.Vzip,     OpCode32SimdCmpZ.Create);
 #endregion
 
-#region "OpCode Table (AArch32, T16/T32)"
-            // T16
+#region "OpCode Table (AArch32, T16)"
             SetT16("000<<xxxxxxxxxxx", InstName.Mov,    InstEmit32.Mov,     OpCodeT16ShiftImm.Create);
             SetT16("0001100xxxxxxxxx", InstName.Add,    InstEmit32.Add,     OpCodeT16AddSubReg.Create);
             SetT16("0001101xxxxxxxxx", InstName.Sub,    InstEmit32.Sub,     OpCodeT16AddSubReg.Create);
@@ -1045,6 +1045,26 @@ namespace ARMeilleure.Decoders
             SetT16("11100xxxxxxxxxxx", InstName.B,      InstEmit32.B,       OpCodeT16BImm11.Create);
 #endregion
 
+#region "OpCode Table (AArch32, T32)"
+            // Base
+            SetT32("11101011010xxxxx0xxxxxxxxxxxxxxx", InstName.Adc,      InstEmit32.Adc,      OpCodeT32AluRsImm.Create);
+            SetT32("11101011000<xxxx0xxx<<<<xxxxxxxx", InstName.Add,      InstEmit32.Add,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010000<xxxx0xxx<<<<xxxxxxxx", InstName.And,      InstEmit32.And,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010001xxxxx0xxxxxxxxxxxxxxx", InstName.Bic,      InstEmit32.Bic,      OpCodeT32AluRsImm.Create);
+            SetT32("111010110001xxxx0xxx1111xxxxxxxx", InstName.Cmn,      InstEmit32.Cmn,      OpCodeT32AluRsImm.Create);
+            SetT32("111010111011xxxx0xxx1111xxxxxxxx", InstName.Cmp,      InstEmit32.Cmp,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010100<xxxx0xxx<<<<xxxxxxxx", InstName.Eor,      InstEmit32.Eor,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010010x11110xxxxxxxxxxxxxxx", InstName.Mov,      InstEmit32.Mov,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010011x11110xxxxxxxxxxxxxxx", InstName.Mvn,      InstEmit32.Mvn,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010011x<<<<0xxxxxxxxxxxxxxx", InstName.Orn,      InstEmit32.Orn,      OpCodeT32AluRsImm.Create);
+            SetT32("11101010010x<<<<0xxxxxxxxxxxxxxx", InstName.Orr,      InstEmit32.Orr,      OpCodeT32AluRsImm.Create);
+            SetT32("11101011110xxxxx0xxxxxxxxxxxxxxx", InstName.Rsb,      InstEmit32.Rsb,      OpCodeT32AluRsImm.Create);
+            SetT32("11101011011xxxxx0xxxxxxxxxxxxxxx", InstName.Sbc,      InstEmit32.Sbc,      OpCodeT32AluRsImm.Create);
+            SetT32("11101011101<xxxx0xxx<<<<xxxxxxxx", InstName.Sub,      InstEmit32.Sub,      OpCodeT32AluRsImm.Create);
+            SetT32("111010101001xxxx0xxx1111xxxxxxxx", InstName.Teq,      InstEmit32.Teq,      OpCodeT32AluRsImm.Create);
+            SetT32("111010100001xxxx0xxx1111xxxxxxxx", InstName.Tst,      InstEmit32.Tst,      OpCodeT32AluRsImm.Create);
+#endregion
+
             FillFastLookupTable(InstA32FastLookup, AllInstA32, ToFastLookupIndexA);
             FillFastLookupTable(InstT32FastLookup, AllInstT32, ToFastLookupIndexT);
             FillFastLookupTable(InstA64FastLookup, AllInstA64, ToFastLookupIndexA);
@@ -1092,8 +1112,11 @@ namespace ARMeilleure.Decoders
 
         private static void SetT32(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
         {
-            encoding = encoding.Substring(16) + encoding.Substring(0, 16);
-            Set(encoding, AllInstT32, new InstDescriptor(name, emitter), makeOp);
+            string reversedEncoding = encoding.Substring(16) + encoding.Substring(0, 16);
+            MakeOp reversedMakeOp =
+                (InstDescriptor inst, ulong address, int opCode)
+                    => makeOp(inst, address, (int)BitOperations.RotateRight((uint)opCode, 16));
+            Set(reversedEncoding, AllInstT32, new InstDescriptor(name, emitter), reversedMakeOp);
         }
 
         private static void SetA64(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
