@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS
 
             var buildIds = executables.Select(e => (e switch
             {
-                NsoExecutable nso => BitConverter.ToString(nso.BuildId.Bytes.ToArray()),
+                NsoExecutable nso => BitConverter.ToString(nso.BuildId.ItemsRo.ToArray()),
                 NroExecutable nro => BitConverter.ToString(nro.Header.BuildId),
                 _ => ""
             }).Replace("-", "").ToUpper());

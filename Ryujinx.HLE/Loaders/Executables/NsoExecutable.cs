@@ -1,4 +1,4 @@
-using LibHac.Common;
+using LibHac.Common.FixedArrays;
 using LibHac.Fs;
 using LibHac.Loader;
 using LibHac.Tools.FsSystem;
@@ -26,8 +26,8 @@ namespace Ryujinx.HLE.Loaders.Executables
         public uint DataSize { get; }
         public uint BssSize  { get; }
 
-        public string   Name;
-        public Buffer32 BuildId;
+        public string        Name;
+        public Array32<byte> BuildId;
 
         public NsoExecutable(IStorage inStorage, string name = null)
         {

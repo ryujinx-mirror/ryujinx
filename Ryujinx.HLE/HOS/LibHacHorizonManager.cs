@@ -24,6 +24,7 @@ namespace Ryujinx.HLE.HOS
         public HorizonClient BcatClient        { get; private set; }
         public HorizonClient FsClient          { get; private set; }
         public HorizonClient NsClient          { get; private set; }
+        public HorizonClient PmClient          { get; private set; }
         public HorizonClient SdbClient         { get; private set; }
 
         private SharedRef<LibHacIReader> _arpIReader;
@@ -65,6 +66,7 @@ namespace Ryujinx.HLE.HOS
 
         public void InitializeSystemClients()
         {
+            PmClient      = Server.CreatePrivilegedHorizonClient();
             AccountClient = Server.CreateHorizonClient(new ProgramLocation(SystemProgramId.Account, StorageId.BuiltInSystem), AccountFsPermissions);
             AmClient      = Server.CreateHorizonClient(new ProgramLocation(SystemProgramId.Am,      StorageId.BuiltInSystem), AmFsPermissions);
             NsClient      = Server.CreateHorizonClient(new ProgramLocation(SystemProgramId.Ns,      StorageId.BuiltInSystem), NsFsPermissions);

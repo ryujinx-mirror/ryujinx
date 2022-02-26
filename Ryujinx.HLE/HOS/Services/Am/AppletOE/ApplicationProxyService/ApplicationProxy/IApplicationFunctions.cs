@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             }
 
             HorizonClient hos = context.Device.System.LibHacHorizonManager.AmClient;
-            Result result = EnsureApplicationSaveData(hos.Fs, out long requiredSize, applicationId, ref control, ref userId);
+            Result result = hos.Fs.EnsureApplicationSaveData(out long requiredSize, applicationId, in control, in userId);
 
             context.ResponseData.Write(requiredSize);
 
@@ -148,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // TODO: When above calls are implemented, switch to using ns:am
 
             long desiredLanguageCode = context.Device.System.State.DesiredLanguageCode;
-            int  supportedLanguages  = (int)context.Device.Application.ControlData.Value.SupportedLanguages;
+            int  supportedLanguages  = (int)context.Device.Application.ControlData.Value.SupportedLanguageFlag;
             int  firstSupported      = BitOperations.TrailingZeroCount(supportedLanguages);
 
             if (firstSupported > (int)SystemState.TitleLanguage.BrazilianPortuguese)
@@ -190,7 +190,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // GetDisplayVersion() -> nn::oe::DisplayVersion
         public ResultCode GetDisplayVersion(ServiceCtx context)
         {
-            // This should work as DisplayVersion U8Span always gives a 0x10 size byte array.
             // If an NACP isn't found, the buffer will be all '\0' which seems to be the correct implementation.
             context.ResponseData.Write(context.Device.Application.ControlData.Value.DisplayVersion);
 
@@ -252,7 +251,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
 
             Result result = _horizon.Fs.CreateApplicationCacheStorage(out long requiredSize,
-                out CacheStorageTargetMedia storageTarget, applicationId, ref controlHolder.Value, index, saveSize,
+                out CacheStorageTargetMedia storageTarget, applicationId, in controlHolder.Value, index, saveSize,
                 journalSize);
 
             if (result.IsFailure()) return (ResultCode)result.Value;

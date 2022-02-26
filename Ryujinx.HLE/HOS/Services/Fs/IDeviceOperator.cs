@@ -1,6 +1,6 @@
 ﻿using LibHac;
 using LibHac.Common;
-using LibHac.FsSrv;
+using LibHac.Fs;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {

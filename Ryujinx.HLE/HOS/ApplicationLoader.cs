@@ -481,14 +481,14 @@ namespace Ryujinx.HLE.HOS
 
                 if (result.IsSuccess() && bytesRead == controlData.ByteSpan.Length)
                 {
-                    titleName = controlData.Value.Titles[(int)device.System.State.DesiredTitleLanguage].Name.ToString();
+                    titleName = controlData.Value.Title[(int)device.System.State.DesiredTitleLanguage].NameString.ToString();
 
                     if (string.IsNullOrWhiteSpace(titleName))
                     {
-                        titleName = controlData.Value.Titles.ToArray().FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
+                        titleName = controlData.Value.Title.ItemsRo.ToArray().FirstOrDefault(x => x.Name[0] != 0).NameString.ToString();
                     }
 
-                    displayVersion = controlData.Value.DisplayVersion.ToString();
+                    displayVersion = controlData.Value.DisplayVersionString.ToString();
                 }
             }
             else
@@ -615,20 +615,20 @@ namespace Ryujinx.HLE.HOS
 
                                 ref ApplicationControlProperty nacp = ref ControlData.Value;
 
-                                programInfo.Name = nacp.Titles[(int)_device.System.State.DesiredTitleLanguage].Name.ToString();
+                                programInfo.Name = nacp.Title[(int)_device.System.State.DesiredTitleLanguage].NameString.ToString();
 
                                 if (string.IsNullOrWhiteSpace(programInfo.Name))
                                 {
-                                    programInfo.Name = nacp.Titles.ToArray().FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
+                                    programInfo.Name = nacp.Title.ItemsRo.ToArray().FirstOrDefault(x => x.Name[0] != 0).NameString.ToString();
                                 }
 
                                 if (nacp.PresenceGroupId != 0)
                                 {
                                     programInfo.ProgramId = nacp.PresenceGroupId;
                                 }
-                                else if (nacp.SaveDataOwnerId.Value != 0)
+                                else if (nacp.SaveDataOwnerId != 0)
                                 {
-                                    programInfo.ProgramId = nacp.SaveDataOwnerId.Value;
+                                    programInfo.ProgramId = nacp.SaveDataOwnerId;
                                 }
                                 else if (nacp.AddOnContentBaseId != 0)
                                 {
@@ -776,14 +776,14 @@ namespace Ryujinx.HLE.HOS
                 // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
                 control.UserAccountSaveDataSize = 0x4000;
                 control.UserAccountSaveDataJournalSize = 0x4000;
-                control.SaveDataOwnerId = applicationId;
+                control.SaveDataOwnerId = applicationId.Value;
 
                 Logger.Warning?.Print(LogClass.Application,
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
             HorizonClient hos = _device.System.LibHacHorizonManager.RyujinxClient;
-            Result resultCode = hos.Fs.EnsureApplicationCacheStorage(out _, out _, applicationId, ref control);
+            Result resultCode = hos.Fs.EnsureApplicationCacheStorage(out _, out _, applicationId, in control);
 
             if (resultCode.IsFailure())
             {
@@ -792,7 +792,7 @@ namespace Ryujinx.HLE.HOS
                 return resultCode;
             }
 
-            resultCode = EnsureApplicationSaveData(hos.Fs, out _, applicationId, ref control, ref user);
+            resultCode = hos.Fs.EnsureApplicationSaveData(out _, applicationId, in control, in user);
 
             if (resultCode.IsFailure())
             {

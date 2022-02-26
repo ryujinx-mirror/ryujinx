@@ -168,8 +168,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         private void DeleteSaveData(UserId userId)
         {
-            SaveDataFilter saveDataFilter = new SaveDataFilter();
-            saveDataFilter.SetUserId(new LibHac.Fs.UserId((ulong)userId.High, (ulong)userId.Low));
+            var saveDataFilter = SaveDataFilter.Make(programId: default, saveType: default,
+                new LibHac.Fs.UserId((ulong)userId.High, (ulong)userId.Low), saveDataId: default, index: default);
 
             using var saveDataIterator = new UniqueRef<SaveDataIterator>();
 

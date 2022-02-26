@@ -1,7 +1,8 @@
-using LibHac.Ns;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
 using System;
+
+using static LibHac.Ns.ApplicationControlProperty;
 
 namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 {
@@ -52,8 +53,8 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                         _titleId = titleId;
 
                         // TODO: Call nn::arp::GetApplicationControlProperty here when implemented, if it return ResultCode.Success we assign fields.
-                        _ratingAge           = Array.ConvertAll(context.Device.Application.ControlData.Value.RatingAge.ToArray(), Convert.ToInt32);
-                        _parentalControlFlag = context.Device.Application.ControlData.Value.ParentalControl;
+                        _ratingAge           = Array.ConvertAll(context.Device.Application.ControlData.Value.RatingAge.ItemsRo.ToArray(), Convert.ToInt32);
+                        _parentalControlFlag = context.Device.Application.ControlData.Value.ParentalControlFlag;
                     }
                 }
 
@@ -224,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private ResultCode IsStereoVisionPermittedImpl()
         {
             /*
-                // TODO: Application Exemptions are readed from file "appExemptions.dat" in the service savedata.
+                // TODO: Application Exemptions are read from file "appExemptions.dat" in the service savedata.
                 //       Since we don't support the pctl savedata for now, this can be implemented later.
 
                 if (appExemption)

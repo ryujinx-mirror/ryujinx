@@ -15,6 +15,8 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 
         internal static ResultCode GetPlayStatistics(ServiceCtx context, bool byUserId = false)
         {
+            ref readonly var controlProperty = ref context.Device.Application.ControlData.Value;
+
             ulong inputPosition = context.Request.SendBuff[0].Position;
             ulong inputSize     = context.Request.SendBuff[0].Size;
 
@@ -31,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
                 }
             }
 
-            PlayLogQueryCapability queryCapability = (PlayLogQueryCapability)context.Device.Application.ControlData.Value.PlayLogQueryCapability;
+            PlayLogQueryCapability queryCapability = (PlayLogQueryCapability)controlProperty.PlayLogQueryCapability;
 
             List<ulong> titleIds = new List<ulong>();
 
@@ -45,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
                 // Check if input title ids are in the whitelist.
                 foreach (ulong titleId in titleIds)
                 {
-                    if (!context.Device.Application.ControlData.Value.PlayLogQueryableApplicationId.Contains(titleId))
+                    if (!controlProperty.PlayLogQueryableApplicationId.ItemsRo.Contains(titleId))
                     {
                         return (ResultCode)Am.ResultCode.ObjectInvalid;
                     }

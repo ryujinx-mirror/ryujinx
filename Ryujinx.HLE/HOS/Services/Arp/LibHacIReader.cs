@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
         {
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty
             {
-                BaseStorageId = StorageId.BuiltInUser,
+                StorageId = StorageId.BuiltInUser,
                 ApplicationId = ApplicationId
             };
 
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
         {
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty
             {
-                BaseStorageId = StorageId.BuiltInUser,
+                StorageId = StorageId.BuiltInUser,
                 ApplicationId = applicationId
             };
 

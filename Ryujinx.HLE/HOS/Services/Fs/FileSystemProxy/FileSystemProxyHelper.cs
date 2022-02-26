@@ -132,22 +132,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             }
         }
 
-        public static Result ReadFsPath(out FsPath path, ServiceCtx context, int index = 0)
-        {
-            ulong position = context.Request.PtrBuff[index].Position;
-            ulong size     = context.Request.PtrBuff[index].Size;
-
-            byte[] pathBytes = new byte[size];
-
-            context.Memory.Read(position, pathBytes);
-
-            return FsPath.FromSpan(out path, pathBytes);
-        }
-
         public static ref readonly FspPath GetFspPath(ServiceCtx context, int index = 0)
         {
-            ulong position = (ulong)context.Request.PtrBuff[index].Position;
-            ulong size = (ulong)context.Request.PtrBuff[index].Size;
+            ulong position = context.Request.PtrBuff[index].Position;
+            ulong size = context.Request.PtrBuff[index].Size;
 
             ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
             ReadOnlySpan<FspPath> fspBuffer = MemoryMarshal.Cast<byte, FspPath>(buffer);
@@ -157,8 +145,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
         public static ref readonly LibHac.FsSrv.Sf.Path GetSfPath(ServiceCtx context, int index = 0)
         {
-            ulong position = (ulong)context.Request.PtrBuff[index].Position;
-            ulong size = (ulong)context.Request.PtrBuff[index].Size;
+            ulong position = context.Request.PtrBuff[index].Position;
+            ulong size = context.Request.PtrBuff[index].Size;
 
             ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
             ReadOnlySpan<LibHac.FsSrv.Sf.Path> pathBuffer = MemoryMarshal.Cast<byte, LibHac.FsSrv.Sf.Path>(buffer);

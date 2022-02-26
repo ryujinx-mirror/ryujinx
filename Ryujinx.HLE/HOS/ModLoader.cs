@@ -695,7 +695,7 @@ namespace Ryujinx.HLE.HOS
 
             var buildIds = programs.Select(p => p switch
             {
-                NsoExecutable nso => BitConverter.ToString(nso.BuildId.Bytes.ToArray()).Replace("-", "").TrimEnd('0'),
+                NsoExecutable nso => BitConverter.ToString(nso.BuildId.ItemsRo.ToArray()).Replace("-", "").TrimEnd('0'),
                 NroExecutable nro => BitConverter.ToString(nro.Header.BuildId).Replace("-", "").TrimEnd('0'),
                 _ => string.Empty
             }).ToList();

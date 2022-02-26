@@ -6,7 +6,6 @@ using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
-using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
@@ -25,8 +24,6 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-
-using static LibHac.Fs.ApplicationSaveDataManagement;
 
 namespace Ryujinx.Ui.Widgets
 {
@@ -81,7 +78,7 @@ namespace Ryujinx.Ui.Widgets
             PopupAtPointer(null);
         }
 
-        private bool TryFindSaveData(string titleName, ulong titleId, BlitStruct<ApplicationControlProperty> controlHolder, SaveDataFilter filter, out ulong saveDataId)
+        private bool TryFindSaveData(string titleName, ulong titleId, BlitStruct<ApplicationControlProperty> controlHolder, in SaveDataFilter filter, out ulong saveDataId)
         {
             saveDataId = default;
 
@@ -121,7 +118,7 @@ namespace Ryujinx.Ui.Widgets
 
                 Uid user = new Uid((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
 
-                result = EnsureApplicationSaveData(_horizonClient.Fs, out _, new LibHac.Ncm.ApplicationId(titleId), ref control, ref user);
+                result = _horizonClient.Fs.EnsureApplicationSaveData(out _, new LibHac.Ncm.ApplicationId(titleId), in control, in user);
 
                 if (result.IsFailure())
                 {
@@ -146,11 +143,9 @@ namespace Ryujinx.Ui.Widgets
             return false;
         }
 
-        private void OpenSaveDir(SaveDataFilter saveDataFilter)
+        private void OpenSaveDir(in SaveDataFilter saveDataFilter)
         {
-            saveDataFilter.SetProgramId(new ProgramId(_titleId));
-
-            if (!TryFindSaveData(_titleName, _titleId, _controlData, saveDataFilter, out ulong saveDataId))
+            if (!TryFindSaveData(_titleName, _titleId, _controlData, in saveDataFilter, out ulong saveDataId))
             {
                 return;
             }
@@ -439,26 +434,24 @@ namespace Ryujinx.Ui.Widgets
         //
         private void OpenSaveUserDir_Clicked(object sender, EventArgs args)
         {
-            SaveDataFilter saveDataFilter = new SaveDataFilter();
-            saveDataFilter.SetUserId(new LibHac.Fs.UserId((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low));
+            var userId = new LibHac.Fs.UserId((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, saveType: default, userId, saveDataId: default, index: default);
 
-            OpenSaveDir(saveDataFilter);
+            OpenSaveDir(in saveDataFilter);
         }
 
         private void OpenSaveDeviceDir_Clicked(object sender, EventArgs args)
         {
-            SaveDataFilter saveDataFilter = new SaveDataFilter();
-            saveDataFilter.SetSaveDataType(SaveDataType.Device);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, SaveDataType.Device, userId: default, saveDataId: default, index: default);
 
-            OpenSaveDir(saveDataFilter);
+            OpenSaveDir(in saveDataFilter);
         }
 
         private void OpenSaveBcatDir_Clicked(object sender, EventArgs args)
         {
-            SaveDataFilter saveDataFilter = new SaveDataFilter();
-            saveDataFilter.SetSaveDataType(SaveDataType.Bcat);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, SaveDataType.Bcat, userId: default, saveDataId: default, index: default);
 
-            OpenSaveDir(saveDataFilter);
+            OpenSaveDir(in saveDataFilter);
         }
 
         private void ManageTitleUpdates_Clicked(object sender, EventArgs args)

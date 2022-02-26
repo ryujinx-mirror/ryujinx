@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             // TODO: Account actually calls nn::arp::detail::IReader::GetApplicationControlProperty() with the current Pid and store the result (NACP file) internally.
             //       But since we use LibHac and we load one Application at a time, it's not necessary.
 
-            context.ResponseData.Write(context.Device.Application.ControlData.Value.UserAccountSwitchLock);
+            context.ResponseData.Write((byte)context.Device.Application.ControlData.Value.UserAccountSwitchLock);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAcc);
 

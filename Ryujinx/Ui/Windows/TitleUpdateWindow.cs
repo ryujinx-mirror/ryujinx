@@ -105,7 +105,7 @@ namespace Ryujinx.Ui.Windows
                             controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
                             nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                            RadioButton radioButton = new RadioButton($"Version {controlData.DisplayVersion.ToString()} - {path}");
+                            RadioButton radioButton = new RadioButton($"Version {controlData.DisplayVersionString.ToString()} - {path}");
                             radioButton.JoinGroup(_noUpdateRadioButton);
 
                             _availableUpdatesBox.Add(radioButton);

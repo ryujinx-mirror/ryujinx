@@ -558,10 +558,10 @@ namespace Ryujinx.Ui.App
         {
             _ = Enum.TryParse(_desiredTitleLanguage.ToString(), out TitleLanguage desiredTitleLanguage);
 
-            if (controlData.Titles.Length > (int)desiredTitleLanguage)
+            if (controlData.Title.ItemsRo.Length > (int)desiredTitleLanguage)
             {
-                titleName = controlData.Titles[(int)desiredTitleLanguage].Name.ToString();
-                publisher = controlData.Titles[(int)desiredTitleLanguage].Publisher.ToString();
+                titleName = controlData.Title[(int)desiredTitleLanguage].NameString.ToString();
+                publisher = controlData.Title[(int)desiredTitleLanguage].PublisherString.ToString();
             }
             else
             {
@@ -571,11 +571,11 @@ namespace Ryujinx.Ui.App
 
             if (string.IsNullOrWhiteSpace(titleName))
             {
-                foreach (ApplicationControlTitle controlTitle in controlData.Titles)
+                foreach (ref readonly var controlTitle in controlData.Title.ItemsRo)
                 {
-                    if (!((U8Span)controlTitle.Name).IsEmpty())
+                    if (!controlTitle.NameString.IsEmpty())
                     {
-                        titleName = controlTitle.Name.ToString();
+                        titleName = controlTitle.NameString.ToString();
 
                         break;
                     }
@@ -584,11 +584,11 @@ namespace Ryujinx.Ui.App
 
             if (string.IsNullOrWhiteSpace(publisher))
             {
-                foreach (ApplicationControlTitle controlTitle in controlData.Titles)
+                foreach (ref readonly var controlTitle in controlData.Title.ItemsRo)
                 {
-                    if (!((U8Span)controlTitle.Publisher).IsEmpty())
+                    if (!controlTitle.PublisherString.IsEmpty())
                     {
-                        publisher = controlTitle.Publisher.ToString();
+                        publisher = controlTitle.PublisherString.ToString();
 
                         break;
                     }
@@ -599,7 +599,7 @@ namespace Ryujinx.Ui.App
             {
                 titleId = controlData.PresenceGroupId.ToString("x16");
             }
-            else if (controlData.SaveDataOwnerId.Value != 0)
+            else if (controlData.SaveDataOwnerId != 0)
             {
                 titleId = controlData.SaveDataOwnerId.ToString();
             }
@@ -612,7 +612,7 @@ namespace Ryujinx.Ui.App
                 titleId = "0000000000000000";
             }
 
-            version = controlData.DisplayVersion.ToString();
+            version = controlData.DisplayVersionString.ToString();
         }
 
         private bool IsUpdateApplied(string titleId, out IFileSystem updatedControlFs)
