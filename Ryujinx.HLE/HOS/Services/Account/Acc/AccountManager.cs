@@ -3,6 +3,7 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public UserProfile LastOpenedUser { get; private set; }
 
-        public AccountManager(HorizonClient horizonClient)
+        public AccountManager(HorizonClient horizonClient, string initialProfileName = null)
         {
             _horizonClient = horizonClient;
 
@@ -43,7 +44,14 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
             else
             {
-                OpenUser(_accountSaveDataManager.LastOpened);
+                UserId commandLineUserProfileOverride = default; 
+                if (!string.IsNullOrEmpty(initialProfileName))
+                { 
+                    commandLineUserProfileOverride = _profiles.Values.FirstOrDefault(x => x.Name == initialProfileName)?.UserId ?? default;
+                    if (commandLineUserProfileOverride.IsNull)
+                        Logger.Warning?.Print(LogClass.Application, $"The command line specified profile named '{initialProfileName}' was not found");
+                }
+                OpenUser(commandLineUserProfileOverride.IsNull ? _accountSaveDataManager.LastOpened : commandLineUserProfileOverride);
             }
         }
 
