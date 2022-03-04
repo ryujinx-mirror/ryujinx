@@ -80,7 +80,7 @@ namespace Ryujinx.Configuration
             if (e.NewValue)
             {
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(AppDomain.CurrentDomain.BaseDirectory, "file"),
+                    new FileLogTarget(ReleaseInformations.GetBaseApplicationDirectory(), "file"),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));

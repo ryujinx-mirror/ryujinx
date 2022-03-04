@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-nx-nca">
+        <comment>Nintendo Content Archive</comment>
+        <glob pattern="*.nca"/>
+    </mime-type>
+    <mime-type type="application/x-nx-nro">
+        <comment>Nintendo Relocatable Object</comment>
+        <glob pattern="*.nro"/>
+    </mime-type>
+    <mime-type type="application/x-nx-nso">
+        <comment>Nintendo Shared Object</comment>
+        <glob pattern="*.nso"/>
+    </mime-type>
+    <mime-type type="application/x-nx-nsp">
+        <comment>Nintendo Submission Package</comment>
+        <glob pattern="*.nsp"/>
+    </mime-type>
+    <mime-type type="application/x-nx-xci">
+        <comment>Nintendo Switch Cartridge</comment>
+        <glob pattern="*.xci"/>
+    </mime-type>
+</mime-info>

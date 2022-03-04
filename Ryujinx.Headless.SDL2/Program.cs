@@ -310,7 +310,7 @@ namespace Ryujinx.Headless.SDL2
                 {
                     controllerConfig.RangeLeft  = 1.0f;
                     controllerConfig.RangeRight = 1.0f;
-                    
+
                     Logger.Info?.Print(LogClass.Application, $"{config.PlayerIndex} stick range reset. Save the profile now to update your configuration");
                 }
             }
@@ -396,7 +396,7 @@ namespace Ryujinx.Headless.SDL2
             if ((bool)option.EnableFileLog)
             {
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(AppDomain.CurrentDomain.BaseDirectory, "file"),
+                    new FileLogTarget(ReleaseInformations.GetBaseApplicationDirectory(), "file"),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));
