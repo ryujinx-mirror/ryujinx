@@ -121,7 +121,7 @@ namespace ARMeilleure.Decoders
                             currBlock.Branch = GetBlock((ulong)op.Immediate);
                         }
 
-                        if (!IsUnconditionalBranch(lastOp) || isCall)
+                        if (isCall || !(IsUnconditionalBranch(lastOp) || IsTrap(lastOp)))
                         {
                             currBlock.Next = GetBlock(currBlock.EndAddress);
                         }
@@ -330,8 +330,12 @@ namespace ARMeilleure.Decoders
 
         private static bool IsException(OpCode opCode)
         {
+            return IsTrap(opCode) || opCode.Instruction.Name == InstName.Svc;
+        }
+
+        private static bool IsTrap(OpCode opCode)
+        {
             return opCode.Instruction.Name == InstName.Brk ||
-                   opCode.Instruction.Name == InstName.Svc ||
                    opCode.Instruction.Name == InstName.Trap ||
                    opCode.Instruction.Name == InstName.Und;
         }

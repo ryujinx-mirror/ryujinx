@@ -10,17 +10,9 @@ namespace ARMeilleure.Instructions
     {
         public static void Svc(ArmEmitterContext context)
         {
-            EmitExceptionCall(context, nameof(NativeInterface.SupervisorCall));
-        }
-
-        public static void Trap(ArmEmitterContext context)
-        {
-            EmitExceptionCall(context, nameof(NativeInterface.Break));
-        }
-
-        private static void EmitExceptionCall(ArmEmitterContext context, string name)
-        {
             IOpCode32Exception op = (IOpCode32Exception)context.CurrOp;
+
+            string name = nameof(NativeInterface.SupervisorCall);
 
             context.StoreToContext();
 
@@ -29,6 +21,21 @@ namespace ARMeilleure.Instructions
             context.LoadFromContext();
 
             Translator.EmitSynchronization(context);
+        }
+
+        public static void Trap(ArmEmitterContext context)
+        {
+            IOpCode32Exception op = (IOpCode32Exception)context.CurrOp;
+
+            string name = nameof(NativeInterface.Break);
+
+            context.StoreToContext();
+
+            context.Call(typeof(NativeInterface).GetMethod(name), Const(((IOpCode)op).Address), Const(op.Id));
+
+            context.LoadFromContext();
+
+            context.Return(Const(context.CurrOp.Address));
         }
     }
 }

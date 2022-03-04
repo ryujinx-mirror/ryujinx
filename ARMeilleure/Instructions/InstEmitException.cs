@@ -9,17 +9,24 @@ namespace ARMeilleure.Instructions
     {
         public static void Brk(ArmEmitterContext context)
         {
-            EmitExceptionCall(context, nameof(NativeInterface.Break));
+            OpCodeException op = (OpCodeException)context.CurrOp;
+
+            string name = nameof(NativeInterface.Break);
+
+            context.StoreToContext();
+
+            context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.Id));
+
+            context.LoadFromContext();
+
+            context.Return(Const(op.Address));
         }
 
         public static void Svc(ArmEmitterContext context)
         {
-            EmitExceptionCall(context, nameof(NativeInterface.SupervisorCall));
-        }
-
-        private static void EmitExceptionCall(ArmEmitterContext context, string name)
-        {
             OpCodeException op = (OpCodeException)context.CurrOp;
+
+            string name = nameof(NativeInterface.SupervisorCall);
 
             context.StoreToContext();
 
@@ -41,6 +48,8 @@ namespace ARMeilleure.Instructions
             context.Call(typeof(NativeInterface).GetMethod(name), Const(op.Address), Const(op.RawOpCode));
 
             context.LoadFromContext();
+
+            context.Return(Const(op.Address));
         }
     }
 }
