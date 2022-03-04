@@ -128,7 +128,7 @@ namespace ARMeilleure.Instructions
         {
             Debug.Assert(value.Type == OperandType.I32);
 
-            if (IsThumb(context.CurrOp))
+            if (((OpCode32)context.CurrOp).IsThumb())
             {
                 bool isReturn = IsA32Return(context);
                 if (!isReturn)

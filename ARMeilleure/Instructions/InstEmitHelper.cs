@@ -10,11 +10,6 @@ namespace ARMeilleure.Instructions
 {
     static class InstEmitHelper
     {
-        public static bool IsThumb(OpCode op)
-        {
-            return op is OpCodeT16 || op is OpCodeT32;
-        }
-
         public static Operand GetExtendedM(ArmEmitterContext context, int rm, IntType type)
         {
             Operand value = GetIntOrZR(context, rm);

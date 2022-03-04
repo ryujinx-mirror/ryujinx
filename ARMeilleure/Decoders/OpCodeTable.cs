@@ -1050,7 +1050,11 @@ namespace ARMeilleure.Decoders
             SetT32("11101011010xxxxx0xxxxxxxxxxxxxxx", InstName.Adc,      InstEmit32.Adc,      OpCodeT32AluRsImm.Create);
             SetT32("11101011000<xxxx0xxx<<<<xxxxxxxx", InstName.Add,      InstEmit32.Add,      OpCodeT32AluRsImm.Create);
             SetT32("11101010000<xxxx0xxx<<<<xxxxxxxx", InstName.And,      InstEmit32.And,      OpCodeT32AluRsImm.Create);
+            SetT32("11110x<<<xxxxxxx10x0xxxxxxxxxxxx", InstName.B,        InstEmit32.B,        OpCodeT32BImm20.Create);
+            SetT32("11110xxxxxxxxxxx10x1xxxxxxxxxxxx", InstName.B,        InstEmit32.B,        OpCodeT32BImm24.Create);
             SetT32("11101010001xxxxx0xxxxxxxxxxxxxxx", InstName.Bic,      InstEmit32.Bic,      OpCodeT32AluRsImm.Create);
+            SetT32("11110xxxxxxxxxxx11x1xxxxxxxxxxxx", InstName.Bl,       InstEmit32.Bl,       OpCodeT32BImm24.Create);
+            SetT32("11110xxxxxxxxxxx11x0xxxxxxxxxxx0", InstName.Blx,      InstEmit32.Blx,      OpCodeT32BImm24.Create);
             SetT32("111010110001xxxx0xxx1111xxxxxxxx", InstName.Cmn,      InstEmit32.Cmn,      OpCodeT32AluRsImm.Create);
             SetT32("111010111011xxxx0xxx1111xxxxxxxx", InstName.Cmp,      InstEmit32.Cmp,      OpCodeT32AluRsImm.Create);
             SetT32("11101010100<xxxx0xxx<<<<xxxxxxxx", InstName.Eor,      InstEmit32.Eor,      OpCodeT32AluRsImm.Create);
