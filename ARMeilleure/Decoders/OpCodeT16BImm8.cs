@@ -1,6 +1,6 @@
 ﻿namespace ARMeilleure.Decoders
 {
-    class OpCodeT16BImm8 : OpCode32, IOpCode32BImm
+    class OpCodeT16BImm8 : OpCodeT16, IOpCode32BImm
     {
         public long Immediate { get; }
 
