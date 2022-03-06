@@ -136,7 +136,8 @@ namespace Ryujinx.HLE.HOS
 
         private static bool StrEquals(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
 
-        public string GetModsBasePath() => EnsureBaseDirStructure(AppDataManager.GetModsPath());
+        public string GetModsBasePath()   => EnsureBaseDirStructure(AppDataManager.GetModsPath());
+        public string GetSdModsBasePath() => EnsureBaseDirStructure(AppDataManager.GetSdModsPath());
 
         private string EnsureBaseDirStructure(string modsBasePath)
         {

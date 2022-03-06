@@ -477,6 +477,14 @@ namespace Ryujinx.Ui.Widgets
             OpenHelper.OpenFolder(titleModsPath);
         }
 
+        private void OpenTitleSdModDir_Clicked(object sender, EventArgs args)
+        {
+            string sdModsBasePath  = _virtualFileSystem.ModLoader.GetSdModsBasePath();
+            string titleModsPath   = _virtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, _titleIdText);
+
+            OpenHelper.OpenFolder(titleModsPath);
+        }
+
         private void ExtractRomFs_Clicked(object sender, EventArgs args)
         {
             ExtractSection(NcaSectionType.Data);

@@ -84,7 +84,10 @@ namespace Ryujinx.HLE.HOS
 
             MetaLoader metaData = ReadNpdm(codeFs);
 
-            _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(new[] { TitleId }, _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath());
+            _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
+                new[] { TitleId }, 
+                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(), 
+                _device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
 
             if (TitleId != 0)
             {
@@ -388,7 +391,10 @@ namespace Ryujinx.HLE.HOS
 
             MetaLoader metaData = ReadNpdm(codeFs);
 
-            _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(_device.Configuration.ContentManager.GetAocTitleIds().Prepend(TitleId), _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath());
+            _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
+                _device.Configuration.ContentManager.GetAocTitleIds().Prepend(TitleId), 
+                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(), 
+                _device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
 
             if (controlNca != null)
             {
