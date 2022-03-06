@@ -308,7 +308,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     int attr = offset + elemIndex * 4;
                     if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
                     {
-                        int index = (attr - AttributeConsts.UserAttributeBase) / 16;
+                        int userAttr = attr - AttributeConsts.UserAttributeBase;
+                        int index = userAttr / 16;
 
                         if (isStore)
                         {
@@ -316,7 +317,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         }
                         else
                         {
-                            config.SetInputUserAttribute(index, perPatch);
+                            config.SetInputUserAttribute(index, (userAttr >> 2) & 3, perPatch);
                         }
                     }
 

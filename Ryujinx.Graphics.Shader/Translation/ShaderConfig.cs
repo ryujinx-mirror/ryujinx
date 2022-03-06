@@ -54,6 +54,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         private int _nextUsedInputAttributes;
         private int _thisUsedInputAttributes;
 
+        public UInt128 NextInputAttributesComponents { get; private set; }
+        public UInt128 ThisInputAttributesComponents { get; private set; }
+        public UInt128 NextInputAttributesPerPatchComponents { get; private set; }
+        public UInt128 ThisInputAttributesPerPatchComponents { get; private set; }
+
         private int _usedConstantBuffers;
         private int _usedStorageBuffers;
         private int _usedStorageBuffersWrite;
@@ -227,11 +232,12 @@ namespace Ryujinx.Graphics.Shader.Translation
             UsedOutputAttributes |= 1 << index;
         }
 
-        public void SetInputUserAttribute(int index, bool perPatch)
+        public void SetInputUserAttribute(int index, int component, bool perPatch)
         {
             if (perPatch)
             {
                 UsedInputAttributesPerPatch |= 1 << index;
+                ThisInputAttributesPerPatchComponents |= UInt128.Pow2(index * 4 + component);
             }
             else
             {
@@ -239,6 +245,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 UsedInputAttributes |= mask;
                 _thisUsedInputAttributes |= mask;
+                ThisInputAttributesComponents |= UInt128.Pow2(index * 4 + component);
             }
         }
 
@@ -256,6 +263,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void MergeFromtNextStage(ShaderConfig config)
         {
+            NextInputAttributesComponents = config.ThisInputAttributesComponents;
+            NextInputAttributesPerPatchComponents = config.ThisInputAttributesPerPatchComponents;
             NextUsesFixedFuncAttributes = config.UsedFeatures.HasFlag(FeatureFlags.FixedFuncAttr);
             MergeOutputUserAttributes(config.UsedInputAttributes, config.UsedInputAttributesPerPatch);
         }
