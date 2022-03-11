@@ -658,10 +658,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private static uint GetPsr(ARMeilleure.State.ExecutionContext context)
         {
-            return (context.GetPstateFlag(ARMeilleure.State.PState.NFlag) ? (1U << (int)ARMeilleure.State.PState.NFlag) : 0U) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.ZFlag) ? (1U << (int)ARMeilleure.State.PState.ZFlag) : 0U) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.CFlag) ? (1U << (int)ARMeilleure.State.PState.CFlag) : 0U) |
-                   (context.GetPstateFlag(ARMeilleure.State.PState.VFlag) ? (1U << (int)ARMeilleure.State.PState.VFlag) : 0U);
+            return context.Pstate & 0xFF0FFE20;
         }
 
         private ThreadContext GetCurrentContext()
@@ -1371,7 +1368,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             PreferredCore = _originalPreferredCore;
             AffinityMask = _originalAffinityMask;
-            
+
             if (AffinityMask != affinityMask)
             {
                 if ((AffinityMask & 1UL << ActiveCore) != 0)
