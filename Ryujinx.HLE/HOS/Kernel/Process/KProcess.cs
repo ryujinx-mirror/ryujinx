@@ -751,7 +751,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
-            if (currentThread.Owner != null &&
+            if (currentThread.Context.Running &&
+                currentThread.Owner != null &&
                 currentThread.GetUserDisableCount() != 0 &&
                 currentThread.Owner.PinnedThreads[currentThread.CurrentCore] == null)
             {
