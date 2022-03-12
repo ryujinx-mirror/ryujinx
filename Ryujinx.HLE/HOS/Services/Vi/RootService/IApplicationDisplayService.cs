@@ -1,7 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
-using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -22,16 +21,21 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
     {
         private readonly ViServiceType _serviceType;
 
-        private readonly List<DisplayInfo>              _displayInfo;
-        private readonly Dictionary<ulong, DisplayInfo> _openDisplayInfo;
+        private class DisplayState
+        {
+            public int RetrievedEventsCount;
+        }
+
+        private readonly List<DisplayInfo>               _displayInfo;
+        private readonly Dictionary<ulong, DisplayState> _openDisplays;
 
         private int _vsyncEventHandle;
 
         public IApplicationDisplayService(ViServiceType serviceType)
         {
-            _serviceType     = serviceType;
-            _displayInfo     = new List<DisplayInfo>();
-            _openDisplayInfo = new Dictionary<ulong, DisplayInfo>();
+            _serviceType  = serviceType;
+            _displayInfo  = new List<DisplayInfo>();
+            _openDisplays = new Dictionary<ulong, DisplayState>();
 
             void AddDisplayInfo(string name, bool layerLimitEnabled, ulong layerLimitMax, ulong width, ulong height)
             {
@@ -64,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             // FIXME: Should be _serviceType != ViServiceType.Application but guests crashes if we do this check.
             if (_serviceType > ViServiceType.System)
             {
-                return ResultCode.InvalidRange;
+                return ResultCode.PermissionDenied;
             }
 
             MakeObject(context, new HOSBinderDriverServer());
@@ -79,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             // FIXME: Should be _serviceType == ViServiceType.System but guests crashes if we do this check.
             if (_serviceType > ViServiceType.System)
             {
-                return ResultCode.InvalidRange;
+                return ResultCode.PermissionDenied;
             }
 
             MakeObject(context, new ISystemDisplayService(this));
@@ -93,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             if (_serviceType > ViServiceType.System)
             {
-                return ResultCode.InvalidRange;
+                return ResultCode.PermissionDenied;
             }
 
             MakeObject(context, new IManagerDisplayService(this));
@@ -107,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             if (_serviceType > ViServiceType.System)
             {
-                return ResultCode.InvalidRange;
+                return ResultCode.PermissionDenied;
             }
 
             MakeObject(context, new HOSBinderDriverServer());
@@ -174,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
                 return ResultCode.InvalidValue;
             }
 
-            if (!_openDisplayInfo.TryAdd((ulong)displayId, _displayInfo[displayId]))
+            if (!_openDisplays.TryAdd((ulong)displayId, new DisplayState()))
             {
                 return ResultCode.AlreadyOpened;
             }
@@ -190,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             ulong displayId = context.RequestData.ReadUInt64();
 
-            if (!_openDisplayInfo.Remove(displayId))
+            if (!_openDisplays.Remove(displayId))
             {
                 return ResultCode.InvalidValue;
             }
@@ -454,9 +458,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             ulong displayId = context.RequestData.ReadUInt64();
 
-            if (!_openDisplayInfo.ContainsKey(displayId))
+            if (!_openDisplays.TryGetValue(displayId, out DisplayState displayState))
             {
                 return ResultCode.InvalidValue;
+            }
+
+            if (displayState.RetrievedEventsCount > 0)
+            {
+                return ResultCode.PermissionDenied;
             }
 
             if (_vsyncEventHandle == 0)
@@ -467,6 +476,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
                 }
             }
 
+            displayState.RetrievedEventsCount++;
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_vsyncEventHandle);
 
             return ResultCode.Success;

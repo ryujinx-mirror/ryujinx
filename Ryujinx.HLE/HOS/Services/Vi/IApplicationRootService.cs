@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             if (serviceType != ViServiceType.Application)
             {
-                return ResultCode.InvalidRange;
+                return ResultCode.PermissionDenied;
             }
 
             MakeObject(context, new IApplicationDisplayService(serviceType));
