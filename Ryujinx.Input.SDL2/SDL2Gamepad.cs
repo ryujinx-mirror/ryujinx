@@ -350,6 +350,14 @@ namespace Ryujinx.Input.SDL2
                 {
                     resultY = -resultY;
                 }
+
+                if ((inputId == StickInputId.Left && _configuration.LeftJoyconStick.Rotate90CW) ||
+                    (inputId == StickInputId.Right && _configuration.RightJoyconStick.Rotate90CW))
+                {
+                    float temp = resultX;
+                    resultX = resultY;
+                    resultY = -temp;
+                }
             }
 
             return (resultX, resultY);
