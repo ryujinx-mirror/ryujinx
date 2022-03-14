@@ -328,6 +328,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public void SetAllInputUserAttributes()
         {
             UsedInputAttributes |= Constants.AllAttributesMask;
+            ThisInputAttributesComponents |= ~UInt128.Zero >> (128 - Constants.MaxAttributes * 4);
         }
 
         public void SetAllOutputUserAttributes()

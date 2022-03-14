@@ -10,6 +10,12 @@ namespace Ryujinx.Graphics.Shader.Translation
         private ulong _v0;
         private ulong _v1;
 
+        public UInt128(ulong low, ulong high)
+        {
+            _v0 = low;
+            _v1 = high;
+        }
+
         public int TrailingZeroCount()
         {
             int count = BitOperations.TrailingZeroCount(_v0);
@@ -25,25 +31,57 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             if (x >= 64)
             {
-                return new UInt128() { _v0 = 0, _v1 = 1UL << (x - 64 ) };
+                return new UInt128(0, 1UL << (x - 64));
             }
 
-            return new UInt128() { _v0 = 1UL << x, _v1 = 0 };
+            return new UInt128(1UL << x, 0);
         }
 
         public static UInt128 operator ~(UInt128 x)
         {
-            return new UInt128() { _v0 = ~x._v0, _v1 = ~x._v1 };
+            return new UInt128(~x._v0, ~x._v1);
         }
 
         public static UInt128 operator &(UInt128 x, UInt128 y)
         {
-            return new UInt128() { _v0 = x._v0 & y._v0, _v1 = x._v1 & y._v1 };
+            return new UInt128(x._v0 & y._v0, x._v1 & y._v1);
         }
 
         public static UInt128 operator |(UInt128 x, UInt128 y)
         {
-            return new UInt128() { _v0 = x._v0 | y._v0, _v1 = x._v1 | y._v1 };
+            return new UInt128(x._v0 | y._v0, x._v1 | y._v1);
+        }
+
+        public static UInt128 operator <<(UInt128 x, int shift)
+        {
+            if (shift == 0)
+            {
+                return new UInt128(x._v0, x._v1);
+            }
+            else if (shift >= 64)
+            {
+                return new UInt128(0, x._v0 << (shift - 64));
+            }
+
+            ulong shiftOut = x._v0 >> (64 - shift);
+
+            return new UInt128(x._v0 << shift, (x._v1 << shift) | shiftOut);
+        }
+
+        public static UInt128 operator >>(UInt128 x, int shift)
+        {
+            if (shift == 0)
+            {
+                return new UInt128(x._v0, x._v1);
+            }
+            else if (shift >= 64)
+            {
+                return new UInt128(x._v1 >> (shift - 64), 0);
+            }
+
+            ulong shiftOut = x._v1 & ((1UL << shift) - 1);
+
+            return new UInt128((x._v0 >> shift) | (shiftOut << (64 - shift)), x._v1 >> shift);
         }
 
         public static bool operator ==(UInt128 x, UInt128 y)
