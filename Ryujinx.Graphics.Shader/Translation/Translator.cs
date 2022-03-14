@@ -218,10 +218,17 @@ namespace Ryujinx.Graphics.Shader.Translation
             while (usedAttributes != UInt128.Zero)
             {
                 int index = usedAttributes.TrailingZeroCount();
-
-                InitializeOutputComponent(context, AttributeConsts.UserAttributeBase + index * 4, perPatch: false);
+                int vecIndex = index / 4;
 
                 usedAttributes &= ~UInt128.Pow2(index);
+
+                // We don't need to initialize passthrough attributes.
+                if ((context.Config.PassthroughAttributes & (1 << vecIndex)) != 0)
+                {
+                    continue;
+                }
+
+                InitializeOutputComponent(context, AttributeConsts.UserAttributeBase + index * 4, perPatch: false);
             }
 
             UInt128 usedAttributesPerPatch = context.Config.NextInputAttributesPerPatchComponents;
