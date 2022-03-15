@@ -291,7 +291,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private static ClearBufferMask GetMask(Format format)
         {
-            if (format == Format.D24UnormS8Uint || format == Format.D32FloatS8Uint)
+            if (format == Format.D24UnormS8Uint || format == Format.D32FloatS8Uint || format == Format.S8UintD24Unorm)
             {
                 return ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit;
             }
@@ -311,9 +311,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         private static bool IsDepthOnly(Format format)
         {
-            return format == Format.D16Unorm   ||
-                   format == Format.D24X8Unorm ||
-                   format == Format.D32Float;
+            return format == Format.D16Unorm || format == Format.D32Float;
         }
 
         public TextureView BgraSwap(TextureView from)

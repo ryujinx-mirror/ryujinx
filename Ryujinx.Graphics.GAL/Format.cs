@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.GAL
         R32G32B32A32Sint,
         S8Uint,
         D16Unorm,
-        D24X8Unorm,
+        S8UintD24Unorm,
         D32Float,
         D24UnormS8Uint,
         D32FloatS8Uint,
@@ -266,7 +266,7 @@ namespace Ryujinx.Graphics.GAL
             {
                 case Format.D16Unorm:
                 case Format.D24UnormS8Uint:
-                case Format.D24X8Unorm:
+                case Format.S8UintD24Unorm:
                 case Format.D32Float:
                 case Format.D32FloatS8Uint:
                 case Format.S8Uint:

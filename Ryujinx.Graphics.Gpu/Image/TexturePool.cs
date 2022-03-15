@@ -362,7 +362,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return DepthStencilMode.Depth;
             }
 
-            if (format == Format.D24X8Unorm || format == Format.D24UnormS8Uint)
+            if (format == Format.D24UnormS8Uint)
             {
                 return component == SwizzleComponent.Red
                     ? DepthStencilMode.Stencil

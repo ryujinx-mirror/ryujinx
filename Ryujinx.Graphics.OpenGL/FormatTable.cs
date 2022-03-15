@@ -6,15 +6,15 @@ namespace Ryujinx.Graphics.OpenGL
 {
     struct FormatTable
     {
-        private static FormatInfo[] Table;
-        private static SizedInternalFormat[] TableImage;
+        private static FormatInfo[] _table;
+        private static SizedInternalFormat[] _tableImage;
 
         static FormatTable()
         {
             int tableSize = Enum.GetNames<Format>().Length;
 
-            Table = new FormatInfo[tableSize];
-            TableImage = new SizedInternalFormat[tableSize];
+            _table = new FormatInfo[tableSize];
+            _tableImage = new SizedInternalFormat[tableSize];
 
             Add(Format.R8Unorm,             new FormatInfo(1, true,  false, All.R8,                PixelFormat.Red,            PixelType.UnsignedByte));
             Add(Format.R8Snorm,             new FormatInfo(1, true,  false, All.R8Snorm,           PixelFormat.Red,            PixelType.Byte));
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.R32G32B32A32Sint,    new FormatInfo(4, false, false, All.Rgba32i,           PixelFormat.RgbaInteger,    PixelType.Int));
             Add(Format.S8Uint,              new FormatInfo(1, false, false, All.StencilIndex8,     PixelFormat.StencilIndex,   PixelType.UnsignedByte));
             Add(Format.D16Unorm,            new FormatInfo(1, false, false, All.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort));
-            Add(Format.D24X8Unorm,          new FormatInfo(1, false, false, All.DepthComponent24,  PixelFormat.DepthComponent, PixelType.UnsignedInt));
+            Add(Format.S8UintD24Unorm,      new FormatInfo(1, false, false, All.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248));
             Add(Format.D32Float,            new FormatInfo(1, false, false, All.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float));
             Add(Format.D24UnormS8Uint,      new FormatInfo(1, false, false, All.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248));
             Add(Format.D32FloatS8Uint,      new FormatInfo(1, false, false, All.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev));
@@ -218,22 +218,22 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static void Add(Format format, FormatInfo info)
         {
-            Table[(int)format] = info;
+            _table[(int)format] = info;
         }
 
         private static void Add(Format format, SizedInternalFormat sif)
         {
-            TableImage[(int)format] = sif;
+            _tableImage[(int)format] = sif;
         }
 
         public static FormatInfo GetFormatInfo(Format format)
         {
-            return Table[(int)format];
+            return _table[(int)format];
         }
 
         public static SizedInternalFormat GetImageFormat(Format format)
         {
-            return TableImage[(int)format];
+            return _tableImage[(int)format];
         }
     }
 }
