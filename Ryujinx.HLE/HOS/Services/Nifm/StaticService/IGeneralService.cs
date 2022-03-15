@@ -14,6 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
     {
         private GeneralServiceDetail _generalServiceDetail;
 
+        private IPInterfaceProperties _targetPropertiesCache = null;
+        private UnicastIPAddressInformation _targetAddressInfoCache = null;
+
         public IGeneralService()
         {
             _generalServiceDetail = new GeneralServiceDetail
@@ -21,6 +24,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                 ClientId                     = GeneralServiceManager.Count,
                 IsAnyInternetRequestAccepted = true // NOTE: Why not accept any internet request?
             };
+
+            NetworkChange.NetworkAddressChanged += new NetworkAddressChangedEventHandler(LocalInterfaceCacheHandler);
 
             GeneralServiceManager.Add(_generalServiceDetail);
         }
@@ -165,6 +170,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                 return (null, null);
             }
 
+            if (_targetPropertiesCache != null && _targetAddressInfoCache != null)
+            {
+                return (_targetPropertiesCache, _targetAddressInfoCache);
+            }
+
             IPInterfaceProperties       targetProperties  = null;
             UnicastIPAddressInformation targetAddressInfo = null;
 
@@ -194,13 +204,26 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                 }
             }
 
+            _targetPropertiesCache  = targetProperties;
+            _targetAddressInfoCache = targetAddressInfo;
+
             return (targetProperties, targetAddressInfo);
+        }
+
+        private void LocalInterfaceCacheHandler(object sender, EventArgs e)
+        {
+            Logger.Info?.Print(LogClass.ServiceNifm, $"NetworkAddress changed, invalidating cached data.");
+
+            _targetPropertiesCache  = null;
+            _targetAddressInfoCache = null;
         }
 
         protected override void Dispose(bool isDisposing)
         {
             if (isDisposing)
             {
+                NetworkChange.NetworkAddressChanged -= LocalInterfaceCacheHandler;
+
                 GeneralServiceManager.Remove(_generalServiceDetail.ClientId);
             }
         }
