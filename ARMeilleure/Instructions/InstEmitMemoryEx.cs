@@ -130,11 +130,6 @@ namespace ARMeilleure.Instructions
             bool ordered   = (accType & AccessType.Ordered)   != 0;
             bool exclusive = (accType & AccessType.Exclusive) != 0;
 
-            if (ordered)
-            {
-                EmitBarrier(context);
-            }
-
             Operand address = context.Copy(GetIntOrSP(context, op.Rn));
 
             Operand t = GetIntOrZR(context, op.Rt);
@@ -162,6 +157,11 @@ namespace ARMeilleure.Instructions
             else
             {
                 EmitStoreExclusive(context, address, t, exclusive, op.Size, op.Rs, a32: false);
+            }
+
+            if (ordered)
+            {
+                EmitBarrier(context);
             }
         }
 
