@@ -1478,6 +1478,11 @@ namespace Ryujinx.Graphics.OpenGL
             _currentComponentMasks |= componentMaskAtIndex;
         }
 
+        public void RestoreClipControl()
+        {
+            GL.ClipControl(_clipOrigin, _clipDepthMode);
+        }
+
         public void RestoreScissor0Enable()
         {
             if ((_scissorEnables & 1u) != 0)
@@ -1492,6 +1497,11 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 GL.Enable(EnableCap.RasterizerDiscard);
             }
+        }
+
+        public void RestoreViewport0()
+        {
+            GL.ViewportArray(0, 1, _viewportArray);
         }
 
         public bool TryHostConditionalRendering(ICounterEvent value, ulong compare, bool isEqual)
