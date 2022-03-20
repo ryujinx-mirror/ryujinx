@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
                 return ResultCode.NullArgument;
             }
 
-            if (_saveDataBackupSettingDatabase[userId])
+            if (_saveDataBackupSettingDatabase.TryGetValue(userId, out bool enabled) && enabled)
             {
                 context.ResponseData.Write((byte)1); // TODO: Determine value.
             }
