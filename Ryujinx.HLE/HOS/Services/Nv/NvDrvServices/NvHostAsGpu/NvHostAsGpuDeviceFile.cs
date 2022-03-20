@@ -232,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                         ulong virtualAddress = arguments.Offset + arguments.BufferOffset;
 
                         physicalAddress += arguments.BufferOffset;
-                        _asContext.Gmm.Map(physicalAddress, virtualAddress, arguments.MappingSize);
+                        _asContext.Gmm.Map(physicalAddress, virtualAddress, arguments.MappingSize, (PteKind)arguments.Kind);
 
                         return NvInternalResult.Success;
                     }
@@ -282,7 +282,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 {
                     if (_asContext.ValidateFixedBuffer(arguments.Offset, size, pageSize))
                     {
-                        _asContext.Gmm.Map(physicalAddress, arguments.Offset, size);
+                        _asContext.Gmm.Map(physicalAddress, arguments.Offset, size, (PteKind)arguments.Kind);
                     }
                     else
                     {
@@ -301,7 +301,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                         _memoryAllocator.AllocateRange(va, size, freeAddressStartPosition);
                     }
 
-                    _asContext.Gmm.Map(physicalAddress, va, size);
+                    _asContext.Gmm.Map(physicalAddress, va, size, (PteKind)arguments.Kind);
                     arguments.Offset = va;
                 }
 
@@ -366,26 +366,30 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
             for (int index = 0; index < arguments.Length; index++)
             {
-                ulong mapOffs = (ulong)arguments[index].MapOffset << 16;
-                ulong gpuVa = (ulong)arguments[index].GpuOffset << 16;
-                ulong size = (ulong)arguments[index].Pages << 16;
+                ref RemapArguments argument = ref arguments[index];
+                ulong gpuVa = (ulong)argument.GpuOffset << 16;
+                ulong size = (ulong)argument.Pages << 16;
+                int nvmapHandle = argument.NvMapHandle;
 
-                if (arguments[index].NvMapHandle == 0)
+                if (nvmapHandle == 0)
                 {
                     gmm.Unmap(gpuVa, size);
                 }
                 else
                 {
-                    NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(Owner, arguments[index].NvMapHandle);
+                    ulong mapOffs = (ulong)argument.MapOffset << 16;
+                    PteKind kind = (PteKind)argument.Kind;
+
+                    NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(Owner, nvmapHandle);
 
                     if (map == null)
                     {
-                        Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid NvMap handle 0x{arguments[index].NvMapHandle:x8}!");
+                        Logger.Warning?.Print(LogClass.ServiceNv, $"Invalid NvMap handle 0x{nvmapHandle:x8}!");
 
                         return NvInternalResult.InvalidInput;
                     }
 
-                    gmm.Map(mapOffs + map.Address, gpuVa, size);
+                    gmm.Map(mapOffs + map.Address, gpuVa, size, kind);
                 }
             }
 

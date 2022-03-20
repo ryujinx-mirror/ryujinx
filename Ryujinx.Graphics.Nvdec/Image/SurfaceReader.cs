@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Nvdec.Image
             int width = surface.Width;
             int height = surface.Height;
             int stride = surface.Stride;
- 
+
             ReadOnlySpan<byte> luma = gmm.DeviceGetSpan(lumaOffset, GetBlockLinearSize(width, height, 1));
 
             ReadLuma(surface.YPlane.AsSpan(), luma, stride, width, height);
