@@ -612,7 +612,7 @@ namespace Ryujinx.Graphics.OpenGL
                     _program?.Bind();
                     _unit0Sampler?.Bind(0);
 
-                    GL.ViewportArray(0, 1, _viewportArray);
+                    RestoreViewport0();
 
                     Enable(EnableCap.CullFace, _cullEnable);
                     Enable(EnableCap.StencilTest, _stencilTestEnable);
@@ -1501,7 +1501,10 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void RestoreViewport0()
         {
-            GL.ViewportArray(0, 1, _viewportArray);
+            if (_viewportArray.Length > 0)
+            {
+                GL.ViewportArray(0, 1, _viewportArray);
+            }
         }
 
         public bool TryHostConditionalRendering(ICounterEvent value, ulong compare, bool isEqual)
