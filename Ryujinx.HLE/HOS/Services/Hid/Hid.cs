@@ -55,9 +55,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             _storage = storage;
 
             SharedMemory = SharedMemory.Create();
+
+            InitDevices();
         }
 
-        public void InitDevices()
+        private void InitDevices()
         {
             DebugPad    = new DebugPadDevice(_device, true);
             Touchscreen = new TouchDevice(_device, true);

@@ -1,5 +1,5 @@
-﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.FileSystem;
+﻿using LibHac.Ncm;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.Services.Nim.ShopServiceAccessServerInterface;
 

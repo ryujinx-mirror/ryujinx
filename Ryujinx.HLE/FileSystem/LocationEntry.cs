@@ -1,6 +1,6 @@
 ﻿using LibHac.FsSystem;
 
-namespace Ryujinx.HLE.FileSystem.Content
+namespace Ryujinx.HLE.FileSystem
 {
     public struct LocationEntry
     {

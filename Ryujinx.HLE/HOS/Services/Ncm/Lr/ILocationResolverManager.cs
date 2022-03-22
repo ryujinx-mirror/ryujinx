@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.FileSystem;
+﻿using LibHac.Ncm;
 using Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager;
 
 namespace Ryujinx.HLE.HOS.Services.Ncm.Lr

@@ -8,7 +8,6 @@ namespace Ryujinx.HLE.FileSystem
 {
     public class EncryptedFileSystemCreator : IEncryptedFileSystemCreator
     {
-
         public Result Create(ref SharedRef<IFileSystem> outEncryptedFileSystem,
             ref SharedRef<IFileSystem> baseFileSystem, IEncryptedFileSystemCreator.KeyId idIndex,
             in EncryptionSeed encryptionSeed)
@@ -18,7 +17,7 @@ namespace Ryujinx.HLE.FileSystem
                 return ResultFs.InvalidArgument.Log();
             }
 
-            // Todo: Reenable when AesXtsFileSystem is fixed
+            // TODO: Reenable when AesXtsFileSystem is fixed.
             outEncryptedFileSystem = SharedRef<IFileSystem>.CreateMove(ref baseFileSystem);
 
             return Result.Success;

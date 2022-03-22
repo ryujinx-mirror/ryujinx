@@ -20,7 +20,6 @@ using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Headless.SDL2.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Input;
@@ -29,7 +28,6 @@ using Ryujinx.Input.SDL2;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 

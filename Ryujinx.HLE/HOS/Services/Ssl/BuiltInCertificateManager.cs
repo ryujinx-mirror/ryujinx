@@ -3,13 +3,13 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
+using LibHac.Ncm;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Services.Ssl.Types;
 using System;
 using System.Collections.Generic;
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 
         public string GetCertStoreTitleContentPath()
         {
-            return _contentManager.GetInstalledContentPath(CertStoreTitleId, StorageId.NandSystem, NcaContentType.Data);
+            return _contentManager.GetInstalledContentPath(CertStoreTitleId, StorageId.BuiltInSystem, NcaContentType.Data);
         }
 
         public bool HasCertStoreTitle()

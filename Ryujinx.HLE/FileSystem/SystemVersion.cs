@@ -1,8 +1,7 @@
 using Ryujinx.HLE.Utilities;
 using System.IO;
-using System.Text;
 
-namespace Ryujinx.HLE.FileSystem.Content
+namespace Ryujinx.HLE.FileSystem
 {
     public class SystemVersion
     {

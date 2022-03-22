@@ -20,7 +20,7 @@ using System.IO.Compression;
 using System.Linq;
 using Path = System.IO.Path;
 
-namespace Ryujinx.HLE.FileSystem.Content
+namespace Ryujinx.HLE.FileSystem
 {
     public class ContentManager
     {
@@ -110,8 +110,8 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                     try
                     {
-                        contentPathString   = LocationHelper.GetContentRoot(storageId);
-                        contentDirectory    = LocationHelper.GetRealPath(_virtualFileSystem, contentPathString);
+                        contentPathString   = ContentPath.GetContentPath(storageId);
+                        contentDirectory    = ContentPath.GetRealPath(_virtualFileSystem, contentPathString);
                         registeredDirectory = Path.Combine(contentDirectory, "registered");
                     }
                     catch (NotSupportedException)
@@ -367,8 +367,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             {
                 LocationEntry locationEntry = GetLocation(titleId, contentType, storageId);
 
-                return locationEntry.ContentPath != null ?
-                    LocationHelper.GetStorageId(locationEntry.ContentPath) : StorageId.None;
+                return locationEntry.ContentPath != null ? ContentPath.GetStorageId(locationEntry.ContentPath) : StorageId.None;
             }
         }
 
@@ -493,8 +492,8 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public void InstallFirmware(string firmwareSource)
         {
-            string contentPathString   = LocationHelper.GetContentRoot(StorageId.NandSystem);
-            string contentDirectory    = LocationHelper.GetRealPath(_virtualFileSystem, contentPathString);
+            string contentPathString   = ContentPath.GetContentPath(StorageId.BuiltInSystem);
+            string contentDirectory    = ContentPath.GetRealPath(_virtualFileSystem, contentPathString);
             string registeredDirectory = Path.Combine(contentDirectory, "registered");
             string temporaryDirectory  = Path.Combine(contentDirectory, "temp");
 
@@ -998,9 +997,9 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                     foreach (var entry in updateNcas)
                     {
-                        foreach (var nca in entry.Value)
+                        foreach (var (type, path) in entry.Value)
                         {
-                            extraNcas += nca.path + Environment.NewLine;
+                            extraNcas += path + Environment.NewLine;
                         }
                     }
 
@@ -1019,7 +1018,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             lock (_lock)
             {
-                var locationEnties = _locationEntries[StorageId.NandSystem];
+                var locationEnties = _locationEntries[StorageId.BuiltInSystem];
 
                 foreach (var entry in locationEnties)
                 {

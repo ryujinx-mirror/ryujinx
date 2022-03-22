@@ -1,18 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-
-using ARMeilleure.Translation;
+﻿using ARMeilleure.Translation;
 using ARMeilleure.Translation.PTC;
-
 using Gtk;
-
 using LibHac.Common;
 using LibHac.Common.Keys;
 using LibHac.FsSystem;
+using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.Dummy;
@@ -29,7 +21,6 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.SystemState;
@@ -42,9 +33,14 @@ using Ryujinx.Ui.Applet;
 using Ryujinx.Ui.Helper;
 using Ryujinx.Ui.Widgets;
 using Ryujinx.Ui.Windows;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
-
 using PtcLoadingState = ARMeilleure.Translation.PTC.PtcLoadingState;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 
@@ -1283,7 +1279,7 @@ namespace Ryujinx.Ui
 
         private void Load_Mii_Edit_Applet(object sender, EventArgs args)
         {
-            string contentPath = _contentManager.GetInstalledContentPath(0x0100000000001009, StorageId.NandSystem, NcaContentType.Program);
+            string contentPath = _contentManager.GetInstalledContentPath(0x0100000000001009, StorageId.BuiltInSystem, NcaContentType.Program);
 
             LoadApplication(contentPath);
         }

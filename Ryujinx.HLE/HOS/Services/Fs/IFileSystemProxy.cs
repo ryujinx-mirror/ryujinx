@@ -2,7 +2,6 @@ using LibHac;
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
-using LibHac.FsSrv;
 using LibHac.FsSrv.Impl;
 using LibHac.FsSystem;
 using LibHac.Ncm;
@@ -19,7 +18,6 @@ using static Ryujinx.HLE.Utilities.StringUtils;
 using IFileSystem = LibHac.FsSrv.Sf.IFileSystem;
 using IStorage = LibHac.FsSrv.Sf.IStorage;
 using RightsId = LibHac.Fs.RightsId;
-using StorageId = Ryujinx.HLE.FileSystem.StorageId;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
