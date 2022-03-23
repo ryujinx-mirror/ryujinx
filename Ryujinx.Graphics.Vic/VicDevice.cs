@@ -43,9 +43,9 @@ namespace Ryujinx.Graphics.Vic
                     continue;
                 }
 
-                var offsets = _state.State.SetSurfacexSlotx[i][0];
+                ref var offsets = ref _state.State.SetSurfacexSlotx[i];
 
-                using Surface src = SurfaceReader.Read(_rm, ref slot.SlotSurfaceConfig, ref offsets);
+                using Surface src = SurfaceReader.Read(_rm, ref slot.SlotConfig, ref slot.SlotSurfaceConfig, ref offsets);
 
                 Blender.BlendOne(output, src, ref slot);
             }

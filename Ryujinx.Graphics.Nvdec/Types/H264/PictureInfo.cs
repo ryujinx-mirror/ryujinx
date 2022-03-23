@@ -26,10 +26,10 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
         public uint Transform8x8ModeFlag;
         public uint LumaPitch;
         public uint ChromaPitch;
-        public uint LumaTopOffset;
-        public uint LumaBottomOffset;
+        public uint LumaTopFieldOffset;
+        public uint LumaBottomFieldOffset;
         public uint LumaFrameOffset;
-        public uint ChromaTopOffset;
+        public uint ChromaTopFieldOffset;
         public uint ChromaBottomFieldOffset;
         public uint ChromaFrameOffset;
         public uint HistBufferSize;

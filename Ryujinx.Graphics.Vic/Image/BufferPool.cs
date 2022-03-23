@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Vic.Image
         /// If the required buffer is larger than this, it won't be
         /// added to the pool to avoid long term high memory usage.
         /// </summary>
-        private const int MaxBufferSize = 2048 * 1280;
+        private const int MaxBufferSize = 2048 * 2048;
 
         private struct PoolItem
         {

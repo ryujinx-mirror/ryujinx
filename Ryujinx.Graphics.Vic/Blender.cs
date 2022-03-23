@@ -48,38 +48,10 @@ namespace Ryujinx.Graphics.Vic
 
             int one = 1 << (mtx.MatrixRShift + 8);
 
-
-            // NOTE: This is buggy on .NET 5.0.100, we use a workaround for now (see https://github.com/dotnet/runtime/issues/44704)
-            // TODO: Uncomment this when fixed.
-            //Vector128<int> col1 = Vector128.Create(mtx.MatrixCoeff00, mtx.MatrixCoeff10, mtx.MatrixCoeff20, 0);
-            //Vector128<int> col2 = Vector128.Create(mtx.MatrixCoeff01, mtx.MatrixCoeff11, mtx.MatrixCoeff21, 0);
-            //Vector128<int> col3 = Vector128.Create(mtx.MatrixCoeff02, mtx.MatrixCoeff12, mtx.MatrixCoeff22, one);
-            //Vector128<int> col4 = Vector128.Create(mtx.MatrixCoeff03, mtx.MatrixCoeff13, mtx.MatrixCoeff23, 0);
-
-            Vector128<int> col1 = new Vector128<int>();
-            Vector128<int> col2 = new Vector128<int>();
-            Vector128<int> col3 = new Vector128<int>();
-            Vector128<int> col4 = new Vector128<int>();
-
-            col1 = Sse41.Insert(col1, mtx.MatrixCoeff00, 0);
-            col1 = Sse41.Insert(col1, mtx.MatrixCoeff10, 1);
-            col1 = Sse41.Insert(col1, mtx.MatrixCoeff20, 2);
-            col1 = Sse41.Insert(col1, 0, 3);
-
-            col2 = Sse41.Insert(col2, mtx.MatrixCoeff01, 0);
-            col2 = Sse41.Insert(col2, mtx.MatrixCoeff11, 1);
-            col2 = Sse41.Insert(col2, mtx.MatrixCoeff21, 2);
-            col2 = Sse41.Insert(col2, 0, 3);
-
-            col3 = Sse41.Insert(col3, mtx.MatrixCoeff02, 0);
-            col3 = Sse41.Insert(col3, mtx.MatrixCoeff12, 1);
-            col3 = Sse41.Insert(col3, mtx.MatrixCoeff22, 2);
-            col3 = Sse41.Insert(col3, one, 3);
-
-            col4 = Sse41.Insert(col4, mtx.MatrixCoeff03, 0);
-            col4 = Sse41.Insert(col4, mtx.MatrixCoeff13, 1);
-            col4 = Sse41.Insert(col4, mtx.MatrixCoeff23, 2);
-            col4 = Sse41.Insert(col4, 0, 3);
+            Vector128<int> col1 = Vector128.Create(mtx.MatrixCoeff00, mtx.MatrixCoeff10, mtx.MatrixCoeff20, 0);
+            Vector128<int> col2 = Vector128.Create(mtx.MatrixCoeff01, mtx.MatrixCoeff11, mtx.MatrixCoeff21, 0);
+            Vector128<int> col3 = Vector128.Create(mtx.MatrixCoeff02, mtx.MatrixCoeff12, mtx.MatrixCoeff22, one);
+            Vector128<int> col4 = Vector128.Create(mtx.MatrixCoeff03, mtx.MatrixCoeff13, mtx.MatrixCoeff23, 0);
 
             Vector128<int> rShift = Vector128.CreateScalar(mtx.MatrixRShift);
             Vector128<ushort> clMin = Vector128.Create((ushort)slot.SlotConfig.SoftClampLow);

@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Vic.Types;
 using System;
@@ -12,24 +12,32 @@ namespace Ryujinx.Graphics.Vic.Image
 {
     static class SurfaceReader
     {
-        public static Surface Read(ResourceManager rm, ref SlotSurfaceConfig config, ref PlaneOffsets offsets)
+        public static Surface Read(
+            ResourceManager rm,
+            ref SlotConfig config,
+            ref SlotSurfaceConfig surfaceConfig,
+            ref Array8<PlaneOffsets> offsets)
         {
-            switch (config.SlotPixelFormat)
+            switch (surfaceConfig.SlotPixelFormat)
             {
-                case PixelFormat.Y8___V8U8_N420: return ReadNv12(rm, ref config, ref offsets);
+                case PixelFormat.Y8___V8U8_N420: return ReadNv12(rm, ref config, ref surfaceConfig, ref offsets);
             }
 
-            Logger.Error?.Print(LogClass.Vic, $"Unsupported pixel format \"{config.SlotPixelFormat}\".");
+            Logger.Error?.Print(LogClass.Vic, $"Unsupported pixel format \"{surfaceConfig.SlotPixelFormat}\".");
 
-            int lw = config.SlotLumaWidth + 1;
-            int lh = config.SlotLumaHeight + 1;
+            int lw = surfaceConfig.SlotLumaWidth + 1;
+            int lh = surfaceConfig.SlotLumaHeight + 1;
 
             return new Surface(rm.SurfacePool, lw, lh);
         }
 
-        private unsafe static Surface ReadNv12(ResourceManager rm, ref SlotSurfaceConfig config, ref PlaneOffsets offsets)
+        private unsafe static Surface ReadNv12(
+            ResourceManager rm,
+            ref SlotConfig config,
+            ref SlotSurfaceConfig surfaceConfig,
+            ref Array8<PlaneOffsets> offsets)
         {
-            InputSurface input = ReadSurface(rm.Gmm, ref config, ref offsets, 1, 2);
+            InputSurface input = ReadSurface(rm, ref config, ref surfaceConfig, ref offsets, 1, 2);
 
             int width = input.Width;
             int height = input.Height;
@@ -160,6 +168,8 @@ namespace Ryujinx.Graphics.Vic.Image
                 }
             }
 
+            input.Return(rm.BufferPool);
+
             return output;
         }
 
@@ -170,84 +180,227 @@ namespace Ryujinx.Graphics.Vic.Image
         }
 
         private static InputSurface ReadSurface(
-            MemoryManager gmm,
-            ref SlotSurfaceConfig config,
-            ref PlaneOffsets offsets,
+            ResourceManager rm,
+            ref SlotConfig config,
+            ref SlotSurfaceConfig surfaceConfig,
+            ref Array8<PlaneOffsets> offsets,
             int bytesPerPixel,
             int planes)
         {
             InputSurface surface = new InputSurface();
 
-            int gobBlocksInY = 1 << config.SlotBlkHeight;
+            surface.Initialize();
 
-            bool linear = config.SlotBlkKind == 0;
+            int gobBlocksInY = 1 << surfaceConfig.SlotBlkHeight;
 
-            int lw = config.SlotLumaWidth + 1;
-            int lh = config.SlotLumaHeight + 1;
+            bool linear = surfaceConfig.SlotBlkKind == 0;
 
-            int cw = config.SlotChromaWidth + 1;
-            int ch = config.SlotChromaHeight + 1;
+            int lw = surfaceConfig.SlotLumaWidth + 1;
+            int lh = surfaceConfig.SlotLumaHeight + 1;
+
+            int cw = surfaceConfig.SlotChromaWidth + 1;
+            int ch = surfaceConfig.SlotChromaHeight + 1;
+
+            // Interlaced inputs have double the height when deinterlaced.
+            int heightShift = config.FrameFormat.IsField() ? 1 : 0;
 
             surface.Width = lw;
-            surface.Height = lh;
+            surface.Height = lh << heightShift;
             surface.UvWidth = cw;
-            surface.UvHeight = ch;
+            surface.UvHeight = ch << heightShift;
 
             if (planes > 0)
             {
-                surface.Buffer0 = ReadBuffer(gmm, offsets.LumaOffset, linear, lw, lh, bytesPerPixel, gobBlocksInY);
+                surface.SetBuffer0(ReadBuffer(rm, ref config, ref offsets, linear, 0, lw, lh, bytesPerPixel, gobBlocksInY));
             }
 
             if (planes > 1)
             {
-                surface.Buffer1 = ReadBuffer(gmm, offsets.ChromaUOffset, linear, cw, ch, planes == 2 ? 2 : 1, gobBlocksInY);
+                surface.SetBuffer1(ReadBuffer(rm, ref config, ref offsets, linear, 1, cw, ch, planes == 2 ? 2 : 1, gobBlocksInY));
             }
 
             if (planes > 2)
             {
-                surface.Buffer2 = ReadBuffer(gmm, offsets.ChromaVOffset, linear, cw, ch, 1, gobBlocksInY);
+                surface.SetBuffer2(ReadBuffer(rm, ref config, ref offsets, linear, 2, cw, ch, 1, gobBlocksInY));
             }
 
             return surface;
         }
 
-        private static ReadOnlySpan<byte> ReadBuffer(
-            MemoryManager gmm,
-            uint offset,
+        private static RentedBuffer ReadBuffer(
+            ResourceManager rm,
+            ref SlotConfig config,
+            ref Array8<PlaneOffsets> offsets,
             bool linear,
+            int plane,
+            int width,
+            int height,
+            int bytesPerPixel,
+            int gobBlocksInY)
+        {
+            FrameFormat frameFormat = config.FrameFormat;
+            bool isLuma = plane == 0;
+            bool isField = frameFormat.IsField();
+            bool isTopField = frameFormat.IsTopField(isLuma);
+            int stride = GetPitch(width, bytesPerPixel);
+            uint offset = GetOffset(ref offsets[0], plane);
+
+            int dstStart = 0;
+            int dstStride = stride;
+
+            if (isField)
+            {
+                dstStart = isTopField ? 0 : stride;
+                dstStride = stride * 2;
+            }
+
+            RentedBuffer buffer;
+
+            if (linear)
+            {
+                buffer = ReadBufferLinear(rm, offset, width, height, dstStart, dstStride, bytesPerPixel);
+            }
+            else
+            {
+                buffer = ReadBufferBlockLinear(rm, offset, width, height, dstStart, dstStride, bytesPerPixel, gobBlocksInY);
+            }
+
+            if (isField || frameFormat.IsInterlaced())
+            {
+                RentedBuffer prevBuffer = RentedBuffer.Empty;
+                RentedBuffer nextBuffer = RentedBuffer.Empty;
+
+                if (config.PrevFieldEnable)
+                {
+                    prevBuffer = ReadBufferNoDeinterlace(rm, ref offsets[1], linear, plane, width, height, bytesPerPixel, gobBlocksInY);
+                }
+
+                if (config.NextFieldEnable)
+                {
+                    nextBuffer = ReadBufferNoDeinterlace(rm, ref offsets[2], linear, plane, width, height, bytesPerPixel, gobBlocksInY);
+                }
+
+                int w = width * bytesPerPixel;
+
+                switch (config.DeinterlaceMode)
+                {
+                    case DeinterlaceMode.Weave:
+                        Scaler.DeinterlaceWeave(buffer.Data, prevBuffer.Data, w, stride, isTopField);
+                        break;
+                    case DeinterlaceMode.BobField:
+                        Scaler.DeinterlaceBob(buffer.Data, w, stride, isTopField);
+                        break;
+                    case DeinterlaceMode.Bob:
+                        bool isCurrentTop = isLuma ? config.IsEven : config.ChromaEven;
+                        Scaler.DeinterlaceBob(buffer.Data, w, stride, isCurrentTop ^ frameFormat.IsInterlacedBottomFirst());
+                        break;
+                    case DeinterlaceMode.NewBob:
+                    case DeinterlaceMode.Disi1:
+                        Scaler.DeinterlaceMotionAdaptive(buffer.Data, prevBuffer.Data, nextBuffer.Data, w, stride, isTopField);
+                        break;
+                    case DeinterlaceMode.WeaveLumaBobFieldChroma:
+                        if (isLuma)
+                        {
+                            Scaler.DeinterlaceWeave(buffer.Data, prevBuffer.Data, w, stride, isTopField);
+                        }
+                        else
+                        {
+                            Scaler.DeinterlaceBob(buffer.Data, w, stride, isTopField);
+                        }
+                        break;
+                    default:
+                        Logger.Error?.Print(LogClass.Vic, $"Unsupported deinterlace mode \"{config.DeinterlaceMode}\".");
+                        break;
+                }
+
+                prevBuffer.Return(rm.BufferPool);
+                nextBuffer.Return(rm.BufferPool);
+            }
+
+            return buffer;
+        }
+
+        private static uint GetOffset(ref PlaneOffsets offsets, int plane)
+        {
+            return plane switch
+            {
+                0 => offsets.LumaOffset,
+                1 => offsets.ChromaUOffset,
+                2 => offsets.ChromaVOffset,
+                _ => throw new ArgumentOutOfRangeException(nameof(plane))
+            };
+        }
+
+        private static RentedBuffer ReadBufferNoDeinterlace(
+            ResourceManager rm,
+            ref PlaneOffsets offsets,
+            bool linear,
+            int plane,
             int width,
             int height,
             int bytesPerPixel,
             int gobBlocksInY)
         {
             int stride = GetPitch(width, bytesPerPixel);
+            uint offset = GetOffset(ref offsets, plane);
 
             if (linear)
             {
-                return gmm.GetSpan(ExtendOffset(offset), stride * height);
+                return ReadBufferLinear(rm, offset, width, height, 0, stride, bytesPerPixel);
             }
 
-            return ReadBuffer(gmm, offset, width, height, stride, bytesPerPixel, gobBlocksInY);
+            return ReadBufferBlockLinear(rm, offset, width, height, 0, stride, bytesPerPixel, gobBlocksInY);
         }
 
-        private static ReadOnlySpan<byte> ReadBuffer(
-            MemoryManager gmm,
+        private static RentedBuffer ReadBufferLinear(
+            ResourceManager rm,
             uint offset,
             int width,
             int height,
+            int dstStart,
+            int dstStride,
+            int bytesPerPixel)
+        {
+            int srcStride = GetPitch(width, bytesPerPixel);
+            int inSize = srcStride * height;
+
+            ReadOnlySpan<byte> src = rm.Gmm.GetSpan(ExtendOffset(offset), inSize);
+
+            int outSize = dstStride * height;
+            int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);
+            Span<byte> dst = buffer;
+            dst = dst.Slice(0, outSize);
+
+            for (int y = 0; y < height; y++)
+            {
+                src.Slice(y * srcStride, srcStride).CopyTo(dst.Slice(dstStart + y * dstStride, srcStride));
+            }
+
+            return new RentedBuffer(dst, bufferIndex);
+        }
+
+        private static RentedBuffer ReadBufferBlockLinear(
+            ResourceManager rm,
+            uint offset,
+            int width,
+            int height,
+            int dstStart,
             int dstStride,
             int bytesPerPixel,
             int gobBlocksInY)
         {
             int inSize = GetBlockLinearSize(width, height, bytesPerPixel, gobBlocksInY);
 
-            ReadOnlySpan<byte> src = gmm.GetSpan(ExtendOffset(offset), inSize);
+            ReadOnlySpan<byte> src = rm.Gmm.GetSpan(ExtendOffset(offset), inSize);
 
-            Span<byte> dst = new byte[dstStride * height];
+            int outSize = dstStride * height;
+            int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);
+            Span<byte> dst = buffer;
+            dst = dst.Slice(0, outSize);
 
-            LayoutConverter.ConvertBlockLinearToLinear(dst, width, height, dstStride, bytesPerPixel, gobBlocksInY, src);
+            LayoutConverter.ConvertBlockLinearToLinear(dst.Slice(dstStart), width, height, dstStride, bytesPerPixel, gobBlocksInY, src);
 
-            return dst;
+            return new RentedBuffer(dst, bufferIndex);
         }
     }
 }

@@ -27,7 +27,7 @@
         public bool PrevMotionFieldEnable => _word0.Extract(13);
         public bool PpMotionFieldEnable => _word0.Extract(14);
         public bool CombMotionFieldEnable => _word0.Extract(15);
-        public int FrameFormat => _word0.Extract(16, 4);
+        public FrameFormat FrameFormat => (FrameFormat)_word0.Extract(16, 4);
         public int FilterLengthY => _word0.Extract(20, 2);
         public int FilterLengthX => _word0.Extract(22, 2);
         public int Panoramic => _word0.Extract(24, 12);
@@ -36,7 +36,7 @@
         public int FilterDetail => _word1.Extract(74, 10);
         public int ChromaNoise => _word1.Extract(84, 10);
         public int ChromaDetail => _word1.Extract(94, 10);
-        public int DeinterlaceMode => _word1.Extract(104, 4);
+        public DeinterlaceMode DeinterlaceMode => (DeinterlaceMode)_word1.Extract(104, 4);
         public int MotionAccumWeight => _word1.Extract(108, 3);
         public int NoiseIir => _word1.Extract(111, 11);
         public int LightLevel => _word1.Extract(122, 4);

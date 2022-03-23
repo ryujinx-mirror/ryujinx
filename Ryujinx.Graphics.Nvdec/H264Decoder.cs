@@ -31,7 +31,24 @@ namespace Ryujinx.Graphics.Nvdec
 
             if (decoder.Decode(ref info, outputSurface, bitstream))
             {
-                SurfaceWriter.Write(rm.Gmm, outputSurface, lumaOffset, chromaOffset);
+                if (outputSurface.Field == FrameField.Progressive)
+                {
+                    SurfaceWriter.Write(
+                        rm.Gmm,
+                        outputSurface,
+                        lumaOffset   + pictureInfo.LumaFrameOffset,
+                        chromaOffset + pictureInfo.ChromaFrameOffset);
+                }
+                else
+                {
+                    SurfaceWriter.WriteInterlaced(
+                        rm.Gmm,
+                        outputSurface,
+                        lumaOffset   + pictureInfo.LumaTopFieldOffset,
+                        chromaOffset + pictureInfo.ChromaTopFieldOffset,
+                        lumaOffset   + pictureInfo.LumaBottomFieldOffset,
+                        chromaOffset + pictureInfo.ChromaBottomFieldOffset);
+                }
             }
 
             rm.Cache.Put(outputSurface);

@@ -15,11 +15,13 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg
         public Plane UPlane => new Plane((IntPtr)Frame->data[1], UvStride * UvHeight);
         public Plane VPlane => new Plane((IntPtr)Frame->data[2], UvStride * UvHeight);
 
+        public FrameField Field => Frame->interlaced_frame != 0 ? FrameField.Interlaced : FrameField.Progressive;
+
         public int Width => Frame->width;
         public int Height => Frame->height;
         public int Stride => Frame->linesize[0];
-        public int UvWidth => (Frame->width + 1) >> 1;
-        public int UvHeight => (Frame->height + 1) >> 1;
+        public int UvWidth => (Width + 1) >> 1;
+        public int UvHeight => (Height + 1) >> 1;
         public int UvStride => Frame->linesize[1];
 
         public Surface(int width, int height)

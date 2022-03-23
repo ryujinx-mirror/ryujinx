@@ -38,6 +38,55 @@ namespace Ryujinx.Graphics.Nvdec.Image
                 surface.UvHeight);
         }
 
+        public static void WriteInterlaced(
+            MemoryManager gmm,
+            ISurface surface,
+            uint lumaTopOffset,
+            uint chromaTopOffset,
+            uint lumaBottomOffset,
+            uint chromaBottomOffset)
+        {
+            int lumaSize = GetBlockLinearSize(surface.Width, surface.Height / 2, 1);
+
+            using var lumaTop = gmm.GetWritableRegion(ExtendOffset(lumaTopOffset), lumaSize);
+            using var lumaBottom = gmm.GetWritableRegion(ExtendOffset(lumaBottomOffset), lumaSize);
+
+            WriteLuma(
+                lumaTop.Memory.Span,
+                surface.YPlane.AsSpan(),
+                surface.Stride * 2,
+                surface.Width,
+                surface.Height / 2);
+
+            WriteLuma(
+                lumaBottom.Memory.Span,
+                surface.YPlane.AsSpan().Slice(surface.Stride),
+                surface.Stride * 2,
+                surface.Width,
+                surface.Height / 2);
+
+            int chromaSize = GetBlockLinearSize(surface.UvWidth, surface.UvHeight / 2, 2);
+
+            using var chromaTop = gmm.GetWritableRegion(ExtendOffset(chromaTopOffset), chromaSize);
+            using var chromaBottom = gmm.GetWritableRegion(ExtendOffset(chromaBottomOffset), chromaSize);
+
+            WriteChroma(
+                chromaTop.Memory.Span,
+                surface.UPlane.AsSpan(),
+                surface.VPlane.AsSpan(),
+                surface.UvStride * 2,
+                surface.UvWidth,
+                surface.UvHeight / 2);
+
+            WriteChroma(
+                chromaBottom.Memory.Span,
+                surface.UPlane.AsSpan().Slice(surface.UvStride),
+                surface.VPlane.AsSpan().Slice(surface.UvStride),
+                surface.UvStride * 2,
+                surface.UvWidth,
+                surface.UvHeight / 2);
+        }
+
         private static void WriteLuma(Span<byte> dst, ReadOnlySpan<byte> src, int srcStride, int width, int height)
         {
             LayoutConverter.ConvertLinearToBlockLinear(dst, width, height, srcStride, 1, 2, src);
