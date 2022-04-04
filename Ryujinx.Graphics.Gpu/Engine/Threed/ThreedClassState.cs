@@ -730,7 +730,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public int PatchVertices;
         public fixed uint ReservedDD0[4];
         public uint TextureBarrier;
-        public fixed uint ReservedDE4[7];
+        public uint WatchdogTimer;
+        public Boolean32 PrimitiveRestartDrawArrays;
+        public fixed uint ReservedDEC[5];
         public Array16<ScissorState> ScissorState;
         public fixed uint ReservedF00[21];
         public StencilBackMasks StencilBackMasks;

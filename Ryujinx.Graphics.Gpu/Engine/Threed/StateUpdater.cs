@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public const int RasterizerStateIndex = 1;
         public const int ScissorStateIndex = 2;
         public const int VertexBufferStateIndex = 3;
+        public const int PrimitiveRestartStateIndex = 4;
 
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
@@ -74,6 +75,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.VertexBufferInstanced),
                     nameof(ThreedClassState.VertexBufferState),
                     nameof(ThreedClassState.VertexBufferEndAddress)),
+
+                new StateUpdateCallbackEntry(UpdatePrimitiveRestartState,
+                    nameof(ThreedClassState.PrimitiveRestartDrawArrays),
+                    nameof(ThreedClassState.PrimitiveRestartState)),
 
                 new StateUpdateCallbackEntry(UpdateTessellationState,
                     nameof(ThreedClassState.TessOuterLevel),
@@ -140,8 +145,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.PointSpriteEnable),
                     nameof(ThreedClassState.PointCoordReplace)),
 
-                new StateUpdateCallbackEntry(UpdatePrimitiveRestartState, nameof(ThreedClassState.PrimitiveRestartState)),
-
                 new StateUpdateCallbackEntry(UpdateIndexBufferState,
                     nameof(ThreedClassState.IndexBufferState),
                     nameof(ThreedClassState.IndexBufferCount)),
@@ -197,6 +200,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             if (_drawState.DrawIndexed != _prevDrawIndexed)
             {
                 _updateTracker.ForceDirty(VertexBufferStateIndex);
+
+                // If PrimitiveRestartDrawArrays is false and this is a non-indexed draw, we need to ensure primitive restart is disabled.
+                // If PrimitiveRestartDrawArrays is false and this is a indexed draw, we need to ensure primitive restart enable matches GPU state.
+                // If PrimitiveRestartDrawArrays is true, then primitive restart enable should always match GPU state.
+                // That is because "PrimitiveRestartDrawArrays" is not configurable on the backend, it is always
+                // true on OpenGL and always false on Vulkan.
+                if (!_state.State.PrimitiveRestartDrawArrays && _state.State.PrimitiveRestartState.Enable)
+                {
+                    _updateTracker.ForceDirty(PrimitiveRestartStateIndex);
+                }
+
                 _prevDrawIndexed = _drawState.DrawIndexed;
             }
 
@@ -816,8 +830,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private void UpdatePrimitiveRestartState()
         {
             PrimitiveRestartState primitiveRestart = _state.State.PrimitiveRestartState;
+            bool enable = primitiveRestart.Enable && (_drawState.DrawIndexed || _state.State.PrimitiveRestartDrawArrays);
 
-            _context.Renderer.Pipeline.SetPrimitiveRestart(primitiveRestart.Enable, primitiveRestart.Index);
+            _context.Renderer.Pipeline.SetPrimitiveRestart(enable, primitiveRestart.Index);
         }
 
         /// <summary>
