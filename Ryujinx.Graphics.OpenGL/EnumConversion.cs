@@ -444,8 +444,8 @@ namespace Ryujinx.Graphics.OpenGL
                     return TextureTarget.Texture2DArray;
                 case Target.Texture2DMultisample:
                     return TextureTarget.Texture2DMultisample;
-                case Target.Rectangle:
-                    return TextureTarget.TextureRectangle;
+                case Target.Texture2DMultisampleArray:
+                    return TextureTarget.Texture2DMultisampleArray;
                 case Target.Cubemap:
                     return TextureTarget.TextureCubeMap;
                 case Target.CubemapArray:

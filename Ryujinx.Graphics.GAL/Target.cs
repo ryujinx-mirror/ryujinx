@@ -9,7 +9,6 @@ namespace Ryujinx.Graphics.GAL
         Texture2DArray,
         Texture2DMultisample,
         Texture2DMultisampleArray,
-        Rectangle,
         Cubemap,
         CubemapArray,
         TextureBuffer
