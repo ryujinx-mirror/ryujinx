@@ -70,6 +70,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             AppendLine("}" + suffix);
         }
 
+        public (TextureDescriptor, int) FindTextureDescriptor(AstTextureOperation texOp)
+        {
+            TextureDescriptor[] descriptors = Config.GetTextureDescriptors();
+
+            for (int i = 0; i < descriptors.Length; i++)
+            {
+                var descriptor = descriptors[i];
+
+                if (descriptor.CbufSlot == texOp.CbufSlot &&
+                    descriptor.HandleIndex == texOp.Handle &&
+                    descriptor.Format == texOp.Format)
+                {
+                    return (descriptor, i);
+                }
+            }
+
+            return (default, -1);
+        }
+
         private static int FindDescriptorIndex(TextureDescriptor[] array, AstTextureOperation texOp)
         {
             for (int i = 0; i < array.Length; i++)
