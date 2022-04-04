@@ -525,7 +525,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 int scissorW = screenScissorState.Width;
                 int scissorH = screenScissorState.Height;
 
-                if (clearAffectedByScissor)
+                if (clearAffectedByScissor && _state.State.ScissorState[0].Enable)
                 {
                     ref var scissorState = ref _state.State.ScissorState[0];
 
