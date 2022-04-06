@@ -198,7 +198,7 @@ namespace Ryujinx.Audio.Renderer.Server
             return (uint)1853.2f;
         }
 
-        public uint Estimate(DelayCommand command)
+        public virtual uint Estimate(DelayCommand command)
         {
             Debug.Assert(_sampleCount == 160 || _sampleCount == 240);
 
@@ -272,7 +272,7 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
-        public uint Estimate(ReverbCommand command)
+        public virtual uint Estimate(ReverbCommand command)
         {
             Debug.Assert(_sampleCount == 160 || _sampleCount == 240);
 
@@ -346,7 +346,7 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
-        public uint Estimate(Reverb3dCommand command)
+        public virtual uint Estimate(Reverb3dCommand command)
         {
             Debug.Assert(_sampleCount == 160 || _sampleCount == 240);
 

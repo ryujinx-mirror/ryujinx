@@ -445,5 +445,39 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 ToIntSlow(output, input, sampleCount);
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RemapLegacyChannelEffectMappingToChannelResourceMapping(bool isSupported, Span<ushort> bufferIndices)
+        {
+            if (!isSupported && bufferIndices.Length == 6)
+            {
+                ushort backLeft = bufferIndices[2];
+                ushort backRight = bufferIndices[3];
+                ushort frontCenter = bufferIndices[4];
+                ushort lowFrequency = bufferIndices[5];
+
+                bufferIndices[2] = frontCenter;
+                bufferIndices[3] = lowFrequency;
+                bufferIndices[4] = backLeft;
+                bufferIndices[5] = backRight;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RemapChannelResourceMappingToLegacy(bool isSupported, Span<ushort> bufferIndices)
+        {
+            if (isSupported && bufferIndices.Length == 6)
+            {
+                ushort frontCenter = bufferIndices[2];
+                ushort lowFrequency = bufferIndices[3];
+                ushort backLeft = bufferIndices[4];
+                ushort backRight = bufferIndices[5];
+
+                bufferIndices[2] = backLeft;
+                bufferIndices[3] = backRight;
+                bufferIndices[4] = frontCenter;
+                bufferIndices[5] = lowFrequency;
+            }
+        }
     }
 }

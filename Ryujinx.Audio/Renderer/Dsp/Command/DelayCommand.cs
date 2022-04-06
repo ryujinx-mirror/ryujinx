@@ -45,7 +45,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private const int FixedPointPrecision = 14;
 
-        public DelayCommand(uint bufferOffset, DelayParameter parameter, Memory<DelayState> state, bool isEnabled, ulong workBuffer, int nodeId)
+        public DelayCommand(uint bufferOffset, DelayParameter parameter, Memory<DelayState> state, bool isEnabled, ulong workBuffer, int nodeId, bool newEffectChannelMappingSupported)
         {
             Enabled = true;
             NodeId = nodeId;
@@ -63,6 +63,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 InputBufferIndices[i] = (ushort)(bufferOffset + Parameter.Input[i]);
                 OutputBufferIndices[i] = (ushort)(bufferOffset + Parameter.Output[i]);
             }
+
+            // NOTE: We do the opposite as Nintendo here for now to restore previous behaviour
+            // TODO: Update delay processing and remove this to use RemapLegacyChannelEffectMappingToChannelResourceMapping.
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, InputBufferIndices);
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, OutputBufferIndices);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

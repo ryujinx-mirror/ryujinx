@@ -483,31 +483,31 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
-        private void GenerateDelayEffect(uint bufferOffset, DelayEffect effect, int nodeId)
+        private void GenerateDelayEffect(uint bufferOffset, DelayEffect effect, int nodeId, bool newEffectChannelMappingSupported)
         {
             Debug.Assert(effect.Type == EffectType.Delay);
 
             ulong workBuffer = effect.GetWorkBuffer(-1);
 
-            _commandBuffer.GenerateDelayEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId);
+            _commandBuffer.GenerateDelayEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId, newEffectChannelMappingSupported);
         }
 
-        private void GenerateReverbEffect(uint bufferOffset, ReverbEffect effect, int nodeId, bool isLongSizePreDelaySupported)
+        private void GenerateReverbEffect(uint bufferOffset, ReverbEffect effect, int nodeId, bool isLongSizePreDelaySupported, bool newEffectChannelMappingSupported)
         {
             Debug.Assert(effect.Type == EffectType.Reverb);
 
             ulong workBuffer = effect.GetWorkBuffer(-1);
 
-            _commandBuffer.GenerateReverbEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId, isLongSizePreDelaySupported);
+            _commandBuffer.GenerateReverbEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId, isLongSizePreDelaySupported, newEffectChannelMappingSupported);
         }
 
-        private void GenerateReverb3dEffect(uint bufferOffset, Reverb3dEffect effect, int nodeId)
+        private void GenerateReverb3dEffect(uint bufferOffset, Reverb3dEffect effect, int nodeId, bool newEffectChannelMappingSupported)
         {
             Debug.Assert(effect.Type == EffectType.Reverb3d);
 
             ulong workBuffer = effect.GetWorkBuffer(-1);
 
-            _commandBuffer.GenerateReverb3dEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId);
+            _commandBuffer.GenerateReverb3dEffect(bufferOffset, effect.Parameter, effect.State, effect.IsEnabled, workBuffer, nodeId, newEffectChannelMappingSupported);
         }
 
         private void GenerateBiquadFilterEffect(uint bufferOffset, BiquadFilterEffect effect, int nodeId)
@@ -650,13 +650,13 @@ namespace Ryujinx.Audio.Renderer.Server
                     GenerateAuxEffect(mix.BufferOffset, (AuxiliaryBufferEffect)effect, nodeId);
                     break;
                 case EffectType.Delay:
-                    GenerateDelayEffect(mix.BufferOffset, (DelayEffect)effect, nodeId);
+                    GenerateDelayEffect(mix.BufferOffset, (DelayEffect)effect, nodeId, _rendererContext.BehaviourContext.IsNewEffectChannelMappingSupported());
                     break;
                 case EffectType.Reverb:
-                    GenerateReverbEffect(mix.BufferOffset, (ReverbEffect)effect, nodeId, mix.IsLongSizePreDelaySupported);
+                    GenerateReverbEffect(mix.BufferOffset, (ReverbEffect)effect, nodeId, mix.IsLongSizePreDelaySupported, _rendererContext.BehaviourContext.IsNewEffectChannelMappingSupported());
                     break;
                 case EffectType.Reverb3d:
-                    GenerateReverb3dEffect(mix.BufferOffset, (Reverb3dEffect)effect, nodeId);
+                    GenerateReverb3dEffect(mix.BufferOffset, (Reverb3dEffect)effect, nodeId, _rendererContext.BehaviourContext.IsNewEffectChannelMappingSupported());
                     break;
                 case EffectType.BiquadFilter:
                     GenerateBiquadFilterEffect(mix.BufferOffset, (BiquadFilterEffect)effect, nodeId);

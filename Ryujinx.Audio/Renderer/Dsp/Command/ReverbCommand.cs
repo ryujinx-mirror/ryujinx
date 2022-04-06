@@ -66,7 +66,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private const int FixedPointPrecision = 14;
 
-        public ReverbCommand(uint bufferOffset, ReverbParameter parameter, Memory<ReverbState> state, bool isEnabled, ulong workBuffer, int nodeId, bool isLongSizePreDelaySupported)
+        public ReverbCommand(uint bufferOffset, ReverbParameter parameter, Memory<ReverbState> state, bool isEnabled, ulong workBuffer, int nodeId, bool isLongSizePreDelaySupported, bool newEffectChannelMappingSupported)
         {
             Enabled = true;
             IsEffectEnabled = isEnabled;
@@ -85,6 +85,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             }
 
             IsLongSizePreDelaySupported = isLongSizePreDelaySupported;
+
+            // NOTE: We do the opposite as Nintendo here for now to restore previous behaviour
+            // TODO: Update reverb processing and remove this to use RemapLegacyChannelEffectMappingToChannelResourceMapping.
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, InputBufferIndices);
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, OutputBufferIndices);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -214,7 +219,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 if (isSurround)
                 {
-                    outputValues[4] += state.BackLeftDelayLine.Update((feedbackOutputValues[2] - feedbackOutputValues[3]) * 0.5f);
+                    outputValues[4] += state.FrontCenterDelayLine.Update((feedbackOutputValues[2] - feedbackOutputValues[3]) * 0.5f);
                 }
 
                 for (int channelIndex = 0; channelIndex < Parameter.ChannelCount; channelIndex++)

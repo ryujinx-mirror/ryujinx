@@ -97,7 +97,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
         public DelayLine[] FdnDelayLines { get; }
         public DecayDelay[] DecayDelays { get; }
         public DelayLine PreDelayLine { get; }
-        public DelayLine BackLeftDelayLine { get; }
+        public DelayLine FrontCenterDelayLine { get; }
         public uint[] EarlyDelayTime { get; }
         public float[] EarlyGain { get; }
         public uint PreDelayLineDelayTime { get; private set; }
@@ -149,7 +149,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             }
 
             PreDelayLine = new DelayLine(sampleRate, preDelayTimeMax);
-            BackLeftDelayLine = new DelayLine(sampleRate, 5.0f);
+            FrontCenterDelayLine = new DelayLine(sampleRate, 5.0f);
 
             UpdateParameter(ref parameter);
         }
