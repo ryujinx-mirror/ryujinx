@@ -767,6 +767,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 throw new InvalidOperationException("Out of handles!");
             }
 
+            // Games expect this event to be signaled after calling this function
+            evnt.ReadableEvent.Signal();
+
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, npadId, npadStyleSet });
