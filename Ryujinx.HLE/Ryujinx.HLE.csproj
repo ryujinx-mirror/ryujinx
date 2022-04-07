@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Concentus" Version="1.1.7" />
-    <PackageReference Include="LibHac" Version="0.16.0" />
+    <PackageReference Include="LibHac" Version="0.16.1" />
     <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta11" />
