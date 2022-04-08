@@ -1136,17 +1136,33 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="range">Texture view physical memory ranges</param>
         /// <param name="layerSize">Layer size on the given texture</param>
         /// <param name="caps">Host GPU capabilities</param>
+        /// <param name="allowMs">Indicates that multisample textures are allowed to match non-multisample requested textures</param>
         /// <param name="firstLayer">Texture view initial layer on this texture</param>
         /// <param name="firstLevel">Texture view first mipmap level on this texture</param>
         /// <returns>The level of compatiblilty a view with the given parameters created from this texture has</returns>
-        public TextureViewCompatibility IsViewCompatible(TextureInfo info, MultiRange range, int layerSize, Capabilities caps, out int firstLayer, out int firstLevel)
+        public TextureViewCompatibility IsViewCompatible(TextureInfo info, MultiRange range, int layerSize, Capabilities caps, bool allowMs, out int firstLayer, out int firstLevel)
         {
             TextureViewCompatibility result = TextureViewCompatibility.Full;
 
             result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewFormatCompatible(Info, info, caps));
             if (result != TextureViewCompatibility.Incompatible)
             {
-                result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewTargetCompatible(Info, info));
+                bool msTargetCompatible = false;
+
+                if (allowMs)
+                {
+                    msTargetCompatible = Info.Target == Target.Texture2DMultisample && info.Target == Target.Texture2D;
+                }
+
+                if (!msTargetCompatible)
+                {
+                    result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewTargetCompatible(Info, info));
+
+                    if (Info.SamplesInX != info.SamplesInX || Info.SamplesInY != info.SamplesInY)
+                    {
+                        result = TextureViewCompatibility.Incompatible;
+                    }
+                }
 
                 if (result == TextureViewCompatibility.Full && Info.FormatInfo.Format != info.FormatInfo.Format && !_context.Capabilities.SupportsMismatchingViewFormat)
                 {
@@ -1155,11 +1171,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Create a copy dependency to avoid this issue.
 
                     result = TextureViewCompatibility.CopyOnly;
-                }
-
-                if (Info.SamplesInX != info.SamplesInX || Info.SamplesInY != info.SamplesInY)
-                {
-                    result = TextureViewCompatibility.Incompatible;
                 }
             }
 

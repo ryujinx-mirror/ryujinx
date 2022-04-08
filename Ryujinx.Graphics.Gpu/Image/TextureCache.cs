@@ -542,7 +542,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             for (int index = 0; index < overlapsCount; index++)
             {
                 Texture overlap = _textureOverlaps[index];
-                TextureViewCompatibility overlapCompatibility = overlap.IsViewCompatible(info, range.Value, sizeInfo.LayerSize, _context.Capabilities, out int firstLayer, out int firstLevel);
+                TextureViewCompatibility overlapCompatibility = overlap.IsViewCompatible(
+                    info,
+                    range.Value,
+                    sizeInfo.LayerSize,
+                    _context.Capabilities,
+                    flags.HasFlag(TextureSearchFlags.ForCopy),
+                    out int firstLayer,
+                    out int firstLevel);
 
                 if (overlapCompatibility == TextureViewCompatibility.Full)
                 {
@@ -650,7 +657,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Texture overlap = _textureOverlaps[index];
                     bool overlapInCache = overlap.CacheNode != null;
 
-                    TextureViewCompatibility compatibility = texture.IsViewCompatible(overlap.Info, overlap.Range, overlap.LayerSize, _context.Capabilities, out int firstLayer, out int firstLevel);
+                    TextureViewCompatibility compatibility = texture.IsViewCompatible(
+                        overlap.Info,
+                        overlap.Range,
+                        overlap.LayerSize,
+                        _context.Capabilities,
+                        false,
+                        out int firstLayer,
+                        out int firstLevel);
 
                     if (overlap.IsView && compatibility == TextureViewCompatibility.Full)
                     {
@@ -1000,20 +1014,34 @@ namespace Ryujinx.Graphics.Gpu.Image
                 depthOrLayers = info.DepthOrLayers;
             }
 
+            // 2D and 2D multisample textures are not considered compatible.
+            // This specific case is required for copies, where the source texture might be multisample.
+            // In this case, we inherit the parent texture multisample state.
+            Target target = info.Target;
+            int samplesInX = info.SamplesInX;
+            int samplesInY = info.SamplesInY;
+
+            if (target == Target.Texture2D && parent.Target == Target.Texture2DMultisample)
+            {
+                target = Target.Texture2DMultisample;
+                samplesInX = parent.Info.SamplesInX;
+                samplesInY = parent.Info.SamplesInY;
+            }
+
             return new TextureInfo(
                 info.GpuAddress,
                 width,
                 height,
                 depthOrLayers,
                 info.Levels,
-                info.SamplesInX,
-                info.SamplesInY,
+                samplesInX,
+                samplesInY,
                 info.Stride,
                 info.IsLinear,
                 info.GobBlocksInY,
                 info.GobBlocksInZ,
                 info.GobBlocksInTileX,
-                info.Target,
+                target,
                 info.FormatInfo,
                 info.DepthStencilMode,
                 info.SwizzleR,
