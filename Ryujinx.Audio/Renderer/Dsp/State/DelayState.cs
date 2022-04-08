@@ -17,6 +17,7 @@
 
 using Ryujinx.Audio.Renderer.Dsp.Effect;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.State
 {
@@ -43,7 +44,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             {
                 DelayLines[i] = new DelayLine(sampleRate, parameter.DelayTimeMax);
                 DelayLines[i].SetDelay(parameter.DelayTime);
-                LowPassZ[0] = 0;
             }
 
             UpdateParameter(ref parameter);
@@ -68,6 +68,17 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             LowPassFeedbackGain = 0.95f * FixedPointHelper.ToFloat(parameter.LowPassAmount, FixedPointPrecision);
             LowPassBaseGain = 1.0f - LowPassFeedbackGain;
+        }
+
+        public void UpdateLowPassFilter(ref float tempRawRef, uint channelCount)
+        {
+            for (int i = 0; i < channelCount; i++)
+            {
+                float lowPassResult = LowPassFeedbackGain * LowPassZ[i] + Unsafe.Add(ref tempRawRef, i) * LowPassBaseGain;
+
+                LowPassZ[i] = lowPassResult;
+                DelayLines[i].Update(lowPassResult);
+            }
         }
     }
 }
