@@ -35,6 +35,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private byte _vsClipDistancesWritten;
 
         private bool _prevDrawIndexed;
+        private IndexType _prevIndexType;
+        private uint _prevFirstVertex;
         private bool _prevTfEnable;
 
         /// <summary>
@@ -212,6 +214,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
 
                 _prevDrawIndexed = _drawState.DrawIndexed;
+            }
+
+            // In some cases, the index type is also used to guess the
+            // vertex buffer size, so we must update it if the type changed too.
+            if (_drawState.DrawIndexed &&
+                (_prevIndexType != _state.State.IndexBufferState.Type ||
+                 _prevFirstVertex != _state.State.FirstVertex))
+            {
+                _updateTracker.ForceDirty(VertexBufferStateIndex);
+                _prevIndexType = _state.State.IndexBufferState.Type;
+                _prevFirstVertex = _state.State.FirstVertex;
             }
 
             bool tfEnable = _state.State.TfEnable;
@@ -867,6 +880,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void UpdateVertexBufferState()
         {
+            IndexType indexType = _state.State.IndexBufferState.Type;
+            bool indexTypeSmall = indexType == IndexType.UByte || indexType == IndexType.UShort;
+
             _drawState.IsAnyVbInstanced = false;
 
             for (int index = 0; index < Constants.TotalVertexBuffers; index++)
@@ -898,12 +914,27 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     // This size may be (much) larger than the real vertex buffer size.
                     // Avoid calculating it this way, unless we don't have any other option.
+
                     size = endAddress.Pack() - address + 1;
+
+                    if (stride > 0 && indexTypeSmall)
+                    {
+                        // If the index type is a small integer type, then we might be still able
+                        // to reduce the vertex buffer size based on the maximum possible index value.
+
+                        ulong maxVertexBufferSize = indexType == IndexType.UByte ? 0x100UL : 0x10000UL;
+
+                        maxVertexBufferSize += _state.State.FirstVertex;
+                        maxVertexBufferSize *= (uint)stride;
+
+                        size = Math.Min(size, maxVertexBufferSize);
+                    }
                 }
                 else
                 {
                     // For non-indexed draws, we can guess the size from the vertex count
                     // and stride.
+
                     int firstInstance = (int)_state.State.FirstInstance;
 
                     var drawState = _state.State.VertexBufferDrawState;
