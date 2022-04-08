@@ -86,22 +86,9 @@ namespace Ryujinx.Ui.Widgets
 
             if (ResultFs.TargetNotFound.Includes(result))
             {
-                // Savedata was not found. Ask the user if they want to create it
-                using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
-                {
-                    Title          = "Ryujinx",
-                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png"),
-                    Text           = $"There is no savedata for {titleName} [{titleId:x16}]",
-                    SecondaryText  = "Would you like to create savedata for this game?",
-                    WindowPosition = WindowPosition.Center
-                };
-
-                if (messageDialog.Run() != (int)ResponseType.Yes)
-                {
-                    return false;
-                }
-
                 ref ApplicationControlProperty control = ref controlHolder.Value;
+
+                Logger.Info?.Print(LogClass.Application, $"Creating save directory for Title: {titleName} [{titleId:x16}]");
 
                 if (Utilities.IsZeros(controlHolder.ByteSpan))
                 {

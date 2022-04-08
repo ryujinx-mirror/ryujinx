@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS
 
             if (titleModsPath == null)
             {
-                Logger.Info?.Print(LogClass.ModLoader, $"Creating mods dir for Title {titleId.ToUpper()}");
+                Logger.Info?.Print(LogClass.ModLoader, $"Creating mods directory for Title {titleId.ToUpper()}");
                 titleModsPath = contentsDir.CreateSubdirectory(titleId);
             }
 
