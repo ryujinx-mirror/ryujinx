@@ -250,9 +250,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             : "gl_SubgroupInvocationID";
                     }
 
-                    // TODO: There must be a better way to handle this...
                     if (config.Stage == ShaderStage.Fragment)
                     {
+                        // TODO: There must be a better way to handle this...
                         switch (value)
                         {
                             case AttributeConsts.PositionX: return $"(gl_FragCoord.x / {DefaultNames.SupportBlockRenderScaleName}[0])";

@@ -13,14 +13,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstVmnmx op = context.GetOp<InstVmnmx>();
 
-            Operand srcA = Extend(context, GetSrcReg(context, op.SrcA), op.ASelect);
+            Operand srcA = InstEmitAluHelper.Extend(context, GetSrcReg(context, op.SrcA), op.ASelect);
             Operand srcC = GetSrcReg(context, op.SrcC);
-
             Operand srcB;
 
             if (op.BVideo)
             {
-                srcB = Extend(context, GetSrcReg(context, op.SrcB), op.BSelect);
+                srcB = InstEmitAluHelper.Extend(context, GetSrcReg(context, op.SrcB), op.BSelect);
             }
             else
             {
@@ -124,13 +123,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstVsetp op = context.GetOp<InstVsetp>();
 
-            Operand srcA = Extend(context, GetSrcReg(context, op.SrcA), op.ASelect);
-
+            Operand srcA = InstEmitAluHelper.Extend(context, GetSrcReg(context, op.SrcA), op.ASelect);
             Operand srcB;
 
             if (op.BVideo)
             {
-                srcB = Extend(context, GetSrcReg(context, op.SrcB), op.BSelect);
+                srcB = InstEmitAluHelper.Extend(context, GetSrcReg(context, op.SrcB), op.BSelect);
             }
             else
             {
@@ -180,26 +178,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(Register(op.DestPred, RegisterType.Predicate), p0Res);
             context.Copy(Register(op.DestPredInv, RegisterType.Predicate), p1Res);
-        }
-
-        private static Operand Extend(EmitterContext context, Operand src, VectorSelect type)
-        {
-            return type switch
-            {
-                VectorSelect.U8B0 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(0)), 8),
-                VectorSelect.U8B1 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(8)), 8),
-                VectorSelect.U8B2 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(16)), 8),
-                VectorSelect.U8B3 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(24)), 8),
-                VectorSelect.U16H0 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(0)), 16),
-                VectorSelect.U16H1 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(16)), 16),
-                VectorSelect.S8B0 => SignExtendTo32(context, context.ShiftRightU32(src, Const(0)), 8),
-                VectorSelect.S8B1 => SignExtendTo32(context, context.ShiftRightU32(src, Const(8)), 8),
-                VectorSelect.S8B2 => SignExtendTo32(context, context.ShiftRightU32(src, Const(16)), 8),
-                VectorSelect.S8B3 => SignExtendTo32(context, context.ShiftRightU32(src, Const(24)), 8),
-                VectorSelect.S16H0 => SignExtendTo32(context, context.ShiftRightU32(src, Const(0)), 16),
-                VectorSelect.S16H1 => SignExtendTo32(context, context.ShiftRightU32(src, Const(16)), 16),
-                _ => src
-            };
         }
     }
 }

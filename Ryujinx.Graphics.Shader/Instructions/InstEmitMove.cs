@@ -94,31 +94,19 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case SReg.InvocationInfo:
                     if (context.Config.Stage != ShaderStage.Compute && context.Config.Stage != ShaderStage.Fragment)
                     {
-                        Operand primitiveId = Attribute(AttributeConsts.PrimitiveId);
-                        Operand patchVerticesIn;
+                        // Note: Lowest 8-bits seems to contain some primitive index,
+                        // but it seems to be NVIDIA implementation specific as it's only used
+                        // to calculate ISBE offsets, so we can just keep it as zero.
 
-                        if (context.Config.Stage == ShaderStage.TessellationEvaluation)
+                        if (context.Config.Stage == ShaderStage.TessellationControl ||
+                            context.Config.Stage == ShaderStage.TessellationEvaluation)
                         {
-                            patchVerticesIn = context.ShiftLeft(Attribute(AttributeConsts.PatchVerticesIn), Const(16));
+                            src = context.ShiftLeft(Attribute(AttributeConsts.PatchVerticesIn), Const(16));
                         }
                         else
                         {
-                            InputTopology inputTopology = context.Config.GpuAccessor.QueryPrimitiveTopology();
-
-                            int inputVertices = inputTopology switch
-                            {
-                                InputTopology.Points => 1,
-                                InputTopology.Lines or
-                                InputTopology.LinesAdjacency => 2,
-                                InputTopology.Triangles or
-                                InputTopology.TrianglesAdjacency => 3,
-                                _ => 1
-                            };
-
-                            patchVerticesIn = Const(inputVertices << 16);
+                            src = Const(context.Config.GpuAccessor.QueryPrimitiveTopology().ToInputVertices() << 16);
                         }
-
-                        src = context.BitwiseOr(primitiveId, patchVerticesIn);
                     }
                     else
                     {

@@ -73,6 +73,26 @@ namespace Ryujinx.Graphics.Shader.Instructions
             };
         }
 
+        public static Operand Extend(EmitterContext context, Operand src, VectorSelect type)
+        {
+            return type switch
+            {
+                VectorSelect.U8B0 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(0)), 8),
+                VectorSelect.U8B1 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(8)), 8),
+                VectorSelect.U8B2 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(16)), 8),
+                VectorSelect.U8B3 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(24)), 8),
+                VectorSelect.U16H0 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(0)), 16),
+                VectorSelect.U16H1 => ZeroExtendTo32(context, context.ShiftRightU32(src, Const(16)), 16),
+                VectorSelect.S8B0 => SignExtendTo32(context, context.ShiftRightU32(src, Const(0)), 8),
+                VectorSelect.S8B1 => SignExtendTo32(context, context.ShiftRightU32(src, Const(8)), 8),
+                VectorSelect.S8B2 => SignExtendTo32(context, context.ShiftRightU32(src, Const(16)), 8),
+                VectorSelect.S8B3 => SignExtendTo32(context, context.ShiftRightU32(src, Const(24)), 8),
+                VectorSelect.S16H0 => SignExtendTo32(context, context.ShiftRightU32(src, Const(0)), 16),
+                VectorSelect.S16H1 => SignExtendTo32(context, context.ShiftRightU32(src, Const(16)), 16),
+                _ => src
+            };
+        }
+
         public static void SetZnFlags(EmitterContext context, Operand dest, bool setCC, bool extended = false)
         {
             if (!setCC)
@@ -116,6 +136,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(GetZF(), context.FPCompareEqual(dest, zero, fpType));
                 context.Copy(GetNF(), context.FPCompareLess (dest, zero, fpType));
             }
+        }
+
+        public static (Operand, Operand) NegateLong(EmitterContext context, Operand low, Operand high)
+        {
+            low = context.BitwiseNot(low);
+            high = context.BitwiseNot(high);
+            low = AddWithCarry(context, low, Const(1), out Operand carryOut);
+            high = context.IAdd(high, carryOut);
+            return (low, high);
         }
 
         public static Operand AddWithCarry(EmitterContext context, Operand lhs, Operand rhs, out Operand carryOut)
