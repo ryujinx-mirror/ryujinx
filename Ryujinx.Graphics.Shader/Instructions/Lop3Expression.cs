@@ -7,138 +7,135 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static class Lop3Expression
     {
-        public static Operand GetFromTruthTable(EmitterContext context, Operand srcA, Operand srcB, Operand srcC, int imm)
+        private enum TruthTable : byte
         {
-            Operand expr = null;
-
-            // Handle some simple cases, or cases where
-            // the KMap would yield poor results (like XORs).
-            if (imm == 0x96 || imm == 0x69)
-            {
-                // XOR (0x96) and XNOR (0x69).
-                if (imm == 0x69)
-                {
-                    srcA = context.BitwiseNot(srcA);
-                }
-
-                expr = context.BitwiseExclusiveOr(srcA, srcB);
-                expr = context.BitwiseExclusiveOr(expr, srcC);
-
-                return expr;
-            }
-            else if (imm == 0)
-            {
-                // Always false.
-                return Const(IrConsts.False);
-            }
-            else if (imm == 0xff)
-            {
-                // Always true.
-                return Const(IrConsts.True);
-            }
-
-            int map;
-
-            // Encode into gray code.
-            map = ((imm >> 0) & 1) << 0;
-            map |= ((imm >> 1) & 1) << 4;
-            map |= ((imm >> 2) & 1) << 1;
-            map |= ((imm >> 3) & 1) << 5;
-            map |= ((imm >> 4) & 1) << 3;
-            map |= ((imm >> 5) & 1) << 7;
-            map |= ((imm >> 6) & 1) << 2;
-            map |= ((imm >> 7) & 1) << 6;
-
-            // Solve KMap, get sum of products.
-            int visited = 0;
-
-            for (int index = 0; index < 8 && visited != 0xff; index++)
-            {
-                if ((map & (1 << index)) == 0)
-                {
-                    continue;
-                }
-
-                int mask = 0;
-
-                for (int mSize = 4; mSize != 0; mSize >>= 1)
-                {
-                    mask = RotateLeft4((1 << mSize) - 1, index & 3) << (index & 4);
-
-                    if ((map & mask) == mask)
-                    {
-                        break;
-                    }
-                }
-
-                // The mask should wrap, if we are on the high row, shift to low etc.
-                int mask2 = (index & 4) != 0 ? mask >> 4 : mask << 4;
-
-                if ((map & mask2) == mask2)
-                {
-                    mask |= mask2;
-                }
-
-                if ((mask & visited) == mask)
-                {
-                    continue;
-                }
-
-                bool notA = (mask & 0x33) != 0;
-                bool notB = (mask & 0x99) != 0;
-                bool notC = (mask & 0x0f) != 0;
-
-                bool aChanges = (mask & 0xcc) != 0 && notA;
-                bool bChanges = (mask & 0x66) != 0 && notB;
-                bool cChanges = (mask & 0xf0) != 0 && notC;
-
-                Operand localExpr = null;
-
-                void And(Operand source)
-                {
-                    if (localExpr != null)
-                    {
-                        localExpr = context.BitwiseAnd(localExpr, source);
-                    }
-                    else
-                    {
-                        localExpr = source;
-                    }
-                }
-
-                if (!aChanges)
-                {
-                    And(context.BitwiseNot(srcA, notA));
-                }
-
-                if (!bChanges)
-                {
-                    And(context.BitwiseNot(srcB, notB));
-                }
-
-                if (!cChanges)
-                {
-                    And(context.BitwiseNot(srcC, notC));
-                }
-
-                if (expr != null)
-                {
-                    expr = context.BitwiseOr(expr, localExpr);
-                }
-                else
-                {
-                    expr = localExpr;
-                }
-
-                visited |= mask;
-            }
-
-            return expr;
+            False         = 0x00, // false
+            True          = 0xff, // true
+            In            = 0xf0, // a
+            And2          = 0xc0, // a & b
+            Or2           = 0xfc, // a | b
+            Xor2          = 0x3c, // a ^ b
+            And3          = 0x80, // a & b & c
+            Or3           = 0xfe, // a | b | c
+            XorAnd        = 0x60, // a & (b ^ c)
+            XorOr         = 0xf6, // a | (b ^ c)
+            OrAnd         = 0xe0, // a & (b | c)
+            AndOr         = 0xf8, // a | (b & c)
+            Onehot        = 0x16, // (a & !b & !c) | (!a & b & !c) | (!a & !b & c) - Only one value is true.
+            Majority      = 0xe8, // Popcount(a, b, c) >= 2
+            Gamble        = 0x81, // (a & b & c) | (!a & !b & !c) - All on or all off
+            InverseGamble = 0x7e, // Inverse of Gamble
+            Dot           = 0x1a, // a ^ (c | (a & b))
+            Mux           = 0xca, // a ? b : c
+            AndXor        = 0x78, // a ^ (b & c)
+            OrXor         = 0x1e, // a ^ (b | c)
+            Xor3          = 0x96, // a ^ b ^ c
         }
 
-        private static int RotateLeft4(int value, int shift)
+        public static Operand GetFromTruthTable(EmitterContext context, Operand srcA, Operand srcB, Operand srcC, int imm)
         {
-            return ((value << shift) | (value >> (4 - shift))) & 0xf;
+            for (int i = 0; i < 0x40; i++)
+            {
+                TruthTable currImm = (TruthTable)imm;
+
+                Operand x = srcA;
+                Operand y = srcB;
+                Operand z = srcC;
+                
+                if ((i & 0x01) != 0)
+                {
+                    (x, y) = (y, x);
+                    currImm = PermuteTable(currImm, 7, 6, 3, 2, 5, 4, 1, 0);
+                }
+
+                if ((i & 0x02) != 0)
+                {
+                    (x, z) = (z, x);
+                    currImm = PermuteTable(currImm, 7, 3, 5, 1, 6, 2, 4, 0);
+                }
+
+                if ((i & 0x04) != 0)
+                {
+                    (y, z) = (z, y);
+                    currImm = PermuteTable(currImm, 7, 5, 6, 4, 3, 1, 2, 0);
+                }
+
+                if ((i & 0x08) != 0)
+                {
+                    x = context.BitwiseNot(x);
+                    currImm = PermuteTable(currImm, 3, 2, 1, 0, 7, 6, 5, 4);
+                }
+
+                if ((i & 0x10) != 0)
+                {
+                    y = context.BitwiseNot(y);
+                    currImm = PermuteTable(currImm, 5, 4, 7, 6, 1, 0, 3, 2);
+                }
+
+                if ((i & 0x20) != 0)
+                {
+                    z = context.BitwiseNot(z);
+                    currImm = PermuteTable(currImm, 6, 7, 4, 5, 2, 3, 0, 1);
+                }
+
+                Operand result = GetExpr(currImm, context, x, y, z);
+                if (result != null)
+                {
+                    return result;
+                }
+
+                Operand notResult = GetExpr((TruthTable)((~(int)currImm) & 0xff), context, x, y, z);
+                if (notResult != null)
+                {
+                    return context.BitwiseNot(notResult);
+                }
+            }
+
+            return null;
+        }
+
+        private static Operand GetExpr(TruthTable imm, EmitterContext context, Operand x, Operand y, Operand z)
+        {
+            return imm switch
+            {
+                TruthTable.False         => Const(0),
+                TruthTable.True          => Const(-1),
+                TruthTable.In            => x,
+                TruthTable.And2          => context.BitwiseAnd(x, y),
+                TruthTable.Or2           => context.BitwiseOr(x, y),
+                TruthTable.Xor2          => context.BitwiseExclusiveOr(x, y),
+                TruthTable.And3          => context.BitwiseAnd(x, context.BitwiseAnd(y, z)),
+                TruthTable.Or3           => context.BitwiseOr(x, context.BitwiseOr(y, z)),
+                TruthTable.XorAnd        => context.BitwiseAnd(x, context.BitwiseExclusiveOr(y, z)),
+                TruthTable.XorOr         => context.BitwiseOr(x, context.BitwiseExclusiveOr(y, z)),
+                TruthTable.OrAnd         => context.BitwiseAnd(x, context.BitwiseOr(y, z)),
+                TruthTable.AndOr         => context.BitwiseOr(x, context.BitwiseAnd(y, z)),
+                TruthTable.Onehot        => context.BitwiseExclusiveOr(context.BitwiseOr(x, y), context.BitwiseOr(z, context.BitwiseAnd(x, y))),
+                TruthTable.Majority      => context.BitwiseAnd(context.BitwiseOr(x, y), context.BitwiseOr(z, context.BitwiseAnd(x, y))),
+                TruthTable.InverseGamble => context.BitwiseOr(context.BitwiseExclusiveOr(x, y), context.BitwiseExclusiveOr(x, z)),
+                TruthTable.Dot           => context.BitwiseAnd(context.BitwiseExclusiveOr(x, z), context.BitwiseOr(context.BitwiseNot(y), z)),
+                TruthTable.Mux           => context.BitwiseOr(context.BitwiseAnd(x, y), context.BitwiseAnd(context.BitwiseNot(x), z)),
+                TruthTable.AndXor        => context.BitwiseExclusiveOr(x, context.BitwiseAnd(y, z)),
+                TruthTable.OrXor         => context.BitwiseExclusiveOr(x, context.BitwiseOr(y, z)),
+                TruthTable.Xor3          => context.BitwiseExclusiveOr(x, context.BitwiseExclusiveOr(y, z)),
+                _                        => null
+            };
+        }
+
+        private static TruthTable PermuteTable(TruthTable imm, int bit7, int bit6, int bit5, int bit4, int bit3, int bit2, int bit1, int bit0)
+        {
+            int result = 0;
+
+            result |= (((int)imm >> 0) & 1) << bit0;
+            result |= (((int)imm >> 1) & 1) << bit1;
+            result |= (((int)imm >> 2) & 1) << bit2;
+            result |= (((int)imm >> 3) & 1) << bit3;
+            result |= (((int)imm >> 4) & 1) << bit4;
+            result |= (((int)imm >> 5) & 1) << bit5;
+            result |= (((int)imm >> 6) & 1) << bit6;
+            result |= (((int)imm >> 7) & 1) << bit7;
+
+            return (TruthTable)result;
         }
     }
 }
