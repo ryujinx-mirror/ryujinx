@@ -191,7 +191,7 @@ namespace ARMeilleure.Signal
                 // Is the fault address within this tracked region?
                 Operand inRange = context.BitwiseAnd(
                     context.ICompare(faultAddress, rangeAddress, Comparison.GreaterOrEqualUI),
-                    context.ICompare(faultAddress, rangeEndAddress, Comparison.Less)
+                    context.ICompare(faultAddress, rangeEndAddress, Comparison.LessUI)
                     );
 
                 // Only call tracking if in range.

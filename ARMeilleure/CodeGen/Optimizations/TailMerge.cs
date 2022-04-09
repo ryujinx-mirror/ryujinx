@@ -59,7 +59,7 @@ namespace ARMeilleure.CodeGen.Optimizations
             BasicBlock fromPred = from.Predecessors.Count == 1 ? from.Predecessors[0] : null;
 
             // If the block is empty, we can try to append to the predecessor and avoid unnecessary jumps.
-            if (from.Operations.Count == 0 && fromPred != null)
+            if (from.Operations.Count == 0 && fromPred != null && fromPred.SuccessorsCount == 1)
             {
                 for (int i = 0; i < fromPred.SuccessorsCount; i++)
                 {
