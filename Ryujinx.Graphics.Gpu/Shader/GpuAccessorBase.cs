@@ -1,22 +1,25 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
-using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
-    abstract class TextureDescriptorCapableGpuAccessor : IGpuAccessor
+    /// <summary>
+    /// GPU accessor.
+    /// </summary>
+    class GpuAccessorBase
     {
         private readonly GpuContext _context;
 
-        public TextureDescriptorCapableGpuAccessor(GpuContext context)
+        /// <summary>
+        /// Creates a new GPU accessor.
+        /// </summary>
+        /// <param name="context">GPU context</param>
+        public GpuAccessorBase(GpuContext context)
         {
             _context = context;
         }
-
-        public abstract ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
-
-        public abstract ITextureDescriptor GetTextureDescriptor(int handle, int cbufSlot);
 
         /// <summary>
         /// Queries host about the presence of the FrontFacing built-in variable bug.
@@ -79,20 +82,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
         /// <summary>
-        /// Queries texture format information, for shaders using image load or store.
+        /// Converts a packed Maxwell texture format to the shader translator texture format.
         /// </summary>
-        /// <remarks>
-        /// This only returns non-compressed color formats.
-        /// If the format of the texture is a compressed, depth or unsupported format, then a default value is returned.
-        /// </remarks>
-        /// <param name="handle">Texture handle</param>
-        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
-        /// <returns>Color format of the non-compressed texture</returns>
-        public TextureFormat QueryTextureFormat(int handle, int cbufSlot = -1)
+        /// <param name="format">Packed maxwell format</param>
+        /// <param name="formatSrgb">Indicates if the format is sRGB</param>
+        /// <returns>Shader translator texture format</returns>
+        protected static TextureFormat ConvertToTextureFormat(uint format, bool formatSrgb)
         {
-            var descriptor = GetTextureDescriptor(handle, cbufSlot);
-
-            if (!FormatTable.TryGetTextureFormat(descriptor.UnpackFormat(), descriptor.UnpackSrgb(), out FormatInfo formatInfo))
+            if (!FormatTable.TryGetTextureFormat(format, formatSrgb, out FormatInfo formatInfo))
             {
                 return TextureFormat.Unknown;
             }
@@ -144,32 +141,31 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
-        /// Queries sampler type information.
+        /// Converts the Maxwell primitive topology to the shader translator topology.
         /// </summary>
-        /// <param name="handle">Texture handle</param>
-        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
-        /// <returns>The sampler type value for the given handle</returns>
-        public SamplerType QuerySamplerType(int handle, int cbufSlot = -1)
+        /// <param name="topology">Maxwell primitive topology</param>
+        /// <param name="tessellationMode">Maxwell tessellation mode</param>
+        /// <returns>Shader translator topology</returns>
+        protected static InputTopology ConvertToInputTopology(PrimitiveTopology topology, TessMode tessellationMode)
         {
-            return GetTextureDescriptor(handle, cbufSlot).UnpackTextureTarget().ConvertSamplerType();
-        }
-
-        /// <summary>
-        /// Queries texture target information.
-        /// </summary>
-        /// <param name="handle">Texture handle</param>
-        /// <param name="cbufSlot">Constant buffer slot for the texture handle</param>
-        /// <returns>True if the texture is a rectangle texture, false otherwise</returns>
-        public bool QueryIsTextureRectangle(int handle, int cbufSlot = -1)
-        {
-            var descriptor = GetTextureDescriptor(handle, cbufSlot);
-
-            TextureTarget target = descriptor.UnpackTextureTarget();
-
-            bool is2DTexture = target == TextureTarget.Texture2D ||
-                               target == TextureTarget.Texture2DRect;
-
-            return !descriptor.UnpackTextureCoordNormalized() && is2DTexture;
+            return topology switch
+            {
+                PrimitiveTopology.Points => InputTopology.Points,
+                PrimitiveTopology.Lines or
+                PrimitiveTopology.LineLoop or
+                PrimitiveTopology.LineStrip => InputTopology.Lines,
+                PrimitiveTopology.LinesAdjacency or
+                PrimitiveTopology.LineStripAdjacency => InputTopology.LinesAdjacency,
+                PrimitiveTopology.Triangles or
+                PrimitiveTopology.TriangleStrip or
+                PrimitiveTopology.TriangleFan => InputTopology.Triangles,
+                PrimitiveTopology.TrianglesAdjacency or
+                PrimitiveTopology.TriangleStripAdjacency => InputTopology.TrianglesAdjacency,
+                PrimitiveTopology.Patches => tessellationMode.UnpackPatchType() == TessPatchType.Isolines
+                    ? InputTopology.Lines
+                    : InputTopology.Triangles,
+                _ => InputTopology.Points
+            };
         }
     }
 }

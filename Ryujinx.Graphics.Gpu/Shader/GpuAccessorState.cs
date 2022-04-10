@@ -1,72 +1,61 @@
-using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.Engine.Threed;
-
 namespace Ryujinx.Graphics.Gpu.Shader
 {
     /// <summary>
     /// State used by the <see cref="GpuAccessor"/>.
     /// </summary>
-    struct GpuAccessorState
+    class GpuAccessorState
     {
         /// <summary>
-        /// GPU virtual address of the texture pool.
+        /// GPU texture pool state.
         /// </summary>
-        public ulong TexturePoolGpuVa { get; }
+        public readonly GpuChannelPoolState PoolState;
 
         /// <summary>
-        /// Maximum ID of the texture pool.
+        /// GPU compute state, for compute shaders.
         /// </summary>
-        public int TexturePoolMaximumId { get; }
+        public readonly GpuChannelComputeState ComputeState;
 
         /// <summary>
-        /// Constant buffer slot where the texture handles are located.
+        /// GPU graphics state, for vertex, tessellation, geometry and fragment shaders.
         /// </summary>
-        public int TextureBufferIndex { get; }
+        public readonly GpuChannelGraphicsState GraphicsState;
 
         /// <summary>
-        /// Early Z force enable.
+        /// Shader specialization state (shared by all stages).
         /// </summary>
-        public bool EarlyZForce { get; }
-
-        /// <summary>
-        /// Primitive topology of current draw.
-        /// </summary>
-        public PrimitiveTopology Topology { get; }
-
-        /// <summary>
-        /// Tessellation mode.
-        /// </summary>
-        public TessMode TessellationMode { get; }
+        public readonly ShaderSpecializationState SpecializationState;
 
         /// <summary>
         /// Transform feedback information, if the shader uses transform feedback. Otherwise, should be null.
         /// </summary>
-        public TransformFeedbackDescriptor[] TransformFeedbackDescriptors { get; set; }
+        public readonly TransformFeedbackDescriptor[] TransformFeedbackDescriptors;
 
         /// <summary>
-        /// Creates a new instance of the GPU accessor state.
+        /// Shader resource counts (shared by all stages).
         /// </summary>
-        /// <param name="texturePoolGpuVa">GPU virtual address of the texture pool</param>
-        /// <param name="texturePoolMaximumId">Maximum ID of the texture pool</param>
-        /// <param name="textureBufferIndex">Constant buffer slot where the texture handles are located</param>
-        /// <param name="earlyZForce">Early Z force enable</param>
-        /// <param name="topology">Primitive topology</param>
-        /// <param name="tessellationMode">Tessellation mode</param>
+        public readonly ResourceCounts ResourceCounts;
+
+        /// <summary>
+        /// Creates a new GPU accessor state.
+        /// </summary>
+        /// <param name="poolState">GPU texture pool state</param>
+        /// <param name="computeState">GPU compute state, for compute shaders</param>
+        /// <param name="graphicsState">GPU graphics state, for vertex, tessellation, geometry and fragment shaders</param>
+        /// <param name="specializationState">Shader specialization state (shared by all stages)</param>
+        /// <param name="transformFeedbackDescriptors">Transform feedback information, if the shader uses transform feedback. Otherwise, should be null</param>
         public GpuAccessorState(
-            ulong texturePoolGpuVa,
-            int texturePoolMaximumId,
-            int textureBufferIndex,
-            bool earlyZForce,
-            PrimitiveTopology topology,
-            TessMode tessellationMode)
+            GpuChannelPoolState poolState,
+            GpuChannelComputeState computeState,
+            GpuChannelGraphicsState graphicsState,
+            ShaderSpecializationState specializationState,
+            TransformFeedbackDescriptor[] transformFeedbackDescriptors = null)
         {
-            TexturePoolGpuVa = texturePoolGpuVa;
-            TexturePoolMaximumId = texturePoolMaximumId;
-            TextureBufferIndex = textureBufferIndex;
-            EarlyZForce = earlyZForce;
-            Topology = topology;
-            TessellationMode = tessellationMode;
-            TransformFeedbackDescriptors = null;
+            PoolState = poolState;
+            GraphicsState = graphicsState;
+            ComputeState = computeState;
+            SpecializationState = specializationState;
+            TransformFeedbackDescriptors = transformFeedbackDescriptors;
+            ResourceCounts = new ResourceCounts();
         }
     }
 }

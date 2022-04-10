@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
+﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
     struct PreFrameCommand : IGALCommand
     {

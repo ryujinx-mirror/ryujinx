@@ -16,11 +16,9 @@ namespace Ryujinx.Graphics.GAL
 
         void BackgroundContextAction(Action action, bool alwaysBackground = false);
 
-        IShader CompileShader(ShaderStage stage, string code);
-
         BufferHandle CreateBuffer(int size);
 
-        IProgram CreateProgram(IShader[] shaders, ShaderInfo info);
+        IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info);
 
         ISampler CreateSampler(SamplerCreateInfo info);
         ITexture CreateTexture(TextureCreateInfo info, float scale);

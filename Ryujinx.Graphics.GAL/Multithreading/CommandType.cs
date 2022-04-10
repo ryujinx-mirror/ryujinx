@@ -3,7 +3,6 @@
     enum CommandType : byte
     {
         Action,
-        CompileShader,
         CreateBuffer,
         CreateProgram,
         CreateSampler,
@@ -28,8 +27,6 @@
         ProgramCheckLink,
 
         SamplerDispose,
-
-        ShaderDispose,
 
         TextureCopyTo,
         TextureCopyToScaled,

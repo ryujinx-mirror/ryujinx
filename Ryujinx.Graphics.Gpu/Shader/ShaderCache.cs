@@ -1,18 +1,14 @@
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader.Cache;
-using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
+using Ryujinx.Graphics.Gpu.Shader.DiskCache;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -21,30 +17,66 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// </summary>
     class ShaderCache : IDisposable
     {
-        private const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
+        /// <summary>
+        /// Default flags used on the shader translation process.
+        /// </summary>
+        public const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
+
+        private struct TranslatedShader
+        {
+            public readonly CachedShaderStage Shader;
+            public readonly ShaderProgram Program;
+
+            public TranslatedShader(CachedShaderStage shader, ShaderProgram program)
+            {
+                Shader = shader;
+                Program = program;
+            }
+        }
+
+        private struct TranslatedShaderVertexPair
+        {
+            public readonly CachedShaderStage VertexA;
+            public readonly CachedShaderStage VertexB;
+            public readonly ShaderProgram Program;
+
+            public TranslatedShaderVertexPair(CachedShaderStage vertexA, CachedShaderStage vertexB, ShaderProgram program)
+            {
+                VertexA = vertexA;
+                VertexB = vertexB;
+                Program = program;
+            }
+        }
 
         private readonly GpuContext _context;
 
         private readonly ShaderDumper _dumper;
 
-        private readonly Dictionary<ulong, List<ShaderBundle>> _cpPrograms;
-        private readonly Dictionary<ShaderAddresses, List<ShaderBundle>> _gpPrograms;
+        private readonly Dictionary<ulong, CachedShaderProgram> _cpPrograms;
+        private readonly Dictionary<ShaderAddresses, CachedShaderProgram> _gpPrograms;
 
-        private CacheManager _cacheManager;
+        private struct ProgramToSave
+        {
+            public readonly CachedShaderProgram CachedProgram;
+            public readonly IProgram HostProgram;
 
-        private Dictionary<Hash128, ShaderBundle> _gpProgramsDiskCache;
-        private Dictionary<Hash128, ShaderBundle> _cpProgramsDiskCache;
+            public ProgramToSave(CachedShaderProgram cachedProgram, IProgram hostProgram)
+            {
+                CachedProgram = cachedProgram;
+                HostProgram = hostProgram;
+            }
+        }
 
-        private Queue<(IProgram, Action<byte[]>)> _programsToSaveQueue;
+        private Queue<ProgramToSave> _programsToSaveQueue;
+
+        private readonly ComputeShaderCacheHashTable _computeShaderCache;
+        private readonly ShaderCacheHashTable _graphicsShaderCache;
+        private readonly DiskCacheHostStorage _diskCacheHostStorage;
+        private readonly BackgroundDiskCacheWriter _cacheWriter;
 
         /// <summary>
-        /// Version of the codegen (to be changed when codegen or guest format change).
+        /// Event for signalling shader cache loading progress.
         /// </summary>
-        private const ulong ShaderCodeGenVersion = 3251;
-
-        // Progress reporting helpers
-        private volatile int _shaderCount;
-        private volatile int _totalShaderCount;
         public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
 
         /// <summary>
@@ -57,12 +89,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             _dumper = new ShaderDumper();
 
-            _cpPrograms = new Dictionary<ulong, List<ShaderBundle>>();
-            _gpPrograms = new Dictionary<ShaderAddresses, List<ShaderBundle>>();
-            _gpProgramsDiskCache = new Dictionary<Hash128, ShaderBundle>();
-            _cpProgramsDiskCache = new Dictionary<Hash128, ShaderBundle>();
+            _cpPrograms = new Dictionary<ulong, CachedShaderProgram>();
+            _gpPrograms = new Dictionary<ShaderAddresses, CachedShaderProgram>();
 
-            _programsToSaveQueue = new Queue<(IProgram, Action<byte[]>)>();
+            _programsToSaveQueue = new Queue<ProgramToSave>();
+
+            string diskCacheTitleId = GraphicsConfig.EnableShaderCache && GraphicsConfig.TitleId != null
+                ? CacheHelper.GetBaseCacheDirectory(GraphicsConfig.TitleId)
+                : null;
+
+            _computeShaderCache = new ComputeShaderCacheHashTable();
+            _graphicsShaderCache = new ShaderCacheHashTable();
+            _diskCacheHostStorage = new DiskCacheHostStorage(diskCacheTitleId);
+
+            if (_diskCacheHostStorage.CacheEnabled)
+            {
+                _cacheWriter = new BackgroundDiskCacheWriter(context, _diskCacheHostStorage);
+            }
         }
 
         /// <summary>
@@ -72,13 +115,17 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             // Check to see if the binaries for previously compiled shaders are ready, and save them out.
 
-            while (_programsToSaveQueue.Count > 0)
+            while (_programsToSaveQueue.TryPeek(out ProgramToSave programToSave))
             {
-                (IProgram program, Action<byte[]> dataAction) = _programsToSaveQueue.Peek();
+                ProgramLinkStatus result = programToSave.HostProgram.CheckProgramLink(false);
 
-                if (program.CheckProgramLink(false) != ProgramLinkStatus.Incomplete)
+                if (result != ProgramLinkStatus.Incomplete)
                 {
-                    dataAction(program.GetBinary());
+                    if (result == ProgramLinkStatus.Success)
+                    {
+                        _cacheWriter.AddShader(programToSave.CachedProgram, programToSave.HostProgram.GetBinary());
+                    }
+
                     _programsToSaveQueue.Dequeue();
                 }
                 else
@@ -91,463 +138,48 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Initialize the cache.
         /// </summary>
-        internal void Initialize()
+        /// <param name="cancellationToken">Cancellation token to cancel the shader cache initialization process</param>
+        internal void Initialize(CancellationToken cancellationToken)
         {
-            if (GraphicsConfig.EnableShaderCache && GraphicsConfig.TitleId != null)
+            if (_diskCacheHostStorage.CacheEnabled)
             {
-                _cacheManager = new CacheManager(CacheGraphicsApi.OpenGL, CacheHashType.XxHash128, "glsl", GraphicsConfig.TitleId, ShaderCodeGenVersion);
-
-                bool isReadOnly = _cacheManager.IsReadOnly;
-
-                HashSet<Hash128> invalidEntries = null;
-
-                if (isReadOnly)
+                if (!_diskCacheHostStorage.CacheExists())
                 {
-                    Logger.Warning?.Print(LogClass.Gpu, "Loading shader cache in read-only mode (cache in use by another program!)");
-                }
-                else
-                {
-                    invalidEntries = new HashSet<Hash128>();
+                    // If we don't have a shader cache on the new format, try to perform migration from the old shader cache.
+                    Logger.Info?.Print(LogClass.Gpu, "No shader cache found, trying to migrate from legacy shader cache...");
+
+                    int migrationCount = Migration.MigrateFromLegacyCache(_context, _diskCacheHostStorage);
+
+                    Logger.Info?.Print(LogClass.Gpu, $"Migrated {migrationCount} shaders.");
                 }
 
-                ReadOnlySpan<Hash128> guestProgramList = _cacheManager.GetGuestProgramList();
+                ParallelDiskCacheLoader loader = new ParallelDiskCacheLoader(
+                    _context,
+                    _graphicsShaderCache,
+                    _computeShaderCache,
+                    _diskCacheHostStorage,
+                    cancellationToken,
+                    ShaderCacheStateUpdate);
 
-                using AutoResetEvent progressReportEvent = new AutoResetEvent(false);
+                loader.LoadShaders();
 
-                _shaderCount = 0;
-                _totalShaderCount = guestProgramList.Length;
-
-                ShaderCacheStateChanged?.Invoke(ShaderCacheState.Start, _shaderCount, _totalShaderCount);
-                Thread progressReportThread = null;
-
-                if (guestProgramList.Length > 0)
+                int errorCount = loader.ErrorCount;
+                if (errorCount != 0)
                 {
-                    progressReportThread = new Thread(ReportProgress)
-                    {
-                        Name = "ShaderCache.ProgressReporter",
-                        Priority = ThreadPriority.Lowest,
-                        IsBackground = true
-                    };
-
-                    progressReportThread.Start(progressReportEvent);
+                    Logger.Warning?.Print(LogClass.Gpu, $"Failed to load {errorCount} shaders from the disk cache.");
                 }
-
-                // Make sure these are initialized before doing compilation.
-                Capabilities caps = _context.Capabilities;
-
-                int maxTaskCount = Math.Min(Environment.ProcessorCount, 8);
-                int programIndex = 0;
-                List<ShaderCompileTask> activeTasks = new List<ShaderCompileTask>();
-
-                using AutoResetEvent taskDoneEvent = new AutoResetEvent(false);
-
-                // This thread dispatches tasks to do shader translation, and creates programs that OpenGL will link in the background.
-                // The program link status is checked in a non-blocking manner so that multiple shaders can be compiled at once.
-
-                while (programIndex < guestProgramList.Length || activeTasks.Count > 0)
-                {
-                    if (activeTasks.Count < maxTaskCount && programIndex < guestProgramList.Length)
-                    {
-                        // Begin a new shader compilation.
-                        Hash128 key = guestProgramList[programIndex];
-
-                        byte[] hostProgramBinary = _cacheManager.GetHostProgramByHash(ref key);
-                        bool hasHostCache = hostProgramBinary != null;
-
-                        IProgram hostProgram = null;
-
-                        // If the program sources aren't in the cache, compile from saved guest program.
-                        byte[] guestProgram = _cacheManager.GetGuestProgramByHash(ref key);
-
-                        if (guestProgram == null)
-                        {
-                            Logger.Error?.Print(LogClass.Gpu, $"Ignoring orphan shader hash {key} in cache (is the cache incomplete?)");
-
-                            // Should not happen, but if someone messed with the cache it's better to catch it.
-                            invalidEntries?.Add(key);
-
-                            _shaderCount = ++programIndex;
-
-                            continue;
-                        }
-
-                        ReadOnlySpan<byte> guestProgramReadOnlySpan = guestProgram;
-
-                        ReadOnlySpan<GuestShaderCacheEntry> cachedShaderEntries = GuestShaderCacheEntry.Parse(ref guestProgramReadOnlySpan, out GuestShaderCacheHeader fileHeader);
-
-                        if (cachedShaderEntries[0].Header.Stage == ShaderStage.Compute)
-                        {
-                            Debug.Assert(cachedShaderEntries.Length == 1);
-
-                            GuestShaderCacheEntry entry = cachedShaderEntries[0];
-
-                            HostShaderCacheEntry[] hostShaderEntries = null;
-
-                            // Try loading host shader binary.
-                            if (hasHostCache)
-                            {
-                                hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
-                                hostProgramBinary = hostProgramBinarySpan.ToArray();
-                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary, false, new ShaderInfo(-1));
-                            }
-
-                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
-                            activeTasks.Add(task);
-
-                            task.OnCompiled(hostProgram, (bool isHostProgramValid, ShaderCompileTask task) =>
-                            {
-                                ShaderProgram program = null;
-                                ShaderProgramInfo shaderProgramInfo = null;
-
-                                if (isHostProgramValid)
-                                {
-                                    // Reconstruct code holder.
-
-                                    program = new ShaderProgram(entry.Header.Stage, "");
-                                    shaderProgramInfo = hostShaderEntries[0].ToShaderProgramInfo();
-
-                                    byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-
-                                    ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
-
-                                    _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
-
-                                    return true;
-                                }
-                                else
-                                {
-                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
-
-                                    Task compileTask = Task.Run(() =>
-                                    {
-                                        var binaryCode = new Memory<byte>(entry.Code);
-
-                                        var gpuAccessor = new CachedGpuAccessor(
-                                            _context,
-                                            binaryCode,
-                                            binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
-                                            entry.Header.GpuAccessorHeader,
-                                            entry.TextureDescriptors,
-                                            null);
-
-                                        var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags | TranslationFlags.Compute);
-                                        program = Translator.CreateContext(0, gpuAccessor, options).Translate(out shaderProgramInfo);
-                                    });
-
-                                    task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
-                                    {
-                                        if (task.IsFaulted)
-                                        {
-                                            Logger.Warning?.Print(LogClass.Gpu, $"Host shader {key} is corrupted or incompatible, discarding...");
-
-                                            _cacheManager.RemoveProgram(ref key);
-                                            return true; // Exit early, the decoding step failed.
-                                        }
-
-                                        byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-
-                                        ShaderCodeHolder shader = new ShaderCodeHolder(program, shaderProgramInfo, code);
-
-                                        Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
-
-                                        // Compile shader and create program as the shader program binary got invalidated.
-                                        shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, program.Code);
-                                        hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, new ShaderInfo(-1));
-
-                                        task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
-                                        {
-                                            // As the host program was invalidated, save the new entry in the cache.
-                                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), new ShaderCodeHolder[] { shader });
-
-                                            if (!isReadOnly)
-                                            {
-                                                if (hasHostCache)
-                                                {
-                                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                                                }
-                                                else
-                                                {
-                                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
-
-                                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
-                                                }
-                                            }
-
-                                            _cpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shader));
-
-                                            return true;
-                                        });
-
-                                        return false; // Not finished: still need to compile the host program.
-                                    });
-
-                                    return false; // Not finished: translating the program.
-                                }
-                            });
-                        }
-                        else
-                        {
-                            Debug.Assert(cachedShaderEntries.Length == Constants.ShaderStages);
-
-                            ShaderCodeHolder[] shaders = new ShaderCodeHolder[cachedShaderEntries.Length];
-                            List<ShaderProgram> shaderPrograms = new List<ShaderProgram>();
-
-                            TransformFeedbackDescriptor[] tfd = CacheHelper.ReadTransformFeedbackInformation(ref guestProgramReadOnlySpan, fileHeader);
-
-                            TranslationCounts counts = new TranslationCounts();
-
-                            HostShaderCacheEntry[] hostShaderEntries = null;
-
-                            // Try loading host shader binary.
-                            if (hasHostCache)
-                            {
-                                hostShaderEntries = HostShaderCacheEntry.Parse(hostProgramBinary, out ReadOnlySpan<byte> hostProgramBinarySpan);
-                                hostProgramBinary = hostProgramBinarySpan.ToArray();
-
-                                bool hasFragmentShader = false;
-                                int fragmentOutputMap = -1;
-                                int fragmentIndex = (int)ShaderStage.Fragment - 1;
-
-                                if (hostShaderEntries[fragmentIndex] != null && hostShaderEntries[fragmentIndex].Header.InUse)
-                                {
-                                    hasFragmentShader = true;
-                                    fragmentOutputMap = hostShaderEntries[fragmentIndex].Header.FragmentOutputMap;
-                                }
-
-                                hostProgram = _context.Renderer.LoadProgramBinary(hostProgramBinary, hasFragmentShader, new ShaderInfo(fragmentOutputMap));
-                            }
-
-                            ShaderCompileTask task = new ShaderCompileTask(taskDoneEvent);
-                            activeTasks.Add(task);
-
-                            GuestShaderCacheEntry[] entries = cachedShaderEntries.ToArray();
-
-                            task.OnCompiled(hostProgram, (bool isHostProgramValid, ShaderCompileTask task) =>
-                            {
-                                Task compileTask = Task.Run(() =>
-                                {
-                                    TranslatorContext[] shaderContexts = null;
-
-                                    if (!isHostProgramValid)
-                                    {
-                                        shaderContexts = new TranslatorContext[1 + entries.Length];
-
-                                        for (int i = 0; i < entries.Length; i++)
-                                        {
-                                            GuestShaderCacheEntry entry = entries[i];
-
-                                            if (entry == null)
-                                            {
-                                                continue;
-                                            }
-
-                                            var binaryCode = new Memory<byte>(entry.Code);
-
-                                            var gpuAccessor = new CachedGpuAccessor(
-                                                _context,
-                                                binaryCode,
-                                                binaryCode.Slice(binaryCode.Length - entry.Header.Cb1DataSize),
-                                                entry.Header.GpuAccessorHeader,
-                                                entry.TextureDescriptors,
-                                                tfd);
-
-                                            var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags);
-
-                                            shaderContexts[i + 1] = Translator.CreateContext(0, gpuAccessor, options, counts);
-
-                                            if (entry.Header.SizeA != 0)
-                                            {
-                                                var options2 = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags | TranslationFlags.VertexA);
-
-                                                shaderContexts[0] = Translator.CreateContext((ulong)entry.Header.Size, gpuAccessor, options2, counts);
-                                            }
-                                        }
-                                    }
-
-                                    // Reconstruct code holder.
-                                    for (int i = 0; i < entries.Length; i++)
-                                    {
-                                        GuestShaderCacheEntry entry = entries[i];
-
-                                        if (entry == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        ShaderProgram program;
-                                        ShaderProgramInfo shaderProgramInfo;
-
-                                        if (isHostProgramValid)
-                                        {
-                                            program = new ShaderProgram(entry.Header.Stage, "");
-                                            shaderProgramInfo = hostShaderEntries[i].ToShaderProgramInfo();
-                                        }
-                                        else
-                                        {
-                                            int stageIndex = i + 1;
-
-                                            TranslatorContext currentStage = shaderContexts[stageIndex];
-                                            TranslatorContext nextStage = GetNextStageContext(shaderContexts, stageIndex);
-                                            TranslatorContext vertexA = stageIndex == 1 ? shaderContexts[0] : null;
-
-                                            program = currentStage.Translate(out shaderProgramInfo, nextStage, vertexA);
-                                        }
-
-                                        // NOTE: Vertex B comes first in the shader cache.
-                                        byte[] code = entry.Code.AsSpan(0, entry.Header.Size - entry.Header.Cb1DataSize).ToArray();
-                                        byte[] code2 = entry.Header.SizeA != 0 ? entry.Code.AsSpan(entry.Header.Size, entry.Header.SizeA).ToArray() : null;
-
-                                        shaders[i] = new ShaderCodeHolder(program, shaderProgramInfo, code, code2);
-
-                                        shaderPrograms.Add(program);
-                                    }
-                                });
-
-                                task.OnTask(compileTask, (bool _, ShaderCompileTask task) =>
-                                {
-                                    if (task.IsFaulted)
-                                    {
-                                        Logger.Warning?.Print(LogClass.Gpu, $"Host shader {key} is corrupted or incompatible, discarding...");
-
-                                        _cacheManager.RemoveProgram(ref key);
-                                        return true; // Exit early, the decoding step failed.
-                                    }
-
-                                    // If the host program was rejected by the gpu driver or isn't in cache, try to build from program sources again.
-                                    if (!isHostProgramValid)
-                                    {
-                                        Logger.Info?.Print(LogClass.Gpu, $"Host shader {key} got invalidated, rebuilding from guest...");
-
-                                        List<IShader> hostShaders = new List<IShader>();
-
-                                        // Compile shaders and create program as the shader program binary got invalidated.
-                                        for (int stage = 0; stage < Constants.ShaderStages; stage++)
-                                        {
-                                            ShaderProgram program = shaders[stage]?.Program;
-
-                                            if (program == null)
-                                            {
-                                                continue;
-                                            }
-
-                                            IShader hostShader = _context.Renderer.CompileShader(program.Stage, program.Code);
-
-                                            shaders[stage].HostShader = hostShader;
-
-                                            hostShaders.Add(hostShader);
-                                        }
-
-                                        int fragmentIndex = (int)ShaderStage.Fragment - 1;
-                                        int fragmentOutputMap = -1;
-
-                                        if (shaders[fragmentIndex] != null)
-                                        {
-                                            fragmentOutputMap = shaders[fragmentIndex].Info.FragmentOutputMap;
-                                        }
-
-                                        hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), new ShaderInfo(fragmentOutputMap));
-
-                                        task.OnCompiled(hostProgram, (bool isNewProgramValid, ShaderCompileTask task) =>
-                                        {
-                                            // As the host program was invalidated, save the new entry in the cache.
-                                            hostProgramBinary = HostShaderCacheEntry.Create(hostProgram.GetBinary(), shaders);
-
-                                            if (!isReadOnly)
-                                            {
-                                                if (hasHostCache)
-                                                {
-                                                    _cacheManager.ReplaceHostProgram(ref key, hostProgramBinary);
-                                                }
-                                                else
-                                                {
-                                                    Logger.Warning?.Print(LogClass.Gpu, $"Add missing host shader {key} in cache (is the cache incomplete?)");
-
-                                                    _cacheManager.AddHostProgram(ref key, hostProgramBinary);
-                                                }
-                                            }
-
-                                            _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
-
-                                            return true;
-                                        });
-
-                                        return false; // Not finished: still need to compile the host program.
-                                    }
-                                    else
-                                    {
-                                        _gpProgramsDiskCache.Add(key, new ShaderBundle(hostProgram, shaders));
-
-                                        return true;
-                                    }
-                                });
-
-                                return false; // Not finished: translating the program.
-                            });
-                        }
-
-                        _shaderCount = ++programIndex;
-                    }
-
-                    // Process the queue.
-                    for (int i = 0; i < activeTasks.Count; i++)
-                    {
-                        ShaderCompileTask task = activeTasks[i];
-
-                        if (task.IsDone())
-                        {
-                            activeTasks.RemoveAt(i--);
-                        }
-                    }
-
-                    if (activeTasks.Count == maxTaskCount)
-                    {
-                        // Wait for a task to be done, or for 1ms.
-                        // Host shader compilation cannot signal when it is done,
-                        // so the 1ms timeout is required to poll status.
-
-                        taskDoneEvent.WaitOne(1);
-                    }
-                }
-
-                if (!isReadOnly)
-                {
-                    // Remove entries that are broken in the cache
-                    _cacheManager.RemoveManifestEntries(invalidEntries);
-                    _cacheManager.FlushToArchive();
-                    _cacheManager.Synchronize();
-                }
-
-                progressReportEvent.Set();
-                progressReportThread?.Join();
-
-                ShaderCacheStateChanged?.Invoke(ShaderCacheState.Loaded, _shaderCount, _totalShaderCount);
-
-                Logger.Info?.Print(LogClass.Gpu, $"Shader cache loaded {_shaderCount} entries.");
             }
         }
 
         /// <summary>
-        /// Raises ShaderCacheStateChanged events periodically.
+        /// Shader cache state update handler.
         /// </summary>
-        private void ReportProgress(object state)
+        /// <param name="state">Current state of the shader cache load process</param>
+        /// <param name="current">Number of the current shader being processed</param>
+        /// <param name="total">Total number of shaders to process</param>
+        private void ShaderCacheStateUpdate(ShaderCacheState state, int current, int total)
         {
-            const int refreshRate = 50; // ms
-
-            AutoResetEvent endEvent = (AutoResetEvent)state;
-
-            int count = 0;
-
-            do
-            {
-                int newCount = _shaderCount;
-
-                if (count != newCount)
-                {
-                    ShaderCacheStateChanged?.Invoke(ShaderCacheState.Loading, newCount, _totalShaderCount);
-                    count = newCount;
-                }
-            }
-            while (!endEvent.WaitOne(refreshRate));
+            ShaderCacheStateChanged?.Invoke(state, current, total);
         }
 
         /// <summary>
@@ -557,112 +189,42 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// This automatically translates, compiles and adds the code to the cache if not present.
         /// </remarks>
         /// <param name="channel">GPU channel</param>
-        /// <param name="gas">GPU accessor state</param>
+        /// <param name="poolState">Texture pool state</param>
+        /// <param name="computeState">Compute engine state</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
-        /// <param name="localSizeX">Local group size X of the computer shader</param>
-        /// <param name="localSizeY">Local group size Y of the computer shader</param>
-        /// <param name="localSizeZ">Local group size Z of the computer shader</param>
-        /// <param name="localMemorySize">Local memory size of the compute shader</param>
-        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>Compiled compute shader code</returns>
-        public ShaderBundle GetComputeShader(
+        public CachedShaderProgram GetComputeShader(
             GpuChannel channel,
-            GpuAccessorState gas,
-            ulong gpuVa,
-            int localSizeX,
-            int localSizeY,
-            int localSizeZ,
-            int localMemorySize,
-            int sharedMemorySize)
+            GpuChannelPoolState poolState,
+            GpuChannelComputeState computeState,
+            ulong gpuVa)
         {
-            bool isCached = _cpPrograms.TryGetValue(gpuVa, out List<ShaderBundle> list);
-
-            if (isCached)
+            if (_cpPrograms.TryGetValue(gpuVa, out var cpShader) && IsShaderEqual(channel, poolState, cpShader, gpuVa))
             {
-                foreach (ShaderBundle cachedCpShader in list)
-                {
-                    if (IsShaderEqual(channel.MemoryManager, cachedCpShader, gpuVa))
-                    {
-                        return cachedCpShader;
-                    }
-                }
+                return cpShader;
             }
 
-            TranslatorContext[] shaderContexts = new TranslatorContext[1];
-
-            shaderContexts[0] = DecodeComputeShader(
-                channel,
-                gas,
-                gpuVa,
-                localSizeX,
-                localSizeY,
-                localSizeZ,
-                localMemorySize,
-                sharedMemorySize);
-
-            bool isShaderCacheEnabled = _cacheManager != null;
-            bool isShaderCacheReadOnly = false;
-
-            Hash128 programCodeHash = default;
-            GuestShaderCacheEntry[] shaderCacheEntries = null;
-
-            // Current shader cache doesn't support bindless textures
-            if (shaderContexts[0].UsedFeatures.HasFlag(FeatureFlags.Bindless))
+            if (_computeShaderCache.TryFind(channel, poolState, gpuVa, out cpShader, out byte[] cachedGuestCode))
             {
-                isShaderCacheEnabled = false;
+                _cpPrograms[gpuVa] = cpShader;
+                return cpShader;
             }
 
-            if (isShaderCacheEnabled)
-            {
-                isShaderCacheReadOnly = _cacheManager.IsReadOnly;
+            ShaderSpecializationState specState = new ShaderSpecializationState(computeState);
+            GpuAccessorState gpuAccessorState = new GpuAccessorState(poolState, computeState, default, specState);
+            GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gpuAccessorState);
 
-                // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel, shaderContexts);
-                programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries);
-            }
+            TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, gpuVa);
 
-            ShaderBundle cpShader;
+            TranslatedShader translatedShader = TranslateShader(_dumper, channel, translatorContext, cachedGuestCode);
 
-            // Search for the program hash in loaded shaders.
-            if (!isShaderCacheEnabled || !_cpProgramsDiskCache.TryGetValue(programCodeHash, out cpShader))
-            {
-                if (isShaderCacheEnabled)
-                {
-                    Logger.Debug?.Print(LogClass.Gpu, $"Shader {programCodeHash} not in cache, compiling!");
-                }
+            IProgram hostProgram = _context.Renderer.CreateProgram(new ShaderSource[] { CreateShaderSource(translatedShader.Program) }, new ShaderInfo(-1));
 
-                // The shader isn't currently cached, translate it and compile it.
-                ShaderCodeHolder shader = TranslateShader(_dumper, channel.MemoryManager, shaderContexts[0], null, null);
+            cpShader = new CachedShaderProgram(hostProgram, specState, translatedShader.Shader);
 
-                shader.HostShader = _context.Renderer.CompileShader(ShaderStage.Compute, shader.Program.Code);
-
-                IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader }, new ShaderInfo(-1));
-
-                cpShader = new ShaderBundle(hostProgram, shader);
-
-                if (isShaderCacheEnabled)
-                {
-                    _cpProgramsDiskCache.Add(programCodeHash, cpShader);
-
-                    if (!isShaderCacheReadOnly)
-                    {
-                        byte[] guestProgramDump = CacheHelper.CreateGuestProgramDump(shaderCacheEntries);
-                        _programsToSaveQueue.Enqueue((hostProgram, (byte[] hostProgramBinary) =>
-                        {
-                            _cacheManager.SaveProgram(ref programCodeHash, guestProgramDump, HostShaderCacheEntry.Create(hostProgramBinary, new ShaderCodeHolder[] { shader }));
-                        }));
-                    }
-                }
-            }
-
-            if (!isCached)
-            {
-                list = new List<ShaderBundle>();
-
-                _cpPrograms.Add(gpuVa, list);
-            }
-
-            list.Add(cpShader);
+            _computeShaderCache.Add(cpShader);
+            EnqueueProgramToSave(new ProgramToSave(cpShader, hostProgram));
+            _cpPrograms[gpuVa] = cpShader;
 
             return cpShader;
         }
@@ -676,141 +238,139 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </remarks>
         /// <param name="state">GPU state</param>
         /// <param name="channel">GPU channel</param>
-        /// <param name="gas">GPU accessor state</param>
+        /// <param name="poolState">Texture pool state</param>
+        /// <param name="graphicsState">3D engine state</param>
         /// <param name="addresses">Addresses of the shaders for each stage</param>
         /// <returns>Compiled graphics shader code</returns>
-        public ShaderBundle GetGraphicsShader(ref ThreedClassState state, GpuChannel channel, GpuAccessorState gas, ShaderAddresses addresses)
+        public CachedShaderProgram GetGraphicsShader(
+            ref ThreedClassState state,
+            GpuChannel channel,
+            GpuChannelPoolState poolState,
+            GpuChannelGraphicsState graphicsState,
+            ShaderAddresses addresses)
         {
-            bool isCached = _gpPrograms.TryGetValue(addresses, out List<ShaderBundle> list);
-
-            if (isCached)
+            if (_gpPrograms.TryGetValue(addresses, out var gpShaders) && IsShaderEqual(channel, poolState, gpShaders, addresses))
             {
-                foreach (ShaderBundle cachedGpShaders in list)
+                return gpShaders;
+            }
+
+            if (_graphicsShaderCache.TryFind(channel, poolState, addresses, out gpShaders, out var cachedGuestCode))
+            {
+                _gpPrograms[addresses] = gpShaders;
+                return gpShaders;
+            }
+
+            TransformFeedbackDescriptor[] transformFeedbackDescriptors = GetTransformFeedbackDescriptors(ref state);
+
+            ShaderSpecializationState specState = new ShaderSpecializationState(graphicsState, transformFeedbackDescriptors);
+            GpuAccessorState gpuAccessorState = new GpuAccessorState(poolState, default, graphicsState, specState, transformFeedbackDescriptors);
+
+            ReadOnlySpan<ulong> addressesSpan = addresses.AsSpan();
+
+            TranslatorContext[] translatorContexts = new TranslatorContext[Constants.ShaderStages + 1];
+            TranslatorContext nextStage = null;
+
+            for (int stageIndex = Constants.ShaderStages - 1; stageIndex >= 0; stageIndex--)
+            {
+                ulong gpuVa = addressesSpan[stageIndex + 1];
+
+                if (gpuVa != 0)
                 {
-                    if (IsShaderEqual(channel.MemoryManager, cachedGpShaders, addresses))
+                    GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gpuAccessorState, stageIndex);
+                    TranslatorContext currentStage = DecodeGraphicsShader(gpuAccessor, DefaultFlags, gpuVa);
+
+                    if (nextStage != null)
                     {
-                        return cachedGpShaders;
+                        currentStage.SetNextStage(nextStage);
+                    }
+
+                    if (stageIndex == 0 && addresses.VertexA != 0)
+                    {
+                        translatorContexts[0] = DecodeGraphicsShader(gpuAccessor, DefaultFlags | TranslationFlags.VertexA, addresses.VertexA);
+                    }
+
+                    translatorContexts[stageIndex + 1] = currentStage;
+                    nextStage = currentStage;
+                }
+            }
+
+            CachedShaderStage[] shaders = new CachedShaderStage[Constants.ShaderStages + 1];
+            List<ShaderSource> shaderSources = new List<ShaderSource>();
+
+            for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
+            {
+                TranslatorContext currentStage = translatorContexts[stageIndex + 1];
+
+                if (currentStage != null)
+                {
+                    ShaderProgram program;
+
+                    if (stageIndex == 0 && translatorContexts[0] != null)
+                    {
+                        TranslatedShaderVertexPair translatedShader = TranslateShader(
+                            _dumper,
+                            channel,
+                            currentStage,
+                            translatorContexts[0],
+                            cachedGuestCode.VertexACode,
+                            cachedGuestCode.VertexBCode);
+
+                        shaders[0] = translatedShader.VertexA;
+                        shaders[1] = translatedShader.VertexB;
+                        program = translatedShader.Program;
+                    }
+                    else
+                    {
+                        byte[] code = cachedGuestCode.GetByIndex(stageIndex);
+
+                        TranslatedShader translatedShader = TranslateShader(_dumper, channel, currentStage, code);
+
+                        shaders[stageIndex + 1] = translatedShader.Shader;
+                        program = translatedShader.Program;
+                    }
+
+                    if (program != null)
+                    {
+                        shaderSources.Add(CreateShaderSource(program));
                     }
                 }
             }
 
-            TranslatorContext[] shaderContexts = new TranslatorContext[Constants.ShaderStages + 1];
+            int fragmentOutputMap = shaders[5]?.Info.FragmentOutputMap ?? -1;
+            IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources.ToArray(), new ShaderInfo(fragmentOutputMap));
 
-            TransformFeedbackDescriptor[] tfd = GetTransformFeedbackDescriptors(ref state);
+            gpShaders = new CachedShaderProgram(hostProgram, specState, shaders);
 
-            gas.TransformFeedbackDescriptors = tfd;
-
-            TranslationCounts counts = new TranslationCounts();
-
-            if (addresses.VertexA != 0)
-            {
-                shaderContexts[0] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags | TranslationFlags.VertexA, ShaderStage.Vertex, addresses.VertexA);
-            }
-
-            shaderContexts[1] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags, ShaderStage.Vertex, addresses.Vertex);
-            shaderContexts[2] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags, ShaderStage.TessellationControl, addresses.TessControl);
-            shaderContexts[3] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags, ShaderStage.TessellationEvaluation, addresses.TessEvaluation);
-            shaderContexts[4] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags, ShaderStage.Geometry, addresses.Geometry);
-            shaderContexts[5] = DecodeGraphicsShader(channel, gas, counts, DefaultFlags, ShaderStage.Fragment, addresses.Fragment);
-
-            bool isShaderCacheEnabled = _cacheManager != null;
-            bool isShaderCacheReadOnly = false;
-
-            Hash128 programCodeHash = default;
-            GuestShaderCacheEntry[] shaderCacheEntries = null;
-
-            // Current shader cache doesn't support bindless textures
-            for (int i = 0; i < shaderContexts.Length; i++)
-            {
-                if (shaderContexts[i] != null && shaderContexts[i].UsedFeatures.HasFlag(FeatureFlags.Bindless))
-                {
-                    isShaderCacheEnabled = false;
-                    break;
-                }
-            }
-
-            if (isShaderCacheEnabled)
-            {
-                isShaderCacheReadOnly = _cacheManager.IsReadOnly;
-
-                // Compute hash and prepare data for shader disk cache comparison.
-                shaderCacheEntries = CacheHelper.CreateShaderCacheEntries(channel, shaderContexts);
-                programCodeHash = CacheHelper.ComputeGuestHashFromCache(shaderCacheEntries, tfd);
-            }
-
-            ShaderBundle gpShaders;
-
-            // Search for the program hash in loaded shaders.
-            if (!isShaderCacheEnabled || !_gpProgramsDiskCache.TryGetValue(programCodeHash, out gpShaders))
-            {
-                if (isShaderCacheEnabled)
-                {
-                    Logger.Debug?.Print(LogClass.Gpu, $"Shader {programCodeHash} not in cache, compiling!");
-                }
-
-                // The shader isn't currently cached, translate it and compile it.
-                ShaderCodeHolder[] shaders = new ShaderCodeHolder[Constants.ShaderStages];
-
-                for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
-                {
-                    shaders[stageIndex] = TranslateShader(_dumper, channel.MemoryManager, shaderContexts, stageIndex + 1);
-                }
-
-                List<IShader> hostShaders = new List<IShader>();
-
-                for (int stage = 0; stage < Constants.ShaderStages; stage++)
-                {
-                    ShaderProgram program = shaders[stage]?.Program;
-
-                    if (program == null)
-                    {
-                        continue;
-                    }
-
-                    IShader hostShader = _context.Renderer.CompileShader(program.Stage, program.Code);
-
-                    shaders[stage].HostShader = hostShader;
-
-                    hostShaders.Add(hostShader);
-                }
-
-                int fragmentIndex = (int)ShaderStage.Fragment - 1;
-                int fragmentOutputMap = -1;
-
-                if (shaders[fragmentIndex] != null)
-                {
-                    fragmentOutputMap = shaders[fragmentIndex].Info.FragmentOutputMap;
-                }
-
-                IProgram hostProgram = _context.Renderer.CreateProgram(hostShaders.ToArray(), new ShaderInfo(fragmentOutputMap));
-
-                gpShaders = new ShaderBundle(hostProgram, shaders);
-
-                if (isShaderCacheEnabled)
-                {
-                    _gpProgramsDiskCache.Add(programCodeHash, gpShaders);
-
-                    if (!isShaderCacheReadOnly)
-                    {
-                        byte[] guestProgramDump = CacheHelper.CreateGuestProgramDump(shaderCacheEntries, tfd);
-                        _programsToSaveQueue.Enqueue((hostProgram, (byte[] hostProgramBinary) =>
-                        {
-                            _cacheManager.SaveProgram(ref programCodeHash, guestProgramDump, HostShaderCacheEntry.Create(hostProgramBinary, shaders));
-                        }));
-                    }
-                }
-            }
-
-            if (!isCached)
-            {
-                list = new List<ShaderBundle>();
-
-                _gpPrograms.Add(addresses, list);
-            }
-
-            list.Add(gpShaders);
+            _graphicsShaderCache.Add(gpShaders);
+            EnqueueProgramToSave(new ProgramToSave(gpShaders, hostProgram));
+            _gpPrograms[addresses] = gpShaders;
 
             return gpShaders;
+        }
+
+        /// <summary>
+        /// Creates a shader source for use with the backend from a translated shader program.
+        /// </summary>
+        /// <param name="program">Translated shader program</param>
+        /// <returns>Shader source</returns>
+        public static ShaderSource CreateShaderSource(ShaderProgram program)
+        {
+            return new ShaderSource(program.Code, program.BinaryCode, program.Info.Stage, program.Language);
+        }
+
+        /// <summary>
+        /// Puts a program on the queue of programs to be saved on the disk cache.
+        /// </summary>
+        /// <remarks>
+        /// This will not do anything if disk shader cache is disabled.
+        /// </remarks>
+        /// <param name="programToSave">Program to be saved on disk</param>
+        private void EnqueueProgramToSave(ProgramToSave programToSave)
+        {
+            if (_diskCacheHostStorage.CacheEnabled)
+            {
+                _programsToSaveQueue.Enqueue(programToSave);
+            }
         }
 
         /// <summary>
@@ -821,7 +381,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private static TransformFeedbackDescriptor[] GetTransformFeedbackDescriptors(ref ThreedClassState state)
         {
             bool tfEnable = state.TfEnable;
-
             if (!tfEnable)
             {
                 return null;
@@ -833,11 +392,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 var tf = state.TfState[i];
 
-                int length = (int)Math.Min((uint)tf.VaryingsCount, 0x80);
-
-                var varyingLocations = MemoryMarshal.Cast<uint, byte>(state.TfVaryingLocations[i].ToSpan()).Slice(0, length);
-
-                descs[i] = new TransformFeedbackDescriptor(tf.BufferIndex, tf.Stride, varyingLocations.ToArray());
+                descs[i] = new TransformFeedbackDescriptor(
+                    tf.BufferIndex,
+                    tf.Stride,
+                    tf.VaryingsCount,
+                    ref state.TfVaryingLocations[i]);
             }
 
             return descs;
@@ -846,46 +405,54 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Checks if compute shader code in memory is equal to the cached shader.
         /// </summary>
-        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
+        /// <param name="channel">GPU channel using the shader</param>
+        /// <param name="poolState">GPU channel state to verify shader compatibility</param>
         /// <param name="cpShader">Cached compute shader</param>
         /// <param name="gpuVa">GPU virtual address of the shader code in memory</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderBundle cpShader, ulong gpuVa)
+        private static bool IsShaderEqual(
+            GpuChannel channel,
+            GpuChannelPoolState poolState,
+            CachedShaderProgram cpShader,
+            ulong gpuVa)
         {
-            return IsShaderEqual(memoryManager, cpShader.Shaders[0], gpuVa);
+            if (IsShaderEqual(channel.MemoryManager, cpShader.Shaders[0], gpuVa))
+            {
+                return cpShader.SpecializationState.MatchesCompute(channel, poolState);
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Checks if graphics shader code from all stages in memory are equal to the cached shaders.
         /// </summary>
-        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
+        /// <param name="channel">GPU channel using the shader</param>
+        /// <param name="poolState">GPU channel state to verify shader compatibility</param>
         /// <param name="gpShaders">Cached graphics shaders</param>
         /// <param name="addresses">GPU virtual addresses of all enabled shader stages</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderBundle gpShaders, ShaderAddresses addresses)
+        private static bool IsShaderEqual(
+            GpuChannel channel,
+            GpuChannelPoolState poolState,
+            CachedShaderProgram gpShaders,
+            ShaderAddresses addresses)
         {
-            for (int stage = 0; stage < gpShaders.Shaders.Length; stage++)
+            ReadOnlySpan<ulong> addressesSpan = addresses.AsSpan();
+
+            for (int stageIndex = 0; stageIndex < gpShaders.Shaders.Length; stageIndex++)
             {
-                ShaderCodeHolder shader = gpShaders.Shaders[stage];
+                CachedShaderStage shader = gpShaders.Shaders[stageIndex];
 
-                ulong gpuVa = 0;
+                ulong gpuVa = addressesSpan[stageIndex];
 
-                switch (stage)
-                {
-                    case 0: gpuVa = addresses.Vertex;         break;
-                    case 1: gpuVa = addresses.TessControl;    break;
-                    case 2: gpuVa = addresses.TessEvaluation; break;
-                    case 3: gpuVa = addresses.Geometry;       break;
-                    case 4: gpuVa = addresses.Fragment;       break;
-                }
-
-                if (!IsShaderEqual(memoryManager, shader, gpuVa, addresses.VertexA))
+                if (!IsShaderEqual(channel.MemoryManager, shader, gpuVa))
                 {
                     return false;
                 }
             }
 
-            return true;
+            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState);
         }
 
         /// <summary>
@@ -894,9 +461,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
         /// <param name="shader">Cached shader to compare with</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
-        /// <param name="gpuVaA">Optional GPU virtual address of the "Vertex A" binary shader code</param>
         /// <returns>True if the code is different, false otherwise</returns>
-        private static bool IsShaderEqual(MemoryManager memoryManager, ShaderCodeHolder shader, ulong gpuVa, ulong gpuVaA = 0)
+        private static bool IsShaderEqual(MemoryManager memoryManager, CachedShaderStage shader, ulong gpuVa)
         {
             if (shader == null)
             {
@@ -905,47 +471,17 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             ReadOnlySpan<byte> memoryCode = memoryManager.GetSpan(gpuVa, shader.Code.Length);
 
-            bool equals = memoryCode.SequenceEqual(shader.Code);
-
-            if (equals && shader.Code2 != null)
-            {
-                memoryCode = memoryManager.GetSpan(gpuVaA, shader.Code2.Length);
-
-                equals = memoryCode.SequenceEqual(shader.Code2);
-            }
-
-            return equals;
+            return memoryCode.SequenceEqual(shader.Code);
         }
 
         /// <summary>
         /// Decode the binary Maxwell shader code to a translator context.
         /// </summary>
-        /// <param name="channel">GPU channel</param>
-        /// <param name="gas">GPU accessor state</param>
+        /// <param name="gpuAccessor">GPU state accessor</param>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
-        /// <param name="localSizeX">Local group size X of the computer shader</param>
-        /// <param name="localSizeY">Local group size Y of the computer shader</param>
-        /// <param name="localSizeZ">Local group size Z of the computer shader</param>
-        /// <param name="localMemorySize">Local memory size of the compute shader</param>
-        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>The generated translator context</returns>
-        private TranslatorContext DecodeComputeShader(
-            GpuChannel channel,
-            GpuAccessorState gas,
-            ulong gpuVa,
-            int localSizeX,
-            int localSizeY,
-            int localSizeZ,
-            int localMemorySize,
-            int sharedMemorySize)
+        public static TranslatorContext DecodeComputeShader(IGpuAccessor gpuAccessor, ulong gpuVa)
         {
-            if (gpuVa == 0)
-            {
-                return null;
-            }
-
-            GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gas, localSizeX, localSizeY, localSizeZ, localMemorySize, sharedMemorySize);
-
             var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, DefaultFlags | TranslationFlags.Compute);
             return Translator.CreateContext(gpuVa, gpuAccessor, options);
         }
@@ -956,126 +492,105 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <remarks>
         /// This will combine the "Vertex A" and "Vertex B" shader stages, if specified, into one shader.
         /// </remarks>
-        /// <param name="channel">GPU channel</param>
-        /// <param name="gas">GPU accessor state</param>
-        /// <param name="counts">Cumulative shader resource counts</param>
+        /// <param name="gpuAccessor">GPU state accessor</param>
         /// <param name="flags">Flags that controls shader translation</param>
-        /// <param name="stage">Shader stage</param>
         /// <param name="gpuVa">GPU virtual address of the shader code</param>
         /// <returns>The generated translator context</returns>
-        private TranslatorContext DecodeGraphicsShader(
-            GpuChannel channel,
-            GpuAccessorState gas,
-            TranslationCounts counts,
-            TranslationFlags flags,
-            ShaderStage stage,
-            ulong gpuVa)
+        public static TranslatorContext DecodeGraphicsShader(IGpuAccessor gpuAccessor, TranslationFlags flags, ulong gpuVa)
         {
-            if (gpuVa == 0)
-            {
-                return null;
-            }
-
-            GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gas, (int)stage - 1);
-
             var options = new TranslationOptions(TargetLanguage.Glsl, TargetApi.OpenGL, flags);
-            return Translator.CreateContext(gpuVa, gpuAccessor, options, counts);
+            return Translator.CreateContext(gpuVa, gpuAccessor, options);
         }
 
         /// <summary>
         /// Translates a previously generated translator context to something that the host API accepts.
         /// </summary>
         /// <param name="dumper">Optional shader code dumper</param>
-        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
-        /// <param name="stages">Translator context of all available shader stages</param>
-        /// <param name="stageIndex">Index on the stages array to translate</param>
-        /// <returns>Compiled graphics shader code</returns>
-        private static ShaderCodeHolder TranslateShader(
-            ShaderDumper dumper,
-            MemoryManager memoryManager,
-            TranslatorContext[] stages,
-            int stageIndex)
-        {
-            TranslatorContext currentStage = stages[stageIndex];
-            TranslatorContext nextStage = GetNextStageContext(stages, stageIndex);
-            TranslatorContext vertexA = stageIndex == 1 ? stages[0] : null;
-
-            return TranslateShader(dumper, memoryManager, currentStage, nextStage, vertexA);
-        }
-
-        /// <summary>
-        /// Gets the next shader stage context, from an array of contexts and index of the current stage.
-        /// </summary>
-        /// <param name="stages">Translator context of all available shader stages</param>
-        /// <param name="stageIndex">Index on the stages array to translate</param>
-        /// <returns>The translator context of the next stage, or null if inexistent</returns>
-        private static TranslatorContext GetNextStageContext(TranslatorContext[] stages, int stageIndex)
-        {
-            for (int nextStageIndex = stageIndex + 1; nextStageIndex < stages.Length; nextStageIndex++)
-            {
-                if (stages[nextStageIndex] != null)
-                {
-                    return stages[nextStageIndex];
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Translates a previously generated translator context to something that the host API accepts.
-        /// </summary>
-        /// <param name="dumper">Optional shader code dumper</param>
-        /// <param name="memoryManager">Memory manager used to access the GPU memory where the shader is located</param>
+        /// <param name="channel">GPU channel using the shader</param>
         /// <param name="currentStage">Translator context of the stage to be translated</param>
-        /// <param name="nextStage">Translator context of the next active stage, if existent</param>
         /// <param name="vertexA">Optional translator context of the shader that should be combined</param>
+        /// <param name="codeA">Optional Maxwell binary code of the Vertex A shader, if present</param>
+        /// <param name="codeB">Optional Maxwell binary code of the Vertex B or current stage shader, if present on cache</param>
         /// <returns>Compiled graphics shader code</returns>
-        private static ShaderCodeHolder TranslateShader(
+        private static TranslatedShaderVertexPair TranslateShader(
             ShaderDumper dumper,
-            MemoryManager memoryManager,
+            GpuChannel channel,
             TranslatorContext currentStage,
-            TranslatorContext nextStage,
-            TranslatorContext vertexA)
+            TranslatorContext vertexA,
+            byte[] codeA,
+            byte[] codeB)
         {
-            if (currentStage == null)
+            ulong cb1DataAddress = channel.BufferManager.GetGraphicsUniformBufferAddress(0, 1);
+
+            var memoryManager = channel.MemoryManager;
+
+            codeA ??= memoryManager.GetSpan(vertexA.Address, vertexA.Size).ToArray();
+            codeB ??= memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
+            byte[] cb1DataA = memoryManager.Physical.GetSpan(cb1DataAddress, vertexA.Cb1DataSize).ToArray();
+            byte[] cb1DataB = memoryManager.Physical.GetSpan(cb1DataAddress, currentStage.Cb1DataSize).ToArray();
+
+            ShaderDumpPaths pathsA = default;
+            ShaderDumpPaths pathsB = default;
+
+            if (dumper != null)
             {
-                return null;
+                pathsA = dumper.Dump(codeA, compute: false);
+                pathsB = dumper.Dump(codeB, compute: false);
             }
 
-            if (vertexA != null)
+            ShaderProgram program = currentStage.Translate(vertexA);
+
+            pathsB.Prepend(program);
+            pathsA.Prepend(program);
+
+            CachedShaderStage vertexAStage = new CachedShaderStage(null, codeA, cb1DataA);
+            CachedShaderStage vertexBStage = new CachedShaderStage(program.Info, codeB, cb1DataB);
+
+            return new TranslatedShaderVertexPair(vertexAStage, vertexBStage, program);
+        }
+
+        /// <summary>
+        /// Translates a previously generated translator context to something that the host API accepts.
+        /// </summary>
+        /// <param name="dumper">Optional shader code dumper</param>
+        /// <param name="channel">GPU channel using the shader</param>
+        /// <param name="context">Translator context of the stage to be translated</param>
+        /// <param name="code">Optional Maxwell binary code of the current stage shader, if present on cache</param>
+        /// <returns>Compiled graphics shader code</returns>
+        private static TranslatedShader TranslateShader(ShaderDumper dumper, GpuChannel channel, TranslatorContext context, byte[] code)
+        {
+            var memoryManager = channel.MemoryManager;
+
+            ulong cb1DataAddress = context.Stage == ShaderStage.Compute
+                ? channel.BufferManager.GetComputeUniformBufferAddress(1)
+                : channel.BufferManager.GetGraphicsUniformBufferAddress(StageToStageIndex(context.Stage), 1);
+
+            byte[] cb1Data = memoryManager.Physical.GetSpan(cb1DataAddress, context.Cb1DataSize).ToArray();
+            code ??= memoryManager.GetSpan(context.Address, context.Size).ToArray();
+
+            ShaderDumpPaths paths = dumper?.Dump(code, context.Stage == ShaderStage.Compute) ?? default;
+            ShaderProgram program = context.Translate();
+
+            paths.Prepend(program);
+
+            return new TranslatedShader(new CachedShaderStage(program.Info, code, cb1Data), program);
+        }
+
+        /// <summary>
+        /// Gets the index of a stage from a <see cref="ShaderStage"/>.
+        /// </summary>
+        /// <param name="stage">Stage to get the index from</param>
+        /// <returns>Stage index</returns>
+        private static int StageToStageIndex(ShaderStage stage)
+        {
+            return stage switch
             {
-                byte[] codeA = memoryManager.GetSpan(vertexA.Address, vertexA.Size).ToArray();
-                byte[] codeB = memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
-
-                ShaderDumpPaths pathsA = default;
-                ShaderDumpPaths pathsB = default;
-
-                if (dumper != null)
-                {
-                    pathsA = dumper.Dump(codeA, compute: false);
-                    pathsB = dumper.Dump(codeB, compute: false);
-                }
-
-                ShaderProgram program = currentStage.Translate(out ShaderProgramInfo shaderProgramInfo, nextStage, vertexA);
-
-                pathsB.Prepend(program);
-                pathsA.Prepend(program);
-
-                return new ShaderCodeHolder(program, shaderProgramInfo, codeB, codeA);
-            }
-            else
-            {
-                byte[] code = memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
-
-                ShaderDumpPaths paths = dumper?.Dump(code, currentStage.Stage == ShaderStage.Compute) ?? default;
-
-                ShaderProgram program = currentStage.Translate(out ShaderProgramInfo shaderProgramInfo, nextStage);
-
-                paths.Prepend(program);
-
-                return new ShaderCodeHolder(program, shaderProgramInfo, code);
-            }
+                ShaderStage.TessellationControl => 1,
+                ShaderStage.TessellationEvaluation => 2,
+                ShaderStage.Geometry => 3,
+                ShaderStage.Fragment => 4,
+                _ => 0
+            };
         }
 
         /// <summary>
@@ -1084,23 +599,17 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         public void Dispose()
         {
-            foreach (List<ShaderBundle> list in _cpPrograms.Values)
+            foreach (CachedShaderProgram program in _graphicsShaderCache.GetPrograms())
             {
-                foreach (ShaderBundle bundle in list)
-                {
-                    bundle.Dispose();
-                }
+                program.Dispose();
             }
 
-            foreach (List<ShaderBundle> list in _gpPrograms.Values)
+            foreach (CachedShaderProgram program in _computeShaderCache.GetPrograms())
             {
-                foreach (ShaderBundle bundle in list)
-                {
-                    bundle.Dispose();
-                }
+                program.Dispose();
             }
 
-            _cacheManager?.Dispose();
+            _cacheWriter?.Dispose();
         }
     }
 }

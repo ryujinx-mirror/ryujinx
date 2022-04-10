@@ -250,15 +250,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             }
         }
 
-        public IShader CompileShader(ShaderStage stage, string code)
-        {
-            var shader = new ThreadedShader(this, stage, code);
-            New<CompileShaderCommand>().Set(Ref(shader));
-            QueueCommand();
-
-            return shader;
-        }
-
         public BufferHandle CreateBuffer(int size)
         {
             BufferHandle handle = Buffers.CreateBufferHandle();
@@ -268,7 +259,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return handle;
         }
 
-        public IProgram CreateProgram(IShader[] shaders, ShaderInfo info)
+        public IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info)
         {
             var program = new ThreadedProgram(this);
             SourceProgramRequest request = new SourceProgramRequest(program, shaders, info);

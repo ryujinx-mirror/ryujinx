@@ -43,6 +43,7 @@ namespace Ryujinx.Headless.SDL2
         private GraphicsDebugLevel _glLogLevel;
         private readonly Stopwatch _chrono;
         private readonly long _ticksPerFrame;
+        private readonly CancellationTokenSource _gpuCancellationTokenSource;
         private readonly ManualResetEvent _exitEvent;
 
         private long _ticks;
@@ -66,6 +67,7 @@ namespace Ryujinx.Headless.SDL2
             _glLogLevel = glLogLevel;
             _chrono = new Stopwatch();
             _ticksPerFrame = Stopwatch.Frequency / TargetFps;
+            _gpuCancellationTokenSource = new CancellationTokenSource();
             _exitEvent = new ManualResetEvent(false);
             _aspectRatio = aspectRatio;
             _enableMouse = enableMouse;
@@ -162,7 +164,7 @@ namespace Ryujinx.Headless.SDL2
 
             Device.Gpu.Renderer.RunLoop(() =>
             {
-                Device.Gpu.InitializeShaderCache();
+                Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
                 Translator.IsReadyForTranslation.Set();
 
                 while (_isActive)
@@ -222,6 +224,8 @@ namespace Ryujinx.Headless.SDL2
             {
                 return;
             }
+
+            _gpuCancellationTokenSource.Cancel();
 
             _isStopped = true;
             _isActive = false;

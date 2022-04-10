@@ -55,7 +55,7 @@ namespace Ryujinx.ShaderTools
 
             TranslationOptions translationOptions = new TranslationOptions(options.TargetLanguage, options.TargetApi, flags);
 
-            ShaderProgram program = Translator.CreateContext(0, new GpuAccessor(data), translationOptions).Translate(out _);
+            ShaderProgram program = Translator.CreateContext(0, new GpuAccessor(data), translationOptions).Translate();
 
             if (options.OutputPath == null)
             {

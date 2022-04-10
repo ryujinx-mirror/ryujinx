@@ -7,7 +7,6 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -30,6 +29,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private readonly StateUpdateTracker<ThreedClassState> _updateTracker;
 
         private readonly ShaderProgramInfo[] _currentProgramInfo;
+        private ShaderSpecializationState _shaderSpecState;
 
         private bool _vtgWritesRtLayer;
         private byte _vsClipDistancesWritten;
@@ -195,6 +195,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update()
         {
+            // If any state that the shader depends on changed,
+            // then we may need to compile/bind a different version
+            // of the shader for the new state.
+            if (_shaderSpecState != null)
+            {
+                if (!_shaderSpecState.MatchesGraphics(_channel, GetPoolState()))
+                {
+                    ForceShaderUpdate();
+                }
+            }
+
             // The vertex buffer size is calculated using a different
             // method when doing indexed draws, so we need to make sure
             // to update the vertex buffers if we are doing a regular
@@ -1065,106 +1076,125 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void UpdateShaderState()
         {
+            var shaderCache = _channel.MemoryManager.Physical.ShaderCache;
+
+            _vtgWritesRtLayer = false;
+
             ShaderAddresses addresses = new ShaderAddresses();
-
-            Span<ShaderAddresses> addressesSpan = MemoryMarshal.CreateSpan(ref addresses, 1);
-
-            Span<ulong> addressesArray = MemoryMarshal.Cast<ShaderAddresses, ulong>(addressesSpan);
+            Span<ulong> addressesSpan = addresses.AsSpan();
 
             ulong baseAddress = _state.State.ShaderBaseAddress.Pack();
 
             for (int index = 0; index < 6; index++)
             {
                 var shader = _state.State.ShaderState[index];
-
                 if (!shader.UnpackEnable() && index != 1)
                 {
                     continue;
                 }
 
-                addressesArray[index] = baseAddress + shader.Offset;
+                addressesSpan[index] = baseAddress + shader.Offset;
             }
 
-            GpuAccessorState gas = new GpuAccessorState(
-                _state.State.TexturePoolState.Address.Pack(),
-                _state.State.TexturePoolState.MaximumId,
-                (int)_state.State.TextureBufferIndex,
-                _state.State.EarlyZForce,
-                _drawState.Topology,
-                _state.State.TessMode);
+            GpuChannelPoolState poolState = GetPoolState();
+            GpuChannelGraphicsState graphicsState = GetGraphicsState();
 
-            ShaderBundle gs = _channel.MemoryManager.Physical.ShaderCache.GetGraphicsShader(ref _state.State, _channel, gas, addresses);
+            CachedShaderProgram gs = shaderCache.GetGraphicsShader(ref _state.State, _channel, poolState, graphicsState, addresses);
+
+            _shaderSpecState = gs.SpecializationState;
 
             byte oldVsClipDistancesWritten = _vsClipDistancesWritten;
 
-            _drawState.VsUsesInstanceId = gs.Shaders[0]?.Info.UsesInstanceId ?? false;
-            _vsClipDistancesWritten = gs.Shaders[0]?.Info.ClipDistancesWritten ?? 0;
-            _vtgWritesRtLayer = false;
+            _drawState.VsUsesInstanceId = gs.Shaders[1]?.Info.UsesInstanceId ?? false;
+            _vsClipDistancesWritten = gs.Shaders[1]?.Info.ClipDistancesWritten ?? 0;
 
             if (oldVsClipDistancesWritten != _vsClipDistancesWritten)
             {
                 UpdateUserClipState();
             }
 
-            for (int stage = 0; stage < Constants.ShaderStages; stage++)
+            for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
-                ShaderProgramInfo info = gs.Shaders[stage]?.Info;
-
-                _currentProgramInfo[stage] = info;
-
-                if (info == null)
-                {
-                    _channel.TextureManager.RentGraphicsTextureBindings(stage, 0);
-                    _channel.TextureManager.RentGraphicsImageBindings(stage, 0);
-                    _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, null);
-                    _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, null);
-                    continue;
-                }
-
-                Span<TextureBindingInfo> textureBindings = _channel.TextureManager.RentGraphicsTextureBindings(stage, info.Textures.Count);
-
-                if (info.UsesRtLayer)
-                {
-                    _vtgWritesRtLayer = true;
-                }
-
-                for (int index = 0; index < info.Textures.Count; index++)
-                {
-                    var descriptor = info.Textures[index];
-
-                    Target target = ShaderTexture.GetTarget(descriptor.Type);
-
-                    textureBindings[index] = new TextureBindingInfo(
-                        target,
-                        descriptor.Binding,
-                        descriptor.CbufSlot,
-                        descriptor.HandleIndex,
-                        descriptor.Flags);
-                }
-
-                TextureBindingInfo[] imageBindings = _channel.TextureManager.RentGraphicsImageBindings(stage, info.Images.Count);
-
-                for (int index = 0; index < info.Images.Count; index++)
-                {
-                    var descriptor = info.Images[index];
-
-                    Target target = ShaderTexture.GetTarget(descriptor.Type);
-                    Format format = ShaderTexture.GetFormat(descriptor.Format);
-
-                    imageBindings[index] = new TextureBindingInfo(
-                        target,
-                        format,
-                        descriptor.Binding,
-                        descriptor.CbufSlot,
-                        descriptor.HandleIndex,
-                        descriptor.Flags);
-                }
-
-                _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
-                _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
+                UpdateStageBindings(stageIndex, gs.Shaders[stageIndex + 1]?.Info);
             }
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
+        }
+
+        private void UpdateStageBindings(int stage, ShaderProgramInfo info)
+        {
+            _currentProgramInfo[stage] = info;
+
+            if (info == null)
+            {
+                _channel.TextureManager.RentGraphicsTextureBindings(stage, 0);
+                _channel.TextureManager.RentGraphicsImageBindings(stage, 0);
+                _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, null);
+                _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, null);
+                return;
+            }
+
+            Span<TextureBindingInfo> textureBindings = _channel.TextureManager.RentGraphicsTextureBindings(stage, info.Textures.Count);
+
+            if (info.UsesRtLayer)
+            {
+                _vtgWritesRtLayer = true;
+            }
+
+            for (int index = 0; index < info.Textures.Count; index++)
+            {
+                var descriptor = info.Textures[index];
+
+                Target target = ShaderTexture.GetTarget(descriptor.Type);
+
+                textureBindings[index] = new TextureBindingInfo(
+                    target,
+                    descriptor.Binding,
+                    descriptor.CbufSlot,
+                    descriptor.HandleIndex,
+                    descriptor.Flags);
+            }
+
+            TextureBindingInfo[] imageBindings = _channel.TextureManager.RentGraphicsImageBindings(stage, info.Images.Count);
+
+            for (int index = 0; index < info.Images.Count; index++)
+            {
+                var descriptor = info.Images[index];
+
+                Target target = ShaderTexture.GetTarget(descriptor.Type);
+                Format format = ShaderTexture.GetFormat(descriptor.Format);
+
+                imageBindings[index] = new TextureBindingInfo(
+                    target,
+                    format,
+                    descriptor.Binding,
+                    descriptor.CbufSlot,
+                    descriptor.HandleIndex,
+                    descriptor.Flags);
+            }
+
+            _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
+            _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
+        }
+
+        private GpuChannelPoolState GetPoolState()
+        {
+            return new GpuChannelPoolState(
+                _state.State.TexturePoolState.Address.Pack(),
+                _state.State.TexturePoolState.MaximumId,
+                (int)_state.State.TextureBufferIndex);
+        }
+
+        /// <summary>
+        /// Gets the current GPU channel state for shader creation or compatibility verification.
+        /// </summary>
+        /// <returns>Current GPU channel state</returns>
+        private GpuChannelGraphicsState GetGraphicsState()
+        {
+            return new GpuChannelGraphicsState(
+                _state.State.EarlyZForce,
+                _drawState.Topology,
+                _state.State.TessMode);
         }
 
         /// <summary>

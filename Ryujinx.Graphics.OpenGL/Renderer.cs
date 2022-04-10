@@ -1,11 +1,10 @@
-﻿using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
 using Ryujinx.Graphics.OpenGL.Queries;
-using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -54,11 +53,6 @@ namespace Ryujinx.Graphics.OpenGL
             ResourcePool = new ResourcePool();
         }
 
-        public IShader CompileShader(ShaderStage stage, string code)
-        {
-            return new Shader(stage, code);
-        }
-
         public BufferHandle CreateBuffer(int size)
         {
             BufferCount++;
@@ -66,7 +60,7 @@ namespace Ryujinx.Graphics.OpenGL
             return Buffer.Create(size);
         }
 
-        public IProgram CreateProgram(IShader[] shaders, ShaderInfo info)
+        public IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info)
         {
             return new Program(shaders, info.FragmentOutputMap);
         }
@@ -101,6 +95,8 @@ namespace Ryujinx.Graphics.OpenGL
         public Capabilities GetCapabilities()
         {
             return new Capabilities(
+                api: TargetApi.OpenGL,
+                vendorName: GpuVendor,
                 hasFrontFacingBug: HwCapabilities.Vendor == HwCapabilities.GpuVendor.IntelWindows,
                 hasVectorIndexingBug: HwCapabilities.Vendor == HwCapabilities.GpuVendor.AmdWindows,
                 supportsAstcCompression: HwCapabilities.SupportsAstcCompression,

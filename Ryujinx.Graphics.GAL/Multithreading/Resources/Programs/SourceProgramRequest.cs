@@ -6,10 +6,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
     {
         public ThreadedProgram Threaded { get; set; }
 
-        private IShader[] _shaders;
+        private ShaderSource[] _shaders;
         private ShaderInfo _info;
 
-        public SourceProgramRequest(ThreadedProgram program, IShader[] shaders, ShaderInfo info)
+        public SourceProgramRequest(ThreadedProgram program, ShaderSource[] shaders, ShaderInfo info)
         {
             Threaded = program;
 
@@ -19,14 +19,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
 
         public IProgram Create(IRenderer renderer)
         {
-            IShader[] shaders = _shaders.Select(shader =>
-            {
-                var threaded = (ThreadedShader)shader;
-                threaded?.EnsureCreated();
-                return threaded?.Base;
-            }).ToArray();
-
-            return renderer.CreateProgram(shaders, _info);
+            return renderer.CreateProgram(_shaders, _info);
         }
     }
 }

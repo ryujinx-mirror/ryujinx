@@ -1,25 +1,28 @@
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 namespace Ryujinx.Graphics.Shader
 {
     public class ShaderProgram
     {
-        public ShaderStage Stage { get; }
+        public ShaderProgramInfo Info { get; }
+        public TargetLanguage Language { get; }
 
         public string Code { get; private set; }
         public byte[] BinaryCode { get; }
 
-        private ShaderProgram(ShaderStage stage)
+        private ShaderProgram(ShaderProgramInfo info, TargetLanguage language)
         {
-            Stage = stage;
+            Info = info;
+            Language = language;
         }
 
-        public ShaderProgram(ShaderStage stage, string code) : this(stage)
+        public ShaderProgram(ShaderProgramInfo info, TargetLanguage language, string code) : this(info, language)
         {
             Code = code;
         }
 
-        public ShaderProgram(ShaderStage stage, byte[] binaryCode) : this(stage)
+        public ShaderProgram(ShaderProgramInfo info, TargetLanguage language, byte[] binaryCode) : this(info, language)
         {
             BinaryCode = binaryCode;
         }

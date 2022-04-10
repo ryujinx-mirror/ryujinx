@@ -47,8 +47,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
 
             string baseCacheDirectory = CacheHelper.GetBaseCacheDirectory(titleId);
 
-            CacheMigration.Run(baseCacheDirectory, graphicsApi, hashType, shaderProvider);
-
             _guestProgramCache = new CacheCollection(baseCacheDirectory, _hashType, CacheGraphicsApi.Guest, "", "program", GuestCacheVersion);
             _hostProgramCache = new CacheCollection(baseCacheDirectory, _hashType, _graphicsApi, _shaderProvider, "host", shaderCodeGenVersion);
         }

@@ -74,7 +74,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     for (int j = 0; j < locations.Length; j++)
                     {
                         byte location = locations[j];
-                        if (location < 0x80)
+                        if (location < 0xc0)
                         {
                             context.Info.TransformFeedbackOutputs[location] = new TransformFeedbackOutput(tfbIndex, j * 4, stride);
                         }

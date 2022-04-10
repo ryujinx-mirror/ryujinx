@@ -238,13 +238,13 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Initialize the GPU shader cache.
         /// </summary>
-        public void InitializeShaderCache()
+        public void InitializeShaderCache(CancellationToken cancellationToken)
         {
             HostInitalized.WaitOne();
 
             foreach (var physicalMemory in PhysicalMemoryRegistry.Values)
             {
-                physicalMemory.ShaderCache.Initialize();
+                physicalMemory.ShaderCache.Initialize(cancellationToken);
             }
         }
 

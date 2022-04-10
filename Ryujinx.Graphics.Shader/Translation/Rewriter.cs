@@ -164,9 +164,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isRect = !isBindless && config.GpuAccessor.QueryIsTextureRectangle(texOp.Handle, texOp.CbufSlot);
+            bool isCoordNormalized = !isBindless && config.GpuAccessor.QueryTextureCoordNormalized(texOp.Handle, texOp.CbufSlot);
 
-            if (!(hasInvalidOffset || isRect))
+            if (!hasInvalidOffset && isCoordNormalized)
             {
                 return node;
             }
@@ -263,7 +263,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             hasInvalidOffset &= !areAllOffsetsConstant;
 
-            if (!(hasInvalidOffset || isRect))
+            if (!hasInvalidOffset && isCoordNormalized)
             {
                 return node;
             }
@@ -300,15 +300,17 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return res;
             }
 
-            // Emulate texture rectangle by normalizing the coordinates on the shader.
-            // When sampler*Rect is used, the coords are expected to the in the [0, W or H] range,
+            // Emulate non-normalized coordinates by normalizing the coordinates on the shader.
+            // Without normalization, the coordinates are expected to the in the [0, W or H] range,
             // and otherwise, it is expected to be in the [0, 1] range.
             // We normalize by dividing the coords by the texture size.
-            if (isRect && !intCoords)
+            if (!isCoordNormalized && !intCoords)
             {
                 config.SetUsedFeature(FeatureFlags.IntegerSampling);
 
-                for (int index = 0; index < coordsCount; index++)
+                int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
+
+                for (int index = 0; index < normCoordsCount; index++)
                 {
                     Operand coordSize = Local();
 

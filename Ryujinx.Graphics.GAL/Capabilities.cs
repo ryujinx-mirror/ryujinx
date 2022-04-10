@@ -1,7 +1,12 @@
+using Ryujinx.Graphics.Shader.Translation;
+
 namespace Ryujinx.Graphics.GAL
 {
     public struct Capabilities
     {
+        public readonly TargetApi Api;
+        public readonly string VendorName;
+
         public readonly bool HasFrontFacingBug;
         public readonly bool HasVectorIndexingBug;
 
@@ -24,6 +29,8 @@ namespace Ryujinx.Graphics.GAL
         public readonly int StorageBufferOffsetAlignment;
 
         public Capabilities(
+            TargetApi api,
+            string vendorName,
             bool hasFrontFacingBug,
             bool hasVectorIndexingBug,
             bool supportsAstcCompression,
@@ -43,6 +50,8 @@ namespace Ryujinx.Graphics.GAL
             float maximumSupportedAnisotropy,
             int storageBufferOffsetAlignment)
         {
+            Api = api;
+            VendorName = vendorName;
             HasFrontFacingBug = hasFrontFacingBug;
             HasVectorIndexingBug = hasVectorIndexingBug;
             SupportsAstcCompression = supportsAstcCompression;

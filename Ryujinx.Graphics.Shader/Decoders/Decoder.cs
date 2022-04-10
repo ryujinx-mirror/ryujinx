@@ -373,7 +373,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                     for (int i = 0; i < cbOffsetsCount; i++)
                     {
-                        uint targetOffset = config.GpuAccessor.ConstantBuffer1Read(cbBaseOffset + i * 4);
+                        uint targetOffset = config.ConstantBuffer1Read(cbBaseOffset + i * 4);
                         Block target = getBlock(baseOffset + targetOffset);
                         target.Predecessors.Add(block);
                         block.Successors.Add(target);

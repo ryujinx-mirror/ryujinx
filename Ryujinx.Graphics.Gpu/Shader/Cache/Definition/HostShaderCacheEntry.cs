@@ -96,6 +96,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
                 SBuffers,
                 Textures,
                 Images,
+                default,
                 Header.UseFlags.HasFlag(UseFlags.InstanceId),
                 Header.UseFlags.HasFlag(UseFlags.RtLayer),
                 Header.ClipDistancesWritten,
@@ -160,7 +161,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache.Definition
         /// <param name="programCode">The host shader program</param>
         /// <param name="codeHolders">The shaders code holder</param>
         /// <returns>Raw data of a new host shader cache file</returns>
-        internal static byte[] Create(ReadOnlySpan<byte> programCode, ShaderCodeHolder[] codeHolders)
+        internal static byte[] Create(ReadOnlySpan<byte> programCode, CachedShaderStage[] codeHolders)
         {
             HostShaderCacheHeader header = new HostShaderCacheHeader((byte)codeHolders.Length, programCode.Length);
 

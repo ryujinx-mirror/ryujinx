@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -527,6 +528,20 @@ namespace Ryujinx.Graphics.OpenGL
             Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(LogicalOp)} enum value: {op}.");
 
             return All.Never;
+        }
+
+        public static ShaderType Convert(this ShaderStage stage)
+        {
+            return stage switch
+            {
+                ShaderStage.Compute => ShaderType.ComputeShader,
+                ShaderStage.Vertex => ShaderType.VertexShader,
+                ShaderStage.TessellationControl => ShaderType.TessControlShader,
+                ShaderStage.TessellationEvaluation => ShaderType.TessEvaluationShader,
+                ShaderStage.Geometry => ShaderType.GeometryShader,
+                ShaderStage.Fragment => ShaderType.FragmentShader,
+                _ => ShaderType.VertexShader
+            };
         }
     }
 }

@@ -60,6 +60,8 @@ namespace Ryujinx.Ui
 
         private readonly ManualResetEvent _exitEvent;
 
+        private readonly CancellationTokenSource _gpuCancellationTokenSource;
+
         // Hide Cursor
         const int CursorHideIdleTime = 8; // seconds
         private static readonly Cursor _invisibleCursor = new Cursor(Display.Default, CursorType.BlankCursor);
@@ -104,6 +106,8 @@ namespace Ryujinx.Ui
                           | EventMask.KeyReleaseMask));
 
             _exitEvent = new ManualResetEvent(false);
+
+            _gpuCancellationTokenSource = new CancellationTokenSource();
 
             _hideCursorOnIdle = ConfigurationState.Instance.HideCursorOnIdle;
             _lastCursorMoveTime = Stopwatch.GetTimestamp();
@@ -387,7 +391,7 @@ namespace Ryujinx.Ui
             Device.Gpu.Renderer.RunLoop(() =>
             {
                 Device.Gpu.SetGpuThread();
-                Device.Gpu.InitializeShaderCache();
+                Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
                 Translator.IsReadyForTranslation.Set();
 
                 (Toplevel as MainWindow)?.ActivatePauseMenu();
@@ -499,6 +503,8 @@ namespace Ryujinx.Ui
                 return;
             }
 
+            _gpuCancellationTokenSource.Cancel();
+
             _isStopped = true;
             _isActive = false;
 
@@ -603,7 +609,7 @@ namespace Ryujinx.Ui
                 if (currentHotkeyState.HasFlag(KeyboardHotkeyState.ToggleMute) &&
                     !_prevHotkeyState.HasFlag(KeyboardHotkeyState.ToggleMute))
                 {
-                    if (Device.IsAudioMuted()) 
+                    if (Device.IsAudioMuted())
                     {
                         Device.SetVolume(ConfigurationState.Instance.System.AudioVolume);
                     }

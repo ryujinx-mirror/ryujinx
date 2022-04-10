@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             Functions = new List<StructuredFunction>();
 
-            TransformFeedbackOutputs = new TransformFeedbackOutput[0x80];
+            TransformFeedbackOutputs = new TransformFeedbackOutput[0xc0];
         }
     }
 }

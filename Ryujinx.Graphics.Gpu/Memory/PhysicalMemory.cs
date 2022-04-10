@@ -341,9 +341,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Checks if the page at a given address is mapped on CPU memory.
+        /// Checks if a given memory page is mapped.
         /// </summary>
-        /// <param name="address">CPU virtual address of the page to check</param>
+        /// <param name="address">CPU virtual address of the page</param>
         /// <returns>True if mapped, false otherwise</returns>
         public bool IsMapped(ulong address)
         {

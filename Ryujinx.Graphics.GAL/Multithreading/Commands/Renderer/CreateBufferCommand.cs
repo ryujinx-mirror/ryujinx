@@ -1,7 +1,4 @@
-﻿using Ryujinx.Graphics.GAL.Multithreading.Resources;
-using Ryujinx.Graphics.Shader;
-
-namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
+﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
     struct CreateBufferCommand : IGALCommand
     {

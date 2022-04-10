@@ -116,6 +116,73 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets a read-only span of data from GPU mapped memory, up to the entire range specified,
+        /// or the last mapped page if the range is not fully mapped.
+        /// </summary>
+        /// <param name="va">GPU virtual address where the data is located</param>
+        /// <param name="size">Size of the data</param>
+        /// <param name="tracked">True if read tracking is triggered on the span</param>
+        /// <returns>The span of the data at the specified memory location</returns>
+        public ReadOnlySpan<byte> GetSpanMapped(ulong va, int size, bool tracked = false)
+        {
+            bool isContiguous = true;
+            int mappedSize;
+
+            if (ValidateAddress(va) && GetPte(va) != PteUnmapped && Physical.IsMapped(Translate(va)))
+            {
+                ulong endVa = va + (ulong)size;
+                ulong endVaAligned = (endVa + PageMask) & ~PageMask;
+                ulong currentVa = va & ~PageMask;
+
+                int pages = (int)((endVaAligned - currentVa) / PageSize);
+
+                for (int page = 0; page < pages - 1; page++)
+                {
+                    ulong nextVa = currentVa + PageSize;
+                    ulong nextPa = Translate(nextVa);
+
+                    if (!ValidateAddress(nextVa) || GetPte(nextVa) == PteUnmapped || !Physical.IsMapped(nextPa))
+                    {
+                        break;
+                    }
+
+                    if (Translate(currentVa) + PageSize != nextPa)
+                    {
+                        isContiguous = false;
+                    }
+
+                    currentVa += PageSize;
+                }
+
+                currentVa += PageSize;
+
+                if (currentVa > endVa)
+                {
+                    currentVa = endVa;
+                }
+
+                mappedSize = (int)(currentVa - va);
+            }
+            else
+            {
+                return ReadOnlySpan<byte>.Empty;
+            }
+
+            if (isContiguous)
+            {
+                return Physical.GetSpan(Translate(va), mappedSize, tracked);
+            }
+            else
+            {
+                Span<byte> data = new byte[mappedSize];
+
+                ReadImpl(va, data, tracked);
+
+                return data;
+            }
+        }
+
+        /// <summary>
         /// Reads data from a possibly non-contiguous region of GPU mapped memory.
         /// </summary>
         /// <param name="va">GPU virtual address of the data</param>

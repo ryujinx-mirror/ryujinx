@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.Shader
         public ReadOnlyCollection<TextureDescriptor> Textures { get; }
         public ReadOnlyCollection<TextureDescriptor> Images { get; }
 
+        public ShaderStage Stage { get; }
         public bool UsesInstanceId { get; }
         public bool UsesRtLayer { get; }
         public byte ClipDistancesWritten { get; }
@@ -20,6 +21,7 @@ namespace Ryujinx.Graphics.Shader
             BufferDescriptor[] sBuffers,
             TextureDescriptor[] textures,
             TextureDescriptor[] images,
+            ShaderStage stage,
             bool usesInstanceId,
             bool usesRtLayer,
             byte clipDistancesWritten,
@@ -30,6 +32,7 @@ namespace Ryujinx.Graphics.Shader
             Textures = Array.AsReadOnly(textures);
             Images = Array.AsReadOnly(images);
 
+            Stage = stage;
             UsesInstanceId = usesInstanceId;
             UsesRtLayer = usesRtLayer;
             ClipDistancesWritten = clipDistancesWritten;
