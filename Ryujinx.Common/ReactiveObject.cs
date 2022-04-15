@@ -34,7 +34,7 @@ namespace Ryujinx.Common
 
                 _readerWriterLock.ReleaseWriterLock();
 
-                if (!oldIsInitialized || !oldValue.Equals(_value))
+                if (!oldIsInitialized || oldValue == null || !oldValue.Equals(_value))
                 {
                     Event?.Invoke(this, new ReactiveEventArgs<T>(oldValue, value));
                 }
