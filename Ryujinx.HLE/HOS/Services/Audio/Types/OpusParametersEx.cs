@@ -7,8 +7,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.Types
     struct OpusParametersEx
     {
         public int SampleRate;
-        public int ChannelCount;
-        public OpusDecoderFlags UseLargeFrameSize;
+        public int ChannelsCount;
+        public OpusDecoderFlags Flags;
 
         Array4<byte> Padding1;
     }

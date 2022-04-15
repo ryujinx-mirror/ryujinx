@@ -12,9 +12,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.Types
         public uint length;
         public uint finalRange;
 
-        public static OpusPacketHeader FromStream(BinaryReader reader)
+        public static OpusPacketHeader FromSpan(ReadOnlySpan<byte> data)
         {
-            OpusPacketHeader header = reader.ReadStruct<OpusPacketHeader>();
+            OpusPacketHeader header = MemoryMarshal.Cast<byte, OpusPacketHeader>(data)[0];
 
             header.length     = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(header.length)     : header.length;
             header.finalRange = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(header.finalRange) : header.finalRange;
