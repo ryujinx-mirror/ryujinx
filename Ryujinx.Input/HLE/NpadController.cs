@@ -302,7 +302,7 @@ namespace Ryujinx.Input.HLE
                             Vector3 gyroscope = _gamepad.GetMotionData(MotionInputId.Gyroscope);
 
                             accelerometer = new Vector3(accelerometer.X, -accelerometer.Z, accelerometer.Y);
-                            gyroscope = new Vector3(gyroscope.X, gyroscope.Z, gyroscope.Y);
+                            gyroscope = new Vector3(gyroscope.X, -gyroscope.Z, gyroscope.Y);
 
                             _leftMotionInput.Update(accelerometer, gyroscope, (ulong)PerformanceCounter.ElapsedNanoseconds / 1000, controllerConfig.Motion.Sensitivity, (float)controllerConfig.Motion.GyroDeadzone);
 
