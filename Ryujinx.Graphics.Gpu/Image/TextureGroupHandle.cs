@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -32,9 +33,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private ulong _modifiedSync;
 
         /// <summary>
-        /// Whether a tracking action is currently registered or not.
+        /// Whether a tracking action is currently registered or not. (0/1)
         /// </summary>
-        private bool _actionRegistered;
+        private int _actionRegistered;
 
         /// <summary>
         /// Whether a sync action is currently registered or not.
@@ -171,11 +172,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 _syncActionRegistered = true;
             }
 
-            if (!_actionRegistered)
+            if (Interlocked.Exchange(ref _actionRegistered, 1) == 0)
             {
                 _group.RegisterAction(this);
-
-                _actionRegistered = true;
             }
         }
 
@@ -233,8 +232,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="context">The GPU context used to wait for sync</param>
         public void Sync(GpuContext context)
         {
-            _actionRegistered = false;
-
             bool needsSync = !context.IsGpuThread();
 
             if (needsSync)
@@ -264,20 +261,38 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Clears the action registered variable, indicating that the tracking action should be
+        /// re-registered on the next modification.
+        /// </summary>
+        public void ClearActionRegistered()
+        {
+            Interlocked.Exchange(ref _actionRegistered, 0);
+        }
+
+        /// <summary>
         /// Action to perform when a sync number is registered after modification.
         /// This action will register a read tracking action on the memory tracking handle so that a flush from CPU can happen.
         /// </summary>
         private void SyncAction()
         {
+            // The storage will need to signal modified again to update the sync number in future.
+            _group.Storage.SignalModifiedDirty();
+
+            lock (Overlaps)
+            {
+                foreach (Texture texture in Overlaps)
+                {
+                    texture.SignalModifiedDirty();
+                }
+            }
+
             // Register region tracking for CPU? (again)
             _registeredSync = _modifiedSync;
             _syncActionRegistered = false;
 
-            if (!_actionRegistered)
+            if (Interlocked.Exchange(ref _actionRegistered, 1) == 0)
             {
                 _group.RegisterAction(this);
-
-                _actionRegistered = true;
             }
         }
 

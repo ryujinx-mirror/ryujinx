@@ -144,9 +144,9 @@ namespace Ryujinx.Memory.Tracking
                 {
                     lock (_preActionLock)
                     {
-                        _preAction?.Invoke(address, size);
+                        RegionSignal action = Interlocked.Exchange(ref _preAction, null);
 
-                        _preAction = null;
+                        action?.Invoke(address, size);
                     }
                 }
                 finally
@@ -252,8 +252,7 @@ namespace Ryujinx.Memory.Tracking
 
             lock (_preActionLock)
             {
-                RegionSignal lastAction = _preAction;
-                _preAction = action;
+                RegionSignal lastAction = Interlocked.Exchange(ref _preAction, action);
 
                 if (lastAction == null && action != lastAction)
                 {
