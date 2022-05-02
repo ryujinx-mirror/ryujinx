@@ -190,6 +190,30 @@ namespace Ryujinx.Memory.Tracking
 
         /// <summary>
         /// Signal that a virtual memory event happened at the given location.
+        /// This is similar VirtualMemoryEvent, but on Windows, it might also return true after a partial unmap.
+        /// This should only be called from the exception handler.
+        /// </summary>
+        /// <param name="address">Virtual address accessed</param>
+        /// <param name="size">Size of the region affected in bytes</param>
+        /// <param name="write">Whether the region was written to or read</param>
+        /// <param name="precise">True if the access is precise, false otherwise</param>
+        /// <returns>True if the event triggered any tracking regions, false otherwise</returns>
+        public bool VirtualMemoryEventEh(ulong address, ulong size, bool write, bool precise = false)
+        {
+            // Windows has a limitation, it can't do partial unmaps.
+            // For this reason, we need to unmap the whole range and then remap the sub-ranges.
+            // When this happens, we might have caused a undesirable access violation from the time that the range was unmapped.
+            // In this case, try again as the memory might be mapped now.
+            if (OperatingSystem.IsWindows() && MemoryManagementWindows.RetryFromAccessViolation())
+            {
+                return true;
+            }
+
+            return VirtualMemoryEvent(address, size, write, precise);
+        }
+
+        /// <summary>
+        /// Signal that a virtual memory event happened at the given location.
         /// This can be flagged as a precise event, which will avoid reprotection and call special handlers if possible.
         /// A precise event has an exact address and size, rather than triggering on page granularity.
         /// </summary>

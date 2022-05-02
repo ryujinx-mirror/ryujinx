@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -566,6 +567,11 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             _owner = context.Process.HandleTable.GetKProcess(context.Request.HandleDesc.ToCopy[0]);
             context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
 
+            if (_owner?.CpuMemory is IRefCounted rc)
+            {
+                rc.IncrementReferenceCount();
+            }
+
             return ResultCode.Success;
         }
 
@@ -579,6 +585,11 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 }
 
                 _nroInfos.Clear();
+
+                if (_owner?.CpuMemory is IRefCounted rc)
+                {
+                    rc.DecrementReferenceCount();
+                }
             }
         }
     }

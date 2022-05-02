@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Memory
 {
-    class PageTable<T> where T : unmanaged
+    public class PageTable<T> where T : unmanaged
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;

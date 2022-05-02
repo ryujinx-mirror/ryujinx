@@ -1,9 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
-using Ryujinx.Memory.Range;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
@@ -14,9 +12,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         // TODO: Remove when we no longer need to read it from the owner directly.
         public KProcess Creator => _creator;
 
-        private readonly List<HostMemoryRange> _ranges;
-
-        private readonly SharedMemoryStorage _storage;
+        private readonly KPageList _pageList;
 
         public ulong Address { get; private set; }
         public ulong Size { get; private set; }
@@ -28,12 +24,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KTransferMemory(KernelContext context) : base(context)
         {
-            _ranges = new List<HostMemoryRange>();
+            _pageList = new KPageList();
         }
 
         public KTransferMemory(KernelContext context, SharedMemoryStorage storage) : base(context)
         {
-            _storage = storage;
+            _pageList = storage.GetPageList();
             Permission = KMemoryPermission.ReadAndWrite;
 
             _hasBeenInitialized = true;
@@ -46,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             _creator = creator;
 
-            KernelResult result = creator.MemoryManager.BorrowTransferMemory(_ranges, address, size, permission);
+            KernelResult result = creator.MemoryManager.BorrowTransferMemory(_pageList, address, size, permission);
 
             if (result != KernelResult.Success)
             {
@@ -71,15 +67,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             KProcess process,
             KMemoryPermission permission)
         {
-            if (_storage == null)
-            {
-                throw new NotImplementedException();
-            }
-
-            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KPageTableBase.PageSize);
-
-            var pageList = _storage.GetPageList();
-            if (pageList.GetPagesCount() != pagesCountRounded)
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
@@ -91,16 +79,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             MemoryState state = Permission == KMemoryPermission.None ? MemoryState.TransferMemoryIsolated : MemoryState.TransferMemory;
 
-            KernelResult result = memoryManager.MapPages(address, pageList, state, KMemoryPermission.ReadAndWrite);
+            KernelResult result = memoryManager.MapPages(address, _pageList, state, KMemoryPermission.ReadAndWrite);
 
             if (result == KernelResult.Success)
             {
                 _isMapped = true;
-
-                if (!memoryManager.SupportsMemoryAliasing)
-                {
-                    _storage.Borrow(process, address);
-                }
             }
 
             return result;
@@ -112,26 +95,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong size,
             KProcess process)
         {
-            if (_storage == null)
-            {
-                throw new NotImplementedException();
-            }
-
-            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KPageTableBase.PageSize);
-
-            var pageList = _storage.GetPageList();
-            ulong pagesCount = pageList.GetPagesCount();
-
-            if (pagesCount != pagesCountRounded)
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
 
-            var ranges = _storage.GetRanges();
-
             MemoryState state = Permission == KMemoryPermission.None ? MemoryState.TransferMemoryIsolated : MemoryState.TransferMemory;
 
-            KernelResult result = memoryManager.UnmapPages(address, pagesCount, ranges, state);
+            KernelResult result = memoryManager.UnmapPages(address, _pageList, state);
 
             if (result == KernelResult.Success)
             {
@@ -145,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             if (_hasBeenInitialized)
             {
-                if (!_isMapped && _creator.MemoryManager.UnborrowTransferMemory(Address, Size, _ranges) != KernelResult.Success)
+                if (!_isMapped && _creator.MemoryManager.UnborrowTransferMemory(Address, Size, _pageList) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Unexpected failure restoring transfer memory attributes.");
                 }

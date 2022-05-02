@@ -13,9 +13,9 @@ namespace Ryujinx.Memory
         /// Addresses and size must be page aligned.
         /// </remarks>
         /// <param name="va">Virtual memory address</param>
-        /// <param name="hostAddress">Pointer where the region should be mapped to</param>
+        /// <param name="pa">Physical memory address where the region should be mapped to</param>
         /// <param name="size">Size to be mapped</param>
-        void Map(ulong va, nuint hostAddress, ulong size);
+        void Map(ulong va, ulong pa, ulong size);
 
         /// <summary>
         /// Unmaps a previously mapped range of virtual memory.
@@ -111,7 +111,7 @@ namespace Ryujinx.Memory
         /// <param name="va">Virtual address of the range</param>
         /// <param name="size">Size of the range</param>
         /// <returns>Array of physical regions</returns>
-        IEnumerable<HostMemoryRange> GetPhysicalRegions(ulong va, ulong size);
+        IEnumerable<MemoryRange> GetPhysicalRegions(ulong va, ulong size);
 
         /// <summary>
         /// Checks if the page at a given CPU virtual address is mapped.

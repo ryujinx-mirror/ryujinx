@@ -21,6 +21,7 @@ namespace ARMeilleure.Signal
     static class UnixSignalHandlerRegistration
     {
         private const int SIGSEGV = 11;
+        private const int SIGBUS = 10;
         private const int SA_SIGINFO = 0x00000004;
 
         [DllImport("libc", SetLastError = true)]
@@ -43,7 +44,17 @@ namespace ARMeilleure.Signal
 
             if (result != 0)
             {
-                throw new InvalidOperationException($"Could not register sigaction. Error: {result}");
+                throw new InvalidOperationException($"Could not register SIGSEGV sigaction. Error: {result}");
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                result = sigaction(SIGBUS, ref sig, out SigAction oldb);
+
+                if (result != 0)
+                {
+                    throw new InvalidOperationException($"Could not register SIGBUS sigaction. Error: {result}");
+                }
             }
 
             return old;
@@ -51,7 +62,7 @@ namespace ARMeilleure.Signal
 
         public static bool RestoreExceptionHandler(SigAction oldAction)
         {
-            return sigaction(SIGSEGV, ref oldAction, out SigAction _) == 0;
+            return sigaction(SIGSEGV, ref oldAction, out SigAction _) == 0 && (!OperatingSystem.IsMacOS() || sigaction(SIGBUS, ref oldAction, out SigAction _) == 0);
         }
     }
 }

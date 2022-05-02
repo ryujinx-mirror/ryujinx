@@ -21,7 +21,23 @@ namespace Ryujinx.Memory
             MAP_PRIVATE = 2,
             MAP_ANONYMOUS = 4,
             MAP_NORESERVE = 8,
-            MAP_UNLOCKED = 16
+            MAP_FIXED = 16,
+            MAP_UNLOCKED = 32
+        }
+
+        [Flags]
+        public enum OpenFlags : uint
+        {
+            O_RDONLY = 0,
+            O_WRONLY = 1,
+            O_RDWR = 2,
+            O_CREAT = 4,
+            O_EXCL = 8,
+            O_NOCTTY = 16,
+            O_TRUNC = 32,
+            O_APPEND = 64,
+            O_NONBLOCK = 128,
+            O_SYNC = 256,
         }
 
         private const int MAP_ANONYMOUS_LINUX_GENERIC = 0x20;
@@ -50,6 +66,24 @@ namespace Ryujinx.Memory
         [DllImport("libc", SetLastError = true)]
         public static extern int madvise(IntPtr address, ulong size, int advice);
 
+        [DllImport("libc", SetLastError = true)]
+        public static extern int mkstemp(IntPtr template);
+
+        [DllImport("libc", SetLastError = true)]
+        public static extern int unlink(IntPtr pathname);
+
+        [DllImport("libc", SetLastError = true)]
+        public static extern int ftruncate(int fildes, IntPtr length);
+
+        [DllImport("libc", SetLastError = true)]
+        public static extern int close(int fd);
+
+        [DllImport("libc", SetLastError = true)]
+        public static extern int shm_open(IntPtr name, int oflag, uint mode);
+
+        [DllImport("libc", SetLastError = true)]
+        public static extern int shm_unlink(IntPtr name);
+
         private static int MmapFlagsToSystemFlags(MmapFlags flags)
         {
             int result = 0;
@@ -62,6 +96,11 @@ namespace Ryujinx.Memory
             if (flags.HasFlag(MmapFlags.MAP_PRIVATE))
             {
                 result |= (int)MmapFlags.MAP_PRIVATE;
+            }
+
+            if (flags.HasFlag(MmapFlags.MAP_FIXED))
+            {
+                result |= (int)MmapFlags.MAP_FIXED;
             }
 
             if (flags.HasFlag(MmapFlags.MAP_ANONYMOUS))

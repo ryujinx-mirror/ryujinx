@@ -17,6 +17,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.Memory;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -561,7 +562,14 @@ namespace Ryujinx.HLE.HOS
             Graphics.Gpu.GraphicsConfig.TitleId = TitleIdText;
             _device.Gpu.HostInitalized.Set();
 
-            Ptc.Initialize(TitleIdText, DisplayVersion, usePtc, _device.Configuration.MemoryManagerMode);
+            MemoryManagerMode memoryManagerMode = _device.Configuration.MemoryManagerMode;
+
+            if (!MemoryBlock.SupportsFlags(MemoryAllocationFlags.ViewCompatible))
+            {
+                memoryManagerMode = MemoryManagerMode.SoftwarePageTable;
+            }
+
+            Ptc.Initialize(TitleIdText, DisplayVersion, usePtc, memoryManagerMode);
 
             metaData.GetNpdm(out Npdm npdm).ThrowIfFailure();
             ProgramLoader.LoadNsos(_device.System.KernelContext, out ProcessTamperInfo tamperInfo, metaData, new ProgramInfo(in npdm), executables: programs);

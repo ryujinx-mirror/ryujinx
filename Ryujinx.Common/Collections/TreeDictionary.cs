@@ -921,10 +921,10 @@ namespace Ryujinx.Common.Collections
 
         public bool IsReadOnly => false;
 
-        public V this[K key] 
-        { 
+        public V this[K key]
+        {
             get => Get(key);
-            set => Add(key, value); 
+            set => Add(key, value);
         }
 
         #endregion
@@ -967,20 +967,20 @@ namespace Ryujinx.Common.Collections
     /// </summary>
     /// <typeparam name="K">Key of the node</typeparam>
     /// <typeparam name="V">Value of the node</typeparam>
-    internal class Node<K, V>
+    class Node<K, V>
     {
-        internal bool Color = true;
-        internal Node<K, V> Left = null;
-        internal Node<K, V> Right = null;
-        internal Node<K, V> Parent = null;
-        internal K Key;
-        internal V Value;
+        public bool Color = true;
+        public Node<K, V> Left = null;
+        public Node<K, V> Right = null;
+        public Node<K, V> Parent = null;
+        public K Key;
+        public V Value;
 
         public Node(K key, V value, Node<K, V> parent)
         {
-            this.Key = key;
-            this.Value = value;
-            this.Parent = parent;
+            Key = key;
+            Value = value;
+            Parent = parent;
         }
     }
 }

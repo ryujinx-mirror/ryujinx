@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace Ryujinx.Common.Collections
+namespace Ryujinx.Memory.WindowsShared
 {
     /// <summary>
     /// An Augmented Interval Tree based off of the "TreeDictionary"'s Red-Black Tree. Allows fast overlap checking of ranges.
     /// </summary>
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
-    public class IntervalTree<K, V> where K : IComparable<K>
+    class IntervalTree<K, V> where K : IComparable<K>
     {
         private const int ArrayGrowthSize = 32;
 
@@ -28,59 +27,33 @@ namespace Ryujinx.Common.Collections
         /// Gets the values of the interval whose key is <paramref name="key"/>.
         /// </summary>
         /// <param name="key">Key of the node value to get</param>
-        /// <param name="overlaps">Overlaps array to place results in</param>
-        /// <returns>Number of values found</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
-        public int Get(K key, ref V[] overlaps)
+        /// <param name="value">Value with the given <paramref name="key"/></param>
+        /// <returns>True if the key is on the dictionary, false otherwise</returns>
+        public bool TryGet(K key, out V value)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             IntervalTreeNode<K, V> node = GetNode(key);
 
             if (node == null)
             {
-                return 0;
+                value = default;
+                return false;
             }
 
-            if (node.Values.Count > overlaps.Length)
-            {
-                Array.Resize(ref overlaps, node.Values.Count);
-            }
-
-            int overlapsCount = 0;
-            foreach (RangeNode<K, V> value in node.Values)
-            {
-                overlaps[overlapsCount++] = value.Value;
-            }
-
-            return overlapsCount;
+            value = node.Value;
+            return true;
         }
 
         /// <summary>
-        /// Returns the values of the intervals whose start and end keys overlap the given range.
+        /// Returns the start addresses of the intervals whose start and end keys overlap the given range.
         /// </summary>
         /// <param name="start">Start of the range</param>
         /// <param name="end">End of the range</param>
         /// <param name="overlaps">Overlaps array to place results in</param>
         /// <param name="overlapCount">Index to start writing results into the array. Defaults to 0</param>
-        /// <returns>Number of values found</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="start"/> or <paramref name="end"/> is null</exception>
-        public int Get(K start, K end, ref V[] overlaps, int overlapCount = 0)
+        /// <returns>Number of intervals found</returns>
+        public int Get(K start, K end, ref IntervalTreeNode<K, V>[] overlaps, int overlapCount = 0)
         {
-            if (start == null)
-            {
-                throw new ArgumentNullException(nameof(start));
-            }
-
-            if (end == null)
-            {
-                throw new ArgumentNullException(nameof(end));
-            }
-
-            GetValues(_root, start, end, ref overlaps, ref overlapCount);
+            GetNodes(_root, start, end, ref overlaps, ref overlapCount);
 
             return overlapCount;
         }
@@ -91,55 +64,53 @@ namespace Ryujinx.Common.Collections
         /// <param name="start">Start of the range to add</param>
         /// <param name="end">End of the range to insert</param>
         /// <param name="value">Value to add</param>
-        /// <exception cref="ArgumentNullException"><paramref name="start"/>, <paramref name="end"/> or <paramref name="value"/> are null</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
         public void Add(K start, K end, V value)
         {
-            if (start == null)
-            {
-                throw new ArgumentNullException(nameof(start));
-            }
-
-            if (end == null)
-            {
-                throw new ArgumentNullException(nameof(end));
-            }
-
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            Insert(start, end, value);
+            BSTInsert(start, end, value, null, out _);
         }
 
         /// <summary>
-        /// Removes the given <paramref name="value"/> from the tree, searching for it with <paramref name="key"/>.
+        /// Removes a value from the tree, searching for it with <paramref name="key"/>.
         /// </summary>
         /// <param name="key">Key of the node to remove</param>
-        /// <param name="value">Value to remove</param>
-        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         /// <returns>Number of deleted values</returns>
-        public int Remove(K key, V value)
+        public int Remove(K key)
         {
-            if (key == null)
+            return Remove(GetNode(key));
+        }
+
+        /// <summary>
+        /// Removes a value from the tree, searching for it with <paramref name="key"/>.
+        /// </summary>
+        /// <param name="nodeToDelete">Node to be removed</param>
+        /// <returns>Number of deleted values</returns>
+        public int Remove(IntervalTreeNode<K, V> nodeToDelete)
+        {
+            if (nodeToDelete == null)
             {
-                throw new ArgumentNullException(nameof(key));
+                return 0;
             }
 
-            int removed = Delete(key, value);
+            Delete(nodeToDelete);
 
-            _count -= removed;
+            _count--;
 
-            return removed;
+            return 1;
         }
 
         /// <summary>
         /// Adds all the nodes in the dictionary into <paramref name="list"/>.
         /// </summary>
-        /// <returns>A list of all RangeNodes sorted by Key Order</returns>
-        public List<RangeNode<K, V>> AsList()
+        /// <returns>A list of all values sorted by Key Order</returns>
+        public List<V> AsList()
         {
-            List<RangeNode<K, V>> list = new List<RangeNode<K, V>>();
+            List<V> list = new List<V>();
 
             AddToList(_root, list);
 
@@ -151,11 +122,11 @@ namespace Ryujinx.Common.Collections
         #region Private Methods (BST)
 
         /// <summary>
-        /// Adds all RangeNodes that are children of or contained within <paramref name="node"/> into <paramref name="list"/>, in Key Order.
+        /// Adds all values that are children of or contained within <paramref name="node"/> into <paramref name="list"/>, in Key Order.
         /// </summary>
-        /// <param name="node">The node to search for RangeNodes within</param>
-        /// <param name="list">The list to add RangeNodes to</param>
-        private void AddToList(IntervalTreeNode<K, V> node, List<RangeNode<K, V>> list)
+        /// <param name="node">The node to search for values within</param>
+        /// <param name="list">The list to add values to</param>
+        private void AddToList(IntervalTreeNode<K, V> node, List<V> list)
         {
             if (node == null)
             {
@@ -164,7 +135,7 @@ namespace Ryujinx.Common.Collections
 
             AddToList(node.Left, list);
 
-            list.AddRange(node.Values);
+            list.Add(node.Value);
 
             AddToList(node.Right, list);
         }
@@ -173,8 +144,8 @@ namespace Ryujinx.Common.Collections
         /// Retrieve the node reference whose key is <paramref name="key"/>, or null if no such node exists.
         /// </summary>
         /// <param name="key">Key of the node to get</param>
-        /// <returns>Node reference in the tree</returns>
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
+        /// <returns>Node reference in the tree</returns>
         private IntervalTreeNode<K, V> GetNode(K key)
         {
             if (key == null)
@@ -203,55 +174,36 @@ namespace Ryujinx.Common.Collections
         }
 
         /// <summary>
-        /// Retrieve all values that overlap the given start and end keys.
+        /// Retrieve all nodes that overlap the given start and end keys.
         /// </summary>
         /// <param name="start">Start of the range</param>
         /// <param name="end">End of the range</param>
         /// <param name="overlaps">Overlaps array to place results in</param>
         /// <param name="overlapCount">Overlaps count to update</param>
-        private void GetValues(IntervalTreeNode<K, V> node, K start, K end, ref V[] overlaps, ref int overlapCount)
+        private void GetNodes(IntervalTreeNode<K, V> node, K start, K end, ref IntervalTreeNode<K, V>[] overlaps, ref int overlapCount)
         {
             if (node == null || start.CompareTo(node.Max) >= 0)
             {
                 return;
             }
 
-            GetValues(node.Left, start, end, ref overlaps, ref overlapCount);
+            GetNodes(node.Left, start, end, ref overlaps, ref overlapCount);
 
             bool endsOnRight = end.CompareTo(node.Start) > 0;
             if (endsOnRight)
             {
                 if (start.CompareTo(node.End) < 0)
                 {
-                    // Contains this node. Add overlaps to list.
-                    foreach (RangeNode<K,V> overlap in node.Values)
+                    if (overlaps.Length >= overlapCount)
                     {
-                        if (start.CompareTo(overlap.End) < 0)
-                        {
-                            if (overlaps.Length >= overlapCount)
-                            {
-                                Array.Resize(ref overlaps, overlapCount + ArrayGrowthSize);
-                            }
-
-                            overlaps[overlapCount++] = overlap.Value;
-                        }
+                        Array.Resize(ref overlaps, overlapCount + ArrayGrowthSize);
                     }
+
+                    overlaps[overlapCount++] = node;
                 }
 
-                GetValues(node.Right, start, end, ref overlaps, ref overlapCount);
+                GetNodes(node.Right, start, end, ref overlaps, ref overlapCount);
             }
-        }
-
-        /// <summary>
-        /// Inserts a new node into the tree with a given <paramref name="start"/>, <paramref name="end"/> and <paramref name="value"/>.
-        /// </summary>
-        /// <param name="start">Start of the range to insert</param>
-        /// <param name="end">End of the range to insert</param>
-        /// <param name="value">Value to insert</param>
-        private void Insert(K start, K end, V value)
-        {
-            IntervalTreeNode<K, V> newNode = BSTInsert(start, end, value);
-            RestoreBalanceAfterInsertion(newNode);
         }
 
         /// <summary>
@@ -313,8 +265,10 @@ namespace Ryujinx.Common.Collections
         /// <param name="start">Start of the range to insert</param>
         /// <param name="end">End of the range to insert</param>
         /// <param name="value">Value to insert</param>
-        /// <returns>The inserted Node</returns>
-        private IntervalTreeNode<K, V> BSTInsert(K start, K end, V value)
+        /// <param name="updateFactoryCallback">Optional factory used to create a new value if <paramref name="start"/> is already on the tree</param>
+        /// <param name="outNode">Node that was inserted or modified</param>
+        /// <returns>True if <paramref name="start"/> was not yet on the tree, false otherwise</returns>
+        private bool BSTInsert(K start, K end, V value, Func<K, V, V> updateFactoryCallback, out IntervalTreeNode<K, V> outNode)
         {
             IntervalTreeNode<K, V> parent = null;
             IntervalTreeNode<K, V> node = _root;
@@ -333,20 +287,33 @@ namespace Ryujinx.Common.Collections
                 }
                 else
                 {
-                    node.Values.Add(new RangeNode<K, V>(start, end, value));
+                    outNode = node;
 
-                    if (end.CompareTo(node.End) > 0)
+                    if (updateFactoryCallback != null)
                     {
-                        node.End = end;
-                        if (end.CompareTo(node.Max) > 0)
+                        // Replace
+                        node.Value = updateFactoryCallback(start, node.Value);
+
+                        int endCmp = end.CompareTo(node.End);
+
+                        if (endCmp > 0)
                         {
-                            node.Max = end;
-                            PropagateIncrease(node);
+                            node.End = end;
+                            if (end.CompareTo(node.Max) > 0)
+                            {
+                                node.Max = end;
+                                PropagateIncrease(node);
+                                RestoreBalanceAfterInsertion(node);
+                            }
+                        }
+                        else if (endCmp < 0)
+                        {
+                            node.End = end;
+                            PropagateFull(node);
                         }
                     }
 
-                    _count++;
-                    return node;
+                    return false;
                 }
             }
             IntervalTreeNode<K, V> newNode = new IntervalTreeNode<K, V>(start, end, value, parent);
@@ -365,39 +332,17 @@ namespace Ryujinx.Common.Collections
 
             PropagateIncrease(newNode);
             _count++;
-            return newNode;
+            RestoreBalanceAfterInsertion(newNode);
+            outNode = newNode;
+            return true;
         }
 
         /// <summary>
-        /// Removes instances of <paramref name="value"> from the dictionary after searching for it with <paramref name="key">.
+        /// Removes the value from the dictionary after searching for it with <paramref name="key">.
         /// </summary>
-        /// <param name="key">Key to search for</param>
-        /// <param name="value">Value to delete</param>
-        /// <returns>Number of deleted values</returns>
-        private int Delete(K key, V value)
+        /// <param name="key">Tree node to be removed</param>
+        private void Delete(IntervalTreeNode<K, V> nodeToDelete)
         {
-            IntervalTreeNode<K, V> nodeToDelete = GetNode(key);
-
-            if (nodeToDelete == null)
-            {
-                return 0;
-            }
-
-            int removed = nodeToDelete.Values.RemoveAll(node => node.Value.Equals(value));
-
-            if (nodeToDelete.Values.Count > 0)
-            {
-                if (removed > 0)
-                {
-                    nodeToDelete.End = nodeToDelete.Values.Max(node => node.End);
-
-                    // Recalculate max from children and new end.
-                    PropagateFull(nodeToDelete);
-                }
-
-                return removed;
-            }
-
             IntervalTreeNode<K, V> replacementNode;
 
             if (LeftOf(nodeToDelete) == null || RightOf(nodeToDelete) == null)
@@ -432,7 +377,7 @@ namespace Ryujinx.Common.Collections
             if (replacementNode != nodeToDelete)
             {
                 nodeToDelete.Start = replacementNode.Start;
-                nodeToDelete.Values = replacementNode.Values;
+                nodeToDelete.Value = replacementNode.Value;
                 nodeToDelete.End = replacementNode.End;
                 nodeToDelete.Max = replacementNode.Max;
             }
@@ -443,8 +388,6 @@ namespace Ryujinx.Common.Collections
             {
                 RestoreBalanceAfterRemoval(tmp);
             }
-
-            return removed;
         }
 
         /// <summary>
@@ -482,9 +425,11 @@ namespace Ryujinx.Common.Collections
             }
             return parent;
         }
+
         #endregion
 
         #region Private Methods (RBL)
+
         private void RestoreBalanceAfterRemoval(IntervalTreeNode<K, V> balanceNode)
         {
             IntervalTreeNode<K, V> ptr = balanceNode;
@@ -675,6 +620,7 @@ namespace Ryujinx.Common.Collections
                 PropagateFull(node);
             }
         }
+
         #endregion
 
         #region Safety-Methods
@@ -735,14 +681,11 @@ namespace Ryujinx.Common.Collections
         {
             return node?.Parent;
         }
+
         #endregion
 
         public bool ContainsKey(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
             return GetNode(key) != null;
         }
 
@@ -750,25 +693,6 @@ namespace Ryujinx.Common.Collections
         {
             _root = null;
             _count = 0;
-        }
-    }
-
-    /// <summary>
-    /// Represents a value and its start and end keys.
-    /// </summary>
-    /// <typeparam name="K"></typeparam>
-    /// <typeparam name="V"></typeparam>
-    public readonly struct RangeNode<K, V>
-    {
-        public readonly K Start;
-        public readonly K End;
-        public readonly V Value;
-
-        public RangeNode(K start, K end, V value)
-        {
-            Start = start;
-            End = end;
-            Value = value;
         }
     }
 
@@ -790,7 +714,7 @@ namespace Ryujinx.Common.Collections
         public K Start;
 
         /// <summary>
-        /// The end of the range - maximum of all in the Values list.
+        /// The end of the range.
         /// </summary>
         public K End;
 
@@ -799,14 +723,17 @@ namespace Ryujinx.Common.Collections
         /// </summary>
         public K Max;
 
-        public List<RangeNode<K, V>> Values;
+        /// <summary>
+        /// Value stored on this node.
+        /// </summary>
+        public V Value;
 
         public IntervalTreeNode(K start, K end, V value, IntervalTreeNode<K, V> parent)
         {
             Start = start;
             End = end;
             Max = end;
-            Values = new List<RangeNode<K, V>> { new RangeNode<K, V>(start, end, value) };
+            Value = value;
             Parent = parent;
         }
     }
