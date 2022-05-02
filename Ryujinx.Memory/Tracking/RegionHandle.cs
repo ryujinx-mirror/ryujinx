@@ -144,9 +144,11 @@ namespace Ryujinx.Memory.Tracking
                 {
                     lock (_preActionLock)
                     {
-                        RegionSignal action = Interlocked.Exchange(ref _preAction, null);
+                        _preAction?.Invoke(address, size);
 
-                        action?.Invoke(address, size);
+                        // The action is removed after it returns, to ensure that the null check above succeeds when
+                        // it's still in progress rather than continuing and possibly missing a required data flush.
+                        Interlocked.Exchange(ref _preAction, null);
                     }
                 }
                 finally
