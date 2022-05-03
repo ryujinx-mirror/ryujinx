@@ -46,6 +46,7 @@ jobs:
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      RYUJINX_BASE_VERSION: "1.1.0"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
@@ -59,24 +60,24 @@ jobs:
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
-        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="1.1.0" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
+        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
       - name: Test
         run: dotnet test -c "${{ matrix.configuration }}"
       - name: Publish Ryujinx
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="1.1.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
         if: github.event_name == 'pull_request'
       - name: Publish Ryujinx.Headless.SDL2
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="1.1.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ryujinx-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
+          name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
           path: publish
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx.Headless.SDL2 artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ryujinx-headless-sdl2-${{ matrix.configuration }}-1.0.0+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
+          name: ryujinx-headless-sdl2-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
           path: publish_sdl2_headless
         if: github.event_name == 'pull_request'
