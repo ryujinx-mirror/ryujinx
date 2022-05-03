@@ -86,8 +86,8 @@ namespace Ryujinx.HLE.HOS
             MetaLoader metaData = ReadNpdm(codeFs);
 
             _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
-                new[] { TitleId }, 
-                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(), 
+                new[] { TitleId },
+                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(),
                 _device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
 
             if (TitleId != 0)
@@ -393,8 +393,8 @@ namespace Ryujinx.HLE.HOS
             MetaLoader metaData = ReadNpdm(codeFs);
 
             _device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
-                _device.Configuration.ContentManager.GetAocTitleIds().Prepend(TitleId), 
-                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(), 
+                _device.Configuration.ContentManager.GetAocTitleIds().Prepend(TitleId),
+                _device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(),
                 _device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
 
             if (controlNca != null)
@@ -571,8 +571,12 @@ namespace Ryujinx.HLE.HOS
 
             Ptc.Initialize(TitleIdText, DisplayVersion, usePtc, memoryManagerMode);
 
+            // We allow it for nx-hbloader because it can be used to launch homebrew.
+            bool allowCodeMemoryForJit = TitleId == 0x010000000000100DUL;
+
             metaData.GetNpdm(out Npdm npdm).ThrowIfFailure();
-            ProgramLoader.LoadNsos(_device.System.KernelContext, out ProcessTamperInfo tamperInfo, metaData, new ProgramInfo(in npdm), executables: programs);
+            ProgramInfo programInfo = new ProgramInfo(in npdm, allowCodeMemoryForJit);
+            ProgramLoader.LoadNsos(_device.System.KernelContext, out ProcessTamperInfo tamperInfo, metaData, programInfo, executables: programs);
 
             _device.Configuration.VirtualFileSystem.ModLoader.LoadCheats(TitleId, tamperInfo, _device.TamperMachine);
         }
@@ -581,7 +585,7 @@ namespace Ryujinx.HLE.HOS
         {
             MetaLoader metaData = GetDefaultNpdm();
             metaData.GetNpdm(out Npdm npdm).ThrowIfFailure();
-            ProgramInfo programInfo = new ProgramInfo(in npdm);
+            ProgramInfo programInfo = new ProgramInfo(in npdm, allowCodeMemoryForJit: true);
 
             bool isNro = Path.GetExtension(filePath).ToLower() == ".nro";
 

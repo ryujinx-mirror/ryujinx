@@ -7,7 +7,6 @@ using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.Memory;
 using System;
 using System.Threading;
 
@@ -1363,10 +1362,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             KCodeMemory codeMemory = currentProcess.HandleTable.GetObject<KCodeMemory>(handle);
 
-            // Newer versions of the return also returns an error here if the owner and process
+            // Newer versions of the kernel also returns an error here if the owner and process
             // where the operation will happen are the same. We do not return an error here
-            // because some homebrew requires this to be patched out to work (for JIT).
-            if (codeMemory == null /* || codeMemory.Owner == currentProcess */)
+            // for homebrew because some of them requires this to be patched out to work (for JIT).
+            if (codeMemory == null || (!currentProcess.AllowCodeMemoryForJit && codeMemory.Owner == currentProcess))
             {
                 return KernelResult.InvalidHandle;
             }

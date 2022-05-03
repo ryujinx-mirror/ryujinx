@@ -60,6 +60,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KProcessCapabilities Capabilities { get; private set; }
 
+        public bool AllowCodeMemoryForJit { get; private set; }
+
         public ulong TitleId { get; private set; }
         public bool IsApplication { get; private set; }
         public ulong Pid { get; private set; }
@@ -90,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public HleProcessDebugger Debugger { get; private set; }
 
-        public KProcess(KernelContext context) : base(context)
+        public KProcess(KernelContext context, bool allowCodeMemoryForJit = false) : base(context)
         {
             _processLock = new object();
             _threadingLock = new object();
@@ -101,6 +103,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _freeTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
 
             Capabilities = new KProcessCapabilities();
+
+            AllowCodeMemoryForJit = allowCodeMemoryForJit;
 
             RandomEntropy = new ulong[KScheduler.CpuCoresCount];
             PinnedThreads = new KThread[KScheduler.CpuCoresCount];

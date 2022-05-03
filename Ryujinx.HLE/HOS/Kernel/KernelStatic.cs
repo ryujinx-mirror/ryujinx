@@ -59,5 +59,15 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             return GetCurrentThread().Owner;
         }
+
+        internal static KProcess GetProcessByPid(ulong pid)
+        {
+            if (Context.Processes.TryGetValue(pid, out KProcess process))
+            {
+                return process;
+            }
+
+            return null;
+        }
     }
 }
