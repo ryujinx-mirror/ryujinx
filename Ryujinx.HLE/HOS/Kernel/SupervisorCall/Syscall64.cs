@@ -160,6 +160,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.CreateTransferMemory(out handle, address, size, permission);
         }
 
+        public KernelResult CreateCodeMemory64([R(1)] ulong address, [R(2)] ulong size, [R(1)] out int handle)
+        {
+            return _syscall.CreateCodeMemory(address, size, out handle);
+        }
+
+        public KernelResult ControlCodeMemory64([R(0)] int handle, [R(1)] CodeMemoryOperation op, [R(2)] ulong address, [R(3)] ulong size, [R(4)] KMemoryPermission permission)
+        {
+            return _syscall.ControlCodeMemory(handle, op, address, size, permission);
+        }
+
         public KernelResult MapTransferMemory64([R(0)] int handle, [R(1)] ulong address, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
         {
             return _syscall.MapTransferMemory(handle, address, size, permission);
@@ -180,6 +190,21 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.UnmapPhysicalMemory(address, size);
         }
 
+        public KernelResult SetProcessMemoryPermission64([R(0)] int handle, [R(1)] ulong src, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
+        {
+            return _syscall.SetProcessMemoryPermission(handle, src, size, permission);
+        }
+
+        public KernelResult MapProcessMemory64([R(0)] ulong dst, [R(1)] int handle, [R(2)] ulong src, [R(3)] ulong size)
+        {
+            return _syscall.MapProcessMemory(dst, handle, src, size);
+        }
+
+        public KernelResult UnmapProcessMemory64([R(0)] ulong dst, [R(1)] int handle, [R(2)] ulong src, [R(3)] ulong size)
+        {
+            return _syscall.UnmapProcessMemory(dst, handle, src, size);
+        }
+
         public KernelResult MapProcessCodeMemory64([R(0)] int handle, [R(1)] ulong dst, [R(2)] ulong src, [R(3)] ulong size)
         {
             return _syscall.MapProcessCodeMemory(handle, dst, src, size);
@@ -188,11 +213,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public KernelResult UnmapProcessCodeMemory64([R(0)] int handle, [R(1)] ulong dst, [R(2)] ulong src, [R(3)] ulong size)
         {
             return _syscall.UnmapProcessCodeMemory(handle, dst, src, size);
-        }
-
-        public KernelResult SetProcessMemoryPermission64([R(0)] int handle, [R(1)] ulong src, [R(2)] ulong size, [R(3)] KMemoryPermission permission)
-        {
-            return _syscall.SetProcessMemoryPermission(handle, src, size, permission);
         }
 
         // System

@@ -1095,6 +1095,77 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
+        public KernelResult UnmapProcessMemory(ulong dst, ulong size, KPageTableBase srcPageTable, ulong src)
+        {
+            lock (_blockManager)
+            {
+                lock (srcPageTable._blockManager)
+                {
+                    bool success = CheckRange(
+                        dst,
+                        size,
+                        MemoryState.Mask,
+                        MemoryState.ProcessMemory,
+                        KMemoryPermission.ReadAndWrite,
+                        KMemoryPermission.ReadAndWrite,
+                        MemoryAttribute.Mask,
+                        MemoryAttribute.None,
+                        MemoryAttribute.IpcAndDeviceMapped,
+                        out _,
+                        out _,
+                        out _);
+
+                    success &= srcPageTable.CheckRange(
+                        src,
+                        size,
+                        MemoryState.MapProcessAllowed,
+                        MemoryState.MapProcessAllowed,
+                        KMemoryPermission.None,
+                        KMemoryPermission.None,
+                        MemoryAttribute.Mask,
+                        MemoryAttribute.None,
+                        MemoryAttribute.IpcAndDeviceMapped,
+                        out _,
+                        out _,
+                        out _);
+
+                    if (!success)
+                    {
+                        return KernelResult.InvalidMemState;
+                    }
+
+                    KPageList srcPageList = new KPageList();
+                    KPageList dstPageList = new KPageList();
+
+                    srcPageTable.GetPhysicalRegions(src, size, srcPageList);
+                    GetPhysicalRegions(dst, size, dstPageList);
+
+                    if (!dstPageList.IsEqual(srcPageList))
+                    {
+                        return KernelResult.InvalidMemRange;
+                    }
+                }
+
+                if (!_slabManager.CanAllocate(MaxBlocksNeededForInsertion))
+                {
+                    return KernelResult.OutOfResource;
+                }
+
+                ulong pagesCount = size / PageSize;
+
+                KernelResult result = Unmap(dst, pagesCount);
+
+                if (result != KernelResult.Success)
+                {
+                    return result;
+                }
+
+                _blockManager.InsertBlock(dst, pagesCount, MemoryState.Unmapped);
+
+                return KernelResult.Success;
+            }
+        }
+
         public KernelResult SetProcessMemoryPermission(ulong address, ulong size, KMemoryPermission permission)
         {
             lock (_blockManager)
@@ -2023,6 +2094,49 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             block.RestoreIpcMappingPermission();
         }
 
+        public KernelResult GetPagesIfStateEquals(
+            ulong address,
+            ulong size,
+            MemoryState stateMask,
+            MemoryState stateExpected,
+            KMemoryPermission permissionMask,
+            KMemoryPermission permissionExpected,
+            MemoryAttribute attributeMask,
+            MemoryAttribute attributeExpected,
+            KPageList pageList)
+        {
+            if (!InsideAddrSpace(address, size))
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            lock (_blockManager)
+            {
+                if (CheckRange(
+                    address,
+                    size,
+                    stateMask | MemoryState.IsPoolAllocated,
+                    stateExpected | MemoryState.IsPoolAllocated,
+                    permissionMask,
+                    permissionExpected,
+                    attributeMask,
+                    attributeExpected,
+                    MemoryAttribute.IpcAndDeviceMapped,
+                    out _,
+                    out _,
+                    out _))
+                {
+                    GetPhysicalRegions(address, size, pageList);
+
+                    return KernelResult.Success;
+                }
+                else
+                {
+                    return KernelResult.InvalidMemState;
+                }
+            }
+        }
+
         public KernelResult BorrowIpcBuffer(ulong address, ulong size)
         {
             return SetAttributesAndChangePermission(
@@ -2050,6 +2164,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 MemoryAttribute.Mask,
                 MemoryAttribute.None,
                 permission,
+                MemoryAttribute.Borrowed,
+                pageList);
+        }
+
+        public KernelResult BorrowCodeMemory(KPageList pageList, ulong address, ulong size)
+        {
+            return SetAttributesAndChangePermission(
+                address,
+                size,
+                MemoryState.CodeMemoryAllowed,
+                MemoryState.CodeMemoryAllowed,
+                KMemoryPermission.Mask,
+                KMemoryPermission.ReadAndWrite,
+                MemoryAttribute.Mask,
+                MemoryAttribute.None,
+                KMemoryPermission.None,
                 MemoryAttribute.Borrowed,
                 pageList);
         }
@@ -2150,6 +2280,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 size,
                 MemoryState.TransferMemoryAllowed,
                 MemoryState.TransferMemoryAllowed,
+                KMemoryPermission.None,
+                KMemoryPermission.None,
+                MemoryAttribute.Mask,
+                MemoryAttribute.Borrowed,
+                KMemoryPermission.ReadAndWrite,
+                MemoryAttribute.Borrowed,
+                pageList);
+        }
+
+        public KernelResult UnborrowCodeMemory(ulong address, ulong size, KPageList pageList)
+        {
+            return ClearAttributesAndChangePermission(
+                address,
+                size,
+                MemoryState.CodeMemoryAllowed,
+                MemoryState.CodeMemoryAllowed,
                 KMemoryPermission.None,
                 KMemoryPermission.None,
                 MemoryAttribute.Mask,

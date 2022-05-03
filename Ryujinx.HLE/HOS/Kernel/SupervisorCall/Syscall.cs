@@ -1317,6 +1317,248 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return process.MemoryManager.UnmapPhysicalMemory(address, size);
         }
 
+        public KernelResult CreateCodeMemory(ulong address, ulong size, out int handle)
+        {
+            handle = 0;
+
+            if (!PageAligned(address))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (size + address <= address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            KCodeMemory codeMemory = new KCodeMemory(_context);
+
+            using var _ = new OnScopeExit(codeMemory.DecrementReferenceCount);
+
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            if (!currentProcess.MemoryManager.InsideAddrSpace(address, size))
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            KernelResult result = codeMemory.Initialize(address, size);
+
+            if (result != KernelResult.Success)
+            {
+                return result;
+            }
+
+            return currentProcess.HandleTable.GenerateHandle(codeMemory, out handle);
+        }
+
+        public KernelResult ControlCodeMemory(int handle, CodeMemoryOperation op, ulong address, ulong size, KMemoryPermission permission)
+        {
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            KCodeMemory codeMemory = currentProcess.HandleTable.GetObject<KCodeMemory>(handle);
+
+            // Newer versions of the return also returns an error here if the owner and process
+            // where the operation will happen are the same. We do not return an error here
+            // because some homebrew requires this to be patched out to work (for JIT).
+            if (codeMemory == null /* || codeMemory.Owner == currentProcess */)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            switch (op)
+            {
+                case CodeMemoryOperation.Map:
+                    if (!currentProcess.MemoryManager.CanContain(address, size, MemoryState.CodeWritable))
+                    {
+                        return KernelResult.InvalidMemRange;
+                    }
+
+                    if (permission != KMemoryPermission.ReadAndWrite)
+                    {
+                        return KernelResult.InvalidPermission;
+                    }
+
+                    return codeMemory.Map(address, size, permission);
+
+                case CodeMemoryOperation.MapToOwner:
+                    if (!currentProcess.MemoryManager.CanContain(address, size, MemoryState.CodeReadOnly))
+                    {
+                        return KernelResult.InvalidMemRange;
+                    }
+
+                    if (permission != KMemoryPermission.Read && permission != KMemoryPermission.ReadAndExecute)
+                    {
+                        return KernelResult.InvalidPermission;
+                    }
+
+                    return codeMemory.MapToOwner(address, size, permission);
+
+                case CodeMemoryOperation.Unmap:
+                    if (!currentProcess.MemoryManager.CanContain(address, size, MemoryState.CodeWritable))
+                    {
+                        return KernelResult.InvalidMemRange;
+                    }
+
+                    if (permission != KMemoryPermission.None)
+                    {
+                        return KernelResult.InvalidPermission;
+                    }
+
+                    return codeMemory.Unmap(address, size);
+
+                case CodeMemoryOperation.UnmapFromOwner:
+                    if (!currentProcess.MemoryManager.CanContain(address, size, MemoryState.CodeReadOnly))
+                    {
+                        return KernelResult.InvalidMemRange;
+                    }
+
+                    if (permission != KMemoryPermission.None)
+                    {
+                        return KernelResult.InvalidPermission;
+                    }
+
+                    return codeMemory.UnmapFromOwner(address, size);
+
+                default: return KernelResult.InvalidEnumValue;
+            }
+        }
+
+        public KernelResult SetProcessMemoryPermission(int handle, ulong src, ulong size, KMemoryPermission permission)
+        {
+            if (!PageAligned(src))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (permission != KMemoryPermission.None &&
+                permission != KMemoryPermission.Read &&
+                permission != KMemoryPermission.ReadAndWrite &&
+                permission != KMemoryPermission.ReadAndExecute)
+            {
+                return KernelResult.InvalidPermission;
+            }
+
+            KProcess currentProcess = KernelStatic.GetCurrentProcess();
+
+            KProcess targetProcess = currentProcess.HandleTable.GetObject<KProcess>(handle);
+
+            if (targetProcess == null)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            if (targetProcess.MemoryManager.OutsideAddrSpace(src, size))
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            return targetProcess.MemoryManager.SetProcessMemoryPermission(src, size, permission);
+        }
+
+        public KernelResult MapProcessMemory(ulong dst, int handle, ulong src, ulong size)
+        {
+            if (!PageAligned(src) || !PageAligned(dst))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (dst + size <= dst || src + size <= src)
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            KProcess dstProcess = KernelStatic.GetCurrentProcess();
+            KProcess srcProcess = dstProcess.HandleTable.GetObject<KProcess>(handle);
+
+            if (srcProcess == null)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            if (!srcProcess.MemoryManager.InsideAddrSpace(src, size) ||
+                !dstProcess.MemoryManager.CanContain(dst, size, MemoryState.ProcessMemory))
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            KPageList pageList = new KPageList();
+
+            KernelResult result = srcProcess.MemoryManager.GetPagesIfStateEquals(
+                src,
+                size,
+                MemoryState.MapProcessAllowed,
+                MemoryState.MapProcessAllowed,
+                KMemoryPermission.None,
+                KMemoryPermission.None,
+                MemoryAttribute.Mask,
+                MemoryAttribute.None,
+                pageList);
+
+            if (result != KernelResult.Success)
+            {
+                return result;
+            }
+
+            return dstProcess.MemoryManager.MapPages(dst, pageList, MemoryState.ProcessMemory, KMemoryPermission.ReadAndWrite);
+        }
+
+        public KernelResult UnmapProcessMemory(ulong dst, int handle, ulong src, ulong size)
+        {
+            if (!PageAligned(src) || !PageAligned(dst))
+            {
+                return KernelResult.InvalidAddress;
+            }
+
+            if (!PageAligned(size) || size == 0)
+            {
+                return KernelResult.InvalidSize;
+            }
+
+            if (dst + size <= dst || src + size <= src)
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            KProcess dstProcess = KernelStatic.GetCurrentProcess();
+            KProcess srcProcess = dstProcess.HandleTable.GetObject<KProcess>(handle);
+
+            if (srcProcess == null)
+            {
+                return KernelResult.InvalidHandle;
+            }
+
+            if (!srcProcess.MemoryManager.InsideAddrSpace(src, size) ||
+                !dstProcess.MemoryManager.CanContain(dst, size, MemoryState.ProcessMemory))
+            {
+                return KernelResult.InvalidMemRange;
+            }
+
+            KernelResult result = dstProcess.MemoryManager.UnmapProcessMemory(dst, size, srcProcess.MemoryManager, src);
+
+            if (result != KernelResult.Success)
+            {
+                return result;
+            }
+
+            return KernelResult.Success;
+        }
+
         public KernelResult MapProcessCodeMemory(int handle, ulong dst, ulong src, ulong size)
         {
             if (!PageAligned(dst) || !PageAligned(src))
@@ -1389,43 +1631,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
 
             return targetProcess.MemoryManager.UnmapProcessCodeMemory(dst, src, size);
-        }
-
-        public KernelResult SetProcessMemoryPermission(int handle, ulong src, ulong size, KMemoryPermission permission)
-        {
-            if (!PageAligned(src))
-            {
-                return KernelResult.InvalidAddress;
-            }
-
-            if (!PageAligned(size) || size == 0)
-            {
-                return KernelResult.InvalidSize;
-            }
-
-            if (permission != KMemoryPermission.None &&
-                permission != KMemoryPermission.Read &&
-                permission != KMemoryPermission.ReadAndWrite &&
-                permission != KMemoryPermission.ReadAndExecute)
-            {
-                return KernelResult.InvalidPermission;
-            }
-
-            KProcess currentProcess = KernelStatic.GetCurrentProcess();
-
-            KProcess targetProcess = currentProcess.HandleTable.GetObject<KProcess>(handle);
-
-            if (targetProcess == null)
-            {
-                return KernelResult.InvalidHandle;
-            }
-
-            if (targetProcess.MemoryManager.OutsideAddrSpace(src, size))
-            {
-                return KernelResult.InvalidMemState;
-            }
-
-            return targetProcess.MemoryManager.SetProcessMemoryPermission(src, size, permission);
         }
 
         private static bool PageAligned(ulong address)

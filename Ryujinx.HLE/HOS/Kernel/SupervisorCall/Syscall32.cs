@@ -143,6 +143,26 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.CreateTransferMemory(out handle, address, size, permission);
         }
 
+        public KernelResult CreateCodeMemory32([R(1)] uint address, [R(2)] uint size, [R(1)] out int handle)
+        {
+            return _syscall.CreateCodeMemory(address, size, out handle);
+        }
+
+        public KernelResult ControlCodeMemory32(
+            [R(0)] int handle,
+            [R(1)] CodeMemoryOperation op,
+            [R(2)] uint addressLow,
+            [R(3)] uint addressHigh,
+            [R(4)] uint sizeLow,
+            [R(5)] uint sizeHigh,
+            [R(6)] KMemoryPermission permission)
+        {
+            ulong address = addressLow | ((ulong)addressHigh << 32);
+            ulong size = sizeLow | ((ulong)sizeHigh << 32);
+
+            return _syscall.ControlCodeMemory(handle, op, address, size, permission);
+        }
+
         public KernelResult MapTransferMemory32([R(0)] int handle, [R(1)] uint address, [R(2)] uint size, [R(3)] KMemoryPermission permission)
         {
             return _syscall.MapTransferMemory(handle, address, size, permission);
@@ -163,6 +183,34 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _syscall.UnmapPhysicalMemory(address, size);
         }
 
+        public KernelResult SetProcessMemoryPermission32(
+            [R(0)] int handle,
+            [R(1)] uint sizeLow,
+            [R(2)] uint srcLow,
+            [R(3)] uint srcHigh,
+            [R(4)] uint sizeHigh,
+            [R(5)] KMemoryPermission permission)
+        {
+            ulong src = srcLow | ((ulong)srcHigh << 32);
+            ulong size = sizeLow | ((ulong)sizeHigh << 32);
+
+            return _syscall.SetProcessMemoryPermission(handle, src, size, permission);
+        }
+
+        public KernelResult MapProcessMemory32([R(0)] uint dst, [R(1)] int handle, [R(2)] uint srcLow, [R(3)] uint srcHigh, [R(4)] uint size)
+        {
+            ulong src = srcLow | ((ulong)srcHigh << 32);
+
+            return _syscall.MapProcessMemory(dst, handle, src, size);
+        }
+
+        public KernelResult UnmapProcessMemory32([R(0)] uint dst, [R(1)] int handle, [R(2)] uint srcLow, [R(3)] uint srcHigh, [R(4)] uint size)
+        {
+            ulong src = srcLow | ((ulong)srcHigh << 32);
+
+            return _syscall.UnmapProcessMemory(dst, handle, src, size);
+        }
+
         public KernelResult MapProcessCodeMemory32([R(0)] int handle, [R(1)] uint srcLow, [R(2)] uint dstLow, [R(3)] uint dstHigh, [R(4)] uint srcHigh, [R(5)] uint sizeLow, [R(6)] uint sizeHigh)
         {
             ulong src = srcLow | ((ulong)srcHigh << 32);
@@ -179,20 +227,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ulong size = sizeLow | ((ulong)sizeHigh << 32);
 
             return _syscall.UnmapProcessCodeMemory(handle, dst, src, size);
-        }
-
-        public KernelResult SetProcessMemoryPermission32(
-            [R(0)] int handle,
-            [R(1)] uint sizeLow,
-            [R(2)] uint srcLow,
-            [R(3)] uint srcHigh,
-            [R(4)] uint sizeHigh,
-            [R(5)] KMemoryPermission permission)
-        {
-            ulong src = srcLow | ((ulong)srcHigh << 32);
-            ulong size = sizeLow | ((ulong)sizeHigh << 32);
-
-            return _syscall.SetProcessMemoryPermission(handle, src, size, permission);
         }
 
         // System
