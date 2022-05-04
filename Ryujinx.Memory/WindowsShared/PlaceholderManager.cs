@@ -469,13 +469,11 @@ namespace Ryujinx.Memory.WindowsShared
         {
             ulong endAddress = address + size;
             var overlaps = Array.Empty<IntervalTreeNode<ulong, MemoryPermission>>();
-            int count = 0;
+            int count;
 
             lock (_protections)
             {
                 count = _protections.Get(address, endAddress, ref overlaps);
-
-                Debug.Assert(count > 0);
 
                 if (count == 1 &&
                     overlaps[0].Start <= address &&
@@ -574,7 +572,7 @@ namespace Ryujinx.Memory.WindowsShared
         {
             ulong endAddress = address + size;
             var overlaps = Array.Empty<IntervalTreeNode<ulong, MemoryPermission>>();
-            int count = 0;
+            int count;
 
             lock (_protections)
             {
