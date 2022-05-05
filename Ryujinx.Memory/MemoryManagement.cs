@@ -8,9 +8,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.Allocate(sizeNint);
+                return MemoryManagementWindows.Allocate((IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -22,13 +20,11 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static IntPtr Reserve(ulong size, bool viewCompatible)
+        public static IntPtr Reserve(ulong size, bool viewCompatible, bool force4KBMap)
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.Reserve(sizeNint, viewCompatible);
+                return MemoryManagementWindows.Reserve((IntPtr)size, viewCompatible, force4KBMap);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -44,9 +40,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.Commit(address, sizeNint);
+                return MemoryManagementWindows.Commit(address, (IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -62,9 +56,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.Decommit(address, sizeNint);
+                return MemoryManagementWindows.Decommit(address, (IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -80,15 +72,13 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
                 if (force4KBMap)
                 {
-                    MemoryManagementWindows.MapView4KB(sharedMemory, srcOffset, address, sizeNint);
+                    MemoryManagementWindows.MapView4KB(sharedMemory, srcOffset, address, (IntPtr)size);
                 }
                 else
                 {
-                    MemoryManagementWindows.MapView(sharedMemory, srcOffset, address, sizeNint);
+                    MemoryManagementWindows.MapView(sharedMemory, srcOffset, address, (IntPtr)size);
                 }
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
@@ -105,15 +95,13 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
                 if (force4KBMap)
                 {
-                    MemoryManagementWindows.UnmapView4KB(address, sizeNint);
+                    MemoryManagementWindows.UnmapView4KB(address, (IntPtr)size);
                 }
                 else
                 {
-                    MemoryManagementWindows.UnmapView(sharedMemory, address, sizeNint);
+                    MemoryManagementWindows.UnmapView(sharedMemory, address, (IntPtr)size);
                 }
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
@@ -132,15 +120,13 @@ namespace Ryujinx.Memory
 
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
                 if (forView && force4KBMap)
                 {
-                    result = MemoryManagementWindows.Reprotect4KB(address, sizeNint, permission, forView);
+                    result = MemoryManagementWindows.Reprotect4KB(address, (IntPtr)size, permission, forView);
                 }
                 else
                 {
-                    result = MemoryManagementWindows.Reprotect(address, sizeNint, permission, forView);
+                    result = MemoryManagementWindows.Reprotect(address, (IntPtr)size, permission, forView);
                 }
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
@@ -158,11 +144,11 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Free(IntPtr address)
+        public static bool Free(IntPtr address, ulong size, bool force4KBMap)
         {
             if (OperatingSystem.IsWindows())
             {
-                return MemoryManagementWindows.Free(address);
+                return MemoryManagementWindows.Free(address, (IntPtr)size, force4KBMap);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -178,9 +164,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                IntPtr sizeNint = new IntPtr((long)size);
-
-                return MemoryManagementWindows.CreateSharedMemory(sizeNint, reserve);
+                return MemoryManagementWindows.CreateSharedMemory((IntPtr)size, reserve);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {

@@ -48,7 +48,7 @@ namespace Ryujinx.Memory
             {
                 _viewCompatible = flags.HasFlag(MemoryAllocationFlags.ViewCompatible);
                 _forceWindows4KBView = flags.HasFlag(MemoryAllocationFlags.ForceWindows4KBViewMapping);
-                _pointer = MemoryManagement.Reserve(size, _viewCompatible);
+                _pointer = MemoryManagement.Reserve(size, _viewCompatible, _forceWindows4KBView);
             }
             else
             {
@@ -404,7 +404,7 @@ namespace Ryujinx.Memory
                 }
                 else
                 {
-                    MemoryManagement.Free(ptr);
+                    MemoryManagement.Free(ptr, Size, _forceWindows4KBView);
                 }
 
                 foreach (MemoryBlock viewStorage in _viewStorages.Keys)

@@ -7,21 +7,27 @@ namespace Ryujinx.Memory
     [SupportedOSPlatform("windows")]
     static class MemoryManagementWindows
     {
-        private const int PageSize = 0x1000;
+        public const int PageSize = 0x1000;
 
         private static readonly PlaceholderManager _placeholders = new PlaceholderManager();
+        private static readonly PlaceholderManager4KB _placeholders4KB = new PlaceholderManager4KB();
 
         public static IntPtr Allocate(IntPtr size)
         {
             return AllocateInternal(size, AllocationType.Reserve | AllocationType.Commit);
         }
 
-        public static IntPtr Reserve(IntPtr size, bool viewCompatible)
+        public static IntPtr Reserve(IntPtr size, bool viewCompatible, bool force4KBMap)
         {
             if (viewCompatible)
             {
                 IntPtr baseAddress = AllocateInternal2(size, AllocationType.Reserve | AllocationType.ReservePlaceholder);
-                _placeholders.ReserveRange((ulong)baseAddress, (ulong)size);
+
+                if (!force4KBMap)
+                {
+                    _placeholders.ReserveRange((ulong)baseAddress, (ulong)size);
+                }
+
                 return baseAddress;
             }
 
@@ -69,6 +75,8 @@ namespace Ryujinx.Memory
 
         public static void MapView4KB(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
         {
+            _placeholders4KB.UnmapAndMarkRangeAsMapped(location, size);
+
             ulong uaddress = (ulong)location;
             ulong usize = (ulong)size;
             IntPtr endLocation = (IntPtr)(uaddress + usize);
@@ -105,20 +113,7 @@ namespace Ryujinx.Memory
 
         public static void UnmapView4KB(IntPtr location, IntPtr size)
         {
-            ulong uaddress = (ulong)location;
-            ulong usize = (ulong)size;
-            IntPtr endLocation = (IntPtr)(uaddress + usize);
-
-            while (location != endLocation)
-            {
-                bool result = WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, location, 2);
-                if (!result)
-                {
-                    throw new WindowsApiException("UnmapViewOfFile2");
-                }
-
-                location += PageSize;
-            }
+            _placeholders4KB.UnmapView(location, size);
         }
 
         public static bool Reprotect(IntPtr address, IntPtr size, MemoryPermission permission, bool forView)
@@ -151,8 +146,17 @@ namespace Ryujinx.Memory
             return true;
         }
 
-        public static bool Free(IntPtr address)
+        public static bool Free(IntPtr address, IntPtr size, bool force4KBMap)
         {
+            if (force4KBMap)
+            {
+                _placeholders4KB.UnmapRange(address, size);
+            }
+            else
+            {
+                _placeholders.UnmapView(IntPtr.Zero, address, size);
+            }
+
             return WindowsApi.VirtualFree(address, IntPtr.Zero, AllocationType.Release);
         }
 

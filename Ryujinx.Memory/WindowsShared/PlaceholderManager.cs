@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Ryujinx.Memory.WindowsShared
@@ -7,6 +8,7 @@ namespace Ryujinx.Memory.WindowsShared
     /// <summary>
     /// Windows memory placeholder manager.
     /// </summary>
+    [SupportedOSPlatform("windows")]
     class PlaceholderManager
     {
         private const ulong MinimumPageSize = 0x1000;
@@ -203,7 +205,7 @@ namespace Ryujinx.Memory.WindowsShared
             ulong endAddress = startAddress + unmapSize;
 
             var overlaps = Array.Empty<IntervalTreeNode<ulong, ulong>>();
-            int count = 0;
+            int count;
 
             lock (_mappings)
             {
@@ -226,8 +228,11 @@ namespace Ryujinx.Memory.WindowsShared
                     ulong overlapEnd = overlap.End;
                     ulong overlapValue = overlap.Value;
 
-                    _mappings.Remove(overlap);
-                    _mappings.Add(overlapStart, overlapEnd, ulong.MaxValue);
+                    lock (_mappings)
+                    {
+                        _mappings.Remove(overlap);
+                        _mappings.Add(overlapStart, overlapEnd, ulong.MaxValue);
+                    }
 
                     bool overlapStartsBefore = overlapStart < startAddress;
                     bool overlapEndsAfter = overlapEnd > endAddress;
@@ -364,7 +369,7 @@ namespace Ryujinx.Memory.WindowsShared
             ulong endAddress = reprotectAddress + reprotectSize;
 
             var overlaps = Array.Empty<IntervalTreeNode<ulong, ulong>>();
-            int count = 0;
+            int count;
 
             lock (_mappings)
             {
@@ -534,7 +539,7 @@ namespace Ryujinx.Memory.WindowsShared
         {
             ulong endAddress = address + size;
             var overlaps = Array.Empty<IntervalTreeNode<ulong, MemoryPermission>>();
-            int count = 0;
+            int count;
 
             lock (_protections)
             {

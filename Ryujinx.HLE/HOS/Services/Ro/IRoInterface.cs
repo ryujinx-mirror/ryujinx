@@ -30,6 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         private List<NroInfo> _nroInfos;
 
         private KProcess _owner;
+        private IVirtualMemoryManager _ownerMm;
 
         private static Random _random = new Random();
 
@@ -38,6 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             _nrrInfos = new List<NrrInfo>(MaxNrr);
             _nroInfos = new List<NroInfo>(MaxNro);
             _owner    = null;
+            _ownerMm  = null;
         }
 
         private ResultCode ParseNrr(out NrrInfo nrrInfo, ServiceCtx context, ulong nrrAddress, ulong nrrSize)
@@ -564,10 +566,12 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidSession;
             }
 
-            _owner = context.Process.HandleTable.GetKProcess(context.Request.HandleDesc.ToCopy[0]);
-            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
+            int processHandle = context.Request.HandleDesc.ToCopy[0];
+            _owner = context.Process.HandleTable.GetKProcess(processHandle);
+            _ownerMm = _owner?.CpuMemory;
+            context.Device.System.KernelContext.Syscall.CloseHandle(processHandle);
 
-            if (_owner?.CpuMemory is IRefCounted rc)
+            if (_ownerMm is IRefCounted rc)
             {
                 rc.IncrementReferenceCount();
             }
@@ -586,7 +590,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
                 _nroInfos.Clear();
 
-                if (_owner?.CpuMemory is IRefCounted rc)
+                if (_ownerMm is IRefCounted rc)
                 {
                     rc.DecrementReferenceCount();
                 }
