@@ -222,12 +222,23 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-       [CommandHipc(60)]
+        [CommandHipc(60)]
         // IsUserSystemClockAutomaticCorrectionEnabled() -> bool
         public ResultCode IsUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
             // NOTE: When set to true, is automatically synced with the internet.
             context.ResponseData.Write(true);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(62)]
+        // GetDebugModeFlag() -> bool
+        public ResultCode GetDebugModeFlag(ServiceCtx context)
+        {
+            context.ResponseData.Write(false);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

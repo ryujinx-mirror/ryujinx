@@ -72,6 +72,8 @@ namespace Ryujinx.HLE.HOS
 
         internal List<NfpDevice> NfpDevices { get; private set; }
 
+        internal SmRegistry SmRegistry { get; private set; }
+
         internal ServerBase SmServer { get; private set; }
         internal ServerBase BsdServer { get; private set; }
         internal ServerBase AudRenServer { get; private set; }
@@ -291,7 +293,8 @@ namespace Ryujinx.HLE.HOS
 
         private void InitializeServices()
         {
-            SmServer = new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext));
+            SmRegistry = new SmRegistry();
+            SmServer = new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext, SmRegistry));
 
             // Wait until SM server thread is done with initialization,
             // only then doing connections to SM is safe.
@@ -468,7 +471,7 @@ namespace Ryujinx.HLE.HOS
                 AudioRendererManager.Dispose();
 
                 LibHacHorizonManager.PmClient.Fs.UnregisterProgram(LibHacHorizonManager.ApplicationClient.Os.GetCurrentProcessId().Value).ThrowIfFailure();
-                
+
                 KernelContext.Dispose();
             }
         }

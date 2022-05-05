@@ -1,11 +1,9 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,21 +15,19 @@ namespace Ryujinx.HLE.HOS.Services.Sm
     {
         private static Dictionary<string, Type> _services;
 
-        private static readonly ConcurrentDictionary<string, KPort> _registeredServices;
-
+        private readonly SmRegistry _registry;
         private readonly ServerBase _commonServer;
 
         private bool _isInitialized;
 
-        public IUserInterface(KernelContext context)
+        public IUserInterface(KernelContext context, SmRegistry registry)
         {
             _commonServer = new ServerBase(context, "CommonServer");
+            _registry = registry;
         }
 
         static IUserInterface()
         {
-            _registeredServices = new ConcurrentDictionary<string, KPort>();
-
             _services = Assembly.GetExecutingAssembly().GetTypes()
                 .SelectMany(type => type.GetCustomAttributes(typeof(ServiceAttribute), true)
                 .Select(service => (((ServiceAttribute)service).Name, type)))
@@ -74,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             KSession session = new KSession(context.Device.System.KernelContext);
 
-            if (_registeredServices.TryGetValue(name, out KPort port))
+            if (_registry.TryGetService(name, out KPort port))
             {
                 KernelResult result = port.EnqueueIncomingSession(session.ServerSession);
 
@@ -82,6 +78,15 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 {
                     throw new InvalidOperationException($"Session enqueue on port returned error \"{result}\".");
                 }
+
+                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+
+                session.ClientSession.DecrementReferenceCount();
+
+                context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
             }
             else
             {
@@ -107,17 +112,17 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                         throw new NotImplementedException(name);
                     }
                 }
+
+                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+
+                session.ServerSession.DecrementReferenceCount();
+                session.ClientSession.DecrementReferenceCount();
+
+                context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
             }
-
-            if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
-            {
-                throw new InvalidOperationException("Out of handles!");
-            }
-
-            session.ServerSession.DecrementReferenceCount();
-            session.ClientSession.DecrementReferenceCount();
-
-            context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
             return ResultCode.Success;
         }
@@ -179,7 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, 0);
 
-            if (!_registeredServices.TryAdd(name, port))
+            if (!_registry.TryRegister(name, port))
             {
                 return ResultCode.AlreadyRegistered;
             }
@@ -219,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 return ResultCode.InvalidName;
             }
 
-            if (!_registeredServices.TryRemove(name, out _))
+            if (!_registry.Unregister(name))
             {
                 return ResultCode.NotRegistered;
             }

@@ -579,6 +579,15 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             return ResultCode.Success;
         }
 
+        [CommandHipc(10)]
+        // LoadNrr2(u64, u64, u64, pid)
+        public ResultCode LoadNrr2(ServiceCtx context)
+        {
+            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
+
+            return LoadNrr(context);
+        }
+
         protected override void Dispose(bool isDisposing)
         {
             if (isDisposing)
