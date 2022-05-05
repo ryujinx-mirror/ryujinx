@@ -379,20 +379,28 @@ namespace Ryujinx.Graphics.OpenGL
             switch (op)
             {
                 case GAL.StencilOp.Keep:
+                case GAL.StencilOp.KeepGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Keep;
                 case GAL.StencilOp.Zero:
+                case GAL.StencilOp.ZeroGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Zero;
                 case GAL.StencilOp.Replace:
+                case GAL.StencilOp.ReplaceGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Replace;
                 case GAL.StencilOp.IncrementAndClamp:
+                case GAL.StencilOp.IncrementAndClampGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Incr;
                 case GAL.StencilOp.DecrementAndClamp:
+                case GAL.StencilOp.DecrementAndClampGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Decr;
                 case GAL.StencilOp.Invert:
+                case GAL.StencilOp.InvertGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.Invert;
                 case GAL.StencilOp.IncrementAndWrap:
+                case GAL.StencilOp.IncrementAndWrapGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.IncrWrap;
                 case GAL.StencilOp.DecrementAndWrap:
+                case GAL.StencilOp.DecrementAndWrapGl:
                     return OpenTK.Graphics.OpenGL.StencilOp.DecrWrap;
             }
 
