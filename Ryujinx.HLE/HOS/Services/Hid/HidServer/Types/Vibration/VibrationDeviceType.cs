@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public enum HidVibrationDeviceType
+    public enum VibrationDeviceType
     {
         None,
         LinearResonantActuator,

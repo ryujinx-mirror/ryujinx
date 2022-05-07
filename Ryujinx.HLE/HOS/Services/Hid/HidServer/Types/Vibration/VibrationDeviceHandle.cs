@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public struct HidVibrationDeviceHandle
+    public struct VibrationDeviceHandle
     {
         public byte DeviceType;
         public byte PlayerId;

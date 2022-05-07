@@ -1,8 +1,7 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public enum HidVibrationDevicePosition
+    public enum NpadJoyDeviceType
     {
-        None,
         Left,
         Right
     }

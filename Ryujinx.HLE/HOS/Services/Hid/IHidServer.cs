@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -26,9 +27,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private bool _isFirmwareUpdateAvailableForSixAxisSensor;
         private bool _isSixAxisSensorUnalteredPassthroughEnabled;
 
-        private HidNpadJoyAssignmentMode      _npadJoyAssignmentMode;
-        private HidNpadHandheldActivationMode _npadHandheldActivationMode;
-        private HidGyroscopeZeroDriftMode     _gyroscopeZeroDriftMode;
+        private NpadHandheldActivationMode _npadHandheldActivationMode;
+        private GyroscopeZeroDriftMode     _gyroscopeZeroDriftMode;
 
         private long  _npadCommunicationMode;
         private uint  _accelerometerPlayMode;
@@ -37,22 +37,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 #pragma warning restore CS0649
         private float _sevenSixAxisSensorFusionStrength;
 
-        private HidSensorFusionParameters  _sensorFusionParams;
-        private HidAccelerometerParameters _accelerometerParams;
+        private SensorFusionParameters  _sensorFusionParams;
+        private AccelerometerParameters _accelerometerParams;
 
         public IHidServer(ServiceCtx context) : base(context.Device.System.HidServer)
         {
             _xpadIdEvent                 = new KEvent(context.Device.System.KernelContext);
             _palmaOperationCompleteEvent = new KEvent(context.Device.System.KernelContext);
 
-            _npadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
-            _npadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;
-            _gyroscopeZeroDriftMode     = HidGyroscopeZeroDriftMode.Standard;
+            _npadHandheldActivationMode = NpadHandheldActivationMode.Dual;
+            _gyroscopeZeroDriftMode     = GyroscopeZeroDriftMode.Standard;
 
             _isFirmwareUpdateAvailableForSixAxisSensor = false;
 
-            _sensorFusionParams  = new HidSensorFusionParameters();
-            _accelerometerParams = new HidAccelerometerParameters();
+            _sensorFusionParams  = new SensorFusionParameters();
+            _accelerometerParams = new AccelerometerParameters();
 
             // TODO: signal event at right place
             _xpadIdEvent.ReadableEvent.Signal();
@@ -393,7 +392,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int sixAxisSensorHandle = context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4; // Padding
 
-            _sensorFusionParams = new HidSensorFusionParameters
+            _sensorFusionParams = new SensorFusionParameters
             {
                 RevisePower = context.RequestData.ReadInt32(),
                 ReviseRange = context.RequestData.ReadInt32()
@@ -445,7 +444,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int sixAxisSensorHandle = context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4; // Padding
 
-            _accelerometerParams = new HidAccelerometerParameters
+            _accelerometerParams = new AccelerometerParameters
             {
                 X = context.RequestData.ReadInt32(),
                 Y = context.RequestData.ReadInt32()
@@ -539,7 +538,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode SetGyroscopeZeroDriftMode(ServiceCtx context)
         {
             int sixAxisSensorHandle = context.RequestData.ReadInt32();
-            _gyroscopeZeroDriftMode = (HidGyroscopeZeroDriftMode)context.RequestData.ReadInt32();
+            _gyroscopeZeroDriftMode = (GyroscopeZeroDriftMode)context.RequestData.ReadInt32();
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, sixAxisSensorHandle, _gyroscopeZeroDriftMode });
@@ -570,7 +569,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             context.RequestData.BaseStream.Position += 4; // Padding
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            _gyroscopeZeroDriftMode = HidGyroscopeZeroDriftMode.Standard;
+            _gyroscopeZeroDriftMode = GyroscopeZeroDriftMode.Standard;
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, sixAxisSensorHandle, _gyroscopeZeroDriftMode });
 
@@ -909,54 +908,63 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // SetNpadJoyAssignmentModeSingleByDefault(uint HidControllerId, nn::applet::AppletResourceUserId)
         public ResultCode SetNpadJoyAssignmentModeSingleByDefault(ServiceCtx context)
         {
-            PlayerIndex hidControllerId      = (PlayerIndex)context.RequestData.ReadInt32();
-            long        appletResourceUserId = context.RequestData.ReadInt64();
+            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
+            context.RequestData.BaseStream.Position += 4; // Padding
+            long appletResourceUserId = context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, hidControllerId, _npadJoyAssignmentMode });
+            if (HidUtils.IsValidNpadIdType(npadIdType))
+            {
+                context.Device.Hid.SharedMemory.Npads[(int)HidUtils.GetIndexFromNpadIdType(npadIdType)].InternalState.JoyAssignmentMode = NpadJoyAssignmentMode.Single;
+            }
 
             return ResultCode.Success;
         }
 
         [CommandHipc(123)]
-        // SetNpadJoyAssignmentModeSingle(uint HidControllerId, nn::applet::AppletResourceUserId, long HidNpadJoyDeviceType)
+        // SetNpadJoyAssignmentModeSingle(uint npadIdType, nn::applet::AppletResourceUserId, uint npadJoyDeviceType)
         public ResultCode SetNpadJoyAssignmentModeSingle(ServiceCtx context)
         {
-            PlayerIndex          hidControllerId      = (PlayerIndex)context.RequestData.ReadInt32();
-            long                 appletResourceUserId = context.RequestData.ReadInt64();
-            HidNpadJoyDeviceType hidNpadJoyDeviceType = (HidNpadJoyDeviceType)context.RequestData.ReadInt64();
+            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
+            context.RequestData.BaseStream.Position += 4; // Padding
+            long appletResourceUserId = context.RequestData.ReadInt64();
+            NpadJoyDeviceType npadJoyDeviceType = (NpadJoyDeviceType)context.RequestData.ReadUInt32();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, hidControllerId, hidNpadJoyDeviceType, _npadJoyAssignmentMode });
+            if (HidUtils.IsValidNpadIdType(npadIdType))
+            {
+                SetNpadJoyAssignmentModeSingleWithDestinationImpl(context, npadIdType, appletResourceUserId, npadJoyDeviceType, out _, out _);
+            }
 
             return ResultCode.Success;
         }
 
         [CommandHipc(124)]
-        // SetNpadJoyAssignmentModeDual(uint HidControllerId, nn::applet::AppletResourceUserId)
+        // SetNpadJoyAssignmentModeDual(uint npadIdType, nn::applet::AppletResourceUserId)
         public ResultCode SetNpadJoyAssignmentModeDual(ServiceCtx context)
         {
-            PlayerIndex hidControllerId      = HidUtils.GetIndexFromNpadIdType((NpadIdType)context.RequestData.ReadInt32());
-            long        appletResourceUserId = context.RequestData.ReadInt64();
+            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
+            context.RequestData.BaseStream.Position += 4; // Padding
+            long appletResourceUserId = context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Dual;
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, hidControllerId, _npadJoyAssignmentMode });
+            if (HidUtils.IsValidNpadIdType(npadIdType))
+            {
+                context.Device.Hid.SharedMemory.Npads[(int)HidUtils.GetIndexFromNpadIdType(npadIdType)].InternalState.JoyAssignmentMode = NpadJoyAssignmentMode.Dual;
+            }
 
             return ResultCode.Success;
         }
 
         [CommandHipc(125)]
-        // MergeSingleJoyAsDualJoy(uint SingleJoyId0, uint SingleJoyId1, nn::applet::AppletResourceUserId)
+        // MergeSingleJoyAsDualJoy(uint npadIdType0, uint npadIdType1, nn::applet::AppletResourceUserId)
         public ResultCode MergeSingleJoyAsDualJoy(ServiceCtx context)
         {
-            long singleJoyId0         = context.RequestData.ReadInt32();
-            long singleJoyId1         = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            NpadIdType npadIdType0          = (NpadIdType)context.RequestData.ReadUInt32();
+            NpadIdType npadIdType1          = (NpadIdType)context.RequestData.ReadUInt32();
+            long       appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, singleJoyId0, singleJoyId1 });
+            if (HidUtils.IsValidNpadIdType(npadIdType0) && HidUtils.IsValidNpadIdType(npadIdType1))
+            {
+                Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, npadIdType0, npadIdType1 });
+            }
 
             return ResultCode.Success;
         }
@@ -988,7 +996,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode SetNpadHandheldActivationMode(ServiceCtx context)
         {
             long appletResourceUserId   = context.RequestData.ReadInt64();
-            _npadHandheldActivationMode = (HidNpadHandheldActivationMode)context.RequestData.ReadInt64();
+            _npadHandheldActivationMode = (NpadHandheldActivationMode)context.RequestData.ReadInt64();
 
             Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, _npadHandheldActivationMode });
 
@@ -1049,37 +1057,47 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         [CommandHipc(133)] // 5.0.0+
-        // SetNpadJoyAssignmentModeSingleWithDestination(uint HidControllerId, long HidNpadJoyDeviceType, nn::applet::AppletResourceUserId) -> bool Unknown0, uint Unknown1
+        // SetNpadJoyAssignmentModeSingleWithDestination(uint npadIdType, uint npadJoyDeviceType, nn::applet::AppletResourceUserId) -> bool npadIdTypeIsSet, uint npadIdTypeSet
         public ResultCode SetNpadJoyAssignmentModeSingleWithDestination(ServiceCtx context)
         {
-            PlayerIndex          hidControllerId      = (PlayerIndex)context.RequestData.ReadInt32();
-            HidNpadJoyDeviceType hidNpadJoyDeviceType = (HidNpadJoyDeviceType)context.RequestData.ReadInt64();
-            long                 appletResourceUserId = context.RequestData.ReadInt64();
+            NpadIdType        npadIdType        = (NpadIdType)context.RequestData.ReadInt32();
+            NpadJoyDeviceType npadJoyDeviceType = (NpadJoyDeviceType)context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Position += 4; // Padding
+            long appletResourceUserId = context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
+            if (HidUtils.IsValidNpadIdType(npadIdType))
+            {
+                SetNpadJoyAssignmentModeSingleWithDestinationImpl(context, npadIdType, appletResourceUserId, npadJoyDeviceType, out NpadIdType npadIdTypeSet, out bool npadIdTypeIsSet);
 
-            context.ResponseData.Write(0); //Unknown0
-            context.ResponseData.Write(0); //Unknown1
-
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new {
-                appletResourceUserId,
-                hidControllerId,
-                hidNpadJoyDeviceType,
-                _npadJoyAssignmentMode,
-                Unknown0 = 0,
-                Unknown1 = 0
-            });
+                if (npadIdTypeIsSet)
+                {
+                    context.ResponseData.Write(npadIdTypeIsSet);
+                    context.ResponseData.Write((uint)npadIdTypeSet);
+                }
+            }
 
             return ResultCode.Success;
+        }
+
+        private void SetNpadJoyAssignmentModeSingleWithDestinationImpl(ServiceCtx context, NpadIdType npadIdType, long appletResourceUserId, NpadJoyDeviceType npadJoyDeviceType, out NpadIdType npadIdTypeSet, out bool npadIdTypeIsSet)
+        {
+            npadIdTypeSet   = default;
+            npadIdTypeIsSet = false;
+
+            context.Device.Hid.SharedMemory.Npads[(int)HidUtils.GetIndexFromNpadIdType(npadIdType)].InternalState.JoyAssignmentMode = NpadJoyAssignmentMode.Single;
+
+            // TODO: Service seems to use the npadJoyDeviceType to find the nearest other Npad available and merge them to dual.
+            //       If one is found, it returns the npadIdType of the other Npad and a bool.
+            //       If not, it returns nothing.
         }
 
         [CommandHipc(200)]
         // GetVibrationDeviceInfo(nn::hid::VibrationDeviceHandle) -> nn::hid::VibrationDeviceInfo
         public ResultCode GetVibrationDeviceInfo(ServiceCtx context)
         {
-            HidVibrationDeviceHandle deviceHandle = context.RequestData.ReadStruct<HidVibrationDeviceHandle>();
-            NpadStyleIndex           deviceType   = (NpadStyleIndex)deviceHandle.DeviceType;
-            NpadIdType               npadIdType   = (NpadIdType)deviceHandle.PlayerId;
+            VibrationDeviceHandle deviceHandle = context.RequestData.ReadStruct<VibrationDeviceHandle>();
+            NpadStyleIndex        deviceType   = (NpadStyleIndex)deviceHandle.DeviceType;
+            NpadIdType            npadIdType   = (NpadIdType)deviceHandle.PlayerId;
 
             if (deviceType < NpadStyleIndex.System || deviceType >= NpadStyleIndex.FullKey)
             {
@@ -1093,28 +1111,28 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     return ResultCode.InvalidDeviceIndex;
                 }
 
-                HidVibrationDeviceType vibrationDeviceType = HidVibrationDeviceType.None;
+                VibrationDeviceType vibrationDeviceType = VibrationDeviceType.None;
 
-                if (Enum.IsDefined<NpadStyleIndex>(deviceType))
+                if (Enum.IsDefined(deviceType))
                 {
-                    vibrationDeviceType = HidVibrationDeviceType.LinearResonantActuator;
+                    vibrationDeviceType = VibrationDeviceType.LinearResonantActuator;
                 }
                 else if ((uint)deviceType == 8)
                 {
-                    vibrationDeviceType = HidVibrationDeviceType.GcErm;
+                    vibrationDeviceType = VibrationDeviceType.GcErm;
                 }
 
-                HidVibrationDevicePosition vibrationDevicePosition = HidVibrationDevicePosition.None;
+                VibrationDevicePosition vibrationDevicePosition = VibrationDevicePosition.None;
 
-                if (vibrationDeviceType == HidVibrationDeviceType.LinearResonantActuator)
+                if (vibrationDeviceType == VibrationDeviceType.LinearResonantActuator)
                 {
                     if (deviceHandle.Position == 0)
                     {
-                        vibrationDevicePosition = HidVibrationDevicePosition.Left;
+                        vibrationDevicePosition = VibrationDevicePosition.Left;
                     }
                     else if (deviceHandle.Position == 1)
                     {
-                        vibrationDevicePosition = HidVibrationDevicePosition.Right;
+                        vibrationDevicePosition = VibrationDevicePosition.Right;
                     }
                     else
                     {
@@ -1122,7 +1140,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     }
                 }
 
-                HidVibrationDeviceValue deviceInfo = new HidVibrationDeviceValue
+                VibrationDeviceValue deviceInfo = new VibrationDeviceValue
                 {
                     DeviceType = vibrationDeviceType,
                     Position = vibrationDevicePosition
@@ -1140,7 +1158,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // SendVibrationValue(nn::hid::VibrationDeviceHandle, nn::hid::VibrationValue, nn::applet::AppletResourceUserId)
         public ResultCode SendVibrationValue(ServiceCtx context)
         {
-            HidVibrationDeviceHandle deviceHandle = new HidVibrationDeviceHandle
+            VibrationDeviceHandle deviceHandle = new VibrationDeviceHandle
             {
                 DeviceType = context.RequestData.ReadByte(),
                 PlayerId   = context.RequestData.ReadByte(),
@@ -1148,7 +1166,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 Reserved   = context.RequestData.ReadByte()
             };
 
-            HidVibrationValue vibrationValue = new HidVibrationValue
+            VibrationValue vibrationValue = new VibrationValue
             {
                 AmplitudeLow  = context.RequestData.ReadSingle(),
                 FrequencyLow  = context.RequestData.ReadSingle(),
@@ -1158,7 +1176,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Dictionary<byte, HidVibrationValue> dualVibrationValues = new Dictionary<byte, HidVibrationValue>();
+            Dictionary<byte, VibrationValue> dualVibrationValues = new Dictionary<byte, VibrationValue>();
 
             dualVibrationValues[deviceHandle.Position] = vibrationValue;
 
@@ -1171,7 +1189,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetActualVibrationValue(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId) -> nn::hid::VibrationValue
         public ResultCode GetActualVibrationValue(ServiceCtx context)
         {
-            HidVibrationDeviceHandle deviceHandle = new HidVibrationDeviceHandle
+            VibrationDeviceHandle deviceHandle = new VibrationDeviceHandle
             {
                 DeviceType = context.RequestData.ReadByte(),
                 PlayerId   = context.RequestData.ReadByte(),
@@ -1181,7 +1199,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            HidVibrationValue vibrationValue = context.Device.Hid.Npads.GetLastVibrationValue((PlayerIndex)deviceHandle.PlayerId, deviceHandle.Position);
+            VibrationValue vibrationValue = context.Device.Hid.Npads.GetLastVibrationValue((PlayerIndex)deviceHandle.PlayerId, deviceHandle.Position);
 
             context.ResponseData.Write(vibrationValue.AmplitudeLow);
             context.ResponseData.Write(vibrationValue.FrequencyLow);
@@ -1234,12 +1252,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.Memory.Read(context.Request.PtrBuff[1].Position, vibrationValueBuffer);
 
-            Span<HidVibrationDeviceHandle> deviceHandles   = MemoryMarshal.Cast<byte, HidVibrationDeviceHandle>(vibrationDeviceHandleBuffer);
-            Span<HidVibrationValue>        vibrationValues = MemoryMarshal.Cast<byte, HidVibrationValue>(vibrationValueBuffer);
+            Span<VibrationDeviceHandle> deviceHandles   = MemoryMarshal.Cast<byte, VibrationDeviceHandle>(vibrationDeviceHandleBuffer);
+            Span<VibrationValue>        vibrationValues = MemoryMarshal.Cast<byte, VibrationValue>(vibrationValueBuffer);
 
             if (!deviceHandles.IsEmpty && vibrationValues.Length == deviceHandles.Length)
             {
-                Dictionary<byte, HidVibrationValue> dualVibrationValues = new Dictionary<byte, HidVibrationValue>();
+                Dictionary<byte, VibrationValue> dualVibrationValues = new Dictionary<byte, VibrationValue>();
                 PlayerIndex currentIndex = (PlayerIndex)deviceHandles[0].PlayerId;
 
                 for (int deviceCounter = 0; deviceCounter < deviceHandles.Length; deviceCounter++)
@@ -1250,7 +1268,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                     if (index != currentIndex || dualVibrationValues.Count == 2)
                     {
                         context.Device.Hid.Npads.UpdateRumbleQueue(currentIndex, dualVibrationValues);
-                        dualVibrationValues = new Dictionary<byte, HidVibrationValue>();
+                        dualVibrationValues = new Dictionary<byte, VibrationValue>();
                     }
 
                     dualVibrationValues[position] = vibrationValues[deviceCounter];

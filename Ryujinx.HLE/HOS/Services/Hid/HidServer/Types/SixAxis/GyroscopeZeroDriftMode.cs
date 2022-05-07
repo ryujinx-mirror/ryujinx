@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public enum HidGyroscopeZeroDriftMode
+    public enum GyroscopeZeroDriftMode
     {
         Loose,
         Standard,

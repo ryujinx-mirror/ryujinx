@@ -35,5 +35,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
             PlayerIndex.Unknown  => NpadIdType.Unknown,
             _                    => throw new ArgumentOutOfRangeException(nameof(index))
         };
+
+        public static bool IsValidNpadIdType(NpadIdType npadIdType)
+        {
+            return npadIdType <= NpadIdType.Player8 || npadIdType == NpadIdType.Handheld || npadIdType == NpadIdType.Unknown;
+        }
     }
 }

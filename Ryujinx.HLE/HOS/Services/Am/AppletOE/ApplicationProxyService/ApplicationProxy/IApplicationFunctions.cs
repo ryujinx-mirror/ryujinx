@@ -15,7 +15,6 @@ using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
-using Ryujinx.HLE.HOS.Services.Sm;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
 using System.Numerics;
@@ -41,6 +40,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         private int _friendInvitationStorageChannelEventHandle;
         private int _notificationStorageChannelEventHandle;
         private int _healthWarningDisappearedSystemEventHandle;
+
+        private bool _gamePlayRecordingState;
 
         private int _jitLoaded;
 
@@ -349,6 +350,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             return ResultCode.Success;
         }
 
+        [CommandHipc(65)] // 3.0.0+
+        // IsGamePlayRecordingSupported() -> u8
+        public ResultCode IsGamePlayRecordingSupported(ServiceCtx context)
+        {
+            context.ResponseData.Write(_gamePlayRecordingState);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(66)] // 3.0.0+
         // InitializeGamePlayRecording(u64, handle<copy>)
         public ResultCode InitializeGamePlayRecording(ServiceCtx context)
@@ -362,9 +372,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetGamePlayRecordingState(u32)
         public ResultCode SetGamePlayRecordingState(ServiceCtx context)
         {
-            int state = context.RequestData.ReadInt32();
+            _gamePlayRecordingState = context.RequestData.ReadInt32() != 0;
 
-            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { state });
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { _gamePlayRecordingState });
 
             return ResultCode.Success;
         }

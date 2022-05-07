@@ -1,9 +1,8 @@
-﻿using Ryujinx.HLE.HOS.Tamper;
-using System;
+﻿using System;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public struct HidVibrationValue
+    public struct VibrationValue
     {
         public float AmplitudeLow;
         public float FrequencyLow;
@@ -12,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public override bool Equals(object obj)
         {
-            return obj is HidVibrationValue value &&
+            return obj is VibrationValue value &&
                    AmplitudeLow == value.AmplitudeLow &&
                    AmplitudeHigh == value.AmplitudeHigh;
         }

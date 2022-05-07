@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private ControllerType[] _configuredTypes;
         private KEvent[] _styleSetUpdateEvents;
         private bool[] _supportedPlayers;
-        private static HidVibrationValue _neutralVibrationValue = new HidVibrationValue
+        private static VibrationValue _neutralVibrationValue = new VibrationValue
         {
             AmplitudeLow = 0f,
             FrequencyLow = 160f,
@@ -33,8 +33,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         internal bool SixAxisActive = false; // TODO: link to hidserver when implemented
         internal ControllerType SupportedStyleSets { get; set; }
 
-        public Dictionary<PlayerIndex, ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>> RumbleQueues = new Dictionary<PlayerIndex, ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>>();
-        public Dictionary<PlayerIndex, (HidVibrationValue, HidVibrationValue)> LastVibrationValues = new Dictionary<PlayerIndex, (HidVibrationValue, HidVibrationValue)>();
+        public Dictionary<PlayerIndex, ConcurrentQueue<(VibrationValue, VibrationValue)>> RumbleQueues = new Dictionary<PlayerIndex, ConcurrentQueue<(VibrationValue, VibrationValue)>>();
+        public Dictionary<PlayerIndex, (VibrationValue, VibrationValue)> LastVibrationValues = new Dictionary<PlayerIndex, (VibrationValue, VibrationValue)>();
 
         public NpadDevices(Switch device, bool active = true) : base(device, active)
         {
@@ -588,21 +588,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             WriteNewSixInputEntry(ref currentNpad.JoyRightSixAxisSensor, ref newState);
         }
 
-        public void UpdateRumbleQueue(PlayerIndex index, Dictionary<byte, HidVibrationValue> dualVibrationValues)
+        public void UpdateRumbleQueue(PlayerIndex index, Dictionary<byte, VibrationValue> dualVibrationValues)
         {
-            if (RumbleQueues.TryGetValue(index, out ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> currentQueue))
+            if (RumbleQueues.TryGetValue(index, out ConcurrentQueue<(VibrationValue, VibrationValue)> currentQueue))
             {
-                if (!dualVibrationValues.TryGetValue(0, out HidVibrationValue leftVibrationValue))
+                if (!dualVibrationValues.TryGetValue(0, out VibrationValue leftVibrationValue))
                 {
                     leftVibrationValue = _neutralVibrationValue;
                 }
 
-                if (!dualVibrationValues.TryGetValue(1, out HidVibrationValue rightVibrationValue))
+                if (!dualVibrationValues.TryGetValue(1, out VibrationValue rightVibrationValue))
                 {
                     rightVibrationValue = _neutralVibrationValue;
                 }
 
-                if (!LastVibrationValues.TryGetValue(index, out (HidVibrationValue, HidVibrationValue) dualVibrationValue) || !leftVibrationValue.Equals(dualVibrationValue.Item1) || !rightVibrationValue.Equals(dualVibrationValue.Item2))
+                if (!LastVibrationValues.TryGetValue(index, out (VibrationValue, VibrationValue) dualVibrationValue) || !leftVibrationValue.Equals(dualVibrationValue.Item1) || !rightVibrationValue.Equals(dualVibrationValue.Item2))
                 {
                     currentQueue.Enqueue((leftVibrationValue, rightVibrationValue));
 
@@ -611,9 +611,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             }
         }
 
-        public HidVibrationValue GetLastVibrationValue(PlayerIndex index, byte position)
+        public VibrationValue GetLastVibrationValue(PlayerIndex index, byte position)
         {
-            if (!LastVibrationValues.TryGetValue(index, out (HidVibrationValue, HidVibrationValue) dualVibrationValue))
+            if (!LastVibrationValues.TryGetValue(index, out (VibrationValue, VibrationValue) dualVibrationValue))
             {
                 return _neutralVibrationValue;
             }
@@ -621,11 +621,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return (position == 0) ? dualVibrationValue.Item1 : dualVibrationValue.Item2;
         }
 
-        public ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> GetRumbleQueue(PlayerIndex index)
+        public ConcurrentQueue<(VibrationValue, VibrationValue)> GetRumbleQueue(PlayerIndex index)
         {
-            if (!RumbleQueues.TryGetValue(index, out ConcurrentQueue<(HidVibrationValue, HidVibrationValue)> rumbleQueue))
+            if (!RumbleQueues.TryGetValue(index, out ConcurrentQueue<(VibrationValue, VibrationValue)> rumbleQueue))
             {
-                rumbleQueue = new ConcurrentQueue<(HidVibrationValue, HidVibrationValue)>();
+                rumbleQueue = new ConcurrentQueue<(VibrationValue, VibrationValue)>();
                 _device.Hid.Npads.RumbleQueues[index] = rumbleQueue;
             }
 
