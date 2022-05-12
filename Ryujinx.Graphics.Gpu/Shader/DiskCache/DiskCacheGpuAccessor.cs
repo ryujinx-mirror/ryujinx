@@ -186,6 +186,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        public bool QueryViewportTransformDisable()
+        {
+            return _oldSpecState.GraphicsState.ViewportTransformDisable;
+        }
+
+        /// <inheritdoc/>
         public void RegisterTexture(int handle, int cbufSlot)
         {
             if (!_oldSpecState.TextureRegistered(_stageIndex, handle, cbufSlot))

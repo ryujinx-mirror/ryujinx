@@ -113,7 +113,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.DepthMode),
                     nameof(ThreedClassState.ViewportTransform),
                     nameof(ThreedClassState.ViewportExtents),
-                    nameof(ThreedClassState.YControl)),
+                    nameof(ThreedClassState.YControl),
+                    nameof(ThreedClassState.ViewportTransformEnable)),
 
                 new StateUpdateCallbackEntry(UpdatePolygonMode,
                     nameof(ThreedClassState.PolygonModeFront),
@@ -200,7 +201,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             // of the shader for the new state.
             if (_shaderSpecState != null)
             {
-                if (!_shaderSpecState.MatchesGraphics(_channel, GetPoolState()))
+                if (!_shaderSpecState.MatchesGraphics(_channel, GetPoolState(), GetGraphicsState()))
                 {
                     ForceShaderUpdate();
                 }
@@ -568,6 +569,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             var yControl = _state.State.YControl;
             var face = _state.State.FaceState;
 
+            bool disableTransform = _state.State.ViewportTransformEnable == 0;
+
             UpdateFrontFace(yControl, face.FrontFace);
             UpdateDepthMode();
 
@@ -577,6 +580,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             for (int index = 0; index < Constants.TotalViewports; index++)
             {
+                if (disableTransform)
+                {
+                    ref var scissor = ref _state.State.ScreenScissorState;
+
+                    float rScale = _channel.TextureManager.RenderTargetScale;
+                    var scissorRect = new RectangleF(0, 0, (scissor.X + scissor.Width) * rScale, (scissor.Y + scissor.Height) * rScale);
+
+                    viewports[index] = new Viewport(scissorRect, ViewportSwizzle.PositiveX, ViewportSwizzle.PositiveY, ViewportSwizzle.PositiveZ, ViewportSwizzle.PositiveW, 0, 1);
+                    continue;
+                }
+
                 ref var transform = ref _state.State.ViewportTransform[index];
                 ref var extents = ref _state.State.ViewportExtents[index];
 
@@ -628,7 +642,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 viewports[index] = new Viewport(region, swizzleX, swizzleY, swizzleZ, swizzleW, depthNear, depthFar);
             }
 
-            _context.Renderer.Pipeline.SetViewports(0, viewports);
+            _context.Renderer.Pipeline.SetViewports(0, viewports, disableTransform);
         }
 
         /// <summary>
@@ -1194,7 +1208,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             return new GpuChannelGraphicsState(
                 _state.State.EarlyZForce,
                 _drawState.Topology,
-                _state.State.TessMode);
+                _state.State.TessMode,
+                _state.State.ViewportTransformEnable == 0);
         }
 
         /// <summary>

@@ -330,6 +330,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries if host state disables the viewport transform.
+        /// </summary>
+        /// <returns>True if the viewport transform is disabled</returns>
+        bool QueryViewportTransformDisable()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Registers a texture used by the shader.
         /// </summary>
         /// <param name="handle">Texture handle word offset</param>

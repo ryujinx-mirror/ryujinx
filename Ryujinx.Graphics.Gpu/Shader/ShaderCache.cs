@@ -249,12 +249,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             GpuChannelGraphicsState graphicsState,
             ShaderAddresses addresses)
         {
-            if (_gpPrograms.TryGetValue(addresses, out var gpShaders) && IsShaderEqual(channel, poolState, gpShaders, addresses))
+            if (_gpPrograms.TryGetValue(addresses, out var gpShaders) && IsShaderEqual(channel, poolState, graphicsState, gpShaders, addresses))
             {
                 return gpShaders;
             }
 
-            if (_graphicsShaderCache.TryFind(channel, poolState, addresses, out gpShaders, out var cachedGuestCode))
+            if (_graphicsShaderCache.TryFind(channel, poolState, graphicsState, addresses, out gpShaders, out var cachedGuestCode))
             {
                 _gpPrograms[addresses] = gpShaders;
                 return gpShaders;
@@ -429,12 +429,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel using the shader</param>
         /// <param name="poolState">GPU channel state to verify shader compatibility</param>
+        /// <param name="graphicsState">GPU channel graphics state to verify shader compatibility</param>
         /// <param name="gpShaders">Cached graphics shaders</param>
         /// <param name="addresses">GPU virtual addresses of all enabled shader stages</param>
         /// <returns>True if the code is different, false otherwise</returns>
         private static bool IsShaderEqual(
             GpuChannel channel,
             GpuChannelPoolState poolState,
+            GpuChannelGraphicsState graphicsState,
             CachedShaderProgram gpShaders,
             ShaderAddresses addresses)
         {
@@ -452,7 +454,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState);
+            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState, graphicsState);
         }
 
         /// <summary>

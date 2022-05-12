@@ -218,6 +218,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
+        public bool QueryViewportTransformDisable()
+        {
+            return _state.GraphicsState.ViewportTransformDisable;
+        }
+
+        /// <inheritdoc/>
         public void RegisterTexture(int handle, int cbufSlot)
         {
             _state.SpecializationState?.RegisterTexture(_stageIndex, handle, cbufSlot, GetTextureDescriptor(handle, cbufSlot));

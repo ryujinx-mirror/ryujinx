@@ -24,13 +24,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="graphicsState">Graphics state</param>
         /// <param name="program">Cached program, if found</param>
         /// <returns>True if a compatible program is found, false otherwise</returns>
-        public bool TryFindForGraphics(GpuChannel channel, GpuChannelPoolState poolState, out CachedShaderProgram program)
+        public bool TryFindForGraphics(
+            GpuChannel channel,
+            GpuChannelPoolState poolState,
+            GpuChannelGraphicsState graphicsState,
+            out CachedShaderProgram program)
         {
             foreach (var entry in _entries)
             {
-                if (entry.SpecializationState.MatchesGraphics(channel, poolState))
+                if (entry.SpecializationState.MatchesGraphics(channel, poolState, graphicsState))
                 {
                     program = entry;
                     return true;

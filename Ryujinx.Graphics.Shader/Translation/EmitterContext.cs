@@ -154,9 +154,56 @@ namespace Ryujinx.Graphics.Shader.Translation
             return label;
         }
 
+        public void PrepareForVertexReturn()
+        {
+            if (Config.GpuAccessor.QueryViewportTransformDisable())
+            {
+                Operand x = Attribute(AttributeConsts.PositionX | AttributeConsts.LoadOutputMask);
+                Operand y = Attribute(AttributeConsts.PositionY | AttributeConsts.LoadOutputMask);
+                Operand xScale = Attribute(AttributeConsts.SupportBlockViewInverseX);
+                Operand yScale = Attribute(AttributeConsts.SupportBlockViewInverseY);
+                Operand negativeOne = ConstF(-1.0f);
+
+                this.Copy(Attribute(AttributeConsts.PositionX), this.FPFusedMultiplyAdd(x, xScale, negativeOne));
+                this.Copy(Attribute(AttributeConsts.PositionY), this.FPFusedMultiplyAdd(y, yScale, negativeOne));
+            }
+        }
+
+        public void PrepareForVertexReturn(out Operand oldXLocal, out Operand oldYLocal, out Operand oldZLocal)
+        {
+            if (Config.GpuAccessor.QueryViewportTransformDisable())
+            {
+                oldXLocal = Local();
+                this.Copy(oldXLocal, Attribute(AttributeConsts.PositionX | AttributeConsts.LoadOutputMask));
+                oldYLocal = Local();
+                this.Copy(oldYLocal, Attribute(AttributeConsts.PositionY | AttributeConsts.LoadOutputMask));
+            }
+            else
+            {
+                oldXLocal = null;
+                oldYLocal = null;
+            }
+
+            // Will be used by Vulkan backend for depth mode emulation.
+            oldZLocal = null;
+
+            PrepareForVertexReturn();
+        }
+
         public void PrepareForReturn()
         {
-            if (!IsNonMain && Config.Stage == ShaderStage.Fragment)
+            if (IsNonMain)
+            {
+                return;
+            }
+
+            if (Config.LastInVertexPipeline &&
+                (Config.Stage == ShaderStage.Vertex || Config.Stage == ShaderStage.TessellationEvaluation) &&
+                (Config.Options.Flags & TranslationFlags.VertexA) == 0)
+            {
+                PrepareForVertexReturn();
+            }
+            else if (Config.Stage == ShaderStage.Fragment)
             {
                 if (Config.OmapDepth)
                 {

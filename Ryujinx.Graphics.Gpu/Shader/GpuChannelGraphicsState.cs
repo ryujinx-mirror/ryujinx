@@ -26,16 +26,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public readonly TessMode TessellationMode;
 
         /// <summary>
+        /// Indicates whenever the viewport transform is disabled.
+        /// </summary>
+        public readonly bool ViewportTransformDisable;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
         /// <param name="topology">Primitive topology</param>
         /// <param name="tessellationMode">Tessellation mode</param>
-        public GpuChannelGraphicsState(bool earlyZForce, PrimitiveTopology topology, TessMode tessellationMode)
+        /// <param name="viewportTransformDisable">Indicates whenever the viewport transform is disabled</param>
+        public GpuChannelGraphicsState(bool earlyZForce, PrimitiveTopology topology, TessMode tessellationMode, bool viewportTransformDisable)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
             TessellationMode = tessellationMode;
+            ViewportTransformDisable = viewportTransformDisable;
         }
     }
 }

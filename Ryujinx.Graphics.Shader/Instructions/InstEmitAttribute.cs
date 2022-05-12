@@ -206,7 +206,33 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (emit)
             {
-                context.EmitVertex();
+                if (context.Config.LastInVertexPipeline)
+                {
+                    context.PrepareForVertexReturn(out var tempXLocal, out var tempYLocal, out var tempZLocal);
+
+                    context.EmitVertex();
+
+                    // Restore output position value before transformation.
+
+                    if (tempXLocal != null)
+                    {
+                        context.Copy(Attribute(AttributeConsts.PositionX), tempXLocal);
+                    }
+
+                    if (tempYLocal != null)
+                    {
+                        context.Copy(Attribute(AttributeConsts.PositionY), tempYLocal);
+                    }
+
+                    if (tempZLocal != null)
+                    {
+                        context.Copy(Attribute(AttributeConsts.PositionZ), tempZLocal);
+                    }
+                }
+                else
+                {
+                    context.EmitVertex();
+                }
             }
 
             if (cut)

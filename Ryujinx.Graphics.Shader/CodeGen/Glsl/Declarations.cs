@@ -249,7 +249,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                         context.AppendLine();
                     }
                 }
-                else if (isFragment)
+                else if (isFragment || context.Config.Stage == ShaderStage.Vertex)
                 {
                     DeclareSupportUniformBlock(context, context.Config.Stage, 0);
                 }
@@ -615,8 +615,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareSupportUniformBlock(CodeGenContext context, ShaderStage stage, int scaleElements)
         {
-            bool isFragment = stage == ShaderStage.Fragment;
-            if (!isFragment && scaleElements == 0)
+            bool needsSupportBlock = stage == ShaderStage.Fragment || 
+                (context.Config.LastInVertexPipeline && context.Config.GpuAccessor.QueryViewportTransformDisable());
+
+            if (!needsSupportBlock && scaleElements == 0)
             {
                 return;
             }
@@ -630,6 +632,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 case ShaderStage.Vertex:
                     context.AppendLine($"uint {DefaultNames.SupportBlockAlphaTestName};");
                     context.AppendLine($"bool {DefaultNames.SupportBlockIsBgraName}[{SupportBuffer.FragmentIsBgraCount}];");
+                    context.AppendLine($"vec4 {DefaultNames.SupportBlockViewportInverse};");
                     context.AppendLine($"int {DefaultNames.SupportBlockFragmentScaleCount};");
                     break;
                 case ShaderStage.Compute:

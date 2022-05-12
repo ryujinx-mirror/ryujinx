@@ -72,6 +72,13 @@ namespace Ryujinx.Graphics.GAL
             UpdateGenericField(SupportBuffer.FragmentIsBgraOffset, data, Data.FragmentIsBgra.ToSpan(), offset, count);
         }
 
+        public void UpdateViewportInverse(Vector4<float> data)
+        {
+            Data.ViewportInverse = data;
+
+            MarkDirty(SupportBuffer.ViewportInverseOffset, SupportBuffer.FieldSize);
+        }
+
         public void Commit()
         {
             if (_startOffset != -1)

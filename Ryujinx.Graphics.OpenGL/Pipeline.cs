@@ -1266,7 +1266,7 @@ namespace Ryujinx.Graphics.OpenGL
             _vertexArray.SetVertexBuffers(vertexBuffers);
         }
 
-        public void SetViewports(int first, ReadOnlySpan<Viewport> viewports)
+        public void SetViewports(int first, ReadOnlySpan<Viewport> viewports, bool disableTransform)
         {
             Array.Resize(ref _viewportArray, viewports.Length * 4);
             Array.Resize(ref _depthRangeArray, viewports.Length * 2);
@@ -1305,6 +1305,19 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.ViewportArray(first, viewports.Length, viewportArray);
             GL.DepthRangeArray(first, viewports.Length, depthRangeArray);
+
+            float disableTransformF = disableTransform ? 1.0f : 0.0f;
+            if (_supportBuffer.Data.ViewportInverse.W != disableTransformF || disableTransform)
+            {
+                float scale = _renderScale[0].X;
+                _supportBuffer.UpdateViewportInverse(new Vector4<float>
+                {
+                    X = scale * 2f / viewports[first].Region.Width,
+                    Y = scale * 2f / viewports[first].Region.Height,
+                    Z = 1,
+                    W = disableTransformF
+                });
+            }
         }
 
         public void TextureBarrier()

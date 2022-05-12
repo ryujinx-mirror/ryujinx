@@ -84,7 +84,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             { AttributeConsts.FragmentOutputIsBgraBase + 16, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[4]",  VariableType.Bool) },
             { AttributeConsts.FragmentOutputIsBgraBase + 20, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[5]",  VariableType.Bool) },
             { AttributeConsts.FragmentOutputIsBgraBase + 24, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[6]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 28, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[7]",  VariableType.Bool) }
+            { AttributeConsts.FragmentOutputIsBgraBase + 28, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[7]",  VariableType.Bool) },
+
+            { AttributeConsts.SupportBlockViewInverseX,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.x",  VariableType.F32) },
+            { AttributeConsts.SupportBlockViewInverseY,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.y",  VariableType.F32) }
         };
 
         private Dictionary<AstOperand, string> _locals;

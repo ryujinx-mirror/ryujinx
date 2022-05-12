@@ -208,6 +208,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </remarks>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="graphicsState">Graphics state</param>
         /// <param name="addresses">Guest addresses of the shaders to find</param>
         /// <param name="program">Cached host program for the given state, if found</param>
         /// <param name="guestCode">Cached guest code, if any found</param>
@@ -215,6 +216,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool TryFind(
             GpuChannel channel,
             GpuChannelPoolState poolState,
+            GpuChannelGraphicsState graphicsState,
             ShaderAddresses addresses,
             out CachedShaderProgram program,
             out CachedGraphicsGuestCode guestCode)
@@ -234,7 +236,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             if (found && _shaderPrograms.TryGetValue(idTable, out ShaderSpecializationList specList))
             {
-                return specList.TryFindForGraphics(channel, poolState, out program);
+                return specList.TryFindForGraphics(channel, poolState, graphicsState, out program);
             }
 
             return false;
