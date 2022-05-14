@@ -164,6 +164,7 @@ namespace Ryujinx.Headless.SDL2
 
             Device.Gpu.Renderer.RunLoop(() =>
             {
+                Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
                 Translator.IsReadyForTranslation.Set();
 
