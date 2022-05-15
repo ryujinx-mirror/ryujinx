@@ -61,9 +61,9 @@ jobs:
           popd
 
           pushd publish_windows_sdl2_headless
-          7z a ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-win_x64.zip publish          
+          7z a ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-win_x64.zip publish
           popd
-          
+
           pushd publish_windows_ava
           7z a ../release_output/ava-ryujinx-${{ steps.version_info.outputs.build_version }}-win_x64.zip publish
           popd
@@ -94,12 +94,15 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           name: ${{ steps.version_info.outputs.build_version }}
-          artifacts: "release_output/*.tar.gz,release_output/*.zip"
+          # IMPORTANT NOTE: DO NOT SIMPLIFY THIS, ORDER MAY BE IMPORTANT FOR BUILD PRIOR TO 1.1.122
+          artifacts: "release_output/ryujinx-*.tar.gz,release_output/ryujinx-*.zip,release_output/sdl2-ryujinx-headless-*.tar.gz,release_output/sdl2-ryujinx-headless-*.zip,release_output/ava-ryujinx-*.tar.gz,release_output/ava-ryujinx-*.zip"
           tag: ${{ steps.version_info.outputs.build_version }}
           body: "For more informations about this release please check out the official [Changelog](https://github.com/Ryujinx/Ryujinx/wiki/Changelog)."
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true
+          # TEMP
+          prerelease: true
           owner: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_OWNER }}
           repo: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_REPO }}
           token: ${{ secrets.RELEASE_TOKEN }}
