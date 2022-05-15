@@ -677,7 +677,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.MultiDrawElementsIndirectCount(
                 _primitiveType,
-                (Version46)_elementsType,
+                (All)_elementsType,
                 (IntPtr)indirectBuffer.Offset,
                 (IntPtr)parameterBuffer.Offset,
                 maxDrawCount,

@@ -4,11 +4,9 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Input;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using AvaKey = Avalonia.Input.Key;
 using Key = Ryujinx.Input.Key;
-using TextInputEventArgs = OpenTK.Windowing.Common.TextInputEventArgs;
 
 namespace Ryujinx.Ava.Input
 {
@@ -20,7 +18,7 @@ namespace Ryujinx.Ava.Input
 
         public event EventHandler<KeyEventArgs> KeyPressed;
         public event EventHandler<KeyEventArgs> KeyRelease;
-        public event EventHandler<TextInputEventArgs> TextInput;
+        public event EventHandler<string> TextInput;
 
         public string DriverName => "Avalonia";
 
@@ -36,9 +34,9 @@ namespace Ryujinx.Ava.Input
             _control.TextInput += Control_TextInput;
         }
 
-        private void Control_TextInput(object sender, Avalonia.Input.TextInputEventArgs e)
+        private void Control_TextInput(object sender, TextInputEventArgs e)
         {
-            TextInput?.Invoke(this, new TextInputEventArgs(e.Text.First()));
+            TextInput?.Invoke(this, e.Text);
         }
 
         public event Action<string> OnGamepadConnected

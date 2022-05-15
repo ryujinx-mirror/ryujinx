@@ -1,141 +1,144 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-        <OutputType>Exe</OutputType>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.0.0-dirty</Version>
-        <RootNamespace>Ryujinx.Ava</RootNamespace>
-        <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
-    </PropertyGroup>
-	<PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-		<PublishSingleFile>true</PublishSingleFile>
-		<PublishTrimmed>true</PublishTrimmed>
-	</PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-	<ItemGroup>
-		<ContentWithTargetPath Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>alsoft.ini</TargetPath>
-		</ContentWithTargetPath>
-		<ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>THIRDPARTY.md</TargetPath>
-		</ContentWithTargetPath>
-		<ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
-		</ContentWithTargetPath>
-	</ItemGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-        <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
-    </PropertyGroup>
-    <ItemGroup>
-        <AvaloniaResource Include="Ui\**\*.xaml">
-            <SubType>Designer</SubType>
-        </AvaloniaResource>
-        <None Remove="Assets\Locales\el_GR.json" />
-        <None Remove="Assets\Locales\ru_RU.json" />
-        <AvaloniaResource Include="Assets\Fonts\SegoeFluentIcons.ttf" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Remove="Assets\Styles\BaseDark.xaml" />
-        <None Remove="Assets\Styles\BaseLight.xaml" />
-    </ItemGroup>
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\Styles\BaseLight.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </AvaloniaResource>
-        <AvaloniaResource Include="Assets\Styles\BaseDark.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </AvaloniaResource>
-        <AvaloniaResource Include="Assets\Styles\Styles.xaml" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.14" />
-        <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="0.10.14" />
-        <PackageReference Include="Avalonia.Svg" Version="0.10.13" />
-        <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.13" />
-        <PackageReference Include="DynamicData" Version="7.7.1" />
-        <PackageReference Include="FluentAvaloniaUI" Version="1.3.4" />
-        <PackageReference Include="Crc32.NET" Version="1.2.0" />
-        <PackageReference Include="jp2masa.Avalonia.Flexbox" Version="0.2.0" />
-        <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
-        <PackageReference Include="OpenTK" Version="4.6.3" />
-        <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="4.4.0-build9" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
-        <PackageReference Include="SharpZipLib" Version="1.3.3" />
-        <PackageReference Include="Avalonia" Version="0.10.14" />
-        <PackageReference Include="Avalonia.Desktop" Version="0.10.14" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.14" />
-        <PackageReference Include="Silk.NET.Vulkan" Version="2.2.0" />
-        <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.2.0" />
-        <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.2.0" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
-        <PackageReference Include="SPB" Version="0.0.4-build17" />
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="Assets\Locales\el_GR.json" />
-        <EmbeddedResource Include="Assets\Locales\en_US.json" />
-        <EmbeddedResource Include="Assets\Locales\es_ES.json" />
-        <EmbeddedResource Include="Assets\Locales\fr_FR.json" />
-        <EmbeddedResource Include="Assets\Locales\de_DE.json" />
-        <EmbeddedResource Include="Assets\Locales\it_IT.json" />
-        <EmbeddedResource Include="Assets\Locales\ko_KR.json" />
-        <EmbeddedResource Include="Assets\Locales\pt_BR.json" />
-        <EmbeddedResource Include="Assets\Locales\ru_RU.json" />
-	    <EmbeddedResource Include="Assets\Locales\tr_TR.json" />    
-        <EmbeddedResource Include="Assets\Styles\Styles.xaml" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj" />
-        <ProjectReference Include="..\Ryujinx.Input\Ryujinx.Input.csproj" />
-        <ProjectReference Include="..\Ryujinx.Input.SDL2\Ryujinx.Input.SDL2.csproj" />
-        <ProjectReference Include="..\Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj" />
-        <ProjectReference Include="..\Ryujinx.Audio.Backends.SoundIo\Ryujinx.Audio.Backends.SoundIo.csproj" />
-        <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
-        <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
-        <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
-        <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
-        <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
-        <ProjectReference Include="..\Ryujinx.Ui.Common\Ryujinx.Ui.Common.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Update="App.axaml.cs">
-            <DependentUpon>App.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Windows\MainWindow.axaml.cs">
-            <DependentUpon>MainWindow.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Windows\AboutWindow.axaml.cs">
-            <DependentUpon>AboutWindow.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Applet\ErrorAppletWindow.axaml.cs">
-            <DependentUpon>ProfileWindow.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Applet\SwkbdAppletWindow.axaml.cs">
-            <DependentUpon>ProfileWindow.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Controls\InputDialog.axaml.cs">
-            <DependentUpon>InputDialog.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Ui\Windows\ContentDialogOverlay.xaml.cs">
-            <DependentUpon>ContentDialogOverlay.xaml</DependentUpon>
-        </Compile>
-        <Compile Update="Ui\Controls\GameListView.axaml.cs">
-          <DependentUpon>GameListView.axaml</DependentUpon>
-          <SubType>Code</SubType>
-        </Compile>
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Version>1.0.0-dirty</Version>
+    <TieredCompilation>false</TieredCompilation>
+    <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
+    <DefineConstants Condition=" '$(ExtraDefineConstants)' != '' ">$(DefineConstants);$(ExtraDefineConstants)</DefineConstants>
+    <RootNamespace>Ryujinx.Ava</RootNamespace>
+    <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.14" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.14" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.14" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.14" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="0.10.14" />
+    <PackageReference Include="Avalonia.Svg" Version="0.10.13" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.13" />
+    <PackageReference Include="jp2masa.Avalonia.Flexbox" Version="0.2.0" />
+    <PackageReference Include="DynamicData" Version="7.7.14" />
+    <PackageReference Include="FluentAvaloniaUI" Version="1.3.4" />
+
+    <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
+    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="4.4.0-build9" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
+    <PackageReference Include="OpenTK.Graphics" Version="4.7.2" />
+    <PackageReference Include="SPB" Version="0.0.4-build17" />
+    <PackageReference Include="SharpZipLib" Version="1.3.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj" />
+    <ProjectReference Include="..\Ryujinx.Input\Ryujinx.Input.csproj" />
+    <ProjectReference Include="..\Ryujinx.Input.SDL2\Ryujinx.Input.SDL2.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.SoundIo\Ryujinx.Audio.Backends.SoundIo.csproj" />
+    <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+    <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
+    <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.Ui.Common\Ryujinx.Ui.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ContentWithTargetPath Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>alsoft.ini</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>THIRDPARTY.md</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Ui\**\*.xaml">
+      <SubType>Designer</SubType>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\Fonts\SegoeFluentIcons.ttf" />
+    <AvaloniaResource Include="Assets\Styles\BaseLight.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\Styles\BaseDark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\Styles\Styles.xaml" />
+
+    <Compile Update="App.axaml.cs">
+      <DependentUpon>App.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Windows\MainWindow.axaml.cs">
+      <DependentUpon>MainWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Windows\AboutWindow.axaml.cs">
+      <DependentUpon>AboutWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Applet\ErrorAppletWindow.axaml.cs">
+      <DependentUpon>ProfileWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Applet\SwkbdAppletWindow.axaml.cs">
+      <DependentUpon>ProfileWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Controls\InputDialog.axaml.cs">
+      <DependentUpon>InputDialog.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Ui\Windows\ContentDialogOverlay.xaml.cs">
+      <DependentUpon>ContentDialogOverlay.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Ui\Controls\GameListView.axaml.cs">
+      <DependentUpon>GameListView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Locales\el_GR.json" />
+    <None Remove="Assets\Locales\en_US.json" />
+    <None Remove="Assets\Locales\es_ES.json" />
+    <None Remove="Assets\Locales\fr_FR.json" />
+    <None Remove="Assets\Locales\de_DE.json" />
+    <None Remove="Assets\Locales\it_IT.json" />
+    <None Remove="Assets\Locales\ko_KR.json" />
+    <None Remove="Assets\Locales\pt_BR.json" />
+    <None Remove="Assets\Locales\ru_RU.json" />
+    <None Remove="Assets\Locales\tr_TR.json" />
+    <None Remove="Assets\Styles\Styles.xaml" />
+    <None Remove="Assets\Styles\BaseDark.xaml" />
+    <None Remove="Assets\Styles\BaseLight.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Locales\el_GR.json" />
+    <EmbeddedResource Include="Assets\Locales\en_US.json" />
+    <EmbeddedResource Include="Assets\Locales\es_ES.json" />
+    <EmbeddedResource Include="Assets\Locales\fr_FR.json" />
+    <EmbeddedResource Include="Assets\Locales\de_DE.json" />
+    <EmbeddedResource Include="Assets\Locales\it_IT.json" />
+    <EmbeddedResource Include="Assets\Locales\ko_KR.json" />
+    <EmbeddedResource Include="Assets\Locales\pt_BR.json" />
+    <EmbeddedResource Include="Assets\Locales\ru_RU.json" />
+    <EmbeddedResource Include="Assets\Locales\tr_TR.json" />
+    <EmbeddedResource Include="Assets\Styles\Styles.xaml" />
+  </ItemGroup>
 </Project>

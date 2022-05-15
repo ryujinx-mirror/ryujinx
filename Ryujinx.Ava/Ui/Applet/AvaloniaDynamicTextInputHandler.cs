@@ -1,14 +1,15 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
-using OpenTK.Windowing.Common;
 using Ryujinx.Ava.Input;
 using Ryujinx.Ava.Ui.Controls;
 using Ryujinx.Ava.Ui.Windows;
-using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.HLE.Ui;
 using System;
 using System.Threading;
+
+using HidKey = Ryujinx.Common.Configuration.Hid.Key;
 
 namespace Ryujinx.Ava.Ui.Applet
 {
@@ -54,20 +55,20 @@ namespace Ryujinx.Ava.Ui.Applet
             TextChangedEvent?.Invoke(_hiddenTextBox.Text ?? string.Empty, _hiddenTextBox.SelectionStart, _hiddenTextBox.SelectionEnd, true);
         }
 
-        private void AvaloniaDynamicTextInputHandler_TextInput(object sender, TextInputEventArgs e)
+        private void AvaloniaDynamicTextInputHandler_TextInput(object sender, string text)
         {
             Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (_canProcessInput)
                 {
-                    _hiddenTextBox.SendText(e.AsString);
+                    _hiddenTextBox.SendText(text);
                 }
             });
         }
 
         private void AvaloniaDynamicTextInputHandler_KeyRelease(object sender, Avalonia.Input.KeyEventArgs e)
         {
-            var key = (Key)AvaloniaMappingHelper.ToInputKey(e.Key);
+            var key = (HidKey)AvaloniaMappingHelper.ToInputKey(e.Key);
 
             if (!(KeyReleasedEvent?.Invoke(key)).GetValueOrDefault(true))
             {
@@ -85,9 +86,9 @@ namespace Ryujinx.Ava.Ui.Applet
             });
         }
 
-        private void AvaloniaDynamicTextInputHandler_KeyPressed(object sender, Avalonia.Input.KeyEventArgs e)
+        private void AvaloniaDynamicTextInputHandler_KeyPressed(object sender, KeyEventArgs e)
         {
-            var key = (Key)AvaloniaMappingHelper.ToInputKey(e.Key);
+            var key = (HidKey)AvaloniaMappingHelper.ToInputKey(e.Key);
 
             if (!(KeyPressedEvent?.Invoke(key)).GetValueOrDefault(true))
             {
