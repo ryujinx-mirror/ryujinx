@@ -30,16 +30,16 @@
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="..\Ryujinx\THIRDPARTY.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>THIRDPARTY.md</TargetPath>
-    </None>
-    <ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
-    </ContentWithTargetPath>
-  </ItemGroup>
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>THIRDPARTY.md</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
 
   <!-- Due to .net core 3.1 embedded resource loading -->
   <PropertyGroup>

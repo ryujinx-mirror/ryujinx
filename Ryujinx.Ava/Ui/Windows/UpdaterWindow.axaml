@@ -1,0 +1,37 @@
+<window:StyleableWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+                        xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+                        x:Class="Ryujinx.Ava.Ui.Windows.UpdaterWindow"
+                        xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
+                        CanResize="False"
+                        SizeToContent="Height"
+                        Width="500" MinHeight="500" Height="500"
+                        WindowStartupLocation="CenterOwner"
+                        MinWidth="500"
+                        Title="Ryujinx Updater">
+    <Grid Margin="20" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="1" HorizontalAlignment="Stretch" TextAlignment="Center" Height="20" Name="MainText" />
+        <TextBlock Height="20" HorizontalAlignment="Stretch" TextAlignment="Center" Name="SecondaryText" Grid.Row="2" />
+        <ProgressBar IsVisible="False" HorizontalAlignment="Stretch" Name="ProgressBar" Maximum="100" Minimum="0"
+                     Margin="20" Grid.Row="3" />
+        <StackPanel IsVisible="False" Name="ButtonBox" Orientation="Horizontal" Spacing="20" Grid.Row="4"
+                    HorizontalAlignment="Right">
+            <Button Command="{Binding YesPressed}" MinWidth="50">
+                <TextBlock TextAlignment="Center" Text="{locale:Locale InputDialogYes}" />
+            </Button>
+            <Button Command="{Binding NoPressed}" MinWidth="50">
+                <TextBlock TextAlignment="Center" Text="{locale:Locale InputDialogNo}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</window:StyleableWindow>

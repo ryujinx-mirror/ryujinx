@@ -19,7 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
     <PackageReference Include="GtkSharp" Version="3.22.25.128" />
     <PackageReference Include="GtkSharp.Dependencies" Version="1.1.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
     <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="4.4.0-build9" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
@@ -40,20 +39,23 @@
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.Ui.Common\Ryujinx.Ui.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="THIRDPARTY.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
-    </ContentWithTargetPath>
-  </ItemGroup>
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>alsoft.ini</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>THIRDPARTY.md</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
 
   <!-- Due to .net core 3.1 embedded resource loading -->
   <PropertyGroup>
@@ -67,21 +69,6 @@
 
   <ItemGroup>
     <None Remove="Ui\MainWindow.glade" />
-    <None Remove="Ui\Resources\Controller_JoyConLeft.svg" />
-    <None Remove="Ui\Resources\Controller_JoyConPair.svg" />
-    <None Remove="Ui\Resources\Controller_JoyConRight.svg" />
-    <None Remove="Ui\Resources\Controller_ProCon.svg" />
-    <None Remove="Ui\Resources\Icon_NCA.png" />
-    <None Remove="Ui\Resources\Icon_NRO.png" />
-    <None Remove="Ui\Resources\Icon_NSO.png" />
-    <None Remove="Ui\Resources\Icon_NSP.png" />
-    <None Remove="Ui\Resources\Icon_XCI.png" />
-    <None Remove="Ui\Resources\Logo_Amiibo.png" />
-    <None Remove="Ui\Resources\Logo_Discord.png" />
-    <None Remove="Ui\Resources\Logo_GitHub.png" />
-    <None Remove="Ui\Resources\Logo_Patreon.png" />
-    <None Remove="Ui\Resources\Logo_Ryujinx.png" />
-    <None Remove="Ui\Resources\Logo_Twitter.png" />
     <None Remove="Ui\Widgets\ProfileDialog.glade" />
     <None Remove="Ui\Windows\CheatWindow.glade" />
     <None Remove="Ui\Windows\ControllerWindow.glade" />
@@ -93,21 +80,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Ui\MainWindow.glade" />
-    <EmbeddedResource Include="Ui\Resources\Controller_JoyConLeft.svg" />
-    <EmbeddedResource Include="Ui\Resources\Controller_JoyConPair.svg" />
-    <EmbeddedResource Include="Ui\Resources\Controller_JoyConRight.svg" />
-    <EmbeddedResource Include="Ui\Resources\Controller_ProCon.svg" />
-    <EmbeddedResource Include="Ui\Resources\Icon_NCA.png" />
-    <EmbeddedResource Include="Ui\Resources\Icon_NRO.png" />
-    <EmbeddedResource Include="Ui\Resources\Icon_NSO.png" />
-    <EmbeddedResource Include="Ui\Resources\Icon_NSP.png" />
-    <EmbeddedResource Include="Ui\Resources\Icon_XCI.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_Amiibo.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_Discord.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_GitHub.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_Patreon.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_Ryujinx.png" />
-    <EmbeddedResource Include="Ui\Resources\Logo_Twitter.png" />
     <EmbeddedResource Include="Ui\Widgets\ProfileDialog.glade" />
     <EmbeddedResource Include="Ui\Windows\CheatWindow.glade" />
     <EmbeddedResource Include="Ui\Windows\ControllerWindow.glade" />

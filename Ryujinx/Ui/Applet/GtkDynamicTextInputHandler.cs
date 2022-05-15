@@ -52,7 +52,7 @@ namespace Ryujinx.Ui.Applet
         [GLib.ConnectBefore()]
         private void HandleKeyPressEvent(object o, KeyPressEventArgs args)
         {
-            var key = (Common.Configuration.Hid.Key)GTK3MappingHelper.ToInputKey(args.Event.Key);
+            var key = (Ryujinx.Common.Configuration.Hid.Key)GTK3MappingHelper.ToInputKey(args.Event.Key);
 
             if (!(KeyPressedEvent?.Invoke(key)).GetValueOrDefault(true))
             {
@@ -70,7 +70,7 @@ namespace Ryujinx.Ui.Applet
         [GLib.ConnectBefore()]
         private void HandleKeyReleaseEvent(object o, KeyReleaseEventArgs args)
         {
-            var key = (Common.Configuration.Hid.Key)GTK3MappingHelper.ToInputKey(args.Event.Key);
+            var key = (Ryujinx.Common.Configuration.Hid.Key)GTK3MappingHelper.ToInputKey(args.Event.Key);
 
             if (!(KeyReleasedEvent?.Invoke(key)).GetValueOrDefault(true))
             {

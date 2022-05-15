@@ -1,0 +1,51 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StyleInclude Source="avares://Ryujinx.Ava/Assets/Styles/Styles.xaml" />
+    <Design.PreviewWith>
+        <Border Padding="20" Height="2000">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Code Font Family" />
+                <Grid RowDefinitions="*,Auto">
+                    <Menu Grid.Row="1" Width="100">
+                        <MenuItem Header="File">
+                            <MenuItem Header="Test 1" />
+                            <MenuItem Header="Test 2" />
+                            <MenuItem Header="Test 3">
+                                <MenuItem.Icon>
+                                    <CheckBox Margin="0" IsChecked="{Binding Checkbox, Mode=TwoWay}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
+                    <StackPanel Orientation="Horizontal">
+                        <Button
+                            Name="btnAdd"
+                            HorizontalAlignment="Right"
+                            Content="Add" />
+                        <Button
+                            Name="btnRem"
+                            HorizontalAlignment="Right"
+                            Content="Add" />
+                        <TextBox Width="100" VerticalAlignment="Center" Text="Rrrrr" Watermark="Hello"
+                                 UseFloatingWatermark="True" />
+                        <CheckBox>Test Check</CheckBox>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+    <Styles.Resources>
+        <SolidColorBrush x:Key="DataGridSelectionBackgroundBrush" Color="{DynamicResource DataGridSelectionColor}" />
+        <SolidColorBrush x:Key="ThemeAccentColorBrush" Color="{DynamicResource SystemAccentColor}" />
+        <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor4}" />
+        <Color x:Key="SystemAccentColor">#FF00C3E3</Color>
+        <Color x:Key="ThemeAccentColor4">#FFe8e8e8</Color>
+        <Color x:Key="DataGridSelectionColor">#FF00FABB</Color>
+        <Color x:Key="ThemeContentBackgroundColor">#FFF0F0F0</Color>
+        <Color x:Key="ThemeControlBorderColor">#FFd6d6d6</Color>
+        <Color x:Key="TextOnAccentFillColorPrimary">#FFFFFFFF</Color>
+        <Color x:Key="SystemChromeWhiteColor">#FFFFFFFF</Color>
+        <Color x:Key="ThemeForegroundColor">#FF000000</Color>
+    </Styles.Resources>
+</Styles>

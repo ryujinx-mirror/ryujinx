@@ -36,6 +36,8 @@ namespace Ryujinx.Headless.SDL2
         protected IntPtr WindowHandle { get; set; }
 
         public IHostUiTheme HostUiTheme { get; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         protected SDL2MouseDriver MouseDriver;
         private InputManager _inputManager;
@@ -119,6 +121,9 @@ namespace Ryujinx.Headless.SDL2
 
             _windowId = SDL_GetWindowID(WindowHandle);
             SDL2Driver.Instance.RegisterWindow(_windowId, HandleWindowEvent);
+
+            Width = DefaultWidth;
+            Height = DefaultHeight;
         }
 
         private void HandleWindowEvent(SDL_Event evnt)
@@ -128,8 +133,10 @@ namespace Ryujinx.Headless.SDL2
                 switch (evnt.window.windowEvent)
                 {
                     case SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
-                        Renderer?.Window.SetSize(evnt.window.data1, evnt.window.data2);
-                        MouseDriver.SetClientSize(evnt.window.data1, evnt.window.data2);
+                        Width = evnt.window.data1;
+                        Height = evnt.window.data2;
+                        Renderer?.Window.SetSize(Width, Height);
+                        MouseDriver.SetClientSize(Width, Height);
                         break;
                     case SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
                         Exit();
@@ -148,7 +155,7 @@ namespace Ryujinx.Headless.SDL2
 
         protected abstract void FinalizeRenderer();
 
-        protected abstract void SwapBuffers();
+        protected abstract void SwapBuffers(object image);
 
         protected abstract string GetGpuVendorName();
 
@@ -188,7 +195,7 @@ namespace Ryujinx.Headless.SDL2
 
                     while (Device.ConsumeFrameAvailable())
                     {
-                        Device.PresentFrame(SwapBuffers);
+                        Device.PresentFrame((texture) => { SwapBuffers(texture); });
                     }
 
                     if (_ticks >= _ticksPerFrame)

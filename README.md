@@ -132,7 +132,7 @@ This software is licensed under the terms of the <a href="https://github.com/Ryu
 The Ryujinx.Audio project is licensed under the terms of the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/Ryujinx.Audio/LICENSE.txt
 " target="_blank">LGPLv3 license.</a></i><br />
 This project makes use of code authored by the libvpx project, licensed under BSD and the ffmpeg project, licensed under LGPLv3.
-See [LICENSE.txt](LICENSE.txt) and [THIRDPARTY.md](Ryujinx/THIRDPARTY.md) for more details.
+See [LICENSE.txt](LICENSE.txt) and [THIRDPARTY.md](distribution/legal/THIRDPARTY.md) for more details.
 ## Credits
 
 - [LibHac](https://github.com/Thealexbarney/LibHac) is used for our file-system. 

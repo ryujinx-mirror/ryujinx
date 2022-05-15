@@ -9,9 +9,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Window
         public CommandType CommandType => CommandType.WindowPresent;
         private TableRef<ThreadedTexture> _texture;
         private ImageCrop _crop;
-        private TableRef<Action> _swapBuffersCallback;
+        private TableRef<Action<object>> _swapBuffersCallback;
 
-        public void Set(TableRef<ThreadedTexture> texture, ImageCrop crop, TableRef<Action> swapBuffersCallback)
+        public void Set(TableRef<ThreadedTexture> texture, ImageCrop crop, TableRef<Action<object>> swapBuffersCallback)
         {
             _texture = texture;
             _crop = crop;

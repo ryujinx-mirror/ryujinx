@@ -1,6 +1,7 @@
 using Gtk;
 using System;
 using System.Reflection;
+using Ryujinx.Ui.Common.Configuration;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -20,7 +21,7 @@ namespace Ryujinx.Ui.Widgets
         private ProfileDialog(Builder builder) : base(builder.GetObject("_profileDialog").Handle)
         {
             builder.Autoconnect(this);
-            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+            Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
         }
 
         private void OkToggle_Activated(object sender, EventArgs args)

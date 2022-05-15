@@ -70,7 +70,6 @@ namespace Ryujinx.Input.SDL2
             SDL_Keycode.SDLK_F23,
             SDL_Keycode.SDLK_F24,
 
-            // F25-F35 not exposed on SDL2
             SDL_Keycode.SDLK_0,
             SDL_Keycode.SDLK_0,
             SDL_Keycode.SDLK_0,

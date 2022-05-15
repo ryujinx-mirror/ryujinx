@@ -5,7 +5,7 @@ using Gtk;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Configuration;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Input;
@@ -117,7 +117,7 @@ namespace Ryujinx.Ui
 
         public abstract void InitializeRenderer();
 
-        public abstract void SwapBuffers();
+        public abstract void SwapBuffers(object image);
 
         public abstract string GetGpuVendorName();
 
@@ -416,7 +416,7 @@ namespace Ryujinx.Ui
 
                     while (Device.ConsumeFrameAvailable())
                     {
-                        Device.PresentFrame(SwapBuffers);
+                        Device.PresentFrame((texture) => { SwapBuffers(texture);});
                     }
 
                     if (_ticks >= _ticksPerFrame)

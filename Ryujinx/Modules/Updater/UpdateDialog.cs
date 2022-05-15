@@ -1,6 +1,7 @@
 using Gdk;
 using Gtk;
 using Ryujinx.Ui;
+using Ryujinx.Ui.Common.Configuration;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Ryujinx.Modules
             _mainWindow = mainWindow;
             _buildUrl   = buildUrl;
 
-            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+            Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
             MainText.Text      = "Do you want to update Ryujinx to the latest version?";
             SecondaryText.Text = $"{Program.Version} -> {newVersion}";
 

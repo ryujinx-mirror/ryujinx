@@ -11,6 +11,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
+using Ryujinx.Common;
 
 namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
@@ -65,10 +66,10 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
         public SoftwareKeyboardRendererBase(IHostUiTheme uiTheme)
         {
-            string ryujinxLogoPath = "Ryujinx.Ui.Resources.Logo_Ryujinx.png";
-            int    ryujinxLogoSize = 32;
+            int ryujinxLogoSize = 32;
 
-            _ryujinxLogo = LoadResource(Assembly.GetEntryAssembly(), ryujinxLogoPath, ryujinxLogoSize, ryujinxLogoSize);
+            Stream logoStream = EmbeddedResources.GetStream("Ryujinx.Ui.Common/Resources/Logo_Ryujinx.png");
+            _ryujinxLogo = LoadResource(logoStream, ryujinxLogoSize, ryujinxLogoSize);
 
             string padAcceptIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnA.png";
             string padCancelIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnB.png";
@@ -158,6 +159,11 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         {
             Stream resourceStream = assembly.GetManifestResourceStream(resourcePath);
 
+            return LoadResource(resourceStream, newWidth, newHeight);
+        }
+
+        private Image LoadResource(Stream resourceStream, int newWidth, int newHeight)
+        {
             Debug.Assert(resourceStream != null);
 
             var image = Image.Load(resourceStream);

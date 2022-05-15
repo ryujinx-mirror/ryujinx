@@ -1,9 +1,20 @@
 ﻿using Ryujinx.Common.Configuration.Hid.Controller.Motion;
+using System;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+using NotImplementedException = System.NotImplementedException;
 
 namespace Ryujinx.Common.Configuration.Hid.Controller
 {
     public class GenericControllerInputConfig<Button, Stick> : GenericInputConfigurationCommon<Button> where Button : unmanaged where Stick : unmanaged
     {
+        [JsonIgnore]
+        private float _deadzoneLeft;
+        [JsonIgnore]
+        private float _deadzoneRight;
+        [JsonIgnore]
+        private float _triggerThreshold;
+
         /// <summary>
         /// Left JoyCon Controller Stick Bindings
         /// </summary>
@@ -17,12 +28,26 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         /// <summary>
         /// Controller Left Analog Stick Deadzone
         /// </summary>
-        public float DeadzoneLeft { get; set; }
+        public float DeadzoneLeft
+        {
+            get => _deadzoneLeft; set
+            {
+                _deadzoneLeft = MathF.Round(value, 3);
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Controller Right Analog Stick Deadzone
         /// </summary>
-        public float DeadzoneRight { get; set; }
+        public float DeadzoneRight
+        {
+            get => _deadzoneRight; set
+            {
+                _deadzoneRight = MathF.Round(value, 3);
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Controller Left Analog Stick Range
@@ -37,7 +62,14 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         /// <summary>
         /// Controller Trigger Threshold
         /// </summary>
-        public float TriggerThreshold { get; set; }
+        public float TriggerThreshold
+        {
+            get => _triggerThreshold; set
+            {
+                _triggerThreshold = MathF.Round(value, 3);
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Controller Motion Settings

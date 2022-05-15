@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="Ryujinx.Ava.Ui.Controls.InputDialog">
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,10,5, 5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Center" Text="{Binding Message}" />
+        <TextBox MaxLength="{Binding MaxLength}" Grid.Row="1" Margin="10" Width="300" HorizontalAlignment="Center"
+                 Text="{Binding Input, Mode=TwoWay}" />
+        <TextBlock Grid.Row="2" Margin="5, 5, 5, 10" HorizontalAlignment="Center" Text="{Binding SubMessage}" />
+    </Grid>
+</UserControl>

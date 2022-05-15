@@ -6,8 +6,7 @@ using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.GraphicsDriver;
-using Ryujinx.Configuration;
-using Ryujinx.Configuration.System;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.Ui.Helper;
@@ -20,6 +19,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
+using Ryujinx.Ui.Common.Configuration.System;
 
 namespace Ryujinx.Ui.Windows
 {
@@ -109,7 +109,7 @@ namespace Ryujinx.Ui.Windows
 
         private SettingsWindow(MainWindow parent, Builder builder, VirtualFileSystem virtualFileSystem, ContentManager contentManager) : base(builder.GetObject("_settingsWin").Handle)
         {
-            Icon = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.Resources.Logo_Ryujinx.png");
+            Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
 
             _parent = parent;
 
@@ -519,7 +519,7 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Hid.EnableMouse.Value                  = _directMouseAccess.Active;
             ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
             ConfigurationState.Instance.System.Language.Value                  = Enum.Parse<Language>(_systemLanguageSelect.ActiveId);
-            ConfigurationState.Instance.System.Region.Value                    = Enum.Parse<Configuration.System.Region>(_systemRegionSelect.ActiveId);
+            ConfigurationState.Instance.System.Region.Value                    = Enum.Parse<Common.Configuration.System.Region>(_systemRegionSelect.ActiveId);
             ConfigurationState.Instance.System.SystemTimeOffset.Value          = _systemTimeOffset;
             ConfigurationState.Instance.Ui.CustomThemePath.Value               = _custThemePath.Buffer.Text;
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value         = _graphicsShadersDumpPath.Buffer.Text;

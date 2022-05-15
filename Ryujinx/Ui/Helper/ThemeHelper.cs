@@ -1,6 +1,6 @@
 ﻿using Gtk;
 using Ryujinx.Common.Logging;
-using Ryujinx.Configuration;
+using Ryujinx.Ui.Common.Configuration;
 using System.IO;
 
 namespace Ryujinx.Ui.Helper
