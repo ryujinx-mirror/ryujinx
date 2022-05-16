@@ -41,6 +41,8 @@ namespace Ryujinx.Ui
         public IRenderer Renderer { get; private set; }
 
         public bool ScreenshotRequested { get; set; }
+        protected int WindowWidth { get; private set; }
+        protected int WindowHeight { get; private set; }
 
         public static event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
@@ -71,9 +73,6 @@ namespace Ryujinx.Ui
         private IKeyboard _keyboardInterface;
         private GraphicsDebugLevel _glLogLevel;
         private string _gpuVendorName;
-
-        private int _windowHeight;
-        private int _windowWidth;
         private bool _isMouseInClient;
 
         public RendererWidgetBase(InputManager inputManager, GraphicsDebugLevel glLogLevel)
@@ -223,10 +222,10 @@ namespace Ryujinx.Ui
 
             Gdk.Monitor monitor = Display.GetMonitorAtWindow(Window);
 
-            _windowWidth = evnt.Width * monitor.ScaleFactor;
-            _windowHeight = evnt.Height * monitor.ScaleFactor;
+            WindowWidth = evnt.Width * monitor.ScaleFactor;
+            WindowHeight = evnt.Height * monitor.ScaleFactor;
 
-            Renderer?.Window.SetSize(_windowWidth, _windowHeight);
+            Renderer?.Window.SetSize(WindowWidth, WindowHeight);
 
             return result;
         }
@@ -307,7 +306,7 @@ namespace Ryujinx.Ui
             }
 
             Renderer = renderer;
-            Renderer?.Window.SetSize(_windowWidth, _windowHeight);
+            Renderer?.Window.SetSize(WindowWidth, WindowHeight);
 
             if (Renderer != null)
             {

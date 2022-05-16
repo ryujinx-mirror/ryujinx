@@ -177,7 +177,7 @@ namespace Ryujinx.Ava
         {
             if (_renderer != null)
             {
-                double scale = Program.WindowScaleFactor;
+                double scale = _parent.PlatformImpl.RenderScaling;
                 _renderer.Window.SetSize((int)(size.Width * scale), (int)(size.Height * scale));
             }
         }
@@ -809,7 +809,7 @@ namespace Ryujinx.Ava
             Width = (int)Renderer.Bounds.Width;
             Height = (int)Renderer.Bounds.Height;
 
-            _renderer.Window.SetSize((int)(Width * Program.WindowScaleFactor), (int)(Height * Program.WindowScaleFactor));
+            _renderer.Window.SetSize((int)(Width * _parent.PlatformImpl.RenderScaling), (int)(Height * _parent.PlatformImpl.RenderScaling));
 
             Device.Gpu.Renderer.RunLoop(() =>
             {

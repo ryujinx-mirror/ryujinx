@@ -73,10 +73,13 @@ namespace Ryujinx.Ava.Ui.Controls
         {
             SizeChanged?.Invoke(this, rect.Size);
 
-            RenderSize = rect.Size * Program.WindowScaleFactor;
+            if (!rect.IsEmpty)
+            {
+                RenderSize = rect.Size * VisualRoot.RenderScaling;
 
-            _glDrawOperation?.Dispose();
-            _glDrawOperation = new GlDrawOperation(this);
+                _glDrawOperation?.Dispose();
+                _glDrawOperation = new GlDrawOperation(this);
+            }
         }
 
         public override void Render(DrawingContext context)
