@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             }
             else
             {
-                Logger.Error?.Print(LogClass.ServiceAudio, $"Error while processing renderer update: 0x{result}");
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Error while processing renderer update: 0x{(int)result:X}");
             }
 
             return result;
