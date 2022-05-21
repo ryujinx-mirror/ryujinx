@@ -137,7 +137,6 @@ namespace Ryujinx.Ava
             }
 
             // Make process DPI aware for proper window sizing on high-res screens.
-            ForceDpiAware.Windows();
             WindowScaleFactor = ForceDpiAware.GetWindowScaleFactor();
 
             // Delete backup files after updating.
