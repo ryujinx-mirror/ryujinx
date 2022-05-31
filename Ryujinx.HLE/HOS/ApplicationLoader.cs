@@ -280,13 +280,6 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            if (mainNca == null)
-            {
-                Logger.Error?.Print(LogClass.Loader, "Unable to load NSP: Could not find Main NCA");
-
-                return;
-            }
-
             if (mainNca != null)
             {
                 _device.Configuration.ContentManager.ClearAocData();
@@ -298,7 +291,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             // This is not a normal NSP, it's actually a ExeFS as a NSP
-            LoadExeFs(nsp);
+            LoadExeFs(nsp, null, isHomebrew: true);
         }
 
         public void LoadNca(string ncaFile)
@@ -593,7 +586,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        private void LoadExeFs(IFileSystem codeFs, MetaLoader metaData = null)
+        private void LoadExeFs(IFileSystem codeFs, MetaLoader metaData = null, bool isHomebrew = false)
         {
             if (_device.Configuration.VirtualFileSystem.ModLoader.ReplaceExefsPartition(TitleId, ref codeFs))
             {
@@ -661,7 +654,7 @@ namespace Ryujinx.HLE.HOS
             Ptc.Initialize(TitleIdText, DisplayVersion, usePtc, memoryManagerMode);
 
             // We allow it for nx-hbloader because it can be used to launch homebrew.
-            bool allowCodeMemoryForJit = TitleId == 0x010000000000100DUL;
+            bool allowCodeMemoryForJit = TitleId == 0x010000000000100DUL || isHomebrew;
 
             metaData.GetNpdm(out Npdm npdm).ThrowIfFailure();
             ProgramInfo programInfo = new ProgramInfo(in npdm, allowCodeMemoryForJit);
