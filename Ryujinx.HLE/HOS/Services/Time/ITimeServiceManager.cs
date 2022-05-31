@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -6,7 +7,6 @@ using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.IO;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
@@ -68,7 +68,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
             TimeSpanType testOffset         = context.RequestData.ReadStruct<TimeSpanType>();
             bool         isRtcResetDetected = context.RequestData.ReadBoolean();
 
-            _timeManager.SetupStandardSteadyClock(context.Thread, clockSourceId, setupValue, internalOffset, testOffset, isRtcResetDetected);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            _timeManager.SetupStandardSteadyClock(tickSource, clockSourceId, setupValue, internalOffset, testOffset, isRtcResetDetected);
 
             return ResultCode.Success;
         }
@@ -80,7 +82,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
             SystemClockContext clockContext = context.RequestData.ReadStruct<SystemClockContext>();
             long               posixTime    = context.RequestData.ReadInt64();
 
-            _timeManager.SetupStandardLocalSystemClock(context.Thread, clockContext, posixTime);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            _timeManager.SetupStandardLocalSystemClock(tickSource, clockContext, posixTime);
 
             return ResultCode.Success;
         }
@@ -107,7 +111,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             SteadyClockTimePoint steadyClockTimePoint = context.RequestData.ReadStruct<SteadyClockTimePoint>();
 
-            _timeManager.SetupStandardUserSystemClock(context.Thread, isAutomaticCorrectionEnabled, steadyClockTimePoint);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            _timeManager.SetupStandardUserSystemClock(tickSource, isAutomaticCorrectionEnabled, steadyClockTimePoint);
 
             return ResultCode.Success;
         }
@@ -191,7 +197,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             TimeSpanType rtcOffset = context.RequestData.ReadStruct<TimeSpanType>();
 
-            _timeManager.SetStandardSteadyClockRtcOffset(context.Thread, rtcOffset);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            _timeManager.SetStandardSteadyClockRtcOffset(tickSource, rtcOffset);
 
             return ResultCode.Success;
         }

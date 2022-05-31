@@ -33,13 +33,13 @@ namespace ARMeilleure.Instructions
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0000_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCtrEl0));    break;
-                case 0b11_011_0000_0000_111: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetDczidEl0));  break;
-                case 0b11_011_0100_0010_000: EmitGetNzcv(context);                                                           return;
-                case 0b11_011_0100_0100_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcr));      break;
-                case 0b11_011_0100_0100_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpsr));      break;
-                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrEl0));  break;
-                case 0b11_011_1101_0000_011: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidr));     break;
+                case 0b11_011_0000_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCtrEl0)); break;
+                case 0b11_011_0000_0000_111: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetDczidEl0)); break;
+                case 0b11_011_0100_0010_000: EmitGetNzcv(context); return;
+                case 0b11_011_0100_0100_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcr)); break;
+                case 0b11_011_0100_0100_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpsr)); break;
+                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrEl0)); break;
+                case 0b11_011_1101_0000_011: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrroEl0)); break;
                 case 0b11_011_1110_0000_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntfrqEl0)); break;
                 case 0b11_011_1110_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0)); break;
                 case 0b11_011_1110_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntvctEl0)); break;

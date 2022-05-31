@@ -1,4 +1,4 @@
-﻿using ARMeilleure.State;
+﻿using Ryujinx.Cpu;
 using Ryujinx.Memory;
 using System;
 
@@ -8,7 +8,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         IVirtualMemoryManager AddressSpace { get; }
 
-        void Execute(ExecutionContext context, ulong codeAddress);
+        IExecutionContext CreateExecutionContext(ExceptionCallbacks exceptionCallbacks);
+        void Execute(IExecutionContext context, ulong codeAddress);
         void InvalidateCacheRegion(ulong address, ulong size);
     }
 }

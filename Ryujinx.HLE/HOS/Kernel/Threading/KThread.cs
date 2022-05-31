@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public Thread HostThread { get; private set; }
 
-        public ARMeilleure.State.ExecutionContext Context { get; private set; }
+        public IExecutionContext Context { get; private set; }
 
         public KThreadContext ThreadContext { get; private set; }
 
@@ -115,9 +115,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public bool WaitingInArbitration { get; set; }
 
-        public long LastPc { get; set; }
-
-        private object ActivityOperationLock = new object();
+        private object _activityOperationLock;
 
         public KThread(KernelContext context) : base(context)
         {
@@ -128,6 +126,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _mutexWaiters = new LinkedList<KThread>();
             _pinnedWaiters = new LinkedList<KThread>();
+
+            _activityOperationLock = new object();
         }
 
         public KernelResult Initialize(
@@ -192,7 +192,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             HostThread = new Thread(ThreadStart);
 
-            Context = CpuContext.CreateExecutionContext();
+            Context = owner?.CreateExecutionContext() ?? new ProcessExecutionContext();
 
             Context.IsAarch32 = !is64Bits;
 
@@ -208,8 +208,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 Context.SetX(13, (uint)stackTop);
             }
 
-            Context.CntfrqEl0 = 19200000;
-            Context.Tpidr = (long)_tlsAddress;
+            Context.TpidrroEl0 = (long)_tlsAddress;
 
             ThreadUid = KernelContext.NewThreadUid();
 
@@ -221,7 +220,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (owner != null)
             {
-                owner.SubscribeThreadEventHandlers(Context);
                 owner.AddThread(this);
 
                 if (owner.IsPaused)
@@ -538,7 +536,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KernelResult SetActivity(bool pause)
         {
-            lock (ActivityOperationLock)
+            lock (_activityOperationLock)
             {
                 KernelResult result = KernelResult.Success;
 
@@ -634,7 +632,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             context = default;
 
-            lock (ActivityOperationLock)
+            lock (_activityOperationLock)
             {
                 KernelContext.CriticalSection.Enter();
 
@@ -656,7 +654,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             return KernelResult.Success;
         }
 
-        private static uint GetPsr(ARMeilleure.State.ExecutionContext context)
+        private static uint GetPsr(IExecutionContext context)
         {
             return context.Pstate & 0xFF0FFE20;
         }
@@ -683,9 +681,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 context.Fp = Context.GetX(29);
                 context.Lr = Context.GetX(30);
                 context.Sp = Context.GetX(31);
-                context.Pc = (ulong)LastPc;
+                context.Pc = Context.Pc;
                 context.Pstate = GetPsr(Context);
-                context.Tpidr = (ulong)Context.Tpidr;
+                context.Tpidr = (ulong)Context.TpidrroEl0;
             }
             else
             {
@@ -699,9 +697,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     context.FpuRegisters[i] = Context.GetV(i);
                 }
 
-                context.Pc = (uint)LastPc;
+                context.Pc = (uint)Context.Pc;
                 context.Pstate = GetPsr(Context);
-                context.Tpidr = (uint)Context.Tpidr;
+                context.Tpidr = (uint)Context.TpidrroEl0;
             }
 
             context.Fpcr = (uint)Context.Fpcr;
@@ -743,7 +741,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public KernelResult SetCoreAndAffinityMask(int newCore, ulong newAffinityMask)
         {
-            lock (ActivityOperationLock)
+            lock (_activityOperationLock)
             {
                 KernelContext.CriticalSection.Enter();
 

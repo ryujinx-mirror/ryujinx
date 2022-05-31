@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
@@ -25,13 +25,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             return _steadyClockCore;
         }
 
-        public ResultCode GetCurrentTime(KThread thread, out long posixTime)
+        public ResultCode GetCurrentTime(ITickSource tickSource, out long posixTime)
         {
             posixTime = 0;
 
-            SteadyClockTimePoint currentTimePoint = _steadyClockCore.GetCurrentTimePoint(thread);
+            SteadyClockTimePoint currentTimePoint = _steadyClockCore.GetCurrentTimePoint(tickSource);
 
-            ResultCode result = GetClockContext(thread, out SystemClockContext clockContext);
+            ResultCode result = GetClockContext(tickSource, out SystemClockContext clockContext);
 
             if (result == ResultCode.Success)
             {
@@ -48,9 +48,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             return result;
         }
 
-        public ResultCode SetCurrentTime(KThread thread, long posixTime)
+        public ResultCode SetCurrentTime(ITickSource tickSource, long posixTime)
         {
-            SteadyClockTimePoint currentTimePoint = _steadyClockCore.GetCurrentTimePoint(thread);
+            SteadyClockTimePoint currentTimePoint = _steadyClockCore.GetCurrentTimePoint(tickSource);
 
             SystemClockContext clockContext = new SystemClockContext()
             {
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             return result;
         }
 
-        public virtual ResultCode GetClockContext(KThread thread, out SystemClockContext context)
+        public virtual ResultCode GetClockContext(ITickSource tickSource, out SystemClockContext context)
         {
             context = _context;
 
@@ -127,13 +127,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             _isInitialized = true;
         }
 
-        public bool IsClockSetup(KThread thread)
+        public bool IsClockSetup(ITickSource tickSource)
         {
-            ResultCode result = GetClockContext(thread, out SystemClockContext context);
+            ResultCode result = GetClockContext(tickSource, out SystemClockContext context);
 
             if (result == ResultCode.Success)
             {
-                SteadyClockTimePoint steadyClockTimePoint = _steadyClockCore.GetCurrentTimePoint(thread);
+                SteadyClockTimePoint steadyClockTimePoint = _steadyClockCore.GetCurrentTimePoint(tickSource);
 
                 return steadyClockTimePoint.ClockSourceId == context.SteadyTimePoint.ClockSourceId;
             }

@@ -7,6 +7,7 @@ using LibHac.Ncm;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
@@ -63,7 +64,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         {
             InitializeInstance(device.FileSystem, device.System.ContentManager, device.System.FsIntegrityCheckLevel);
 
-            SteadyClockTimePoint timeZoneUpdatedTimePoint = timeManager.StandardSteadyClock.GetCurrentTimePoint(null);
+            ITickSource tickSource = device.System.TickSource;
+
+            SteadyClockTimePoint timeZoneUpdatedTimePoint = timeManager.StandardSteadyClock.GetCurrentTimePoint(tickSource);
 
             string deviceLocationName = SanityCheckDeviceLocationName(device.Configuration.TimeZone);
 

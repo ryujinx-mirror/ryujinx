@@ -19,6 +19,7 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Audio.Renderer.Dsp;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
@@ -78,6 +79,11 @@ namespace Ryujinx.Audio.Renderer.Server
         private IHardwareDeviceDriver _deviceDriver;
 
         /// <summary>
+        /// Tick source used to measure elapsed time.
+        /// </summary>
+        public ITickSource TickSource { get; }
+
+        /// <summary>
         /// The <see cref="AudioProcessor"/> instance associated to this manager.
         /// </summary>
         public AudioProcessor Processor { get; }
@@ -90,9 +96,11 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// Create a new <see cref="AudioRendererManager"/>.
         /// </summary>
-        public AudioRendererManager()
+        /// <param name="tickSource">Tick source used to measure elapsed time.</param>
+        public AudioRendererManager(ITickSource tickSource)
         {
             Processor = new AudioProcessor();
+            TickSource = tickSource;
             _sessionIds = new int[Constants.AudioRendererSessionCountMax];
             _sessions = new AudioRenderSystem[Constants.AudioRendererSessionCountMax];
             _activeSessionCount = 0;

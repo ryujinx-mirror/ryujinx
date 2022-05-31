@@ -1755,7 +1755,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public ulong GetSystemTick()
         {
-            return KernelStatic.GetCurrentThread().Context.CntpctEl0;
+            return _context.TickSource.Counter;
         }
 
         public void Break(ulong reason)

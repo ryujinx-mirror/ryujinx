@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -31,7 +32,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 return ResultCode.UninitializedClock;
             }
 
-            ResultCode result = _clockCore.GetCurrentTime(context.Thread, out long posixTime);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            ResultCode result = _clockCore.GetCurrentTime(tickSource, out long posixTime);
 
             if (result == ResultCode.Success)
             {
@@ -57,7 +60,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 
             long posixTime = context.RequestData.ReadInt64();
 
-            return _clockCore.SetCurrentTime(context.Thread, posixTime);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            return _clockCore.SetCurrentTime(tickSource, posixTime);
         }
 
         [CommandHipc(2)]
@@ -69,7 +74,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 return ResultCode.UninitializedClock;
             }
 
-            ResultCode result = _clockCore.GetClockContext(context.Thread, out SystemClockContext clockContext);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            ResultCode result = _clockCore.GetClockContext(tickSource, out SystemClockContext clockContext);
 
             if (result == ResultCode.Success)
             {

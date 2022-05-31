@@ -1,8 +1,10 @@
-﻿using ARMeilleure.Memory;
+using ARMeilleure.Memory;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
+using Ryujinx.Cpu;
+using Ryujinx.Cpu.Jit;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Tests.Cpu
 {
     public class CpuContext
     {
@@ -21,7 +23,7 @@ namespace Ryujinx.Cpu
 
         public static ExecutionContext CreateExecutionContext()
         {
-            return new ExecutionContext(new JitMemoryAllocator());
+            return new ExecutionContext(new JitMemoryAllocator(), new TickSource(19200000));
         }
 
         public void Execute(ExecutionContext context, ulong address)

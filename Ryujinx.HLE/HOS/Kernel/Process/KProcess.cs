@@ -1,4 +1,3 @@
-using ARMeilleure.State;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
@@ -744,14 +743,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        public void SubscribeThreadEventHandlers(ARMeilleure.State.ExecutionContext context)
+        public IExecutionContext CreateExecutionContext()
         {
-            context.Interrupt += InterruptHandler;
-            context.SupervisorCall += KernelContext.SyscallHandler.SvcCall;
-            context.Undefined += UndefinedInstructionHandler;
+            return Context?.CreateExecutionContext(new ExceptionCallbacks(
+                InterruptHandler,
+                null,
+                KernelContext.SyscallHandler.SvcCall,
+                UndefinedInstructionHandler));
         }
 
-        private void InterruptHandler(object sender, EventArgs e)
+        private void InterruptHandler(IExecutionContext context)
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
@@ -1093,12 +1094,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return false;
         }
 
-        private void UndefinedInstructionHandler(object sender, InstUndefinedEventArgs e)
+        private void UndefinedInstructionHandler(IExecutionContext context, ulong address, int opCode)
         {
             KernelStatic.GetCurrentThread().PrintGuestStackTrace();
             KernelStatic.GetCurrentThread()?.PrintGuestRegisterPrintout();
 
-            throw new UndefinedInstructionException(e.Address, e.OpCode);
+            throw new UndefinedInstructionException(address, opCode);
         }
 
         protected override void Destroy() => Context.Dispose();

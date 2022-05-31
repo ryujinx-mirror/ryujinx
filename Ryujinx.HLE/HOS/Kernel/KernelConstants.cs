@@ -12,5 +12,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         public const ulong UserSlabHeapBase = DramMemoryMap.SlabHeapBase;
         public const ulong UserSlabHeapItemSize = KPageTableBase.PageSize;
         public const ulong UserSlabHeapSize = 0x3de000;
+
+        public const ulong CounterFrequency = 19200000;
     }
 }

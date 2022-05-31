@@ -2,7 +2,7 @@ using ARMeilleure;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using NUnit.Framework;
-using Ryujinx.Cpu;
+using Ryujinx.Cpu.Jit;
 using Ryujinx.Memory;
 using Ryujinx.Tests.Unicorn;
 using System;

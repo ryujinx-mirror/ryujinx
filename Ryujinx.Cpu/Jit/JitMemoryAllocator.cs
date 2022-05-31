@@ -1,9 +1,9 @@
 ﻿using ARMeilleure.Memory;
 using Ryujinx.Memory;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Cpu.Jit
 {
-    class JitMemoryAllocator : IJitMemoryAllocator
+    public class JitMemoryAllocator : IJitMemoryAllocator
     {
         public IJitMemoryBlock Allocate(ulong size) => new JitMemoryBlock(size, MemoryAllocationFlags.None);
         public IJitMemoryBlock Reserve(ulong size) => new JitMemoryBlock(size, MemoryAllocationFlags.Reserve);

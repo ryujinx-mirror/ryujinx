@@ -523,9 +523,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
         private ulong GetSystemTicks()
         {
-            double ticks = ARMeilleure.State.ExecutionContext.ElapsedTicks * ARMeilleure.State.ExecutionContext.TickFrequency;
-
-            return (ulong)(ticks * Constants.TargetTimerFrequency);
+            return (ulong)(_manager.TickSource.ElapsedSeconds * Constants.TargetTimerFrequency);
         }
 
         private uint ComputeVoiceDrop(CommandBuffer commandBuffer, long voicesEstimatedTime, long deltaTimeDsp)

@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Cpu.Jit
 {
     /// <summary>
     /// Represents a CPU memory manager.

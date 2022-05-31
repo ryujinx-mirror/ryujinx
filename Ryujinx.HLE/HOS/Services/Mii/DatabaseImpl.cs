@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using System;
 
@@ -27,7 +28,6 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
         public DatabaseImpl()
         {
-            _utilityImpl = new UtilityImpl();
             _miiDatabase = new MiiDatabaseManager();
         }
 
@@ -148,12 +148,13 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             return GetDefault(flag, ref count, elements);
         }
 
-        public ResultCode InitializeDatabase(HorizonClient horizonClient)
+        public ResultCode InitializeDatabase(ITickSource tickSource, HorizonClient horizonClient)
         {
+            _utilityImpl = new UtilityImpl(tickSource);
             _miiDatabase.InitializeDatabase(horizonClient);
             _miiDatabase.LoadFromFile(out _isBroken);
 
-            // Nintendo ignore any error code from before
+            // Nintendo ignores any error code from before.
             return ResultCode.Success;
         }
 

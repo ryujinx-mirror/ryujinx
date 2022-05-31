@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Cpu;
+using Ryujinx.Cpu.Jit;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -10,10 +11,12 @@ namespace Ryujinx.HLE.HOS
 {
     class ArmProcessContextFactory : IProcessContextFactory
     {
+        private readonly ICpuEngine _cpuEngine;
         private readonly GpuContext _gpu;
 
-        public ArmProcessContextFactory(GpuContext gpu)
+        public ArmProcessContextFactory(ICpuEngine cpuEngine, GpuContext gpu)
         {
+            _cpuEngine = cpuEngine;
             _gpu = gpu;
         }
 
@@ -29,12 +32,14 @@ namespace Ryujinx.HLE.HOS
             switch (mode)
             {
                 case MemoryManagerMode.SoftwarePageTable:
-                    return new ArmProcessContext<MemoryManager>(pid, _gpu, new MemoryManager(context.Memory, addressSpaceSize, invalidAccessHandler), for64Bit);
+                    var memoryManager = new MemoryManager(context.Memory, addressSpaceSize, invalidAccessHandler);
+                    return new ArmProcessContext<MemoryManager>(pid, _cpuEngine, _gpu, memoryManager, for64Bit);
 
                 case MemoryManagerMode.HostMapped:
                 case MemoryManagerMode.HostMappedUnsafe:
                     bool unsafeMode = mode == MemoryManagerMode.HostMappedUnsafe;
-                    return new ArmProcessContext<MemoryManagerHostMapped>(pid, _gpu, new MemoryManagerHostMapped(context.Memory, addressSpaceSize, unsafeMode, invalidAccessHandler), for64Bit);
+                    var memoryManagerHostMapped = new MemoryManagerHostMapped(context.Memory, addressSpaceSize, unsafeMode, invalidAccessHandler);
+                    return new ArmProcessContext<MemoryManagerHostMapped>(pid, _cpuEngine, _gpu, memoryManagerHostMapped, for64Bit);
 
                 default:
                     throw new ArgumentOutOfRangeException();

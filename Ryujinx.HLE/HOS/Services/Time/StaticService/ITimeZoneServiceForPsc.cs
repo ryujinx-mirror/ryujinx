@@ -7,7 +7,6 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 {
@@ -44,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             {
                 return ResultCode.PermissionDenied;
             }
-            
+
             return ResultCode.NotImplemented;
         }
 

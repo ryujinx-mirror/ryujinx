@@ -1,5 +1,4 @@
 ﻿using ARMeilleure.Memory;
-using ARMeilleure.State;
 using Ryujinx.Cpu;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -11,12 +10,12 @@ namespace Ryujinx.HLE.HOS
     {
         private readonly ulong _pid;
         private readonly GpuContext _gpuContext;
-        private readonly CpuContext _cpuContext;
+        private readonly ICpuContext _cpuContext;
         private T _memoryManager;
 
         public IVirtualMemoryManager AddressSpace => _memoryManager;
 
-        public ArmProcessContext(ulong pid, GpuContext gpuContext, T memoryManager, bool for64Bit)
+        public ArmProcessContext(ulong pid, ICpuEngine cpuEngine, GpuContext gpuContext, T memoryManager, bool for64Bit)
         {
             if (memoryManager is IRefCounted rc)
             {
@@ -27,11 +26,16 @@ namespace Ryujinx.HLE.HOS
 
             _pid = pid;
             _gpuContext = gpuContext;
-            _cpuContext = new CpuContext(memoryManager, for64Bit);
+            _cpuContext = cpuEngine.CreateCpuContext(memoryManager, for64Bit);
             _memoryManager = memoryManager;
         }
 
-        public void Execute(ExecutionContext context, ulong codeAddress)
+        public IExecutionContext CreateExecutionContext(ExceptionCallbacks exceptionCallbacks)
+        {
+            return _cpuContext.CreateExecutionContext(exceptionCallbacks);
+        }
+
+        public void Execute(IExecutionContext context, ulong codeAddress)
         {
             _cpuContext.Execute(context, codeAddress);
         }

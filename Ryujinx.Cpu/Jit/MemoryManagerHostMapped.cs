@@ -8,12 +8,12 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Cpu.Jit
 {
     /// <summary>
     /// Represents a CPU memory manager which maps guest virtual memory directly onto a host virtual region.
     /// </summary>
-    public class MemoryManagerHostMapped : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
+    public sealed class MemoryManagerHostMapped : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;

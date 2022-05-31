@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Memory;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
@@ -63,11 +64,11 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             };
         }
 
-        public static RegisterInfo GetRegisterInfo(string amiiboId, string nickname)
+        public static RegisterInfo GetRegisterInfo(ITickSource tickSource, string amiiboId, string nickname)
         {
             VirtualAmiiboFile amiiboFile = LoadAmiiboFile(amiiboId);
 
-            UtilityImpl utilityImpl = new UtilityImpl();
+            UtilityImpl utilityImpl = new UtilityImpl(tickSource);
             CharInfo    charInfo    = new CharInfo();
 
             charInfo.SetFromStoreData(StoreData.BuildDefault(utilityImpl, 0));

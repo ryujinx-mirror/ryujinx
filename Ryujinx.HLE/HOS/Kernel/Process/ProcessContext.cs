@@ -1,4 +1,4 @@
-﻿using ARMeilleure.State;
+﻿using Ryujinx.Cpu;
 using Ryujinx.Memory;
 using System;
 
@@ -13,7 +13,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             AddressSpace = asManager;
         }
 
-        public void Execute(ExecutionContext context, ulong codeAddress)
+        public IExecutionContext CreateExecutionContext(ExceptionCallbacks exceptionCallbacks)
+        {
+            return new ProcessExecutionContext();
+        }
+
+        public void Execute(IExecutionContext context, ulong codeAddress)
         {
             throw new NotSupportedException();
         }

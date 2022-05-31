@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Common;
+﻿using Ryujinx.Cpu;
+using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.SupervisorCall;
@@ -23,6 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public Switch Device { get; }
         public MemoryBlock Memory { get; }
+        public ITickSource TickSource { get; }
         public Syscall Syscall { get; }
         public SyscallHandler SyscallHandler { get; }
 
@@ -52,11 +54,13 @@ namespace Ryujinx.HLE.HOS.Kernel
         private ulong _threadUid;
 
         public KernelContext(
+            ITickSource tickSource,
             Switch device,
             MemoryBlock memory,
             MemorySize memorySize,
             MemoryArrange memoryArrange)
         {
+            TickSource = tickSource;
             Device = device;
             Memory = memory;
 

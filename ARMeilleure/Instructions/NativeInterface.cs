@@ -107,14 +107,14 @@ namespace ARMeilleure.Instructions
             return (uint)GetContext().TpidrEl0;
         }
 
-        public static ulong GetTpidr()
+        public static ulong GetTpidrroEl0()
         {
-            return (ulong)GetContext().Tpidr;
+            return (ulong)GetContext().TpidrroEl0;
         }
 
         public static uint GetTpidr32()
         {
-            return (uint)GetContext().Tpidr;
+            return (uint)GetContext().TpidrroEl0;
         }
 
         public static ulong GetCntfrqEl0()

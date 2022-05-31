@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 
 namespace Ryujinx.HLE.HOS.Services.Time.StaticService
@@ -25,7 +26,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
                 return ResultCode.UninitializedClock;
             }
 
-            SteadyClockTimePoint currentTimePoint = _steadyClock.GetCurrentTimePoint(context.Thread);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            SteadyClockTimePoint currentTimePoint = _steadyClock.GetCurrentTimePoint(tickSource);
 
             context.ResponseData.WriteStruct(currentTimePoint);
 

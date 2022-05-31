@@ -1,12 +1,11 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading;
+﻿using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Memory;
-using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.Services.Time.Types;
 using Ryujinx.HLE.Utilities;
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
@@ -38,19 +37,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return _sharedMemory;
         }
 
-        public void SetupStandardSteadyClock(KThread thread, UInt128 clockSourceId, TimeSpanType currentTimePoint)
+        public void SetupStandardSteadyClock(ITickSource tickSource, UInt128 clockSourceId, TimeSpanType currentTimePoint)
         {
-            TimeSpanType ticksTimeSpan;
-
-            // As this may be called before the guest code, we support passing a null thread to make this api usable.
-            if (thread == null)
-            {
-                ticksTimeSpan = TimeSpanType.FromSeconds(0);
-            }
-            else
-            {
-                ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
-            }
+            TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(tickSource.Counter, tickSource.Frequency);
 
             SteadyClockContext context = new SteadyClockContext
             {
@@ -67,10 +56,10 @@ namespace Ryujinx.HLE.HOS.Services.Time
             WriteObjectToSharedMemory(AutomaticCorrectionEnabledOffset, 0, Convert.ToByte(isAutomaticCorrectionEnabled));
         }
 
-        public void SetSteadyClockRawTimePoint(KThread thread, TimeSpanType currentTimePoint)
+        public void SetSteadyClockRawTimePoint(ITickSource tickSource, TimeSpanType currentTimePoint)
         {
             SteadyClockContext context       = ReadObjectFromSharedMemory<SteadyClockContext>(SteadyClockContextOffset, 4);
-            TimeSpanType       ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
+            TimeSpanType       ticksTimeSpan = TimeSpanType.FromTicks(tickSource.Counter, tickSource.Frequency);
 
             context.InternalOffset = (ulong)(currentTimePoint.NanoSeconds - ticksTimeSpan.NanoSeconds);
 

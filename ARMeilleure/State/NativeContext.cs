@@ -34,6 +34,12 @@ namespace ARMeilleure.State
             GetStorage().ExclusiveAddress = ulong.MaxValue;
         }
 
+        public ulong GetPc()
+        {
+            // TODO: More precise tracking of PC value.
+            return GetStorage().DispatchAddress;
+        }
+
         public unsafe ulong GetX(int index)
         {
             if ((uint)index >= RegisterConsts.IntRegsCount)

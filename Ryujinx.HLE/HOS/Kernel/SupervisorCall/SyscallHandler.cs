@@ -1,4 +1,4 @@
-using ARMeilleure.State;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             _syscall64 = new Syscall64(context.Syscall);
         }
 
-        public void SvcCall(object sender, InstExceptionEventArgs e)
+        public void SvcCall(IExecutionContext context, ulong address, int id)
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
@@ -34,26 +34,24 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 _context.CriticalSection.Leave();
             }
 
-            ExecutionContext context = (ExecutionContext)sender; 
-
             if (context.IsAarch32)
             {
-                var svcFunc = SyscallTable.SvcTable32[e.Id];
+                var svcFunc = SyscallTable.SvcTable32[id];
 
                 if (svcFunc == null)
                 {
-                    throw new NotImplementedException($"SVC 0x{e.Id:X4} is not implemented.");
+                    throw new NotImplementedException($"SVC 0x{id:X4} is not implemented.");
                 }
 
                 svcFunc(_syscall32, context);
             }
             else
             {
-                var svcFunc = SyscallTable.SvcTable64[e.Id];
+                var svcFunc = SyscallTable.SvcTable64[id];
 
                 if (svcFunc == null)
                 {
-                    throw new NotImplementedException($"SVC 0x{e.Id:X4} is not implemented.");
+                    throw new NotImplementedException($"SVC 0x{id:X4} is not implemented.");
                 }
 
                 svcFunc(_syscall64, context);

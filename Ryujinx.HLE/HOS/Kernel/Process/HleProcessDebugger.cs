@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             string GetReg(int x)
             {
-                var v = x == 32 ? (ulong)thread.LastPc : context.GetX(x);
+                var v = x == 32 ? context.Pc : context.GetX(x);
                 if (!AnalyzePointer(out PointerInfo info, v, thread))
                 {
                     return $"0x{v:x16}";

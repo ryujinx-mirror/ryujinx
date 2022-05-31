@@ -2,9 +2,9 @@
 using Ryujinx.Memory;
 using System;
 
-namespace Ryujinx.Cpu
+namespace Ryujinx.Cpu.Jit
 {
-    class JitMemoryBlock : IJitMemoryBlock
+    public class JitMemoryBlock : IJitMemoryBlock
     {
         private readonly MemoryBlock _impl;
 

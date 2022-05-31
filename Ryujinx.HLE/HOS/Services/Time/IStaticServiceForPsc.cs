@@ -2,7 +2,6 @@ using Ryujinx.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
-using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.Services.Time.StaticService;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
@@ -163,13 +162,15 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             bool autoCorrectionEnabled = context.RequestData.ReadBoolean();
 
-            ResultCode result = userClock.SetAutomaticCorrectionEnabled(context.Thread, autoCorrectionEnabled);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            ResultCode result = userClock.SetAutomaticCorrectionEnabled(tickSource, autoCorrectionEnabled);
 
             if (result == ResultCode.Success)
             {
                 _timeManager.SharedMemory.SetAutomaticCorrectionEnabled(autoCorrectionEnabled);
 
-                SteadyClockTimePoint currentTimePoint = userClock.GetSteadyClockCore().GetCurrentTimePoint(context.Thread);
+                SteadyClockTimePoint currentTimePoint = userClock.GetSteadyClockCore().GetCurrentTimePoint(tickSource);
 
                 userClock.SetAutomaticCorrectionUpdatedTime(currentTimePoint);
                 userClock.SignalAutomaticCorrectionEvent();
@@ -190,7 +191,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // IsStandardNetworkSystemClockAccuracySufficient() -> bool
         public ResultCode IsStandardNetworkSystemClockAccuracySufficient(ServiceCtx context)
         {
-            context.ResponseData.Write(_timeManager.StandardNetworkSystemClock.IsStandardNetworkSystemClockAccuracySufficient(context.Thread));
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            context.ResponseData.Write(_timeManager.StandardNetworkSystemClock.IsStandardNetworkSystemClockAccuracySufficient(tickSource));
 
             return ResultCode.Success;
         }
@@ -222,14 +225,16 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 return ResultCode.UninitializedClock;
             }
 
+            ITickSource tickSource = context.Device.System.TickSource;
+
             SystemClockContext   otherContext     = context.RequestData.ReadStruct<SystemClockContext>();
-            SteadyClockTimePoint currentTimePoint = steadyClock.GetCurrentTimePoint(context.Thread);
+            SteadyClockTimePoint currentTimePoint = steadyClock.GetCurrentTimePoint(tickSource);
 
             ResultCode result = ResultCode.TimeMismatch;
 
             if (currentTimePoint.ClockSourceId == otherContext.SteadyTimePoint.ClockSourceId)
             {
-                TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(context.Thread.Context.CntpctEl0, context.Thread.Context.CntfrqEl0);
+                TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(tickSource.Counter, tickSource.Frequency);
                 long         baseTimePoint = otherContext.Offset + currentTimePoint.TimePoint - ticksTimeSpan.ToSeconds();
 
                 context.ResponseData.Write(baseTimePoint);
@@ -248,15 +253,17 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<ClockSnapshot>());
 
-            ResultCode result = _timeManager.StandardUserSystemClock.GetClockContext(context.Thread, out SystemClockContext userContext);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            ResultCode result = _timeManager.StandardUserSystemClock.GetClockContext(tickSource, out SystemClockContext userContext);
 
             if (result == ResultCode.Success)
             {
-                result = _timeManager.StandardNetworkSystemClock.GetClockContext(context.Thread, out SystemClockContext networkContext);
+                result = _timeManager.StandardNetworkSystemClock.GetClockContext(tickSource, out SystemClockContext networkContext);
 
                 if (result == ResultCode.Success)
                 {
-                    result = GetClockSnapshotFromSystemClockContextInternal(context.Thread, userContext, networkContext, type, out ClockSnapshot clockSnapshot);
+                    result = GetClockSnapshotFromSystemClockContextInternal(tickSource, userContext, networkContext, type, out ClockSnapshot clockSnapshot);
 
                     if (result == ResultCode.Success)
                     {
@@ -281,7 +288,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
             SystemClockContext userContext    = context.RequestData.ReadStruct<SystemClockContext>();
             SystemClockContext networkContext = context.RequestData.ReadStruct<SystemClockContext>();
 
-            ResultCode result = GetClockSnapshotFromSystemClockContextInternal(context.Thread, userContext, networkContext, type, out ClockSnapshot clockSnapshot);
+            ITickSource tickSource = context.Device.System.TickSource;
+
+            ResultCode result = GetClockSnapshotFromSystemClockContextInternal(tickSource, userContext, networkContext, type, out ClockSnapshot clockSnapshot);
 
             if (result == ResultCode.Success)
             {
@@ -344,12 +353,12 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return resultCode;
         }
 
-        private ResultCode GetClockSnapshotFromSystemClockContextInternal(KThread thread, SystemClockContext userContext, SystemClockContext networkContext, byte type, out ClockSnapshot clockSnapshot)
+        private ResultCode GetClockSnapshotFromSystemClockContextInternal(ITickSource tickSource, SystemClockContext userContext, SystemClockContext networkContext, byte type, out ClockSnapshot clockSnapshot)
         {
             clockSnapshot = new ClockSnapshot();
 
             SteadyClockCore      steadyClockCore  = _timeManager.StandardSteadyClock;
-            SteadyClockTimePoint currentTimePoint = steadyClockCore.GetCurrentTimePoint(thread);
+            SteadyClockTimePoint currentTimePoint = steadyClockCore.GetCurrentTimePoint(tickSource);
 
             clockSnapshot.IsAutomaticCorrectionEnabled = _timeManager.StandardUserSystemClock.IsAutomaticCorrectionEnabled();
             clockSnapshot.UserContext                  = userContext;
