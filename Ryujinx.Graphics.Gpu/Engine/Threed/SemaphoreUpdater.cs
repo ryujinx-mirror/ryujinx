@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private enum ReportCounterType
         {
-            Zero = 0,
+            Payload = 0,
             InputVertices = 1,
             InputPrimitives = 3,
             VertexShaderInvocations = 5,
@@ -169,8 +169,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             switch (type)
             {
-                case ReportCounterType.Zero:
-                    resultHandler(null, 0);
+                case ReportCounterType.Payload:
+                    resultHandler(null, (ulong)_state.State.SemaphorePayload);
                     break;
                 case ReportCounterType.SamplesPassed:
                     counter = _context.Renderer.ReportCounter(CounterType.SamplesPassed, resultHandler, false);
