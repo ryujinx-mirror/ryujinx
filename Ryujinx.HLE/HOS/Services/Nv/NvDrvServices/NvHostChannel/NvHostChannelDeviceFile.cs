@@ -429,8 +429,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                 Channel.PushHostCommandBuffer(CreateWaitCommandBuffer(header.Fence));
             }
 
-            Channel.PushEntries(entries);
-
             header.Fence.Id = _channelSyncpoint.Id;
 
             if (header.Flags.HasFlag(SubmitGpfifoFlags.FenceIncrement) || header.Flags.HasFlag(SubmitGpfifoFlags.IncrementWithValue))
@@ -448,6 +446,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             {
                 header.Fence.Value = _device.System.HostSyncpoint.ReadSyncpointMaxValue(header.Fence.Id);
             }
+
+            Channel.PushEntries(entries);
 
             if (header.Flags.HasFlag(SubmitGpfifoFlags.FenceIncrement))
             {
