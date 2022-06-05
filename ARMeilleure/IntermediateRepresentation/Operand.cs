@@ -14,10 +14,11 @@ namespace ARMeilleure.IntermediateRepresentation
             public byte Kind;
             public byte Type;
             public byte SymbolType;
+            public byte Padding; // Unused space.
             public ushort AssignmentsCount;
             public ushort AssignmentsCapacity;
-            public ushort UsesCount;
-            public ushort UsesCapacity;
+            public uint UsesCount;
+            public uint UsesCapacity;
             public Operation* Assignments;
             public Operation* Uses;
             public ulong Value;
@@ -84,11 +85,11 @@ namespace ARMeilleure.IntermediateRepresentation
             {
                 Debug.Assert(Kind != OperandKind.Memory);
 
-                return new ReadOnlySpan<Operation>(_data->Uses, _data->UsesCount);
+                return new ReadOnlySpan<Operation>(_data->Uses, (int)_data->UsesCount);
             }
         }
 
-        public int UsesCount => _data->UsesCount;
+        public int UsesCount => (int)_data->UsesCount;
         public int AssignmentsCount => _data->AssignmentsCount;
 
         public bool Relocatable => Symbol.Type != SymbolType.None;
@@ -178,7 +179,7 @@ namespace ARMeilleure.IntermediateRepresentation
                 {
                     Add(operation, ref addr._data->Assignments, ref addr._data->AssignmentsCount, ref addr._data->AssignmentsCapacity);
                 }
-                
+
                 if (index != default)
                 {
                     Add(operation, ref index._data->Assignments, ref index._data->AssignmentsCount, ref index._data->AssignmentsCapacity);
@@ -265,6 +266,13 @@ namespace ARMeilleure.IntermediateRepresentation
             data = Allocators.References.Allocate<T>(initialCapacity);
         }
 
+        private static void New<T>(ref T* data, ref uint count, ref uint capacity, uint initialCapacity) where T : unmanaged
+        {
+            count = 0;
+            capacity = initialCapacity;
+            data = Allocators.References.Allocate<T>(initialCapacity);
+        }
+
         private static void Add<T>(T item, ref T* data, ref ushort count, ref ushort capacity) where T : unmanaged
         {
             if (count < capacity)
@@ -294,9 +302,63 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
+        private static void Add<T>(T item, ref T* data, ref uint count, ref uint capacity) where T : unmanaged
+        {
+            if (count < capacity)
+            {
+                data[count++] = item;
+
+                return;
+            }
+
+            // Could not add item in the fast path, fallback onto the slow path.
+            ExpandAdd(item, ref data, ref count, ref capacity);
+
+            static void ExpandAdd(T item, ref T* data, ref uint count, ref uint capacity)
+            {
+                uint newCount = checked(count + 1);
+                uint newCapacity = (uint)Math.Min(capacity * 2, int.MaxValue);
+
+                if (newCapacity <= capacity)
+                {
+                    throw new OverflowException();
+                }
+
+                var oldSpan = new Span<T>(data, (int)count);
+
+                capacity = newCapacity;
+                data = Allocators.References.Allocate<T>(capacity);
+
+                oldSpan.CopyTo(new Span<T>(data, (int)count));
+
+                data[count] = item;
+                count = newCount;
+            }
+        }
+
         private static void Remove<T>(in T item, ref T* data, ref ushort count) where T : unmanaged
         {
             var span = new Span<T>(data, count);
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                if (EqualityComparer<T>.Default.Equals(span[i], item))
+                {
+                    if (i + 1 < count)
+                    {
+                        span.Slice(i + 1).CopyTo(span.Slice(i));
+                    }
+
+                    count--;
+
+                    return;
+                }
+            }
+        }
+
+        private static void Remove<T>(in T item, ref T* data, ref uint count) where T : unmanaged
+        {
+            var span = new Span<T>(data, (int)count);
 
             for (int i = 0; i < span.Length; i++)
             {
