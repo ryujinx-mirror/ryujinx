@@ -115,14 +115,77 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             TextureView destinationView = (TextureView)destination;
 
-            _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
+            if (destinationView.Target.IsMultisample() || Target.IsMultisample())
+            {
+                Extents2D srcRegion = new Extents2D(0, 0, Width, Height);
+                Extents2D dstRegion = new Extents2D(0, 0, destinationView.Width, destinationView.Height);
+
+                TextureView intermmediate = _renderer.TextureCopy.IntermmediatePool.GetOrCreateWithAtLeast(
+                    GetIntermmediateTarget(Target),
+                    Info.BlockWidth,
+                    Info.BlockHeight,
+                    Info.BytesPerPixel,
+                    Format,
+                    Width,
+                    Height,
+                    Info.Depth,
+                    Info.Levels);
+
+                GL.Disable(EnableCap.FramebufferSrgb);
+
+                _renderer.TextureCopy.Copy(this, intermmediate, srcRegion, srcRegion, true);
+                _renderer.TextureCopy.Copy(intermmediate, destinationView, srcRegion, dstRegion, true, 0, firstLayer, 0, firstLevel);
+
+                GL.Enable(EnableCap.FramebufferSrgb);
+            }
+            else
+            {
+                _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
+            }
         }
 
         public void CopyTo(ITexture destination, int srcLayer, int dstLayer, int srcLevel, int dstLevel)
         {
-             TextureView destinationView = (TextureView)destination;
+            TextureView destinationView = (TextureView)destination;
 
-            _renderer.TextureCopy.CopyUnscaled(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
+            if (destinationView.Target.IsMultisample() || Target.IsMultisample())
+            {
+                Extents2D srcRegion = new Extents2D(0, 0, Width, Height);
+                Extents2D dstRegion = new Extents2D(0, 0, destinationView.Width, destinationView.Height);
+
+                TextureView intermmediate = _renderer.TextureCopy.IntermmediatePool.GetOrCreateWithAtLeast(
+                    GetIntermmediateTarget(Target),
+                    Info.BlockWidth,
+                    Info.BlockHeight,
+                    Info.BytesPerPixel,
+                    Format,
+                    Math.Max(1, Width >> srcLevel),
+                    Math.Max(1, Height >> srcLevel),
+                    1,
+                    1);
+
+                GL.Disable(EnableCap.FramebufferSrgb);
+
+                _renderer.TextureCopy.Copy(this, intermmediate, srcRegion, srcRegion, true, srcLayer, 0, srcLevel, 0, 1, 1);
+                _renderer.TextureCopy.Copy(intermmediate, destinationView, srcRegion, dstRegion, true, 0, dstLayer, 0, dstLevel, 1, 1);
+
+                GL.Enable(EnableCap.FramebufferSrgb);
+            }
+            else
+            {
+                _renderer.TextureCopy.CopyUnscaled(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
+            }
+        }
+
+        private static Target GetIntermmediateTarget(Target srcTarget)
+        {
+            return srcTarget switch
+            {
+                Target.Texture2D => Target.Texture2DMultisample,
+                Target.Texture2DArray => Target.Texture2DMultisampleArray,
+                Target.Texture2DMultisampleArray => Target.Texture2DArray,
+                _ => Target.Texture2D
+            };
         }
 
         public void CopyTo(ITexture destination, Extents2D srcRegion, Extents2D dstRegion, bool linearFilter)

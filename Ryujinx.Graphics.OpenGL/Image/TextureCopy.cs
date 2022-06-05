@@ -9,6 +9,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
     {
         private readonly Renderer _renderer;
 
+        public IntermmediatePool IntermmediatePool { get; }
+
         private int _srcFramebuffer;
         private int _dstFramebuffer;
 
@@ -18,6 +20,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public TextureCopy(Renderer renderer)
         {
             _renderer = renderer;
+            IntermmediatePool = new IntermmediatePool(renderer);
         }
 
         public void Copy(
@@ -25,7 +28,30 @@ namespace Ryujinx.Graphics.OpenGL.Image
             TextureView dst,
             Extents2D   srcRegion,
             Extents2D   dstRegion,
-            bool        linearFilter)
+            bool        linearFilter,
+            int         srcLayer = 0,
+            int         dstLayer = 0,
+            int         srcLevel = 0,
+            int         dstLevel = 0)
+        {
+            int levels = Math.Min(src.Info.Levels - srcLevel, dst.Info.Levels - dstLevel);
+            int layers = Math.Min(src.Info.GetLayers() - srcLayer, dst.Info.GetLayers() - dstLayer);
+
+            Copy(src, dst, srcRegion, dstRegion, linearFilter, srcLayer, dstLayer, srcLevel, dstLevel, layers, levels);
+        }
+
+        public void Copy(
+            TextureView src,
+            TextureView dst,
+            Extents2D   srcRegion,
+            Extents2D   dstRegion,
+            bool        linearFilter,
+            int         srcLayer,
+            int         dstLayer,
+            int         srcLevel,
+            int         dstLevel,
+            int         layers,
+            int         levels)
         {
             TextureView srcConverted = src.Format.IsBgr() != dst.Format.IsBgr() ? BgraSwap(src) : src;
 
@@ -34,22 +60,29 @@ namespace Ryujinx.Graphics.OpenGL.Image
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, GetSrcFramebufferLazy());
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, GetDstFramebufferLazy());
 
-            int levels = Math.Min(src.Info.Levels, dst.Info.Levels);
-            int layers = Math.Min(src.Info.GetLayers(), dst.Info.GetLayers());
+            if (srcLevel != 0)
+            {
+                srcRegion = srcRegion.Reduce(srcLevel);
+            }
+
+            if (dstLevel != 0)
+            {
+                dstRegion = dstRegion.Reduce(dstLevel);
+            }
 
             for (int level = 0; level < levels; level++)
             {
                 for (int layer = 0; layer < layers; layer++)
                 {
-                    if (layers > 1)
+                    if ((srcLayer | dstLayer) != 0 || layers > 1)
                     {
-                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, level, layer);
-                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, level, layer);
+                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, srcLevel + level, srcLayer + layer);
+                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, dstLevel + level, dstLayer + layer);
                     }
                     else
                     {
-                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, level);
-                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, level);
+                        Attach(FramebufferTarget.ReadFramebuffer, src.Format, srcConverted.Handle, srcLevel + level);
+                        Attach(FramebufferTarget.DrawFramebuffer, dst.Format, dst.Handle, dstLevel + level);
                     }
 
                     ClearBufferMask mask = GetMask(src.Format);
@@ -484,6 +517,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
                 _copyPboHandle = 0;
             }
+
+            IntermmediatePool.Dispose();
         }
     }
 }

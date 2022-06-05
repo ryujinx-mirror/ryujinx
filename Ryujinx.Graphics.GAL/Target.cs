@@ -13,4 +13,12 @@ namespace Ryujinx.Graphics.GAL
         CubemapArray,
         TextureBuffer
     }
+
+    public static class TargetExtensions
+    {
+        public static bool IsMultisample(this Target target)
+        {
+            return target == Target.Texture2DMultisample || target == Target.Texture2DMultisampleArray;
+        }
+    }
 }

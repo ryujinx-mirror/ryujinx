@@ -547,7 +547,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     range.Value,
                     sizeInfo.LayerSize,
                     _context.Capabilities,
-                    flags.HasFlag(TextureSearchFlags.ForCopy),
                     out int firstLayer,
                     out int firstLevel);
 
@@ -662,7 +661,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                         overlap.Range,
                         overlap.LayerSize,
                         _context.Capabilities,
-                        false,
                         out int firstLayer,
                         out int firstLevel);
 
