@@ -45,19 +45,64 @@ namespace Ryujinx.Memory.WindowsShared
         }
 
         /// <summary>
+        /// Unreserves a range of memory that has been previously reserved with <see cref="ReserveRange"/>.
+        /// </summary>
+        /// <param name="address">Start address of the region to unreserve</param>
+        /// <param name="size">Size in bytes of the region to unreserve</param>
+        /// <exception cref="WindowsApiException">Thrown when the Windows API returns an error unreserving the memory</exception>
+        public void UnreserveRange(ulong address, ulong size)
+        {
+            ulong endAddress = address + size;
+
+            var overlaps = Array.Empty<IntervalTreeNode<ulong, ulong>>();
+            int count;
+
+            lock (_mappings)
+            {
+                count = _mappings.Get(address, endAddress, ref overlaps);
+
+                for (int index = 0; index < count; index++)
+                {
+                    var overlap = overlaps[index];
+
+                    if (IsMapped(overlap.Value))
+                    {
+                        if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)overlap.Start, 2))
+                        {
+                            throw new WindowsApiException("UnmapViewOfFile2");
+                        }
+                    }
+
+                    _mappings.Remove(overlap);
+                }
+            }
+
+            if (count > 1)
+            {
+                CheckFreeResult(WindowsApi.VirtualFree(
+                    (IntPtr)address,
+                    (IntPtr)size,
+                    AllocationType.Release | AllocationType.CoalescePlaceholders));
+            }
+
+            RemoveProtection(address, size);
+        }
+
+        /// <summary>
         /// Maps a shared memory view on a previously reserved memory region.
         /// </summary>
         /// <param name="sharedMemory">Shared memory that will be the backing storage for the view</param>
         /// <param name="srcOffset">Offset in the shared memory to map</param>
         /// <param name="location">Address to map the view into</param>
         /// <param name="size">Size of the view in bytes</param>
-        public void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
+        /// <param name="owner">Memory block that owns the mapping</param>
+        public void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size, MemoryBlock owner)
         {
             _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
 
             try
             {
-                UnmapViewInternal(sharedMemory, location, size);
+                UnmapViewInternal(sharedMemory, location, size, owner);
                 MapViewInternal(sharedMemory, srcOffset, location, size);
             }
             finally
@@ -173,13 +218,14 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="sharedMemory">Shared memory that the view being unmapped belongs to</param>
         /// <param name="location">Address to unmap</param>
         /// <param name="size">Size of the region to unmap in bytes</param>
-        public void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size)
+        /// <param name="owner">Memory block that owns the mapping</param>
+        public void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
         {
             _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
 
             try
             {
-                UnmapViewInternal(sharedMemory, location, size);
+                UnmapViewInternal(sharedMemory, location, size, owner);
             }
             finally
             {
@@ -197,8 +243,9 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="sharedMemory">Shared memory that the view being unmapped belongs to</param>
         /// <param name="location">Address to unmap</param>
         /// <param name="size">Size of the region to unmap in bytes</param>
+        /// <param name="owner">Memory block that owns the mapping</param>
         /// <exception cref="WindowsApiException">Thrown when the Windows API returns an error unmapping or remapping the memory</exception>
-        private void UnmapViewInternal(IntPtr sharedMemory, IntPtr location, IntPtr size)
+        private void UnmapViewInternal(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
         {
             ulong startAddress = (ulong)location;
             ulong unmapSize = (ulong)size;
@@ -272,7 +319,7 @@ namespace Ryujinx.Memory.WindowsShared
                 }
             }
 
-            CoalesceForUnmap(startAddress, unmapSize);
+            CoalesceForUnmap(startAddress, unmapSize, owner);
             RemoveProtection(startAddress, unmapSize);
         }
 
@@ -281,15 +328,21 @@ namespace Ryujinx.Memory.WindowsShared
         /// </summary>
         /// <param name="address">Address of the region that was unmapped</param>
         /// <param name="size">Size of the region that was unmapped in bytes</param>
-        private void CoalesceForUnmap(ulong address, ulong size)
+        /// <param name="owner">Memory block that owns the mapping</param>
+        private void CoalesceForUnmap(ulong address, ulong size, MemoryBlock owner)
         {
             ulong endAddress = address + size;
+            ulong blockAddress = (ulong)owner.Pointer;
+            ulong blockEnd = blockAddress + owner.Size;
             var overlaps = Array.Empty<IntervalTreeNode<ulong, ulong>>();
             int unmappedCount = 0;
 
             lock (_mappings)
             {
-                int count = _mappings.Get(address - MinimumPageSize, endAddress + MinimumPageSize, ref overlaps);
+                int count = _mappings.Get(
+                    Math.Max(address - MinimumPageSize, blockAddress),
+                    Math.Min(endAddress + MinimumPageSize, blockEnd), ref overlaps);
+
                 if (count < 2)
                 {
                     // Nothing to coalesce if we only have 1 or no overlaps.

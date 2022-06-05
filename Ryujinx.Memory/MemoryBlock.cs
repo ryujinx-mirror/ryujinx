@@ -19,6 +19,8 @@ namespace Ryujinx.Memory
         private ConcurrentDictionary<MemoryBlock, byte> _viewStorages;
         private int _viewCount;
 
+        internal bool ForceWindows4KBView => _forceWindows4KBView;
+
         /// <summary>
         /// Pointer to the memory block data.
         /// </summary>
@@ -145,7 +147,7 @@ namespace Ryujinx.Memory
                 srcBlock.IncrementViewCount();
             }
 
-            MemoryManagement.MapView(srcBlock._sharedMemory, srcOffset, GetPointerInternal(dstOffset, size), size, _forceWindows4KBView);
+            MemoryManagement.MapView(srcBlock._sharedMemory, srcOffset, GetPointerInternal(dstOffset, size), size, this);
         }
 
         /// <summary>
@@ -156,7 +158,7 @@ namespace Ryujinx.Memory
         /// <param name="size">Size of the range to be unmapped</param>
         public void UnmapView(MemoryBlock srcBlock, ulong offset, ulong size)
         {
-            MemoryManagement.UnmapView(srcBlock._sharedMemory, GetPointerInternal(offset, size), size, _forceWindows4KBView);
+            MemoryManagement.UnmapView(srcBlock._sharedMemory, GetPointerInternal(offset, size), size, this);
         }
 
         /// <summary>

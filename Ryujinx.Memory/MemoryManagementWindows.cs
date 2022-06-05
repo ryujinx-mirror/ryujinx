@@ -68,9 +68,9 @@ namespace Ryujinx.Memory
             return WindowsApi.VirtualFree(location, size, AllocationType.Decommit);
         }
 
-        public static void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
+        public static void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size, MemoryBlock owner)
         {
-            _placeholders.MapView(sharedMemory, srcOffset, location, size);
+            _placeholders.MapView(sharedMemory, srcOffset, location, size, owner);
         }
 
         public static void MapView4KB(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
@@ -106,9 +106,9 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size)
+        public static void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
         {
-            _placeholders.UnmapView(sharedMemory, location, size);
+            _placeholders.UnmapView(sharedMemory, location, size, owner);
         }
 
         public static void UnmapView4KB(IntPtr location, IntPtr size)
@@ -154,7 +154,7 @@ namespace Ryujinx.Memory
             }
             else
             {
-                _placeholders.UnmapView(IntPtr.Zero, address, size);
+                _placeholders.UnreserveRange((ulong)address, (ulong)size);
             }
 
             return WindowsApi.VirtualFree(address, IntPtr.Zero, AllocationType.Release);
