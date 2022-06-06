@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
         private bool _instancedDrawPending;
         private bool _instancedIndexed;
+        private bool _instancedIndexedInline;
 
         private int _instancedFirstIndex;
         private int _instancedFirstVertex;
@@ -135,6 +136,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _instancedDrawPending = true;
 
                 _instancedIndexed = _drawState.DrawIndexed;
+                _instancedIndexedInline = _drawState.IbStreamer.HasInlineIndexData;
 
                 _instancedFirstIndex = firstIndex;
                 _instancedFirstVertex = (int)_state.State.FirstVertex;
@@ -451,7 +453,21 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _instancedDrawPending = false;
 
-                if (_instancedIndexed)
+                if (_instancedIndexedInline)
+                {
+                    int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount();
+                    BufferRange br = new BufferRange(_drawState.IbStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
+
+                    _channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
+
+                    _context.Renderer.Pipeline.DrawIndexed(
+                        inlineIndexCount,
+                        _instanceIndex + 1,
+                        _instancedFirstIndex,
+                        _instancedFirstVertex,
+                        _instancedFirstInstance);
+                }
+                else if (_instancedIndexed)
                 {
                     _context.Renderer.Pipeline.DrawIndexed(
                         _instancedIndexCount,
