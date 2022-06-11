@@ -597,6 +597,8 @@ namespace Ryujinx.Graphics.OpenGL
                         GL.EndTransformFeedback();
                     }
 
+                    GL.ClipControl(ClipOrigin.UpperLeft, ClipDepthMode.NegativeOneToOne);
+
                     _drawTexture.Draw(
                         view,
                         samp,
@@ -627,6 +629,8 @@ namespace Ryujinx.Graphics.OpenGL
                     {
                         GL.BeginTransformFeedback(_tfTopology);
                     }
+
+                    RestoreClipControl();
                 }
             }
         }
