@@ -135,14 +135,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _instancedDrawPending = true;
 
+                int ibCount = _drawState.IbStreamer.InlineIndexCount;
+
                 _instancedIndexed = _drawState.DrawIndexed;
-                _instancedIndexedInline = _drawState.IbStreamer.HasInlineIndexData;
+                _instancedIndexedInline = ibCount != 0;
 
                 _instancedFirstIndex = firstIndex;
                 _instancedFirstVertex = (int)_state.State.FirstVertex;
                 _instancedFirstInstance = (int)_state.State.FirstInstance;
 
-                _instancedIndexCount = indexCount;
+                _instancedIndexCount = ibCount != 0 ? ibCount : indexCount;
 
                 var drawState = _state.State.VertexBufferDrawState;
 
@@ -453,22 +455,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _instancedDrawPending = false;
 
-                if (_instancedIndexedInline)
-                {
-                    int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount();
-                    BufferRange br = new BufferRange(_drawState.IbStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
+                bool indexedInline = _instancedIndexedInline;
 
-                    _channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
-
-                    _context.Renderer.Pipeline.DrawIndexed(
-                        inlineIndexCount,
-                        _instanceIndex + 1,
-                        _instancedFirstIndex,
-                        _instancedFirstVertex,
-                        _instancedFirstInstance);
-                }
-                else if (_instancedIndexed)
+                if (_instancedIndexed || indexedInline)
                 {
+                    if (indexedInline)
+                    {
+                        int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount();
+                        BufferRange br = new BufferRange(_drawState.IbStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
+
+                        _channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
+                    }
+
                     _context.Renderer.Pipeline.DrawIndexed(
                         _instancedIndexCount,
                         _instanceIndex + 1,

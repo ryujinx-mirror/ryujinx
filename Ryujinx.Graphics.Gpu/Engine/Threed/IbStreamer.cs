@@ -21,6 +21,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public bool HasInlineIndexData => _inlineIndexCount != 0;
 
         /// <summary>
+        /// Total numbers of indices that have been pushed.
+        /// </summary>
+        public int InlineIndexCount => _inlineIndexCount;
+
+        /// <summary>
         /// Gets the handle for the host buffer currently holding the inline index buffer data.
         /// </summary>
         /// <returns>Host buffer handle</returns>
