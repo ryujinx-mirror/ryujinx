@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
@@ -38,15 +39,18 @@ namespace Ryujinx.HLE.HOS.Services
         private readonly Dictionary<int, Func<IpcService>> _ports = new Dictionary<int, Func<IpcService>>();
 
         public ManualResetEvent InitDone { get; }
-        public Func<IpcService> SmObjectFactory { get; }
         public string Name { get; }
+        public Func<IpcService> SmObjectFactory { get; }
 
-        public ServerBase(KernelContext context, string name, Func<IpcService> smObjectFactory = null)
+        private int _threadCount;
+
+        public ServerBase(KernelContext context, string name, Func<IpcService> smObjectFactory = null, int threadCount = 1)
         {
             InitDone = new ManualResetEvent(false);
+            _context = context;
             Name = name;
             SmObjectFactory = smObjectFactory;
-            _context = context;
+            _threadCount = threadCount;
 
             const ProcessCreationFlags flags =
                 ProcessCreationFlags.EnableAslr |
@@ -56,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, flags, 0, 0);
 
-            KernelStatic.StartInitialProcess(context, creationInfo, DefaultCapabilities, 44, ServerLoop);
+            KernelStatic.StartInitialProcess(context, creationInfo, DefaultCapabilities, 44, Main);
         }
 
         private void AddPort(int serverPortHandle, Func<IpcService> objectFactory)
@@ -78,6 +82,32 @@ namespace Ryujinx.HLE.HOS.Services
         {
             _sessionHandles.Add(serverSessionHandle);
             _sessions.Add(serverSessionHandle, obj);
+        }
+
+        private void Main()
+        {
+            for (int i = 1; i < _threadCount; i++)
+            {
+                KernelResult result = _context.Syscall.CreateThread(out int threadHandle, 0UL, 0UL, 0UL, 44, 3, ServerLoop);
+
+                if (result == KernelResult.Success)
+                {
+                    result = _context.Syscall.StartThread(threadHandle);
+
+                    if (result != KernelResult.Success)
+                    {
+                        Logger.Error?.Print(LogClass.Service, $"Failed to start thread on {Name}: {result}");
+                    }
+
+                    _context.Syscall.CloseHandle(threadHandle);
+                }
+                else
+                {
+                    Logger.Error?.Print(LogClass.Service, $"Failed to create thread on {Name}: {result}");
+                }
+            }
+
+            ServerLoop();
         }
 
         private void ServerLoop()

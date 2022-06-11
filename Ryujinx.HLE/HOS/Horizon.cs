@@ -309,7 +309,7 @@ namespace Ryujinx.HLE.HOS
             // only then doing connections to SM is safe.
             SmServer.InitDone.WaitOne();
 
-            BsdServer = new ServerBase(KernelContext, "BsdServer");
+            BsdServer = new ServerBase(KernelContext, "BsdServer", null, 2);
             AudRenServer = new ServerBase(KernelContext, "AudioRendererServer");
             AudOutServer = new ServerBase(KernelContext, "AudioOutServer");
             FsServer = new ServerBase(KernelContext, "FsServer");

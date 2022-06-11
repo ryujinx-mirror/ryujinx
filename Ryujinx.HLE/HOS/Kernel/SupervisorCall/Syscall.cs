@@ -2351,6 +2351,18 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             int priority,
             int cpuCore)
         {
+            return CreateThread(out handle, entrypoint, argsPtr, stackTop, priority, cpuCore, null);
+        }
+
+        public KernelResult CreateThread(
+            out int handle,
+            ulong entrypoint,
+            ulong argsPtr,
+            ulong stackTop,
+            int priority,
+            int cpuCore,
+            ThreadStart customThreadStart)
+        {
             handle = 0;
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
@@ -2386,7 +2398,8 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 argsPtr,
                 stackTop,
                 priority,
-                cpuCore);
+                cpuCore,
+                customThreadStart);
 
             if (result == KernelResult.Success)
             {

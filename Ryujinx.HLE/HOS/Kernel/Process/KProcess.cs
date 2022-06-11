@@ -735,11 +735,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             ulong argsPtr,
             ulong stackTop,
             int priority,
-            int cpuCore)
+            int cpuCore,
+            ThreadStart customThreadStart = null)
         {
             lock (_processLock)
             {
-                return thread.Initialize(entrypoint, argsPtr, stackTop, priority, cpuCore, this, ThreadType.User, null);
+                return thread.Initialize(entrypoint, argsPtr, stackTop, priority, cpuCore, this, ThreadType.User, customThreadStart);
             }
         }
 
