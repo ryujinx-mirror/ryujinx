@@ -18,6 +18,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
         public EventFileDescriptor(ulong value, EventFdFlags flags)
         {
+            // FIXME: We should support blocking operations.
+            // Right now they can't be supported because it would cause the
+            // service to lock up as we only have one thread processing requests.
+            flags |= EventFdFlags.NonBlocking;
+
             _value = value;
             _flags = flags;
 
