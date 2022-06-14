@@ -505,8 +505,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             int index = (argument >> 6) & 0xf;
+            int layer = (argument >> 10) & 0x3ff;
 
-            engine.UpdateRenderTargetState(useControl: false, singleUse: index);
+            engine.UpdateRenderTargetState(useControl: false, layered: layer != 0, singleUse: index);
 
             // If there is a mismatch on the host clip region and the one explicitly defined by the guest
             // on the screen scissor state, then we need to force only one texture to be bound to avoid
@@ -581,7 +582,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 ColorF color = new ColorF(clearColor.Red, clearColor.Green, clearColor.Blue, clearColor.Alpha);
 
-                _context.Renderer.Pipeline.ClearRenderTargetColor(index, componentMask, color);
+                _context.Renderer.Pipeline.ClearRenderTargetColor(index, layer, componentMask, color);
             }
 
             if (clearDepth || clearStencil)
@@ -602,6 +603,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
 
                 _context.Renderer.Pipeline.ClearRenderTargetDepthStencil(
+                    layer,
                     depthValue,
                     clearDepth,
                     stencilValue,

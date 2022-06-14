@@ -131,10 +131,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// Updates render targets (color and depth-stencil buffers) based on current render target state.
         /// </summary>
         /// <param name="useControl">Use draw buffers information from render target control register</param>
+        /// <param name="layered">Indicates if the texture is layered</param>
         /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param>
-        public void UpdateRenderTargetState(bool useControl, int singleUse = -1)
+        public void UpdateRenderTargetState(bool useControl, bool layered = false, int singleUse = -1)
         {
-            _stateUpdater.UpdateRenderTargetState(useControl, singleUse);
+            _stateUpdater.UpdateRenderTargetState(useControl, layered, singleUse);
         }
 
         /// <summary>

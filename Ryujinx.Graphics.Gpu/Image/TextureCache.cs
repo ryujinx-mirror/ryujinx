@@ -349,6 +349,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
         /// <param name="dsState">Depth-stencil buffer texture to find or create</param>
         /// <param name="size">Size of the depth-stencil texture</param>
+        /// <param name="layered">Indicates if the texture might be accessed with a non-zero layer index</param>
         /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
         /// <param name="samplesInY">Number of samples in the Y direction, for MSAA</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
@@ -357,6 +358,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             MemoryManager memoryManager,
             RtDepthStencilState dsState,
             Size3D size,
+            bool layered,
             int samplesInX,
             int samplesInY,
             Size sizeHint)
@@ -364,9 +366,24 @@ namespace Ryujinx.Graphics.Gpu.Image
             int gobBlocksInY = dsState.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = dsState.MemoryLayout.UnpackGobBlocksInZ();
 
-            Target target = (samplesInX | samplesInY) != 1
-                ? Target.Texture2DMultisample
-                : Target.Texture2D;
+            Target target;
+
+            if (dsState.MemoryLayout.UnpackIsTarget3D())
+            {
+                target = Target.Texture3D;
+            }
+            else if ((samplesInX | samplesInY) != 1)
+            {
+                target = size.Depth > 1 && layered
+                    ? Target.Texture2DMultisampleArray
+                    : Target.Texture2DMultisample;
+            }
+            else
+            {
+                target = size.Depth > 1 && layered
+                    ? Target.Texture2DArray
+                    : Target.Texture2D;
+            }
 
             FormatInfo formatInfo = dsState.Format.Convert();
 

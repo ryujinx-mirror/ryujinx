@@ -362,8 +362,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// Updates render targets (color and depth-stencil buffers) based on current render target state.
         /// </summary>
         /// <param name="useControl">Use draw buffers information from render target control register</param>
+        /// <param name="layered">Indicates if the texture is layered</param>
         /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param>
-        public void UpdateRenderTargetState(bool useControl, int singleUse = -1)
+        public void UpdateRenderTargetState(bool useControl, bool layered = false, int singleUse = -1)
         {
             var memoryManager = _channel.MemoryManager;
             var rtControl = _state.State.RtControl;
@@ -399,7 +400,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 Image.Texture color = memoryManager.Physical.TextureCache.FindOrCreateTexture(
                     memoryManager,
                     colorState,
-                    _vtgWritesRtLayer,
+                    _vtgWritesRtLayer || layered,
                     samplesInX,
                     samplesInY,
                     sizeHint);
@@ -433,6 +434,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     memoryManager,
                     dsState,
                     dsSize,
+                    _vtgWritesRtLayer || layered,
                     samplesInX,
                     samplesInY,
                     sizeHint);

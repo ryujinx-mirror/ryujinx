@@ -40,15 +40,15 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
-        public void ClearRenderTargetColor(int index, uint componentMask, ColorF color)
+        public void ClearRenderTargetColor(int index, int layer, uint componentMask, ColorF color)
         {
-            _renderer.New<ClearRenderTargetColorCommand>().Set(index, componentMask, color);
+            _renderer.New<ClearRenderTargetColorCommand>().Set(index, layer, componentMask, color);
             _renderer.QueueCommand();
         }
 
-        public void ClearRenderTargetDepthStencil(float depthValue, bool depthMask, int stencilValue, int stencilMask)
+        public void ClearRenderTargetDepthStencil(int layer, float depthValue, bool depthMask, int stencilValue, int stencilMask)
         {
-            _renderer.New<ClearRenderTargetDepthStencilCommand>().Set(depthValue, depthMask, stencilValue, stencilMask);
+            _renderer.New<ClearRenderTargetDepthStencilCommand>().Set(layer, depthValue, depthMask, stencilValue, stencilMask);
             _renderer.QueueCommand();
         }
 
