@@ -10,17 +10,22 @@ namespace Ryujinx.Graphics.Vic
 {
     static class Blender
     {
-        public static void BlendOne(Surface dst, Surface src, ref SlotStruct slot)
+        public static void BlendOne(Surface dst, Surface src, ref SlotStruct slot, Rectangle targetRect)
         {
-            if (Sse41.IsSupported && (dst.Width & 3) == 0)
+            int x1 = targetRect.X;
+            int y1 = targetRect.Y;
+            int x2 = Math.Min(src.Width, x1 + targetRect.Width);
+            int y2 = Math.Min(src.Height, y1 + targetRect.Height);
+
+            if (Sse41.IsSupported && ((x1 | x2) & 3) == 0)
             {
-                BlendOneSse41(dst, src, ref slot);
+                BlendOneSse41(dst, src, ref slot, x1, y1, x2, y2);
                 return;
             }
 
-            for (int y = 0; y < dst.Height; y++)
+            for (int y = y1; y < y2; y++)
             {
-                for (int x = 0; x < dst.Width; x++)
+                for (int x = x1; x < x2; x++)
                 {
                     int inR = src.GetR(x, y);
                     int inG = src.GetG(x, y);
@@ -40,9 +45,9 @@ namespace Ryujinx.Graphics.Vic
             }
         }
 
-        private unsafe static void BlendOneSse41(Surface dst, Surface src, ref SlotStruct slot)
+        private unsafe static void BlendOneSse41(Surface dst, Surface src, ref SlotStruct slot, int x1, int y1, int x2, int y2)
         {
-            Debug.Assert((dst.Width & 3) == 0);
+            Debug.Assert(((x1 | x2) & 3) == 0);
 
             ref MatrixStruct mtx = ref slot.ColorMatrixStruct;
 
@@ -62,9 +67,9 @@ namespace Ryujinx.Graphics.Vic
                 Pixel* ip = srcPtr;
                 Pixel* op = dstPtr;
 
-                for (int y = 0; y < dst.Height; y++, ip += src.Width, op += dst.Width)
+                for (int y = y1; y < y2; y++, ip += src.Width, op += dst.Width)
                 {
-                    for (int x = 0; x < dst.Width; x += 4)
+                    for (int x = x1; x < x2; x += 4)
                     {
                         Vector128<int> pixel1 = Sse41.ConvertToVector128Int32((ushort*)(ip + (uint)x));
                         Vector128<int> pixel2 = Sse41.ConvertToVector128Int32((ushort*)(ip + (uint)x + 1));

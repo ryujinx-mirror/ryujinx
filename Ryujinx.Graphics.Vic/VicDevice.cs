@@ -2,6 +2,7 @@
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic.Image;
 using Ryujinx.Graphics.Vic.Types;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Vic
@@ -47,7 +48,19 @@ namespace Ryujinx.Graphics.Vic
 
                 using Surface src = SurfaceReader.Read(_rm, ref slot.SlotConfig, ref slot.SlotSurfaceConfig, ref offsets);
 
-                Blender.BlendOne(output, src, ref slot);
+                int x1 = config.OutputConfig.TargetRectLeft;
+                int y1 = config.OutputConfig.TargetRectTop;
+                int x2 = config.OutputConfig.TargetRectRight + 1;
+                int y2 = config.OutputConfig.TargetRectBottom + 1;
+
+                int targetX = Math.Min(x1, x2);
+                int targetY = Math.Min(y1, y2);
+                int targetW = Math.Min(output.Width - targetX, Math.Abs(x2 - x1));
+                int targetH = Math.Min(output.Height - targetY, Math.Abs(y2 - y1));
+
+                Rectangle targetRect = new Rectangle(targetX, targetY, targetW, targetH);
+
+                Blender.BlendOne(output, src, ref slot, targetRect);
             }
 
             SurfaceWriter.Write(_rm, output, ref config.OutputSurfaceConfig, ref _state.State.SetOutputSurface);
