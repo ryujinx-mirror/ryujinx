@@ -9,6 +9,11 @@ namespace Ryujinx.Graphics.Gpu.Image
     class Sampler : IDisposable
     {
         /// <summary>
+        /// True if the sampler is disposed, false otherwise.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
+
+        /// <summary>
         /// Host sampler object.
         /// </summary>
         private readonly ISampler _hostSampler;
@@ -101,6 +106,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void Dispose()
         {
+            IsDisposed = true;
+
             _hostSampler.Dispose();
             _anisoSampler?.Dispose();
         }

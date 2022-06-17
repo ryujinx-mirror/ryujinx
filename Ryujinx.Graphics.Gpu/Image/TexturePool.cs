@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         private readonly GpuChannel _channel;
         private readonly ConcurrentQueue<Texture> _dereferenceQueue = new ConcurrentQueue<Texture>();
+        private TextureDescriptor _defaultDescriptor;
 
         /// <summary>
         /// Intrusive linked list node used on the texture pool cache.
@@ -30,6 +31,62 @@ namespace Ryujinx.Graphics.Gpu.Image
         public TexturePool(GpuContext context, GpuChannel channel, ulong address, int maximumId) : base(context, channel.MemoryManager.Physical, address, maximumId)
         {
             _channel = channel;
+        }
+
+        /// <summary>
+        /// Gets the texture descripor and texture with the given ID with no bounds check or synchronization.
+        /// </summary>
+        /// <param name="id">ID of the texture. This is effectively a zero-based index</param>
+        /// <param name="texture">The texture with the given ID</param>
+        /// <returns>The texture descriptor with the given ID</returns>
+        private ref readonly TextureDescriptor GetInternal(int id, out Texture texture)
+        {
+            texture = Items[id];
+
+            ref readonly TextureDescriptor descriptor = ref GetDescriptorRef(id);
+
+            if (texture == null)
+            {
+                TextureInfo info = GetInfo(descriptor, out int layerSize);
+
+                ProcessDereferenceQueue();
+
+                texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
+
+                // If this happens, then the texture address is invalid, we can't add it to the cache.
+                if (texture == null)
+                {
+                    return ref descriptor;
+                }
+
+                texture.IncrementReferenceCount(this, id);
+
+                Items[id] = texture;
+
+                DescriptorCache[id] = descriptor;
+            }
+            else
+            {
+                if (texture.ChangedSize)
+                {
+                    // Texture changed size at one point - it may be a different size than the sampler expects.
+                    // This can be triggered when the size is changed by a size hint on copy or draw, but the texture has been sampled before.
+
+                    int baseLevel = descriptor.UnpackBaseLevel();
+                    int width = Math.Max(1, descriptor.UnpackWidth() >> baseLevel);
+                    int height = Math.Max(1, descriptor.UnpackHeight() >> baseLevel);
+
+                    if (texture.Info.Width != width || texture.Info.Height != height)
+                    {
+                        texture.ChangeSize(width, height, texture.Info.DepthOrLayers);
+                    }
+                }
+
+                // Memory is automatically synchronized on texture creation.
+                texture.SynchronizeMemory();
+            }
+
+            return ref descriptor;
         }
 
         /// <summary>
@@ -51,54 +108,47 @@ namespace Ryujinx.Graphics.Gpu.Image
                 SynchronizeMemory();
             }
 
-            Texture texture = Items[id];
-
-            if (texture == null)
-            {
-                TextureDescriptor descriptor = GetDescriptor(id);
-
-                TextureInfo info = GetInfo(descriptor, out int layerSize);
-
-                ProcessDereferenceQueue();
-
-                texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
-
-                // If this happens, then the texture address is invalid, we can't add it to the cache.
-                if (texture == null)
-                {
-                    return null;
-                }
-
-                texture.IncrementReferenceCount(this, id);
-
-                Items[id] = texture;
-
-                DescriptorCache[id] = descriptor;
-            }
-            else
-            {
-                if (texture.ChangedSize)
-                {
-                    // Texture changed size at one point - it may be a different size than the sampler expects.
-                    // This can be triggered when the size is changed by a size hint on copy or draw, but the texture has been sampled before.
-
-                    TextureDescriptor descriptor = GetDescriptor(id);
-
-                    int baseLevel = descriptor.UnpackBaseLevel();
-                    int width = Math.Max(1, descriptor.UnpackWidth() >> baseLevel);
-                    int height = Math.Max(1, descriptor.UnpackHeight() >> baseLevel);
-
-                    if (texture.Info.Width != width || texture.Info.Height != height)
-                    {
-                        texture.ChangeSize(width, height, texture.Info.DepthOrLayers);
-                    }
-                }
-
-                // Memory is automatically synchronized on texture creation.
-                texture.SynchronizeMemory();
-            }
+            GetInternal(id, out Texture texture);
 
             return texture;
+        }
+
+        /// <summary>
+        /// Gets the texture descriptor and texture with the given ID.
+        /// </summary>
+        /// <remarks>
+        /// This method assumes that the pool has been manually synchronized before doing binding.
+        /// </remarks>
+        /// <param name="id">ID of the texture. This is effectively a zero-based index</param>
+        /// <param name="texture">The texture with the given ID</param>
+        /// <returns>The texture descriptor with the given ID</returns>
+        public ref readonly TextureDescriptor GetForBinding(int id, out Texture texture)
+        {
+            if ((uint)id >= Items.Length)
+            {
+                texture = null;
+                return ref _defaultDescriptor;
+            }
+
+            // When getting for binding, assume the pool has already been synchronized.
+
+            return ref GetInternal(id, out texture);
+        }
+
+        /// <summary>
+        /// Checks if the pool was modified, and returns the last sequence number where a modification was detected.
+        /// </summary>
+        /// <returns>A number that increments each time a modification is detected</returns>
+        public int CheckModified()
+        {
+            if (SequenceNumber != Context.SequenceNumber)
+            {
+                SequenceNumber = Context.SequenceNumber;
+
+                SynchronizeMemory();
+            }
+
+            return ModifiedSequenceNumber;
         }
 
         /// <summary>
@@ -175,7 +225,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="descriptor">The texture descriptor</param>
         /// <param name="layerSize">Layer size for textures using a sub-range of mipmap levels, otherwise 0</param>
         /// <returns>The texture information</returns>
-        private TextureInfo GetInfo(TextureDescriptor descriptor, out int layerSize)
+        private TextureInfo GetInfo(in TextureDescriptor descriptor, out int layerSize)
         {
             int depthOrLayers = descriptor.UnpackDepth();
             int levels        = descriptor.UnpackLevels();

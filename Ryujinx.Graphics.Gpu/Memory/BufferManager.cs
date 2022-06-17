@@ -379,6 +379,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Gets the bounds of the uniform buffer currently bound at the given index.
+        /// </summary>
+        /// <param name="isCompute">Indicates whenever the uniform is requested by the 3D or compute engine</param>
+        /// <param name="stage">Index of the shader stage, if the uniform is for the 3D engine</param>
+        /// <param name="index">Index of the uniform buffer binding</param>
+        /// <returns>The uniform buffer bounds, or an undefined value if the buffer is not currently bound</returns>
+        public ref BufferBounds GetUniformBufferBounds(bool isCompute, int stage, int index)
+        {
+            if (isCompute)
+            {
+                return ref _cpUniformBuffers.Buffers[index];
+            }
+            else
+            {
+                return ref _gpUniformBuffers[stage].Buffers[index];
+            }
+        }
+
+        /// <summary>
         /// Ensures that the compute engine bindings are visible to the host GPU.
         /// Note: this actually performs the binding using the host graphics API.
         /// </summary>

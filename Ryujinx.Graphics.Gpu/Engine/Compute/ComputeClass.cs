@@ -188,6 +188,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
             _channel.BufferManager.SetComputeStorageBufferBindings(info.SBuffers);
             _channel.BufferManager.SetComputeUniformBufferBindings(info.CBuffers);
 
+            int maxTextureBinding = -1;
+            int maxImageBinding = -1;
+
             TextureBindingInfo[] textureBindings = _channel.TextureManager.RentComputeTextureBindings(info.Textures.Count);
 
             for (int index = 0; index < info.Textures.Count; index++)
@@ -202,6 +205,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                     descriptor.CbufSlot,
                     descriptor.HandleIndex,
                     descriptor.Flags);
+
+                if (descriptor.Binding > maxTextureBinding)
+                {
+                    maxTextureBinding = descriptor.Binding;
+                }
             }
 
             TextureBindingInfo[] imageBindings = _channel.TextureManager.RentComputeImageBindings(info.Images.Count);
@@ -220,9 +228,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                     descriptor.CbufSlot,
                     descriptor.HandleIndex,
                     descriptor.Flags);
+
+                if (descriptor.Binding > maxImageBinding)
+                {
+                    maxImageBinding = descriptor.Binding;
+                }
             }
 
-            _channel.TextureManager.CommitComputeBindings();
+            _channel.TextureManager.SetComputeMaxBindings(maxTextureBinding, maxImageBinding);
+
+            // Should never return false for mismatching spec state, since the shader was fetched above.
+            _channel.TextureManager.CommitComputeBindings(cs.SpecializationState); 
+            
             _channel.BufferManager.CommitComputeBindings();
 
             _context.Renderer.Pipeline.DispatchCompute(qmd.CtaRasterWidth, qmd.CtaRasterHeight, qmd.CtaRasterDepth);

@@ -100,6 +100,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public bool AlwaysFlushOnOverlap { get; private set; }
 
+        /// <summary>
+        /// Increments when the host texture is swapped, or when the texture is removed from all pools.
+        /// </summary>
+        public int InvalidatedSequence { get; private set; }
+
         private int _depth;
         private int _layers;
         public int FirstLayer { get; private set; }
@@ -1407,6 +1412,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             DisposeTextures();
 
             HostTexture = hostTexture;
+            InvalidatedSequence++;
         }
 
         /// <summary>
@@ -1535,6 +1541,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 _poolOwners.Clear();
             }
+
+            InvalidatedSequence++;
         }
 
         /// <summary>

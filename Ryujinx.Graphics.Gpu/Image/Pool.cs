@@ -1,6 +1,7 @@
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -16,6 +17,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         protected GpuContext Context;
         protected PhysicalMemory PhysicalMemory;
         protected int SequenceNumber;
+        protected int ModifiedSequenceNumber;
 
         protected T1[] Items;
         protected T2[] DescriptorCache;
@@ -40,6 +42,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private readonly CpuMultiRegionHandle _memoryTracking;
         private readonly Action<ulong, ulong> _modifiedDelegate;
+
+        private int _modifiedSequenceOffset;
+        private bool _modified;
 
         /// <summary>
         /// Creates a new instance of the GPU resource pool.
@@ -80,6 +85,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets a reference to the descriptor for a given ID.
+        /// </summary>
+        /// <param name="id">ID of the descriptor. This is effectively a zero-based index</param>
+        /// <returns>A reference to the descriptor</returns>
+        public ref readonly T2 GetDescriptorRef(int id)
+        {
+            return ref MemoryMarshal.Cast<byte, T2>(PhysicalMemory.GetSpan(Address + (ulong)id * DescriptorSize, DescriptorSize))[0];
+        }
+
+        /// <summary>
         /// Gets the GPU resource with the given ID.
         /// </summary>
         /// <param name="id">ID of the resource. This is effectively a zero-based index</param>
@@ -93,7 +108,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SynchronizeMemory()
         {
+            _modified = false;
             _memoryTracking.QueryModified(_modifiedDelegate);
+
+            if (_modified)
+            {
+                UpdateModifiedSequence();
+            }
         }
 
         /// <summary>
@@ -103,6 +124,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="mSize">Size of the modified region</param>
         private void RegionModified(ulong mAddress, ulong mSize)
         {
+            _modified = true;
+
             if (mAddress < Address)
             {
                 mAddress = Address;
@@ -119,6 +142,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Updates the modified sequence number using the current sequence number and offset,
+        /// indicating that it has been modified.
+        /// </summary>
+        protected void UpdateModifiedSequence()
+        {
+            ModifiedSequenceNumber = SequenceNumber + _modifiedSequenceOffset;
+        }
+
+        /// <summary>
         /// An action to be performed when a precise memory access occurs to this resource.
         /// Makes sure that the dirty flags are checked.
         /// </summary>
@@ -129,6 +161,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             if (write && Context.SequenceNumber == SequenceNumber)
             {
+                if (ModifiedSequenceNumber == SequenceNumber + _modifiedSequenceOffset)
+                {
+                    // The modified sequence number is offset when PreciseActions occur so that
+                    // users checking it will see an increment and know the pool has changed since
+                    // their last look, even though the main SequenceNumber has not been changed.
+
+                    _modifiedSequenceOffset++;
+                }
+
+                // Force the pool to be checked again the next time it is used.
                 SequenceNumber--;
             }
 

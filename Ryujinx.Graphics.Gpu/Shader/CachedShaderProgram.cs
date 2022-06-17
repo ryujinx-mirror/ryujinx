@@ -35,6 +35,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             HostProgram = hostProgram;
             SpecializationState = specializationState;
             Shaders = shaders;
+
+            SpecializationState.Prepare(shaders);
         }
 
         /// <summary>

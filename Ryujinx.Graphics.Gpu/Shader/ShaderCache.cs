@@ -418,7 +418,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             if (IsShaderEqual(channel.MemoryManager, cpShader.Shaders[0], gpuVa))
             {
-                return cpShader.SpecializationState.MatchesCompute(channel, poolState);
+                return cpShader.SpecializationState.MatchesCompute(channel, poolState, true);
             }
 
             return false;
@@ -454,7 +454,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState, graphicsState);
+            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, true);
         }
 
         /// <summary>

@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             foreach (var entry in _entries)
             {
-                if (entry.SpecializationState.MatchesGraphics(channel, poolState, graphicsState))
+                if (entry.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, true))
                 {
                     program = entry;
                     return true;
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             foreach (var entry in _entries)
             {
-                if (entry.SpecializationState.MatchesCompute(channel, poolState))
+                if (entry.SpecializationState.MatchesCompute(channel, poolState, true))
                 {
                     program = entry;
                     return true;

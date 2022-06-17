@@ -1,9 +1,14 @@
 using Ryujinx.Common.Memory;
+using Ryujinx.Graphics.Gpu.Image;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader.DiskCache;
 using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -158,6 +163,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         private readonly Dictionary<TextureKey, Box<TextureSpecializationState>> _textureSpecialization;
+        private KeyValuePair<TextureKey, Box<TextureSpecializationState>>[] _allTextures;
+        private Box<TextureSpecializationState>[][] _textureByBinding;
+        private Box<TextureSpecializationState>[][] _imageByBinding;
 
         /// <summary>
         /// Creates a new instance of the shader specialization state.
@@ -191,6 +199,48 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 TransformFeedbackDescriptors = descriptors;
                 _queriedState |= QueriedStateFlags.TransformFeedback;
+            }
+        }
+
+        /// <summary>
+        /// Prepare the shader specialization state for quick binding lookups.
+        /// </summary>
+        /// <param name="stages">The shader stages</param>
+        public void Prepare(CachedShaderStage[] stages)
+        {
+            _allTextures = _textureSpecialization.ToArray();
+
+            _textureByBinding = new Box<TextureSpecializationState>[stages.Length][];
+            _imageByBinding = new Box<TextureSpecializationState>[stages.Length][];
+
+            for (int i = 0; i < stages.Length; i++)
+            {
+                CachedShaderStage stage = stages[i];
+                if (stage?.Info != null)
+                {
+                    var textures = stage.Info.Textures;
+                    var images = stage.Info.Images;
+
+                    var texBindings = new Box<TextureSpecializationState>[textures.Count];
+                    var imageBindings = new Box<TextureSpecializationState>[images.Count];
+
+                    int stageIndex = Math.Max(i - 1, 0); // Don't count VertexA for looking up spec state. No-Op for compute.
+
+                    for (int j = 0; j < textures.Count; j++)
+                    {
+                        var texture = textures[j];
+                        texBindings[j] = GetTextureSpecState(stageIndex, texture.HandleIndex, texture.CbufSlot);
+                    }
+
+                    for (int j = 0; j < images.Count; j++)
+                    {
+                        var image = images[j];
+                        imageBindings[j] = GetTextureSpecState(stageIndex, image.HandleIndex, image.CbufSlot);
+                    }
+
+                    _textureByBinding[i] = texBindings;
+                    _imageByBinding[i] = imageBindings;
+                }
             }
         }
 
@@ -396,15 +446,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
         /// <param name="graphicsState">Graphics state</param>
+        /// <param name="checkTextures">Indicates whether texture descriptors should be checked</param>
         /// <returns>True if the state matches, false otherwise</returns>
-        public bool MatchesGraphics(GpuChannel channel, GpuChannelPoolState poolState, GpuChannelGraphicsState graphicsState)
+        public bool MatchesGraphics(GpuChannel channel, GpuChannelPoolState poolState, GpuChannelGraphicsState graphicsState, bool checkTextures)
         {
             if (graphicsState.ViewportTransformDisable != GraphicsState.ViewportTransformDisable)
             {
                 return false;
             }
 
-            return Matches(channel, poolState, isCompute: false);
+            return Matches(channel, poolState, checkTextures, isCompute: false);
         }
 
         /// <summary>
@@ -412,10 +463,64 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="checkTextures">Indicates whether texture descriptors should be checked</param>
         /// <returns>True if the state matches, false otherwise</returns>
-        public bool MatchesCompute(GpuChannel channel, GpuChannelPoolState poolState)
+        public bool MatchesCompute(GpuChannel channel, GpuChannelPoolState poolState, bool checkTextures)
         {
-            return Matches(channel, poolState, isCompute: true);
+            return Matches(channel, poolState, checkTextures, isCompute: true);
+        }
+
+        /// <summary>
+        /// Fetch the constant buffers used for a texture to cache.
+        /// </summary>
+        /// <param name="channel">GPU channel</param>
+        /// <param name="isCompute">Indicates whenever the check is requested by the 3D or compute engine</param>
+        /// <param name="cachedTextureBufferIndex">The currently cached texture buffer index</param>
+        /// <param name="cachedSamplerBufferIndex">The currently cached sampler buffer index</param>
+        /// <param name="cachedTextureBuffer">The currently cached texture buffer data</param>
+        /// <param name="cachedSamplerBuffer">The currently cached sampler buffer data</param>
+        /// <param name="cachedStageIndex">The currently cached stage</param>
+        /// <param name="textureBufferIndex">The new texture buffer index</param>
+        /// <param name="samplerBufferIndex">The new sampler buffer index</param>
+        /// <param name="stageIndex">Stage index of the constant buffer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void UpdateCachedBuffer(
+            GpuChannel channel,
+            bool isCompute,
+            ref int cachedTextureBufferIndex,
+            ref int cachedSamplerBufferIndex,
+            ref ReadOnlySpan<int> cachedTextureBuffer,
+            ref ReadOnlySpan<int> cachedSamplerBuffer,
+            ref int cachedStageIndex,
+            int textureBufferIndex,
+            int samplerBufferIndex,
+            int stageIndex)
+        {
+            bool stageChange = stageIndex != cachedStageIndex;
+
+            if (stageChange || textureBufferIndex != cachedTextureBufferIndex)
+            {
+                ref BufferBounds bounds = ref channel.BufferManager.GetUniformBufferBounds(isCompute, stageIndex, textureBufferIndex);
+
+                cachedTextureBuffer = MemoryMarshal.Cast<byte, int>(channel.MemoryManager.Physical.GetSpan(bounds.Address, (int)bounds.Size));
+                cachedTextureBufferIndex = textureBufferIndex;
+
+                if (samplerBufferIndex == textureBufferIndex)
+                {
+                    cachedSamplerBuffer = cachedTextureBuffer;
+                    cachedSamplerBufferIndex = samplerBufferIndex;
+                }
+            }
+
+            if (stageChange || samplerBufferIndex != cachedSamplerBufferIndex)
+            {
+                ref BufferBounds bounds = ref channel.BufferManager.GetUniformBufferBounds(isCompute, stageIndex, samplerBufferIndex);
+
+                cachedSamplerBuffer = MemoryMarshal.Cast<byte, int>(channel.MemoryManager.Physical.GetSpan(bounds.Address, (int)bounds.Size));
+                cachedSamplerBufferIndex = samplerBufferIndex;
+            }
+
+            cachedStageIndex = stageIndex;
         }
 
         /// <summary>
@@ -423,9 +528,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="checkTextures">Indicates whether texture descriptors should be checked</param>
         /// <param name="isCompute">Indicates whenever the check is requested by the 3D or compute engine</param>
         /// <returns>True if the state matches, false otherwise</returns>
-        private bool Matches(GpuChannel channel, GpuChannelPoolState poolState, bool isCompute)
+        private bool Matches(GpuChannel channel, GpuChannelPoolState poolState, bool checkTextures, bool isCompute)
         {
             int constantBufferUsePerStageMask = _constantBufferUsePerStage;
 
@@ -445,55 +551,60 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 constantBufferUsePerStageMask &= ~(1 << index);
             }
 
-            foreach (var kv in _textureSpecialization)
+            if (checkTextures)
             {
-                TextureKey textureKey = kv.Key;
+                TexturePool pool = channel.TextureManager.GetTexturePool(poolState.TexturePoolGpuVa, poolState.TexturePoolMaximumId);
 
-                (int textureBufferIndex, int samplerBufferIndex) = TextureHandle.UnpackSlots(textureKey.CbufSlot, poolState.TextureBufferIndex);
+                int cachedTextureBufferIndex = -1;
+                int cachedSamplerBufferIndex = -1;
+                int cachedStageIndex = -1;
+                ReadOnlySpan<int> cachedTextureBuffer = Span<int>.Empty;
+                ReadOnlySpan<int> cachedSamplerBuffer = Span<int>.Empty;
 
-                ulong textureCbAddress;
-                ulong samplerCbAddress;
-
-                if (isCompute)
+                foreach (var kv in _allTextures)
                 {
-                    textureCbAddress = channel.BufferManager.GetComputeUniformBufferAddress(textureBufferIndex);
-                    samplerCbAddress = channel.BufferManager.GetComputeUniformBufferAddress(samplerBufferIndex);
-                }
-                else
-                {
-                    textureCbAddress = channel.BufferManager.GetGraphicsUniformBufferAddress(textureKey.StageIndex, textureBufferIndex);
-                    samplerCbAddress = channel.BufferManager.GetGraphicsUniformBufferAddress(textureKey.StageIndex, samplerBufferIndex);
-                }
+                    TextureKey textureKey = kv.Key;
 
-                if (!channel.MemoryManager.Physical.IsMapped(textureCbAddress) || !channel.MemoryManager.Physical.IsMapped(samplerCbAddress))
-                {
-                    continue;
+                    (int textureBufferIndex, int samplerBufferIndex) = TextureHandle.UnpackSlots(textureKey.CbufSlot, poolState.TextureBufferIndex);
+
+                    UpdateCachedBuffer(channel,
+                        isCompute,
+                        ref cachedTextureBufferIndex,
+                        ref cachedSamplerBufferIndex,
+                        ref cachedTextureBuffer,
+                        ref cachedSamplerBuffer,
+                        ref cachedStageIndex,
+                        textureBufferIndex,
+                        samplerBufferIndex,
+                        textureKey.StageIndex);
+
+                    int packedId = TextureHandle.ReadPackedId(textureKey.Handle, cachedTextureBuffer, cachedSamplerBuffer);
+
+                    int textureId = TextureHandle.UnpackTextureId(packedId);
+
+                    ref readonly Image.TextureDescriptor descriptor = ref pool.GetDescriptorRef(textureId);
+
+                    if (!MatchesTexture(kv.Value, descriptor))
+                    {
+                        return false;
+                    }
                 }
+            }
 
-                Image.TextureDescriptor descriptor;
+            return true;
+        }
 
-                if (isCompute)
-                {
-                    descriptor = channel.TextureManager.GetComputeTextureDescriptor(
-                        poolState.TexturePoolGpuVa,
-                        poolState.TextureBufferIndex,
-                        poolState.TexturePoolMaximumId,
-                        textureKey.Handle,
-                        textureKey.CbufSlot);
-                }
-                else
-                {
-                    descriptor = channel.TextureManager.GetGraphicsTextureDescriptor(
-                        poolState.TexturePoolGpuVa,
-                        poolState.TextureBufferIndex,
-                        poolState.TexturePoolMaximumId,
-                        textureKey.StageIndex,
-                        textureKey.Handle,
-                        textureKey.CbufSlot);
-                }
-
-                Box<TextureSpecializationState> specializationState = kv.Value;
-
+        /// <summary>
+        /// Checks if the recorded texture state matches the given texture descriptor.
+        /// </summary>
+        /// <param name="specializationState">Texture specialization state</param>
+        /// <param name="descriptor">Texture descriptor</param>
+        /// <returns>True if the state matches, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool MatchesTexture(Box<TextureSpecializationState> specializationState, in Image.TextureDescriptor descriptor)
+        {
+            if (specializationState != null)
+            {
                 if (specializationState.Value.QueriedFlags.HasFlag(QueriedTextureStateFlags.CoordNormalized) &&
                     specializationState.Value.CoordNormalized != descriptor.UnpackTextureCoordNormalized())
                 {
@@ -502,6 +613,34 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks if the recorded texture state for a given texture binding matches a texture descriptor.
+        /// </summary>
+        /// <param name="stage">The shader stage</param>
+        /// <param name="index">The texture index</param>
+        /// <param name="descriptor">Texture descriptor</param>
+        /// <returns>True if the state matches, false otherwise</returns>
+        public bool MatchesTexture(ShaderStage stage, int index, in Image.TextureDescriptor descriptor)
+        {
+            Box<TextureSpecializationState> specializationState = _textureByBinding[(int)stage][index];
+
+            return MatchesTexture(specializationState, descriptor);
+        }
+
+        /// <summary>
+        /// Checks if the recorded texture state for a given image binding matches a texture descriptor.
+        /// </summary>
+        /// <param name="stage">The shader stage</param>
+        /// <param name="index">The texture index</param>
+        /// <param name="descriptor">Texture descriptor</param>
+        /// <returns>True if the state matches, false otherwise</returns>
+        public bool MatchesImage(ShaderStage stage, int index, in Image.TextureDescriptor descriptor)
+        {
+            Box<TextureSpecializationState> specializationState = _imageByBinding[(int)stage][index];
+
+            return MatchesTexture(specializationState, descriptor);
         }
 
         /// <summary>
