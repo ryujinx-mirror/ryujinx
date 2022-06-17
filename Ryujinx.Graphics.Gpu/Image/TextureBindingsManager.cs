@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private readonly TextureBindingInfo[][] _textureBindings;
         private readonly TextureBindingInfo[][] _imageBindings;
 
-        private struct TextureStatePerStage
+        private struct TextureState
         {
             public ITexture Texture;
             public ISampler Sampler;
@@ -45,10 +45,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             public int InvalidatedSequence;
             public Texture CachedTexture;
             public Sampler CachedSampler;
+            public int ScaleIndex;
+            public TextureUsageFlags UsageFlags;
         }
 
-        private TextureStatePerStage[] _textureState;
-        private TextureStatePerStage[] _imageState;
+        private TextureState[] _textureState;
+        private TextureState[] _imageState;
 
         private int[] _textureBindingsCount;
         private int[] _imageBindingsCount;
@@ -83,8 +85,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             _textureBindings = new TextureBindingInfo[stages][];
             _imageBindings   = new TextureBindingInfo[stages][];
 
-            _textureState = new TextureStatePerStage[InitialTextureStateSize];
-            _imageState   = new TextureStatePerStage[InitialImageStateSize];
+            _textureState = new TextureState[InitialTextureStateSize];
+            _imageState   = new TextureState[InitialImageStateSize];
 
             _textureBindingsCount = new int[stages];
             _imageBindingsCount = new int[stages];
@@ -230,18 +232,18 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Updates the texture scale for a given texture or image.
         /// </summary>
         /// <param name="texture">Start GPU virtual address of the pool</param>
-        /// <param name="binding">The related texture binding</param>
+        /// <param name="usageFlags">The related texture usage flags</param>
         /// <param name="index">The texture/image binding index</param>
         /// <param name="stage">The active shader stage</param>
         /// <returns>True if the given texture has become blacklisted, indicating that its host texture may have changed.</returns>
-        private bool UpdateScale(Texture texture, TextureBindingInfo binding, int index, ShaderStage stage)
+        private bool UpdateScale(Texture texture, TextureUsageFlags usageFlags, int index, ShaderStage stage)
         {
             float result = 1f;
             bool changed = false;
 
-            if ((binding.Flags & TextureUsageFlags.NeedsScaleValue) != 0 && texture != null)
+            if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 && texture != null)
             {
-                if ((binding.Flags & TextureUsageFlags.ResScaleUnsupported) != 0)
+                if ((usageFlags & TextureUsageFlags.ResScaleUnsupported) != 0)
                 {
                     changed = texture.ScaleMode != TextureScaleMode.Blacklisted;
                     texture.BlacklistScale();
@@ -469,6 +471,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             for (int index = 0; index < textureCount; index++)
             {
                 TextureBindingInfo bindingInfo = _textureBindings[stageIndex][index];
+                TextureUsageFlags usageFlags = bindingInfo.Flags;
 
                 (int textureBufferIndex, int samplerBufferIndex) = TextureHandle.UnpackSlots(bindingInfo.CbufSlot, _textureBufferIndex);
 
@@ -487,7 +490,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     samplerId = TextureHandle.UnpackSamplerId(packedId);
                 }
 
-                ref TextureStatePerStage state = ref _textureState[bindingInfo.Binding];
+                ref TextureState state = ref _textureState[bindingInfo.Binding];
 
                 if (!poolModified &&
                     state.TextureHandle == textureId &&
@@ -498,6 +501,18 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     // The texture is already bound.
                     state.CachedTexture.SynchronizeMemory();
+
+                    if ((state.ScaleIndex != index || state.UsageFlags != usageFlags) &&
+                        UpdateScale(state.CachedTexture, usageFlags, index, stage))
+                    {
+                        ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
+
+                        state.Texture = hostTextureRebind;
+                        state.ScaleIndex = index;
+                        state.UsageFlags = usageFlags;
+
+                        _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTextureRebind);
+                    }
 
                     continue;
                 }
@@ -522,12 +537,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     if (state.Texture != hostTexture)
                     {
-                        if (UpdateScale(texture, bindingInfo, index, stage))
+                        if (UpdateScale(texture, usageFlags, index, stage))
                         {
                             hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                         }
 
                         state.Texture = hostTexture;
+                        state.ScaleIndex = index;
+                        state.UsageFlags = usageFlags;
 
                         _context.Renderer.Pipeline.SetTexture(bindingInfo.Binding, hostTexture);
                     }
@@ -589,6 +606,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             for (int index = 0; index < imageCount; index++)
             {
                 TextureBindingInfo bindingInfo = _imageBindings[stageIndex][index];
+                TextureUsageFlags usageFlags = bindingInfo.Flags;
+                int scaleIndex = baseScaleIndex + index;
 
                 (int textureBufferIndex, int samplerBufferIndex) = TextureHandle.UnpackSlots(bindingInfo.CbufSlot, _textureBufferIndex);
 
@@ -597,7 +616,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 int packedId = TextureHandle.ReadPackedId(bindingInfo.Handle, cachedTextureBuffer, cachedSamplerBuffer);
                 int textureId = TextureHandle.UnpackTextureId(packedId);
 
-                ref TextureStatePerStage state = ref _imageState[bindingInfo.Binding];
+                ref TextureState state = ref _imageState[bindingInfo.Binding];
 
                 bool isStore = bindingInfo.Flags.HasFlag(TextureUsageFlags.ImageStore);
 
@@ -606,12 +625,28 @@ namespace Ryujinx.Graphics.Gpu.Image
                     state.CachedTexture != null &&
                     state.CachedTexture.InvalidatedSequence == state.InvalidatedSequence)
                 {
+                    Texture cachedTexture = state.CachedTexture;
+
                     // The texture is already bound.
-                    state.CachedTexture.SynchronizeMemory();
+                    cachedTexture.SynchronizeMemory();
 
                     if (isStore)
                     {
-                        state.CachedTexture?.SignalModified();
+                        cachedTexture?.SignalModified();
+                    }
+
+                    if ((state.ScaleIndex != index || state.UsageFlags != usageFlags) &&
+                        UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage))
+                    {
+                        ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
+
+                        Format format = bindingInfo.Format == 0 ? cachedTexture.Format : bindingInfo.Format;
+
+                        state.Texture = hostTextureRebind;
+                        state.ScaleIndex = scaleIndex;
+                        state.UsageFlags = usageFlags;
+
+                        _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTextureRebind, format);
                     }
 
                     continue;
@@ -649,12 +684,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     if (state.Texture != hostTexture)
                     {
-                        if (UpdateScale(texture, bindingInfo, baseScaleIndex + index, stage))
+                        if (UpdateScale(texture, usageFlags, scaleIndex, stage))
                         {
                             hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                         }
 
                         state.Texture = hostTexture;
+                        state.ScaleIndex = scaleIndex;
+                        state.UsageFlags = usageFlags;
 
                         Format format = bindingInfo.Format;
 
