@@ -22,7 +22,17 @@ namespace Ryujinx.Common
 
         public static long AlignUp(long value, int size)
         {
-            return (value + (size - 1)) & -(long)size;
+            return AlignUp(value, (long)size);
+        }
+
+        public static ulong AlignUp(ulong value, ulong size)
+        {
+            return (ulong)AlignUp((long)value, (long)size);
+        }
+
+        public static long AlignUp(long value, long size)
+        {
+            return (value + (size - 1)) & -size;
         }
 
         public static uint AlignDown(uint value, int size)
@@ -42,7 +52,17 @@ namespace Ryujinx.Common
 
         public static long AlignDown(long value, int size)
         {
-            return value & -(long)size;
+            return AlignDown(value, (long)size);
+        }
+
+        public static ulong AlignDown(ulong value, ulong size)
+        {
+            return (ulong)AlignDown((long)value, (long)size);
+        }
+
+        public static long AlignDown(long value, long size)
+        {
+            return value & -size;
         }
 
         public static int DivRoundUp(int value, int dividend)

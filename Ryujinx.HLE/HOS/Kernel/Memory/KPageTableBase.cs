@@ -555,7 +555,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             KMemoryRegionManager region = GetMemoryRegionManager();
 
-            KernelResult result = region.AllocatePages(pagesCount, _aslrDisabled, out KPageList pageList);
+            KernelResult result = region.AllocatePages(out KPageList pageList, pagesCount);
 
             if (result != KernelResult.Success)
             {
@@ -712,7 +712,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     KMemoryRegionManager region = GetMemoryRegionManager();
 
-                    KernelResult result = region.AllocatePages(pagesCount, _aslrDisabled, out KPageList pageList);
+                    KernelResult result = region.AllocatePages(out KPageList pageList, pagesCount);
 
                     using var _ = new OnScopeExit(() => pageList.DecrementPagesReferenceCount(Context.MemoryManager));
 
@@ -1276,7 +1276,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 KMemoryRegionManager region = GetMemoryRegionManager();
 
-                KernelResult result = region.AllocatePages(remainingPages, _aslrDisabled, out KPageList pageList);
+                KernelResult result = region.AllocatePages(out KPageList pageList, remainingPages);
 
                 using var _ = new OnScopeExit(() => pageList.DecrementPagesReferenceCount(Context.MemoryManager));
 

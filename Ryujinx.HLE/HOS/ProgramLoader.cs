@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS
 
             KMemoryRegionManager region = context.MemoryManager.MemoryRegions[(int)memoryRegion];
 
-            KernelResult result = region.AllocatePages((ulong)codePagesCount, false, out KPageList pageList);
+            KernelResult result = region.AllocatePages(out KPageList pageList, (ulong)codePagesCount);
 
             if (result != KernelResult.Success)
             {
