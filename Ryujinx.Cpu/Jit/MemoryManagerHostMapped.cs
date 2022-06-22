@@ -42,7 +42,7 @@ namespace Ryujinx.Cpu.Jit
         private readonly ulong _addressSpaceSize;
 
         private readonly MemoryBlock _backingMemory;
-        private readonly PageTable<ulong> _pageTable;
+        private readonly MappingTree _mappingTree;
 
         private readonly MemoryEhMeilleure _memoryEh;
 
@@ -68,7 +68,6 @@ namespace Ryujinx.Cpu.Jit
         public MemoryManagerHostMapped(MemoryBlock backingMemory, ulong addressSpaceSize, bool unsafeMode, InvalidAccessHandler invalidAccessHandler = null)
         {
             _backingMemory = backingMemory;
-            _pageTable = new PageTable<ulong>();
             _invalidAccessHandler = invalidAccessHandler;
             _unsafeMode = unsafeMode;
             _addressSpaceSize = addressSpaceSize;
@@ -83,6 +82,8 @@ namespace Ryujinx.Cpu.Jit
             }
 
             AddressSpaceBits = asBits;
+
+            _mappingTree = new MappingTree(asSize);
 
             _pageBitmap = new ulong[1 << (AddressSpaceBits - (PageBits + PageToPteShift))];
 
@@ -150,9 +151,8 @@ namespace Ryujinx.Cpu.Jit
             AssertValidAddressAndSize(va, size);
 
             _addressSpace.MapView(_backingMemory, pa, va, size);
-            _addressSpaceMirror.MapView(_backingMemory, pa, va, size);
             AddMapping(va, size);
-            PtMap(va, pa, size);
+            _mappingTree.Map(va, pa, size);
 
             Tracking.Map(va, size);
         }
@@ -166,32 +166,9 @@ namespace Ryujinx.Cpu.Jit
             Tracking.Unmap(va, size);
 
             RemoveMapping(va, size);
-            PtUnmap(va, size);
+            _mappingTree.Unmap(va, size);
             _addressSpace.UnmapView(_backingMemory, va, size);
             _addressSpaceMirror.UnmapView(_backingMemory, va, size);
-        }
-
-        private void PtMap(ulong va, ulong pa, ulong size)
-        {
-            while (size != 0)
-            {
-                _pageTable.Map(va, pa);
-
-                va += PageSize;
-                pa += PageSize;
-                size -= PageSize;
-            }
-        }
-
-        private void PtUnmap(ulong va, ulong size)
-        {
-            while (size != 0)
-            {
-                _pageTable.Unmap(va);
-
-                va += PageSize;
-                size -= PageSize;
-            }
         }
 
         /// <inheritdoc/>
@@ -201,7 +178,8 @@ namespace Ryujinx.Cpu.Jit
             {
                 AssertMapped(va, (ulong)Unsafe.SizeOf<T>());
 
-                return _addressSpaceMirror.Read<T>(va);
+                (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)Unsafe.SizeOf<T>());
+                return block.Read<T>(offset);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -241,7 +219,8 @@ namespace Ryujinx.Cpu.Jit
             {
                 AssertMapped(va, (ulong)data.Length);
 
-                _addressSpaceMirror.Read(va, data);
+                (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)data.Length);
+                block.Read(offset, data);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -260,7 +239,8 @@ namespace Ryujinx.Cpu.Jit
             {
                 SignalMemoryTracking(va, (ulong)Unsafe.SizeOf<T>(), write: true);
 
-                _addressSpaceMirror.Write(va, value);
+                (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)Unsafe.SizeOf<T>());
+                block.Write(offset, value);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -274,10 +254,12 @@ namespace Ryujinx.Cpu.Jit
         /// <inheritdoc/>
         public void Write(ulong va, ReadOnlySpan<byte> data)
         {
-            try {
+            try
+            {
                 SignalMemoryTracking(va, (ulong)data.Length, write: true);
 
-                _addressSpaceMirror.Write(va, data);
+                (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)data.Length);
+                block.Write(offset, data);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -295,7 +277,8 @@ namespace Ryujinx.Cpu.Jit
             {
                 AssertMapped(va, (ulong)data.Length);
 
-                _addressSpaceMirror.Write(va, data);
+                (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)data.Length);
+                block.Write(offset, data);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -318,7 +301,8 @@ namespace Ryujinx.Cpu.Jit
                 AssertMapped(va, (ulong)size);
             }
 
-            return _addressSpaceMirror.GetSpan(va, size);
+            (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)size);
+            return block.GetSpan(offset, size);
         }
 
         /// <inheritdoc/>
@@ -333,7 +317,8 @@ namespace Ryujinx.Cpu.Jit
                 AssertMapped(va, (ulong)size);
             }
 
-            return _addressSpaceMirror.GetWritableRegion(va, size);
+            (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)size);
+            return block.GetWritableRegion(offset, size);
         }
 
         /// <inheritdoc/>
@@ -341,7 +326,8 @@ namespace Ryujinx.Cpu.Jit
         {
             SignalMemoryTracking(va, (ulong)Unsafe.SizeOf<T>(), true);
 
-            return ref _addressSpaceMirror.GetRef<T>(va);
+            (MemoryBlock block, ulong offset) = GetContiguousBlock(va, (ulong)Unsafe.SizeOf<T>());
+            return ref block.GetRef<T>(offset);
         }
 
         /// <inheritdoc/>
@@ -428,51 +414,7 @@ namespace Ryujinx.Cpu.Jit
         /// <inheritdoc/>
         public IEnumerable<MemoryRange> GetPhysicalRegions(ulong va, ulong size)
         {
-            int pages = GetPagesCount(va, (uint)size, out va);
-
-            var regions = new List<MemoryRange>();
-
-            ulong regionStart = GetPhysicalAddressChecked(va);
-            ulong regionSize = PageSize;
-
-            for (int page = 0; page < pages - 1; page++)
-            {
-                if (!ValidateAddress(va + PageSize))
-                {
-                    return null;
-                }
-
-                ulong newPa = GetPhysicalAddressChecked(va + PageSize);
-
-                if (GetPhysicalAddressChecked(va) + PageSize != newPa)
-                {
-                    regions.Add(new MemoryRange(regionStart, regionSize));
-                    regionStart = newPa;
-                    regionSize = 0;
-                }
-
-                va += PageSize;
-                regionSize += PageSize;
-            }
-
-            regions.Add(new MemoryRange(regionStart, regionSize));
-
-            return regions;
-        }
-
-        private ulong GetPhysicalAddressChecked(ulong va)
-        {
-            if (!IsMapped(va))
-            {
-                ThrowInvalidMemoryRegionException($"Not mapped: va=0x{va:X16}");
-            }
-
-            return GetPhysicalAddressInternal(va);
-        }
-
-        private ulong GetPhysicalAddressInternal(ulong va)
-        {
-            return _pageTable.Read(va) + (va & PageMask);
+            return _mappingTree.GetPhysicalRegions(va, size);
         }
 
         /// <inheritdoc/>
@@ -682,6 +624,11 @@ namespace Ryujinx.Cpu.Jit
         public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity)
         {
             return new CpuSmartMultiRegionHandle(Tracking.BeginSmartGranularTracking(address, size, granularity));
+        }
+
+        private (MemoryBlock, ulong) GetContiguousBlock(ulong va, ulong size)
+        {
+            return _mappingTree.GetContiguousBlock(_backingMemory, _addressSpaceMirror, va, size);
         }
 
         /// <summary>
