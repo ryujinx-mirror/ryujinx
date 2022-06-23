@@ -114,15 +114,6 @@ namespace Ryujinx.Cpu.Jit
             return regions;
         }
 
-        public bool TryGetContiguousPa(ulong va, ulong size, out ulong pa)
-        {
-            _treeLock.AcquireReaderLock(Timeout.Infinite);
-            bool result = TryGetContiguousPaImpl(va, size, out pa);
-            _treeLock.ReleaseReaderLock();
-
-            return result;
-        }
-
         public (MemoryBlock, ulong) GetContiguousBlock(MemoryBlock backingMemory, MemoryBlock mirror, ulong va, ulong size)
         {
             _treeLock.AcquireReaderLock(Timeout.Infinite);
@@ -255,22 +246,6 @@ namespace Ryujinx.Cpu.Jit
             }
 
             return regions;
-        }
-
-        private bool TryGetContiguousPaImpl(ulong va, ulong size, out ulong pa)
-        {
-            Mapping map = _tree.GetNode(new Mapping(va, 1UL, 0UL, MappingState.Unmapped));
-
-            ulong endAddress = va + size;
-
-            if (map != null && map.Address <= va && map.EndAddress >= endAddress)
-            {
-                pa = map.BackingOffset + (va - map.Address);
-                return true;
-            }
-
-            pa = 0;
-            return false;
         }
 
         private (MemoryBlock, ulong) GetContiguousBlockImpl(MemoryBlock backingMemory, MemoryBlock mirror, ulong va, ulong size)
