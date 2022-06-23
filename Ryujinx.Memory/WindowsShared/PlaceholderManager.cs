@@ -69,6 +69,11 @@ namespace Ryujinx.Memory.WindowsShared
             {
                 _mappings.Add(new RangeNode<ulong>(address, address + size, ulong.MaxValue));
             }
+
+            lock (_protections)
+            {
+                _protections.Add(new RangeNode<MemoryPermission>(address, size, MemoryPermission.None));
+            }
         }
 
         /// <summary>
@@ -104,14 +109,6 @@ namespace Ryujinx.Memory.WindowsShared
                 }
             }
 
-            if (count > 1)
-            {
-                CheckFreeResult(WindowsApi.VirtualFree(
-                    (IntPtr)address,
-                    (IntPtr)size,
-                    AllocationType.Release | AllocationType.CoalescePlaceholders));
-            }
-
             RemoveProtection(address, size);
         }
 
@@ -130,7 +127,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             try
             {
-                UnmapViewInternal(sharedMemory, location, size, owner);
+                UnmapViewInternal(sharedMemory, location, size, owner, updateProtection: false);
                 MapViewInternal(sharedMemory, srcOffset, location, size);
             }
             finally
@@ -166,6 +163,8 @@ namespace Ryujinx.Memory.WindowsShared
             {
                 throw new WindowsApiException("MapViewOfFile3");
             }
+
+            UpdateProtection((ulong)location, (ulong)size, MemoryPermission.ReadAndWrite);
         }
 
         /// <summary>
@@ -189,7 +188,6 @@ namespace Ryujinx.Memory.WindowsShared
 
                 var overlap = overlaps[0];
 
-                // Tree operations might modify the node start/end values, so save a copy before we modify the tree.
                 ulong overlapStart = overlap.Start;
                 ulong overlapEnd = overlap.End;
                 ulong overlapValue = overlap.Value;
@@ -254,7 +252,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             try
             {
-                UnmapViewInternal(sharedMemory, location, size, owner);
+                UnmapViewInternal(sharedMemory, location, size, owner, updateProtection: true);
             }
             finally
             {
@@ -273,8 +271,9 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="location">Address to unmap</param>
         /// <param name="size">Size of the region to unmap in bytes</param>
         /// <param name="owner">Memory block that owns the mapping</param>
+        /// <param name="updateProtection">Indicates if the memory protections should be updated after the unmap</param>
         /// <exception cref="WindowsApiException">Thrown when the Windows API returns an error unmapping or remapping the memory</exception>
-        private void UnmapViewInternal(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
+        private void UnmapViewInternal(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner, bool updateProtection)
         {
             ulong startAddress = (ulong)location;
             ulong unmapSize = (ulong)size;
@@ -294,7 +293,6 @@ namespace Ryujinx.Memory.WindowsShared
 
                 if (IsMapped(overlap.Value))
                 {
-                    // Tree operations might modify the node start/end values, so save a copy before we modify the tree.
                     ulong overlapStart = overlap.Start;
                     ulong overlapEnd = overlap.End;
                     ulong overlapValue = overlap.Value;
@@ -360,7 +358,11 @@ namespace Ryujinx.Memory.WindowsShared
             }
 
             CoalesceForUnmap(startAddress, unmapSize, owner);
-            RemoveProtection(startAddress, unmapSize);
+
+            if (updateProtection)
+            {
+                UpdateProtection(startAddress, unmapSize, MemoryPermission.None);
+            }
         }
 
         /// <summary>
@@ -512,18 +514,9 @@ namespace Ryujinx.Memory.WindowsShared
 
                     success = false;
                 }
-
-                // We only keep track of "non-standard" protections,
-                // that is, everything that is not just RW (which is the default when views are mapped).
-                if (permission == MemoryPermission.ReadAndWrite)
-                {
-                    RemoveProtection(mappedAddress, mappedSize);
-                }
-                else
-                {
-                    AddProtection(mappedAddress, mappedSize, permission);
-                }
             }
+
+            UpdateProtection(reprotectAddress, reprotectSize, permission);
 
             return success;
         }
@@ -573,7 +566,7 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="address">Address of the protected region</param>
         /// <param name="size">Size of the protected region in bytes</param>
         /// <param name="permission">Memory permissions of the region</param>
-        private void AddProtection(ulong address, ulong size, MemoryPermission permission)
+        private void UpdateProtection(ulong address, ulong size, MemoryPermission permission)
         {
             ulong endAddress = address + size;
             var overlaps = new RangeNode<MemoryPermission>[InitialOverlapsSize];
@@ -692,6 +685,12 @@ namespace Ryujinx.Memory.WindowsShared
             for (int index = 0; index < count; index++)
             {
                 var protection = overlaps[index];
+
+                // If protection is R/W we don't need to reprotect as views are initially mapped as R/W.
+                if (protection.Value == MemoryPermission.ReadAndWrite)
+                {
+                    continue;
+                }
 
                 ulong protAddress = protection.Start;
                 ulong protEndAddress = protection.End;
