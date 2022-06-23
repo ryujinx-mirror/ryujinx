@@ -1,9 +1,9 @@
 <Application
     x:Class="Ryujinx.Ava.App"
     xmlns="https://github.com/avaloniaui"
-    xmlns:sty="using:FluentAvalonia.Styling"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sty="using:FluentAvalonia.Styling">
     <Application.Styles>
-        <sty:FluentAvaloniaTheme UseSystemThemeOnWindows="False"/>
+        <sty:FluentAvaloniaTheme UseSystemThemeOnWindows="False" />
     </Application.Styles>
 </Application>

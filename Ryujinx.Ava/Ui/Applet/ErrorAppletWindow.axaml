@@ -1,17 +1,21 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
-        mc:Ignorable="d"
-        x:Class="Ryujinx.Ava.Ui.Applet.ErrorAppletWindow"
-        xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
-        CanResize="False"
-        SizeToContent="Height"
-        Width="450"
-        Height="340"
-        Title="{locale:Locale ErrorWindowTitle}">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
+<Window
+    x:Class="Ryujinx.Ava.Ui.Applet.ErrorAppletWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
+    Title="{locale:Locale ErrorWindowTitle}"
+    Width="450"
+    Height="340"
+    CanResize="False"
+    SizeToContent="Height"
+    mc:Ignorable="d">
+    <Grid
+        Margin="20"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -21,11 +25,28 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Image Grid.Row="1" Grid.RowSpan="2" Margin="5, 10, 20 , 10" Grid.Column="0"
-               Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" Height="80" MinWidth="50" />
-        <TextBlock Grid.Row="1" Margin="10" Grid.Column="1" VerticalAlignment="Stretch" TextWrapping="Wrap"
-                   Text="{Binding Message}" />
-        <StackPanel Name="ButtonStack" Margin="10" Spacing="10" Grid.Row="2" Grid.Column="1"
-                    HorizontalAlignment="Right" Orientation="Horizontal" />
+        <Image
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Grid.Column="0"
+            Height="80"
+            MinWidth="50"
+            Margin="5,10,20,10"
+            Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="10"
+            VerticalAlignment="Stretch"
+            Text="{Binding Message}"
+            TextWrapping="Wrap" />
+        <StackPanel
+            Name="ButtonStack"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="10"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="10" />
     </Grid>
 </Window>

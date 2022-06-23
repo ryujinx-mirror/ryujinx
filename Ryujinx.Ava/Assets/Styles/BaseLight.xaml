@@ -1,9 +1,7 @@
-﻿<Styles
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StyleInclude Source="avares://Ryujinx.Ava/Assets/Styles/Styles.xaml" />
     <Design.PreviewWith>
-        <Border Padding="20" Height="2000">
+        <Border Height="2000" Padding="20">
             <StackPanel Spacing="5">
                 <TextBlock Text="Code Font Family" />
                 <Grid RowDefinitions="*,Auto">
@@ -27,8 +25,12 @@
                             Name="btnRem"
                             HorizontalAlignment="Right"
                             Content="Add" />
-                        <TextBox Width="100" VerticalAlignment="Center" Text="Rrrrr" Watermark="Hello"
-                                 UseFloatingWatermark="True" />
+                        <TextBox
+                            Width="100"
+                            VerticalAlignment="Center"
+                            Text="Rrrrr"
+                            UseFloatingWatermark="True"
+                            Watermark="Hello" />
                         <CheckBox>Test Check</CheckBox>
                     </StackPanel>
                 </Grid>

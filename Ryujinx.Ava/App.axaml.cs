@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
-using Avalonia.Threading;
 using FluentAvalonia.Styling;
 using Ryujinx.Ava.Ui.Windows;
 using Ryujinx.Common;
@@ -13,7 +12,7 @@ using System.IO;
 
 namespace Ryujinx.Ava
 {
-    public class App : Avalonia.Application
+    public class App : Application
     {
         public override void Initialize()
         {
@@ -46,7 +45,7 @@ namespace Ryujinx.Ava
 
         private void ShowRestartDialog()
         {
-            // TODO. Implement Restart Dialog when SettingsWindow is implemented.
+            // TODO: Implement Restart Dialog when SettingsWindow is implemented.
         }
 
         private void ThemeChanged_Event(object sender, ReactiveEventArgs<string> e)
