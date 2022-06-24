@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0x4000, CharSet = CharSet.Ansi)]
-    struct TimeZoneRule
+    public struct TimeZoneRule
     {
         public const int TzMaxTypes = 128;
         public const int TzMaxChars = 50;
@@ -25,20 +25,20 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         public bool GoAhead;
 
         [StructLayout(LayoutKind.Sequential, Size = sizeof(long) * TzMaxTimes)]
-        private struct AtsStorageStruct {}
+        private struct AtsStorageStruct { }
 
         private AtsStorageStruct _ats;
 
         public Span<long> Ats => SpanHelpers.AsSpan<AtsStorageStruct, long>(ref _ats);
 
         [StructLayout(LayoutKind.Sequential, Size = sizeof(byte) * TzMaxTimes)]
-        private struct TypesStorageStruct {}
+        private struct TypesStorageStruct { }
 
         private TypesStorageStruct _types;
 
-        public Span<byte> Types => SpanHelpers.AsByteSpan<TypesStorageStruct>(ref _types);
+        public Span<byte> Types => SpanHelpers.AsByteSpan(ref _types);
 
-        [StructLayout(LayoutKind.Sequential, Size = TimeTypeInfo.Size * TzMaxTimes)]
+        [StructLayout(LayoutKind.Sequential, Size = TimeTypeInfo.Size * TzMaxTypes)]
         private struct TimeTypeInfoStorageStruct { }
 
         private TimeTypeInfoStorageStruct _ttis;
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         public Span<TimeTypeInfo> Ttis => SpanHelpers.AsSpan<TimeTypeInfoStorageStruct, TimeTypeInfo>(ref _ttis);
 
         [StructLayout(LayoutKind.Sequential, Size = sizeof(byte) * TzCharsArraySize)]
-        private struct CharsStorageStruct {}
+        private struct CharsStorageStruct { }
 
         private CharsStorageStruct _chars;
         public Span<byte> Chars => SpanHelpers.AsByteSpan(ref _chars);

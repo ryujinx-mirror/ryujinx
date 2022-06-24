@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 4)]
-    struct TimeTypeInfo
+    public struct TimeTypeInfo
     {
         public const int Size = 0x10;
 
