@@ -579,14 +579,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
                         textureKey.StageIndex);
 
                     int packedId = TextureHandle.ReadPackedId(textureKey.Handle, cachedTextureBuffer, cachedSamplerBuffer);
-
                     int textureId = TextureHandle.UnpackTextureId(packedId);
 
-                    ref readonly Image.TextureDescriptor descriptor = ref pool.GetDescriptorRef(textureId);
-
-                    if (!MatchesTexture(kv.Value, descriptor))
+                    if (pool.IsValidId(textureId))
                     {
-                        return false;
+                        ref readonly Image.TextureDescriptor descriptor = ref pool.GetDescriptorRef(textureId);
+
+                        if (!MatchesTexture(kv.Value, descriptor))
+                        {
+                            return false;
+                        }
                     }
                 }
             }

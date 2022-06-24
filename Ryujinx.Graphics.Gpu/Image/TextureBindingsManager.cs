@@ -738,7 +738,22 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             TexturePool texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, maximumId);
 
-            return texturePool.GetDescriptor(textureId);
+            TextureDescriptor descriptor;
+
+            if (texturePool.IsValidId(textureId))
+            {
+                descriptor = texturePool.GetDescriptor(textureId);
+            }
+            else
+            {
+                // If the ID is not valid, we just return a default descriptor with the most common state.
+                // Since this is used for shader specialization, doing so might avoid the need for recompilations.
+                descriptor = new TextureDescriptor();
+                descriptor.Word4 |= (uint)TextureTarget.Texture2D << 23;
+                descriptor.Word5 |= 1u << 31; // Coords normalized.
+            }
+
+            return descriptor;
         }
 
         /// <summary>

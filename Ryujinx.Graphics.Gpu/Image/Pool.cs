@@ -102,6 +102,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         public abstract T1 Get(int id);
 
         /// <summary>
+        /// Checks if a given ID is valid and inside the range of the pool.
+        /// </summary>
+        /// <param name="id">ID of the descriptor. This is effectively a zero-based index</param>
+        /// <returns>True if the specified ID is valid, false otherwise</returns>
+        public bool IsValidId(int id)
+        {
+            return (uint)id <= MaximumId;
+        }
+
+        /// <summary>
         /// Synchronizes host memory with guest memory.
         /// This causes invalidation of pool entries,
         /// if a modification of entries by the CPU is detected.
