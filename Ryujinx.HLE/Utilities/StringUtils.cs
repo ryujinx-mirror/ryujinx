@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.Utilities
             }
         }
 
-        public static int CompareCStr(ReadOnlySpan<char> s1, ReadOnlySpan<char> s2)
+        public static int CompareCStr(ReadOnlySpan<byte> s1, ReadOnlySpan<byte> s2)
         {
             int s1Index = 0;
             int s2Index = 0;
@@ -142,11 +142,11 @@ namespace Ryujinx.HLE.Utilities
             return s2[s2Index] - s1[s1Index];
         }
 
-        public static int LengthCstr(ReadOnlySpan<char> s)
+        public static int LengthCstr(ReadOnlySpan<byte> s)
         {
             int i = 0;
 
-            while (s[i] != '\0')
+            while (s[i] != 0)
             {
                 i++;
             }

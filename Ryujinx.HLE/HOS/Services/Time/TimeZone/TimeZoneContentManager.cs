@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using static Ryujinx.HLE.HOS.Services.Time.TimeZone.TimeZoneRule;
+using TimeZoneRuleBox = Ryujinx.Common.Memory.Box<Ryujinx.HLE.HOS.Services.Time.TimeZone.TimeZoneRule>;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
@@ -149,7 +149,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                         continue;
                     }
 
-                    TimeZone.ParseTimeZoneBinary(out TimeZoneRule tzRule, tzif.Get.AsStream());
+                    TimeZoneRuleBox tzRuleBox = new TimeZoneRuleBox();
+                    ref TimeZoneRule tzRule = ref tzRuleBox.Data;
+
+                    TimeZone.ParseTimeZoneBinary(ref tzRule, tzif.Get.AsStream());
+
 
                     TimeTypeInfo ttInfo;
                     if (tzRule.TimeCount > 0) // Find the current transition period
@@ -174,10 +178,10 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                         continue;
                     }
 
-                    var abbrStart = tzRule.Chars.AsSpan(ttInfo.AbbreviationListIndex);
-                    int abbrEnd = abbrStart.IndexOf('\0');
+                    var abbrStart = tzRule.Chars[ttInfo.AbbreviationListIndex..];
+                    int abbrEnd = abbrStart.IndexOf((byte)0);
 
-                    outList.Add((ttInfo.GmtOffset, locName, abbrStart.Slice(0, abbrEnd).ToString()));
+                    outList.Add((ttInfo.GmtOffset, locName, abbrStart[..abbrEnd].ToString()));
                 }
             }
 
@@ -276,15 +280,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return (ResultCode)result.Value;
         }
 
-        internal ResultCode LoadTimeZoneRule(out TimeZoneRule outRules, string locationName)
+        internal ResultCode LoadTimeZoneRule(ref TimeZoneRule rules, string locationName)
         {
-            outRules = new TimeZoneRule
-            {
-                Ats   = new long[TzMaxTimes],
-                Types = new byte[TzMaxTimes],
-                Ttis  = new TimeTypeInfo[TzMaxTypes],
-                Chars = new char[TzCharsArraySize]
-            };
+            rules = default;
 
             if (!HasTimeZoneBinaryTitle())
             {
@@ -295,7 +293,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (result == ResultCode.Success)
             {
-                result = Manager.ParseTimeZoneRuleBinary(out outRules, timeZoneBinaryStream);
+                result = Manager.ParseTimeZoneRuleBinary(ref rules, timeZoneBinaryStream);
 
                 ncaFile.Dispose();
             }

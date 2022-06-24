@@ -1,17 +1,19 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
-    [StructLayout(LayoutKind.Sequential, Size = 0x10, Pack = 4)]
+    [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 4)]
     struct TimeTypeInfo
     {
+        public const int Size = 0x10;
+
         public int GmtOffset;
 
         [MarshalAs(UnmanagedType.I1)]
         public bool IsDaySavingTime;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-        public char[] Padding1;
+        public Array3<byte> Padding1;
 
         public int AbbreviationListIndex;
 
@@ -21,7 +23,6 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         [MarshalAs(UnmanagedType.I1)]
         public bool IsGMT;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-        public char[] Padding2;
+        public ushort Padding2;
     }
 }
