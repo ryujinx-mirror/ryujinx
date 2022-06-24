@@ -966,6 +966,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 SignalExitToDebugExited();
                 SignalExit();
             }
+
+            KernelStatic.GetCurrentThread().Exit();
         }
 
         private void UnpauseAndTerminateAllThreadsExcept(KThread currentThread)
@@ -981,7 +983,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 foreach (KThread thread in _threads)
                 {
-                    if ((thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
+                    if (thread != currentThread && (thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
                     {
                         thread.PrepareForTermination();
                     }

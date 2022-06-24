@@ -227,6 +227,8 @@ namespace Ryujinx.Memory.Tracking
             // Look up the virtual region using the region list.
             // Signal up the chain to relevant handles.
 
+            bool shouldThrow = false;
+
             lock (TrackingLock)
             {
                 ref var overlaps = ref ThreadStaticArray<VirtualRegion>.Get();
@@ -235,32 +237,41 @@ namespace Ryujinx.Memory.Tracking
 
                 if (count == 0 && !precise)
                 {
-                    if (!_memoryManager.IsMapped(address))
+                    if (_memoryManager.IsMapped(address))
                     {
-                        _invalidAccessHandler?.Invoke(address);
-
-                        // We can't continue - it's impossible to remove protection from the page.
-                        // Even if the access handler wants us to continue, we wouldn't be able to.
-                        throw new InvalidMemoryRegionException();
-                    }
-
-                    _memoryManager.TrackingReprotect(address & ~(ulong)(_pageSize - 1), (ulong)_pageSize, MemoryPermission.ReadAndWrite);
-                    return false; // We can't handle this - it's probably a real invalid access.
-                }
-
-                for (int i = 0; i < count; i++)
-                {
-                    VirtualRegion region = overlaps[i];
-
-                    if (precise)
-                    {
-                        region.SignalPrecise(address, size, write);
+                        _memoryManager.TrackingReprotect(address & ~(ulong)(_pageSize - 1), (ulong)_pageSize, MemoryPermission.ReadAndWrite);
+                        return false; // We can't handle this - it's probably a real invalid access.
                     }
                     else
                     {
-                        region.Signal(address, size, write);
+                        shouldThrow = true;
                     }
                 }
+                else
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        VirtualRegion region = overlaps[i];
+
+                        if (precise)
+                        {
+                            region.SignalPrecise(address, size, write);
+                        }
+                        else
+                        {
+                            region.Signal(address, size, write);
+                        }
+                    }
+                }
+            }
+
+            if (shouldThrow)
+            {
+                _invalidAccessHandler?.Invoke(address);
+
+                // We can't continue - it's impossible to remove protection from the page.
+                // Even if the access handler wants us to continue, we wouldn't be able to.
+                throw new InvalidMemoryRegionException();
             }
 
             return true;
