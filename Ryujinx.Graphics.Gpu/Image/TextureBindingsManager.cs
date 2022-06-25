@@ -32,6 +32,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private readonly GpuChannel _channel;
         private readonly TexturePoolCache _texturePoolCache;
 
+        private TexturePool _cachedTexturePool;
+        private SamplerPool _cachedSamplerPool;
+
         private readonly TextureBindingInfo[][] _textureBindings;
         private readonly TextureBindingInfo[][] _imageBindings;
 
@@ -343,9 +346,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 ? _texturePoolCache.FindOrCreate(_channel, texturePoolAddress, _texturePoolMaximumId)
                 : null;
 
+            SamplerPool samplerPool = _samplerPool;
+
             // Check if the texture pool has been modified since bindings were last committed.
             // If it wasn't, then it's possible to avoid looking up textures again when the handle remains the same.
-            bool poolModified = false;
+            bool poolModified = _cachedTexturePool != texturePool || _cachedSamplerPool != samplerPool;
+
+            _cachedTexturePool = texturePool;
+            _cachedSamplerPool = samplerPool;
 
             if (texturePool != null)
             {
@@ -358,9 +366,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if (_samplerPool != null)
+            if (samplerPool != null)
             {
-                int samplerPoolSequence = _samplerPool.CheckModified();
+                int samplerPoolSequence = samplerPool.CheckModified();
 
                 if (_samplerPoolSequence != samplerPoolSequence)
                 {
