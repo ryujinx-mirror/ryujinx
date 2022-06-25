@@ -123,6 +123,7 @@
     <None Remove="Assets\Locales\pt_BR.json" />
     <None Remove="Assets\Locales\ru_RU.json" />
     <None Remove="Assets\Locales\tr_TR.json" />
+    <None Remove="Assets\Locales\zh_CN.json" />
     <None Remove="Assets\Styles\Styles.xaml" />
     <None Remove="Assets\Styles\BaseDark.xaml" />
     <None Remove="Assets\Styles\BaseLight.xaml" />
@@ -139,6 +140,7 @@
     <EmbeddedResource Include="Assets\Locales\pt_BR.json" />
     <EmbeddedResource Include="Assets\Locales\ru_RU.json" />
     <EmbeddedResource Include="Assets\Locales\tr_TR.json" />
+    <EmbeddedResource Include="Assets\Locales\zh_CN.json" />
     <EmbeddedResource Include="Assets\Styles\Styles.xaml" />
   </ItemGroup>
 </Project>
