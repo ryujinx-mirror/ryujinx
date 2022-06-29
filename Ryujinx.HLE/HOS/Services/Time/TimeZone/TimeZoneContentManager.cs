@@ -15,7 +15,7 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Text;
 using TimeZoneRuleBox = Ryujinx.Common.Memory.Box<Ryujinx.HLE.HOS.Services.Time.TimeZone.TimeZoneRule>;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     var abbrStart = tzRule.Chars[ttInfo.AbbreviationListIndex..];
                     int abbrEnd = abbrStart.IndexOf((byte)0);
 
-                    outList.Add((ttInfo.GmtOffset, locName, abbrStart[..abbrEnd].ToString()));
+                    outList.Add((ttInfo.GmtOffset, locName, Encoding.UTF8.GetString(abbrStart[..abbrEnd])));
                 }
             }
 
