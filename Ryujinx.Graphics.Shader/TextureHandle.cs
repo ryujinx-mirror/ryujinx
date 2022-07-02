@@ -7,7 +7,8 @@ namespace Ryujinx.Graphics.Shader
     {
         CombinedSampler = 0, // Must be 0.
         SeparateSamplerHandle = 1,
-        SeparateSamplerId = 2
+        SeparateSamplerId = 2,
+        SeparateConstantSamplerHandle = 3
     }
 
     public static class TextureHandle
@@ -97,9 +98,19 @@ namespace Ryujinx.Graphics.Shader
             // turn that into a regular texture access and produce those special handles with values on the higher 16 bits.
             if (handleType != TextureHandleType.CombinedSampler)
             {
-                int samplerHandle = cachedSamplerBuffer[samplerWordOffset];
+                int samplerHandle;
 
-                if (handleType == TextureHandleType.SeparateSamplerId)
+                if (handleType != TextureHandleType.SeparateConstantSamplerHandle)
+                {
+                    samplerHandle = cachedSamplerBuffer[samplerWordOffset];
+                }
+                else
+                {
+                    samplerHandle = samplerWordOffset;
+                }
+
+                if (handleType == TextureHandleType.SeparateSamplerId ||
+                    handleType == TextureHandleType.SeparateConstantSamplerHandle)
                 {
                     samplerHandle <<= 20;
                 }

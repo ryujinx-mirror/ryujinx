@@ -237,7 +237,7 @@ namespace Ryujinx.Graphics.Shader
         /// <returns>True if the coordinates are normalized, false otherwise</returns>
         bool QueryTextureCoordNormalized(int handle, int cbufSlot = -1)
         {
-            return false;
+            return true;
         }
 
         /// <summary>

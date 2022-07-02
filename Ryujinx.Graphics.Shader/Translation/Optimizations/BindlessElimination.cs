@@ -51,16 +51,32 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     Operand src0 = Utils.FindLastOperation(handleCombineOp.GetSource(0), block);
                     Operand src1 = Utils.FindLastOperation(handleCombineOp.GetSource(1), block);
 
+                    // For cases where we have a constant, ensure that the constant is always
+                    // the second operand.
+                    // Since this is a commutative operation, both are fine,
+                    // and having a "canonical" representation simplifies some checks below.
+                    if (src0.Type == OperandType.Constant && src1.Type != OperandType.Constant)
+                    {
+                        Operand temp = src1;
+                        src1 = src0;
+                        src0 = temp;
+                    }
+
                     TextureHandleType handleType = TextureHandleType.SeparateSamplerHandle;
 
-                    // Try to match masked pattern:
-                    // - samplerHandle = samplerHandle & 0xFFF00000;
-                    // - textureHandle = textureHandle & 0xFFFFF;
-                    // - combinedHandle = samplerHandle | textureHandle;
-                    // where samplerHandle and textureHandle comes from a constant buffer, and shifted pattern:
-                    // - samplerHandle = samplerId << 20;
-                    // - combinedHandle = samplerHandle | textureHandle;
-                    // where samplerId and textureHandle comes from a constant buffer.
+                    // Try to match the following patterns:
+                    // Masked pattern:
+                    //  - samplerHandle = samplerHandle & 0xFFF00000;
+                    //  - textureHandle = textureHandle & 0xFFFFF;
+                    //  - combinedHandle = samplerHandle | textureHandle;
+                    //  Where samplerHandle and textureHandle comes from a constant buffer.
+                    // Shifted pattern:
+                    //  - samplerHandle = samplerId << 20;
+                    //  - combinedHandle = samplerHandle | textureHandle;
+                    //  Where samplerId and textureHandle comes from a constant buffer.
+                    // Constant pattern:
+                    //  - combinedHandle = samplerHandleConstant | textureHandle;
+                    //  Where samplerHandleConstant is a constant value, and textureHandle comes from a constant buffer.
                     if (src0.AsgOp is Operation src0AsgOp)
                     {
                         if (src1.AsgOp is Operation src1AsgOp &&
@@ -104,18 +120,34 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             handleType = TextureHandleType.SeparateSamplerId;
                         }
                     }
+                    else if (src1.Type == OperandType.Constant && (src1.Value & 0xfffff) == 0)
+                    {
+                        handleType = TextureHandleType.SeparateConstantSamplerHandle;
+                    }
 
-                    if (src0.Type != OperandType.ConstantBuffer || src1.Type != OperandType.ConstantBuffer)
+                    if (src0.Type != OperandType.ConstantBuffer)
                     {
                         continue;
                     }
 
-                    SetHandle(
-                        config,
-                        texOp,
-                        TextureHandle.PackOffsets(src0.GetCbufOffset(), src1.GetCbufOffset(), handleType),
-                        TextureHandle.PackSlots(src0.GetCbufSlot(), src1.GetCbufSlot()),
-                        rewriteSamplerType);
+                    if (handleType == TextureHandleType.SeparateConstantSamplerHandle)
+                    {
+                        SetHandle(
+                            config,
+                            texOp,
+                            TextureHandle.PackOffsets(src0.GetCbufOffset(), ((src1.Value >> 20) & 0xfff), handleType),
+                            TextureHandle.PackSlots(src0.GetCbufSlot(), 0),
+                            rewriteSamplerType);
+                    }
+                    else if (src1.Type == OperandType.ConstantBuffer)
+                    {
+                        SetHandle(
+                            config,
+                            texOp,
+                            TextureHandle.PackOffsets(src0.GetCbufOffset(), src1.GetCbufOffset(), handleType),
+                            TextureHandle.PackSlots(src0.GetCbufSlot(), src1.GetCbufSlot()),
+                            rewriteSamplerType);
+                    }
                 }
                 else if (texOp.Inst == Instruction.ImageLoad ||
                          texOp.Inst == Instruction.ImageStore ||
