@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Modules
 {
-    public static class Updater
+    internal static class Updater
     {
         private const string GitHubApiURL = "https://api.github.com";
         internal static bool Running;

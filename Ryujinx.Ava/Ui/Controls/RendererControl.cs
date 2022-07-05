@@ -18,7 +18,7 @@ using System;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public class RendererControl : Control
+    internal class RendererControl : Control
     {
         private int _image;
 

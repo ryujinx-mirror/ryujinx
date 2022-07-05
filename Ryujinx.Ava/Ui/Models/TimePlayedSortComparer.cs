@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Ryujinx.Ava.Ui.Models
 {
-    public class TimePlayedSortComparer : IComparer
+    internal class TimePlayedSortComparer : IComparer
     {
         public int Compare(object x, object y)
         {

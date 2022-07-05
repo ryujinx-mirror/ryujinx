@@ -11,6 +11,7 @@ using LibHac.FsSystem;
 using LibHac.Ncm;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.Input;
 using Ryujinx.Ava.Ui.Controls;
 using Ryujinx.Ava.Ui.Windows;
 using Ryujinx.Common;
@@ -35,7 +36,7 @@ using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 
 namespace Ryujinx.Ava.Ui.ViewModels
 {
-    public class MainWindowViewModel : BaseModel
+    internal class MainWindowViewModel : BaseModel
     {
         private readonly MainWindow _owner;
         private ObservableCollection<ApplicationData> _applications;
@@ -86,9 +87,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             if (Program.PreviewerDetached)
             {
-                ShowUiKey = KeyGesture.Parse(ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi.ToString());
-                ScreenshotKey = KeyGesture.Parse(ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot.ToString());
-                PauseKey = KeyGesture.Parse(ConfigurationState.Instance.Hid.Hotkeys.Value.Pause.ToString());
+                LoadConfigurableHotKeys();
 
                 Volume = ConfigurationState.Instance.System.AudioVolume;
             }
@@ -836,6 +835,22 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
+        public void LoadConfigurableHotKeys()
+        {
+            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi, out var showUiKey))
+            {
+                ShowUiKey = new KeyGesture(showUiKey, KeyModifiers.None);
+            }
+            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
+            {
+                ScreenshotKey = new KeyGesture(screenshotKey, KeyModifiers.None);
+            }
+            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
+            {
+                PauseKey = new KeyGesture(pauseKey, KeyModifiers.None);
+            }
+        }
+
         public void TakeScreenshot()
         {
             _owner.AppHost.ScreenshotRequested = true;
@@ -930,10 +945,12 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public void OpenSettings()
+        public async void OpenSettings()
         {
-            // TODO : Implement Settings window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            _owner.SettingsWindow = new(_owner.VirtualFileSystem, _owner.ContentManager);
+
+            await _owner.SettingsWindow.ShowDialog(_owner);
+            LoadConfigurableHotKeys();
         }
 
         public void ManageProfiles()
@@ -951,6 +968,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public void ChangeLanguage(object obj)
         {
+            LocaleManager.Instance.LoadDefaultLanguage();
             LocaleManager.Instance.LoadLanguage((string)obj);
         }
 
@@ -1350,7 +1368,13 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
                 dialogMessage += LocaleManager.Instance["DialogFirmwareInstallerFirmwareInstallConfirmMessage"];
 
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(_owner, dialogTitle, dialogMessage, LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], LocaleManager.Instance["RyujinxConfirm"]);
+                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
+                    _owner,
+                    dialogTitle,
+                    dialogMessage,
+                    LocaleManager.Instance["InputDialogYes"],
+                    LocaleManager.Instance["InputDialogNo"],
+                    LocaleManager.Instance["RyujinxConfirm"]);
 
                 UpdateWaitWindow waitingDialog = ContentDialogHelper.CreateWaitingDialog(dialogTitle, LocaleManager.Instance["DialogFirmwareInstallerFirmwareInstallWaitMessage"]);
 

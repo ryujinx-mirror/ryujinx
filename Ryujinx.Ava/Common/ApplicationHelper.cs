@@ -28,7 +28,7 @@ using Path = System.IO.Path;
 
 namespace Ryujinx.Ava.Common
 {
-    public static class ApplicationHelper
+    internal static class ApplicationHelper
     {
         private static HorizonClient _horizonClient;
         private static AccountManager _accountManager;

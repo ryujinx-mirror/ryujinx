@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public class SwkbdAppletDialog : UserControl
+    internal class SwkbdAppletDialog : UserControl
     {
         private Predicate<int> _checkLength;
         private int _inputMax;

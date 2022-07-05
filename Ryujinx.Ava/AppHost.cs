@@ -50,7 +50,7 @@ using WindowState = Avalonia.Controls.WindowState;
 
 namespace Ryujinx.Ava
 {
-    public class AppHost
+    internal class AppHost
     {
         private const int CursorHideIdleTime = 8; // Hide Cursor seconds
 

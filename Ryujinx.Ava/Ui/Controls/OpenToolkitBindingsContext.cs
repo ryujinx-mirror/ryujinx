@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public class OpenToolkitBindingsContext : IBindingsContext
+    internal class OpenToolkitBindingsContext : IBindingsContext
     {
         private readonly Func<string, IntPtr> _getProcAddress;
 

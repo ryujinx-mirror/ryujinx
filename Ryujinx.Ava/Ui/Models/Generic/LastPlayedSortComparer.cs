@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Ava.Ui.Models.Generic
 {
-    public class LastPlayedSortComparer : IComparer<ApplicationData>
+    internal class LastPlayedSortComparer : IComparer<ApplicationData>
     {
         public LastPlayedSortComparer() { }
         public LastPlayedSortComparer(bool isAscending) { IsAscending = isAscending; }

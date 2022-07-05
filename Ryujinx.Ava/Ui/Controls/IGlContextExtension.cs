@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public static class IGlContextExtension
+    internal static class IGlContextExtension
     {
         public static OpenGLContextBase AsOpenGLContextBase(this IGlContext context)
         {

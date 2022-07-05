@@ -97,10 +97,12 @@ namespace Ryujinx.Ava.Ui.Controls
                 });
                 contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
                 {
+                    contentDialog.PrimaryButtonClick -= DeferClose;
                     result = UserResult.No;
                 });
                 contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
                 {
+                    contentDialog.PrimaryButtonClick -= DeferClose;
                     result = UserResult.Cancel;
                 });
                 await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
@@ -114,6 +116,8 @@ namespace Ryujinx.Ava.Ui.Controls
                 {
                     return;
                 }
+
+                contentDialog.PrimaryButtonClick -= DeferClose;
 
                 startedDeferring = true;
 

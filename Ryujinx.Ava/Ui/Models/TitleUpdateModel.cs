@@ -3,7 +3,7 @@ using Ryujinx.Ava.Common.Locale;
 
 namespace Ryujinx.Ava.Ui.Models
 {
-    public class TitleUpdateModel
+    internal class TitleUpdateModel
     {
         public bool IsEnabled { get; set; }
         public bool IsNoUpdate { get; }

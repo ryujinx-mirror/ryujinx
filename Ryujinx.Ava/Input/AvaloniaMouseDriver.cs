@@ -9,7 +9,7 @@ using Size = System.Drawing.Size;
 
 namespace Ryujinx.Ava.Input
 {
-    public class AvaloniaMouseDriver : IGamepadDriver
+    internal class AvaloniaMouseDriver : IGamepadDriver
     {
         private Control _widget;
         private bool _isDisposed;

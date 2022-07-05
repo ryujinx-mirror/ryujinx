@@ -185,7 +185,7 @@ namespace Ryujinx.Ava
             }
         }
 
-        private static void ReloadConfig()
+        public static void ReloadConfig()
         {
             string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
             string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");

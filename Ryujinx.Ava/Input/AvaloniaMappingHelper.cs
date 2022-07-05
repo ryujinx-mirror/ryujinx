@@ -5,7 +5,7 @@ using AvaKey = Avalonia.Input.Key;
 
 namespace Ryujinx.Ava.Input
 {
-    public static class AvaloniaMappingHelper
+    internal static class AvaloniaMappingHelper
     {
         private static readonly AvaKey[] _keyMapping = new AvaKey[(int)Key.Count]
         {

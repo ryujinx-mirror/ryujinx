@@ -239,7 +239,7 @@ namespace Ryujinx.Ui.Windows
             _gtk3KeyboardDriver.Dispose();
         }
 
-        private static string GetShrinkedGamepadName(string str)
+        private static string GetShortGamepadName(string str)
         {
             const string ShrinkChars = "...";
             const int MaxSize = 50;
@@ -264,7 +264,7 @@ namespace Ryujinx.Ui.Windows
 
                 if (gamepad != null)
                 {
-                    _inputDevice.Append($"keyboard/{id}", GetShrinkedGamepadName($"{gamepad.Name} ({id})"));
+                    _inputDevice.Append($"keyboard/{id}", GetShortGamepadName($"{gamepad.Name} ({id})"));
 
                     gamepad.Dispose();
                 }
@@ -276,7 +276,7 @@ namespace Ryujinx.Ui.Windows
 
                 if (gamepad != null)
                 {
-                    _inputDevice.Append($"controller/{id}", GetShrinkedGamepadName($"{gamepad.Name} ({id})"));
+                    _inputDevice.Append($"controller/{id}", GetShortGamepadName($"{gamepad.Name} ({id})"));
 
                     gamepad.Dispose();
                 }

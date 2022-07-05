@@ -58,10 +58,10 @@ namespace Ryujinx.Ava.Ui.Windows
 
         public LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
-        public AppHost AppHost { get; private set; }
+        internal AppHost AppHost { get; private set; }
         public InputManager InputManager { get; private set; }
 
-        public RendererControl GlRenderer { get; private set; }
+        internal RendererControl GlRenderer { get; private set; }
         public ContentControl ContentFrame { get; private set; }
         public TextBlock LoadStatus { get; private set; }
         public TextBlock FirmwareStatus { get; private set; }
@@ -78,7 +78,8 @@ namespace Ryujinx.Ava.Ui.Windows
         public HotKeyControl DockToggleHotKey { get; private set; }
         public HotKeyControl ExitHotKey { get; private set; }
         public ToggleSplitButton VolumeStatus { get; set; }
-        public MainWindowViewModel ViewModel { get; private set; }
+        internal MainWindowViewModel ViewModel { get; private set; }
+        public SettingsWindow SettingsWindow { get; set; }
 
         public bool CanUpdate
         {

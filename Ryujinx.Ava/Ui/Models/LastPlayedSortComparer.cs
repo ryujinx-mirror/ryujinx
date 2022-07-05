@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace Ryujinx.Ava.Ui.Models
 {
-    public class LastPlayedSortComparer : IComparer
+    internal class LastPlayedSortComparer : IComparer
     {
         public int Compare(object x, object y)
         {

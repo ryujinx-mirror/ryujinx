@@ -235,8 +235,7 @@
   "ControllerSettingsMisc": "Divers",
   "ControllerSettingsTriggerThreshold": "Seuil de gachettes:",
   "ControllerSettingsMotion": "Mouvements",
-  "ControllerSettingsCemuHook": "CemuHook",
-  "ControllerSettingsMotionEnableMotionControls": "Activer le capteur de mouvements",
+  "ControllerSettingsConfigureGeneral": "Configurer",
   "ControllerSettingsMotionUseCemuhookCompatibleMotion": "Utiliser un capteur de mouvements CemuHook",
   "ControllerSettingsMotionControllerSlot": "Contrôleur ID:",
   "ControllerSettingsMotionMirrorInput": "Inverser les contrôles",
@@ -266,5 +265,7 @@
   "InputDialogAddNewProfileSubtext": "(Longueur max.: {0})",
   "AvatarChoose": "Choisir",
   "AvatarSetBackgroundColor": "Choisir une couleur de fond",
-  "AvatarClose": "Fermer"
+  "AvatarClose": "Fermer",
+  "ControllerMotionTitle": "Motion Control Settings",
+  "ControllerRumbleTitle": "Rumble Settings"
 }

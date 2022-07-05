@@ -40,7 +40,7 @@ namespace Ryujinx.Ava.Common.Locale
             }
 
             // Load english first, if the target language translation is incomplete, we default to english.
-            LoadLanguage(DefaultLanguageCode);
+            LoadDefaultLanguage();
 
             if (localeLanguageCode != DefaultLanguageCode)
             {
@@ -77,6 +77,11 @@ namespace Ryujinx.Ava.Common.Locale
             _dynamicValues[key] = values;
 
             OnPropertyChanged("Item");
+        }
+
+        public void LoadDefaultLanguage()
+        {
+            LoadLanguage(DefaultLanguageCode);
         }
 
         public void LoadLanguage(string languageCode)

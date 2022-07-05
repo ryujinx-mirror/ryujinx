@@ -492,8 +492,6 @@
   "SettingsTabAudio": "音频",
   "SettingsTabNetwork": "网络",
   "SettingsTabNetworkConnection": "网络连接",
-  "[REMOVE]SettingsTabGraphicsFrameRate": "主机刷新率:",
-  "[REMOVE]SettingsTabGraphicsFrameRateTooltip": "设置主机刷新率。设为 0 可以取消帧率限制",
   "SettingsTabCpuCache": "CPU 缓存",
   "SettingsTabCpuMemory": "CPU 内存",
   "DialogUpdaterFlatpakNotSupportedMessage": "请通过 FlatHub 更新 Ryujinx。",

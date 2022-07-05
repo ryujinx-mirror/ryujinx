@@ -5,7 +5,7 @@ using System;
 
 namespace Ryujinx.Ava.Common.Locale
 {
-    public class LocaleExtension : MarkupExtension
+    internal class LocaleExtension : MarkupExtension
     {
         public LocaleExtension(string key)
         {

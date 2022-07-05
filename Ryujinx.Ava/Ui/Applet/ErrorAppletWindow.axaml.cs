@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Applet
 {
-    public class ErrorAppletWindow : StyleableWindow
+    internal class ErrorAppletWindow : StyleableWindow
     {
         private readonly Window _owner;
         private object _buttonResponse;

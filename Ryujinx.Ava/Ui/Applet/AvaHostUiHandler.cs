@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Controls;
 using Ryujinx.Ava.Ui.Windows;
@@ -45,13 +46,61 @@ namespace Ryujinx.Ava.Ui.Applet
 
         public bool DisplayMessageDialog(string title, string message)
         {
-            // TODO : Show controller applet. Needs settings window to be implemented.
-            Dispatcher.UIThread.InvokeAsync(() =>
+            ManualResetEvent dialogCloseEvent = new(false);
+
+            bool okPressed = false;
+
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                ContentDialogHelper.ShowNotAvailableMessage(_parent);
+                try
+                {
+                    ManualResetEvent deferEvent = new(false);
+
+                    bool opened = false;
+
+                    UserResult response = await ContentDialogHelper.ShowDeferredContentDialog(_parent, 
+                       title, 
+                       message, 
+                       "", 
+                       LocaleManager.Instance["DialogOpenSettingsWindowLabel"], 
+                       "", 
+                       LocaleManager.Instance["SettingsButtonClose"], 
+                       (int)Symbol.Important, 
+                       deferEvent,
+                       async (window) =>
+                       {
+                           if (opened)
+                           {
+                               return;
+                           }
+
+                           opened = true;
+
+                           _parent.SettingsWindow = new SettingsWindow(_parent.VirtualFileSystem, _parent.ContentManager);
+
+                           await _parent.SettingsWindow.ShowDialog(window);
+
+                           opened = false;
+                       });
+
+                    if (response == UserResult.Ok)
+                    {
+                        okPressed = true;
+                    }
+
+                    dialogCloseEvent.Set();
+                }
+                catch (Exception ex)
+                {
+                    ContentDialogHelper.CreateErrorDialog(_parent, string.Format(LocaleManager.Instance["DialogMessageDialogErrorExceptionMessage"], ex));
+
+                    dialogCloseEvent.Set();
+                }
             });
 
-            return true;
+            dialogCloseEvent.WaitOne();
+
+            return okPressed;
         }
 
         public bool DisplayInputDialog(SoftwareKeyboardUiArgs args, out string userText)

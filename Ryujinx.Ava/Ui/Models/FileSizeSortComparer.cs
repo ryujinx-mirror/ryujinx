@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Ryujinx.Ava.Ui.Models
 {
-    public class FileSizeSortComparer : IComparer
+    internal class FileSizeSortComparer : IComparer
     {
         public int Compare(object x, object y)
         {

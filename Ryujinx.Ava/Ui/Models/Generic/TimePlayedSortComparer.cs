@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Ava.Ui.Models.Generic
 {
-    public class TimePlayedSortComparer : IComparer<ApplicationData>
+    internal class TimePlayedSortComparer : IComparer<ApplicationData>
     {
         public TimePlayedSortComparer() { }
         public TimePlayedSortComparer(bool isAscending) { _order = isAscending ? 1 : -1; }

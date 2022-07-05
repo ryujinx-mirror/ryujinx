@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Ryujinx.Ava.Ui.ViewModels"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+             mc:Ignorable="d"
+             x:Class="Ryujinx.Ava.Ui.Windows.RumbleSettingsWindow">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Width="100"
+                    TextWrapping="WrapWithOverflow"
+                    HorizontalAlignment="Center"
+                    Text="{locale:Locale ControllerSettingsRumbleStrongMultiplier}" />
+                <Slider
+                    Margin="0,-5,0,-5"
+                    Width="200"
+                    TickFrequency="0.01"
+                    IsSnapToTickEnabled="True"
+                    Maximum="10"
+                    Minimum="0"
+                    Value="{Binding StrongRumble, Mode=TwoWay}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Margin="5,0"
+                    Text="{Binding StrongRumble, StringFormat=\{0:0.00\}}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Width="100"
+                    TextWrapping="WrapWithOverflow"
+                    HorizontalAlignment="Center"
+                    Text="{locale:Locale ControllerSettingsRumbleWeakMultiplier}" />
+                <Slider
+                    Margin="0,-5,0,-5"
+                    Width="200"
+                    MaxWidth="200"
+                    Maximum="10"
+                    TickFrequency="0.01"
+                    IsSnapToTickEnabled="True"
+                    Minimum="0"
+                    Value="{Binding WeakRumble, Mode=TwoWay}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Margin="5,0"
+                    Text="{Binding WeakRumble, StringFormat=\{0:0.00\}}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

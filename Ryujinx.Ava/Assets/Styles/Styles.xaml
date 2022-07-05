@@ -161,11 +161,11 @@
         <Setter Property="Background" Value="{DynamicResource ThemeControlBorderColor}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeControlBorderColor}" />
     </Style>
-    <Style Selector="TabItem &gt; ScrollViewer">
+    <Style Selector="TabItem > ScrollViewer">
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundColor}" />
         <Setter Property="Margin" Value="0,-5,0,0" />
     </Style>
-    <Style Selector="TabItem &gt; ScrollViewer &gt; Border">
+    <Style Selector="TabItem > ScrollViewer > Border">
         <Setter Property="BorderThickness" Value="0,1,0,0" />
         <Setter Property="Background" Value="{DynamicResource ThemeBackgroundColor}" />
         <Setter Property="BorderBrush" Value="{DynamicResource HighlightBrush}" />
