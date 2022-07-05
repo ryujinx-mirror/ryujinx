@@ -60,6 +60,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetLogicOpState(bool enable, LogicalOp op);
 
+        void SetMultisampleState(MultisampleDescriptor multisample);
+
         void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel);
         void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin);
 

@@ -35,6 +35,15 @@ namespace Ryujinx.Graphics.Shader
         ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         /// <summary>
+        /// Queries whenever the alpha-to-coverage dithering feature is enabled.
+        /// </summary>
+        /// <returns>True if the feature is enabled, false otherwise</returns>
+        bool QueryAlphaToCoverageDitherEnable()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Queries the binding number of a constant buffer.
         /// </summary>
         /// <param name="index">Constant buffer index</param>

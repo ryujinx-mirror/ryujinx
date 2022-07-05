@@ -767,7 +767,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public SamplerIndex SamplerIndex;
         public fixed uint Reserved1238[37];
         public Boolean32 DepthTestEnable;
-        public fixed uint Reserved12D0[5];
+        public fixed uint Reserved12D0[4];
+        public Boolean32 AlphaToCoverageDitherEnable;
         public Boolean32 BlendIndependent;
         public Boolean32 DepthWriteEnable;
         public Boolean32 AlphaTestEnable;
@@ -802,9 +803,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public Boolean32 PointSpriteEnable;
         public fixed uint Reserved1524[3];
         public uint ResetCounter;
-        public uint Reserved1534;
+        public Boolean32 MultisampleEnable;
         public Boolean32 RtDepthStencilEnable;
-        public fixed uint Reserved153C[5];
+        public uint MultisampleControl;
+        public fixed uint Reserved1540[4];
         public GpuVa RenderEnableAddress;
         public Condition RenderEnableCondition;
         public PoolState SamplerPoolState;

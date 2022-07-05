@@ -167,6 +167,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.Cache
                             accessorHeader.StateFlags.HasFlag(GuestGpuStateFlags.EarlyZForce),
                             topology,
                             tessMode,
+                            false,
+                            false,
                             false);
 
                         TransformFeedbackDescriptor[] tfdNew = null;

@@ -184,6 +184,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
+        public void SetMultisampleState(MultisampleDescriptor multisample)
+        {
+            _renderer.New<SetMultisampleStateCommand>().Set(multisample);
+            _renderer.QueueCommand();
+        }
+
         public void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel)
         {
             _renderer.New<SetPatchParametersCommand>().Set(vertices, defaultOuterLevel, defaultInnerLevel);

@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.GAL
         {
             _renderer = renderer;
             Handle = renderer.CreateBuffer(SupportBuffer.RequiredSize);
+            renderer.Pipeline.ClearBuffer(Handle, 0, SupportBuffer.RequiredSize, 0);
         }
 
         private void MarkDirty(int startOffset, int byteSize)

@@ -68,6 +68,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        public bool QueryAlphaToCoverageDitherEnable()
+        {
+            return _oldSpecState.GraphicsState.AlphaToCoverageEnable && _oldSpecState.GraphicsState.AlphaToCoverageDitherEnable;
+        }
+
+        /// <inheritdoc/>
         public int QueryBindingConstantBuffer(int index)
         {
             return _resourceCounts.UniformBuffersCount++;

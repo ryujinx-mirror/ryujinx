@@ -918,6 +918,34 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public void SetMultisampleState(MultisampleDescriptor multisample)
+        {
+            if (multisample.AlphaToCoverageEnable)
+            {
+                GL.Enable(EnableCap.SampleAlphaToCoverage);
+
+                if (multisample.AlphaToOneEnable)
+                {
+                    GL.Enable(EnableCap.SampleAlphaToOne);
+                }
+                else
+                {
+                    GL.Disable(EnableCap.SampleAlphaToOne);
+                }
+
+                if (HwCapabilities.SupportsAlphaToCoverageDitherControl)
+                {
+                    GL.NV.AlphaToCoverageDitherControl(multisample.AlphaToCoverageDitherEnable
+                        ? NvAlphaToCoverageDitherControl.AlphaToCoverageDitherEnableNv
+                        : NvAlphaToCoverageDitherControl.AlphaToCoverageDitherDisableNv);
+                }
+            }
+            else
+            {
+                GL.Disable(EnableCap.SampleAlphaToCoverage);
+            }
+        }
+
         public void SetLineParameters(float width, bool smooth)
         {
             if (smooth)

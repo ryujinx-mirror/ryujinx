@@ -31,18 +31,38 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public readonly bool ViewportTransformDisable;
 
         /// <summary>
+        /// Indicates whenever alpha-to-coverage is enabled.
+        /// </summary>
+        public readonly bool AlphaToCoverageEnable;
+
+        /// <summary>
+        /// Indicates whenever alpha-to-coverage dithering is enabled.
+        /// </summary>
+        public readonly bool AlphaToCoverageDitherEnable;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
         /// <param name="topology">Primitive topology</param>
         /// <param name="tessellationMode">Tessellation mode</param>
         /// <param name="viewportTransformDisable">Indicates whenever the viewport transform is disabled</param>
-        public GpuChannelGraphicsState(bool earlyZForce, PrimitiveTopology topology, TessMode tessellationMode, bool viewportTransformDisable)
+        /// <param name="alphaToCoverageEnable">Indicates whenever alpha-to-coverage is enabled</param>
+        /// <param name="alphaToCoverageDitherEnable">Indicates whenever alpha-to-coverage dithering is enabled</param>
+        public GpuChannelGraphicsState(
+            bool earlyZForce,
+            PrimitiveTopology topology,
+            TessMode tessellationMode,
+            bool viewportTransformDisable,
+            bool alphaToCoverageEnable,
+            bool alphaToCoverageDitherEnable)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
             TessellationMode = tessellationMode;
             ViewportTransformDisable = viewportTransformDisable;
+            AlphaToCoverageEnable = alphaToCoverageEnable;
+            AlphaToCoverageDitherEnable = alphaToCoverageDitherEnable;
         }
     }
 }

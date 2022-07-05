@@ -455,6 +455,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return false;
             }
 
+            bool thisA2cDitherEnable = GraphicsState.AlphaToCoverageEnable && GraphicsState.AlphaToCoverageDitherEnable;
+            bool otherA2cDitherEnable = graphicsState.AlphaToCoverageEnable && graphicsState.AlphaToCoverageDitherEnable;
+
+            if (otherA2cDitherEnable != thisA2cDitherEnable)
+            {
+                return false;
+            }
+
             return Matches(channel, poolState, checkTextures, isCompute: false);
         }
 

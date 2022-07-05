@@ -67,6 +67,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
+        public bool QueryAlphaToCoverageDitherEnable()
+        {
+            return _state.GraphicsState.AlphaToCoverageEnable && _state.GraphicsState.AlphaToCoverageDitherEnable;
+        }
+
+        /// <inheritdoc/>
         public int QueryBindingConstantBuffer(int index)
         {
             return _state.ResourceCounts.UniformBuffersCount++;

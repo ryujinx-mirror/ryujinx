@@ -179,6 +179,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 SetLineParametersCommand.Run(ref GetCommand<SetLineParametersCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetLogicOpState] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetLogicOpStateCommand.Run(ref GetCommand<SetLogicOpStateCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.SetMultisampleState] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                SetMultisampleStateCommand.Run(ref GetCommand<SetMultisampleStateCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetPatchParameters] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetPatchParametersCommand.Run(ref GetCommand<SetPatchParametersCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetPointParameters] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
