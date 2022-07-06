@@ -217,7 +217,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateManagedDisplayLayer() -> u64
         public ResultCode CreateManagedDisplayLayer(ServiceCtx context)
         {
-            context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long layerId);
+            context.Device.System.SurfaceFlinger.CreateLayer(out long layerId, _pid);
             context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
             context.ResponseData.Write(layerId);
@@ -238,8 +238,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateManagedDisplaySeparableLayer() -> (u64, u64)
         public ResultCode CreateManagedDisplaySeparableLayer(ServiceCtx context)
         {
-            context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long displayLayerId);
-            context.Device.System.SurfaceFlinger.CreateLayer(_pid, out long recordingLayerId);
+            context.Device.System.SurfaceFlinger.CreateLayer(out long displayLayerId, _pid);
+            context.Device.System.SurfaceFlinger.CreateLayer(out long recordingLayerId, _pid);
             context.Device.System.SurfaceFlinger.SetRenderLayer(displayLayerId);
 
             context.ResponseData.Write(displayLayerId);

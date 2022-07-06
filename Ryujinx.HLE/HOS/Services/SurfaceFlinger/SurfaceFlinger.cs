@@ -11,6 +11,8 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
+    using ResultCode = Ryujinx.HLE.HOS.Services.Vi.ResultCode;
+
     class SurfaceFlinger : IConsumerListener, IDisposable
     {
         private const int TargetFps = 60;
@@ -45,6 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             public BufferItemConsumer     Consumer;
             public BufferQueueCore        Core;
             public ulong                  Owner;
+            public LayerState             State;
         }
 
         private class TextureCallbackInformation
@@ -92,24 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
         }
 
-        public IGraphicBufferProducer OpenLayer(ulong pid, long layerId)
-        {
-            bool needCreate;
-
-            lock (Lock)
-            {
-                needCreate = GetLayerByIdLocked(layerId) == null;
-            }
-
-            if (needCreate)
-            {
-                CreateLayerFromId(pid, layerId);
-            }
-
-            return GetProducerByLayerId(layerId);
-        }
-
-        public IGraphicBufferProducer CreateLayer(ulong pid, out long layerId)
+        public IGraphicBufferProducer CreateLayer(out long layerId, ulong pid, LayerState initialState = LayerState.ManagedClosed)
         {
             layerId = 1;
 
@@ -124,12 +110,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 }
             }
 
-            CreateLayerFromId(pid, layerId);
+            CreateLayerFromId(pid, layerId, initialState);
 
             return GetProducerByLayerId(layerId);
         }
 
-        private void CreateLayerFromId(ulong pid, long layerId)
+        private void CreateLayerFromId(ulong pid, long layerId, LayerState initialState)
         {
             lock (Lock)
             {
@@ -148,39 +134,129 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     Producer         = producer,
                     Consumer         = new BufferItemConsumer(_device, consumer, 0, -1, false, this),
                     Core             = core,
-                    Owner            = pid
+                    Owner            = pid,
+                    State            = initialState
                 });
             }
         }
 
-        public bool CloseLayer(long layerId)
+        public ResultCode OpenLayer(ulong pid, long layerId, out IBinder producer)
+        {
+            Layer layer = GetLayerByIdLocked(layerId);
+
+            if (layer == null || layer.State != LayerState.ManagedClosed)
+            {
+                producer = null;
+
+                return ResultCode.InvalidArguments;
+            }
+
+            layer.State = LayerState.ManagedOpened;
+            producer = layer.Producer;
+
+            return ResultCode.Success;
+        }
+
+        public ResultCode CloseLayer(long layerId)
         {
             lock (Lock)
             {
                 Layer layer = GetLayerByIdLocked(layerId);
 
-                if (layer != null)
+                if (layer == null)
                 {
-                    HOSBinderDriverServer.UnregisterBinderObject(layer.ProducerBinderId);
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to close layer {layerId}");
+
+                    return ResultCode.InvalidValue;
                 }
 
-                bool removed = _layers.Remove(layerId);
+                CloseLayer(layerId, layer);
 
-                // If the layer was removed and the current in use, we need to change the current layer in use.
-                if (removed && RenderLayerId == layerId)
+                return ResultCode.Success;
+            }
+        }
+
+        public ResultCode DestroyManagedLayer(long layerId)
+        {
+            lock (Lock)
+            {
+                Layer layer = GetLayerByIdLocked(layerId);
+
+                if (layer == null)
                 {
-                    // If no layer is availaible, reset to default value.
-                    if (_layers.Count == 0)
-                    {
-                        SetRenderLayer(0);
-                    }
-                    else
-                    {
-                        SetRenderLayer(_layers.Last().Key);
-                    }
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy managed layer {layerId} (not found)");
+
+                    return ResultCode.InvalidValue;
                 }
 
-                return removed;
+                if (layer.State != LayerState.ManagedClosed && layer.State != LayerState.ManagedOpened)
+                {
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy managed layer {layerId} (permission denied)");
+
+                    return ResultCode.PermissionDenied;
+                }
+
+                HOSBinderDriverServer.UnregisterBinderObject(layer.ProducerBinderId);
+
+                if (_layers.Remove(layerId) && layer.State == LayerState.ManagedOpened)
+                {
+                    CloseLayer(layerId, layer);
+                }
+
+                return ResultCode.Success;
+            }
+        }
+
+        public ResultCode DestroyStrayLayer(long layerId)
+        {
+            lock (Lock)
+            {
+                Layer layer = GetLayerByIdLocked(layerId);
+
+                if (layer == null)
+                {
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy stray layer {layerId} (not found)");
+
+                    return ResultCode.InvalidValue;
+                }
+
+                if (layer.State != LayerState.Stray)
+                {
+                    Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy stray layer {layerId} (permission denied)");
+
+                    return ResultCode.PermissionDenied;
+                }
+
+                HOSBinderDriverServer.UnregisterBinderObject(layer.ProducerBinderId);
+
+                if (_layers.Remove(layerId))
+                {
+                    CloseLayer(layerId, layer);
+                }
+
+                return ResultCode.Success;
+            }
+        }
+
+        private void CloseLayer(long layerId, Layer layer)
+        {
+            // If the layer was removed and the current in use, we need to change the current layer in use.
+            if (RenderLayerId == layerId)
+            {
+                // If no layer is availaible, reset to default value.
+                if (_layers.Count == 0)
+                {
+                    SetRenderLayer(0);
+                }
+                else
+                {
+                    SetRenderLayer(_layers.Last().Key);
+                }
+            }
+
+            if (layer.State == LayerState.ManagedOpened)
+            {
+                layer.State = LayerState.ManagedClosed;
             }
         }
 

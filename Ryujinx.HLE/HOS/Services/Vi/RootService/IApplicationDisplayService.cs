@@ -237,7 +237,12 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             long  userId    = context.RequestData.ReadInt64();
             ulong parcelPtr = context.Request.ReceiveBuff[0].Position;
 
-            IBinder producer = context.Device.System.SurfaceFlinger.OpenLayer(context.Request.HandleDesc.PId, layerId);
+            ResultCode result = context.Device.System.SurfaceFlinger.OpenLayer(context.Request.HandleDesc.PId, layerId, out IBinder producer);
+
+            if (result != ResultCode.Success)
+            {
+                return result;
+            }
 
             context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
@@ -260,9 +265,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             long layerId = context.RequestData.ReadInt64();
 
-            context.Device.System.SurfaceFlinger.CloseLayer(layerId);
-
-            return ResultCode.Success;
+            return context.Device.System.SurfaceFlinger.CloseLayer(layerId);
         }
 
         [CommandHipc(2030)]
@@ -275,7 +278,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             ulong parcelPtr = context.Request.ReceiveBuff[0].Position;
 
             // TODO: support multi display.
-            IBinder producer = context.Device.System.SurfaceFlinger.CreateLayer(0, out long layerId);
+            IBinder producer = context.Device.System.SurfaceFlinger.CreateLayer(out long layerId, 0, LayerState.Stray);
 
             context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
@@ -299,9 +302,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         {
             long layerId = context.RequestData.ReadInt64();
 
-            context.Device.System.SurfaceFlinger.CloseLayer(layerId);
-
-            return ResultCode.Success;
+            return context.Device.System.SurfaceFlinger.DestroyStrayLayer(layerId);
         }
 
         [CommandHipc(2101)]

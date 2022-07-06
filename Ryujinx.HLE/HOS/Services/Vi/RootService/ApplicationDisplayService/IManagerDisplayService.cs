@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 
             ulong pid = context.Device.System.AppletState.AppletResourceUserIds.GetData<ulong>((int)appletResourceUserId);
 
-            context.Device.System.SurfaceFlinger.CreateLayer(pid, out long layerId);
+            context.Device.System.SurfaceFlinger.CreateLayer(out long layerId, pid);
             context.Device.System.SurfaceFlinger.SetRenderLayer(layerId);
 
             context.ResponseData.Write(layerId);
@@ -49,9 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         {
             long layerId = context.RequestData.ReadInt64();
 
-            context.Device.System.SurfaceFlinger.CloseLayer(layerId);
-
-            return ResultCode.Success;
+            return context.Device.System.SurfaceFlinger.DestroyManagedLayer(layerId);
         }
 
         [CommandHipc(2012)] // 7.0.0+
