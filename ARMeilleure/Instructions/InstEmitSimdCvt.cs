@@ -105,11 +105,48 @@ namespace ARMeilleure.Instructions
             }
             else if (op.Size == 1 && op.Opc == 3) // Double -> Half.
             {
-                throw new NotImplementedException("Double-precision to half-precision.");
+                if (Optimizations.UseF16c)
+                {
+                    Debug.Assert(!Optimizations.ForceLegacySse);
+
+                    Operand n = GetVec(op.Rn);
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Cvtsd2ss, context.VectorZero(), n);
+                            res = context.AddIntrinsic(Intrinsic.X86Vcvtps2ph, res, Const(X86GetRoundControl(FPRoundingMode.ToNearest)));
+
+                    context.Copy(GetVec(op.Rd), res);
+                }
+                else
+                {
+                    Operand ne = context.VectorExtract(OperandType.FP64, GetVec(op.Rn), 0);
+
+                    Operand res = context.Call(typeof(SoftFloat64_16).GetMethod(nameof(SoftFloat64_16.FPConvert)), ne);
+
+                    res = context.ZeroExtend16(OperandType.I64, res);
+
+                    context.Copy(GetVec(op.Rd), EmitVectorInsert(context, context.VectorZero(), res, 0, 1));
+                }
             }
-            else if (op.Size == 3 && op.Opc == 1) // Double -> Half.
+            else if (op.Size == 3 && op.Opc == 1) // Half -> Double.
             {
-                throw new NotImplementedException("Half-precision to double-precision.");
+                if (Optimizations.UseF16c)
+                {
+                    Operand n = GetVec(op.Rn);
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Vcvtph2ps, GetVec(op.Rn));
+                            res = context.AddIntrinsic(Intrinsic.X86Cvtss2sd, context.VectorZero(), res);
+                            res = context.VectorZeroUpper64(res);
+
+                    context.Copy(GetVec(op.Rd), res);
+                }
+                else
+                {
+                    Operand ne = EmitVectorExtractZx(context, op.Rn, 0, 1);
+
+                    Operand res = context.Call(typeof(SoftFloat16_64).GetMethod(nameof(SoftFloat16_64.FPConvert)), ne);
+
+                    context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+                }
             }
             else // Invalid encoding.
             {
