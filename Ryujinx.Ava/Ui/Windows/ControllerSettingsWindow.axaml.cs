@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Controls;
+using Ryujinx.Ava.Ui.Models;
 using Ryujinx.Ava.Ui.ViewModels;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
@@ -127,9 +128,7 @@ namespace Ryujinx.Ava.Ui.Windows
             }
             else if (device.Type == Models.DeviceType.Controller)
             {
-                InputConfig config = ConfigurationState.Instance.Hid.InputConfig.Value.Find(inputConfig => inputConfig.Id == ViewModel.SelectedGamepad.Id);
-
-                assigner = new GamepadButtonAssigner(ViewModel.SelectedGamepad, (config as StandardControllerInputConfig).TriggerThreshold, forStick);
+                assigner = new GamepadButtonAssigner(ViewModel.SelectedGamepad, (ViewModel.Config as StandardControllerInputConfig).TriggerThreshold, forStick);
             }
             else
             {
@@ -184,8 +183,8 @@ namespace Ryujinx.Ava.Ui.Windows
 
                 if (e.AddedItems.Count > 0)
                 {
-                    (PlayerIndex key, _) = (KeyValuePair<PlayerIndex, string>)e.AddedItems[0];
-                    ViewModel.PlayerId = key;
+                    var player = (PlayerModel)e.AddedItems[0];
+                    ViewModel.PlayerId = player.Id;
                 }
             }
         }
