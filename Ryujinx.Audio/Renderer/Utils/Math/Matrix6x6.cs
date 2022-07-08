@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Audio.Renderer.Utils.Math
+namespace Ryujinx.Audio.Renderer.Utils.Math
 {
     record struct Matrix6x6
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Utils.Math;
+using Ryujinx.Audio.Renderer.Utils.Math;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 

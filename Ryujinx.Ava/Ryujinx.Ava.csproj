@@ -60,10 +60,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>THIRDPARTY.md</TargetPath>
     </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\Ryujinx.Audio\LICENSE.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <TargetPath>LICENSE-Ryujinx.Audio.txt</TargetPath>
-    </ContentWithTargetPath>
   </ItemGroup>
 
   <ItemGroup>
