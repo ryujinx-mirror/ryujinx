@@ -1,0 +1,104 @@
+<window:StyleableWindow
+    x:Class="Ryujinx.Ava.Ui.Windows.TitleUpdateWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
+    SizeToContent="Height"
+    Width="600" MinHeight="500" Height="500"
+    WindowStartupLocation="CenterOwner"
+    MinWidth="600"
+    mc:Ignorable="d">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock
+            Grid.Row="1"
+            Margin="20,15,20,20"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            MaxWidth="500"
+            LineHeight="18"
+            TextWrapping="Wrap"
+            Text="{Binding Heading}"
+            TextAlignment="Center" />
+        <Border
+            Grid.Row="2"
+            Margin="5"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            BorderBrush="Gray"
+            BorderThickness="1">
+            <ScrollViewer
+                Width="550"
+                MinHeight="200"
+                VerticalAlignment="Stretch"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Auto">
+                <ItemsControl
+                    Margin="10"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Items="{Binding TitleUpdates}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Padding="8, 0" VerticalContentAlignment="Center" GroupName="Update" IsChecked="{Binding IsEnabled, Mode=TwoWay}">
+                                <Label Margin="0" VerticalAlignment="Center" Content="{Binding Label}" />
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+        <DockPanel
+            Grid.Row="3"
+            Margin="0"
+            HorizontalAlignment="Stretch">
+            <DockPanel Margin="0" HorizontalAlignment="Left">
+                <Button
+                    Name="AddButton"
+                    MinWidth="90"
+                    Margin="5"
+                    Command="{Binding Add}">
+                    <TextBlock Text="{locale:Locale SettingsTabGeneralAdd}" />
+                </Button>
+                <Button
+                    Name="RemoveButton"
+                    MinWidth="90"
+                    Margin="5"
+                    Command="{Binding RemoveSelected}">
+                    <TextBlock Text="{locale:Locale SettingsTabGeneralRemove}" />
+                </Button>
+                <Button
+                    Name="RemoveAllButton"
+                    MinWidth="90"
+                    Margin="5"
+                    Command="{Binding RemoveAll}">
+                    <TextBlock Text="{locale:Locale DlcManagerRemoveAllButton}" />
+                </Button>
+            </DockPanel>
+            <DockPanel Margin="0" HorizontalAlignment="Right">
+                <Button
+                    Name="SaveButton"
+                    MinWidth="90"
+                    Margin="5"
+                    Command="{Binding Save}">
+                    <TextBlock Text="{locale:Locale SettingsButtonSave}" />
+                </Button>
+                <Button
+                    Name="CancelButton"
+                    MinWidth="90"
+                    Margin="5"
+                    Command="{Binding Close}">
+                    <TextBlock Text="{locale:Locale InputDialogCancel}" />
+                </Button>
+            </DockPanel>
+        </DockPanel>
+    </Grid>
+</window:StyleableWindow>

@@ -1,0 +1,107 @@
+<window:StyleableWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+                        x:Class="Ryujinx.Ava.Ui.Windows.UserProfileWindow"
+                        xmlns:Locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+                        xmlns:viewModels="clr-namespace:Ryujinx.Ava.Ui.ViewModels"
+                        xmlns:controls="clr-namespace:Ryujinx.Ava.Ui.Controls"
+                        xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
+                        CanResize="False"
+                        Width="850" MinHeight="550" Height="550"
+                        WindowStartupLocation="CenterOwner"
+                        SizeToContent="Manual"
+                        MinWidth="600">
+    <Design.DataContext>
+        <viewModels:UserProfileViewModel />
+    </Design.DataContext>
+    <Window.Resources>
+        <controls:BitmapArrayValueConverter x:Key="ByteImage" />
+    </Window.Resources>
+    <Grid Margin="15" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <ContentControl
+                Focusable="False"
+                IsVisible="False"
+                KeyboardNavigation.IsTabStop="False">
+                <ui:ContentDialog Name="ContentDialog"
+                                  IsPrimaryButtonEnabled="True"
+                                  IsSecondaryButtonEnabled="True"
+                                  IsVisible="False" />
+            </ContentControl>
+            <TextBlock Text="{Locale:Locale UserProfilesSelectedUserProfile}" />
+            <Grid Grid.Row="1" Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Height="96" Width="96"
+                       Source="{Binding SelectedProfile.Image, Converter={StaticResource ByteImage}}" />
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Grid.Column="1" Spacing="10"
+                            Margin="5, 10">
+                    <TextBox Name="NameBox" Text="{Binding SelectedProfile.Name, Mode=OneWay}"
+                             HorizontalAlignment="Stretch" />
+                    <TextBlock Text="{Binding SelectedProfile.UserId}" />
+                </StackPanel>
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Grid.Column="2" Spacing="10"
+                            Margin="5">
+                    <Button Content="{Locale:Locale UserProfilesSaveProfileName}" Name="SetNameButton"
+                            Click="SetNameButton_OnClick" />
+                    <Button Name="SelectProfileImage" Command="{Binding ChooseProfileImage}"
+                            Content="{Locale:Locale UserProfilesChangeProfileImage}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Text="{Locale:Locale UserProfilesAvailableUserProfiles}" />
+            <ListBox Grid.Row="1" Margin="10" Name="ProfilesList" DoubleTapped="ProfilesList_DoubleTapped"
+                     Items="{Binding Profiles}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" Background="{DynamicResource ThemeAccentColorBrush}"
+                                  Grid.ColumnSpan="2"
+                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="5" MinWidth="5"
+                                  IsVisible="{Binding IsOpened}" />
+                            <Image Grid.Column="0" Height="96" Width="96"
+                                   Source="{Binding Image, Converter={StaticResource ByteImage}}" />
+                            <StackPanel Margin="10" Orientation="Vertical" HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Center" Grid.Column="1">
+                                <TextBlock Text="{Binding Name}" />
+                                <TextBlock Text="{Binding  UserId}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10,0" Spacing="10" HorizontalAlignment="Stretch">
+            <Button Content="{Locale:Locale UserProfilesAddNewProfile}" Command="{Binding AddUser}" />
+            <Button IsEnabled="{Binding IsSelectedProfileDeletable}"
+                    Content="{Locale:Locale UserProfilesDeleteSelectedProfile}" Command="{Binding DeleteUser}" />
+            <Button HorizontalAlignment="Right" Content="{Locale:Locale UserProfilesClose}" Click="CloseButton_OnClick"
+                    Name="CloseButton" />
+        </StackPanel>
+    </Grid>
+</window:StyleableWindow>

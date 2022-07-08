@@ -67,6 +67,8 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private bool _isPaused;
         private bool _showContent = true;
         private bool _isLoadingIndeterminate = true;
+        private bool _showAll;
+        private string _lastScannedAmiiboId;
         private ReadOnlyObservableCollection<ApplicationData> _appsObservableList;
 
         public string TitleName { get; internal set; }
@@ -695,15 +697,28 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public void OpenAmiiboWindow()
+        public async void OpenAmiiboWindow()
         {
             if (!_isAmiiboRequested)
             {
                 return;
             }
+            
+            if (_owner.AppHost.Device.System.SearchingForAmiibo(out int deviceId))
+            {
+                string titleId = _owner.AppHost.Device.Application.TitleIdText.ToUpper();
+                AmiiboWindow window = new(_showAll, _lastScannedAmiiboId, titleId);
 
-            // TODO : Implement Amiibo window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+                await window.ShowDialog(_owner);
+
+                if (window.IsScanned)
+                {
+                    _showAll = window.ViewModel.ShowAllAmiibo;
+                    _lastScannedAmiiboId = window.ScannedAmiibo.GetId();
+
+                    _owner.AppHost.Device.System.ScanAmiibo(deviceId, _lastScannedAmiiboId, window.ViewModel.UseRandomUuid);
+                }
+            }
         }
 
         public void HandleShaderProgress(Switch emulationContext)
@@ -953,10 +968,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
             LoadConfigurableHotKeys();
         }
 
-        public void ManageProfiles()
+        public async void ManageProfiles()
         {
-            // TODO : Implement Profiles window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            UserProfileWindow window = new(_owner.AccountManager, _owner.ContentManager, _owner.VirtualFileSystem);
+
+            await window.ShowDialog(_owner);
         }
 
         public async void OpenAboutWindow()
@@ -1227,33 +1243,60 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public void OpenTitleUpdateManager()
+        public async void OpenTitleUpdateManager()
         {
-            // TODO : Implement Update window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            var selection = SelectedApplication;
+
+            if (selection != null)
+            {
+                TitleUpdateWindow titleUpdateManager =
+                    new(_owner.VirtualFileSystem, selection.TitleId, selection.TitleName);
+
+                await titleUpdateManager.ShowDialog(_owner);
+            }
         }
 
-        public void OpenDlcManager()
+        public async void OpenDlcManager()
         {
-            // TODO : Implement Dlc window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            var selection = SelectedApplication;
+
+            if (selection != null)
+            {
+                DlcManagerWindow dlcManager = new(_owner.VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName);
+
+                await dlcManager.ShowDialog(_owner);
+            }
         }
 
-        public void OpenCheatManager()
+        public async void OpenCheatManager()
         {
-            // TODO : Implement cheat window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            var selection = SelectedApplication;
+
+            if (selection != null)
+            {
+                CheatWindow cheatManager = new(_owner.VirtualFileSystem, selection.TitleId, selection.TitleName);
+
+                await cheatManager.ShowDialog(_owner);
+            }
         }
 
-        public void OpenCheatManagerForCurrentApp()
+        public async void OpenCheatManagerForCurrentApp()
         {
             if (!IsGameRunning)
             {
                 return;
             }
 
-            // TODO : Implement cheat window
-            ContentDialogHelper.ShowNotAvailableMessage(_owner);
+            var application = _owner.AppHost.Device.Application;
+
+            if (application != null)
+            {
+                CheatWindow cheatManager = new(_owner.VirtualFileSystem, application.TitleIdText, application.TitleName);
+
+                await cheatManager.ShowDialog(_owner);
+
+                _owner.AppHost.Device.EnableCheats();
+            }
         }
 
         public void OpenDeviceSaveDirectory()

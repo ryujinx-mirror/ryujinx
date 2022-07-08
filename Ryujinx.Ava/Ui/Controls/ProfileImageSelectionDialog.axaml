@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        xmlns:Locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+        x:Class="Ryujinx.Ava.Ui.Controls.ProfileImageSelectionDialog"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        Title="{Locale:Locale ProfileImageSelectionTitle}"
+        CanResize="false">
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,10,5, 5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="70" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Grid.Row="1"
+                   Text="{Locale:Locale ProfileImageSelectionHeader}" />
+        <TextBlock FontWeight="Bold" Grid.Row="2" Margin="10" MaxWidth="400" TextWrapping="Wrap"
+                   HorizontalAlignment="Center" TextAlignment="Center" Text="{Locale:Locale ProfileImageSelectionNote}" />
+        <StackPanel Margin="5,0" Spacing="10" Grid.Row="4" HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <Button Name="Import" Click="Import_OnClick" Width="200">
+                <TextBlock Text="{Locale:Locale ProfileImageSelectionImportImage}" />
+            </Button>
+            <Button Name="SelectFirmwareImage" IsEnabled="{Binding FirmwareFound}" Click="SelectFirmwareImage_OnClick"
+                    Width="200">
+                <TextBlock Text="{Locale:Locale ProfileImageSelectionSelectAvatar}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

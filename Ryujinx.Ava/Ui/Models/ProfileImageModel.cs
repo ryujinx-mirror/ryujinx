@@ -1,6 +1,6 @@
 namespace Ryujinx.Ava.Ui.Models
 {
-    internal class ProfileImageModel
+    public class ProfileImageModel
     {
         public ProfileImageModel(string name, byte[] data)
         {
