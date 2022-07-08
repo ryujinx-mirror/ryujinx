@@ -376,6 +376,7 @@ namespace Ryujinx.Ava.Ui.Windows
                 ViewModel.ShowContent = true;
                 ViewModel.ShowLoadProgress = false;
                 ViewModel.IsLoadingIndeterminate = false;
+                Cursor = Cursor.Default;
 
                 AppHost = null;
 

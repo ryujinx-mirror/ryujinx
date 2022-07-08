@@ -77,7 +77,7 @@ namespace Ryujinx.Ava
         private IRenderer _renderer;
         private readonly Thread _renderingThread;
 
-        private bool _isMouseInClient;
+        private bool _isMouseInRenderer;
         private bool _renderingStarted;
         private bool _dialogShown;
 
@@ -142,7 +142,6 @@ namespace Ryujinx.Ava
 
             ConfigurationState.Instance.HideCursorOnIdle.Event += HideCursorState_Changed;
 
-            _parent.PointerEnter += Parent_PointerEntered;
             _parent.PointerLeave += Parent_PointerLeft;
             _parent.PointerMoved += Parent_PointerMoved;
 
@@ -157,18 +156,15 @@ namespace Ryujinx.Ava
         private void Parent_PointerMoved(object sender, PointerEventArgs e)
         {
             _lastCursorMoveTime = Stopwatch.GetTimestamp();
+            var p = e.GetCurrentPoint(_parent).Position;
+            var r = _parent.InputHitTest(p);
+            _isMouseInRenderer = r == Renderer;
         }
 
         private void Parent_PointerLeft(object sender, PointerEventArgs e)
         {
-            Renderer.Cursor = ConfigurationState.Instance.Hid.EnableMouse ? InvisibleCursor : Cursor.Default;
-
-            _isMouseInClient = false;
-        }
-
-        private void Parent_PointerEntered(object sender, PointerEventArgs e)
-        {
-            _isMouseInClient = true;
+            _isMouseInRenderer = false;
+            _parent.Cursor = Cursor.Default;
         }
 
         private void SetRendererWindowSize(Size size)
@@ -898,13 +894,10 @@ namespace Ryujinx.Ava
         {
             if (ConfigurationState.Instance.Hid.EnableMouse)
             {
-                if (_isMouseInClient)
+                Dispatcher.UIThread.Post(() =>
                 {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        _parent.Cursor = InvisibleCursor;
-                    });
-                }
+                    _parent.Cursor =  _isMouseInRenderer ? InvisibleCursor : Cursor.Default;
+                });
             }
             else
             {
