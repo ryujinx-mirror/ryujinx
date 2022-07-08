@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -13,6 +14,7 @@ namespace Ryujinx.Ava.Input
     {
         private Control _widget;
         private bool _isDisposed;
+        private Size _size;
 
         public bool[] PressedButtons { get; }
 
@@ -29,6 +31,14 @@ namespace Ryujinx.Ava.Input
             _widget.PointerWheelChanged += Parent_ScrollEvent;
 
             PressedButtons = new bool[(int)MouseButton.Count];
+
+            _size = new Size((int)parent.Bounds.Width, (int)parent.Bounds.Height);
+            parent.GetObservable(Control.BoundsProperty).Subscribe(Resized);
+        }
+
+        private void Resized(Rect rect)
+        {
+            _size = new Size((int)rect.Width, (int)rect.Height);
         }
 
         private void Parent_ScrollEvent(object o, PointerWheelEventArgs args)
@@ -78,14 +88,7 @@ namespace Ryujinx.Ava.Input
 
         public Size GetClientSize()
         {
-            Size size = new();
-
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                size = new Size((int)_widget.Bounds.Width, (int)_widget.Bounds.Height);
-            }).Wait();
-
-            return size;
+            return _size;
         }
 
         public string DriverName => "Avalonia";
