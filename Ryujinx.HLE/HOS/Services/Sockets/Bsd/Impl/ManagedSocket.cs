@@ -304,7 +304,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                     return LinuxError.EOPNOTSUPP;
                 }
 
-                int value = MemoryMarshal.Read<int>(optionValue);
+                int value = optionValue.Length >= 4 ? MemoryMarshal.Read<int>(optionValue) : MemoryMarshal.Read<byte>(optionValue);
 
                 if (option == BsdSocketOption.SoLinger)
                 {
