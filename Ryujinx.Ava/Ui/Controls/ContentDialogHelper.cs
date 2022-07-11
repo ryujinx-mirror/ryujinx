@@ -235,7 +235,7 @@ namespace Ryujinx.Ava.Ui.Controls
             return new(mainText, secondaryText);
         }
 
-        internal static async void CreateUpdaterInfoDialog(StyleableWindow window, string primary, string secondaryText)
+        internal static async Task CreateUpdaterInfoDialog(StyleableWindow window, string primary, string secondaryText)
         {
             await ShowContentDialog(
                 window,
@@ -248,7 +248,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Important);
         }
 
-        internal static async void ShowNotAvailableMessage(StyleableWindow window)
+        internal static async Task ShowNotAvailableMessage(StyleableWindow window)
         {
             // Temporary placeholder for features to be added
             await ShowContentDialog(
@@ -262,7 +262,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Important);
         }
 
-        internal static async void CreateWarningDialog(StyleableWindow window, string primary, string secondaryText)
+        internal static async Task CreateWarningDialog(StyleableWindow window, string primary, string secondaryText)
         {
             await ShowContentDialog(
                 window,
@@ -275,7 +275,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Important);
         }
 
-        internal static async void CreateErrorDialog(StyleableWindow owner, string errorMessage, string secondaryErrorMessage = "")
+        internal static async Task CreateErrorDialog(StyleableWindow owner, string errorMessage, string secondaryErrorMessage = "")
         {
             Logger.Error?.Print(LogClass.Application, errorMessage);
 

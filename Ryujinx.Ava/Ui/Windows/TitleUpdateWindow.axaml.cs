@@ -24,6 +24,7 @@ using System.Text;
 using Path = System.IO.Path;
 using SpanHelpers = LibHac.Common.SpanHelpers;
 using LibHac.Tools.FsSystem;
+using Avalonia.Threading;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
@@ -151,14 +152,20 @@ namespace Ryujinx.Ava.Ui.Windows
                         }
                         else
                         {
-                            ContentDialogHelper.CreateErrorDialog(this,
-                                LocaleManager.Instance["DialogUpdateAddUpdateErrorMessage"]);
+                            Dispatcher.UIThread.Post(async () =>
+                            {
+                                await ContentDialogHelper.CreateErrorDialog(this,
+                                 LocaleManager.Instance["DialogUpdateAddUpdateErrorMessage"]);
+                            });
                         }
                     }
                     catch (Exception ex)
                     {
-                        ContentDialogHelper.CreateErrorDialog(this,
-                            string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, path));
+                        Dispatcher.UIThread.Post(async () =>
+                        {
+                            await ContentDialogHelper.CreateErrorDialog(this,
+                                string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, path));
+                        });
                     }
                 }
             }

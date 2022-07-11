@@ -1047,8 +1047,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
                     if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                     out ulong titleIdNumber))
                     {
-                        ContentDialogHelper.CreateErrorDialog(_owner,
-                            LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        Dispatcher.UIThread.Post(async () =>
+                        {
+                            await ContentDialogHelper.CreateErrorDialog(_owner,
+                                LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        });
 
                         return;
                     }
@@ -1155,7 +1158,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                         }
                         catch (Exception e)
                         {
-                            ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogPPTCDeletionErrorMessage"], file.Name, e));
+                            await ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogPPTCDeletionErrorMessage"], file.Name, e));
                         }
                     }
                 }
@@ -1216,7 +1219,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                         }
                         catch (Exception e)
                         {
-                            ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogPPTCDeletionErrorMessage"], directory.Name, e));
+                            await ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogPPTCDeletionErrorMessage"], directory.Name, e));
                         }
                     }
                 }
@@ -1229,7 +1232,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                     }
                     catch (Exception e)
                     {
-                        ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["ShaderCachePurgeError"], file.Name, e));
+                        await ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["ShaderCachePurgeError"], file.Name, e));
                     }
                 }
             }
@@ -1310,8 +1313,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
                     if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                        out ulong titleIdNumber))
                     {
-                        ContentDialogHelper.CreateErrorDialog(_owner,
-                            LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        Dispatcher.UIThread.Post(async () =>
+                        {
+                            await ContentDialogHelper.CreateErrorDialog(_owner,
+                                LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        });
 
                         return;
                     }
@@ -1333,8 +1339,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
                     if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
                        out ulong titleIdNumber))
                     {
-                        ContentDialogHelper.CreateErrorDialog(_owner,
-                            LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        Dispatcher.UIThread.Post(async () =>
+                        {
+                            await ContentDialogHelper.CreateErrorDialog(_owner,
+                                LocaleManager.Instance["DialogRyujinxErrorMessage"], LocaleManager.Instance["DialogInvalidTitleIdErrorMessage"]);
+                        });
 
                         return;
                     }
@@ -1350,30 +1359,30 @@ namespace Ryujinx.Ava.Ui.ViewModels
             ApplicationHelper.OpenSaveDir(in filter, titleId, data.ControlHolder, data.TitleName);
         }
 
-        private void ExtractLogo()
+        private async void ExtractLogo()
         {
             var selection = SelectedApplication;
             if (selection != null)
             {
-                ApplicationHelper.ExtractSection(NcaSectionType.Logo, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, selection.Path);
             }
         }
 
-        private void ExtractRomFs()
+        private async void ExtractRomFs()
         {
             var selection = SelectedApplication;
             if (selection != null)
             {
-                ApplicationHelper.ExtractSection(NcaSectionType.Data, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Data, selection.Path);
             }
         }
 
-        private void ExtractExeFs()
+        private async void ExtractExeFs()
         {
             var selection = SelectedApplication;
             if (selection != null)
             {
-                ApplicationHelper.ExtractSection(NcaSectionType.Code, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Code, selection.Path);
             }
         }
 
@@ -1382,7 +1391,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             _owner.Close();
         }
 
-        private async void HandleFirmwareInstallation(string path)
+        private async Task HandleFirmwareInstallation(string path)
         {
             try
             {
@@ -1392,7 +1401,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
                 if (firmwareVersion == null)
                 {
-                    ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogFirmwareInstallerFirmwareNotFoundErrorMessage"], filename));
+                    await ContentDialogHelper.CreateErrorDialog(_owner, string.Format(LocaleManager.Instance["DialogFirmwareInstallerFirmwareNotFoundErrorMessage"], filename));
 
                     return;
                 }
@@ -1457,11 +1466,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            Dispatcher.UIThread.InvokeAsync(() =>
+                            Dispatcher.UIThread.InvokeAsync(async () =>
                             {
                                 waitingDialog.Close();
 
-                                ContentDialogHelper.CreateErrorDialog(_owner, ex.Message);
+                                await ContentDialogHelper.CreateErrorDialog(_owner, ex.Message);
                             });
                         }
                         finally
@@ -1482,7 +1491,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                ContentDialogHelper.CreateErrorDialog(_owner, ex.Message);
+                await ContentDialogHelper.CreateErrorDialog(_owner, ex.Message);
             }
         }
 
@@ -1497,7 +1506,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             if (file != null && file.Length > 0)
             {
-                HandleFirmwareInstallation(file[0]);
+                await HandleFirmwareInstallation(file[0]);
             }
         }
 
@@ -1509,7 +1518,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             if (!string.IsNullOrWhiteSpace(folder))
             {
-                HandleFirmwareInstallation(folder);
+                await HandleFirmwareInstallation(folder);
             }
         }
     }

@@ -7,7 +7,6 @@
                         xmlns:model="clr-namespace:Ryujinx.Ava.Ui.Models"
                         xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
                         mc:Ignorable="d"
-                        SizeToContent="Height"
                         Width="500" MinHeight="500" Height="500"
                         WindowStartupLocation="CenterOwner"
                         MinWidth="500">
@@ -45,6 +44,13 @@
                       VerticalAlignment="Stretch"
                       Name="CheatsView"
                       MinHeight="300">
+                <TreeView.Styles>
+                    <Styles>
+                        <Style Selector="TreeViewItem:empty /template/ ItemsPresenter">
+                            <Setter Property="IsVisible" Value="False"/>
+                        </Style>
+                    </Styles>
+                </TreeView.Styles>
                 <TreeView.DataTemplates>
                     <TreeDataTemplate DataType="model:CheatsList" ItemsSource="{Binding}">
                         <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
@@ -56,9 +62,9 @@
                         </StackPanel>
                     </TreeDataTemplate>
                     <DataTemplate x:DataType="model:CheatModel">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                            <CheckBox IsChecked="{Binding IsEnabled}" MinWidth="20" />
-                            <TextBlock Text="{Binding CleanName}" />
+                        <StackPanel Orientation="Horizontal" Margin="0" HorizontalAlignment="Left">
+                            <CheckBox IsChecked="{Binding IsEnabled}" Padding="0" Margin="5,0" MinWidth="20" />
+                            <TextBlock Text="{Binding CleanName}" VerticalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>
                 </TreeView.DataTemplates>

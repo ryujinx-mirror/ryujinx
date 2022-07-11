@@ -120,8 +120,6 @@ namespace Ryujinx.Ava.Ui.Windows
                 InputManager = new InputManager(new AvaloniaKeyboardDriver(this), new SDL2GamepadDriver());
 
                 LoadGameList();
-
-                CheckLaunchState();
             }
 
             _rendererWaitEvent = new AutoResetEvent(false);
@@ -451,7 +449,7 @@ namespace Ryujinx.Ava.Ui.Windows
             RefreshFirmwareStatus();
         }
 
-        protected async void CheckLaunchState()
+        protected void CheckLaunchState()
         {
             if (ShowKeyErrorOnLoad)
             {
@@ -470,7 +468,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false, this))
             {
-                await Updater.BeginParse(this, false).ContinueWith(task =>
+                Updater.BeginParse(this, false).ContinueWith(task =>
                 {
                     Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
                 }, TaskContinuationOptions.OnlyOnFaulted);
@@ -535,6 +533,13 @@ namespace Ryujinx.Ava.Ui.Windows
             GameList.DataContext = ViewModel;
 
             LoadHotKeys();
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+
+            CheckLaunchState();
         }
 
         public static void UpdateGraphicsConfig()

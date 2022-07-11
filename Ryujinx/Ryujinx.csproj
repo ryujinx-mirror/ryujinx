@@ -6,8 +6,6 @@
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Version>1.0.0-dirty</Version>
-    <TieredCompilation>false</TieredCompilation>
-    <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
     <DefineConstants Condition=" '$(ExtraDefineConstants)' != '' ">$(DefineConstants);$(ExtraDefineConstants)</DefineConstants>
     <!-- As we already provide GTK3 on Windows via GtkSharp.Dependencies this is redundant. -->
     <SkipGtkInstall>true</SkipGtkInstall>

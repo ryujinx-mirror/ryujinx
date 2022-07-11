@@ -658,7 +658,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             return config;
         }
 
-        public void LoadProfile()
+        public async void LoadProfile()
         {
             if (Device == 0)
             {
@@ -700,9 +700,9 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 catch (JsonException) { }
                 catch (InvalidOperationException)
                 {
-                    ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow,
-                        String.Format(LocaleManager.Instance["DialogProfileInvalidProfileErrorMessage"], ProfileName));
                     Logger.Error?.Print(LogClass.Configuration, $"Profile {ProfileName} is incompatible with the current input configuration system.");
+                    await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow,
+                        String.Format(LocaleManager.Instance["DialogProfileInvalidProfileErrorMessage"], ProfileName));
 
                     return;
                 }
@@ -736,7 +736,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             if (ProfileName == LocaleManager.Instance["ControllerSettingsProfileDefault"])
             {
-                ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileDefaultProfileOverwriteErrorMessage"]);
+                await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileDefaultProfileOverwriteErrorMessage"]);
 
                 return;
             }
@@ -769,7 +769,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 }
                 else
                 {
-                    ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileInvalidProfileNameErrorMessage"]);
+                    await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileInvalidProfileNameErrorMessage"]);
                 }
             }
         }
