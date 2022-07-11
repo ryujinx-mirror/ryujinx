@@ -45,6 +45,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                         if (!(node.Value is Operation operation) || isUnused)
                         {
+                            if (node.Value is PhiNode phi && !isUnused)
+                            {
+                                isUnused = PropagatePhi(phi);
+                            }
+
                             if (isUnused)
                             {
                                 RemoveNode(block, node);
@@ -101,6 +106,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             // Propagate copy source operand to all uses of
             // the destination operand.
+
             Operand dest = copyOp.Dest;
             Operand src  = copyOp.GetSource(0);
 
@@ -116,6 +122,53 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     }
                 }
             }
+        }
+
+        private static bool PropagatePhi(PhiNode phi)
+        {
+            // If all phi sources are the same, we can propagate it and remove the phi.
+
+            Operand firstSrc = phi.GetSource(0);
+
+            for (int index = 1; index < phi.SourcesCount; index++)
+            {
+                if (!IsSameOperand(firstSrc, phi.GetSource(index)))
+                {
+                    return false;
+                }
+            }
+
+            // All sources are equal, we can propagate the value.
+
+            Operand dest = phi.Dest;
+
+            INode[] uses = dest.UseOps.ToArray();
+
+            foreach (INode useNode in uses)
+            {
+                for (int index = 0; index < useNode.SourcesCount; index++)
+                {
+                    if (useNode.GetSource(index) == dest)
+                    {
+                        useNode.SetSource(index, firstSrc);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsSameOperand(Operand x, Operand y)
+        {
+            if (x.Type != y.Type || x.Value != y.Value)
+            {
+                return false;
+            }
+
+            return x.Type == OperandType.Attribute ||
+                   x.Type == OperandType.AttributePerPatch ||
+                   x.Type == OperandType.Constant ||
+                   x.Type == OperandType.ConstantBuffer;
         }
 
         private static bool PropagatePack(Operation packOp)
