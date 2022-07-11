@@ -49,5 +49,6 @@
         <Color x:Key="TextOnAccentFillColorPrimary">#FFFFFFFF</Color>
         <Color x:Key="SystemChromeWhiteColor">#FFFFFFFF</Color>
         <Color x:Key="ThemeForegroundColor">#FF000000</Color>
+        <Color x:Key="MenuFlyoutPresenterBorderColor">#C1C1C1</Color>
     </Styles.Resources>
 </Styles>

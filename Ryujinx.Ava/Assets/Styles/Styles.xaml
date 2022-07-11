@@ -221,6 +221,7 @@
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundColor}" />
     </Style>
     <Styles.Resources>
+        <SolidColorBrush x:Key="ThemeAccentColorBrush" Color="{DynamicResource SystemAccentColor}" />
         <StaticResource x:Key="ListViewItemBackgroundSelected" ResourceKey="ThemeAccentColorBrush" />
         <StaticResource x:Key="ListViewItemBackgroundPressed" ResourceKey="SystemAccentColorDark1" />
         <StaticResource x:Key="ListViewItemBackgroundPointerOver" ResourceKey="SystemAccentColorDark2" />
@@ -232,7 +233,7 @@
             Color="{DynamicResource SystemBaseMediumLowColor}" />
         <SolidColorBrush x:Key="DataGridSelectionBackgroundBrush" Color="{DynamicResource DataGridSelectionColor}" />
         <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="{DynamicResource MenuFlyoutPresenterBorderColor}" />
-        <SolidColorBrush x:Key="ThemeAccentColorBrush" Color="{DynamicResource SystemAccentColor}" />
+        <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="{DynamicResource MenuFlyoutPresenterBorderColor}" />
         <SolidColorBrush x:Key="ListBoxBackground" Color="{DynamicResource ThemeContentBackgroundColor}" />
         <SolidColorBrush x:Key="ThemeForegroundBrush" Color="{DynamicResource ThemeForegroundColor}" />
         <SolidColorBrush x:Key="ThemeAccentBrush4" Color="{DynamicResource ThemeAccentColor4}" />
