@@ -535,6 +535,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
+        public bool ShowConsoleVisible
+        {
+            get => ConsoleHelper.SetConsoleWindowStateSupported;
+        }
+
         public ObservableCollection<ApplicationData> Applications
         {
             get => _applications;

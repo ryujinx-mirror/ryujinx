@@ -128,7 +128,7 @@
                                     <CheckBox IsChecked="{Binding StartGamesInFullscreen, Mode=TwoWay}" />
                                 </MenuItem.Icon>
                             </MenuItem>
-                            <MenuItem Header="{locale:Locale MenuBarOptionsShowConsole}">
+                            <MenuItem Header="{locale:Locale MenuBarOptionsShowConsole}" IsVisible="{Binding ShowConsoleVisible}">
                                 <MenuItem.Icon>
                                     <CheckBox IsChecked="{Binding ShowConsole, Mode=TwoWay}" />
                                 </MenuItem.Icon>
