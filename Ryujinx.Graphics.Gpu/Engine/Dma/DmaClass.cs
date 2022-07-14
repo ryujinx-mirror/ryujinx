@@ -208,7 +208,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                 }
 
                 ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (ulong)srcBaseOffset, srcSize, true);
-                Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (ulong)dstBaseOffset, dstSize).ToArray();
 
                 bool completeSource = IsTextureCopyComplete(src, srcLinear, srcBpp, srcStride, xCount, yCount);
                 bool completeDest = IsTextureCopyComplete(dst, dstLinear, dstBpp, dstStride, xCount, yCount);
@@ -262,42 +261,62 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                         target.SynchronizeMemory();
                         target.SetData(data);
                         target.SignalModified();
-
                         return;
                     }
                     else if (srcCalculator.LayoutMatches(dstCalculator))
                     {
-                        srcSpan.CopyTo(dstSpan); // No layout conversion has to be performed, just copy the data entirely.
-
-                        memoryManager.Write(dstGpuVa + (ulong)dstBaseOffset, dstSpan);
-
+                        // No layout conversion has to be performed, just copy the data entirely.
+                        memoryManager.Write(dstGpuVa + (ulong)dstBaseOffset, srcSpan);
                         return;
                     }
                 }
 
                 unsafe bool Convert<T>(Span<byte> dstSpan, ReadOnlySpan<byte> srcSpan) where T : unmanaged
                 {
-                    fixed (byte* dstPtr = dstSpan, srcPtr = srcSpan)
+                    if (srcLinear && dstLinear && srcBpp == dstBpp)
                     {
-                        byte* dstBase = dstPtr - dstBaseOffset; // Layout offset is relative to the base, so we need to subtract the span's offset.
-                        byte* srcBase = srcPtr - srcBaseOffset;
-
+                        // Optimized path for purely linear copies - we don't need to calculate every single byte offset,
+                        // and we can make use of Span.CopyTo which is very very fast (even compared to pointers)
                         for (int y = 0; y < yCount; y++)
                         {
                             srcCalculator.SetY(srcRegionY + y);
                             dstCalculator.SetY(dstRegionY + y);
+                            int srcOffset = srcCalculator.GetOffset(srcRegionX);
+                            int dstOffset = dstCalculator.GetOffset(dstRegionX);
+                            srcSpan.Slice(srcOffset - srcBaseOffset, xCount * srcBpp)
+                                .CopyTo(dstSpan.Slice(dstOffset - dstBaseOffset, xCount * dstBpp));
+                        }
+                    }
+                    else
+                    {
+                        fixed (byte* dstPtr = dstSpan, srcPtr = srcSpan)
+                        {
+                            byte* dstBase = dstPtr - dstBaseOffset; // Layout offset is relative to the base, so we need to subtract the span's offset.
+                            byte* srcBase = srcPtr - srcBaseOffset;
 
-                            for (int x = 0; x < xCount; x++)
+                            for (int y = 0; y < yCount; y++)
                             {
-                                int srcOffset = srcCalculator.GetOffset(srcRegionX + x);
-                                int dstOffset = dstCalculator.GetOffset(dstRegionX + x);
+                                srcCalculator.SetY(srcRegionY + y);
+                                dstCalculator.SetY(dstRegionY + y);
 
-                                *(T*)(dstBase + dstOffset) = *(T*)(srcBase + srcOffset);
+                                for (int x = 0; x < xCount; x++)
+                                {
+                                    int srcOffset = srcCalculator.GetOffset(srcRegionX + x);
+                                    int dstOffset = dstCalculator.GetOffset(dstRegionX + x);
+
+                                    *(T*)(dstBase + dstOffset) = *(T*)(srcBase + srcOffset);
+                                }
                             }
                         }
                     }
+
                     return true;
                 }
+
+                // OPT: This allocates a (potentially) huge temporary array and then copies an existing
+                // region of memory into it, data that might get overwritten entirely anyways. Ideally this should
+                // all be rewritten to use pooled arrays, but that gets complicated with packed data and strides
+                Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (ulong)dstBaseOffset, dstSize).ToArray();
 
                 bool _ = srcBpp switch
                 {
