@@ -174,6 +174,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
+            if (info.Width == info.Height * info.Height)
+            {
+                // Possibly used for a "3D texture" drawn onto a 2D surface.
+                // Some games do this to generate a tone mapping LUT without rendering into 3D texture slices.
+
+                return false;
+            }
+
             return true;
         }
 
