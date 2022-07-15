@@ -86,26 +86,26 @@ namespace Ryujinx.Memory.WindowsShared
         {
             ulong endAddress = address + size;
 
-            var overlaps = new RangeNode<ulong>[InitialOverlapsSize];
-            int count;
-
             lock (_mappings)
             {
-                count = _mappings.GetNodes(address, endAddress, ref overlaps);
+                RangeNode<ulong> node = _mappings.GetNode(new RangeNode<ulong>(address, address + 1UL, default));
 
-                for (int index = 0; index < count; index++)
+                for (; node != null; node = node.Successor)
                 {
-                    var overlap = overlaps[index];
-
-                    if (IsMapped(overlap.Value))
+                    if (IsMapped(node.Value))
                     {
-                        if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)overlap.Start, 2))
+                        if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)node.Start, 2))
                         {
                             throw new WindowsApiException("UnmapViewOfFile2");
                         }
                     }
 
-                    _mappings.Remove(overlap);
+                    _mappings.Remove(node);
+
+                    if (node.End >= endAddress)
+                    {
+                        break;
+                    }
                 }
             }
 

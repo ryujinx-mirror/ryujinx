@@ -9,6 +9,8 @@ namespace Ryujinx.Memory.WindowsShared
     /// <typeparam name="T">Type of the value stored on the node</typeparam>
     class MappingTree<T> : IntrusiveRedBlackTree<RangeNode<T>>
     {
+        private const int ArrayGrowthSize = 16;
+
         public int GetNodes(ulong start, ulong end, ref RangeNode<T>[] overlaps, int overlapCount = 0)
         {
             RangeNode<T> node = GetNode(new RangeNode<T>(start, start + 1UL, default));
@@ -17,7 +19,7 @@ namespace Ryujinx.Memory.WindowsShared
             {
                 if (overlaps.Length <= overlapCount)
                 {
-                    Array.Resize(ref overlaps, overlapCount + 1);
+                    Array.Resize(ref overlaps, overlapCount + ArrayGrowthSize);
                 }
 
                 overlaps[overlapCount++] = node;
