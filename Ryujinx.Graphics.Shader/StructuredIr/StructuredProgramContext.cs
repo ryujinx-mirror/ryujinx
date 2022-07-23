@@ -300,6 +300,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             if (operand.Type != OperandType.LocalVariable)
             {
+                if (operand.Type == OperandType.ConstantBuffer)
+                {
+                    Config.SetUsedConstantBuffer(operand.GetCbufSlot());
+                }
+
                 return new AstOperand(operand);
             }
 

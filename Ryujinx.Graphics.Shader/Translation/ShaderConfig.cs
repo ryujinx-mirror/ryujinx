@@ -360,12 +360,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             UsedFeatures |= flags;
         }
 
-        public Operand CreateCbuf(int slot, int offset)
-        {
-            SetUsedConstantBuffer(slot);
-            return OperandHelper.Cbuf(slot, offset);
-        }
-
         public void SetUsedConstantBuffer(int slot)
         {
             _usedConstantBuffers |= 1 << slot;

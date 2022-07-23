@@ -45,12 +45,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (isFP64)
             {
                 return context.PackDouble2x32(
-                    context.Config.CreateCbuf(cbufSlot, cbufOffset),
-                    context.Config.CreateCbuf(cbufSlot, cbufOffset + 1));
+                    Cbuf(cbufSlot, cbufOffset),
+                    Cbuf(cbufSlot, cbufOffset + 1));
             }
             else
             {
-                return context.Config.CreateCbuf(cbufSlot, cbufOffset);
+                return Cbuf(cbufSlot, cbufOffset);
             }
         }
 

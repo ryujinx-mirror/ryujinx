@@ -75,9 +75,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 int cbOffset = GetStorageCbOffset(config.Stage, slot);
 
-                Operand baseAddrLow  = config.CreateCbuf(0, cbOffset);
-                Operand baseAddrHigh = config.CreateCbuf(0, cbOffset + 1);
-                Operand size         = config.CreateCbuf(0, cbOffset + 2);
+                Operand baseAddrLow  = Cbuf(0, cbOffset);
+                Operand baseAddrHigh = Cbuf(0, cbOffset + 1);
+                Operand size         = Cbuf(0, cbOffset + 2);
 
                 Operand offset = PrependOperation(Instruction.Subtract,       addrLow, baseAddrLow);
                 Operand borrow = PrependOperation(Instruction.CompareLessU32, addrLow, baseAddrLow);
