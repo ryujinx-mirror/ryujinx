@@ -340,7 +340,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         {
             InstConditional condOp = new InstConditional(op.RawOpCode);
 
-            if (op.Name == InstName.Exit && condOp.Ccc != Ccc.T)
+            if ((op.Name == InstName.Bra || op.Name == InstName.Exit) && condOp.Ccc != Ccc.T)
             {
                 return false;
             }
@@ -672,6 +672,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     // Make sure we found the correct address,
                     // the push and pop instruction types must match, so:
                     // - BRK can only consume addresses pushed by PBK.
+                    // - CONT can only consume addresses pushed by PCNT.
                     // - SYNC can only consume addresses pushed by SSY.
                     if (found)
                     {

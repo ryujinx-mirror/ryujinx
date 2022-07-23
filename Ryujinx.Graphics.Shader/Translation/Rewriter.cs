@@ -164,7 +164,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isCoordNormalized = !isBindless && config.GpuAccessor.QueryTextureCoordNormalized(texOp.Handle, texOp.CbufSlot);
+            bool isCoordNormalized = isBindless || config.GpuAccessor.QueryTextureCoordNormalized(texOp.Handle, texOp.CbufSlot);
 
             if (!hasInvalidOffset && isCoordNormalized)
             {

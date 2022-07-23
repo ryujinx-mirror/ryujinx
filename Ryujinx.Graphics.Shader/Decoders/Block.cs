@@ -92,7 +92,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 pushOpInfo.Consumers.Add(rightBlock, local);
             }
 
-            rightBlock.SyncTargets.Union(SyncTargets);
+            foreach ((ulong  key, SyncTarget value) in SyncTargets)
+            {
+                rightBlock.SyncTargets.Add(key, value);
+            }
+
             SyncTargets.Clear();
 
             // Move push ops.
