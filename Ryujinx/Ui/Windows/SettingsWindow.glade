@@ -1509,7 +1509,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="_internetToggle">
-                                    <property name="label" translatable="yes">Enable guest Internet access</property>
+                                    <property name="label" translatable="yes">Enable Guest Internet Access</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
@@ -1643,7 +1643,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkRadioButton" id="_mmHostUnsafe">
-                                    <property name="label" translatable="yes">Host unchecked (fastest, unsafe)</property>
+                                    <property name="label" translatable="yes">Host Unchecked (fastest, unsafe)</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
@@ -1725,7 +1725,7 @@
                                     <property name="can-focus">False</property>
                                     <property name="halign">start</property>
                                     <property name="margin-bottom">5</property>
-                                    <property name="label" translatable="yes"> - These may cause instability</property>
+                                    <property name="label" translatable="yes"> (may cause instability)</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1749,7 +1749,7 @@
                                 <property name="orientation">vertical</property>
                                 <child>
                                   <object class="GtkCheckButton" id="_expandRamToggle">
-                                    <property name="label" translatable="yes">Expand DRAM size to 6GB</property>
+                                    <property name="label" translatable="yes">Expand DRAM Size to 6GB</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
