@@ -554,5 +554,7 @@
   "ControllerMotionTitle": "Hareket Kontrol Seçenekleri",
   "ControllerRumbleTitle": "Titreşim Seçenekleri",
   "SettingsSelectThemeFileDialogTitle" : "Tema Dosyası Seçin",
-  "SettingsXamlThemeFile" : "Xaml Tema Dosyası"
+  "SettingsXamlThemeFile" : "Xaml Tema Dosyası",
+  "SettingsTabHotkeysResScaleUpHotkey": "Çözünürlüğü artırın:",
+  "SettingsTabHotkeysResScaleDownHotkey": "Çözünürlüğü azaltın:"
 }

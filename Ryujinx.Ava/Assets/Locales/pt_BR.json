@@ -554,5 +554,7 @@
   "ControllerMotionTitle": "Configurações do controle de movimento",
   "ControllerRumbleTitle": "Configurações de vibração",
   "SettingsSelectThemeFileDialogTitle" : "Selecionar arquivo do tema",
-  "SettingsXamlThemeFile" : "Arquivo de tema Xaml"
+  "SettingsXamlThemeFile" : "Arquivo de tema Xaml",
+  "SettingsTabHotkeysResScaleUpHotkey": "Aumentar a resolução:",
+  "SettingsTabHotkeysResScaleDownHotkey": "Diminuir a resolução:"
 }

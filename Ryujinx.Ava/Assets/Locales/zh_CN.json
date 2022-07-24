@@ -568,5 +568,7 @@
   "UpdateWindowTitle": "管理游戏更新",
   "CheatWindowHeading": "适用于 {0} [{1}] 的金手指",
   "DlcWindowHeading": "适用于 {0} [{1}] 的 DLC",
-  "GameUpdateWindowHeading": "适用于 {0} [{1}] 的更新"
+  "GameUpdateWindowHeading": "适用于 {0} [{1}] 的更新",
+  "SettingsTabHotkeysResScaleUpHotkey": "分辨率提高",
+  "SettingsTabHotkeysResScaleDownHotkey": "降低分辨率"
 }

@@ -310,7 +310,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 EnableDockedMode              = new ReactiveObject<bool>();
                 EnableDockedMode.Event        += static (sender, e) => LogValueChange(sender, e, nameof(EnableDockedMode));
                 EnablePtc                     = new ReactiveObject<bool>();
-                EnablePtc.Event               += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc)); 
+                EnablePtc.Event               += static (sender, e) => LogValueChange(sender, e, nameof(EnablePtc));
                 EnableInternetAccess          = new ReactiveObject<bool>();
                 EnableInternetAccess.Event    += static (sender, e) => LogValueChange(sender, e, nameof(EnableInternetAccess));
                 EnableFsIntegrityChecks       = new ReactiveObject<bool>();
@@ -648,7 +648,9 @@ namespace Ryujinx.Ui.Common.Configuration
                 ToggleMute = Key.F2,
                 Screenshot = Key.F8,
                 ShowUi = Key.F4,
-                Pause = Key.F5
+                Pause = Key.F5,
+                ResScaleUp = Key.Unbound,
+                ResScaleDown = Key.Unbound
             };
             Hid.InputConfig.Value = new List<InputConfig>
             {
@@ -967,7 +969,7 @@ namespace Ryujinx.Ui.Common.Configuration
             if (configurationFileFormat.Version < 29)
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 29.");
-                
+
                 configurationFileFormat.Hotkeys = new KeyboardHotkeys
                 {
                     ToggleVsync = Key.Tab,
@@ -1094,6 +1096,22 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileFormat.LanguageCode     = "en_US";
 
                 configurationFileUpdated = true;
+            }
+
+            if (configurationFileFormat.Version < 39)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 39.");
+
+                configurationFileFormat.Hotkeys = new KeyboardHotkeys
+                {
+                    ToggleVsync = configurationFileFormat.Hotkeys.ToggleVsync,
+                    Screenshot = configurationFileFormat.Hotkeys.Screenshot,
+                    ShowUi = configurationFileFormat.Hotkeys.ShowUi,
+                    Pause = configurationFileFormat.Hotkeys.Pause,
+                    ToggleMute = configurationFileFormat.Hotkeys.ToggleMute,
+                    ResScaleUp = Key.Unbound,
+                    ResScaleDown = Key.Unbound
+                };
             }
 
             Logger.EnableFileLog.Value             = configurationFileFormat.EnableFileLog;

@@ -6,6 +6,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Input;
@@ -33,6 +34,7 @@ namespace Ryujinx.Ui
         private const int SwitchPanelWidth = 1280;
         private const int SwitchPanelHeight = 720;
         private const int TargetFps = 60;
+        private const float MaxResolutionScale = 4.0f; // Max resolution hotkeys can scale to before wrapping.
 
         public ManualResetEvent WaitEvent { get; set; }
         public NpadManager NpadManager { get; }
@@ -618,6 +620,19 @@ namespace Ryujinx.Ui
                     }
                 }
 
+                if (currentHotkeyState.HasFlag(KeyboardHotkeyState.ResScaleUp) &&
+                    !_prevHotkeyState.HasFlag(KeyboardHotkeyState.ResScaleUp))
+                {
+                    GraphicsConfig.ResScale = GraphicsConfig.ResScale % MaxResolutionScale + 1;
+                }
+
+                if (currentHotkeyState.HasFlag(KeyboardHotkeyState.ResScaleDown) &&
+                    !_prevHotkeyState.HasFlag(KeyboardHotkeyState.ResScaleDown))
+                {
+                    GraphicsConfig.ResScale =
+                    (MaxResolutionScale + GraphicsConfig.ResScale - 2) % MaxResolutionScale + 1;
+                }
+
                 _prevHotkeyState = currentHotkeyState;
             }
 
@@ -648,7 +663,9 @@ namespace Ryujinx.Ui
             Screenshot = 1 << 1,
             ShowUi = 1 << 2,
             Pause = 1 << 3,
-            ToggleMute = 1 << 4
+            ToggleMute = 1 << 4,
+            ResScaleUp = 1 << 5,
+            ResScaleDown = 1 << 6
         }
 
         private KeyboardHotkeyState GetHotkeyState()
@@ -678,6 +695,16 @@ namespace Ryujinx.Ui
             if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ToggleMute))
             {
                 state |= KeyboardHotkeyState.ToggleMute;
+            }
+
+            if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ResScaleUp))
+            {
+                state |= KeyboardHotkeyState.ResScaleUp;
+            }
+
+            if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ResScaleDown))
+            {
+                state |= KeyboardHotkeyState.ResScaleDown;
             }
 
             return state;

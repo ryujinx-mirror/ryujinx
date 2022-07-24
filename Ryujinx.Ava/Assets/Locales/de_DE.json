@@ -556,5 +556,7 @@
   "SettingsSelectThemeFileDialogTitle" : "Wähle ein benutzerdefiniertes Thema",
   "SettingsXamlThemeFile" : "Xaml Thema-Datei",
   "SettingsTabGraphicsBackend" : "Grafik-Backend",
-  "GraphicsBackendTooltip" : "Ändert das Grafik-Backend"
+  "GraphicsBackendTooltip" : "Ändert das Grafik-Backend",
+  "SettingsTabHotkeysResScaleUpHotkey": "Auflösung erhöhen:",
+  "SettingsTabHotkeysResScaleDownHotkey": "Auflösung vermindern:"
 }

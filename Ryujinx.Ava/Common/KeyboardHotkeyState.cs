@@ -7,6 +7,8 @@
         Screenshot,
         ShowUi,
         Pause,
-        ToggleMute
+        ToggleMute,
+        ResScaleUp,
+        ResScaleDown
     }
 }

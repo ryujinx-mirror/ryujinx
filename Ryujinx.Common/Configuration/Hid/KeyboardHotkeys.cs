@@ -7,5 +7,7 @@
         public Key ShowUi { get; set; }
         public Key Pause { get; set; }
         public Key ToggleMute { get; set; }
+        public Key ResScaleUp { get; set; }
+        public Key ResScaleDown { get; set; }
     }
 }

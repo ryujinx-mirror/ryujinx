@@ -568,5 +568,7 @@
   "UpdateWindowTitle": "Administrar actualizaciones",
   "CheatWindowHeading": "Cheats disponibles para {0} [{1}]",
   "DlcWindowHeading": "Contenido descargable disponible para {0} [{1}]",
-  "GameUpdateWindowHeading": "Actualizaciones disponibles para {0} [{1}]"
+  "GameUpdateWindowHeading": "Actualizaciones disponibles para {0} [{1}]",
+  "SettingsTabHotkeysResScaleUpHotkey": "Aumentar la resolución:",
+  "SettingsTabHotkeysResScaleDownHotkey": "Disminuir la resolución:"
 }

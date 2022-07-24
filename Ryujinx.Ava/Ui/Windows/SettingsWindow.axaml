@@ -241,6 +241,22 @@
                                     TextAlignment="Center" />
                             </ToggleButton>
                         </StackPanel>
+                        <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysResScaleUpHotkey}" Width="230" />
+                            <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                                <TextBlock
+                                    Text="{Binding KeyboardHotkeys.ResScaleUp, Mode=TwoWay, Converter={StaticResource Key}}"
+                                    TextAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysResScaleDownHotkey}" Width="230" />
+                            <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                                <TextBlock
+                                    Text="{Binding KeyboardHotkeys.ResScaleDown, Mode=TwoWay, Converter={StaticResource Key}}"
+                                    TextAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </ScrollViewer>

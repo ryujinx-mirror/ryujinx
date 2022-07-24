@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 38;
+        public const int CurrentVersion = 39;
 
         /// <summary>
         /// Version of the configuration file format
@@ -80,7 +80,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables printing error log messages
         /// </summary>
         public bool LoggingEnableError { get; set; }
-        
+
         /// <summary>
         /// Enables printing trace log messages
         /// </summary>
