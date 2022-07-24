@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
             {
                 (int minVersion, int maxVersion) = value;
 
-                for (int version = minVersion; version <= maxVersion; version++)
+                for (int version = maxVersion; version >= minVersion; version--)
                 {
                     if (NativeLibrary.TryLoad(FormatLibraryNameForCurrentOs(libraryName, version), assembly, searchPath, out handle))
                     {
