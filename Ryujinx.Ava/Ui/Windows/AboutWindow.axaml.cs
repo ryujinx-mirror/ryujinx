@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class AboutWindow : StyleableWindow
+    public partial class AboutWindow : StyleableWindow
     {
         public AboutWindow()
         {
@@ -38,15 +38,6 @@ namespace Ryujinx.Ava.Ui.Windows
         public string Version { get; set; }
 
         public string Developers => string.Format(LocaleManager.Instance["AboutPageDeveloperListMore"], "gdkchan, Ac_K, Thog, rip in peri peri, LDj3SNuD, emmaus, Thealexbarney, Xpl0itR, GoffyDude, »jD«");
-
-        public TextBlock SupportersTextBlock { get; set; }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-
-            SupportersTextBlock = this.FindControl<TextBlock>("SupportersTextBlock");
-        }
 
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {

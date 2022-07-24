@@ -16,7 +16,6 @@ namespace Ryujinx.Ava.Ui.Controls
         private static bool _isChoiceDialogOpen;
 
         private async static Task<UserResult> ShowContentDialog(
-            StyleableWindow window,
             string title,
             string primaryText,
             string secondaryText,
@@ -28,35 +27,32 @@ namespace Ryujinx.Ava.Ui.Controls
         {
             UserResult result = UserResult.None;
 
-            ContentDialog contentDialog = window.ContentDialog;
+            ContentDialog contentDialog = new ContentDialog();
 
             await ShowDialog();
 
             async Task ShowDialog()
             {
-                if (contentDialog != null)
+                contentDialog.Title = title;
+                contentDialog.PrimaryButtonText = primaryButton;
+                contentDialog.SecondaryButtonText = secondaryButton;
+                contentDialog.CloseButtonText = closeButton;
+                contentDialog.Content = CreateDialogTextContent(primaryText, secondaryText, iconSymbol);
+
+                contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
                 {
-                    contentDialog.Title = title;
-                    contentDialog.PrimaryButtonText = primaryButton;
-                    contentDialog.SecondaryButtonText = secondaryButton;
-                    contentDialog.CloseButtonText = closeButton;
-                    contentDialog.Content = CreateDialogTextContent(primaryText, secondaryText, iconSymbol);
+                    result = primaryButtonResult;
+                });
+                contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
+                {
+                    result = UserResult.No;
+                });
+                contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
+                {
+                    result = UserResult.Cancel;
+                });
 
-                    contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
-                    {
-                        result = primaryButtonResult;
-                    });
-                    contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
-                    {
-                        result = UserResult.No;
-                    });
-                    contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
-                    {
-                        result = UserResult.Cancel;
-                    });
-
-                    await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
-                };
+                await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
             }
 
             return result;
@@ -78,35 +74,30 @@ namespace Ryujinx.Ava.Ui.Controls
 
             UserResult result = UserResult.None;
 
-            ContentDialog contentDialog = window.ContentDialog;
-
-            Window overlay = window;
-
-            if (contentDialog != null)
+            ContentDialog contentDialog = new ContentDialog
             {
-                contentDialog.PrimaryButtonClick += DeferClose;
-                contentDialog.Title = title;
-                contentDialog.PrimaryButtonText = primaryButton;
-                contentDialog.SecondaryButtonText = secondaryButton;
-                contentDialog.CloseButtonText = closeButton;
-                contentDialog.Content = CreateDialogTextContent(primaryText, secondaryText, iconSymbol); 
-
-                contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
+                Title = title,
+                PrimaryButtonText = primaryButton,
+                SecondaryButtonText = secondaryButton,
+                CloseButtonText = closeButton,
+                Content = CreateDialogTextContent(primaryText, secondaryText, iconSymbol),
+                PrimaryButtonCommand = MiniCommand.Create(() =>
                 {
                     result = primaryButton == LocaleManager.Instance["InputDialogYes"] ? UserResult.Yes : UserResult.Ok;
-                });
-                contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
-                {
-                    contentDialog.PrimaryButtonClick -= DeferClose;
-                    result = UserResult.No;
-                });
-                contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
-                {
-                    contentDialog.PrimaryButtonClick -= DeferClose;
-                    result = UserResult.Cancel;
-                });
-                await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
+                }),
             };
+            contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
+            {
+                contentDialog.PrimaryButtonClick -= DeferClose;
+                result = UserResult.No;
+            });
+            contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
+            {
+                contentDialog.PrimaryButtonClick -= DeferClose;
+                result = UserResult.Cancel;
+            });
+            contentDialog.PrimaryButtonClick += DeferClose;
+            await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
 
             return result;
 
@@ -141,7 +132,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
                 if (doWhileDeferred != null)
                 {
-                    await doWhileDeferred(overlay);
+                    await doWhileDeferred(window);
 
                     deferResetEvent.Set();
                 }
@@ -191,7 +182,6 @@ namespace Ryujinx.Ava.Ui.Controls
         }
 
         public static async Task<UserResult> CreateInfoDialog(
-            StyleableWindow window,
             string primary,
             string secondaryText,
             string acceptButton,
@@ -199,7 +189,6 @@ namespace Ryujinx.Ava.Ui.Controls
             string title)
         {
             return await ShowContentDialog(
-                window,
                 title,
                 primary,
                 secondaryText,
@@ -210,7 +199,6 @@ namespace Ryujinx.Ava.Ui.Controls
         }
 
         internal static async Task<UserResult> CreateConfirmationDialog(
-            StyleableWindow window,
             string primaryText,
             string secondaryText,
             string acceptButtonText,
@@ -219,7 +207,6 @@ namespace Ryujinx.Ava.Ui.Controls
             UserResult primaryButtonResult = UserResult.Yes)
         {
             return await ShowContentDialog(
-                window,
                 string.IsNullOrWhiteSpace(title) ? LocaleManager.Instance["DialogConfirmationTitle"] : title,
                 primaryText,
                 secondaryText,
@@ -235,10 +222,9 @@ namespace Ryujinx.Ava.Ui.Controls
             return new(mainText, secondaryText);
         }
 
-        internal static async Task CreateUpdaterInfoDialog(StyleableWindow window, string primary, string secondaryText)
+        internal static async Task CreateUpdaterInfoDialog(string primary, string secondaryText)
         {
             await ShowContentDialog(
-                window,
                 LocaleManager.Instance["DialogUpdaterTitle"],
                 primary,
                 secondaryText,
@@ -248,24 +234,9 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Important);
         }
 
-        internal static async Task ShowNotAvailableMessage(StyleableWindow window)
-        {
-            // Temporary placeholder for features to be added
-            await ShowContentDialog(
-                window,
-                "Feature Not Available",
-                "The selected feature is not available in this version.",
-                "",
-                "",
-                "",
-                LocaleManager.Instance["InputDialogOk"],
-                (int)Symbol.Important);
-        }
-
-        internal static async Task CreateWarningDialog(StyleableWindow window, string primary, string secondaryText)
+        internal static async Task CreateWarningDialog(string primary, string secondaryText)
         {
             await ShowContentDialog(
-                window,
                 LocaleManager.Instance["DialogWarningTitle"],
                 primary,
                 secondaryText,
@@ -275,12 +246,11 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Important);
         }
 
-        internal static async Task CreateErrorDialog(StyleableWindow owner, string errorMessage, string secondaryErrorMessage = "")
+        internal static async Task CreateErrorDialog(string errorMessage, string secondaryErrorMessage = "")
         {
             Logger.Error?.Print(LogClass.Application, errorMessage);
 
             await ShowContentDialog(
-                owner,
                 LocaleManager.Instance["DialogErrorTitle"],
                 LocaleManager.Instance["DialogErrorMessage"],
                 errorMessage,
@@ -290,7 +260,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 (int)Symbol.Dismiss);
         }
 
-        internal static async Task<bool> CreateChoiceDialog(StyleableWindow window, string title, string primary, string secondaryText)
+        internal static async Task<bool> CreateChoiceDialog(string title, string primary, string secondaryText)
         {
             if (_isChoiceDialogOpen)
             {
@@ -301,7 +271,6 @@ namespace Ryujinx.Ava.Ui.Controls
 
             UserResult response =
                 await ShowContentDialog(
-                    window,
                     title,
                     primary,
                     secondaryText,
@@ -316,19 +285,17 @@ namespace Ryujinx.Ava.Ui.Controls
             return response == UserResult.Yes;
         }
 
-        internal static async Task<bool> CreateExitDialog(StyleableWindow owner)
+        internal static async Task<bool> CreateExitDialog()
         {
             return await CreateChoiceDialog(
-                owner,
                 LocaleManager.Instance["DialogExitTitle"],
                 LocaleManager.Instance["DialogExitMessage"],
                 LocaleManager.Instance["DialogExitSubMessage"]);
         }
 
-        internal static async Task<bool> CreateStopEmulationDialog(StyleableWindow owner)
+        internal static async Task<bool> CreateStopEmulationDialog()
         {
             return await CreateChoiceDialog(
-                owner,
                 LocaleManager.Instance["DialogStopEmulationTitle"],
                 LocaleManager.Instance["DialogStopEmulationMessage"],
                 LocaleManager.Instance["DialogExitSubMessage"]);
@@ -338,12 +305,10 @@ namespace Ryujinx.Ava.Ui.Controls
             string title,
             string mainText,
             string subText,
-            StyleableWindow owner,
             uint maxLength = int.MaxValue,
             string input = "")
         {
             var result = await InputDialog.ShowInputDialog(
-                owner,
                 title,
                 mainText,
                 input,

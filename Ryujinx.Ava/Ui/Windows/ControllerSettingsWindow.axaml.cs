@@ -24,11 +24,10 @@ using Key = Ryujinx.Input.Key;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class ControllerSettingsWindow : UserControl
+    public partial class ControllerSettingsWindow : UserControl
     {
         private bool _dialogOpen;
 
-        public Grid SettingButtons { get; set; }
         private ButtonKeyAssigner _currentAssigner;
         internal ControllerSettingsViewModel ViewModel { get; set; }
 
@@ -46,13 +45,6 @@ namespace Ryujinx.Ava.Ui.Windows
                     button.Unchecked += Button_Unchecked;
                 }
             }
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-
-            SettingButtons = this.FindControl<Grid>("SettingButtons");
         }
 
         protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -165,7 +157,6 @@ namespace Ryujinx.Ava.Ui.Windows
                 _dialogOpen = true;
 
                 var result = await ContentDialogHelper.CreateConfirmationDialog(
-                    this.GetVisualRoot() as StyleableWindow,
                     LocaleManager.Instance["DialogControllerSettingsModifiedConfirmMessage"],
                     LocaleManager.Instance["DialogControllerSettingsModifiedConfirmSubMessage"],
                     LocaleManager.Instance["InputDialogYes"],

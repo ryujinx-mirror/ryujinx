@@ -7,7 +7,7 @@ using Ryujinx.Ava.Ui.ViewModels;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class AmiiboWindow : StyleableWindow
+    public partial class AmiiboWindow : StyleableWindow
     {
         public AmiiboWindow(bool showAll, string lastScannedAmiiboId, string titleId)
         {
@@ -43,11 +43,6 @@ namespace Ryujinx.Ava.Ui.Windows
         public bool IsScanned { get; set; }
         public Amiibo.AmiiboApi ScannedAmiibo { get; set; }
         public AmiiboWindowViewModel ViewModel { get; set; }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
 
         private void ScanButton_Click(object sender, RoutedEventArgs e)
         {

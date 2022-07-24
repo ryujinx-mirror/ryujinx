@@ -36,7 +36,7 @@ using InputManager = Ryujinx.Input.HLE.InputManager;
 using ProgressBar = Avalonia.Controls.ProgressBar;
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class MainWindow : StyleableWindow
+    public partial class MainWindow : StyleableWindow
     {
         private bool _canUpdate;
         private bool _isClosing;
@@ -62,22 +62,6 @@ namespace Ryujinx.Ava.Ui.Windows
         public InputManager InputManager { get; private set; }
 
         internal RendererControl GlRenderer { get; private set; }
-        public ContentControl ContentFrame { get; private set; }
-        public TextBlock LoadStatus { get; private set; }
-        public TextBlock FirmwareStatus { get; private set; }
-        public TextBox SearchBox { get; private set; }
-        public ProgressBar LoadProgressBar { get; private set; }
-        public Menu Menu { get; private set; }
-        public MenuItem UpdateMenuItem { get; private set; }
-        public MenuItem ActionsMenuItem { get; private set; }
-        public GameGridView GameGrid { get; private set; }
-        public GameListView GameList { get; private set; }
-        public OffscreenTextBox HiddenTextBox { get; private set; }
-        public HotKeyControl FullscreenHotKey { get; private set; }
-        public HotKeyControl FullscreenHotKey2 { get; private set; }
-        public HotKeyControl DockToggleHotKey { get; private set; }
-        public HotKeyControl ExitHotKey { get; private set; }
-        public ToggleSplitButton VolumeStatus { get; set; }
         internal MainWindowViewModel ViewModel { get; private set; }
         public SettingsWindow SettingsWindow { get; set; }
 
@@ -102,6 +86,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
+            Load();
             AttachDebugDevTools();
 
             UiHandler = new AvaHostUiHandler(this);
@@ -192,7 +177,9 @@ namespace Ryujinx.Ava.Ui.Windows
                 string mainMessage = LocaleManager.Instance["DialogPerformanceCheckLoggingEnabledMessage"];
                 string secondaryMessage = LocaleManager.Instance["DialogPerformanceCheckLoggingEnabledConfirmMessage"];
 
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(this, mainMessage, secondaryMessage, LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], LocaleManager.Instance["RyujinxConfirm"]);
+                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(mainMessage, secondaryMessage,
+                    LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"],
+                    LocaleManager.Instance["RyujinxConfirm"]);
 
                 if (result != UserResult.Yes)
                 {
@@ -205,9 +192,12 @@ namespace Ryujinx.Ava.Ui.Windows
             if (!string.IsNullOrWhiteSpace(ConfigurationState.Instance.Graphics.ShadersDumpPath.Value))
             {
                 string mainMessage = LocaleManager.Instance["DialogPerformanceCheckShaderDumpEnabledMessage"];
-                string secondaryMessage = LocaleManager.Instance["DialogPerformanceCheckShaderDumpEnabledConfirmMessage"];
+                string secondaryMessage =
+                    LocaleManager.Instance["DialogPerformanceCheckShaderDumpEnabledConfirmMessage"];
 
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(this, mainMessage, secondaryMessage, LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], LocaleManager.Instance["RyujinxConfirm"]);
+                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(mainMessage, secondaryMessage,
+                    LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"],
+                    LocaleManager.Instance["RyujinxConfirm"]);
 
                 if (result != UserResult.Yes)
                 {
@@ -231,7 +221,7 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             if (AppHost != null)
             {
-                await ContentDialogHelper.CreateInfoDialog(this,
+                await ContentDialogHelper.CreateInfoDialog(
                     LocaleManager.Instance["DialogLoadAppGameAlreadyLoadedMessage"],
                     LocaleManager.Instance["DialogLoadAppGameAlreadyLoadedSubMessage"],
                     LocaleManager.Instance["InputDialogOk"],
@@ -254,7 +244,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             PrepareLoadScreen();
 
-            _mainViewContent = ContentFrame.Content as Control;
+            _mainViewContent = Content.Content as Control;
 
             GlRenderer = new RendererControl(3, 3, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
             AppHost = new AppHost(GlRenderer, InputManager, path, VirtualFileSystem, ContentManager, AccountManager, _userChannelPersistence, this);
@@ -321,7 +311,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ContentFrame.Content = GlRenderer;
+                Content.Content = GlRenderer;
 
                 if (startFullscreen && WindowState != WindowState.FullScreen)
                 {
@@ -365,9 +355,9 @@ namespace Ryujinx.Ava.Ui.Windows
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
-                if (ContentFrame.Content != _mainViewContent)
+                if (Content.Content != _mainViewContent)
                 {
-                    ContentFrame.Content = _mainViewContent;
+                    Content.Content = _mainViewContent;
                 }
 
                 ViewModel.ShowMenuAndStatusBar = true;
@@ -501,27 +491,8 @@ namespace Ryujinx.Ava.Ui.Windows
             ViewModel.IsAppletMenuActive = hasApplet;
         }
 
-        private void InitializeComponent()
+        private void Load()
         {
-            AvaloniaXamlLoader.Load(this);
-
-            ContentFrame = this.FindControl<ContentControl>("Content");
-            GameList = this.FindControl<GameListView>("GameList");
-            LoadStatus = this.FindControl<TextBlock>("LoadStatus");
-            FirmwareStatus = this.FindControl<TextBlock>("FirmwareStatus");
-            LoadProgressBar = this.FindControl<ProgressBar>("LoadProgressBar");
-            SearchBox = this.FindControl<TextBox>("SearchBox");
-            Menu = this.FindControl<Menu>("Menu");
-            UpdateMenuItem = this.FindControl<MenuItem>("UpdateMenuItem");
-            GameGrid = this.FindControl<GameGridView>("GameGrid");
-            HiddenTextBox = this.FindControl<OffscreenTextBox>("HiddenTextBox");
-            FullscreenHotKey = this.FindControl<HotKeyControl>("FullscreenHotKey");
-            FullscreenHotKey2 = this.FindControl<HotKeyControl>("FullscreenHotKey2");
-            DockToggleHotKey = this.FindControl<HotKeyControl>("DockToggleHotKey");
-            ExitHotKey = this.FindControl<HotKeyControl>("ExitHotKey");
-            VolumeStatus = this.FindControl<ToggleSplitButton>("VolumeStatus");
-            ActionsMenuItem = this.FindControl<MenuItem>("ActionsMenuItem");
-
             VolumeStatus.Click += VolumeStatus_CheckedChanged;
 
             GameGrid.ApplicationOpened += Application_Opened;
@@ -710,7 +681,7 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             Dispatcher.UIThread.InvokeAsync(async () =>
            {
-               _isClosing = await ContentDialogHelper.CreateExitDialog(this);
+               _isClosing = await ContentDialogHelper.CreateExitDialog();
 
                if (_isClosing)
                {

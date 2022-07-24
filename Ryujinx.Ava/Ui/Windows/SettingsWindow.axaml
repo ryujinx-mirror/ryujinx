@@ -31,16 +31,11 @@
             <RowDefinition />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ContentControl
+        <ContentPresenter
+            x:Name="ContentPresenter"
             Grid.Row="1"
-            Focusable="False"
             IsVisible="False"
-            KeyboardNavigation.IsTabStop="False">
-            <ui:ContentDialog Name="ContentDialog"
-                              IsPrimaryButtonEnabled="True"
-                              IsSecondaryButtonEnabled="True"
-                              IsVisible="False" />
-        </ContentControl>
+            KeyboardNavigation.IsTabStop="False"/>
         <Grid Name="Pages" IsVisible="False" Grid.Row="2">
             <ScrollViewer Name="UiPage"
                           Margin="0,0,10,0"

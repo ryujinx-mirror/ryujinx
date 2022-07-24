@@ -1,8 +1,10 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
+using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Navigation;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.Ui.Models;
 using Ryujinx.Ava.Ui.Windows;
 using Ryujinx.HLE.FileSystem;
 using SixLabors.ImageSharp;
@@ -12,36 +14,40 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public class ProfileImageSelectionDialog : StyleableWindow
+    public partial class ProfileImageSelectionDialog : UserControl
     {
-        private readonly ContentManager _contentManager;
+        private ContentManager _contentManager;
+        private NavigationDialogHost _parent;
+        private TempProfile _profile;
 
         public bool FirmwareFound => _contentManager.GetCurrentFirmwareVersion() != null;
 
-        public byte[] BufferImageProfile { get; set; }
-
-        public ProfileImageSelectionDialog(ContentManager contentManager)
-        {
-            _contentManager = contentManager;
-            DataContext = this;
-            InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
-        }
-
         public ProfileImageSelectionDialog()
         {
-            DataContext = this;
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+            AddHandler(Frame.NavigatedToEvent, (s, e) =>
+            {
+                NavigatedTo(e);
+            }, RoutingStrategies.Direct);
         }
 
-        private void InitializeComponent()
+        private void NavigatedTo(NavigationEventArgs arg)
         {
-            AvaloniaXamlLoader.Load(this);
+            if (Program.PreviewerDetached)
+            {
+                switch (arg.NavigationMode)
+                {
+                    case NavigationMode.New:
+                        (_parent, _profile) = ((NavigationDialogHost, TempProfile))arg.Parameter;
+                        _contentManager = _parent.ContentManager;
+                        break;
+                    case NavigationMode.Back:
+                        _parent.GoBack();
+                        break;
+                }
+
+                DataContext = this;
+            }
         }
 
         private async void Import_OnClick(object sender, RoutedEventArgs e)
@@ -58,7 +64,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
             dialog.AllowMultiple = false;
 
-            string[] image = await dialog.ShowAsync(this);
+            string[] image = await dialog.ShowAsync(((TopLevel)_parent.GetVisualRoot()) as Window);
 
             if (image != null)
             {
@@ -66,28 +72,22 @@ namespace Ryujinx.Ava.Ui.Controls
                 {
                     string imageFile = image[0];
 
-                    ProcessProfileImage(File.ReadAllBytes(imageFile));
+                    _profile.Image = ProcessProfileImage(File.ReadAllBytes(imageFile));
                 }
 
-                Close();
+                _parent.GoBack();
             }
         }
 
-        private async void SelectFirmwareImage_OnClick(object sender, RoutedEventArgs e)
+        private void SelectFirmwareImage_OnClick(object sender, RoutedEventArgs e)
         {
             if (FirmwareFound)
             {
-                AvatarWindow window = new(_contentManager);
-
-                await window.ShowDialog(this);
-
-                BufferImageProfile = window.SelectedImage;
-
-                Close();
+                _parent.Navigate(typeof(AvatarWindow), (_parent, _profile));
             }
         }
 
-        private void ProcessProfileImage(byte[] buffer)
+        private static byte[] ProcessProfileImage(byte[] buffer)
         {
             using (Image image = Image.Load(buffer))
             {
@@ -97,7 +97,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 {
                     image.SaveAsJpeg(streamJpg);
 
-                    BufferImageProfile = streamJpg.ToArray();
+                    return streamJpg.ToArray();
                 }
             }
         }

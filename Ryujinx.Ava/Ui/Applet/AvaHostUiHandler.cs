@@ -92,7 +92,7 @@ namespace Ryujinx.Ava.Ui.Applet
                 }
                 catch (Exception ex)
                 {
-                    await ContentDialogHelper.CreateErrorDialog(_parent, string.Format(LocaleManager.Instance["DialogMessageDialogErrorExceptionMessage"], ex));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogMessageDialogErrorExceptionMessage"], ex));
 
                     dialogCloseEvent.Set();
                 }
@@ -126,7 +126,7 @@ namespace Ryujinx.Ava.Ui.Applet
                 catch (Exception ex)
                 {
                     error = true;
-                    await ContentDialogHelper.CreateErrorDialog(_parent, string.Format(LocaleManager.Instance["DialogSoftwareKeyboardErrorExceptionMessage"], ex));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogSoftwareKeyboardErrorExceptionMessage"], ex));
                 }
                 finally
                 {
@@ -181,7 +181,7 @@ namespace Ryujinx.Ava.Ui.Applet
                 catch (Exception ex)
                 {
                     dialogCloseEvent.Set();
-                    await ContentDialogHelper.CreateErrorDialog(_parent, string.Format(LocaleManager.Instance["DialogErrorAppletErrorExceptionMessage"], ex));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogErrorAppletErrorExceptionMessage"], ex));
                 }
             });
 

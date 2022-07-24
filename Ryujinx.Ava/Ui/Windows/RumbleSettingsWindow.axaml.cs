@@ -9,13 +9,14 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class RumbleSettingsWindow : UserControl
+    public partial class RumbleSettingsWindow : UserControl
     {
         private readonly InputConfiguration<GamepadInputId, StickInputId> _viewmodel;
 
         public RumbleSettingsWindow()
         {
             InitializeComponent();
+            DataContext = _viewmodel;
         }
 
         public RumbleSettingsWindow(ControllerSettingsViewModel viewmodel)
@@ -24,44 +25,34 @@ namespace Ryujinx.Ava.Ui.Windows
 
             _viewmodel = new InputConfiguration<GamepadInputId, StickInputId>()
             {
-                StrongRumble = config.StrongRumble,
-                WeakRumble = config.WeakRumble
+                StrongRumble = config.StrongRumble, WeakRumble = config.WeakRumble
             };
 
             InitializeComponent();
-        }
-
-        private void InitializeComponent()
-        {
             DataContext = _viewmodel;
-
-            AvaloniaXamlLoader.Load(this);
         }
 
-        public static async Task Show(ControllerSettingsViewModel viewmodel, StyleableWindow window)
+        public static async Task Show(ControllerSettingsViewModel viewmodel)
         {
-            ContentDialog contentDialog = window.ContentDialog;
-
-            string name = string.Empty;
-
             RumbleSettingsWindow content = new RumbleSettingsWindow(viewmodel);
 
-            if (contentDialog != null)
+            ContentDialog contentDialog = new ContentDialog
             {
-                contentDialog.Title = LocaleManager.Instance["ControllerRumbleTitle"];
-                contentDialog.PrimaryButtonText = LocaleManager.Instance["ControllerSettingsSave"];
-                contentDialog.SecondaryButtonText = "";
-                contentDialog.CloseButtonText = LocaleManager.Instance["ControllerSettingsClose"];
-                contentDialog.Content = content;
-                contentDialog.PrimaryButtonClick += (sender, args) =>
-                {
-                    var config = viewmodel.Configuration as InputConfiguration<GamepadInputId, StickInputId>;
-                    config.StrongRumble = content._viewmodel.StrongRumble;
-                    config.WeakRumble = content._viewmodel.WeakRumble;
-                };
-
-                await contentDialog.ShowAsync();
-            }
+                Title = LocaleManager.Instance["ControllerRumbleTitle"],
+                PrimaryButtonText = LocaleManager.Instance["ControllerSettingsSave"],
+                SecondaryButtonText = "",
+                CloseButtonText = LocaleManager.Instance["ControllerSettingsClose"],
+                Content = content,
+            };
+            
+            contentDialog.PrimaryButtonClick += (sender, args) =>
+            {
+                var config = viewmodel.Configuration as InputConfiguration<GamepadInputId, StickInputId>;
+                config.StrongRumble = content._viewmodel.StrongRumble;
+                config.WeakRumble = content._viewmodel.WeakRumble;
+            };
+            
+            await contentDialog.ShowAsync();
         }
     }
 }

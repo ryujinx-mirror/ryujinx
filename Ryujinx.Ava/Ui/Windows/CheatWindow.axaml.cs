@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class CheatWindow : StyleableWindow
+    public partial class CheatWindow : StyleableWindow
     {
         private readonly string _enabledCheatsPath;
         public bool NoCheatsFound { get; }
@@ -100,11 +100,6 @@ namespace Ryujinx.Ava.Ui.Windows
         private void AttachDebugDevTools()
         {
             this.AttachDevTools();
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
 
         public void Save()

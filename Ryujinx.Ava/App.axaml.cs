@@ -55,7 +55,6 @@ namespace Ryujinx.Ava
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     var result = await ContentDialogHelper.CreateConfirmationDialog(
-                        (desktop.MainWindow as MainWindow).SettingsWindow,
                         LocaleManager.Instance["DialogThemeRestartMessage"],
                         LocaleManager.Instance["DialogThemeRestartSubMessage"],
                         LocaleManager.Instance["InputDialogYes"],

@@ -38,18 +38,6 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <controls:OffscreenTextBox Name="HiddenTextBox" Grid.Row="0" />
-        <ContentControl
-            Grid.Row="1"
-            Focusable="False"
-            IsVisible="False"
-            KeyboardNavigation.IsTabStop="False">
-            <ui:ContentDialog
-                Name="ContentDialog"
-                IsPrimaryButtonEnabled="True"
-                IsSecondaryButtonEnabled="True"
-                IsVisible="True"
-                KeyboardNavigation.IsTabStop="False" />
-        </ContentControl>
         <StackPanel Grid.Row="0" IsVisible="False">
             <controls:HotKeyControl Name="FullscreenHotKey" Command="{ReflectionBinding ToggleFullscreen}" />
             <controls:HotKeyControl Name="FullscreenHotKey2" Command="{ReflectionBinding ToggleFullscreen}" />

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    internal class SwkbdAppletDialog : UserControl
+    internal partial class SwkbdAppletDialog : UserControl
     {
         private Predicate<int> _checkLength;
         private int _inputMax;
@@ -30,6 +30,10 @@ namespace Ryujinx.Ava.Ui.Controls
             _placeholder = placeholder;
             InitializeComponent();
 
+            Input.Watermark = _placeholder;
+
+            Input.AddHandler(TextInputEvent, Message_TextInput, RoutingStrategies.Tunnel, true);
+
             SetInputLengthValidation(0, int.MaxValue); // Disable by default.
         }
 
@@ -43,23 +47,9 @@ namespace Ryujinx.Ava.Ui.Controls
         public string MainText { get; set; } = "";
         public string SecondaryText { get; set; } = "";
 
-        public TextBlock Error { get; private set; }
-        public TextBox Input { get; set; }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-            Error = this.FindControl<TextBlock>("Error");
-            Input = this.FindControl<TextBox>("Input");
-
-            Input.Watermark = _placeholder;
-
-            Input.AddHandler(TextInputEvent, Message_TextInput, RoutingStrategies.Tunnel, true);
-        }
-
         public static async Task<(UserResult Result, string Input)> ShowInputDialog(StyleableWindow window, string title, SoftwareKeyboardUiArgs args)
         {
-            ContentDialog contentDialog = window.ContentDialog;
+            ContentDialog contentDialog = new ContentDialog();
 
             UserResult result = UserResult.Cancel;
 

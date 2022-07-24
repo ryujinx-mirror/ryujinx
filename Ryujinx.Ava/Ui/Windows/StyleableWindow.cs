@@ -11,7 +11,6 @@ namespace Ryujinx.Ava.Ui.Windows
 {
     public class StyleableWindow : Window
     {
-        public ContentDialog ContentDialog { get; private set; }
         public IBitmap IconImage { get; set; }
 
         public StyleableWindow()
@@ -26,15 +25,9 @@ namespace Ryujinx.Ava.Ui.Windows
             IconImage = new Bitmap(stream);
         }
 
-        public void LoadDialog()
-        {
-            ContentDialog = this.FindControl<ContentDialog>("ContentDialog");
-        }
-
         protected override void OnOpened(EventArgs e)
         {
             base.OnOpened(e);
-            ContentDialog = this.FindControl<ContentDialog>("ContentDialog");
         }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)

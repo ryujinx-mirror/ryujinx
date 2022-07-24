@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
@@ -28,24 +29,8 @@ using TimeZone = Ryujinx.Ava.Ui.Models.TimeZone;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class SettingsWindow : StyleableWindow
+    public partial class SettingsWindow : StyleableWindow
     {
-        private ListBox _gameList;
-        private TextBox _pathBox;
-        private AutoCompleteBox _timeZoneBox;
-        private ControllerSettingsWindow _controllerSettings;
-
-        // Pages
-        private Control _uiPage;
-        private Control _inputPage;
-        private Control _hotkeysPage;
-        private Control _systemPage;
-        private Control _cpuPage;
-        private Control _graphicsPage;
-        private Control _audioPage;
-        private Control _networkPage;
-        private Control _loggingPage;
-        private NavigationView _navPanel;
         private ButtonKeyAssigner _currentAssigner;
 
         internal SettingsViewModel ViewModel { get; set; }
@@ -58,6 +43,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
+            Load();
             AttachDebugDevTools();
 
             FuncMultiValueConverter<string, string> converter = new(parts => string.Format("{0}  {1}   {2}", parts.ToArray()));
@@ -66,7 +52,7 @@ namespace Ryujinx.Ava.Ui.Windows
             tzMultiBinding.Bindings.Add(new Binding("Location"));
             tzMultiBinding.Bindings.Add(new Binding("Abbreviation"));
 
-            _timeZoneBox.ValueMemberBinding = tzMultiBinding;
+            TimeZoneBox.ValueMemberBinding = tzMultiBinding;
         }
 
         public SettingsWindow()
@@ -75,6 +61,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
+            Load();
             AttachDebugDevTools();
         }
 
@@ -84,31 +71,11 @@ namespace Ryujinx.Ava.Ui.Windows
             this.AttachDevTools();
         }
 
-        private void InitializeComponent()
+        private void Load()
         {
-            AvaloniaXamlLoader.Load(this);
-
-            _pathBox = this.FindControl<TextBox>("PathBox");
-            _gameList = this.FindControl<ListBox>("GameList");
-            _timeZoneBox = this.FindControl<AutoCompleteBox>("TimeZoneBox");
-            _controllerSettings = this.FindControl<ControllerSettingsWindow>("ControllerSettings");
-
-            _uiPage = this.FindControl<Control>("UiPage");
-            _inputPage = this.FindControl<Control>("InputPage");
-            _hotkeysPage = this.FindControl<Control>("HotkeysPage");
-            _systemPage = this.FindControl<Control>("SystemPage");
-            _cpuPage = this.FindControl<Control>("CpuPage");
-            _graphicsPage = this.FindControl<Control>("GraphicsPage");
-            _audioPage = this.FindControl<Control>("AudioPage");
-            _networkPage = this.FindControl<Control>("NetworkPage");
-            _loggingPage = this.FindControl<Control>("LoggingPage");
-
-            var pageGrid = this.FindControl<Grid>("Pages");
-            pageGrid.Children.Clear();
-
-            _navPanel = this.FindControl<NavigationView>("NavPanel");
-            _navPanel.SelectionChanged += NavPanelOnSelectionChanged;
-            _navPanel.SelectedItem = _navPanel.MenuItems.ElementAt(0);
+            Pages.Children.Clear();
+            NavPanel.SelectionChanged += NavPanelOnSelectionChanged;
+            NavPanel.SelectedItem = NavPanel.MenuItems.ElementAt(0);
         }
 
         private void Button_Checked(object sender, RoutedEventArgs e)
@@ -174,31 +141,31 @@ namespace Ryujinx.Ava.Ui.Windows
                 switch (navitem.Tag.ToString())
                 {
                     case "UiPage":
-                        _navPanel.Content = _uiPage;
+                        NavPanel.Content = UiPage;
                         break;
                     case "InputPage":
-                        _navPanel.Content = _inputPage;
+                        NavPanel.Content = InputPage;
                         break;
                     case "HotkeysPage":
-                        _navPanel.Content = _hotkeysPage;
+                        NavPanel.Content = HotkeysPage;
                         break;
                     case "SystemPage":
-                        _navPanel.Content = _systemPage;
+                        NavPanel.Content = SystemPage;
                         break;
                     case "CpuPage":
-                        _navPanel.Content = _cpuPage;
+                        NavPanel.Content = CpuPage;
                         break;
                     case "GraphicsPage":
-                        _navPanel.Content = _graphicsPage;
+                        NavPanel.Content = GraphicsPage;
                         break;
                     case "AudioPage":
-                        _navPanel.Content = _audioPage;
+                        NavPanel.Content = AudioPage;
                         break;
                     case "NetworkPage":
-                        _navPanel.Content = _networkPage;
+                        NavPanel.Content = NetworkPage;
                         break;
                     case "LoggingPage":
-                        _navPanel.Content = _loggingPage;
+                        NavPanel.Content = LoggingPage;
                         break;
                 }
             }
@@ -206,7 +173,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private async void AddButton_OnClick(object sender, RoutedEventArgs e)
         {
-            string path = _pathBox.Text;
+            string path = PathBox.Text;
 
             if (!string.IsNullOrWhiteSpace(path) && Directory.Exists(path) && !ViewModel.GameDirectories.Contains(path))
             {
@@ -225,7 +192,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private void RemoveButton_OnClick(object sender, RoutedEventArgs e)
         {
-            List<string> selected = new(_gameList.SelectedItems.Cast<string>());
+            List<string> selected = new(GameList.SelectedItems.Cast<string>());
 
             foreach (string path in selected)
             {
@@ -279,7 +246,7 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             ViewModel.SaveSettings();
 
-            _controllerSettings?.SaveCurrentProfile();
+            ControllerSettings?.SaveCurrentProfile();
 
             if (Owner is MainWindow window)
             {
@@ -289,7 +256,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         protected override void OnClosed(EventArgs e)
         {
-            _controllerSettings.Dispose();
+            ControllerSettings.Dispose();
             _currentAssigner?.Cancel();
             _currentAssigner = null;
             base.OnClosed(e);

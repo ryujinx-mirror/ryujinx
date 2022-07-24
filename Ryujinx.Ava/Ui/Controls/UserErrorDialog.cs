@@ -75,7 +75,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
             string setupButtonLabel = isInSetupGuide ? LocaleManager.Instance["OpenSetupGuideMessage"] : "";
 
-            var result = await ContentDialogHelper.CreateInfoDialog(owner,
+            var result = await ContentDialogHelper.CreateInfoDialog(
                 string.Format(LocaleManager.Instance["DialogUserErrorDialogMessage"], errorCode, GetErrorTitle(error)),
                 GetErrorDescription(error) + (isInSetupGuide
                     ? LocaleManager.Instance["DialogUserErrorDialogInfoMessage"]

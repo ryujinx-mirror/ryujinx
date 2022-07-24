@@ -417,10 +417,12 @@ namespace Ryujinx.Ava
                 {
                     if (userError == UserError.NoFirmware)
                     {
-                        string message = string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedMessage"], firmwareVersion.VersionString);
+                        string message = string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedMessage"],
+                            firmwareVersion.VersionString);
 
-                        UserResult result = await ContentDialogHelper.CreateConfirmationDialog(_parent,
-                            LocaleManager.Instance["DialogFirmwareNoFirmwareInstalledMessage"], message, LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], "");
+                        UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
+                            LocaleManager.Instance["DialogFirmwareNoFirmwareInstalledMessage"], message,
+                            LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], "");
 
                         if (result != UserResult.Yes)
                         {
@@ -450,12 +452,12 @@ namespace Ryujinx.Ava
 
                         string message = string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedSuccessMessage"], firmwareVersion.VersionString);
 
-                        await ContentDialogHelper.CreateInfoDialog(_parent,
-                                                             string.Format(LocaleManager.Instance["DialogFirmwareInstalledMessage"], firmwareVersion.VersionString),
-                                                             message,
-                                                             LocaleManager.Instance["InputDialogOk"],
-                                                             "",
-                                                             LocaleManager.Instance["RyujinxInfo"]);
+                        await ContentDialogHelper.CreateInfoDialog(
+                            string.Format(LocaleManager.Instance["DialogFirmwareInstalledMessage"], firmwareVersion.VersionString),
+                            message,
+                            LocaleManager.Instance["InputDialogOk"],
+                            "",
+                            LocaleManager.Instance["RyujinxInfo"]);
                     }
                 }
                 else
@@ -879,7 +881,7 @@ namespace Ryujinx.Ava
                 }
 
                 _dialogShown = true;
-                shouldExit = await ContentDialogHelper.CreateStopEmulationDialog(_parent);
+                shouldExit = await ContentDialogHelper.CreateStopEmulationDialog();
 
                 _dialogShown = false;
             }
@@ -896,7 +898,7 @@ namespace Ryujinx.Ava
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _parent.Cursor =  _isMouseInRenderer ? InvisibleCursor : Cursor.Default;
+                    _parent.Cursor = _isMouseInRenderer ? InvisibleCursor : Cursor.Default;
                 });
             }
             else

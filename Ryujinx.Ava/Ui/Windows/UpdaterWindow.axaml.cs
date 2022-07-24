@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class UpdaterWindow : StyleableWindow
+    public partial class UpdaterWindow : StyleableWindow
     {
         private readonly string _buildUrl;
         private readonly MainWindow _mainWindow;
@@ -34,21 +34,6 @@ namespace Ryujinx.Ava.Ui.Windows
             _mainWindow = mainWindow;
             _newVersion = newVersion;
             _buildUrl = buildUrl;
-        }
-
-        public TextBlock MainText { get; set; }
-        public TextBlock SecondaryText { get; set; }
-        public ProgressBar ProgressBar { get; set; }
-        public StackPanel ButtonBox { get; set; }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-
-            MainText = this.FindControl<TextBlock>("MainText");
-            SecondaryText = this.FindControl<TextBlock>("SecondaryText");
-            ProgressBar = this.FindControl<ProgressBar>("ProgressBar");
-            ButtonBox = this.FindControl<StackPanel>("ButtonBox");
         }
 
         [DllImport("libc", SetLastError = true)]

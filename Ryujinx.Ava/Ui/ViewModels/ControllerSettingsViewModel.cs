@@ -327,12 +327,12 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public async void ShowMotionConfig()
         {
-            await MotionSettingsWindow.Show(this, _owner.GetVisualRoot() as StyleableWindow);
+            await MotionSettingsWindow.Show(this);
         }
 
         public async void ShowRumbleConfig()
         {
-            await RumbleSettingsWindow.Show(this, _owner.GetVisualRoot() as StyleableWindow);
+            await RumbleSettingsWindow.Show(this);
         }
 
         private void LoadInputDriver()
@@ -701,8 +701,8 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 catch (InvalidOperationException)
                 {
                     Logger.Error?.Print(LogClass.Configuration, $"Profile {ProfileName} is incompatible with the current input configuration system.");
-                    await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow,
-                        String.Format(LocaleManager.Instance["DialogProfileInvalidProfileErrorMessage"], ProfileName));
+
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogProfileInvalidProfileErrorMessage"], ProfileName));
 
                     return;
                 }
@@ -736,7 +736,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             if (ProfileName == LocaleManager.Instance["ControllerSettingsProfileDefault"])
             {
-                await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileDefaultProfileOverwriteErrorMessage"]);
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogProfileDefaultProfileOverwriteErrorMessage"]);
 
                 return;
             }
@@ -769,7 +769,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 }
                 else
                 {
-                    await ContentDialogHelper.CreateErrorDialog(_owner.GetVisualRoot() as StyleableWindow, LocaleManager.Instance["DialogProfileInvalidProfileNameErrorMessage"]);
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogProfileInvalidProfileNameErrorMessage"]);
                 }
             }
         }
@@ -782,7 +782,6 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
 
             UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
-                _owner.GetVisualRoot() as StyleableWindow,
                 LocaleManager.Instance["DialogProfileDeleteProfileTitle"],
                 LocaleManager.Instance["DialogProfileDeleteProfileMessage"],
                 LocaleManager.Instance["InputDialogYes"],

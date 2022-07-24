@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Applet
 {
-    internal class ErrorAppletWindow : StyleableWindow
+    internal partial class ErrorAppletWindow : StyleableWindow
     {
         private readonly Window _owner;
         private object _buttonResponse;
@@ -50,8 +50,6 @@ namespace Ryujinx.Ava.Ui.Applet
 
         public string Message { get; set; }
 
-        public StackPanel ButtonStack { get; set; }
-
         private void AddButton(string label, object tag)
         {
             Dispatcher.UIThread.InvokeAsync(() =>
@@ -78,12 +76,6 @@ namespace Ryujinx.Ava.Ui.Applet
             await ShowDialog(_owner);
 
             return _buttonResponse;
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-            ButtonStack = this.FindControl<StackPanel>("ButtonStack");
         }
     }
 }

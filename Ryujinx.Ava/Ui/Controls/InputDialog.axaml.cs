@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public class InputDialog : UserControl
+    public partial class InputDialog : UserControl
     {
         public string Message { get; set; }
         public string Input { get; set; }
@@ -24,8 +24,6 @@ namespace Ryujinx.Ava.Ui.Controls
             MaxLength = maxLength;
 
             DataContext = this;
-
-            InitializeComponent();
         }
 
         public InputDialog()
@@ -33,33 +31,26 @@ namespace Ryujinx.Ava.Ui.Controls
             InitializeComponent();
         }
 
-        private void InitializeComponent()
+        public static async Task<(UserResult Result, string Input)> ShowInputDialog(string title, string message,
+            string input = "", string subMessage = "", uint maxLength = int.MaxValue)
         {
-            AvaloniaXamlLoader.Load(this);
-        }
-
-        public static async Task<(UserResult Result, string Input)> ShowInputDialog(StyleableWindow window, string title, string message, string input = "", string subMessage = "", uint maxLength = int.MaxValue)
-        {
-            ContentDialog contentDialog = window.ContentDialog;
-
             UserResult result = UserResult.Cancel;
 
-            InputDialog content = new InputDialog(message, input = "", subMessage = "", maxLength);
-
-            if (contentDialog != null)
+            InputDialog content = new InputDialog(message, input, subMessage, maxLength);
+            ContentDialog contentDialog = new ContentDialog
             {
-                contentDialog.Title = title;
-                contentDialog.PrimaryButtonText = LocaleManager.Instance["InputDialogOk"];
-                contentDialog.SecondaryButtonText = "";
-                contentDialog.CloseButtonText = LocaleManager.Instance["InputDialogCancel"];
-                contentDialog.Content = content;
-                contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
+                Title = title,
+                PrimaryButtonText = LocaleManager.Instance["InputDialogOk"],
+                SecondaryButtonText = "",
+                CloseButtonText = LocaleManager.Instance["InputDialogCancel"],
+                Content = content,
+                PrimaryButtonCommand = MiniCommand.Create(() =>
                 {
                     result = UserResult.Ok;
                     input = content.Input;
-                });
-                await contentDialog.ShowAsync();
-            }
+                })
+            };
+            await contentDialog.ShowAsync();
 
             return (result, input);
         }

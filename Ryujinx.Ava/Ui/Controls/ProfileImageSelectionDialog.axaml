@@ -1,14 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         xmlns:Locale="clr-namespace:Ryujinx.Ava.Common.Locale"
-        x:Class="Ryujinx.Ava.Ui.Controls.ProfileImageSelectionDialog"
-        SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterOwner"
-        Title="{Locale:Locale ProfileImageSelectionTitle}"
-        CanResize="false">
+        x:Class="Ryujinx.Ava.Ui.Controls.ProfileImageSelectionDialog">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,10,5, 5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -32,4 +28,4 @@
             </Button>
         </StackPanel>
     </Grid>
-</Window>
+</UserControl>

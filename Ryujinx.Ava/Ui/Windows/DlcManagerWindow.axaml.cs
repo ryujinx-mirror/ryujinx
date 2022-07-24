@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using LibHac.Common;
 using LibHac.Fs;
@@ -27,7 +26,7 @@ using Path = System.IO.Path;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
-    public class DlcManagerWindow : StyleableWindow
+    public partial class DlcManagerWindow : StyleableWindow
     {
         private readonly List<DlcContainer> _dlcContainerList;
         private readonly string _dlcJsonPath;
@@ -35,7 +34,6 @@ namespace Ryujinx.Ava.Ui.Windows
         public VirtualFileSystem VirtualFileSystem { get; }
 
         public AvaloniaList<DlcModel> Dlcs { get; set; }
-        public Grid DlcGrid { get; private set; }
         public ulong TitleId { get; }
         public string TitleName { get; }
 
@@ -47,7 +45,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
             AttachDebugDevTools();
-            
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["DlcWindowTitle"];
         }
 
@@ -72,7 +70,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
             AttachDebugDevTools();
-            
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["DlcWindowTitle"];
 
             LoadDlcs();
@@ -82,15 +80,6 @@ namespace Ryujinx.Ava.Ui.Windows
         private void AttachDebugDevTools()
         {
             this.AttachDevTools();
-        }
-
-        private void InitializeComponent()
-        {
-            Dlcs = new AvaloniaList<DlcModel>();
-
-            AvaloniaXamlLoader.Load(this);
-
-            DlcGrid = this.FindControl<Grid>("DlcGrid");
         }
 
         private void LoadDlcs()
@@ -129,8 +118,7 @@ namespace Ryujinx.Ava.Ui.Windows
             {
                 Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await ContentDialogHelper.CreateErrorDialog(this,
-                    string.Format(LocaleManager.Instance[
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[
                         "DialogDlcLoadNcaErrorMessage"], ex.Message, containerPath));
                 });
             }
@@ -180,7 +168,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
                 if (!containsDlc)
                 {
-                    await ContentDialogHelper.CreateErrorDialog(this, LocaleManager.Instance["DialogDlcNoDlcErrorMessage"]);
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogDlcNoDlcErrorMessage"]);
                 }
             }
         }
@@ -189,7 +177,7 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             if (removeSelectedOnly)
             {
-               Dlcs.RemoveAll(Dlcs.Where(x => x.IsEnabled).ToList());
+                Dlcs.RemoveAll(Dlcs.Where(x => x.IsEnabled).ToList());
             }
             else
             {

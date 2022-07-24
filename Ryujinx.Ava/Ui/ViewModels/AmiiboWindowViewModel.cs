@@ -390,7 +390,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 return amiiboJsonString;
             }
 
-            await ContentDialogHelper.CreateInfoDialog(_owner, LocaleManager.Instance["DialogAmiiboApiTitle"],
+            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance["DialogAmiiboApiTitle"],
                 LocaleManager.Instance["DialogAmiiboApiFailFetchMessage"],
                 LocaleManager.Instance["InputDialogOk"],
                 "",
@@ -440,7 +440,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         private async void ShowInfoDialog()
         {
-            await ContentDialogHelper.CreateInfoDialog(_owner, LocaleManager.Instance["DialogAmiiboApiTitle"],
+            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance["DialogAmiiboApiTitle"],
                 LocaleManager.Instance["DialogAmiiboApiConnectErrorMessage"],
                 LocaleManager.Instance["InputDialogOk"],
                 "",
