@@ -32,8 +32,8 @@ namespace Ryujinx.Audio.Integration
             _session.QueueBuffer(new AudioBuffer
             {
                 DataPointer = _currentBufferTag++,
-                Data        = _buffer,
-                DataSize    = (ulong)_buffer.Length,
+                Data = _buffer,
+                DataSize = (ulong)_buffer.Length,
             });
 
             _currentBufferTag = _currentBufferTag % 4;

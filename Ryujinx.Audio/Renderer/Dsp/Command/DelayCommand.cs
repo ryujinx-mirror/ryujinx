@@ -87,7 +87,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float dryGain = FixedPointHelper.ToFloat(Parameter.DryGain, FixedPointPrecision);
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
-            Matrix2x2 delayFeedback = new Matrix2x2(delayFeedbackBaseGain , delayFeedbackCrossGain,
+            Matrix2x2 delayFeedback = new Matrix2x2(delayFeedbackBaseGain, delayFeedbackCrossGain,
                                                     delayFeedbackCrossGain, delayFeedbackBaseGain);
 
             for (int i = 0; i < sampleCount; i++)
@@ -124,10 +124,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float dryGain = FixedPointHelper.ToFloat(Parameter.DryGain, FixedPointPrecision);
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
-            Matrix4x4 delayFeedback = new Matrix4x4(delayFeedbackBaseGain , delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f,
-                                                    delayFeedbackCrossGain, delayFeedbackBaseGain , 0.0f                  , delayFeedbackCrossGain,
-                                                    delayFeedbackCrossGain, 0.0f                  , delayFeedbackBaseGain , delayFeedbackCrossGain,
-                                                    0.0f                  , delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain);
+            Matrix4x4 delayFeedback = new Matrix4x4(delayFeedbackBaseGain, delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f,
+                                                    delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, delayFeedbackCrossGain,
+                                                    delayFeedbackCrossGain, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain,
+                                                    0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain);
 
 
             for (int i = 0; i < sampleCount; i++)
@@ -149,7 +149,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 };
 
                 Vector4 temp = MatrixHelper.Transform(ref channelInput, ref delayFeedback) + channelInput * inGain;
-                
+
                 state.UpdateLowPassFilter(ref Unsafe.As<Vector4, float>(ref temp), channelCount);
 
                 *((float*)outputBuffers[0] + i) = (channelInput.X * dryGain + delayLineValues.X * outGain) / 64;
@@ -171,12 +171,12 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float dryGain = FixedPointHelper.ToFloat(Parameter.DryGain, FixedPointPrecision);
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
-            Matrix6x6 delayFeedback = new Matrix6x6(delayFeedbackBaseGain , 0.0f                  , 0.0f                  , 0.0f                  , delayFeedbackCrossGain, delayFeedbackCrossGain,
-                                                    0.0f                  , delayFeedbackBaseGain , 0.0f                  , delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f                  ,
-                                                    delayFeedbackCrossGain, 0.0f                  , delayFeedbackBaseGain , delayFeedbackCrossGain, 0.0f                  , 0.0f                  ,
-                                                    0.0f                  , delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain , 0.0f                  , 0.0f                  ,
-                                                    delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f                  , 0.0f                  , delayFeedbackBaseGain , 0.0f                  ,
-                                                    0.0f                  , 0.0f                  , 0.0f                  , 0.0f                  , 0.0f                  , feedbackGain);
+            Matrix6x6 delayFeedback = new Matrix6x6(delayFeedbackBaseGain, 0.0f, 0.0f, 0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain,
+                                                    0.0f, delayFeedbackBaseGain, 0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f,
+                                                    delayFeedbackCrossGain, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain, 0.0f, 0.0f,
+                                                    0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, 0.0f,
+                                                    delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f, 0.0f, delayFeedbackBaseGain, 0.0f,
+                                                    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, feedbackGain);
 
             for (int i = 0; i < sampleCount; i++)
             {

@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-
-using DspAddress = System.UInt64;
 using CpuAddress = System.UInt64;
+using DspAddress = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Utils
 {

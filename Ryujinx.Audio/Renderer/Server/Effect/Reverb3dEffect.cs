@@ -46,7 +46,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
             Update(out updateErrorInfo, ref parameter, mapper);
         }
 
-        public void Update<T>(out BehaviourParameter.ErrorInfo updateErrorInfo, ref T parameter, PoolMapper mapper) where T: unmanaged, IEffectInParameter
+        public void Update<T>(out BehaviourParameter.ErrorInfo updateErrorInfo, ref T parameter, PoolMapper mapper) where T : unmanaged, IEffectInParameter
         {
             Debug.Assert(IsTypeValid(ref parameter));
 

@@ -169,7 +169,7 @@ namespace Ryujinx.Audio.Output
                 }
 
                 SampleFormat = sampleFormat;
-                SampleRate   = Constants.TargetSampleRate;
+                SampleRate = Constants.TargetSampleRate;
             }
 
             return result;
@@ -187,9 +187,9 @@ namespace Ryujinx.Audio.Output
             {
                 AudioBuffer buffer = new AudioBuffer
                 {
-                    BufferTag   = bufferTag,
+                    BufferTag = bufferTag,
                     DataPointer = userBuffer.Data,
-                    DataSize    = userBuffer.DataSize
+                    DataSize = userBuffer.DataSize
                 };
 
                 if (_session.AppendBuffer(buffer))
@@ -291,7 +291,7 @@ namespace Ryujinx.Audio.Output
         {
             lock (_parentLock)
             {
-                 _session.SetVolume(volume);
+                _session.SetVolume(volume);
             }
         }
 

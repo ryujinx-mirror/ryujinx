@@ -229,14 +229,14 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
 
             if (AssignDspAddress(ref addressInfo))
             {
-                errorInfo.ErrorCode      = 0x0;
+                errorInfo.ErrorCode = 0x0;
                 errorInfo.ExtraErrorInfo = 0x0;
 
                 return true;
             }
             else
             {
-                errorInfo.ErrorCode      = ResultCode.InvalidAddressInfo;
+                errorInfo.ErrorCode = ResultCode.InvalidAddressInfo;
                 errorInfo.ExtraErrorInfo = addressInfo.CpuAddress;
 
                 return _isForceMapEnabled;

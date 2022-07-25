@@ -81,7 +81,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
         /// <returns>Returns true if the <see cref="EffectType"/> sent by the user matches the internal <see cref="EffectType"/>.</returns>
-        public bool IsTypeValid<T>(ref T parameter) where T: unmanaged, IEffectInParameter
+        public bool IsTypeValid<T>(ref T parameter) where T : unmanaged, IEffectInParameter
         {
             return parameter.Type == TargetEffectType;
         }
@@ -140,14 +140,14 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// Initialize the given <paramref name="state"/> result state.
         /// </summary>
         /// <param name="state">The state to initalize</param>
-        public virtual void InitializeResultState(ref EffectResultState state) {}
+        public virtual void InitializeResultState(ref EffectResultState state) { }
 
         /// <summary>
         /// Update the <paramref name="destState"/> result state with <paramref name="srcState"/>.
         /// </summary>
         /// <param name="destState">The destination result state</param>
         /// <param name="srcState">The source result state</param>
-        public virtual void UpdateResultState(ref EffectResultState destState, ref EffectResultState srcState) {}
+        public virtual void UpdateResultState(ref EffectResultState destState, ref EffectResultState srcState) { }
 
         /// <summary>
         /// Update the internal state from a user version 1 parameter.
@@ -215,7 +215,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// </summary>
         /// <param name="outStatus">The given user output.</param>
         /// <param name="isAudioRendererActive">If set to true, the <see cref="AudioRenderSystem"/> is active.</param>
-        public void StoreStatus<T>(ref T outStatus, bool isAudioRendererActive) where T: unmanaged, IEffectOutStatus
+        public void StoreStatus<T>(ref T outStatus, bool isAudioRendererActive) where T : unmanaged, IEffectOutStatus
         {
             if (isAudioRendererActive)
             {

@@ -214,9 +214,9 @@ namespace Ryujinx.Audio.Input
                 outputDeviceName = audioIn.DeviceName;
                 outputConfiguration = new AudioOutputConfiguration
                 {
-                    ChannelCount  = audioIn.ChannelCount,
-                    SampleFormat  = audioIn.SampleFormat,
-                    SampleRate    = audioIn.SampleRate,
+                    ChannelCount = audioIn.ChannelCount,
+                    SampleFormat = audioIn.SampleFormat,
+                    SampleRate = audioIn.SampleRate,
                     AudioOutState = audioIn.GetState(),
                 };
 

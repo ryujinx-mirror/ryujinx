@@ -172,7 +172,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         {
             unsafe
             {
-                fixed (SplitterDestination *nextPtr = &next)
+                fixed (SplitterDestination* nextPtr = &next)
                 {
                     _next = nextPtr;
                 }

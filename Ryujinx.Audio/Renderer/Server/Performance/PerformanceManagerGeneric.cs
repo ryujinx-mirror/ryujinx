@@ -13,7 +13,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
     /// <typeparam name="THeader">The header implementation of the performance frame.</typeparam>
     /// <typeparam name="TEntry">The entry implementation of the performance frame.</typeparam>
     /// <typeparam name="TEntryDetail">A detailed implementation of the performance frame.</typeparam>
-    public class PerformanceManagerGeneric<THeader, TEntry, TEntryDetail> : PerformanceManager where THeader: unmanaged, IPerformanceHeader where TEntry : unmanaged, IPerformanceEntry where TEntryDetail: unmanaged, IPerformanceDetailEntry
+    public class PerformanceManagerGeneric<THeader, TEntry, TEntryDetail> : PerformanceManager where THeader : unmanaged, IPerformanceHeader where TEntry : unmanaged, IPerformanceEntry where TEntryDetail : unmanaged, IPerformanceDetailEntry
     {
         /// <summary>
         /// The magic used for the <see cref="THeader"/>.

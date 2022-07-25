@@ -29,34 +29,34 @@ namespace Ryujinx.Audio.Renderer.Server
         private object _lock = new object();
 
         private AudioRendererExecutionMode _executionMode;
-        private IWritableEvent             _systemEvent;
-        private ManualResetEvent           _terminationEvent;
-        private MemoryPoolState            _dspMemoryPoolState;
-        private VoiceContext               _voiceContext;
-        private MixContext                 _mixContext;
-        private SinkContext                _sinkContext;
-        private SplitterContext            _splitterContext;
-        private EffectContext              _effectContext;
-        private PerformanceManager         _performanceManager;
-        private UpsamplerManager           _upsamplerManager;
-        private bool                       _isActive;
-        private BehaviourContext           _behaviourContext;
-        private ulong                      _totalElapsedTicksUpdating;
-        private ulong                      _totalElapsedTicks;
-        private int                        _sessionId;
-        private Memory<MemoryPoolState>    _memoryPools;
+        private IWritableEvent _systemEvent;
+        private ManualResetEvent _terminationEvent;
+        private MemoryPoolState _dspMemoryPoolState;
+        private VoiceContext _voiceContext;
+        private MixContext _mixContext;
+        private SinkContext _sinkContext;
+        private SplitterContext _splitterContext;
+        private EffectContext _effectContext;
+        private PerformanceManager _performanceManager;
+        private UpsamplerManager _upsamplerManager;
+        private bool _isActive;
+        private BehaviourContext _behaviourContext;
+        private ulong _totalElapsedTicksUpdating;
+        private ulong _totalElapsedTicks;
+        private int _sessionId;
+        private Memory<MemoryPoolState> _memoryPools;
 
-        private uint  _sampleRate;
-        private uint  _sampleCount;
-        private uint  _mixBufferCount;
-        private uint  _voiceChannelCountMax;
-        private uint  _upsamplerCount;
-        private uint  _memoryPoolCount;
-        private uint  _processHandle;
+        private uint _sampleRate;
+        private uint _sampleCount;
+        private uint _mixBufferCount;
+        private uint _voiceChannelCountMax;
+        private uint _upsamplerCount;
+        private uint _memoryPoolCount;
+        private uint _processHandle;
         private ulong _appletResourceId;
 
         private WritableRegion _workBufferRegion;
-        private MemoryHandle   _workBufferMemoryPin;
+        private MemoryHandle _workBufferMemoryPin;
 
         private Memory<float> _mixBuffer;
         private Memory<float> _depopBuffer;
@@ -81,21 +81,21 @@ namespace Ryujinx.Audio.Renderer.Server
 
         public AudioRenderSystem(AudioRendererManager manager, IWritableEvent systemEvent)
         {
-            _manager            = manager;
-            _terminationEvent   = new ManualResetEvent(false);
+            _manager = manager;
+            _terminationEvent = new ManualResetEvent(false);
             _dspMemoryPoolState = MemoryPoolState.Create(MemoryPoolState.LocationType.Dsp);
-            _voiceContext       = new VoiceContext();
-            _mixContext         = new MixContext();
-            _sinkContext        = new SinkContext();
-            _splitterContext    = new SplitterContext();
-            _effectContext      = new EffectContext();
+            _voiceContext = new VoiceContext();
+            _mixContext = new MixContext();
+            _sinkContext = new SinkContext();
+            _splitterContext = new SplitterContext();
+            _effectContext = new EffectContext();
 
             _commandProcessingTimeEstimator = null;
             _systemEvent = systemEvent;
             _behaviourContext = new BehaviourContext();
 
             _totalElapsedTicksUpdating = 0;
-            _sessionId                 = 0;
+            _sessionId = 0;
         }
 
         public ResultCode Initialize(ref AudioRendererConfiguration parameter, uint processHandle, CpuAddress workBuffer, ulong workBufferSize, int sessionId, ulong appletResourceId, IVirtualMemoryManager memoryManager)
@@ -116,7 +116,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             _behaviourContext.SetUserRevision(parameter.Revision);
 
-            _sampleRate  = parameter.SampleRate;
+            _sampleRate = parameter.SampleRate;
             _sampleCount = parameter.SampleCount;
             _mixBufferCount = parameter.MixBufferCount;
             _voiceChannelCountMax = Constants.VoiceChannelCountMax;
@@ -203,7 +203,7 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 ref VoiceChannelResource voiceChannelResource = ref voiceChannelResources.Span[(int)id];
 
-                voiceChannelResource.Id     = id;
+                voiceChannelResource.Id = id;
                 voiceChannelResource.IsUsed = false;
             }
 

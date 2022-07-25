@@ -1,8 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-
-using DspAddress = System.UInt64;
 using CpuAddress = System.UInt64;
+using DspAddress = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Server.MemoryPool
 {
@@ -53,9 +52,9 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
             {
                 return new AddressInfo
                 {
-                    CpuAddress            = cpuAddress,
-                    _memoryPools       = MemoryPoolState.Null,
-                    Size                  = size,
+                    CpuAddress = cpuAddress,
+                    _memoryPools = MemoryPoolState.Null,
+                    Size = size,
                     ForceMappedDspAddress = 0
                 };
             }
@@ -68,8 +67,8 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// <param name="size">The size of the region.</param>
         public void Setup(CpuAddress cpuAddress, ulong size)
         {
-            CpuAddress            = cpuAddress;
-            Size                  = size;
+            CpuAddress = cpuAddress;
+            Size = size;
             ForceMappedDspAddress = 0;
 
             unsafe

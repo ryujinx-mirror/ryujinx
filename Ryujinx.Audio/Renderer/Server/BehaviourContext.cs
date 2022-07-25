@@ -141,8 +141,8 @@ namespace Ryujinx.Audio.Renderer.Server
         public BehaviourContext()
         {
             UserRevision = 0;
-            _errorInfos  = new ErrorInfo[Constants.MaxErrorInfos];
-            _errorIndex  = 0;
+            _errorInfos = new ErrorInfo[Constants.MaxErrorInfos];
+            _errorIndex = 0;
         }
 
         /// <summary>

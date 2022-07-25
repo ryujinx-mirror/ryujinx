@@ -81,7 +81,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             {
                 BufferTag = buffer.BufferTag,
                 DataPointer = buffer.DataPointer,
-                DataSize  = (ulong)downmixedBuffer.Length
+                DataSize = (ulong)downmixedBuffer.Length
             };
 
             bool result = _realSession.RegisterBuffer(fakeBuffer, downmixedBuffer);

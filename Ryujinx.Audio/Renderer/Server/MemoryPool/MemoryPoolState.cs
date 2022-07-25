@@ -1,8 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-
-using DspAddress = System.UInt64;
 using CpuAddress = System.UInt64;
+using DspAddress = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Server.MemoryPool
 {
@@ -69,8 +68,8 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
             {
                 CpuAddress = 0,
                 DspAddress = 0,
-                Size       = 0,
-                Location   = location
+                Size = 0,
+                Location = location
             };
         }
 
@@ -82,7 +81,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         public void SetCpuAddress(CpuAddress cpuAddress, ulong size)
         {
             CpuAddress = cpuAddress;
-            Size       = size;
+            Size = size;
         }
 
         /// <summary>

@@ -25,6 +25,6 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             UpdateParameter(ref parameter);
         }
 
-        public void UpdateParameter(ref LimiterParameter parameter) {}
+        public void UpdateParameter(ref LimiterParameter parameter) { }
     }
 }

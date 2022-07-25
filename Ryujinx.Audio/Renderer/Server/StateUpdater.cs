@@ -21,7 +21,7 @@ namespace Ryujinx.Audio.Renderer.Server
     public class StateUpdater
     {
         private readonly ReadOnlyMemory<byte> _inputOrigin;
-        private ReadOnlyMemory <byte> _outputOrigin;
+        private ReadOnlyMemory<byte> _outputOrigin;
         private ReadOnlyMemory<byte> _input;
 
         private Memory<byte> _output;
@@ -207,7 +207,7 @@ namespace Ryujinx.Audio.Renderer.Server
             return ResultCode.Success;
         }
 
-        private static void ResetEffect<T>(ref BaseEffect effect, ref T parameter, PoolMapper mapper) where T: unmanaged, IEffectInParameter
+        private static void ResetEffect<T>(ref BaseEffect effect, ref T parameter, PoolMapper mapper) where T : unmanaged, IEffectInParameter
         {
             effect.ForceUnmapBuffers(mapper);
 

@@ -200,7 +200,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
             SampleFormat = SampleFormat.Invalid;
             ChannelsCount = 0;
             Pitch = 0.0f;
-            Volume= 0.0f;
+            Volume = 0.0f;
             PreviousVolume = 0.0f;
             BiquadFilters.ToSpan().Fill(new BiquadFilterParameter());
             WaveBuffersCount = 0;
@@ -260,7 +260,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
             }
 
             return DataSourceStateAddressInfo.CpuAddress != parameter.DataSourceStateAddress ||
-                   DataSourceStateAddressInfo.Size != parameter.DataSourceStateSize           ||
+                   DataSourceStateAddressInfo.Size != parameter.DataSourceStateSize ||
                    DataSourceStateUnmapped;
         }
 
