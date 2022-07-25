@@ -110,7 +110,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables Discord Rich Presence</property>
+                                    <property name="tooltip-text" translatable="yes">Choose whether or not to display Ryujinx on your "currently playing" Discord activity</property>
                                     <property name="halign">start</property>
                                     <property name="draw-indicator">True</property>
                                   </object>
@@ -264,7 +264,7 @@
                                       <object class="GtkEntry" id="_addGameDirBox">
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
-                                        <property name="tooltip-text" translatable="yes">Enter a game directroy to add to the list</property>
+                                        <property name="tooltip-text" translatable="yes">Enter a game directory to add to the list</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -494,7 +494,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">Enable or disable Docked Mode</property>
+                                <property name="tooltip-text" translatable="yes">Docked mode makes the emulated system behave as a docked Nintendo Switch. This improves graphical fidelity in most games. Conversely, disabling this will make the emulated system behave as a handheld Nintendo Switch, reducing graphics quality.&#13;Configure player 1 controls if planning to use docked mode; configure handheld controls if planning to use handheld mode.&#13;Leave ON if unsure.</property>
                                 <property name="draw-indicator">True</property>
                               </object>
                               <packing>
@@ -510,7 +510,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">Enable or disable "direct keyboard access (HID) support" (Provides games access to your keyboard as a text entry device)</property>
+                                <property name="tooltip-text" translatable="yes">Direct keyboard access (HID) support. Provides games access to your keyboard as a text entry device.</property>
                                 <property name="draw-indicator">True</property>
                               </object>
                               <packing>
@@ -526,7 +526,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">Enable or disable "direct mouse access (HID) support" (Provides games access to your mouse as a pointing device)</property>
+                                <property name="tooltip-text" translatable="yes">Direct mouse access (HID) support. Provides games access to your mouse as a pointing device.</property>
                                 <property name="draw-indicator">True</property>
                               </object>
                               <packing>
@@ -1477,7 +1477,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables Vertical Sync</property>
+                                    <property name="tooltip-text" translatable="yes">Emulated console's Vertical Sync. Essentially a frame-limiter for the majority of games; disabling it may cause games to run at higher speed or make loading screens take longer or get stuck.&#13;Can be toggled in-game with a hotkey of your preference. We recommend doing this if you plan on disabling it.&#13;Leave ON if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1495,7 +1495,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables profiled translation cache persistency</property>
+                                    <property name="tooltip-text" translatable="yes">Saves translated JIT functions so that they do not need to be translated every time the game loads.&#13;Reduces stuttering and significantly speeds up boot times after the first boot of a game.&#13;Leave ON if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1513,7 +1513,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables guest Internet access. If enabled, the application will behave as if the emulated Switch console was connected to the Internet. Note that in some cases, applications may still access the Internet even with this option disabled</property>
+                                    <property name="tooltip-text" translatable="yes">Allows the emulated application to connect to the Internet.&#13;Games with a LAN mode can connect to each other when this is enabled and the systems are connected to the same access point. This includes real consoles as well.&#13;Does NOT allow connecting to Nintendo servers. May cause crashing in certain games that try to connect to the Internet.&#13;Leave OFF if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1531,7 +1531,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables integrity checks on Game content files</property>
+                                    <property name="tooltip-text" translatable="yes">Checks for corrupt files when booting a game, and if corrupt files are detected, displays a hash error in the log.&#13;Has no impact on performance and is meant to help troubleshooting.&#13;Leave ON if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1561,7 +1561,7 @@
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Change Audio Backend</property>
+                                    <property name="tooltip-text" translatable="yes">Changes the backend used to render audio.&#13;SDL2 is the preferred one, while OpenAL and SoundIO are used as fallbacks. Dummy will have no sound.&#13;Set to SDL2 if unsure.</property>
                                     <property name="halign">end</property>
                                     <property name="margin-right">5</property>
                                     <property name="label" translatable="yes">Audio Backend: </property>
@@ -1592,7 +1592,7 @@
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Change how guest memory is mapped and accessed. Greatly affects emulated CPU performance.</property>
+                                    <property name="tooltip-text" translatable="yes">Change how guest memory is mapped and accessed. Greatly affects emulated CPU performance.&#13;Set to HOST UNCHECKED if unsure.</property>
                                     <property name="halign">end</property>
                                     <property name="margin-right">5</property>
                                     <property name="label" translatable="yes">Memory Manager Mode: </property>
@@ -1753,7 +1753,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Expands the amount of memory on the emulated system from 4GB to 6GB</property>
+                                    <property name="tooltip-text" translatable="yes">Increases the amount of memory on the emulated system from 4GB to 6GB.&#13;This is only useful for higher-resolution texture packs or 4k resolution mods. Does NOT improve performance.&#13;Leave OFF if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1771,7 +1771,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enable or disable ignoring missing services</property>
+                                    <property name="tooltip-text" translatable="yes">Ignores unimplemented Horizon OS services. This may help in bypassing crashes when booting certain games.&#13;Leave OFF if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -1864,7 +1864,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">Enable Graphics Backend Multithreading</property>
+                                        <property name="tooltip-text" translatable="yes">Executes graphics backend commands on a second thread.&#13;Speeds up shader compilation, reduces stuttering, and improves performance on GPU drivers without multithreading support of their own. Slightly better performance on drivers with multithreading.&#13;Set to AUTO if unsure.</property>
                                         <property name="label" translatable="yes">Graphics Backend Multithreading:</property>
                                       </object>
                                       <packing>
@@ -1878,7 +1878,7 @@
                                       <object class="GtkComboBoxText" id="_galThreading">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">Executes graphics backend commands on a second thread. Allows runtime multithreading of shader compilation, reduces stuttering, and improves performance on drivers without multithreading support of their own. Slightly varying peak performance on drivers with multithreading. Ryujinx may need to be restarted to correctly disable driver built-in multithreading, or you may need to do it manually to get the best performance.</property>
+                                        <property name="tooltip-text" translatable="yes">Executes graphics backend commands on a second thread.&#13;Speeds up shader compilation, reduces stuttering, and improves performance on GPU drivers without multithreading support of their own. Slightly better performance on drivers with multithreading.&#13;Set to AUTO if unsure.</property>
                                         <property name="active-id">-1</property>
                                         <items>
                                           <item id="Auto" translatable="yes">Auto</item>
@@ -1954,7 +1954,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables Shader Cache</property>
+                                    <property name="tooltip-text" translatable="yes">Saves a disk shader cache which reduces stuttering in subsequent runs.&#13;Leave ON if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2306,7 +2306,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables or disables logging to a file on disk</property>
+                                    <property name="tooltip-text" translatable="yes">Saves console logging to a log file on disk. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2324,7 +2324,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing stub log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints stub log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2342,7 +2342,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing info log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints info log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2360,7 +2360,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing warning log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints warning log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2378,7 +2378,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing error log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints error log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2396,7 +2396,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing guest log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints guest log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2414,7 +2414,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing fs access log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Enables FS access log output to the console. Possible modes are 0-3</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2560,7 +2560,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing debug log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints debug log messages in the console.&#13;Only use this if specifically instructed by a staff member, as it will make logs difficult to read and worsen emulator performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
@@ -2578,7 +2578,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enables printing trace log messages</property>
+                                    <property name="tooltip-text" translatable="yes">Prints trace log messages in the console. Does not affect performance.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>
