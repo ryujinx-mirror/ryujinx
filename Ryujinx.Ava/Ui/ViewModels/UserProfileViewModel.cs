@@ -43,11 +43,9 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public bool IsHighlightedProfileEditable =>
-            _highlightedProfile != null;
+        public bool IsHighlightedProfileEditable => _highlightedProfile != null;
 
-        public bool IsHighlightedProfileDeletable =>
-            _highlightedProfile != null && _highlightedProfile.UserId != AccountManager.DefaultUserId;
+        public bool IsHighlightedProfileDeletable => _highlightedProfile != null && _highlightedProfile.UserId != AccountManager.DefaultUserId;
 
         public UserProfile HighlightedProfile
         {
@@ -62,16 +60,13 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
 
         public void LoadProfiles()
         {
             Profiles.Clear();
 
-            var profiles = _owner.AccountManager.GetAllUsers()
-                .OrderByDescending(x => x.AccountState == AccountState.Open);
+            var profiles = _owner.AccountManager.GetAllUsers().OrderByDescending(x => x.AccountState == AccountState.Open);
 
             foreach (var profile in profiles)
             {
@@ -94,6 +89,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         public void AddUser()
         {
             UserProfile userProfile = null;
+
             _owner.Navigate(typeof(UserEditor), (this._owner, userProfile, true));
         }
 

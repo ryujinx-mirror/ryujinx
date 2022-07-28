@@ -63,7 +63,7 @@ namespace Ryujinx.Ava.Ui.Controls
             _parent?.GoBack();
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             DataValidationErrors.ClearErrors(NameBox);
             bool isInvalid = false;
@@ -77,7 +77,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
             if (TempProfile.Image == null)
             {
-                ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["UserProfileNoImageError"], "");
+                await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["UserProfileNoImageError"], "");
 
                 isInvalid = true;
             }

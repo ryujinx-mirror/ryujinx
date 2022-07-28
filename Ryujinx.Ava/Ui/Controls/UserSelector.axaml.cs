@@ -21,7 +21,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 AddHandler(Frame.NavigatedToEvent, (s, e) =>
                 {
                     NavigatedTo(e);
-                }, Avalonia.Interactivity.RoutingStrategies.Direct);
+                }, RoutingStrategies.Direct);
             }
         }
 
@@ -29,12 +29,10 @@ namespace Ryujinx.Ava.Ui.Controls
         {
             if (Program.PreviewerDetached)
             {
-                switch (arg.NavigationMode)
+                if (arg.NavigationMode == NavigationMode.New)
                 {
-                    case NavigationMode.New:
-                        _parent = (NavigationDialogHost)arg.Parameter;
-                        ViewModel = _parent.ViewModel;
-                        break;
+                    _parent = (NavigationDialogHost)arg.Parameter;
+                    ViewModel = _parent.ViewModel;
                 }
 
                 DataContext = ViewModel;
