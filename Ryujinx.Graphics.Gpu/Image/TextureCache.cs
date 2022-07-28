@@ -900,23 +900,25 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Tries to find an existing texture matching the given buffer copy destination. If none is found, returns null.
         /// </summary>
         /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>
-        /// <param name="tex">The texture information</param>
         /// <param name="gpuVa">GPU virtual address of the texture</param>
         /// <param name="bpp">Bytes per pixel</param>
         /// <param name="stride">If <paramref name="linear"/> is true, should have the texture stride, otherwise ignored</param>
+        /// <param name="height">If <paramref name="linear"/> is false, should have the texture height, otherwise ignored</param>
         /// <param name="xCount">Number of pixels to be copied per line</param>
         /// <param name="yCount">Number of lines to be copied</param>
         /// <param name="linear">True if the texture has a linear layout, false otherwise</param>
+        /// <param name="memoryLayout">If <paramref name="linear"/> is false, should have the memory layout, otherwise ignored</param>
         /// <returns>A matching texture, or null if there is no match</returns>
         public Texture FindTexture(
             MemoryManager memoryManager,
-            DmaTexture tex,
             ulong gpuVa,
             int bpp,
             int stride,
+            int height,
             int xCount,
             int yCount,
-            bool linear)
+            bool linear,
+            MemoryLayout memoryLayout)
         {
             ulong address = memoryManager.Translate(gpuVa);
 
@@ -945,7 +947,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     // Size is not available for linear textures. Use the stride and end of the copy region instead.
 
-                    match = texture.Info.IsLinear && texture.Info.Stride == stride && tex.RegionY + yCount <= texture.Info.Height;
+                    match = texture.Info.IsLinear && texture.Info.Stride == stride && yCount == texture.Info.Height;
                 }
                 else
                 {
@@ -953,10 +955,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Due to the way linear strided and block layouts work, widths can be multiplied by Bpp for comparison.
                     // Note: tex.Width is the aligned texture size. Prefer param.XCount, as the destination should be a texture with that exact size.
 
-                    bool sizeMatch = xCount * bpp == texture.Info.Width * format.BytesPerPixel && tex.Height == texture.Info.Height;
+                    bool sizeMatch = xCount * bpp == texture.Info.Width * format.BytesPerPixel && height == texture.Info.Height;
                     bool formatMatch = !texture.Info.IsLinear &&
-                                        texture.Info.GobBlocksInY == tex.MemoryLayout.UnpackGobBlocksInY() &&
-                                        texture.Info.GobBlocksInZ == tex.MemoryLayout.UnpackGobBlocksInZ();
+                                        texture.Info.GobBlocksInY == memoryLayout.UnpackGobBlocksInY() &&
+                                        texture.Info.GobBlocksInZ == memoryLayout.UnpackGobBlocksInZ();
 
                     match = sizeMatch && formatMatch;
                 }
