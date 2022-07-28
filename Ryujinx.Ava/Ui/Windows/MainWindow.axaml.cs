@@ -2,10 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Avalonia.Win32;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
@@ -33,7 +31,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using InputManager = Ryujinx.Input.HLE.InputManager;
-using ProgressBar = Avalonia.Controls.ProgressBar;
+
 namespace Ryujinx.Ava.Ui.Windows
 {
     public partial class MainWindow : StyleableWindow
@@ -87,7 +85,6 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
             Load();
-            AttachDebugDevTools();
 
             UiHandler = new AvaHostUiHandler(this);
 
@@ -108,12 +105,6 @@ namespace Ryujinx.Ava.Ui.Windows
             }
 
             _rendererWaitEvent = new AutoResetEvent(false);
-        }
-
-        [Conditional("DEBUG")]
-        private void AttachDebugDevTools()
-        {
-            this.AttachDevTools();
         }
 
         public void LoadGameList()
@@ -244,7 +235,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             PrepareLoadScreen();
 
-            _mainViewContent = Content.Content as Control;
+            _mainViewContent = MainContent.Content as Control;
 
             GlRenderer = new RendererControl(3, 3, ConfigurationState.Instance.Logger.GraphicsDebugLevel);
             AppHost = new AppHost(GlRenderer, InputManager, path, VirtualFileSystem, ContentManager, AccountManager, _userChannelPersistence, this);
@@ -311,7 +302,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Content.Content = GlRenderer;
+                MainContent.Content = GlRenderer;
 
                 if (startFullscreen && WindowState != WindowState.FullScreen)
                 {
@@ -355,9 +346,9 @@ namespace Ryujinx.Ava.Ui.Windows
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
-                if (Content.Content != _mainViewContent)
+                if (MainContent.Content != _mainViewContent)
                 {
-                    Content.Content = _mainViewContent;
+                    MainContent.Content = _mainViewContent;
                 }
 
                 ViewModel.ShowMenuAndStatusBar = true;

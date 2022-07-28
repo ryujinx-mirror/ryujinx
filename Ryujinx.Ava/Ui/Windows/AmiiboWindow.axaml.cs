@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Models;
 using Ryujinx.Ava.Ui.ViewModels;
@@ -18,9 +17,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["Amiibo"];
         }
 
@@ -31,9 +28,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             if (Program.PreviewerDetached)
             {
                 Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["Amiibo"];

@@ -2,7 +2,6 @@
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using FluentAvalonia.UI.Controls;
 using System;
 using System.IO;
 using System.Reflection;

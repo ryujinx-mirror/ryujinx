@@ -37,7 +37,7 @@
                 Header="{locale:Locale GameListContextMenuManageTitleUpdates}"
                 ToolTip.Tip="{locale:Locale GameListContextMenuManageTitleUpdatesToolTip}" />
             <MenuItem
-                Command="{Binding OpenDlcManager}"
+                Command="{Binding OpenDownloadableContentManager}"
                 Header="{locale:Locale GameListContextMenuManageDlc}"
                 ToolTip.Tip="{locale:Locale GameListContextMenuManageDlcToolTip}" />
             <MenuItem

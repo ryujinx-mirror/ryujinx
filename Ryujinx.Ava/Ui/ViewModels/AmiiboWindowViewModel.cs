@@ -382,9 +382,9 @@ namespace Ryujinx.Ava.Ui.ViewModels
             {
                 string amiiboJsonString = await response.Content.ReadAsStringAsync();
 
-                using (FileStream dlcJsonStream = File.Create(_amiiboJsonPath, 4096, FileOptions.WriteThrough))
+                using (FileStream amiiboJsonStream = File.Create(_amiiboJsonPath, 4096, FileOptions.WriteThrough))
                 {
-                    dlcJsonStream.Write(Encoding.UTF8.GetBytes(amiiboJsonString));
+                    amiiboJsonStream.Write(Encoding.UTF8.GetBytes(amiiboJsonString));
                 }
 
                 return amiiboJsonString;

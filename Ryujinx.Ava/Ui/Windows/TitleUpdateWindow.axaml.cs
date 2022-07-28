@@ -1,13 +1,14 @@
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
-using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Ns;
+using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Controls;
 using Ryujinx.Ava.Ui.Models;
@@ -23,14 +24,12 @@ using System.Linq;
 using System.Text;
 using Path = System.IO.Path;
 using SpanHelpers = LibHac.Common.SpanHelpers;
-using LibHac.Tools.FsSystem;
-using Avalonia.Threading;
 
 namespace Ryujinx.Ava.Ui.Windows
 {
     public partial class TitleUpdateWindow : StyleableWindow
     {
-        private readonly string _updateJsonPath;
+        private readonly string     _titleUpdateJsonPath;
         private TitleUpdateMetadata _titleUpdateWindowData;
 
         public VirtualFileSystem VirtualFileSystem { get; }
@@ -46,7 +45,6 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = this;
 
             InitializeComponent();
-            AttachDebugDevTools();
             
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["UpdateWindowTitle"];
         }
@@ -54,34 +52,31 @@ namespace Ryujinx.Ava.Ui.Windows
         public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, string titleId, string titleName)
         {
             VirtualFileSystem = virtualFileSystem;
-            TitleId = titleId;
-            TitleName = titleName;
+            TitleId           = titleId;
+            TitleName         = titleName;
 
-            _updateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId, "updates.json");
+            _titleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId, "updates.json");
 
             try
             {
-                _titleUpdateWindowData = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(_updateJsonPath);
+                _titleUpdateWindowData = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(_titleUpdateJsonPath);
             }
             catch
             {
-                _titleUpdateWindowData = new TitleUpdateMetadata {Selected = "", Paths = new List<string>()};
+                _titleUpdateWindowData = new TitleUpdateMetadata 
+                {
+                    Selected = "",
+                    Paths = new List<string>()
+                };
             }
 
             DataContext = this;
 
             InitializeComponent();
-            AttachDebugDevTools();
-            
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["UpdateWindowTitle"];
 
             LoadUpdates();
-        }
-
-        [Conditional("DEBUG")]
-        private void AttachDebugDevTools()
-        {
-            this.AttachDevTools();
         }
 
         private void LoadUpdates()
@@ -99,8 +94,8 @@ namespace Ryujinx.Ava.Ui.Windows
             }
             else
             {
-                TitleUpdateModel selected = TitleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected);
-                List<TitleUpdateModel> enabled = TitleUpdates.Where(x => x.IsEnabled).ToList();
+                TitleUpdateModel       selected = TitleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected);
+                List<TitleUpdateModel> enabled  = TitleUpdates.Where(x => x.IsEnabled).ToList();
 
                 foreach (TitleUpdateModel update in enabled)
                 {
@@ -126,8 +121,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
                     try
                     {
-                        (Nca patchNca, Nca controlNca) =
-                            ApplicationLoader.GetGameUpdateDataFromPartition(VirtualFileSystem, nsp, TitleId, 0);
+                        (Nca patchNca, Nca controlNca) = ApplicationLoader.GetGameUpdateDataFromPartition(VirtualFileSystem, nsp, TitleId, 0);
 
                         if (controlNca != null && patchNca != null)
                         {
@@ -135,11 +129,8 @@ namespace Ryujinx.Ava.Ui.Windows
 
                             using var nacpFile = new UniqueRef<IFile>();
 
-                            controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None)
-                                .OpenFile(ref nacpFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read)
-                                .ThrowIfFailure();
-                            nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None)
-                                .ThrowIfFailure();
+                            controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                            nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
                             TitleUpdates.Add(new TitleUpdateModel(controlData, path));
                         }
@@ -190,9 +181,17 @@ namespace Ryujinx.Ava.Ui.Windows
 
         public async void Add()
         {
-            OpenFileDialog dialog = new OpenFileDialog() { Title = LocaleManager.Instance["SelectUpdateDialogTitle"], AllowMultiple = true };
+            OpenFileDialog dialog = new OpenFileDialog()
+            {
+                Title         = LocaleManager.Instance["SelectUpdateDialogTitle"],
+                AllowMultiple = true
+            };
 
-            dialog.Filters.Add(new FileDialogFilter { Name = "NSP", Extensions = { "nsp" } });
+            dialog.Filters.Add(new FileDialogFilter
+            {
+                Name       = "NSP", 
+                Extensions = { "nsp" }
+            });
 
             string[] files = await dialog.ShowAsync(this);
 
@@ -222,12 +221,10 @@ namespace Ryujinx.Ava.Ui.Windows
                     return 1;
                 }
 
-                return Version.Parse(first.Control.DisplayVersionString.ToString())
-                    .CompareTo(Version.Parse(second.Control.DisplayVersionString.ToString())) * -1;
+                return Version.Parse(first.Control.DisplayVersionString.ToString()).CompareTo(Version.Parse(second.Control.DisplayVersionString.ToString())) * -1;
             });
 
             TitleUpdates.Clear();
-
             TitleUpdates.AddRange(list);
         }
 
@@ -247,9 +244,9 @@ namespace Ryujinx.Ava.Ui.Windows
                 }
             }
 
-            using (FileStream dlcJsonStream = File.Create(_updateJsonPath, 4096, FileOptions.WriteThrough))
+            using (FileStream titleUpdateJsonStream = File.Create(_titleUpdateJsonPath, 4096, FileOptions.WriteThrough))
             {
-                dlcJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_titleUpdateWindowData, true)));
+                titleUpdateJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_titleUpdateWindowData, true)));
             }
 
             if (Owner is MainWindow window)

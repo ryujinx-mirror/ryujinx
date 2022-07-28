@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Modules;
 using System;
@@ -23,9 +22,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = this;
 
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             Title = LocaleManager.Instance["RyujinxUpdater"];
         }
 

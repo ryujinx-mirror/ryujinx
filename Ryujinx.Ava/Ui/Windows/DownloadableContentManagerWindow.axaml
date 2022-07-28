@@ -1,5 +1,5 @@
 <window:StyleableWindow
-    x:Class="Ryujinx.Ava.Ui.Windows.DlcManagerWindow"
+    x:Class="Ryujinx.Ava.Ui.Windows.DownloadableContentManagerWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,7 +11,7 @@
     WindowStartupLocation="CenterOwner"
     MinWidth="600"
     mc:Ignorable="d">
-    <Grid Name="DlcGrid" Margin="15">
+    <Grid Name="DownloadableContentGrid" Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -40,7 +40,7 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 HorizontalScrollBarVisibility="Auto"
-                Items="{Binding Dlcs}"
+                Items="{Binding DownloadableContents}"
                 VerticalScrollBarVisibility="Auto">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="90">
@@ -50,7 +50,7 @@
                                     Width="50"
                                     MinWidth="40"
                                     HorizontalAlignment="Right"
-                                    IsChecked="{Binding IsEnabled}" />
+                                    IsChecked="{Binding Enabled}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.Header>
@@ -116,7 +116,7 @@
                     Name="SaveButton"
                     MinWidth="90"
                     Margin="5"
-                    Command="{Binding Save}">
+                    Command="{Binding SaveAndClose}">
                     <TextBlock Text="{locale:Locale SettingsButtonSave}" />
                 </Button>
                 <Button

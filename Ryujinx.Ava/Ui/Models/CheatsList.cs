@@ -10,26 +10,13 @@ namespace Ryujinx.Ava.Ui.Models
         public CheatsList(string buildId, string path)
         {
             BuildId = buildId;
-            Path = path;
+            Path    = path;
+
             CollectionChanged += CheatsList_CollectionChanged;
         }
 
-        private void CheatsList_CollectionChanged(object sender,
-            NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                (e.NewItems[0] as CheatModel).EnableToggled += Item_EnableToggled;
-            }
-        }
-
-        private void Item_EnableToggled(object sender, bool e)
-        {
-            OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsEnabled)));
-        }
-
         public string BuildId { get; }
-        public string Path { get; }
+        public string Path    { get; }
 
         public bool IsEnabled
         {
@@ -46,6 +33,19 @@ namespace Ryujinx.Ava.Ui.Models
 
                 OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsEnabled)));
             }
+        }
+
+        private void CheatsList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                (e.NewItems[0] as CheatModel).EnableToggled += Item_EnableToggled;
+            }
+        }
+
+        private void Item_EnableToggled(object sender, bool e)
+        {
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsEnabled)));
         }
     }
 }

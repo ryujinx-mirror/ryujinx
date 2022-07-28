@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Collections;
-using Avalonia.Markup.Xaml;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Models;
 using Ryujinx.HLE.FileSystem;
@@ -26,8 +25,7 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = this;
 
             InitializeComponent();
-            AttachDebugDevTools();
-            
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["CheatWindowTitle"];
         }
 
@@ -38,9 +36,6 @@ namespace Ryujinx.Ava.Ui.Windows
             Heading = string.Format(LocaleManager.Instance["CheatWindowHeading"], titleName, titleId.ToUpper());
 
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
 
             string modsBasePath = virtualFileSystem.ModLoader.GetModsBasePath();
             string titleModsPath = virtualFileSystem.ModLoader.GetTitleDir(modsBasePath, titleId);
@@ -94,12 +89,6 @@ namespace Ryujinx.Ava.Ui.Windows
             DataContext = this;
             
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["CheatWindowTitle"];
-        }
-
-        [Conditional("DEBUG")]
-        private void AttachDebugDevTools()
-        {
-            this.AttachDevTools();
         }
 
         public void Save()

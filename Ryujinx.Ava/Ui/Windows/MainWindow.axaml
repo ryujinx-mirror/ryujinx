@@ -257,7 +257,7 @@
                 </DockPanel>
             </StackPanel>
             <ContentControl
-                Name="Content"
+                Name="MainContent"
                 Grid.Row="1"
                 Padding="0"
                 HorizontalAlignment="Stretch"

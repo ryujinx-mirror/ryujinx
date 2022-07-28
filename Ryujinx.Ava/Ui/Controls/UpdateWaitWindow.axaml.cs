@@ -17,9 +17,6 @@ namespace Ryujinx.Ava.Ui.Controls
         public UpdateWaitWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
     }
 }

@@ -1261,15 +1261,15 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public async void OpenDlcManager()
+        public async void OpenDownloadableContentManager()
         {
             var selection = SelectedApplication;
 
             if (selection != null)
             {
-                DlcManagerWindow dlcManager = new(_owner.VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName);
+                DownloadableContentManagerWindow downloadableContentManager = new(_owner.VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName);
 
-                await dlcManager.ShowDialog(_owner);
+                await downloadableContentManager.ShowDialog(_owner);
             }
         }
 
