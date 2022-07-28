@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Texture bindings manager.
     /// </summary>
-    class TextureBindingsManager : IDisposable
+    class TextureBindingsManager
     {
         private const int InitialTextureStateSize = 32;
         private const int InitialImageStateSize = 8;
@@ -22,15 +22,17 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private readonly bool _isCompute;
 
-        private SamplerPool _samplerPool;
-
+        private ulong _texturePoolGpuVa;
+        private int _texturePoolMaximumId;
+        private TexturePool _texturePool;
+        private ulong _samplerPoolGpuVa;
+        private int _samplerPoolMaximumId;
         private SamplerIndex _samplerIndex;
-
-        private ulong _texturePoolAddress;
-        private int   _texturePoolMaximumId;
+        private SamplerPool _samplerPool;
 
         private readonly GpuChannel _channel;
         private readonly TexturePoolCache _texturePoolCache;
+        private readonly SamplerPoolCache _samplerPoolCache;
 
         private TexturePool _cachedTexturePool;
         private SamplerPool _cachedSamplerPool;
@@ -72,16 +74,25 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="context">The GPU context that the texture bindings manager belongs to</param>
         /// <param name="channel">The GPU channel that the texture bindings manager belongs to</param>
-        /// <param name="poolCache">Texture pools cache used to get texture pools from</param>
+        /// <param name="texturePoolCache">Texture pools cache used to get texture pools from</param>
+        /// <param name="samplerPoolCache">Sampler pools cache used to get sampler pools from</param>
         /// <param name="scales">Array where the scales for the currently bound textures are stored</param>
         /// <param name="isCompute">True if the bindings manager is used for the compute engine</param>
-        public TextureBindingsManager(GpuContext context, GpuChannel channel, TexturePoolCache poolCache, float[] scales, bool isCompute)
+        public TextureBindingsManager(
+            GpuContext context,
+            GpuChannel channel,
+            TexturePoolCache texturePoolCache,
+            SamplerPoolCache samplerPoolCache,
+            float[] scales,
+            bool isCompute)
         {
-            _context          = context;
-            _channel          = channel;
-            _texturePoolCache = poolCache;
-            _scales           = scales;
-            _isCompute        = isCompute;
+            _context = context;
+            _channel = channel;
+            _texturePoolCache = texturePoolCache;
+            _samplerPoolCache = samplerPoolCache;
+
+            _scales = scales;
+            _isCompute = isCompute;
 
             int stages = isCompute ? 1 : Constants.ShaderStages;
 
@@ -173,25 +184,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="samplerIndex">Type of the sampler pool indexing used for bound samplers</param>
         public void SetSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
-            if (gpuVa != 0)
-            {
-                ulong address = _channel.MemoryManager.Translate(gpuVa);
-
-                if (_samplerPool != null && _samplerPool.Address == address && _samplerPool.MaximumId >= maximumId)
-                {
-                    return;
-                }
-
-                _samplerPool?.Dispose();
-                _samplerPool = new SamplerPool(_context, _channel.MemoryManager.Physical, address, maximumId);
-            }
-            else
-            {
-                _samplerPool?.Dispose();
-                _samplerPool = null;
-            }
-
+            _samplerPoolGpuVa = gpuVa;
+            _samplerPoolMaximumId = maximumId;
             _samplerIndex = samplerIndex;
+            _samplerPool = null;
         }
 
         /// <summary>
@@ -201,18 +197,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="maximumId">Maximum ID of the pool (total count minus one)</param>
         public void SetTexturePool(ulong gpuVa, int maximumId)
         {
-            if (gpuVa != 0)
-            {
-                ulong address = _channel.MemoryManager.Translate(gpuVa);
-
-                _texturePoolAddress = address;
-                _texturePoolMaximumId = maximumId;
-            }
-            else
-            {
-                _texturePoolAddress = 0;
-                _texturePoolMaximumId = 0;
-            }
+            _texturePoolGpuVa = gpuVa;
+            _texturePoolMaximumId = maximumId;
+            _texturePool = null;
         }
 
         /// <summary>
@@ -222,13 +209,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="samplerId">ID of the sampler</param>
         public (Texture, Sampler) GetTextureAndSampler(int textureId, int samplerId)
         {
-            ulong texturePoolAddress = _texturePoolAddress;
+            (TexturePool texturePool, SamplerPool samplerPool) = GetPools();
 
-            TexturePool texturePool = texturePoolAddress != 0
-                ? _texturePoolCache.FindOrCreate(_channel, texturePoolAddress, _texturePoolMaximumId)
-                : null;
-
-            return (texturePool.Get(textureId), _samplerPool.Get(samplerId));
+            return (texturePool.Get(textureId), samplerPool.Get(samplerId));
         }
 
         /// <summary>
@@ -340,13 +323,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if all bound textures match the current shader specialiation state, false otherwise</returns>
         public bool CommitBindings(ShaderSpecializationState specState)
         {
-            ulong texturePoolAddress = _texturePoolAddress;
-
-            TexturePool texturePool = texturePoolAddress != 0
-                ? _texturePoolCache.FindOrCreate(_channel, texturePoolAddress, _texturePoolMaximumId)
-                : null;
-
-            SamplerPool samplerPool = _samplerPool;
+            (TexturePool texturePool, SamplerPool samplerPool) = GetPools();
 
             // Check if the texture pool has been modified since bindings were last committed.
             // If it wasn't, then it's possible to avoid looking up textures again when the handle remains the same.
@@ -381,7 +358,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (_isCompute)
             {
-                specStateMatches &= CommitTextureBindings(texturePool, ShaderStage.Compute, 0, poolModified, specState);
+                specStateMatches &= CommitTextureBindings(texturePool, samplerPool, ShaderStage.Compute, 0, poolModified, specState);
                 specStateMatches &= CommitImageBindings(texturePool, ShaderStage.Compute, 0, poolModified, specState);
             }
             else
@@ -390,7 +367,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     int stageIndex = (int)stage - 1;
 
-                    specStateMatches &= CommitTextureBindings(texturePool, stage, stageIndex, poolModified, specState);
+                    specStateMatches &= CommitTextureBindings(texturePool, samplerPool, stage, stageIndex, poolModified, specState);
                     specStateMatches &= CommitImageBindings(texturePool, stage, stageIndex, poolModified, specState);
                 }
             }
@@ -447,13 +424,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Ensures that the texture bindings are visible to the host GPU.
         /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
-        /// <param name="pool">The current texture pool</param>
+        /// <param name="texturePool">The current texture pool</param>
+        /// <param name="samplerPool">The current sampler pool</param>
         /// <param name="stage">The shader stage using the textures to be bound</param>
         /// <param name="stageIndex">The stage number of the specified shader stage</param
         /// <param name="poolModified">True if either the texture or sampler pool was modified, false otherwise</param>
         /// <param name="specState">Specialization state for the bound shader</param>
         /// <returns>True if all bound textures match the current shader specialiation state, false otherwise</returns>
-        private bool CommitTextureBindings(TexturePool pool, ShaderStage stage, int stageIndex, bool poolModified, ShaderSpecializationState specState)
+        private bool CommitTextureBindings(
+            TexturePool texturePool,
+            SamplerPool samplerPool,
+            ShaderStage stage,
+            int stageIndex,
+            bool poolModified,
+            ShaderSpecializationState specState)
         {
             int textureCount = _textureBindingsCount[stageIndex];
             if (textureCount == 0)
@@ -461,9 +445,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return true;
             }
 
-            var samplerPool = _samplerPool;
-
-            if (pool == null)
+            if (texturePool == null)
             {
                 Logger.Error?.Print(LogClass.Gpu, $"Shader stage \"{stage}\" uses textures, but texture pool was not set.");
                 return true;
@@ -528,7 +510,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 state.TextureHandle = textureId;
                 state.SamplerHandle = samplerId;
 
-                ref readonly TextureDescriptor descriptor = ref pool.GetForBinding(textureId, out Texture texture);
+                ref readonly TextureDescriptor descriptor = ref texturePool.GetForBinding(textureId, out Texture texture);
 
                 specStateMatches &= specState.MatchesTexture(stage, index, descriptor);
 
@@ -820,20 +802,60 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Gets the texture and sampler pool for the GPU virtual address that are currently set.
+        /// </summary>
+        /// <returns>The texture and sampler pools</returns>
+        private (TexturePool, SamplerPool) GetPools()
+        {
+            MemoryManager memoryManager = _channel.MemoryManager;
+
+            TexturePool texturePool = _texturePool;
+            SamplerPool samplerPool = _samplerPool;
+
+            if (texturePool == null)
+            {
+                ulong poolAddress = memoryManager.Translate(_texturePoolGpuVa);
+
+                if (poolAddress != MemoryManager.PteUnmapped)
+                {
+                    texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, _texturePoolMaximumId);
+                    _texturePool = texturePool;
+                }
+            }
+
+            if (samplerPool == null)
+            {
+                ulong poolAddress = memoryManager.Translate(_samplerPoolGpuVa);
+
+                if (poolAddress != MemoryManager.PteUnmapped)
+                {
+                    samplerPool = _samplerPoolCache.FindOrCreate(_channel, poolAddress, _samplerPoolMaximumId);
+                    _samplerPool = samplerPool;
+                }
+            }
+
+            return (texturePool, samplerPool);
+        }
+
+        /// <summary>
+        /// Forces the texture and sampler pools to be re-loaded from the cache on next use.
+        /// </summary>
+        /// <remarks>
+        /// This should be called if the memory mappings change, to ensure the correct pools are being used.
+        /// </remarks>
+        public void ReloadPools()
+        {
+            _samplerPool = null;
+            _texturePool = null;
+        }
+
+        /// <summary>
         /// Force all bound textures and images to be rebound the next time CommitBindings is called.
         /// </summary>
         public void Rebind()
         {
             Array.Clear(_textureState);
             Array.Clear(_imageState);
-        }
-
-        /// <summary>
-        /// Disposes all textures and samplers in the cache.
-        /// </summary>
-        public void Dispose()
-        {
-            _samplerPool?.Dispose();
         }
     }
 }

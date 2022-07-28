@@ -59,9 +59,24 @@ namespace Ryujinx.Graphics.Gpu
             {
                 oldMemoryManager.Physical.BufferCache.NotifyBuffersModified -= BufferManager.Rebind;
                 oldMemoryManager.Physical.DecrementReferenceCount();
+                oldMemoryManager.MemoryUnmapped -= MemoryUnmappedHandler;
             }
 
             memoryManager.Physical.BufferCache.NotifyBuffersModified += BufferManager.Rebind;
+            memoryManager.MemoryUnmapped += MemoryUnmappedHandler;
+
+            // Since the memory manager changed, make sure we will get pools from addresses of the new memory manager.
+            TextureManager.ReloadPools();
+        }
+
+        /// <summary>
+        /// Memory mappings change event handler.
+        /// </summary>
+        /// <param name="sender">Memory manager where the mappings changed</param>
+        /// <param name="e">Information about the region that is being changed</param>
+        private void MemoryUnmappedHandler(object sender, UnmapEventArgs e)
+        {
+            TextureManager.ReloadPools();
         }
 
         /// <summary>
