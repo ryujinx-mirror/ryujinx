@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -9,10 +9,12 @@
     <TargetOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">osx</TargetOS>
     <TargetOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">linux</TargetOS>
     <Configurations>Debug;Release</Configurations>
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +27,7 @@
     <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
     <ProjectReference Include="..\Ryujinx.Cpu\Ryujinx.Cpu.csproj" />
     <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
+    <ProjectReference Include="..\Ryujinx.Memory.Tests\Ryujinx.Memory.Tests.csproj" />
     <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
     <ProjectReference Include="..\Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj" />
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />

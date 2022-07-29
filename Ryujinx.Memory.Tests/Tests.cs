@@ -38,9 +38,15 @@ namespace Ryujinx.Memory.Tests
             Assert.AreEqual(Marshal.ReadInt32(_memoryBlock.Pointer, 0x2040), 0xbadc0de);
         }
 
-        [Test, Explicit]
+        [Test]
         public void Test_Alias()
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                // Memory aliasing tests fail on CI at the moment.
+                return;
+            }
+
             using MemoryBlock backing = new MemoryBlock(0x10000, MemoryAllocationFlags.Mirrorable);
             using MemoryBlock toAlias = new MemoryBlock(0x10000, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 
@@ -51,9 +57,15 @@ namespace Ryujinx.Memory.Tests
             Assert.AreEqual(Marshal.ReadInt32(backing.Pointer, 0x1000), 0xbadc0de);
         }
 
-        [Test, Explicit]
+        [Test]
         public void Test_AliasRandom()
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                // Memory aliasing tests fail on CI at the moment.
+                return;
+            }
+
             using MemoryBlock backing = new MemoryBlock(0x80000, MemoryAllocationFlags.Mirrorable);
             using MemoryBlock toAlias = new MemoryBlock(0x80000, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 

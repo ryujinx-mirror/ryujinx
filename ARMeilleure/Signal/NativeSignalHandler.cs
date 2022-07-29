@@ -197,12 +197,29 @@ namespace ARMeilleure.Signal
                 // Only call tracking if in range.
                 context.BranchIfFalse(nextLabel, inRange, BasicBlockFrequency.Cold);
 
-                context.Copy(inRegionLocal, Const(1));
                 Operand offset = context.BitwiseAnd(context.Subtract(faultAddress, rangeAddress), Const(~PageMask));
 
                 // Call the tracking action, with the pointer's relative offset to the base address.
                 Operand trackingActionPtr = context.Load(OperandType.I64, Const((ulong)signalStructPtr + rangeBaseOffset + 20));
-                context.Call(trackingActionPtr, OperandType.I32, offset, Const(PageSize), isWrite, Const(0));
+
+                context.Copy(inRegionLocal, Const(0));
+
+                Operand skipActionLabel = Label();
+
+                // Tracking action should be non-null to call it, otherwise assume false return.
+                context.BranchIfFalse(skipActionLabel, trackingActionPtr);
+                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(PageSize), isWrite, Const(0));
+                context.Copy(inRegionLocal, result);
+
+                context.MarkLabel(skipActionLabel);
+
+                // If the tracking action returns false or does not exist, it might be an invalid access due to a partial overlap on Windows.
+                if (OperatingSystem.IsWindows())
+                {
+                    context.BranchIfTrue(endLabel, inRegionLocal);
+
+                    context.Copy(inRegionLocal, WindowsPartialUnmapHandler.EmitRetryFromAccessViolation(context));
+                }
 
                 context.Branch(endLabel);
 

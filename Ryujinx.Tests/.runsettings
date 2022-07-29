@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <COMPlus_EnableAlternateStackCheck>1</COMPlus_EnableAlternateStackCheck>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

@@ -13,13 +13,10 @@ namespace Ryujinx.Memory
         private readonly bool _usesSharedMemory;
         private readonly bool _isMirror;
         private readonly bool _viewCompatible;
-        private readonly bool _forceWindows4KBView;
         private IntPtr _sharedMemory;
         private IntPtr _pointer;
         private ConcurrentDictionary<MemoryBlock, byte> _viewStorages;
         private int _viewCount;
-
-        internal bool ForceWindows4KBView => _forceWindows4KBView;
 
         /// <summary>
         /// Pointer to the memory block data.
@@ -49,8 +46,7 @@ namespace Ryujinx.Memory
             else if (flags.HasFlag(MemoryAllocationFlags.Reserve))
             {
                 _viewCompatible = flags.HasFlag(MemoryAllocationFlags.ViewCompatible);
-                _forceWindows4KBView = flags.HasFlag(MemoryAllocationFlags.ForceWindows4KBViewMapping);
-                _pointer = MemoryManagement.Reserve(size, _viewCompatible, _forceWindows4KBView);
+                _pointer = MemoryManagement.Reserve(size, _viewCompatible);
             }
             else
             {
@@ -173,7 +169,7 @@ namespace Ryujinx.Memory
         /// <exception cref="MemoryProtectionException">Throw when <paramref name="permission"/> is invalid</exception>
         public void Reprotect(ulong offset, ulong size, MemoryPermission permission, bool throwOnFail = true)
         {
-            MemoryManagement.Reprotect(GetPointerInternal(offset, size), size, permission, _viewCompatible, _forceWindows4KBView, throwOnFail);
+            MemoryManagement.Reprotect(GetPointerInternal(offset, size), size, permission, _viewCompatible, throwOnFail);
         }
 
         /// <summary>
@@ -406,7 +402,7 @@ namespace Ryujinx.Memory
                 }
                 else
                 {
-                    MemoryManagement.Free(ptr, Size, _forceWindows4KBView);
+                    MemoryManagement.Free(ptr, Size);
                 }
 
                 foreach (MemoryBlock viewStorage in _viewStorages.Keys)

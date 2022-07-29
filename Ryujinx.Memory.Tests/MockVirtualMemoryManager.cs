@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Tests
 {
-    class MockVirtualMemoryManager : IVirtualMemoryManager
+    public class MockVirtualMemoryManager : IVirtualMemoryManager
     {
         public bool NoMappings = false;
 

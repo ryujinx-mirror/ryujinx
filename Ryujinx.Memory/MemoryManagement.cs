@@ -20,11 +20,11 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static IntPtr Reserve(ulong size, bool viewCompatible, bool force4KBMap)
+        public static IntPtr Reserve(ulong size, bool viewCompatible)
         {
             if (OperatingSystem.IsWindows())
             {
-                return MemoryManagementWindows.Reserve((IntPtr)size, viewCompatible, force4KBMap);
+                return MemoryManagementWindows.Reserve((IntPtr)size, viewCompatible);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -72,14 +72,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                if (owner.ForceWindows4KBView)
-                {
-                    MemoryManagementWindows.MapView4KB(sharedMemory, srcOffset, address, (IntPtr)size);
-                }
-                else
-                {
-                    MemoryManagementWindows.MapView(sharedMemory, srcOffset, address, (IntPtr)size, owner);
-                }
+                MemoryManagementWindows.MapView(sharedMemory, srcOffset, address, (IntPtr)size, owner);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -95,14 +88,7 @@ namespace Ryujinx.Memory
         {
             if (OperatingSystem.IsWindows())
             {
-                if (owner.ForceWindows4KBView)
-                {
-                    MemoryManagementWindows.UnmapView4KB(address, (IntPtr)size);
-                }
-                else
-                {
-                    MemoryManagementWindows.UnmapView(sharedMemory, address, (IntPtr)size, owner);
-                }
+                MemoryManagementWindows.UnmapView(sharedMemory, address, (IntPtr)size, owner);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -114,20 +100,13 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static void Reprotect(IntPtr address, ulong size, MemoryPermission permission, bool forView, bool force4KBMap, bool throwOnFail)
+        public static void Reprotect(IntPtr address, ulong size, MemoryPermission permission, bool forView, bool throwOnFail)
         {
             bool result;
 
             if (OperatingSystem.IsWindows())
             {
-                if (forView && force4KBMap)
-                {
-                    result = MemoryManagementWindows.Reprotect4KB(address, (IntPtr)size, permission, forView);
-                }
-                else
-                {
-                    result = MemoryManagementWindows.Reprotect(address, (IntPtr)size, permission, forView);
-                }
+                result = MemoryManagementWindows.Reprotect(address, (IntPtr)size, permission, forView);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
@@ -144,11 +123,11 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Free(IntPtr address, ulong size, bool force4KBMap)
+        public static bool Free(IntPtr address, ulong size)
         {
             if (OperatingSystem.IsWindows())
             {
-                return MemoryManagementWindows.Free(address, (IntPtr)size, force4KBMap);
+                return MemoryManagementWindows.Free(address, (IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {

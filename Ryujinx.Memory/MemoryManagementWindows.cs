@@ -10,23 +10,19 @@ namespace Ryujinx.Memory
         public const int PageSize = 0x1000;
 
         private static readonly PlaceholderManager _placeholders = new PlaceholderManager();
-        private static readonly PlaceholderManager4KB _placeholders4KB = new PlaceholderManager4KB();
 
         public static IntPtr Allocate(IntPtr size)
         {
             return AllocateInternal(size, AllocationType.Reserve | AllocationType.Commit);
         }
 
-        public static IntPtr Reserve(IntPtr size, bool viewCompatible, bool force4KBMap)
+        public static IntPtr Reserve(IntPtr size, bool viewCompatible)
         {
             if (viewCompatible)
             {
                 IntPtr baseAddress = AllocateInternal2(size, AllocationType.Reserve | AllocationType.ReservePlaceholder);
 
-                if (!force4KBMap)
-                {
-                    _placeholders.ReserveRange((ulong)baseAddress, (ulong)size);
-                }
+                _placeholders.ReserveRange((ulong)baseAddress, (ulong)size);
 
                 return baseAddress;
             }
@@ -73,47 +69,9 @@ namespace Ryujinx.Memory
             _placeholders.MapView(sharedMemory, srcOffset, location, size, owner);
         }
 
-        public static void MapView4KB(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
-        {
-            _placeholders4KB.UnmapAndMarkRangeAsMapped(location, size);
-
-            ulong uaddress = (ulong)location;
-            ulong usize = (ulong)size;
-            IntPtr endLocation = (IntPtr)(uaddress + usize);
-
-            while (location != endLocation)
-            {
-                WindowsApi.VirtualFree(location, (IntPtr)PageSize, AllocationType.Release | AllocationType.PreservePlaceholder);
-
-                var ptr = WindowsApi.MapViewOfFile3(
-                    sharedMemory,
-                    WindowsApi.CurrentProcessHandle,
-                    location,
-                    srcOffset,
-                    (IntPtr)PageSize,
-                    0x4000,
-                    MemoryProtection.ReadWrite,
-                    IntPtr.Zero,
-                    0);
-
-                if (ptr == IntPtr.Zero)
-                {
-                    throw new WindowsApiException("MapViewOfFile3");
-                }
-
-                location += PageSize;
-                srcOffset += PageSize;
-            }
-        }
-
         public static void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
         {
             _placeholders.UnmapView(sharedMemory, location, size, owner);
-        }
-
-        public static void UnmapView4KB(IntPtr location, IntPtr size)
-        {
-            _placeholders4KB.UnmapView(location, size);
         }
 
         public static bool Reprotect(IntPtr address, IntPtr size, MemoryPermission permission, bool forView)
@@ -128,34 +86,9 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Reprotect4KB(IntPtr address, IntPtr size, MemoryPermission permission, bool forView)
+        public static bool Free(IntPtr address, IntPtr size)
         {
-            ulong uaddress = (ulong)address;
-            ulong usize = (ulong)size;
-            while (usize > 0)
-            {
-                if (!WindowsApi.VirtualProtect((IntPtr)uaddress, (IntPtr)PageSize, WindowsApi.GetProtection(permission), out _))
-                {
-                    return false;
-                }
-
-                uaddress += PageSize;
-                usize -= PageSize;
-            }
-
-            return true;
-        }
-
-        public static bool Free(IntPtr address, IntPtr size, bool force4KBMap)
-        {
-            if (force4KBMap)
-            {
-                _placeholders4KB.UnmapRange(address, size);
-            }
-            else
-            {
-                _placeholders.UnreserveRange((ulong)address, (ulong)size);
-            }
+            _placeholders.UnreserveRange((ulong)address, (ulong)size);
 
             return WindowsApi.VirtualFree(address, IntPtr.Zero, AllocationType.Release);
         }
@@ -206,11 +139,6 @@ namespace Ryujinx.Memory
             {
                 throw new ArgumentException("Invalid address.", nameof(address));
             }
-        }
-
-        public static bool RetryFromAccessViolation()
-        {
-            return _placeholders.RetryFromAccessViolation();
         }
     }
 }

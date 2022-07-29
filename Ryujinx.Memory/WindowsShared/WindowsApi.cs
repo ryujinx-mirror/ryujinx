@@ -76,6 +76,9 @@ namespace Ryujinx.Memory.WindowsShared
         [DllImport("kernel32.dll")]
         public static extern uint GetLastError();
 
+        [DllImport("kernel32.dll")]
+        public static extern int GetCurrentThreadId();
+
         public static MemoryProtection GetProtection(MemoryPermission permission)
         {
             return permission switch

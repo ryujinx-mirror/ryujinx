@@ -1,5 +1,7 @@
+using Ryujinx.Common.Memory.PartialUnmaps;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Threading;
 
@@ -13,13 +15,10 @@ namespace Ryujinx.Memory.WindowsShared
     {
         private const ulong MinimumPageSize = 0x1000;
 
-        [ThreadStatic]
-        private static int _threadLocalPartialUnmapsCount;
-
         private readonly IntervalTree<ulong, ulong> _mappings;
         private readonly IntervalTree<ulong, MemoryPermission> _protections;
-        private readonly ReaderWriterLock _partialUnmapLock;
-        private int _partialUnmapsCount;
+        private readonly IntPtr _partialUnmapStatePtr;
+        private readonly Thread _partialUnmapTrimThread;
 
         /// <summary>
         /// Creates a new instance of the Windows memory placeholder manager.
@@ -28,7 +27,35 @@ namespace Ryujinx.Memory.WindowsShared
         {
             _mappings = new IntervalTree<ulong, ulong>();
             _protections = new IntervalTree<ulong, MemoryPermission>();
-            _partialUnmapLock = new ReaderWriterLock();
+
+            _partialUnmapStatePtr = PartialUnmapState.GlobalState;
+
+            _partialUnmapTrimThread = new Thread(TrimThreadLocalMapLoop);
+            _partialUnmapTrimThread.Name = "CPU.PartialUnmapTrimThread";
+            _partialUnmapTrimThread.IsBackground = true;
+            _partialUnmapTrimThread.Start();
+        }
+
+        /// <summary>
+        /// Gets a reference to the partial unmap state struct.
+        /// </summary>
+        /// <returns>A reference to the partial unmap state struct</returns>
+        private unsafe ref PartialUnmapState GetPartialUnmapState()
+        {
+            return ref Unsafe.AsRef<PartialUnmapState>((void*)_partialUnmapStatePtr);
+        }
+
+        /// <summary>
+        /// Trims inactive threads from the partial unmap state's thread mapping every few seconds.
+        /// Should be run in a Background thread so that it doesn't stop the program from closing.
+        /// </summary>
+        private void TrimThreadLocalMapLoop()
+        {
+            while (true)
+            {
+                Thread.Sleep(2000);
+                GetPartialUnmapState().TrimThreads();
+            }
         }
 
         /// <summary>
@@ -98,7 +125,8 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="owner">Memory block that owns the mapping</param>
         public void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size, MemoryBlock owner)
         {
-            _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
+            ref var partialUnmapLock = ref GetPartialUnmapState().PartialUnmapLock;
+            partialUnmapLock.AcquireReaderLock();
 
             try
             {
@@ -107,7 +135,7 @@ namespace Ryujinx.Memory.WindowsShared
             }
             finally
             {
-                _partialUnmapLock.ReleaseReaderLock();
+                partialUnmapLock.ReleaseReaderLock();
             }
         }
 
@@ -221,7 +249,8 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="owner">Memory block that owns the mapping</param>
         public void UnmapView(IntPtr sharedMemory, IntPtr location, IntPtr size, MemoryBlock owner)
         {
-            _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
+            ref var partialUnmapLock = ref GetPartialUnmapState().PartialUnmapLock;
+            partialUnmapLock.AcquireReaderLock();
 
             try
             {
@@ -229,7 +258,7 @@ namespace Ryujinx.Memory.WindowsShared
             }
             finally
             {
-                _partialUnmapLock.ReleaseReaderLock();
+                partialUnmapLock.ReleaseReaderLock();
             }
         }
 
@@ -265,11 +294,6 @@ namespace Ryujinx.Memory.WindowsShared
 
                 if (IsMapped(overlap.Value))
                 {
-                    if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)overlap.Start, 2))
-                    {
-                        throw new WindowsApiException("UnmapViewOfFile2");
-                    }
-
                     // Tree operations might modify the node start/end values, so save a copy before we modify the tree.
                     ulong overlapStart = overlap.Start;
                     ulong overlapEnd = overlap.End;
@@ -291,30 +315,46 @@ namespace Ryujinx.Memory.WindowsShared
                         // This is necessary because Windows does not support partial view unmaps.
                         // That is, you can only fully unmap a view that was previously mapped, you can't just unmap a chunck of it.
 
-                        LockCookie lockCookie = _partialUnmapLock.UpgradeToWriterLock(Timeout.Infinite);
+                        ref var partialUnmapState = ref GetPartialUnmapState();
+                        ref var partialUnmapLock = ref partialUnmapState.PartialUnmapLock;
+                        partialUnmapLock.UpgradeToWriterLock();
 
-                        _partialUnmapsCount++;
-
-                        if (overlapStartsBefore)
+                        try
                         {
-                            ulong remapSize = startAddress - overlapStart;
+                            partialUnmapState.PartialUnmapsCount++;
 
-                            MapViewInternal(sharedMemory, overlapValue, (IntPtr)overlapStart, (IntPtr)remapSize);
-                            RestoreRangeProtection(overlapStart, remapSize);
+                            if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)overlapStart, 2))
+                            {
+                                throw new WindowsApiException("UnmapViewOfFile2");
+                            }
+
+                            if (overlapStartsBefore)
+                            {
+                                ulong remapSize = startAddress - overlapStart;
+
+                                MapViewInternal(sharedMemory, overlapValue, (IntPtr)overlapStart, (IntPtr)remapSize);
+                                RestoreRangeProtection(overlapStart, remapSize);
+                            }
+
+                            if (overlapEndsAfter)
+                            {
+                                ulong overlappedSize = endAddress - overlapStart;
+                                ulong remapBackingOffset = overlapValue + overlappedSize;
+                                ulong remapAddress = overlapStart + overlappedSize;
+                                ulong remapSize = overlapEnd - endAddress;
+
+                                MapViewInternal(sharedMemory, remapBackingOffset, (IntPtr)remapAddress, (IntPtr)remapSize);
+                                RestoreRangeProtection(remapAddress, remapSize);
+                            }
                         }
-
-                        if (overlapEndsAfter)
+                        finally
                         {
-                            ulong overlappedSize = endAddress - overlapStart;
-                            ulong remapBackingOffset = overlapValue + overlappedSize;
-                            ulong remapAddress = overlapStart + overlappedSize;
-                            ulong remapSize = overlapEnd - endAddress;
-
-                            MapViewInternal(sharedMemory, remapBackingOffset, (IntPtr)remapAddress, (IntPtr)remapSize);
-                            RestoreRangeProtection(remapAddress, remapSize);
+                            partialUnmapLock.DowngradeFromWriterLock();
                         }
-
-                        _partialUnmapLock.DowngradeFromWriterLock(ref lockCookie);
+                    }
+                    else if (!WindowsApi.UnmapViewOfFile2(WindowsApi.CurrentProcessHandle, (IntPtr)overlapStart, 2))
+                    {
+                        throw new WindowsApiException("UnmapViewOfFile2");
                     }
                 }
             }
@@ -394,7 +434,8 @@ namespace Ryujinx.Memory.WindowsShared
         /// <returns>True if the reprotection was successful, false otherwise</returns>
         public bool ReprotectView(IntPtr address, IntPtr size, MemoryPermission permission)
         {
-            _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
+            ref var partialUnmapLock = ref GetPartialUnmapState().PartialUnmapLock;
+            partialUnmapLock.AcquireReaderLock();
 
             try
             {
@@ -402,7 +443,7 @@ namespace Ryujinx.Memory.WindowsShared
             }
             finally
             {
-                _partialUnmapLock.ReleaseReaderLock();
+                partialUnmapLock.ReleaseReaderLock();
             }
         }
 
@@ -658,32 +699,6 @@ namespace Ryujinx.Memory.WindowsShared
 
                 ReprotectViewInternal((IntPtr)protAddress, (IntPtr)(protEndAddress - protAddress), protection.Value, true);
             }
-        }
-
-        /// <summary>
-        /// Checks if an access violation handler should retry execution due to a fault caused by partial unmap.
-        /// </summary>
-        /// <remarks>
-        /// Due to Windows limitations, <see cref="UnmapView"/> might need to unmap more memory than requested.
-        /// The additional memory that was unmapped is later remapped, however this leaves a time gap where the
-        /// memory might be accessed but is unmapped. Users of the API must compensate for that by catching the
-        /// access violation and retrying if it happened between the unmap and remap operation.
-        /// This method can be used to decide if retrying in such cases is necessary or not.
-        /// </remarks>
-        /// <returns>True if execution should be retried, false otherwise</returns>
-        public bool RetryFromAccessViolation()
-        {
-            _partialUnmapLock.AcquireReaderLock(Timeout.Infinite);
-
-            bool retry = _threadLocalPartialUnmapsCount != _partialUnmapsCount;
-            if (retry)
-            {
-                _threadLocalPartialUnmapsCount = _partialUnmapsCount;
-            }
-
-            _partialUnmapLock.ReleaseReaderLock();
-
-            return retry;
         }
     }
 }
