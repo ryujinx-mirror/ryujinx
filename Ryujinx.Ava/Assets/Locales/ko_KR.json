@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "해킹",
-  "SettingsTabSystemHacksNote": " - 불안정을 일으킬 수 있음",
+  "SettingsTabSystemHacksNote": " (불안정을 일으킬 수 있음)",
   "SettingsTabSystemExpandDramSize": "DRAM 크기를 6GB로 확장",
   "SettingsTabSystemIgnoreMissingServices": "누락된 서비스 무시",
   "SettingsTabGraphics": "제도법",

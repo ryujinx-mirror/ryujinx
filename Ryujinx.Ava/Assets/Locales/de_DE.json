@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Hacks",
-  "SettingsTabSystemHacksNote": " - Können Fehler verursachen",
+  "SettingsTabSystemHacksNote": " (Können Fehler verursachen)",
   "SettingsTabSystemExpandDramSize": "Erweitere DRAM Größe auf 6GB",
   "SettingsTabSystemIgnoreMissingServices": "Ignoriere fehlende Dienste",
   "SettingsTabGraphics": "Grafik",

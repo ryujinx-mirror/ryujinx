@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Μικροδιορθώσεις",
-  "SettingsTabSystemHacksNote": " - Μπορεί να προκαλέσουν αστάθεια",
+  "SettingsTabSystemHacksNote": " (Μπορεί να προκαλέσουν αστάθεια)",
   "SettingsTabSystemExpandDramSize": "Επέκταση μεγέθους DRAM στα 6GB",
   "SettingsTabSystemIgnoreMissingServices": "Αγνόηση υπηρεσιών που λείπουν",
   "SettingsTabGraphics": "Γραφικά",

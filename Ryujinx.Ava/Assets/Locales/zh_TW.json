@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "修正",
-  "SettingsTabSystemHacksNote": " - 會引起模擬器不穩定",
+  "SettingsTabSystemHacksNote": " (會引起模擬器不穩定)",
   "SettingsTabSystemExpandDramSize": "將模擬記憶體大小擴充至 6GB",
   "SettingsTabSystemIgnoreMissingServices": "忽略缺少的服務",
   "SettingsTabGraphics": "圖形",

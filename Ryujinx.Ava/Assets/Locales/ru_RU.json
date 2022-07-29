@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Хаки",
-  "SettingsTabSystemHacksNote": " - Эти многие настройки вызывают нестабильность",
+  "SettingsTabSystemHacksNote": " (Эти многие настройки вызывают нестабильность)",
   "SettingsTabSystemExpandDramSize": "Увеличение размера DRAM до 6GB",
   "SettingsTabSystemIgnoreMissingServices": "Игнорировать отсутствующие службы",
   "SettingsTabGraphics": "Графика",

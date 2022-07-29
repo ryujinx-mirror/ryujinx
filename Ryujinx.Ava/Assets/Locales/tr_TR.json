@@ -118,7 +118,7 @@
   "SettingsTabSystemAudioBackendSoundIO": "SoundIO",
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Hacklar",
-  "SettingsTabSystemHacksNote": " - Bunlar birçok dengesizlik oluşturabilir",
+  "SettingsTabSystemHacksNote": " (Bunlar birçok dengesizlik oluşturabilir)",
   "SettingsTabSystemExpandDramSize": "DRAM boyutunu 6GB'a genişlet",
   "SettingsTabSystemIgnoreMissingServices": "Eksik Servisleri Görmezden Gel",
   "SettingsTabGraphics": "Grafikler",
