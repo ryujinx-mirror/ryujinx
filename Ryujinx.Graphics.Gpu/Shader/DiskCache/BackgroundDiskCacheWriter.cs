@@ -83,7 +83,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         {
             _context = context;
             _hostStorage = hostStorage;
-            _fileWriterWorkerQueue = new AsyncWorkQueue<CacheFileOperationTask>(ProcessTask, "Gpu.BackgroundDiskCacheWriter");
+            _fileWriterWorkerQueue = new AsyncWorkQueue<CacheFileOperationTask>(ProcessTask, "GPU.BackgroundDiskCacheWriter");
         }
 
         /// <summary>

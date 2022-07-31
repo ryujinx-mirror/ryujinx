@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int TessLevelInner0     = 0x010;
         public const int TessLevelInner1     = 0x014;
         public const int Layer               = 0x064;
+        public const int ViewportIndex       = 0x068;
         public const int PointSize           = 0x06c;
         public const int PositionX           = 0x070;
         public const int PositionY           = 0x074;

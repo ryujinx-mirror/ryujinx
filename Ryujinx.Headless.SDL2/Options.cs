@@ -94,6 +94,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("enable-shader-cache", Required = false, Default = true, HelpText = "Enables Shader cache.")]
         public bool? EnableShaderCache { get; set; }
 
+        [Option("enable-texture-recompression", Required = false, Default = false, HelpText = "Enables Texture recompression.")]
+        public bool? EnableTextureRecompression { get; set; }
+
         [Option("enable-docked-mode", Required = false, Default = true, HelpText = "Enables Docked Mode.")]
         public bool? EnableDockedMode { get; set; }
 
@@ -163,6 +166,12 @@ namespace Ryujinx.Headless.SDL2
 
         [Option("graphics-shaders-dump-path", Required = false, HelpText = "Dumps shaders in this local directory. (Developer only)")]
         public string GraphicsShadersDumpPath { get; set; }
+
+        [Option("graphics-backend", Required = false, Default = GraphicsBackend.OpenGl, HelpText = "Change Graphics Backend to use.")]
+        public GraphicsBackend GraphicsBackend { get; set; }
+
+        [Option("preferred-gpu-vendor", Required = false, Default = "", HelpText = "When using the Vulkan backend, prefer using the GPU from the specified vendor.")]
+        public string PreferredGpuVendor { get; set; }
 
         // Hacks
 

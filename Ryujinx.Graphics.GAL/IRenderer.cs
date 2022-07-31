@@ -30,6 +30,7 @@ namespace Ryujinx.Graphics.GAL
         ReadOnlySpan<byte> GetBufferData(BufferHandle buffer, int offset, int size);
 
         Capabilities GetCapabilities();
+        HardwareInfo GetHardwareInfo();
 
         IProgram LoadProgramBinary(byte[] programBinary, bool hasFragmentShader, ShaderInfo info);
 

@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Gpu.Shader.Cache.Definition;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 

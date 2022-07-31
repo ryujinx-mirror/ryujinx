@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.OpenGL
         private static readonly Lazy<bool> _supportsDrawTexture                  = new Lazy<bool>(() => HasExtension("GL_NV_draw_texture"));
         private static readonly Lazy<bool> _supportsFragmentShaderInterlock      = new Lazy<bool>(() => HasExtension("GL_ARB_fragment_shader_interlock"));
         private static readonly Lazy<bool> _supportsFragmentShaderOrdering       = new Lazy<bool>(() => HasExtension("GL_INTEL_fragment_shader_ordering"));
+        private static readonly Lazy<bool> _supportsGeometryShaderPassthrough    = new Lazy<bool>(() => HasExtension("GL_NV_geometry_shader_passthrough"));
         private static readonly Lazy<bool> _supportsImageLoadFormatted           = new Lazy<bool>(() => HasExtension("GL_EXT_shader_image_load_formatted"));
         private static readonly Lazy<bool> _supportsIndirectParameters           = new Lazy<bool>(() => HasExtension("GL_ARB_indirect_parameters"));
         private static readonly Lazy<bool> _supportsParallelShaderCompile        = new Lazy<bool>(() => HasExtension("GL_ARB_parallel_shader_compile"));
@@ -17,6 +18,9 @@ namespace Ryujinx.Graphics.OpenGL
         private static readonly Lazy<bool> _supportsQuads                        = new Lazy<bool>(SupportsQuadsCheck);
         private static readonly Lazy<bool> _supportsSeamlessCubemapPerTexture    = new Lazy<bool>(() => HasExtension("GL_ARB_seamless_cubemap_per_texture"));
         private static readonly Lazy<bool> _supportsShaderBallot                 = new Lazy<bool>(() => HasExtension("GL_ARB_shader_ballot"));
+        private static readonly Lazy<bool> _supportsTextureCompressionBptc       = new Lazy<bool>(() => HasExtension("GL_EXT_texture_compression_bptc"));
+        private static readonly Lazy<bool> _supportsTextureCompressionRgtc       = new Lazy<bool>(() => HasExtension("GL_EXT_texture_compression_rgtc"));
+        private static readonly Lazy<bool> _supportsTextureCompressionS3tc       = new Lazy<bool>(() => HasExtension("GL_EXT_texture_compression_s3tc"));
         private static readonly Lazy<bool> _supportsTextureShadowLod             = new Lazy<bool>(() => HasExtension("GL_EXT_texture_shadow_lod"));
         private static readonly Lazy<bool> _supportsViewportSwizzle              = new Lazy<bool>(() => HasExtension("GL_NV_viewport_swizzle"));
 
@@ -49,6 +53,7 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsDrawTexture                  => _supportsDrawTexture.Value;
         public static bool SupportsFragmentShaderInterlock      => _supportsFragmentShaderInterlock.Value;
         public static bool SupportsFragmentShaderOrdering       => _supportsFragmentShaderOrdering.Value;
+        public static bool SupportsGeometryShaderPassthrough    => _supportsGeometryShaderPassthrough.Value;
         public static bool SupportsImageLoadFormatted           => _supportsImageLoadFormatted.Value;
         public static bool SupportsIndirectParameters           => _supportsIndirectParameters.Value;
         public static bool SupportsParallelShaderCompile        => _supportsParallelShaderCompile.Value;
@@ -56,6 +61,9 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsQuads                        => _supportsQuads.Value;
         public static bool SupportsSeamlessCubemapPerTexture    => _supportsSeamlessCubemapPerTexture.Value;
         public static bool SupportsShaderBallot                 => _supportsShaderBallot.Value;
+        public static bool SupportsTextureCompressionBptc       => _supportsTextureCompressionBptc.Value;
+        public static bool SupportsTextureCompressionRgtc       => _supportsTextureCompressionRgtc.Value;
+        public static bool SupportsTextureCompressionS3tc       => _supportsTextureCompressionS3tc.Value;
         public static bool SupportsTextureShadowLod             => _supportsTextureShadowLod.Value;
         public static bool SupportsViewportSwizzle              => _supportsViewportSwizzle.Value;
 

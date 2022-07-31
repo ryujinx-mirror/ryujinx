@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             // When debug mode is enabled, we disable expression propagation
             // (this makes comparison with the disassembly easier).
-            if ((context.Config.Options.Flags & TranslationFlags.DebugMode) == 0)
+            if (!context.Config.Options.Flags.HasFlag(TranslationFlags.DebugMode))
             {
                 AstBlockVisitor visitor = new AstBlockVisitor(mainBlock);
 

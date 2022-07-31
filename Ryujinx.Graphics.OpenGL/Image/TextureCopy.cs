@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureCopy : IDisposable
     {
-        private readonly Renderer _renderer;
+        private readonly OpenGLRenderer _renderer;
 
         public IntermmediatePool IntermmediatePool { get; }
 
@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         private int _copyPboHandle;
         private int _copyPboSize;
 
-        public TextureCopy(Renderer renderer)
+        public TextureCopy(OpenGLRenderer renderer)
         {
             _renderer = renderer;
             IntermmediatePool = new IntermmediatePool(renderer);

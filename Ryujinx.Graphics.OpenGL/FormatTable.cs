@@ -94,9 +94,7 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.Bc7Srgb,             new FormatInfo(4, false, false, All.CompressedSrgbAlphaBptcUnorm));
             Add(Format.Bc6HSfloat,          new FormatInfo(4, false, false, All.CompressedRgbBptcSignedFloat));
             Add(Format.Bc6HUfloat,          new FormatInfo(4, false, false, All.CompressedRgbBptcUnsignedFloat));
-            Add(Format.Etc2RgbUnorm,        new FormatInfo(3, false, false, All.CompressedRgb8Etc2));
             Add(Format.Etc2RgbaUnorm,       new FormatInfo(4, false, false, All.CompressedRgba8Etc2Eac));
-            Add(Format.Etc2RgbSrgb,         new FormatInfo(3, false, false, All.CompressedSrgb8Etc2));
             Add(Format.Etc2RgbaSrgb,        new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Etc2Eac));
             Add(Format.R8Uscaled,           new FormatInfo(1, false, true,  All.R8ui,              PixelFormat.RedInteger,     PixelType.UnsignedByte));
             Add(Format.R8Sscaled,           new FormatInfo(1, false, true,  All.R8i,               PixelFormat.RedInteger,     PixelType.Byte));

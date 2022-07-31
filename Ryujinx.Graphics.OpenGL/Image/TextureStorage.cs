@@ -12,13 +12,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public TextureCreateInfo Info { get; }
 
-        private readonly Renderer _renderer;
+        private readonly OpenGLRenderer _renderer;
 
         private int _viewsCount;
 
         internal ITexture DefaultView { get; private set; }
 
-        public TextureStorage(Renderer renderer, TextureCreateInfo info, float scaleFactor)
+        public TextureStorage(OpenGLRenderer renderer, TextureCreateInfo info, float scaleFactor)
         {
             _renderer = renderer;
             Info      = info;

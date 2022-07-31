@@ -2,7 +2,7 @@ namespace Ryujinx.Graphics.GAL
 {
     public struct Viewport
     {
-        public RectangleF Region { get; }
+        public Rectangle<float> Region { get; }
 
         public ViewportSwizzle SwizzleX { get; }
         public ViewportSwizzle SwizzleY { get; }
@@ -13,13 +13,13 @@ namespace Ryujinx.Graphics.GAL
         public float DepthFar  { get; }
 
         public Viewport(
-            RectangleF      region,
-            ViewportSwizzle swizzleX,
-            ViewportSwizzle swizzleY,
-            ViewportSwizzle swizzleZ,
-            ViewportSwizzle swizzleW,
-            float           depthNear,
-            float           depthFar)
+            Rectangle<float> region,
+            ViewportSwizzle  swizzleX,
+            ViewportSwizzle  swizzleY,
+            ViewportSwizzle  swizzleZ,
+            ViewportSwizzle  swizzleW,
+            float            depthNear,
+            float            depthFar)
         {
             Region    = region;
             SwizzleX  = swizzleX;

@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const uint TocMagic = (byte)'T' | ((byte)'O' << 8) | ((byte)'C' << 16) | ((byte)'G' << 24);
 
         private const ushort VersionMajor = 1;
-        private const ushort VersionMinor = 0;
+        private const ushort VersionMinor = 1;
         private const uint VersionPacked = ((uint)VersionMajor << 16) | VersionMinor;
 
         private const string TocFileName = "guest.toc";
@@ -193,8 +193,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="tocFileStream">Guest TOC file stream</param>
         /// <param name="dataFileStream">Guest data file stream</param>
         /// <param name="index">Guest shader index</param>
-        /// <returns>Tuple with the guest code and constant buffer 1 data, respectively</returns>
-        public (byte[], byte[]) LoadShader(Stream tocFileStream, Stream dataFileStream, int index)
+        /// <returns>Guest code and constant buffer 1 data</returns>
+        public GuestCodeAndCbData LoadShader(Stream tocFileStream, Stream dataFileStream, int index)
         {
             if (_cache == null || index >= _cache.Length)
             {
@@ -226,7 +226,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 _cache[index] = (guestCode, cb1Data);
             }
 
-            return (guestCode, cb1Data);
+            return new GuestCodeAndCbData(guestCode, cb1Data);
         }
 
         /// <summary>

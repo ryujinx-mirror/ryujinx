@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.CodeGen.Glsl;
+using Ryujinx.Graphics.Shader.CodeGen.Spirv;
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
@@ -72,16 +73,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                     Ssa.Rename(cfg.Blocks);
 
                     Optimizer.RunPass(cfg.Blocks, config);
-
                     Rewriter.RunPass(cfg.Blocks, config);
                 }
 
                 funcs[i] = new Function(cfg.Blocks, $"fun{i}", false, inArgumentsCount, outArgumentsCount);
             }
 
-            StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(funcs, config);
+            var sInfo = StructuredProgram.MakeStructuredProgram(funcs, config);
 
-            ShaderProgramInfo info = new ShaderProgramInfo(
+            var info = new ShaderProgramInfo(
                 config.GetConstantBufferDescriptors(),
                 config.GetStorageBufferDescriptors(),
                 config.GetTextureDescriptors(),
@@ -95,6 +95,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return config.Options.TargetLanguage switch
             {
                 TargetLanguage.Glsl => new ShaderProgram(info, TargetLanguage.Glsl, GlslGenerator.Generate(sInfo, config)),
+                TargetLanguage.Spirv => new ShaderProgram(info, TargetLanguage.Spirv, SpirvGenerator.Generate(sInfo, config)),
                 _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString())
             };
         }
@@ -105,7 +106,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             DecodedProgram program;
             ulong maxEndAddress = 0;
 
-            if ((options.Flags & TranslationFlags.Compute) != 0)
+            if (options.Flags.HasFlag(TranslationFlags.Compute))
             {
                 config = new ShaderConfig(gpuAccessor, options);
 

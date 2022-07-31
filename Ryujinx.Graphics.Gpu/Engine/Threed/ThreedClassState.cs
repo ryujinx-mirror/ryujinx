@@ -311,6 +311,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             return Attribute & 0x3fe00000;
         }
+
+         /// <summary>
+        /// Unpacks the Maxwell attribute component type.
+        /// </summary>
+        /// <returns>Attribute component type</returns>
+        public uint UnpackType()
+        {
+            return (Attribute >> 27) & 7;
+        }
     }
 
     /// <summary>
@@ -759,8 +768,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public fixed uint Reserved10B0[18];
         public uint ClearFlags;
         public fixed uint Reserved10FC[25];
-        public Array16<VertexAttribState> VertexAttribState;
-        public fixed uint Reserved11A0[31];
+        public Array32<VertexAttribState> VertexAttribState;
+        public fixed uint Reserved11E0[15];
         public RtControl RtControl;
         public fixed uint Reserved1220[2];
         public Size3D RtDepthStencilSize;

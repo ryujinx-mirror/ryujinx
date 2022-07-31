@@ -197,6 +197,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private string _pauseKey = "F5";
         private string _screenshotkey = "F8";
         private float _volume;
+        private string _backendText;
 
         public ApplicationData SelectedApplication
         {
@@ -335,12 +336,23 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
-        public string GpuStatusText
+        public string GpuNameText
         {
             get => _gpuStatusText;
             set
             {
                 _gpuStatusText = value;
+
+                OnPropertyChanged();
+            }
+        }
+
+        public string BackendText
+        {
+            get => _backendText;
+            set
+            {
+                _backendText = value;
 
                 OnPropertyChanged();
             }

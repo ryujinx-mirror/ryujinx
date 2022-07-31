@@ -45,9 +45,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             public readonly CachedShaderProgram CachedProgram;
 
             /// <summary>
-            /// Host program.
+            /// Optional binary code. If not null, it is used instead of the backend host binary.
             /// </summary>
-            public readonly IProgram HostProgram;
+            public readonly byte[] BinaryCode;
 
             /// <summary>
             /// Program index.
@@ -68,19 +68,19 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             /// Creates a new program validation entry.
             /// </summary>
             /// <param name="cachedProgram">Cached shader program</param>
-            /// <param name="hostProgram">Host program</param>
+            /// <param name="binaryCode">Optional binary code. If not null, it is used instead of the backend host binary</param>
             /// <param name="programIndex">Program index</param>
             /// <param name="isCompute">Indicates if the program is a compute shader</param>
             /// <param name="isBinary">Indicates if the program is a host binary shader</param>
             public ProgramEntry(
                 CachedShaderProgram cachedProgram,
-                IProgram hostProgram,
+                byte[] binaryCode,
                 int programIndex,
                 bool isCompute,
                 bool isBinary)
             {
                 CachedProgram = cachedProgram;
-                HostProgram = hostProgram;
+                BinaryCode = binaryCode;
                 ProgramIndex = programIndex;
                 IsCompute = isCompute;
                 IsBinary = isBinary;
@@ -146,9 +146,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private struct AsyncProgramTranslation
         {
             /// <summary>
-            /// Cached shader stages.
+            /// Guest code for each active stage.
             /// </summary>
-            public readonly CachedShaderStage[] Shaders;
+            public readonly GuestCodeAndCbData?[] GuestShaders;
 
             /// <summary>
             /// Specialization state.
@@ -168,17 +168,17 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             /// <summary>
             /// Creates a new program translation entry.
             /// </summary>
-            /// <param name="shaders">Cached shader stages</param>
+            /// <param name="guestShaders">Guest code for each active stage</param>
             /// <param name="specState">Specialization state</param>
             /// <param name="programIndex">Program index</param>
             /// <param name="isCompute">Indicates if the program is a compute shader</param>
             public AsyncProgramTranslation(
-                CachedShaderStage[] shaders,
+                GuestCodeAndCbData?[] guestShaders,
                 ShaderSpecializationState specState,
                 int programIndex,
                 bool isCompute)
             {
-                Shaders = shaders;
+                GuestShaders = guestShaders;
                 SpecializationState = specState;
                 ProgramIndex = programIndex;
                 IsCompute = isCompute;
@@ -188,7 +188,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private readonly Queue<ProgramEntry> _validationQueue;
         private readonly ConcurrentQueue<ProgramCompilation> _compilationQueue;
         private readonly BlockingCollection<AsyncProgramTranslation> _asyncTranslationQueue;
-        private readonly SortedList<int, CachedShaderProgram> _programList;
+        private readonly SortedList<int, (CachedShaderProgram, byte[])> _programList;
 
         private int _backendParallelCompileThreads;
         private int _compiledCount;
@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             _validationQueue = new Queue<ProgramEntry>();
             _compilationQueue = new ConcurrentQueue<ProgramCompilation>();
             _asyncTranslationQueue = new BlockingCollection<AsyncProgramTranslation>(ThreadCount);
-            _programList = new SortedList<int, CachedShaderProgram>();
+            _programList = new SortedList<int, (CachedShaderProgram, byte[])>();
             _backendParallelCompileThreads = Math.Min(Environment.ProcessorCount, 8); // Must be kept in sync with the backend code.
         }
 
@@ -235,7 +235,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             {
                 workThreads[index] = new Thread(ProcessAsyncQueue)
                 {
-                    Name = $"Gpu.AsyncTranslationThread.{index}"
+                    Name = $"GPU.AsyncTranslationThread.{index}"
                 };
             }
 
@@ -287,7 +287,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             CheckCompilationBlocking();
 
-            if (_needsHostRegen)
+            if (_needsHostRegen && Active)
             {
                 // Rebuild both shared and host cache files.
                 // Rebuilding shared is required because the shader information returned by the translator
@@ -310,8 +310,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                                 break;
                             }
 
-                            CachedShaderProgram program = kv.Value;
-                            _hostStorage.AddShader(_context, program, program.HostProgram.GetBinary(), streams);
+                            (CachedShaderProgram program, byte[] binaryCode) = kv.Value;
+                            _hostStorage.AddShader(_context, program, binaryCode, streams);
                         }
 
                         Logger.Info?.Print(LogClass.Gpu, $"Rebuilt {_programList.Count} shaders successfully.");
@@ -342,24 +342,31 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// Enqueues a host program for compilation.
         /// </summary>
         /// <param name="cachedProgram">Cached program</param>
-        /// <param name="hostProgram">Host program to be compiled</param>
+        /// <param name="binaryCode">Host binary code</param>
         /// <param name="programIndex">Program index</param>
         /// <param name="isCompute">Indicates if the program is a compute shader</param>
-        public void QueueHostProgram(CachedShaderProgram cachedProgram, IProgram hostProgram, int programIndex, bool isCompute)
+        public void QueueHostProgram(CachedShaderProgram cachedProgram, byte[] binaryCode, int programIndex, bool isCompute)
         {
-            EnqueueForValidation(new ProgramEntry(cachedProgram, hostProgram, programIndex, isCompute, isBinary: true));
+            EnqueueForValidation(new ProgramEntry(cachedProgram, binaryCode, programIndex, isCompute, isBinary: true));
         }
 
         /// <summary>
         /// Enqueues a guest program for compilation.
         /// </summary>
-        /// <param name="shaders">Cached shader stages</param>
+        /// <param name="guestShaders">Guest code for each active stage</param>
         /// <param name="specState">Specialization state</param>
         /// <param name="programIndex">Program index</param>
         /// <param name="isCompute">Indicates if the program is a compute shader</param>
-        public void QueueGuestProgram(CachedShaderStage[] shaders, ShaderSpecializationState specState, int programIndex, bool isCompute)
+        public void QueueGuestProgram(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex, bool isCompute)
         {
-            _asyncTranslationQueue.Add(new AsyncProgramTranslation(shaders, specState, programIndex, isCompute));
+            try
+            {
+                AsyncProgramTranslation asyncTranslation = new AsyncProgramTranslation(guestShaders, specState, programIndex, isCompute);
+                _asyncTranslationQueue.Add(asyncTranslation, _cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         /// <summary>
@@ -374,7 +381,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             // If not yet compiled, do nothing. This avoids blocking to wait for shader compilation.
             while (_validationQueue.TryPeek(out ProgramEntry entry))
             {
-                ProgramLinkStatus result = entry.HostProgram.CheckProgramLink(false);
+                ProgramLinkStatus result = entry.CachedProgram.HostProgram.CheckProgramLink(false);
 
                 if (result != ProgramLinkStatus.Incomplete)
                 {
@@ -398,7 +405,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             while (_validationQueue.TryDequeue(out ProgramEntry entry) && Active)
             {
-                ProcessCompiledProgram(ref entry, entry.HostProgram.CheckProgramLink(true), asyncCompile: false);
+                ProcessCompiledProgram(ref entry, entry.CachedProgram.HostProgram.CheckProgramLink(true), asyncCompile: false);
             }
         }
 
@@ -427,7 +434,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     _needsHostRegen = true;
                 }
 
-                _programList.Add(entry.ProgramIndex, entry.CachedProgram);
+                _programList.Add(entry.ProgramIndex, (entry.CachedProgram, entry.BinaryCode));
                 SignalCompiled();
             }
             else if (entry.IsBinary)
@@ -436,13 +443,25 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 // we still have a chance to recompile from the guest binary.
                 CachedShaderProgram program = entry.CachedProgram;
 
+                GuestCodeAndCbData?[] guestShaders = new GuestCodeAndCbData?[program.Shaders.Length];
+
+                for (int index = 0; index < program.Shaders.Length; index++)
+                {
+                    CachedShaderStage shader = program.Shaders[index];
+
+                    if (shader != null)
+                    {
+                        guestShaders[index] = new GuestCodeAndCbData(shader.Code, shader.Cb1Data);
+                    }
+                }
+
                 if (asyncCompile)
                 {
-                    QueueGuestProgram(program.Shaders, program.SpecializationState, entry.ProgramIndex, entry.IsCompute);
+                    QueueGuestProgram(guestShaders, program.SpecializationState, entry.ProgramIndex, entry.IsCompute);
                 }
                 else
                 {
-                    RecompileFromGuestCode(program.Shaders, program.SpecializationState, entry.ProgramIndex, entry.IsCompute);
+                    RecompileFromGuestCode(guestShaders, program.SpecializationState, entry.ProgramIndex, entry.IsCompute);
                     ProcessCompilationQueue();
                 }
             }
@@ -476,10 +495,16 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     }
                 }
 
-                IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources, new ShaderInfo(fragmentOutputMap));
+                ShaderInfo shaderInfo = compilation.SpecializationState.PipelineState.HasValue
+                    ? new ShaderInfo(fragmentOutputMap, compilation.SpecializationState.PipelineState.Value, fromCache: true)
+                    : new ShaderInfo(fragmentOutputMap, fromCache: true);
+
+                IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources, shaderInfo);
                 CachedShaderProgram program = new CachedShaderProgram(hostProgram, compilation.SpecializationState, compilation.Shaders);
 
-                EnqueueForValidation(new ProgramEntry(program, hostProgram, compilation.ProgramIndex, compilation.IsCompute, isBinary: false));
+                byte[] binaryCode = _context.Capabilities.Api == TargetApi.Vulkan ? ShaderBinarySerializer.Pack(shaderSources) : hostProgram.GetBinary();
+
+                EnqueueForValidation(new ProgramEntry(program, binaryCode, compilation.ProgramIndex, compilation.IsCompute, isBinary: false));
             }
         }
 
@@ -496,7 +521,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             // Submitting more seems to cause NVIDIA OpenGL driver to crash.
             if (_validationQueue.Count >= _backendParallelCompileThreads && _validationQueue.TryDequeue(out ProgramEntry entry))
             {
-                ProcessCompiledProgram(ref entry, entry.HostProgram.CheckProgramLink(true), asyncCompile: false);
+                ProcessCompiledProgram(ref entry, entry.CachedProgram.HostProgram.CheckProgramLink(true), asyncCompile: false);
             }
         }
 
@@ -513,7 +538,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 foreach (AsyncProgramTranslation asyncCompilation in _asyncTranslationQueue.GetConsumingEnumerable(ct))
                 {
                     RecompileFromGuestCode(
-                        asyncCompilation.Shaders,
+                        asyncCompilation.GuestShaders,
                         asyncCompilation.SpecializationState,
                         asyncCompilation.ProgramIndex,
                         asyncCompilation.IsCompute);
@@ -527,21 +552,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Recompiles a program from guest code.
         /// </summary>
-        /// <param name="shaders">Shader stages</param>
+        /// <param name="guestShaders">Guest code for each active stage</param>
         /// <param name="specState">Specialization state</param>
         /// <param name="programIndex">Program index</param>
         /// <param name="isCompute">Indicates if the program is a compute shader</param>
-        private void RecompileFromGuestCode(CachedShaderStage[] shaders, ShaderSpecializationState specState, int programIndex, bool isCompute)
+        private void RecompileFromGuestCode(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex, bool isCompute)
         {
             try
             {
                 if (isCompute)
                 {
-                    RecompileComputeFromGuestCode(shaders, specState, programIndex);
+                    RecompileComputeFromGuestCode(guestShaders, specState, programIndex);
                 }
                 else
                 {
-                    RecompileGraphicsFromGuestCode(shaders, specState, programIndex);
+                    RecompileGraphicsFromGuestCode(guestShaders, specState, programIndex);
                 }
             }
             catch (DiskCacheLoadException diskCacheLoadException)
@@ -556,41 +581,47 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Recompiles a graphics program from guest code.
         /// </summary>
-        /// <param name="shaders">Shader stages</param>
+        /// <param name="guestShaders">Guest code for each active stage</param>
         /// <param name="specState">Specialization state</param>
         /// <param name="programIndex">Program index</param>
-        private void RecompileGraphicsFromGuestCode(CachedShaderStage[] shaders, ShaderSpecializationState specState, int programIndex)
+        private void RecompileGraphicsFromGuestCode(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex)
         {
-            ShaderSpecializationState newSpecState = new ShaderSpecializationState(specState.GraphicsState, specState.TransformFeedbackDescriptors);
+            ShaderSpecializationState newSpecState = new ShaderSpecializationState(
+                ref specState.GraphicsState,
+                specState.PipelineState,
+                specState.TransformFeedbackDescriptors);
+
             ResourceCounts counts = new ResourceCounts();
 
             TranslatorContext[] translatorContexts = new TranslatorContext[Constants.ShaderStages + 1];
             TranslatorContext nextStage = null;
 
+            TargetApi api = _context.Capabilities.Api;
+
             for (int stageIndex = Constants.ShaderStages - 1; stageIndex >= 0; stageIndex--)
             {
-                CachedShaderStage shader = shaders[stageIndex + 1];
-
-                if (shader != null)
+                if (guestShaders[stageIndex + 1].HasValue)
                 {
+                    GuestCodeAndCbData shader = guestShaders[stageIndex + 1].Value;
+
                     byte[] guestCode = shader.Code;
                     byte[] cb1Data = shader.Cb1Data;
 
                     DiskCacheGpuAccessor gpuAccessor = new DiskCacheGpuAccessor(_context, guestCode, cb1Data, specState, newSpecState, counts, stageIndex);
-                    TranslatorContext currentStage = DecodeGraphicsShader(gpuAccessor, DefaultFlags, 0);
+                    TranslatorContext currentStage = DecodeGraphicsShader(gpuAccessor, api, DefaultFlags, 0);
 
                     if (nextStage != null)
                     {
                         currentStage.SetNextStage(nextStage);
                     }
 
-                    if (stageIndex == 0 && shaders[0] != null)
+                    if (stageIndex == 0 && guestShaders[0].HasValue)
                     {
-                        byte[] guestCodeA = shaders[0].Code;
-                        byte[] cb1DataA = shaders[0].Cb1Data;
+                        byte[] guestCodeA = guestShaders[0].Value.Code;
+                        byte[] cb1DataA = guestShaders[0].Value.Cb1Data;
 
                         DiskCacheGpuAccessor gpuAccessorA = new DiskCacheGpuAccessor(_context, guestCodeA, cb1DataA, specState, newSpecState, counts, 0);
-                        translatorContexts[0] = DecodeGraphicsShader(gpuAccessorA, DefaultFlags | TranslationFlags.VertexA, 0);
+                        translatorContexts[0] = DecodeGraphicsShader(gpuAccessorA, api, DefaultFlags | TranslationFlags.VertexA, 0);
                     }
 
                     translatorContexts[stageIndex + 1] = currentStage;
@@ -598,6 +629,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 }
             }
 
+            CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
             List<ShaderProgram> translatedStages = new List<ShaderProgram>();
 
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
@@ -608,15 +640,15 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 {
                     ShaderProgram program;
 
-                    byte[] guestCode = shaders[stageIndex + 1].Code;
-                    byte[] cb1Data = shaders[stageIndex + 1].Cb1Data;
+                    byte[] guestCode = guestShaders[stageIndex + 1].Value.Code;
+                    byte[] cb1Data = guestShaders[stageIndex + 1].Value.Cb1Data;
 
-                    if (stageIndex == 0 && shaders[0] != null)
+                    if (stageIndex == 0 && guestShaders[0].HasValue)
                     {
                         program = currentStage.Translate(translatorContexts[0]);
 
-                        byte[] guestCodeA = shaders[0].Code;
-                        byte[] cb1DataA = shaders[0].Cb1Data;
+                        byte[] guestCodeA = guestShaders[0].Value.Code;
+                        byte[] cb1DataA = guestShaders[0].Value.Cb1Data;
 
                         shaders[0] = new CachedShaderStage(null, guestCodeA, cb1DataA);
                         shaders[1] = new CachedShaderStage(program.Info, guestCode, cb1Data);
@@ -641,21 +673,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Recompiles a compute program from guest code.
         /// </summary>
-        /// <param name="shaders">Shader stages</param>
+        /// <param name="guestShaders">Guest code for each active stage</param>
         /// <param name="specState">Specialization state</param>
         /// <param name="programIndex">Program index</param>
-        private void RecompileComputeFromGuestCode(CachedShaderStage[] shaders, ShaderSpecializationState specState, int programIndex)
+        private void RecompileComputeFromGuestCode(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex)
         {
-            CachedShaderStage shader = shaders[0];
+            GuestCodeAndCbData shader = guestShaders[0].Value;
             ResourceCounts counts = new ResourceCounts();
-            ShaderSpecializationState newSpecState = new ShaderSpecializationState(specState.ComputeState);
+            ShaderSpecializationState newSpecState = new ShaderSpecializationState(ref specState.ComputeState);
             DiskCacheGpuAccessor gpuAccessor = new DiskCacheGpuAccessor(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0);
 
-            TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, 0);
+            TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, _context.Capabilities.Api, 0);
 
             ShaderProgram program = translatorContext.Translate();
 
-            shaders[0] = new CachedShaderStage(program.Info, shader.Code, shader.Cb1Data);
+            CachedShaderStage[] shaders = new[] { new CachedShaderStage(program.Info, shader.Code, shader.Cb1Data) };
 
             _compilationQueue.Enqueue(new ProgramCompilation(new[] { program }, shaders, newSpecState, programIndex, isCompute: true));
         }

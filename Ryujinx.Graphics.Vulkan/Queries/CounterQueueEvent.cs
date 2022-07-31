@@ -1,0 +1,167 @@
+﻿using Ryujinx.Graphics.GAL;
+using System;
+using System.Threading;
+
+namespace Ryujinx.Graphics.Vulkan.Queries
+{
+    class CounterQueueEvent : ICounterEvent
+    {
+        public event EventHandler<ulong> OnResult;
+
+        public CounterType Type { get; }
+        public bool ClearCounter { get; private set; }
+
+        public bool Disposed { get; private set; }
+        public bool Invalid { get; set; }
+
+        public ulong DrawIndex { get; }
+
+        private CounterQueue _queue;
+        private BufferedQuery _counter;
+
+        private bool _hostAccessReserved = false;
+        private int _refCount = 1; // Starts with a reference from the counter queue.
+
+        private object _lock = new object();
+        private ulong _result = ulong.MaxValue;
+
+        public CounterQueueEvent(CounterQueue queue, CounterType type, ulong drawIndex)
+        {
+            _queue = queue;
+
+            _counter = queue.GetQueryObject();
+            Type = type;
+
+            DrawIndex = drawIndex;
+
+            _counter.Begin();
+        }
+
+        public Auto<DisposableBuffer> GetBuffer()
+        {
+            return _counter.GetBuffer();
+        }
+
+        internal void Clear(bool counterReset)
+        {
+            if (counterReset)
+            {
+                _counter.Reset();
+            }
+
+            ClearCounter = true;
+        }
+
+        internal void Complete(bool withResult)
+        {
+            _counter.End(withResult);
+        }
+
+        internal bool TryConsume(ref ulong result, bool block, AutoResetEvent wakeSignal = null)
+        {
+            lock (_lock)
+            {
+                if (Disposed)
+                {
+                    return true;
+                }
+
+                if (ClearCounter)
+                {
+                    result = 0;
+                }
+
+                long queryResult;
+
+                if (block)
+                {
+                    queryResult = _counter.AwaitResult(wakeSignal);
+                }
+                else
+                {
+                    if (!_counter.TryGetResult(out queryResult))
+                    {
+                        return false;
+                    }
+                }
+
+                result += (ulong)queryResult;
+
+                _result = result;
+
+                OnResult?.Invoke(this, result);
+
+                Dispose(); // Return the our resources to the pool.
+
+                return true;
+            }
+        }
+
+        public void Flush()
+        {
+            if (Disposed)
+            {
+                return;
+            }
+
+            // Tell the queue to process all events up to this one.
+            _queue.FlushTo(this);
+        }
+
+        public void DecrementRefCount()
+        {
+            if (Interlocked.Decrement(ref _refCount) == 0)
+            {
+                DisposeInternal();
+            }
+        }
+
+        public bool ReserveForHostAccess()
+        {
+            if (_hostAccessReserved)
+            {
+                return true;
+            }
+
+            if (IsValueAvailable())
+            {
+                return false;
+            }
+
+            if (Interlocked.Increment(ref _refCount) == 1)
+            {
+                Interlocked.Decrement(ref _refCount);
+
+                return false;
+            }
+
+            _hostAccessReserved = true;
+
+            return true;
+        }
+
+        public void ReleaseHostAccess()
+        {
+            _hostAccessReserved = false;
+
+            DecrementRefCount();
+        }
+
+        private void DisposeInternal()
+        {
+            _queue.ReturnQueryObject(_counter);
+        }
+
+        private bool IsValueAvailable()
+        {
+            return _result != ulong.MaxValue || _counter.TryGetResult(out _);
+        }
+
+        public void Dispose()
+        {
+            Disposed = true;
+
+            DecrementRefCount();
+        }
+    }
+}

@@ -291,7 +291,7 @@ namespace Ryujinx.Graphics.Texture.Astc
             int depth,
             int levels,
             int layers,
-            out Span<byte> decoded)
+            out byte[] decoded)
         {
             byte[] output = new byte[QueryDecompressedSize(width, height, depth, levels, layers)];
 

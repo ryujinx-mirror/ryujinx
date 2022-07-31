@@ -201,14 +201,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 SetRenderTargetScaleCommand.Run(ref GetCommand<SetRenderTargetScaleCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetRenderTargets] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetRenderTargetsCommand.Run(ref GetCommand<SetRenderTargetsCommand>(memory), threaded, renderer);
-            _lookup[(int)CommandType.SetSampler] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
-                SetSamplerCommand.Run(ref GetCommand<SetSamplerCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetScissor] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
-                SetScissorCommand.Run(ref GetCommand<SetScissorCommand>(memory), threaded, renderer);
+                SetScissorsCommand.Run(ref GetCommand<SetScissorsCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetStencilTest] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetStencilTestCommand.Run(ref GetCommand<SetStencilTestCommand>(memory), threaded, renderer);
-            _lookup[(int)CommandType.SetTexture] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
-                SetTextureCommand.Run(ref GetCommand<SetTextureCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.SetTextureAndSampler] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                SetTextureAndSamplerCommand.Run(ref GetCommand<SetTextureAndSamplerCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetUserClipDistance] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetUserClipDistanceCommand.Run(ref GetCommand<SetUserClipDistanceCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetVertexAttribs] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>

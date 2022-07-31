@@ -6,16 +6,18 @@ namespace Ryujinx.Ava.Ui.Models
     {
         public bool VSyncEnabled { get; }
         public float Volume { get; }
+        public string GpuBackend { get; }
         public string AspectRatio { get; }
         public string DockedMode { get; }
         public string FifoStatus { get; }
         public string GameStatus { get; }
         public string GpuName { get; }
 
-        public StatusUpdatedEventArgs(bool vSyncEnabled, float volume, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus, string gpuName)
+        public StatusUpdatedEventArgs(bool vSyncEnabled, float volume, string gpuBackend, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus, string gpuName)
         {
             VSyncEnabled = vSyncEnabled;
             Volume = volume;
+            GpuBackend = gpuBackend;
             DockedMode = dockedMode;
             AspectRatio = aspectRatio;
             GameStatus = gameStatus;

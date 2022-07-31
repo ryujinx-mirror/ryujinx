@@ -127,7 +127,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 else if (node is AstAssignment assignment)
                 {
                     VariableType srcType = OperandManager.GetNodeDestType(context, assignment.Source);
-                    VariableType dstType = OperandManager.GetNodeDestType(context, assignment.Destination);
+                    VariableType dstType = OperandManager.GetNodeDestType(context, assignment.Destination, isAsgDest: true);
 
                     string dest;
 

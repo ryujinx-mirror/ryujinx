@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.OpenGL
     class Window : IWindow, IDisposable
     {
         private const int TextureCount = 3;
-        private readonly Renderer _renderer;
+        private readonly OpenGLRenderer _renderer;
 
         private int _width;
         private int _height;
@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         internal bool ScreenCaptureRequested { get; set; }
 
-        public Window(Renderer renderer)
+        public Window(OpenGLRenderer renderer)
         {
             _renderer = renderer;
             _stagingTextures = new int[TextureCount];

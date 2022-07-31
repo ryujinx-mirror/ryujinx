@@ -64,7 +64,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 context.LeaveFunction();
             }
 
-            if (config.TransformFeedbackEnabled)
+            if (config.TransformFeedbackEnabled && config.LastInVertexPipeline)
             {
                 for (int tfbIndex = 0; tfbIndex < 4; tfbIndex++)
                 {
@@ -88,6 +88,18 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         private static void AddOperation(StructuredProgramContext context, Operation operation)
         {
             Instruction inst = operation.Inst;
+
+            if (inst == Instruction.LoadAttribute)
+            {
+                Operand src1 = operation.GetSource(0);
+                Operand src2 = operation.GetSource(1);
+
+                if (src1.Type == OperandType.Constant && src2.Type == OperandType.Constant)
+                {
+                    int attrOffset = (src1.Value & AttributeConsts.Mask) + (src2.Value << 2);
+                    context.Info.Inputs.Add(attrOffset);
+                }
+            }
 
             int sourcesCount = operation.SourcesCount;
             int outDestsCount = operation.DestsCount != 0 ? operation.DestsCount - 1 : 0;
@@ -231,6 +243,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     break;
                 case Instruction.SwizzleAdd:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.SwizzleAdd;
+                    break;
+                case Instruction.FSIBegin:
+                case Instruction.FSIEnd:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.FSI;
                     break;
             }
         }

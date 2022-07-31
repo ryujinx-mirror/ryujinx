@@ -85,13 +85,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string ApplyScaling(string vector)
             {
-                if ((context.Config.Stage.SupportsRenderScale()) &&
+                if (context.Config.Stage.SupportsRenderScale() &&
                     texOp.Inst == Instruction.ImageLoad &&
                     !isBindless &&
                     !isIndexed)
                 {
                     // Image scales start after texture ones.
-                    int scaleIndex = context.Config.GetTextureDescriptors().Length + context.FindImageDescriptorIndex(texOp);
+                    int scaleIndex = context.Config.GetTextureDescriptors().Length + context.Config.FindImageDescriptorIndex(texOp);
 
                     if (pCount == 3 && isArray)
                     {
@@ -621,11 +621,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 if (intCoords)
                 {
-                    if ((context.Config.Stage.SupportsRenderScale()) &&
+                    if (context.Config.Stage.SupportsRenderScale() &&
                         !isBindless &&
                         !isIndexed)
                     {
-                        int index = context.FindTextureDescriptorIndex(texOp);
+                        int index = context.Config.FindTextureDescriptorIndex(texOp);
 
                         if (pCount == 3 && isArray)
                         {
@@ -762,7 +762,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else
             {
-                (TextureDescriptor descriptor, int descriptorIndex) = context.FindTextureDescriptor(texOp);
+                (TextureDescriptor descriptor, int descriptorIndex) = context.Config.FindTextureDescriptor(texOp);
                 bool hasLod = !descriptor.Type.HasFlag(SamplerType.Multisample) && descriptor.Type != SamplerType.TextureBuffer;
                 string texCall;
 
@@ -780,6 +780,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 }
 
                 if (context.Config.Stage.SupportsRenderScale() &&
+                    (texOp.Index < 2 || (texOp.Type & SamplerType.Mask) == SamplerType.Texture3D) &&
                     !isBindless &&
                     !isIndexed)
                 {

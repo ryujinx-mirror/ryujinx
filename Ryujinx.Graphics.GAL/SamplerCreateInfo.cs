@@ -50,5 +50,23 @@ namespace Ryujinx.Graphics.GAL
             MipLodBias      = mipLodBias;
             MaxAnisotropy   = maxAnisotropy;
         }
+
+        public static SamplerCreateInfo Create(MinFilter minFilter, MagFilter magFilter)
+        {
+            return new SamplerCreateInfo(
+                minFilter,
+                magFilter,
+                false,
+                AddressMode.ClampToEdge,
+                AddressMode.ClampToEdge,
+                AddressMode.ClampToEdge,
+                CompareMode.None,
+                GAL.CompareOp.Always,
+                new ColorF(0f, 0f, 0f, 0f),
+                0f,
+                0f,
+                0f,
+                1f);
+        }
     }
 }

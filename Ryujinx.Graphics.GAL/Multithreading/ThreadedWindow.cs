@@ -8,12 +8,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading
     public class ThreadedWindow : IWindow
     {
         private ThreadedRenderer _renderer;
-        private IWindow _impl;
+        private IRenderer _impl;
 
-        public ThreadedWindow(ThreadedRenderer renderer, IWindow window)
+        public ThreadedWindow(ThreadedRenderer renderer, IRenderer impl)
         {
             _renderer = renderer;
-            _impl = window;
+            _impl = impl;
         }
 
         public void Present(ITexture texture, ImageCrop crop, Action<object> swapBuffersCallback)
@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public void SetSize(int width, int height)
         {
-            _impl.SetSize(width, height);
+            _impl.Window.SetSize(width, height);
         }
     }
 }

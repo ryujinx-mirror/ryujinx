@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.OpenGL
         private CounterQueueEvent _activeConditionalRender;
 
         private Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
-        private Vector4<float>[] _renderScale = new Vector4<float>[65];
+        private Vector4<float>[] _renderScale = new Vector4<float>[73];
         private int _fragmentScaleCount;
 
         private TextureBase _unit0Texture;
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.OpenGL
             _tfbTargets = new BufferRange[Constants.MaxTransformFeedbackBuffers];
         }
 
-        public void Initialize(Renderer renderer)
+        public void Initialize(OpenGLRenderer renderer)
         {
             _supportBuffer = new SupportBufferUpdater(renderer);
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 0, Unsafe.As<BufferHandle, int>(ref _supportBuffer.Handle));
@@ -1134,45 +1134,45 @@ namespace Ryujinx.Graphics.OpenGL
             _framebuffer.SetDrawBuffers(colors.Length);
         }
 
-        public void SetSampler(int binding, ISampler sampler)
+        public void SetScissors(ReadOnlySpan<Rectangle<int>> regions)
         {
-            if (sampler == null)
+            int count = Math.Min(regions.Length, Constants.MaxViewports);
+
+            Span<int> v = stackalloc int[count * 4];
+
+            for (int index = 0; index < count; index++)
             {
-                return;
-            }
+                int vIndex = index * 4;
 
-            Sampler samp = (Sampler)sampler;
+                var region = regions[index];
 
-            if (binding == 0)
-            {
-                _unit0Sampler = samp;
-            }
+                bool enabled = (region.X | region.Y) != 0 || region.Width != 0xffff || region.Height != 0xffff;
+                uint mask = 1u << index;
 
-            samp.Bind(binding);
-        }
-
-        public void SetScissor(int index, bool enable, int x, int y, int width, int height)
-        {
-            uint mask = 1u << index;
-
-            if (!enable)
-            {
-                if ((_scissorEnables & mask) != 0)
+                if (enabled)
                 {
-                    _scissorEnables &= ~mask;
-                    GL.Disable(IndexedEnableCap.ScissorTest, index);
+                    v[vIndex] = region.X;
+                    v[vIndex + 1] = region.Y;
+                    v[vIndex + 2] = region.Width;
+                    v[vIndex + 3] = region.Height;
+
+                    if ((_scissorEnables & mask) == 0)
+                    {
+                        _scissorEnables |= mask;
+                        GL.Enable(IndexedEnableCap.ScissorTest, index);
+                    }
                 }
-
-                return;
+                else
+                {
+                    if ((_scissorEnables & mask) != 0)
+                    {
+                        _scissorEnables &= ~mask;
+                        GL.Disable(IndexedEnableCap.ScissorTest, index);
+                    }
+                }
             }
 
-            if ((_scissorEnables & mask) == 0)
-            {
-                _scissorEnables |= mask;
-                GL.Enable(IndexedEnableCap.ScissorTest, index);
-            }
-
-            GL.ScissorIndexed(index, x, y, width, height);
+            GL.ScissorArray(0, count, ref v[0]);
         }
 
         public void SetStencilTest(StencilTestDescriptor stencilTest)
@@ -1223,22 +1223,30 @@ namespace Ryujinx.Graphics.OpenGL
             SetBuffers(first, buffers, isStorage: true);
         }
 
-        public void SetTexture(int binding, ITexture texture)
+        public void SetTextureAndSampler(ShaderStage stage, int binding, ITexture texture, ISampler sampler)
         {
-            if (texture == null)
+            if (texture != null)
             {
-                return;
+                if (binding == 0)
+                {
+                    _unit0Texture = (TextureBase)texture;
+                }
+                else
+                {
+                    ((TextureBase)texture).Bind(binding);
+                }
             }
+
+            Sampler glSampler = (Sampler)sampler;
+
+            glSampler?.Bind(binding);
 
             if (binding == 0)
             {
-                _unit0Texture = (TextureBase)texture;
-            }
-            else
-            {
-                ((TextureBase)texture).Bind(binding);
+                _unit0Sampler = glSampler;
             }
         }
+
 
         public void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers)
         {
@@ -1306,7 +1314,7 @@ namespace Ryujinx.Graphics.OpenGL
             _vertexArray.SetVertexBuffers(vertexBuffers);
         }
 
-        public void SetViewports(int first, ReadOnlySpan<Viewport> viewports, bool disableTransform)
+        public void SetViewports(ReadOnlySpan<Viewport> viewports, bool disableTransform)
         {
             Array.Resize(ref _viewportArray, viewports.Length * 4);
             Array.Resize(ref _depthRangeArray, viewports.Length * 2);
@@ -1343,8 +1351,8 @@ namespace Ryujinx.Graphics.OpenGL
 
             SetOrigin(flipY ? ClipOrigin.UpperLeft : ClipOrigin.LowerLeft);
 
-            GL.ViewportArray(first, viewports.Length, viewportArray);
-            GL.DepthRangeArray(first, viewports.Length, depthRangeArray);
+            GL.ViewportArray(0, viewports.Length, viewportArray);
+            GL.DepthRangeArray(0, viewports.Length, depthRangeArray);
 
             float disableTransformF = disableTransform ? 1.0f : 0.0f;
             if (_supportBuffer.Data.ViewportInverse.W != disableTransformF || disableTransform)
@@ -1352,8 +1360,8 @@ namespace Ryujinx.Graphics.OpenGL
                 float scale = _renderScale[0].X;
                 _supportBuffer.UpdateViewportInverse(new Vector4<float>
                 {
-                    X = scale * 2f / viewports[first].Region.Width,
-                    Y = scale * 2f / viewports[first].Region.Height,
+                    X = scale * 2f / viewports[0].Region.Width,
+                    Y = scale * 2f / viewports[0].Region.Height,
                     Z = 1,
                     W = disableTransformF
                 });

@@ -7,11 +7,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 {
     static class InstGenHelper
     {
-        private static InstInfo[] _infoTbl;
+        private static readonly InstInfo[] InfoTable;
 
         static InstGenHelper()
         {
-            _infoTbl = new InstInfo[(int)Instruction.Count];
+            InfoTable = new InstInfo[(int)Instruction.Count];
 
             Add(Instruction.AtomicAdd,                InstType.AtomicBinary,   "atomicAdd");
             Add(Instruction.AtomicAnd,                InstType.AtomicBinary,   "atomicAnd");
@@ -139,12 +139,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static void Add(Instruction inst, InstType flags, string opName = null, int precedence = 0)
         {
-            _infoTbl[(int)inst] = new InstInfo(flags, opName, precedence);
+            InfoTable[(int)inst] = new InstInfo(flags, opName, precedence);
         }
 
         public static InstInfo GetInstructionInfo(Instruction inst)
         {
-            return _infoTbl[(int)(inst & Instruction.Mask)];
+            return InfoTable[(int)(inst & Instruction.Mask)];
         }
 
         public static string GetSoureExpr(CodeGenContext context, IAstNode node, VariableType dstType)
@@ -191,7 +191,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 return false;
             }
 
-            InstInfo info = _infoTbl[(int)(operation.Inst & Instruction.Mask)];
+            InstInfo info = InfoTable[(int)(operation.Inst & Instruction.Mask)];
 
             if ((info.Type & (InstType.Call | InstType.Special)) != 0)
             {

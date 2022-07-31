@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureView : TextureBase, ITexture, ITextureInfo
     {
-        private readonly Renderer _renderer;
+        private readonly OpenGLRenderer _renderer;
 
         private readonly TextureStorage _parent;
 
@@ -16,14 +16,14 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public int FirstLevel { get; private set; }
 
         public TextureView(
-            Renderer          renderer,
-            TextureStorage    parent,
+            OpenGLRenderer renderer,
+            TextureStorage parent,
             TextureCreateInfo info,
-            int               firstLayer,
-            int               firstLevel) : base(info, parent.ScaleFactor)
+            int firstLayer,
+            int firstLevel) : base(info, parent.ScaleFactor)
         {
             _renderer = renderer;
-            _parent   = parent;
+            _parent = parent;
 
             FirstLayer = firstLayer;
             FirstLevel = firstLevel;
@@ -306,7 +306,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
             PixelFormat pixelFormat = format.PixelFormat;
-            PixelType   pixelType   = format.PixelType;
+            PixelType pixelType = format.PixelType;
 
             if (forceBgra)
             {
@@ -580,9 +580,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
 
-            int width  = Info.Width;
+            int width = Info.Width;
             int height = Info.Height;
-            int depth  = Info.Depth;
+            int depth = Info.Depth;
             int levels = Info.GetLevelsClamped();
 
             int offset = 0;
@@ -725,10 +725,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         break;
                 }
 
-                data   += mipSize;
+                data += mipSize;
                 offset += mipSize;
 
-                width  = Math.Max(1, width  >> 1);
+                width = Math.Max(1, width >> 1);
                 height = Math.Max(1, height >> 1);
 
                 if (Target == Target.Texture3D)

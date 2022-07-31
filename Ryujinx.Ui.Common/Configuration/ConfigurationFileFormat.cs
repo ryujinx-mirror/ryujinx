@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 39;
+        public const int CurrentVersion = 40;
 
         /// <summary>
         /// Version of the configuration file format
@@ -160,6 +160,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables or disables Shader cache
         /// </summary>
         public bool EnableShaderCache { get; set; }
+
+        /// <summary>
+        /// Enables or disables texture recompression
+        /// </summary>
+        public bool EnableTextureRecompression { get; set; }
 
         /// <summary>
         /// Enables or disables profiled translation cache persistency
@@ -309,6 +314,16 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Input configurations
         /// </summary>
         public List<InputConfig> InputConfig { get; set; }
+
+        /// <summary>
+        /// Graphics backend
+        /// </summary>
+        public GraphicsBackend GraphicsBackend { get; set; }
+
+        /// <summary>
+        /// Preferred GPU
+        /// </summary>
+        public string PreferredGpu { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk

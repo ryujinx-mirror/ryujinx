@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.OpenGL
                 (IntPtr)size);
         }
 
-        public static unsafe ReadOnlySpan<byte> GetData(Renderer renderer, BufferHandle buffer, int offset, int size)
+        public static unsafe ReadOnlySpan<byte> GetData(OpenGLRenderer renderer, BufferHandle buffer, int offset, int size)
         {
             if (HwCapabilities.UsePersistentBufferForFlush)
             {

@@ -1,6 +1,8 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Runtime.InteropServices;
 
@@ -15,6 +17,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private readonly GpuAccessorState _state;
         private readonly int _stageIndex;
         private readonly bool _compute;
+        private readonly bool _isVulkan;
 
         /// <summary>
         /// Creates a new instance of the GPU state accessor for graphics shader translation.
@@ -23,8 +26,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="stageIndex">Graphics shader stage index (0 = Vertex, 4 = Fragment)</param>
-        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state, int stageIndex) : base(context)
+        public GpuAccessor(
+            GpuContext context,
+            GpuChannel channel,
+            GpuAccessorState state,
+            int stageIndex) : base(context, state.ResourceCounts, stageIndex)
         {
+            _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
             _channel = channel;
             _state = state;
             _stageIndex = stageIndex;
@@ -36,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="context">GPU context</param>
         /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
-        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state) : base(context)
+        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state) : base(context, state.ResourceCounts, 0)
         {
             _channel = channel;
             _state = state;
@@ -73,27 +81,36 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
-        public int QueryBindingConstantBuffer(int index)
+        public AlphaTestOp QueryAlphaTestCompare()
         {
-            return _state.ResourceCounts.UniformBuffersCount++;
+            if (!_isVulkan || !_state.GraphicsState.AlphaTestEnable)
+            {
+                return AlphaTestOp.Always;
+            }
+
+            return _state.GraphicsState.AlphaTestCompare switch
+            {
+                CompareOp.Never or CompareOp.NeverGl => AlphaTestOp.Never,
+                CompareOp.Less or CompareOp.LessGl => AlphaTestOp.Less,
+                CompareOp.Equal or CompareOp.EqualGl => AlphaTestOp.Equal,
+                CompareOp.LessOrEqual or CompareOp.LessOrEqualGl => AlphaTestOp.LessOrEqual,
+                CompareOp.Greater or CompareOp.GreaterGl => AlphaTestOp.Greater,
+                CompareOp.NotEqual or CompareOp.NotEqualGl => AlphaTestOp.NotEqual,
+                CompareOp.GreaterOrEqual or CompareOp.GreaterOrEqualGl => AlphaTestOp.GreaterOrEqual,
+                _ => AlphaTestOp.Always
+            };
         }
 
         /// <inheritdoc/>
-        public int QueryBindingStorageBuffer(int index)
+        public float QueryAlphaTestReference()
         {
-            return _state.ResourceCounts.StorageBuffersCount++;
+            return _state.GraphicsState.AlphaTestReference;
         }
 
         /// <inheritdoc/>
-        public int QueryBindingTexture(int index)
+        public AttributeType QueryAttributeType(int location)
         {
-            return _state.ResourceCounts.TexturesCount++;
-        }
-
-        /// <inheritdoc/>
-        public int QueryBindingImage(int index)
-        {
-            return _state.ResourceCounts.ImagesCount++;
+            return _state.GraphicsState.AttributeTypes[location];
         }
 
         /// <inheritdoc/>
@@ -127,6 +144,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             _state.SpecializationState?.RecordPrimitiveTopology();
             return ConvertToInputTopology(_state.GraphicsState.Topology, _state.GraphicsState.TessellationMode);
+        }
+
+        /// <inheritdoc/>
+        public bool QueryProgramPointSize()
+        {
+            return _state.GraphicsState.ProgramPointSizeEnable;
+        }
+
+        /// <inheritdoc/>
+        public float QueryPointSize()
+        {
+            return _state.GraphicsState.PointSize;
         }
 
         /// <inheritdoc/>
@@ -196,6 +225,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     handle,
                     cbufSlot);
             }
+        }
+
+        /// <inheritdoc/>
+        public bool QueryTransformDepthMinusOneToOne()
+        {
+            return _state.GraphicsState.DepthMode;
         }
 
         /// <inheritdoc/>

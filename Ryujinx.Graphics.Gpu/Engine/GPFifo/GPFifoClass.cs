@@ -15,6 +15,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         private readonly GPFifoProcessor _parent;
         private readonly DeviceState<GPFifoClassState> _state;
 
+        private int _previousSubChannel;
+        private bool _createSyncPending;
+
         private const int MacrosCount = 0x80;
 
         // Note: The size of the macro memory is unknown, we just make
@@ -46,6 +49,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
             _macros = new Macro[MacrosCount];
             _macroCode = new int[MacroCodeSize];
+        }
+
+        /// <summary>
+        /// Create any syncs from WaitForIdle command that are currently pending.
+        /// </summary>
+        public void CreatePendingSyncs()
+        {
+            if (_createSyncPending)
+            {
+                _createSyncPending = false;
+                _context.CreateHostSyncIfNeeded(false);
+            }
         }
 
         /// <summary>
@@ -158,7 +173,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             _parent.PerformDeferredDraws();
             _context.Renderer.Pipeline.Barrier();
 
-            _context.CreateHostSyncIfNeeded(false);
+            _createSyncPending = true;
         }
 
         /// <summary>

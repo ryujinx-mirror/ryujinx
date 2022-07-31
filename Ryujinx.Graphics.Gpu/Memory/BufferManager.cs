@@ -435,7 +435,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
                     else
                     {
-                        _context.Renderer.Pipeline.SetTexture(binding.BindingInfo.Binding, binding.Texture);
+                        _context.Renderer.Pipeline.SetTextureAndSampler(binding.Stage, binding.BindingInfo.Binding, binding.Texture, null);
                     }
                 }
 
@@ -719,17 +719,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Sets the buffer storage of a buffer texture. This will be bound when the buffer manager commits bindings.
         /// </summary>
+        /// <param name="stage">Shader stage accessing the texture</param>
         /// <param name="texture">Buffer texture</param>
         /// <param name="address">Address of the buffer in memory</param>
         /// <param name="size">Size of the buffer in bytes</param>
         /// <param name="bindingInfo">Binding info for the buffer texture</param>
         /// <param name="format">Format of the buffer texture</param>
         /// <param name="isImage">Whether the binding is for an image or a sampler</param>
-        public void SetBufferTextureStorage(ITexture texture, ulong address, ulong size, TextureBindingInfo bindingInfo, Format format, bool isImage)
+        public void SetBufferTextureStorage(
+            ShaderStage stage,
+            ITexture texture,
+            ulong address,
+            ulong size,
+            TextureBindingInfo bindingInfo,
+            Format format,
+            bool isImage)
         {
             _channel.MemoryManager.Physical.BufferCache.CreateBuffer(address, size);
 
-            _bufferTextures.Add(new BufferTextureBinding(texture, address, size, bindingInfo, format, isImage));
+            _bufferTextures.Add(new BufferTextureBinding(stage, texture, address, size, bindingInfo, format, isImage));
         }
 
         /// <summary>

@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             _channel = channel;
 
             _fifoClass = new GPFifoClass(context, this);
-            _3dClass = new ThreedClass(context, channel);
+            _3dClass = new ThreedClass(context, channel, _fifoClass);
             _computeClass = new ComputeClass(context, channel, _3dClass);
             _i2mClass = new InlineToMemoryClass(context, channel);
             _2dClass = new TwodClass(channel);

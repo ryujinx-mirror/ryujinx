@@ -721,7 +721,21 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         IsVisible="{Binding !ShowLoadProgress}"
-                        Text="{Binding GpuStatusText}"
+                        Text="{Binding BackendText}"
+                        TextAlignment="Left" />
+                    <Border
+                        Width="2"
+                        Height="12"
+                        Margin="2,0"
+                        BorderBrush="Gray"
+                        BorderThickness="1"
+                        IsVisible="{Binding !ShowLoadProgress}" />
+                    <TextBlock
+                        Margin="5,0,5,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding !ShowLoadProgress}"
+                        Text="{Binding GpuNameText}"
                         TextAlignment="Left" />
                 </StackPanel>
                 <StackPanel

@@ -13,8 +13,8 @@ using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Widgets;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -140,6 +140,8 @@ namespace Ryujinx
                     ? appDataConfigurationPath
                     : null;
 
+            bool showVulkanPrompt = false;
+
             if (ConfigurationPath == null)
             {
                 // No configuration, we load the default values and save it to disk
@@ -147,16 +149,26 @@ namespace Ryujinx
 
                 ConfigurationState.Instance.LoadDefault();
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(ConfigurationPath);
+
+                showVulkanPrompt = true;
             }
             else
             {
                 if (ConfigurationFileFormat.TryLoad(ConfigurationPath, out ConfigurationFileFormat configurationFileFormat))
                 {
-                    ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
+                    ConfigurationLoadResult result = ConfigurationState.Instance.Load(configurationFileFormat, ConfigurationPath);
+
+                    if ((result & ConfigurationLoadResult.MigratedFromPreVulkan) != 0)
+                    {
+                        showVulkanPrompt = true;
+                    }
                 }
                 else
                 {
                     ConfigurationState.Instance.LoadDefault();
+
+                    showVulkanPrompt = true;
+
                     Logger.Warning?.PrintMsg(LogClass.Application, $"Failed to load config! Loading the default config instead.\nFailed config location {ConfigurationPath}");
                 }
             }
@@ -194,6 +206,35 @@ namespace Ryujinx
                 {
                     Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
                 }, TaskContinuationOptions.OnlyOnFaulted);
+            }
+
+            if (showVulkanPrompt)
+            {
+                var buttonTexts = new Dictionary<int, string>()
+                {
+                    { 0, "Yes (Vulkan)" },
+                    { 1, "No (OpenGL)" }
+                };
+
+                ResponseType response = GtkDialog.CreateCustomDialog(
+                    "Ryujinx - Default graphics backend",
+                    "Use Vulkan as default graphics backend?",
+                    "Ryujinx now supports the Vulkan API. " +
+                    "Vulkan greatly improves shader compilation performance, " +
+                    "and fixes some graphical glitches; however, since it is a new feature, " +
+                    "you may experience some issues that did not occur with OpenGL.\n\n" +
+                    "Note that you will also lose any existing shader cache the first time you start a game " +
+                    "on version 1.1.200 onwards, because Vulkan required changes to the shader cache that makes it incompatible with previous versions.\n\n" +
+                    "Would you like to set Vulkan as the default graphics backend? " +
+                    "You can change this at any time on the settings window.",
+                    buttonTexts,
+                    MessageType.Question);
+
+                ConfigurationState.Instance.Graphics.GraphicsBackend.Value = response == 0
+                    ? GraphicsBackend.Vulkan
+                    : GraphicsBackend.OpenGl;
+
+                ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
             }
 
             Application.Run();

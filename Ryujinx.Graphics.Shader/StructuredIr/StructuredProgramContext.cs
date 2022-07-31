@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.StructuredIr.AstHelper;
 
@@ -35,6 +36,40 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Info = new StructuredProgramInfo();
 
             Config = config;
+
+            if (config.GpPassthrough)
+            {
+                int passthroughAttributes = config.PassthroughAttributes;
+                while (passthroughAttributes != 0)
+                {
+                    int index = BitOperations.TrailingZeroCount(passthroughAttributes);
+
+                    int attrBase = AttributeConsts.UserAttributeBase + index * 16;
+                    Info.Inputs.Add(attrBase);
+                    Info.Inputs.Add(attrBase + 4);
+                    Info.Inputs.Add(attrBase + 8);
+                    Info.Inputs.Add(attrBase + 12);
+
+                    passthroughAttributes &= ~(1 << index);
+                }
+
+                Info.Inputs.Add(AttributeConsts.PositionX);
+                Info.Inputs.Add(AttributeConsts.PositionY);
+                Info.Inputs.Add(AttributeConsts.PositionZ);
+                Info.Inputs.Add(AttributeConsts.PositionW);
+                Info.Inputs.Add(AttributeConsts.PointSize);
+
+                for (int i = 0; i < 8; i++)
+                {
+                    Info.Inputs.Add(AttributeConsts.ClipDistance0 + i * 4);
+                }
+            }
+            else if (config.Stage == ShaderStage.Fragment)
+            {
+                // Potentially used for texture coordinate scaling.
+                Info.Inputs.Add(AttributeConsts.PositionX);
+                Info.Inputs.Add(AttributeConsts.PositionY);
+            }
         }
 
         public void EnterFunction(
@@ -277,6 +312,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public AstOperand GetOperandDef(Operand operand)
         {
+            if (operand.Type == OperandType.Attribute)
+            {
+                Info.Outputs.Add(operand.Value & AttributeConsts.Mask);
+            }
+            else if (operand.Type == OperandType.AttributePerPatch)
+            {
+                Info.OutputsPerPatch.Add(operand.Value & AttributeConsts.Mask);
+            }
+
             return GetOperand(operand);
         }
 
@@ -286,6 +330,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             if (operand.Type.IsAttribute() && (operand.Value & AttributeConsts.LoadOutputMask) != 0)
             {
                 return GetOperandDef(operand);
+            }
+
+            if (operand.Type == OperandType.Attribute)
+            {
+                Info.Inputs.Add(operand.Value);
+            }
+            else if (operand.Type == OperandType.AttributePerPatch)
+            {
+                Info.InputsPerPatch.Add(operand.Value);
             }
 
             return GetOperand(operand);

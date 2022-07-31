@@ -58,5 +58,34 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         {
             return Operations.Last?.Value;
         }
+
+        public void Append(INode node)
+        {
+            INode lastOp = GetLastOp();
+
+            if (lastOp is Operation operation && IsControlFlowInst(operation.Inst))
+            {
+                Operations.AddBefore(Operations.Last, node);
+            }
+            else
+            {
+                Operations.AddLast(node);
+            }
+        }
+
+        private static bool IsControlFlowInst(Instruction inst)
+        {
+            switch (inst)
+            {
+                case Instruction.Branch:
+                case Instruction.BranchIfFalse:
+                case Instruction.BranchIfTrue:
+                case Instruction.Discard:
+                case Instruction.Return:
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

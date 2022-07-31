@@ -1,7 +1,9 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -11,74 +13,140 @@ namespace Ryujinx.Graphics.Gpu.Shader
     class GpuAccessorBase
     {
         private readonly GpuContext _context;
+        private readonly ResourceCounts _resourceCounts;
+        private readonly int _stageIndex;
 
         /// <summary>
         /// Creates a new GPU accessor.
         /// </summary>
         /// <param name="context">GPU context</param>
-        public GpuAccessorBase(GpuContext context)
+        public GpuAccessorBase(GpuContext context, ResourceCounts resourceCounts, int stageIndex)
         {
             _context = context;
+            _resourceCounts = resourceCounts;
+            _stageIndex = stageIndex;
         }
 
-        /// <summary>
-        /// Queries host about the presence of the FrontFacing built-in variable bug.
-        /// </summary>
-        /// <returns>True if the bug is present on the host device used, false otherwise</returns>
+        /// <inheritdoc/>
+        public int QueryBindingConstantBuffer(int index)
+        {
+            if (_context.Capabilities.Api == TargetApi.Vulkan)
+            {
+                // We need to start counting from 1 since binding 0 is reserved for the support uniform buffer.
+                return GetBindingFromIndex(index, _context.Capabilities.MaximumUniformBuffersPerStage, "Uniform buffer") + 1;
+            }
+            else
+            {
+                return _resourceCounts.UniformBuffersCount++;
+            }
+        }
+
+        /// <inheritdoc/>
+        public int QueryBindingStorageBuffer(int index)
+        {
+            if (_context.Capabilities.Api == TargetApi.Vulkan)
+            {
+                return GetBindingFromIndex(index, _context.Capabilities.MaximumStorageBuffersPerStage, "Storage buffer");
+            }
+            else
+            {
+                return _resourceCounts.StorageBuffersCount++;
+            }
+        }
+
+        /// <inheritdoc/>
+        public int QueryBindingTexture(int index, bool isBuffer)
+        {
+            if (_context.Capabilities.Api == TargetApi.Vulkan)
+            {
+                if (isBuffer)
+                {
+                    index += (int)_context.Capabilities.MaximumTexturesPerStage;
+                }
+
+                return GetBindingFromIndex(index, _context.Capabilities.MaximumTexturesPerStage * 2, "Texture");
+            }
+            else
+            {
+                return _resourceCounts.TexturesCount++;
+            }
+        }
+
+        /// <inheritdoc/>
+        public int QueryBindingImage(int index, bool isBuffer)
+        {
+            if (_context.Capabilities.Api == TargetApi.Vulkan)
+            {
+                if (isBuffer)
+                {
+                    index += (int)_context.Capabilities.MaximumImagesPerStage;
+                }
+
+                return GetBindingFromIndex(index, _context.Capabilities.MaximumImagesPerStage * 2, "Image");
+            }
+            else
+            {
+                return _resourceCounts.ImagesCount++;
+            }
+        }
+
+        private int GetBindingFromIndex(int index, uint maxPerStage, string resourceName)
+        {
+            if ((uint)index >= maxPerStage)
+            {
+                Logger.Error?.Print(LogClass.Gpu, $"{resourceName} index {index} exceeds per stage limit of {maxPerStage}.");
+            }
+
+            return GetStageIndex() * (int)maxPerStage + index;
+        }
+
+        private int GetStageIndex()
+        {
+            // This is just a simple remapping to ensure that most frequently used shader stages
+            // have the lowest binding numbers.
+            // This is useful because if we need to run on a system with a low limit on the bindings,
+            // then we can still get most games working as the most common shaders will have low binding numbers.
+            return _stageIndex switch
+            {
+                4 => 1, // Fragment
+                3 => 2, // Geometry
+                1 => 3, // Tessellation control
+                2 => 4, // Tessellation evaluation
+                _ => 0 // Vertex/Compute
+            };
+        }
+
+        /// <inheritdoc/>
         public bool QueryHostHasFrontFacingBug() => _context.Capabilities.HasFrontFacingBug;
 
-        /// <summary>
-        /// Queries host about the presence of the vector indexing bug.
-        /// </summary>
-        /// <returns>True if the bug is present on the host device used, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostHasVectorIndexingBug() => _context.Capabilities.HasVectorIndexingBug;
 
-        /// <summary>
-        /// Queries host storage buffer alignment required.
-        /// </summary>
-        /// <returns>Host storage buffer alignment in bytes</returns>
+        /// <inheritdoc/>
         public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
-        /// <summary>
-        /// Queries host support for texture formats with BGRA component order (such as BGRA8).
-        /// </summary>
-        /// <returns>True if BGRA formats are supported, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsBgraFormat() => _context.Capabilities.SupportsBgraFormat;
 
-        /// <summary>
-        /// Queries host support for fragment shader ordering critical sections on the shader code.
-        /// </summary>
-        /// <returns>True if fragment shader interlock is supported, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsFragmentShaderInterlock() => _context.Capabilities.SupportsFragmentShaderInterlock;
 
-        /// <summary>
-        /// Queries host support for fragment shader ordering scoped critical sections on the shader code.
-        /// </summary>
-        /// <returns>True if fragment shader ordering is supported, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsFragmentShaderOrderingIntel() => _context.Capabilities.SupportsFragmentShaderOrderingIntel;
 
-        /// <summary>
-        /// Queries host support for readable images without a explicit format declaration on the shader.
-        /// </summary>
-        /// <returns>True if formatted image load is supported, false otherwise</returns>
+        /// <inheritdoc/>
+        public bool QueryHostSupportsGeometryShaderPassthrough() => _context.Capabilities.SupportsGeometryShaderPassthrough;
+
+        /// <inheritdoc/>
         public bool QueryHostSupportsImageLoadFormatted() => _context.Capabilities.SupportsImageLoadFormatted;
 
-        /// <summary>
-        /// Queries host GPU non-constant texture offset support.
-        /// </summary>
-        /// <returns>True if the GPU and driver supports non-constant texture offsets, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
-        /// <summary>
-        /// Queries host GPU shader ballot support.
-        /// </summary>
-        /// <returns>True if the GPU and driver supports shader ballot, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsShaderBallot() => _context.Capabilities.SupportsShaderBallot;
 
-        /// <summary>
-        /// Queries host GPU texture shadow LOD support.
-        /// </summary>
-        /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>
+        /// <inheritdoc/>
         public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
         /// <summary>

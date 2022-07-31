@@ -35,6 +35,35 @@ namespace Ryujinx.Graphics.Shader
         ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         /// <summary>
+        /// Queries the alpha test comparison operator that is being used currently.
+        /// If alpha test is disabled, it should be set to <see cref="AlphaTestOp.Always"/>.
+        /// </summary>
+        /// <returns>Current alpha test comparison</returns>
+        AlphaTestOp QueryAlphaTestCompare()
+        {
+            return AlphaTestOp.Always;
+        }
+
+        /// <summary>
+        /// Queries the current alpha test reference value used by the comparison.
+        /// </summary>
+        /// <returns>Current alpha test reference value</returns>
+        float QueryAlphaTestReference()
+        {
+            return 0f;
+        }
+
+        /// <summary>
+        /// Queries the type of the vertex shader input attribute at the specified <paramref name="location"/>.
+        /// </summary>
+        /// <param name="location">Location of the input attribute</param>
+        /// <returns>Input type</returns>
+        AttributeType QueryAttributeType(int location)
+        {
+            return AttributeType.Float;
+        }
+
+        /// <summary>
         /// Queries whenever the alpha-to-coverage dithering feature is enabled.
         /// </summary>
         /// <returns>True if the feature is enabled, false otherwise</returns>
@@ -67,8 +96,9 @@ namespace Ryujinx.Graphics.Shader
         /// Queries the binding number of a texture.
         /// </summary>
         /// <param name="index">Texture index</param>
+        /// <param name="isBuffer">Indicates if the texture is a buffer texture</param>
         /// <returns>Binding number</returns>
-        int QueryBindingTexture(int index)
+        int QueryBindingTexture(int index, bool isBuffer)
         {
             return index;
         }
@@ -77,8 +107,9 @@ namespace Ryujinx.Graphics.Shader
         /// Queries the binding number of an image.
         /// </summary>
         /// <param name="index">Image index</param>
+        /// <param name="isBuffer">Indicates if the image is a buffer image</param>
         /// <returns>Binding number</returns>
-        int QueryBindingImage(int index)
+        int QueryBindingImage(int index, bool isBuffer)
         {
             return index;
         }
@@ -192,6 +223,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU geometry shader passthrough support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports geometry shader passthrough, false otherwise</returns>
+        bool QueryHostSupportsGeometryShaderPassthrough()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host support for readable images without a explicit format declaration on the shader.
         /// </summary>
         /// <returns>True if formatted image load is supported, false otherwise</returns>
@@ -223,6 +263,25 @@ namespace Ryujinx.Graphics.Shader
         /// </summary>
         /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>
         bool QueryHostSupportsTextureShadowLod()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Queries the point size from the GPU state, used when it is not explicitly set on the shader.
+        /// </summary>
+        /// <returns>Current point size</returns>
+        float QueryPointSize()
+        {
+            return 1f;
+        }
+
+        /// <summary>
+        /// Queries the state that indicates if the program point size should be explicitly set on the shader
+        /// or read from the GPU state.
+        /// </summary>
+        /// <returns>True if the shader is expected to set the point size explicitly, false otherwise</returns>
+        bool QueryProgramPointSize()
         {
             return true;
         }
@@ -298,6 +357,15 @@ namespace Ryujinx.Graphics.Shader
         TextureFormat QueryTextureFormat(int handle, int cbufSlot = -1)
         {
             return TextureFormat.R8G8B8A8Unorm;
+        }
+
+        /// <summary>
+        /// Queries depth mode information from the GPU state.
+        /// </summary>
+        /// <returns>True if current depth mode is -1 to 1, false if 0 to 1</returns>
+        bool QueryTransformDepthMinusOneToOne()
+        {
+            return false;
         }
 
         /// <summary>

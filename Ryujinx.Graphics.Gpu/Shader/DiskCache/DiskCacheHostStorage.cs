@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.IO;
 using System.Numerics;
@@ -19,9 +20,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const uint TexdMagic = (byte)'T' | ((byte)'E' << 8) | ((byte)'X' << 16) | ((byte)'D' << 24);
 
         private const ushort FileFormatVersionMajor = 1;
-        private const ushort FileFormatVersionMinor = 1;
+        private const ushort FileFormatVersionMinor = 2;
         private const uint FileFormatVersionPacked = ((uint)FileFormatVersionMajor << 16) | FileFormatVersionMinor;
-        private const uint CodeGenVersion = 3469;
+        private const uint CodeGenVersion = 13;
 
         private const string SharedTocFileName = "shared.toc";
         private const string SharedDataFileName = "shared.data";
@@ -56,14 +57,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             public uint Padding;
 
             /// <summary>
-            /// Reserved space, to be used in the future. Write as zero.
+            /// Timestamp of when the file was first created.
             /// </summary>
-            public ulong Reserved;
+            public ulong Timestamp;
 
             /// <summary>
             /// Reserved space, to be used in the future. Write as zero.
             /// </summary>
-            public ulong Reserved2;
+            public ulong Reserved;
         }
 
         /// <summary>
@@ -77,9 +78,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             public ulong Offset;
 
             /// <summary>
-            /// Size.
+            /// Size of uncompressed data.
             /// </summary>
-            public uint Size;
+            public uint UncompressedSize;
+
+            /// <summary>
+            /// Size of compressed data.
+            /// </summary>
+            public uint CompressedSize;
         }
 
         /// <summary>
@@ -185,7 +191,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 return 0;
             }
 
-            return (int)((new FileInfo(tocFilePath).Length - Unsafe.SizeOf<TocHeader>()) / sizeof(ulong));
+            return Math.Max((int)((new FileInfo(tocFilePath).Length - Unsafe.SizeOf<TocHeader>()) / sizeof(ulong)), 0);
         }
 
         /// <summary>
@@ -324,7 +330,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                         stagesBitMask = 1;
                     }
 
-                    CachedShaderStage[] shaders = new CachedShaderStage[isCompute ? 1 : Constants.ShaderStages + 1];
+                    GuestCodeAndCbData?[] guestShaders = new GuestCodeAndCbData?[isCompute ? 1 : Constants.ShaderStages + 1];
 
                     DataEntryPerStage stageEntry = new DataEntryPerStage();
 
@@ -334,14 +340,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                         dataReader.Read(ref stageEntry);
 
-                        ShaderProgramInfo info = stageIndex != 0 || isCompute ? ReadShaderProgramInfo(ref dataReader) : null;
-
-                        (byte[] guestCode, byte[] cb1Data) = _guestStorage.LoadShader(
+                        guestShaders[stageIndex] = _guestStorage.LoadShader(
                             guestTocFileStream,
                             guestDataFileStream,
                             stageEntry.GuestCodeIndex);
-
-                        shaders[stageIndex] = new CachedShaderStage(info, guestCode, cb1Data);
 
                         stagesBitMask &= ~(1u << stageIndex);
                     }
@@ -351,17 +353,39 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                     if (loadHostCache)
                     {
-                        byte[] hostCode = ReadHostCode(context, ref hostTocFileStream, ref hostDataFileStream, programIndex);
+                        (byte[] hostCode, CachedShaderStage[] shaders) = ReadHostCode(
+                            context,
+                            ref hostTocFileStream,
+                            ref hostDataFileStream,
+                            guestShaders,
+                            programIndex,
+                            header.Timestamp);
 
                         if (hostCode != null)
                         {
                             bool hasFragmentShader = shaders.Length > 5 && shaders[5] != null;
                             int fragmentOutputMap = hasFragmentShader ? shaders[5].Info.FragmentOutputMap : -1;
-                            IProgram hostProgram = context.Renderer.LoadProgramBinary(hostCode, hasFragmentShader, new ShaderInfo(fragmentOutputMap));
+
+                            ShaderInfo shaderInfo = specState.PipelineState.HasValue
+                                ? new ShaderInfo(fragmentOutputMap, specState.PipelineState.Value, fromCache: true)
+                                : new ShaderInfo(fragmentOutputMap, fromCache: true);
+
+                            IProgram hostProgram;
+
+                            if (context.Capabilities.Api == TargetApi.Vulkan)
+                            {
+                                ShaderSource[] shaderSources = ShaderBinarySerializer.Unpack(shaders, hostCode, isCompute);
+
+                                hostProgram = context.Renderer.CreateProgram(shaderSources, shaderInfo);
+                            }
+                            else
+                            {
+                                hostProgram = context.Renderer.LoadProgramBinary(hostCode, hasFragmentShader, shaderInfo);
+                            }
 
                             CachedShaderProgram program = new CachedShaderProgram(hostProgram, specState, shaders);
 
-                            loader.QueueHostProgram(program, hostProgram, programIndex, isCompute);
+                            loader.QueueHostProgram(program, hostCode, programIndex, isCompute);
                         }
                         else
                         {
@@ -371,7 +395,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                     if (!loadHostCache)
                     {
-                        loader.QueueGuestProgram(shaders, specState, programIndex, isCompute);
+                        loader.QueueGuestProgram(guestShaders, specState, programIndex, isCompute);
                     }
 
                     loader.CheckCompilation();
@@ -393,9 +417,17 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="context">GPU context</param>
         /// <param name="tocFileStream">Host TOC file stream, intialized if needed</param>
         /// <param name="dataFileStream">Host data file stream, initialized if needed</param>
+        /// <param name="guestShaders">Guest shader code for each active stage</param>
         /// <param name="programIndex">Index of the program on the cache</param>
+        /// <param name="expectedTimestamp">Timestamp of the shared cache file. The host file must be newer than it</param>
         /// <returns>Host binary code, or null if not found</returns>
-        private byte[] ReadHostCode(GpuContext context, ref Stream tocFileStream, ref Stream dataFileStream, int programIndex)
+        private (byte[], CachedShaderStage[]) ReadHostCode(
+            GpuContext context,
+            ref Stream tocFileStream,
+            ref Stream dataFileStream,
+            GuestCodeAndCbData?[] guestShaders,
+            int programIndex,
+            ulong expectedTimestamp)
         {
             if (tocFileStream == null && dataFileStream == null)
             {
@@ -404,17 +436,28 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                 if (!File.Exists(tocFilePath) || !File.Exists(dataFilePath))
                 {
-                    return null;
+                    return (null, null);
                 }
 
                 tocFileStream = DiskCacheCommon.OpenFile(_basePath, GetHostTocFileName(context), writable: false);
                 dataFileStream = DiskCacheCommon.OpenFile(_basePath, GetHostDataFileName(context), writable: false);
+
+                BinarySerializer tempTocReader = new BinarySerializer(tocFileStream);
+
+                TocHeader header = new TocHeader();
+
+                tempTocReader.Read(ref header);
+
+                if (header.Timestamp < expectedTimestamp)
+                {
+                    return (null, null);
+                }
             }
 
             int offset = Unsafe.SizeOf<TocHeader>() + programIndex * Unsafe.SizeOf<OffsetAndSize>();
             if (offset + Unsafe.SizeOf<OffsetAndSize>() > tocFileStream.Length)
             {
-                return null;
+                return (null, null);
             }
 
             if ((ulong)offset >= (ulong)dataFileStream.Length)
@@ -436,11 +479,33 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             dataFileStream.Seek((long)offsetAndSize.Offset, SeekOrigin.Begin);
 
-            byte[] hostCode = new byte[offsetAndSize.Size];
+            byte[] hostCode = new byte[offsetAndSize.UncompressedSize];
 
             BinarySerializer.ReadCompressed(dataFileStream, hostCode);
 
-            return hostCode;
+            CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
+            BinarySerializer dataReader = new BinarySerializer(dataFileStream);
+
+            dataFileStream.Seek((long)(offsetAndSize.Offset + offsetAndSize.CompressedSize), SeekOrigin.Begin);
+
+            dataReader.BeginCompression();
+
+            for (int index = 0; index < guestShaders.Length; index++)
+            {
+                if (!guestShaders[index].HasValue)
+                {
+                    continue;
+                }
+
+                GuestCodeAndCbData guestShader = guestShaders[index].Value;
+                ShaderProgramInfo info = index != 0 || guestShaders.Length == 1 ? ReadShaderProgramInfo(ref dataReader) : null;
+
+                shaders[index] = new CachedShaderStage(info, guestShader.Code, guestShader.Cb1Data);
+            }
+
+            dataReader.EndCompression();
+
+            return (hostCode, shaders);
         }
 
         /// <summary>
@@ -484,10 +549,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             var tocFileStream = streams != null ? streams.TocFileStream : DiskCacheCommon.OpenFile(_basePath, SharedTocFileName, writable: true);
             var dataFileStream = streams != null ? streams.DataFileStream : DiskCacheCommon.OpenFile(_basePath, SharedDataFileName, writable: true);
 
+            ulong timestamp = (ulong)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
+
             if (tocFileStream.Length == 0)
             {
                 TocHeader header = new TocHeader();
-                CreateToc(tocFileStream, ref header, TocsMagic, CodeGenVersion);
+                CreateToc(tocFileStream, ref header, TocsMagic, CodeGenVersion, timestamp);
             }
 
             tocFileStream.Seek(0, SeekOrigin.End);
@@ -519,8 +586,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 stageEntry.GuestCodeIndex = _guestStorage.AddShader(shader.Code, shader.Cb1Data);
 
                 dataWriter.Write(ref stageEntry);
-
-                WriteShaderProgramInfo(ref dataWriter, shader.Info);
             }
 
             program.SpecializationState.Write(ref dataWriter);
@@ -537,7 +602,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 return;
             }
 
-            WriteHostCode(context, hostCode, -1, streams);
+            WriteHostCode(context, hostCode, program.Shaders, streams, timestamp);
         }
 
         /// <summary>
@@ -575,28 +640,19 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <summary>
-        /// Adds a host binary shader to the host cache.
-        /// </summary>
-        /// <remarks>
-        /// This only modifies the host cache. The shader must already exist in the other caches.
-        /// This method should only be used for rebuilding the host cache after a clear.
-        /// </remarks>
-        /// <param name="context">GPU context</param>
-        /// <param name="hostCode">Host binary code</param>
-        /// <param name="programIndex">Index of the program in the cache</param>
-        public void AddHostShader(GpuContext context, ReadOnlySpan<byte> hostCode, int programIndex)
-        {
-            WriteHostCode(context, hostCode, programIndex);
-        }
-
-        /// <summary>
         /// Writes the host binary code on the host cache.
         /// </summary>
         /// <param name="context">GPU context</param>
         /// <param name="hostCode">Host binary code</param>
-        /// <param name="programIndex">Index of the program in the cache</param>
+        /// <param name="shaders">Shader stages to be added to the host cache</param>
         /// <param name="streams">Output streams to use</param>
-        private void WriteHostCode(GpuContext context, ReadOnlySpan<byte> hostCode, int programIndex, DiskCacheOutputStreams streams = null)
+        /// <param name="timestamp">File creation timestamp</param>
+        private void WriteHostCode(
+            GpuContext context,
+            ReadOnlySpan<byte> hostCode,
+            CachedShaderStage[] shaders,
+            DiskCacheOutputStreams streams,
+            ulong timestamp)
         {
             var tocFileStream = streams != null ? streams.HostTocFileStream : DiskCacheCommon.OpenFile(_basePath, GetHostTocFileName(context), writable: true);
             var dataFileStream = streams != null ? streams.HostDataFileStream : DiskCacheCommon.OpenFile(_basePath, GetHostDataFileName(context), writable: true);
@@ -604,28 +660,38 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             if (tocFileStream.Length == 0)
             {
                 TocHeader header = new TocHeader();
-                CreateToc(tocFileStream, ref header, TochMagic, 0);
+                CreateToc(tocFileStream, ref header, TochMagic, 0, timestamp);
             }
 
-            if (programIndex == -1)
-            {
-                tocFileStream.Seek(0, SeekOrigin.End);
-            }
-            else
-            {
-                tocFileStream.Seek(Unsafe.SizeOf<TocHeader>() + (programIndex * Unsafe.SizeOf<OffsetAndSize>()), SeekOrigin.Begin);
-            }
-
+            tocFileStream.Seek(0, SeekOrigin.End);
             dataFileStream.Seek(0, SeekOrigin.End);
 
             BinarySerializer tocWriter = new BinarySerializer(tocFileStream);
+            BinarySerializer dataWriter = new BinarySerializer(dataFileStream);
 
             OffsetAndSize offsetAndSize = new OffsetAndSize();
             offsetAndSize.Offset = (ulong)dataFileStream.Position;
-            offsetAndSize.Size = (uint)hostCode.Length;
-            tocWriter.Write(ref offsetAndSize);
+            offsetAndSize.UncompressedSize = (uint)hostCode.Length;
+
+            long dataStartPosition = dataFileStream.Position;
 
             BinarySerializer.WriteCompressed(dataFileStream, hostCode, DiskCacheCommon.GetCompressionAlgorithm());
+
+            offsetAndSize.CompressedSize = (uint)(dataFileStream.Position - dataStartPosition);
+
+            tocWriter.Write(ref offsetAndSize);
+
+            dataWriter.BeginCompression(DiskCacheCommon.GetCompressionAlgorithm());
+
+            for (int index = 0; index < shaders.Length; index++)
+            {
+                if (shaders[index] != null)
+                {
+                    WriteShaderProgramInfo(ref dataWriter, shaders[index].Info);
+                }
+            }
+
+            dataWriter.EndCompression();
 
             if (streams == null)
             {
@@ -641,7 +707,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="header">Set to the TOC file header</param>
         /// <param name="magic">Magic value to be written</param>
         /// <param name="codegenVersion">Shader codegen version, only valid for the host file</param>
-        private void CreateToc(Stream tocFileStream, ref TocHeader header, uint magic, uint codegenVersion)
+        /// <param name="timestamp">File creation timestamp</param>
+        private void CreateToc(Stream tocFileStream, ref TocHeader header, uint magic, uint codegenVersion, ulong timestamp)
         {
             BinarySerializer writer = new BinarySerializer(tocFileStream);
 
@@ -650,7 +717,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             header.CodeGenVersion = codegenVersion;
             header.Padding = 0;
             header.Reserved = 0;
-            header.Reserved2 = 0;
+            header.Timestamp = timestamp;
 
             if (tocFileStream.Length > 0)
             {

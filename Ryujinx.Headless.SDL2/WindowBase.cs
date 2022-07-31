@@ -151,21 +151,28 @@ namespace Ryujinx.Headless.SDL2
             }
         }
 
+        protected abstract void InitializeWindowRenderer();
+
         protected abstract void InitializeRenderer();
 
-        protected abstract void FinalizeRenderer();
+        protected abstract void FinalizeWindowRenderer();
 
         protected abstract void SwapBuffers(object image);
 
-        protected abstract string GetGpuVendorName();
-
         public abstract SDL_WindowFlags GetWindowFlags();
+
+        private string GetGpuVendorName()
+        {
+            return Renderer.GetHardwareInfo().GpuVendor;
+        }
 
         public void Render()
         {
-            InitializeRenderer();
+            InitializeWindowRenderer();
 
             Device.Gpu.Renderer.Initialize(_glLogLevel);
+
+            InitializeRenderer();
 
             _gpuVendorName = GetGpuVendorName();
 
@@ -220,7 +227,7 @@ namespace Ryujinx.Headless.SDL2
                 }
             });
 
-            FinalizeRenderer();
+            FinalizeWindowRenderer();
         }
 
         public void Exit()
@@ -323,7 +330,7 @@ namespace Ryujinx.Headless.SDL2
             renderLoopThread.Start();
 
             Thread nvStutterWorkaround = null;
-            if (Renderer is Graphics.OpenGL.Renderer)
+            if (Renderer is Graphics.OpenGL.OpenGLRenderer)
             {
                 nvStutterWorkaround = new Thread(NVStutterWorkaround)
                 {

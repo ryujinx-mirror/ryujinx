@@ -44,7 +44,7 @@ namespace Ryujinx.Common.System
             }
         }
 
-        public static double GetWindowScaleFactor()
+        public static double GetActualScaleFactor()
         {
             double userDpiScale = 96.0;
 
@@ -83,6 +83,13 @@ namespace Ryujinx.Common.System
             {
                 Logger.Warning?.Print(LogClass.Application, $"Couldn't determine monitor DPI: {e.Message}");
             }
+
+            return userDpiScale;
+        }
+
+        public static double GetWindowScaleFactor()
+        {
+            double userDpiScale = GetActualScaleFactor();
 
             return Math.Min(userDpiScale / _standardDpiScale, _maxScaleFactor);
         }

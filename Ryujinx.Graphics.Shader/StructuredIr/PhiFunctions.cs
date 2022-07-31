@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 {
                     LinkedListNode<INode> nextNode = node.Next;
 
-                    if (!(node.Value is PhiNode phi))
+                    if (node.Value is not PhiNode phi)
                     {
                         node = nextNode;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                         Operation copyOp = new Operation(Instruction.Copy, phi.Dest, src);
 
-                        AddBeforeBranch(srcBlock, copyOp);
+                        srcBlock.Append(copyOp);
                     }
 
                     block.Operations.Remove(node);
@@ -40,35 +40,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     node = nextNode;
                 }
             }
-        }
-
-        private static void AddBeforeBranch(BasicBlock block, INode node)
-        {
-            INode lastOp = block.GetLastOp();
-
-            if (lastOp is Operation operation && IsControlFlowInst(operation.Inst))
-            {
-                block.Operations.AddBefore(block.Operations.Last, node);
-            }
-            else
-            {
-                block.Operations.AddLast(node);
-            }
-        }
-
-        private static bool IsControlFlowInst(Instruction inst)
-        {
-            switch (inst)
-            {
-                case Instruction.Branch:
-                case Instruction.BranchIfFalse:
-                case Instruction.BranchIfTrue:
-                case Instruction.Discard:
-                case Instruction.Return:
-                    return true;
-            }
-
-            return false;
         }
     }
 }

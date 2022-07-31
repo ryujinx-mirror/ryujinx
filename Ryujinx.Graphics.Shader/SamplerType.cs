@@ -25,32 +25,28 @@ namespace Ryujinx.Graphics.Shader
     {
         public static int GetDimensions(this SamplerType type)
         {
-            switch (type & SamplerType.Mask)
+            return (type & SamplerType.Mask) switch
             {
-                case SamplerType.Texture1D:     return 1;
-                case SamplerType.TextureBuffer: return 1;
-                case SamplerType.Texture2D:     return 2;
-                case SamplerType.Texture3D:     return 3;
-                case SamplerType.TextureCube:   return 3;
-            }
-
-            throw new ArgumentException($"Invalid sampler type \"{type}\".");
+                SamplerType.Texture1D => 1,
+                SamplerType.TextureBuffer => 1,
+                SamplerType.Texture2D => 2,
+                SamplerType.Texture3D => 3,
+                SamplerType.TextureCube => 3,
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+            };
         }
 
         public static string ToGlslSamplerType(this SamplerType type)
         {
-            string typeName;
-
-            switch (type & SamplerType.Mask)
+            string typeName = (type & SamplerType.Mask) switch
             {
-                case SamplerType.Texture1D:     typeName = "sampler1D";     break;
-                case SamplerType.TextureBuffer: typeName = "samplerBuffer"; break;
-                case SamplerType.Texture2D:     typeName = "sampler2D";     break;
-                case SamplerType.Texture3D:     typeName = "sampler3D";     break;
-                case SamplerType.TextureCube:   typeName = "samplerCube";   break;
-
-                default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
-            }
+                SamplerType.Texture1D => "sampler1D",
+                SamplerType.TextureBuffer => "samplerBuffer",
+                SamplerType.Texture2D => "sampler2D",
+                SamplerType.Texture3D => "sampler3D",
+                SamplerType.TextureCube => "samplerCube",
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+            };
 
             if ((type & SamplerType.Multisample) != 0)
             {
@@ -72,18 +68,15 @@ namespace Ryujinx.Graphics.Shader
 
         public static string ToGlslImageType(this SamplerType type, VariableType componentType)
         {
-            string typeName;
-
-            switch (type & SamplerType.Mask)
+            string typeName = (type & SamplerType.Mask) switch
             {
-                case SamplerType.Texture1D:     typeName = "image1D";     break;
-                case SamplerType.TextureBuffer: typeName = "imageBuffer"; break;
-                case SamplerType.Texture2D:     typeName = "image2D";     break;
-                case SamplerType.Texture3D:     typeName = "image3D";     break;
-                case SamplerType.TextureCube:   typeName = "imageCube";   break;
-
-                default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
-            }
+                SamplerType.Texture1D => "image1D",
+                SamplerType.TextureBuffer => "imageBuffer",
+                SamplerType.Texture2D => "image2D",
+                SamplerType.Texture3D => "image3D",
+                SamplerType.TextureCube => "imageCube",
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+            };
 
             if ((type & SamplerType.Multisample) != 0)
             {

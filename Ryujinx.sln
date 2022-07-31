@@ -74,6 +74,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Ui.Common", "Ryujin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Horizon.Generators", "Ryujinx.Horizon.Generators\Ryujinx.Horizon.Generators.csproj", "{6AE2A5E8-4C5A-48B9-997B-E1455C0355C6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Vulkan", "Ryujinx.Graphics.Vulkan\Ryujinx.Graphics.Vulkan.csproj", "{D4D09B08-D580-4D69-B886-C35D2853F6C8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spv.Generator", "Spv.Generator\Spv.Generator.csproj", "{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -212,6 +216,14 @@ Global
 		{6AE2A5E8-4C5A-48B9-997B-E1455C0355C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6AE2A5E8-4C5A-48B9-997B-E1455C0355C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6AE2A5E8-4C5A-48B9-997B-E1455C0355C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4D09B08-D580-4D69-B886-C35D2853F6C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4D09B08-D580-4D69-B886-C35D2853F6C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4D09B08-D580-4D69-B886-C35D2853F6C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4D09B08-D580-4D69-B886-C35D2853F6C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

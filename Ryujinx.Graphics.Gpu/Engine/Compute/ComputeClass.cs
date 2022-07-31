@@ -238,8 +238,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
             _channel.TextureManager.SetComputeMaxBindings(maxTextureBinding, maxImageBinding);
 
             // Should never return false for mismatching spec state, since the shader was fetched above.
-            _channel.TextureManager.CommitComputeBindings(cs.SpecializationState); 
-            
+            _channel.TextureManager.CommitComputeBindings(cs.SpecializationState);
+
             _channel.BufferManager.CommitComputeBindings();
 
             _context.Renderer.Pipeline.DispatchCompute(qmd.CtaRasterWidth, qmd.CtaRasterHeight, qmd.CtaRasterDepth);

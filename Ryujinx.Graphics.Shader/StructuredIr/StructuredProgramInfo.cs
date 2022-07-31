@@ -22,6 +22,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     {
         public List<StructuredFunction> Functions { get; }
 
+        public HashSet<int> Inputs { get; }
+        public HashSet<int> Outputs { get; }
+        public HashSet<int> InputsPerPatch { get; }
+        public HashSet<int> OutputsPerPatch { get; }
+
         public HelperFunctionsMask HelperFunctionsMask { get; set; }
 
         public TransformFeedbackOutput[] TransformFeedbackOutputs { get; }
@@ -29,6 +34,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public StructuredProgramInfo()
         {
             Functions = new List<StructuredFunction>();
+
+            Inputs = new HashSet<int>();
+            Outputs = new HashSet<int>();
+            InputsPerPatch = new HashSet<int>();
+            OutputsPerPatch = new HashSet<int>();
 
             TransformFeedbackOutputs = new TransformFeedbackOutput[0xc0];
         }

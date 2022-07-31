@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             renderer.ScreenCaptured += (object sender, ScreenCaptureImageInfo info) => ScreenCaptured?.Invoke(this, info);
 
             Pipeline = new ThreadedPipeline(this, renderer.Pipeline);
-            Window = new ThreadedWindow(this, renderer.Window);
+            Window = new ThreadedWindow(this, renderer);
             Buffers = new BufferMap();
             Sync = new SyncMap();
             Programs = new ProgramQueue(renderer);
@@ -262,7 +262,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         public IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info)
         {
             var program = new ThreadedProgram(this);
+
             SourceProgramRequest request = new SourceProgramRequest(program, shaders, info);
+
             Programs.Add(request);
 
             New<CreateProgramCommand>().Set(Ref((IProgramRequest)request));
@@ -335,6 +337,11 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             InvokeCommand();
 
             return box.Result;
+        }
+
+        public HardwareInfo GetHardwareInfo()
+        {
+            return _baseRenderer.GetHardwareInfo();
         }
 
         /// <summary>

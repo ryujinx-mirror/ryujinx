@@ -6,14 +6,14 @@ namespace Ryujinx.Graphics.OpenGL.Image
 {
     class TextureBuffer : TextureBase, ITexture
     {
-        private Renderer _renderer;
+        private OpenGLRenderer _renderer;
         private int _bufferOffset;
         private int _bufferSize;
         private int _bufferCount;
 
         private BufferHandle _buffer;
 
-        public TextureBuffer(Renderer renderer, TextureCreateInfo info) : base(info)
+        public TextureBuffer(OpenGLRenderer renderer, TextureCreateInfo info) : base(info)
         {
             _renderer = renderer;
         }

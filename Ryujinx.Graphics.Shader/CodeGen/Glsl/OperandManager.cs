@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     class OperandManager
     {
-        private static string[] _stagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
+        private static readonly string[] StagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
         private struct BuiltInAttribute
         {
@@ -26,8 +26,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static Dictionary<int, BuiltInAttribute> _builtInAttributes =
-                   new Dictionary<int, BuiltInAttribute>()
+        private static Dictionary<int, BuiltInAttribute> _builtInAttributes = new Dictionary<int, BuiltInAttribute>()
         {
             { AttributeConsts.TessLevelOuter0, new BuiltInAttribute("gl_TessLevelOuter[0]", VariableType.F32)  },
             { AttributeConsts.TessLevelOuter1, new BuiltInAttribute("gl_TessLevelOuter[1]", VariableType.F32)  },
@@ -197,11 +196,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     return name + $"[{(value >> 4)}]." + swzMask;
                 }
-                else if (config.TransformFeedbackEnabled && (config.Stage != ShaderStage.Vertex || isOutAttr))
+                else if (config.TransformFeedbackEnabled &&
+                    ((config.LastInVertexPipeline && isOutAttr) ||
+                    (config.Stage == ShaderStage.Fragment && !isOutAttr)))
                 {
                     string name = $"{prefix}{(value >> 4)}_{swzMask}";
 
-                    if (!perPatch && IsArrayAttribute(config.Stage, isOutAttr))
+                    if (!perPatch && AttributeInfo.IsArrayAttributeGlsl(config.Stage, isOutAttr))
                     {
                         name += isOutAttr ? "[gl_InvocationID]" : $"[{indexExpr}]";
                     }
@@ -212,7 +213,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 {
                     string name = $"{prefix}{(value >> 4)}";
 
-                    if (!perPatch && IsArrayAttribute(config.Stage, isOutAttr))
+                    if (!perPatch && AttributeInfo.IsArrayAttributeGlsl(config.Stage, isOutAttr))
                     {
                         name += isOutAttr ? "[gl_InvocationID]" : $"[{indexExpr}]";
                     }
@@ -276,7 +277,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     string name = builtInAttr.Name;
 
-                    if (!perPatch && IsArrayAttribute(config.Stage, isOutAttr) && IsArrayBuiltIn(value))
+                    if (!perPatch && AttributeInfo.IsArrayAttributeGlsl(config.Stage, isOutAttr) && AttributeInfo.IsArrayBuiltIn(value))
                     {
                         name = isOutAttr ? $"gl_out[gl_InvocationID].{name}" : $"gl_in[{indexExpr}].{name}";
                     }
@@ -302,32 +303,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
 
             return $"{name}[{attrExpr} >> 2][{attrExpr} & 3]";
-        }
-
-        public static bool IsArrayAttribute(ShaderStage stage, bool isOutAttr)
-        {
-            if (isOutAttr)
-            {
-                return stage == ShaderStage.TessellationControl;
-            }
-            else
-            {
-                return stage == ShaderStage.TessellationControl ||
-                       stage == ShaderStage.TessellationEvaluation ||
-                       stage == ShaderStage.Geometry;
-            }
-        }
-
-        private static bool IsArrayBuiltIn(int attr)
-        {
-            if (attr <= AttributeConsts.TessLevelInner1 ||
-                attr == AttributeConsts.TessCoordX ||
-                attr == AttributeConsts.TessCoordY)
-            {
-                return false;
-            }
-
-            return (attr & AttributeConsts.SpecialMask) == 0;
         }
 
         public static string GetUbName(ShaderStage stage, int slot, bool cbIndexable)
@@ -391,12 +366,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             int index = (int)stage;
 
-            if ((uint)index >= _stagePrefixes.Length)
+            if ((uint)index >= StagePrefixes.Length)
             {
                 return "invalid";
             }
 
-            return _stagePrefixes[index];
+            return StagePrefixes[index];
         }
 
         private static char GetSwizzleMask(int value)
@@ -409,7 +384,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"{DefaultNames.ArgumentNamePrefix}{argIndex}";
         }
 
-        public static VariableType GetNodeDestType(CodeGenContext context, IAstNode node)
+        public static VariableType GetNodeDestType(CodeGenContext context, IAstNode node, bool isAsgDest = false)
         {
             if (node is AstOperation operation)
             {
@@ -455,7 +430,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     return context.CurrentFunction.GetArgumentType(argIndex);
                 }
 
-                return GetOperandVarType(operand);
+                return GetOperandVarType(context, operand, isAsgDest);
             }
             else
             {
@@ -463,13 +438,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static VariableType GetOperandVarType(AstOperand operand)
+        private static VariableType GetOperandVarType(CodeGenContext context, AstOperand operand, bool isAsgDest = false)
         {
             if (operand.Type == OperandType.Attribute)
             {
                 if (_builtInAttributes.TryGetValue(operand.Value & ~3, out BuiltInAttribute builtInAttr))
                 {
                     return builtInAttr.Type;
+                }
+                else if (context.Config.Stage == ShaderStage.Vertex && !isAsgDest &&
+                    operand.Value >= AttributeConsts.UserAttributeBase &&
+                    operand.Value < AttributeConsts.UserAttributeEnd)
+                {
+                    int location = (operand.Value - AttributeConsts.UserAttributeBase) / 16;
+
+                    AttributeType type = context.Config.GpuAccessor.QueryAttributeType(location);
+
+                    return type switch
+                    {
+                        AttributeType.Sint => VariableType.S32,
+                        AttributeType.Uint => VariableType.U32,
+                        _ => VariableType.F32
+                    };
                 }
             }
 

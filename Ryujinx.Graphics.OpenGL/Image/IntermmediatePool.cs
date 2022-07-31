@@ -6,10 +6,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
 {
     class IntermmediatePool : IDisposable
     {
-        private readonly Renderer _renderer;
+        private readonly OpenGLRenderer _renderer;
         private readonly List<TextureView> _entries;
 
-        public IntermmediatePool(Renderer renderer)
+        public IntermmediatePool(OpenGLRenderer renderer)
         {
             _renderer = renderer;
             _entries = new List<TextureView>();
