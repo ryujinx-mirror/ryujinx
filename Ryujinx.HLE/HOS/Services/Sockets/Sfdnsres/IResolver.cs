@@ -235,6 +235,32 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return GetAddrInfoRequestImpl(context, outputBufferPosition, outputBufferSize, true, optionsBufferPosition, optionsBufferSize);
         }
 
+        [CommandHipc(14)] // 5.0.0+
+        // ResolverSetOptionRequest(buffer<unknown, 5, 0>, u64 unknown, u64 pid_placeholder, pid) -> (i32 ret, u32 bsd_errno)
+        public ResultCode ResolverSetOptionRequest(ServiceCtx context)
+        {
+            ulong bufferPosition = context.Request.SendBuff[0].Position;
+            ulong bufferSize     = context.Request.SendBuff[0].Size;
+
+            ulong unknown = context.RequestData.ReadUInt64();
+
+            byte[] buffer = new byte[bufferSize];
+
+            context.Memory.Read(bufferPosition, buffer);
+
+            // TODO: Parse and use options.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceSfdnsres, new { unknown });
+
+            NetDbError netDbErrorCode = NetDbError.Success;
+            GaiError   errno          = GaiError.Success;
+
+            context.ResponseData.Write((int)errno);
+            context.ResponseData.Write((int)netDbErrorCode);
+
+            return ResultCode.Success;
+        }
+
         private static ResultCode GetHostByNameRequestImpl(
             ServiceCtx context,
             ulong inputBufferPosition,
@@ -615,7 +641,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             {
                 context.ResponseData.Write((int)netDbErrorCode);
                 context.ResponseData.Write((int)errno);
-                context.ResponseData.Write((int)serializedSize);
+                context.ResponseData.Write(serializedSize);
             }
         }
 
