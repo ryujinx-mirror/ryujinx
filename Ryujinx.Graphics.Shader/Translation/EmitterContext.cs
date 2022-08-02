@@ -248,7 +248,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     this.Copy(Attribute(index + 12), w);
                 }
 
-                if (Config.GpPassthrough)
+                if (Config.GpPassthrough && !Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
                     int inputVertices = Config.GpuAccessor.QueryPrimitiveTopology().ToInputVertices();
 
