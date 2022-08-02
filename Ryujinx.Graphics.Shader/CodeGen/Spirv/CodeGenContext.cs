@@ -234,7 +234,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     IrOperandType.Constant => GetConstant(type, operand),
                     IrOperandType.ConstantBuffer => GetConstantBuffer(type, operand),
                     IrOperandType.LocalVariable => GetLocal(type, operand),
-                    IrOperandType.Undefined => Undef(GetType(type)),
+                    IrOperandType.Undefined => Constant(GetType(type), 0),
                     _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\".")
                 };
             }
