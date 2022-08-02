@@ -50,8 +50,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             public int InvalidatedSequence;
             public Texture CachedTexture;
             public Sampler CachedSampler;
-            public int ScaleIndex;
-            public TextureUsageFlags UsageFlags;
         }
 
         private TextureState[] _textureState;
@@ -535,14 +533,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // The texture is already bound.
                     state.CachedTexture.SynchronizeMemory();
 
-                    if ((state.ScaleIndex != index || state.UsageFlags != usageFlags) &&
+                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
                         UpdateScale(state.CachedTexture, usageFlags, index, stage))
                     {
                         ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
 
                         state.Texture = hostTextureRebind;
-                        state.ScaleIndex = index;
-                        state.UsageFlags = usageFlags;
 
                         _context.Renderer.Pipeline.SetTextureAndSampler(stage, bindingInfo.Binding, hostTextureRebind, state.Sampler);
                     }
@@ -573,7 +569,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     bool textureOrSamplerChanged = state.Texture != hostTexture || state.Sampler != hostSampler;
 
-                    if ((state.ScaleIndex != index || state.UsageFlags != usageFlags || textureOrSamplerChanged) &&
+                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
                         UpdateScale(texture, usageFlags, index, stage))
                     {
                         hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
@@ -583,9 +579,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (textureOrSamplerChanged)
                     {
                         state.Texture = hostTexture;
-                        state.ScaleIndex = index;
-                        state.UsageFlags = usageFlags;
-
                         state.Sampler = hostSampler;
 
                         _context.Renderer.Pipeline.SetTextureAndSampler(stage, bindingInfo.Binding, hostTexture, hostSampler);
@@ -666,7 +659,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         cachedTexture?.SignalModified();
                     }
 
-                    if ((state.ScaleIndex != scaleIndex || state.UsageFlags != usageFlags) &&
+                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
                         UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage))
                     {
                         ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
@@ -674,8 +667,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                         Format format = bindingInfo.Format == 0 ? cachedTexture.Format : bindingInfo.Format;
 
                         state.Texture = hostTextureRebind;
-                        state.ScaleIndex = scaleIndex;
-                        state.UsageFlags = usageFlags;
 
                         _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTextureRebind, format);
                     }
@@ -713,7 +704,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         texture?.SignalModified();
                     }
 
-                    if ((state.ScaleIndex != scaleIndex || state.UsageFlags != usageFlags || state.Texture != hostTexture) &&
+                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
                         UpdateScale(texture, usageFlags, scaleIndex, stage))
                     {
                         hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
@@ -722,8 +713,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (state.Texture != hostTexture)
                     {
                         state.Texture = hostTexture;
-                        state.ScaleIndex = scaleIndex;
-                        state.UsageFlags = usageFlags;
 
                         Format format = bindingInfo.Format;
 
