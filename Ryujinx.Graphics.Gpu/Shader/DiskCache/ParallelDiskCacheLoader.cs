@@ -434,7 +434,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     _needsHostRegen = true;
                 }
 
-                _programList.Add(entry.ProgramIndex, (entry.CachedProgram, entry.BinaryCode));
+                // Fetch the binary code from the backend if it isn't already present.
+                byte[] binaryCode = entry.BinaryCode ?? entry.CachedProgram.HostProgram.GetBinary();
+
+                _programList.Add(entry.ProgramIndex, (entry.CachedProgram, binaryCode));
                 SignalCompiled();
             }
             else if (entry.IsBinary)
@@ -502,7 +505,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources, shaderInfo);
                 CachedShaderProgram program = new CachedShaderProgram(hostProgram, compilation.SpecializationState, compilation.Shaders);
 
-                byte[] binaryCode = _context.Capabilities.Api == TargetApi.Vulkan ? ShaderBinarySerializer.Pack(shaderSources) : hostProgram.GetBinary();
+                // Vulkan's binary code is the SPIR-V used for compilation, so it is ready immediately. Other APIs get this after compilation.
+                byte[] binaryCode = _context.Capabilities.Api == TargetApi.Vulkan ? ShaderBinarySerializer.Pack(shaderSources) : null;
 
                 EnqueueForValidation(new ProgramEntry(program, binaryCode, compilation.ProgramIndex, compilation.IsCompute, isBinary: false));
             }
