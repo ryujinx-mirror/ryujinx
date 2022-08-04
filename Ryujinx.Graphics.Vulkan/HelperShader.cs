@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (clearAlpha)
             {
-                _pipeline.ClearRenderTargetColor(0, 0, new ColorF(0f, 0f, 0f, 1f));
+                _pipeline.ClearRenderTargetColor(0, 0, 1, new ColorF(0f, 0f, 0f, 1f));
             }
 
             _pipeline.SetViewports(viewports, false);

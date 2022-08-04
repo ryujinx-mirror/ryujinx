@@ -487,11 +487,23 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
         /// <summary>
         /// Clears the current color and depth-stencil buffers.
-        /// Which buffers should be cleared is also specified on the argument.
+        /// Which buffers should be cleared can also be specified with the argument.
         /// </summary>
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
         public void Clear(ThreedClass engine, int argument)
+        {
+            Clear(engine, argument, 1);
+        }
+
+        /// <summary>
+        /// Clears the current color and depth-stencil buffers.
+        /// Which buffers should be cleared can also specified with the arguments.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        /// <param name="layerCount">For array and 3D textures, indicates how many layers should be cleared</param>
+        public void Clear(ThreedClass engine, int argument, int layerCount)
         {
             ConditionalRenderEnabled renderEnable = ConditionalRendering.GetRenderEnable(
                 _context,
@@ -507,7 +519,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             int index = (argument >> 6) & 0xf;
             int layer = (argument >> 10) & 0x3ff;
 
-            engine.UpdateRenderTargetState(useControl: false, layered: layer != 0, singleUse: index);
+            engine.UpdateRenderTargetState(useControl: false, layered: layer != 0 || layerCount > 1, singleUse: index);
 
             // If there is a mismatch on the host clip region and the one explicitly defined by the guest
             // on the screen scissor state, then we need to force only one texture to be bound to avoid
@@ -578,7 +590,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             bool clearDepth = (argument & 1) != 0;
             bool clearStencil = (argument & 2) != 0;
-
             uint componentMask = (uint)((argument >> 2) & 0xf);
 
             if (componentMask != 0)
@@ -587,7 +598,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 ColorF color = new ColorF(clearColor.Red, clearColor.Green, clearColor.Blue, clearColor.Alpha);
 
-                _context.Renderer.Pipeline.ClearRenderTargetColor(index, layer, componentMask, color);
+                _context.Renderer.Pipeline.ClearRenderTargetColor(index, layer, layerCount, componentMask, color);
             }
 
             if (clearDepth || clearStencil)
@@ -609,6 +620,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 _context.Renderer.Pipeline.ClearRenderTargetDepthStencil(
                     layer,
+                    layerCount,
                     depthValue,
                     clearDepth,
                     stencilValue,

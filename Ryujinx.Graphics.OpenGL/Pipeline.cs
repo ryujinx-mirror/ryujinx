@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.OpenGL
             Buffer.Clear(destination, offset, size, value);
         }
 
-        public void ClearRenderTargetColor(int index, int layer, uint componentMask, ColorF color)
+        public void ClearRenderTargetColor(int index, int layer, int layerCount, uint componentMask, ColorF color)
         {
             GL.ColorMask(
                 index,
@@ -119,18 +119,28 @@ namespace Ryujinx.Graphics.OpenGL
                 (componentMask & 4) != 0,
                 (componentMask & 8) != 0);
 
-            _framebuffer.AttachColorLayerForClear(index, layer);
-
             float[] colors = new float[] { color.Red, color.Green, color.Blue, color.Alpha };
 
-            GL.ClearBuffer(OpenTK.Graphics.OpenGL.ClearBuffer.Color, index, colors);
+            if (layer != 0 || layerCount != _framebuffer.GetColorLayerCount(index))
+            {
+                for (int l = layer; l < layer + layerCount; l++)
+                {
+                    _framebuffer.AttachColorLayerForClear(index, l);
 
-            _framebuffer.DetachColorLayerForClear(index);
+                    GL.ClearBuffer(OpenTK.Graphics.OpenGL.ClearBuffer.Color, index, colors);
+                }
+
+                _framebuffer.DetachColorLayerForClear(index);
+            }
+            else
+            {
+                GL.ClearBuffer(OpenTK.Graphics.OpenGL.ClearBuffer.Color, index, colors);
+            }
 
             RestoreComponentMask(index);
         }
 
-        public void ClearRenderTargetDepthStencil(int layer, float depthValue, bool depthMask, int stencilValue, int stencilMask)
+        public void ClearRenderTargetDepthStencil(int layer, int layerCount, float depthValue, bool depthMask, int stencilValue, int stencilMask)
         {
             bool stencilMaskChanged =
                 stencilMask != 0 &&
@@ -148,8 +158,35 @@ namespace Ryujinx.Graphics.OpenGL
                 GL.DepthMask(depthMask);
             }
 
-            _framebuffer.AttachDepthStencilLayerForClear(layer);
+            if (layer != 0 || layerCount != _framebuffer.GetDepthStencilLayerCount())
+            {
+                for (int l = layer; l < layer + layerCount; l++)
+                {
+                    _framebuffer.AttachDepthStencilLayerForClear(l);
 
+                    ClearDepthStencil(depthValue, depthMask, stencilValue, stencilMask);
+                }
+
+                _framebuffer.DetachDepthStencilLayerForClear();
+            }
+            else
+            {
+                ClearDepthStencil(depthValue, depthMask, stencilValue, stencilMask);
+            }
+
+            if (stencilMaskChanged)
+            {
+                GL.StencilMaskSeparate(StencilFace.Front, _stencilFrontMask);
+            }
+
+            if (depthMaskChanged)
+            {
+                GL.DepthMask(_depthMask);
+            }
+        }
+
+        private static void ClearDepthStencil(float depthValue, bool depthMask, int stencilValue, int stencilMask)
+        {
             if (depthMask && stencilMask != 0)
             {
                 GL.ClearBuffer(ClearBufferCombined.DepthStencil, 0, depthValue, stencilValue);
@@ -161,18 +198,6 @@ namespace Ryujinx.Graphics.OpenGL
             else if (stencilMask != 0)
             {
                 GL.ClearBuffer(OpenTK.Graphics.OpenGL.ClearBuffer.Stencil, 0, ref stencilValue);
-            }
-
-            _framebuffer.DetachDepthStencilLayerForClear();
-
-            if (stencilMaskChanged)
-            {
-                GL.StencilMaskSeparate(StencilFace.Front, _stencilFrontMask);
-            }
-
-            if (depthMaskChanged)
-            {
-                GL.DepthMask(_depthMask);
             }
         }
 

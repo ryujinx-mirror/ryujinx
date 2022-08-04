@@ -6,7 +6,6 @@ using Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer;
 using Ryujinx.Graphics.GAL.Multithreading.Model;
 using Ryujinx.Graphics.GAL.Multithreading.Resources;
 using Ryujinx.Graphics.GAL.Multithreading.Resources.Programs;
-using Ryujinx.Graphics.Shader;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

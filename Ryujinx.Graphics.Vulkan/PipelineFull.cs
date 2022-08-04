@@ -49,7 +49,7 @@ namespace Ryujinx.Graphics.Vulkan
             _pendingQueryCopies.Clear();
         }
 
-        public void ClearRenderTargetColor(int index, int layer, uint componentMask, ColorF color)
+        public void ClearRenderTargetColor(int index, int layer, int layerCount, uint componentMask, ColorF color)
         {
             if (FramebufferParams == null)
             {
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
             else
             {
-                ClearRenderTargetColor(index, layer, color);
+                ClearRenderTargetColor(index, layer, layerCount, color);
             }
         }
 

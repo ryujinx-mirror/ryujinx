@@ -145,6 +145,16 @@ namespace Ryujinx.Graphics.OpenGL
             return format == Format.D16Unorm || format == Format.D32Float;
         }
 
+        public int GetColorLayerCount(int index)
+        {
+            return _colors[index].Info.GetDepthOrLayers();
+        }
+
+        public int GetDepthStencilLayerCount()
+        {
+            return _depthStencil?.Info.GetDepthOrLayers() ?? 0;
+        }
+
         public void AttachColorLayerForClear(int index, int layer)
         {
             TextureView color = _colors[index];

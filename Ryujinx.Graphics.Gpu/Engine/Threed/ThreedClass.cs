@@ -498,6 +498,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Clears the current color and depth-stencil buffers.
+        /// Which buffers should be cleared can also specified with the arguments.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        /// <param name="layerCount">For array and 3D textures, indicates how many layers should be cleared</param>
+        public void Clear(int argument, int layerCount)
+        {
+            _drawManager.Clear(this, argument, layerCount);
+        }
+
+        /// <summary>
         /// Performs a indirect multi-draw, with parameters from a GPU buffer.
         /// </summary>
         /// <param name="indexCount">Index Buffer Count</param>

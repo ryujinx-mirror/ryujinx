@@ -11,10 +11,11 @@ namespace Ryujinx.Graphics.GAL
 
         void ClearBuffer(BufferHandle destination, int offset, int size, uint value);
 
-        void ClearRenderTargetColor(int index, int layer, uint componentMask, ColorF color);
+        void ClearRenderTargetColor(int index, int layer, int layerCount, uint componentMask, ColorF color);
 
         void ClearRenderTargetDepthStencil(
             int layer,
+            int layerCount,
             float depthValue,
             bool depthMask,
             int stencilValue,
