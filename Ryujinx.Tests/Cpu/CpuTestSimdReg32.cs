@@ -247,6 +247,108 @@ namespace Ryujinx.Tests.Cpu
         private static readonly bool NoInfs  = false;
         private static readonly bool NoNaNs  = false;
 
+        [Test, Pairwise, Description("SHA256H.32 <Qd>, <Qn>, <Qm>")]
+        public void Sha256h_V([Values(0xF3000C40u)] uint opcode,
+                              [Values(0u)] uint rd,
+                              [Values(2u)] uint rn,
+                              [Values(4u)] uint rm,
+                              [Values(0xAEE65C11943FB939ul)] ulong z0,
+                              [Values(0xA89A87F110291DA3ul)] ulong z1,
+                              [Values(0xE9F766DB7A49EA7Dul)] ulong a0,
+                              [Values(0x3053F46B0C2F3507ul)] ulong a1,
+                              [Values(0x6E86A473B9D4A778ul)] ulong b0,
+                              [Values(0x7BE4F9E638156BB1ul)] ulong b1,
+                              [Values(0x1F1DC4A98DA9C132ul)] ulong resultL,
+                              [Values(0xDB9A2A7B47031A0Dul)] ulong resultH)
+        {
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
+            V128 v2 = MakeVectorE0E1(b0, b1);
+
+            ExecutionContext context = SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, runUnicorn: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
+            });
+
+            // Unicorn does not yet support hash instructions in A32.
+            // CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SHA256H2.32 <Qd>, <Qn>, <Qm>")]
+        public void Sha256h2_V([Values(0xF3100C40u)] uint opcode,
+                               [Values(0u)] uint rd,
+                               [Values(2u)] uint rn,
+                               [Values(4u)] uint rm,
+                               [Values(0xAEE65C11943FB939ul)] ulong z0,
+                               [Values(0xA89A87F110291DA3ul)] ulong z1,
+                               [Values(0xE9F766DB7A49EA7Dul)] ulong a0,
+                               [Values(0x3053F46B0C2F3507ul)] ulong a1,
+                               [Values(0x6E86A473B9D4A778ul)] ulong b0,
+                               [Values(0x7BE4F9E638156BB1ul)] ulong b1,
+                               [Values(0x0A1177E9D9C9B611ul)] ulong resultL,
+                               [Values(0xF5A826404928A515ul)] ulong resultH)
+        {
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
+            V128 v2 = MakeVectorE0E1(b0, b1);
+
+            ExecutionContext context = SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, runUnicorn: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
+            });
+
+            // Unicorn does not yet support hash instructions in A32.
+            // CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SHA256SU1.32 <Qd>, <Qn>, <Qm>")]
+        public void Sha256su1_V([Values(0xF3200C40u)] uint opcode,
+                                [Values(0u)] uint rd,
+                                [Values(2u)] uint rn,
+                                [Values(4u)] uint rm,
+                                [Values(0xAEE65C11943FB939ul)] ulong z0,
+                                [Values(0xA89A87F110291DA3ul)] ulong z1,
+                                [Values(0xE9F766DB7A49EA7Dul)] ulong a0,
+                                [Values(0x3053F46B0C2F3507ul)] ulong a1,
+                                [Values(0x6E86A473B9D4A778ul)] ulong b0,
+                                [Values(0x7BE4F9E638156BB1ul)] ulong b1,
+                                [Values(0x9EE69CC896D7DE66ul)] ulong resultL,
+                                [Values(0x004A147155573E54ul)] ulong resultH)
+        {
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
+            V128 v2 = MakeVectorE0E1(b0, b1);
+
+            ExecutionContext context = SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, runUnicorn: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
+            });
+
+            // Unicorn does not yet support hash instructions in A32.
+            // CompareAgainstUnicorn();
+        }
+
         [Explicit]
         [Test, Pairwise, Description("VADD.f32 V0, V0, V0")]
         public void Vadd_f32([Values(0u)] uint rd,

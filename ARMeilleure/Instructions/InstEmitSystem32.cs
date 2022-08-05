@@ -169,6 +169,31 @@ namespace ARMeilleure.Instructions
             SetIntA32(context, op.CRn, context.ConvertI64ToI32(context.ShiftRightUI(result, Const(32))));
         }
 
+        public static void Mrs(ArmEmitterContext context)
+        {
+            OpCode32Mrs op = (OpCode32Mrs)context.CurrOp;
+
+            if (op.R)
+            {
+                throw new NotImplementedException("SPSR");
+            }
+            else
+            {
+                Operand vSh = context.ShiftLeft(GetFlag(PState.VFlag), Const((int)PState.VFlag));
+                Operand cSh = context.ShiftLeft(GetFlag(PState.CFlag), Const((int)PState.CFlag));
+                Operand zSh = context.ShiftLeft(GetFlag(PState.ZFlag), Const((int)PState.ZFlag));
+                Operand nSh = context.ShiftLeft(GetFlag(PState.NFlag), Const((int)PState.NFlag));
+                Operand qSh = context.ShiftLeft(GetFlag(PState.QFlag), Const((int)PState.QFlag));
+
+                Operand spsr = context.BitwiseOr(context.BitwiseOr(nSh, zSh), context.BitwiseOr(cSh, vSh));
+                spsr = context.BitwiseOr(spsr, qSh);
+
+                // TODO: Remaining flags.
+
+                SetIntA32(context, op.Rd, spsr);
+            }
+        }
+
         public static void Msr(ArmEmitterContext context)
         {
             OpCode32MsrReg op = (OpCode32MsrReg)context.CurrOp;
