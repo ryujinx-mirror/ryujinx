@@ -147,7 +147,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public int GetColorLayerCount(int index)
         {
-            return _colors[index].Info.GetDepthOrLayers();
+            return _colors[index]?.Info.GetDepthOrLayers() ?? 0;
         }
 
         public int GetDepthStencilLayerCount()

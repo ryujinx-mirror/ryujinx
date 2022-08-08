@@ -112,6 +112,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void ClearRenderTargetColor(int index, int layer, int layerCount, uint componentMask, ColorF color)
         {
+            EnsureFramebuffer();
+
             GL.ColorMask(
                 index,
                 (componentMask & 1) != 0,
@@ -142,6 +144,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void ClearRenderTargetDepthStencil(int layer, int layerCount, float depthValue, bool depthMask, int stencilValue, int stencilMask)
         {
+            EnsureFramebuffer();
+
             bool stencilMaskChanged =
                 stencilMask != 0 &&
                 stencilMask != _stencilFrontMask;
