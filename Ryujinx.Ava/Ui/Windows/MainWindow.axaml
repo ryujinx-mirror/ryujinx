@@ -159,6 +159,10 @@
                                     Header="Italian" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="ja_JP"
+                                    Header="Japanese" />
+                                <MenuItem
+                                    Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="ko_KR"
                                     Header="Korean" />
                                 <MenuItem
