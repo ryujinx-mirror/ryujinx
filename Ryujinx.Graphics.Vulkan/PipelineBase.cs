@@ -582,7 +582,7 @@ namespace Ryujinx.Graphics.Vulkan
             _newState.PipelineLayout = internalProgram.PipelineLayout;
             _newState.StagesCount = (uint)stages.Length;
 
-            stages.CopyTo(_newState.Stages.ToSpan().Slice(0, stages.Length));
+            stages.CopyTo(_newState.Stages.AsSpan().Slice(0, stages.Length));
 
             SignalStateChange();
         }
@@ -921,7 +921,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         protected void UpdatePipelineAttachmentFormats()
         {
-            var dstAttachmentFormats = _newState.Internal.AttachmentFormats.ToSpan();
+            var dstAttachmentFormats = _newState.Internal.AttachmentFormats.AsSpan();
             FramebufferParams.AttachmentFormats.CopyTo(dstAttachmentFormats);
 
             int maxAttachmentIndex = FramebufferParams.MaxColorAttachmentIndex + (FramebufferParams.HasDepthStencil ? 1 : 0);

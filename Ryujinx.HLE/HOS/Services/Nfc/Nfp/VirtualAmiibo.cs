@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 Reserved1       = new Array64<byte>(),
                 Reserved2       = new Array58<byte>()
             };
-            Encoding.ASCII.GetBytes("Ryujinx").CopyTo(registerInfo.Nickname.ToSpan());
+            Encoding.ASCII.GetBytes("Ryujinx").CopyTo(registerInfo.Nickname.AsSpan());
 
             return registerInfo;
         }

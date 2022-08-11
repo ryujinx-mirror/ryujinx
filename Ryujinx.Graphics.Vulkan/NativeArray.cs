@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Vulkan
             Length = length;
         }
 
-        public Span<T> ToSpan()
+        public Span<T> AsSpan()
         {
             return new Span<T>(Pointer, Length);
         }

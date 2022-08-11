@@ -52,22 +52,22 @@ namespace Ryujinx.Graphics.Vulkan
                 return false;
             }
 
-            if (!SequenceEqual<VertexInputAttributeDescription>(VertexAttributeDescriptions.ToSpan(), other.VertexAttributeDescriptions.ToSpan(), VertexAttributeDescriptionsCount))
+            if (!SequenceEqual<VertexInputAttributeDescription>(VertexAttributeDescriptions.AsSpan(), other.VertexAttributeDescriptions.AsSpan(), VertexAttributeDescriptionsCount))
             {
                 return false;
             }
 
-            if (!SequenceEqual<VertexInputBindingDescription>(VertexBindingDescriptions.ToSpan(), other.VertexBindingDescriptions.ToSpan(), VertexBindingDescriptionsCount))
+            if (!SequenceEqual<VertexInputBindingDescription>(VertexBindingDescriptions.AsSpan(), other.VertexBindingDescriptions.AsSpan(), VertexBindingDescriptionsCount))
             {
                 return false;
             }
 
-            if (!SequenceEqual<PipelineColorBlendAttachmentState>(ColorBlendAttachmentState.ToSpan(), other.ColorBlendAttachmentState.ToSpan(), ColorBlendAttachmentStateCount))
+            if (!SequenceEqual<PipelineColorBlendAttachmentState>(ColorBlendAttachmentState.AsSpan(), other.ColorBlendAttachmentState.AsSpan(), ColorBlendAttachmentStateCount))
             {
                 return false;
             }
 
-            if (!SequenceEqual<Format>(AttachmentFormats.ToSpan(), other.AttachmentFormats.ToSpan(), ColorBlendAttachmentStateCount + (HasDepthStencil ? 1u : 0u)))
+            if (!SequenceEqual<Format>(AttachmentFormats.AsSpan(), other.AttachmentFormats.AsSpan(), ColorBlendAttachmentStateCount + (HasDepthStencil ? 1u : 0u)))
             {
                 return false;
             }

@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
             Port    = port;
             Address = new Array4<byte>();
 
-            address.TryWriteBytes(Address.ToSpan(), out _);
+            address.TryWriteBytes(Address.AsSpan(), out _);
         }
 
         public void ToNetworkOrder()
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
         {
             if (BitConverter.IsLittleEndian)
             {
-                address.ToSpan().Reverse();
+                address.AsSpan().Reverse();
             }
         }
     }

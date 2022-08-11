@@ -65,12 +65,12 @@ namespace Ryujinx.Graphics.GAL
 
         public void UpdateRenderScale(ReadOnlySpan<Vector4<float>> data, int offset, int count)
         {
-            UpdateGenericField(SupportBuffer.GraphicsRenderScaleOffset, data, Data.RenderScale.ToSpan(), offset, count);
+            UpdateGenericField(SupportBuffer.GraphicsRenderScaleOffset, data, Data.RenderScale.AsSpan(), offset, count);
         }
 
         public void UpdateFragmentIsBgra(ReadOnlySpan<Vector4<int>> data, int offset, int count)
         {
-            UpdateGenericField(SupportBuffer.FragmentIsBgraOffset, data, Data.FragmentIsBgra.ToSpan(), offset, count);
+            UpdateGenericField(SupportBuffer.FragmentIsBgraOffset, data, Data.FragmentIsBgra.AsSpan(), offset, count);
         }
 
         public void UpdateViewportInverse(Vector4<float> data)

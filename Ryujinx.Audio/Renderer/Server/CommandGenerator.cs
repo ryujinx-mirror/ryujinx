@@ -141,7 +141,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 Memory<byte> biquadStateRawMemory = SpanMemoryManager<byte>.Cast(state).Slice(VoiceUpdateState.BiquadStateOffset, VoiceUpdateState.BiquadStateSize * Constants.VoiceBiquadFilterCount);
                 Memory<BiquadFilterState> stateMemory = SpanMemoryManager<BiquadFilterState>.Cast(biquadStateRawMemory);
 
-                _commandBuffer.GenerateGroupedBiquadFilter(baseIndex, voiceState.BiquadFilters.ToSpan(), stateMemory, bufferOffset, bufferOffset, voiceState.BiquadFilterNeedInitialization, nodeId);
+                _commandBuffer.GenerateGroupedBiquadFilter(baseIndex, voiceState.BiquadFilters.AsSpan(), stateMemory, bufferOffset, bufferOffset, voiceState.BiquadFilterNeedInitialization, nodeId);
             }
             else
             {
@@ -337,8 +337,8 @@ namespace Ryujinx.Audio.Renderer.Server
                             GeneratePerformance(ref performanceEntry, PerformanceCommand.Type.Start, nodeId);
                         }
 
-                        GenerateVoiceMix(channelResource.Mix.ToSpan(),
-                                         channelResource.PreviousMix.ToSpan(),
+                        GenerateVoiceMix(channelResource.Mix.AsSpan(),
+                                         channelResource.PreviousMix.AsSpan(),
                                          dspStateMemory,
                                          mix.BufferOffset,
                                          mix.BufferCount,
@@ -505,8 +505,8 @@ namespace Ryujinx.Audio.Renderer.Server
                 BiquadFilterParameter parameter = new BiquadFilterParameter();
 
                 parameter.Enable = true;
-                effect.Parameter.Denominator.ToSpan().CopyTo(parameter.Denominator.ToSpan());
-                effect.Parameter.Numerator.ToSpan().CopyTo(parameter.Numerator.ToSpan());
+                effect.Parameter.Denominator.AsSpan().CopyTo(parameter.Denominator.AsSpan());
+                effect.Parameter.Numerator.AsSpan().CopyTo(parameter.Numerator.AsSpan());
 
                 for (int i = 0; i < effect.Parameter.ChannelCount; i++)
                 {
@@ -923,8 +923,8 @@ namespace Ryujinx.Audio.Renderer.Server
             if (useCustomDownMixingCommand)
             {
                 _commandBuffer.GenerateDownMixSurroundToStereo(finalMix.BufferOffset,
-                                                               sink.Parameter.Input.ToSpan(),
-                                                               sink.Parameter.Input.ToSpan(),
+                                                               sink.Parameter.Input.AsSpan(),
+                                                               sink.Parameter.Input.AsSpan(),
                                                                sink.DownMixCoefficients,
                                                                Constants.InvalidNodeId);
             }
@@ -932,8 +932,8 @@ namespace Ryujinx.Audio.Renderer.Server
             else if (_rendererContext.ChannelCount == 2 && sink.Parameter.InputCount == 6)
             {
                 _commandBuffer.GenerateDownMixSurroundToStereo(finalMix.BufferOffset,
-                                                               sink.Parameter.Input.ToSpan(),
-                                                               sink.Parameter.Input.ToSpan(),
+                                                               sink.Parameter.Input.AsSpan(),
+                                                               sink.Parameter.Input.AsSpan(),
                                                                Constants.DefaultSurroundToStereoCoefficients,
                                                                Constants.InvalidNodeId);
             }
@@ -945,7 +945,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 _commandBuffer.GenerateUpsample(finalMix.BufferOffset,
                                                 sink.UpsamplerState,
                                                 sink.Parameter.InputCount,
-                                                sink.Parameter.Input.ToSpan(),
+                                                sink.Parameter.Input.AsSpan(),
                                                 commandList.BufferCount,
                                                 commandList.SampleCount,
                                                 commandList.SampleRate,

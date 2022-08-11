@@ -15,7 +15,7 @@ namespace Spv.Generator
         public Operand Operand5;
         public Operand[] Overflow;
 
-        public Span<Operand> ToSpan()
+        public Span<Operand> AsSpan()
         {
             if (Count > InternalCount)
             {

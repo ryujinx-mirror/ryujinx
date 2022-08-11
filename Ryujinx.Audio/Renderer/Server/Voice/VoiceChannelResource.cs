@@ -34,7 +34,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
         public void UpdateState()
         {
-            Mix.ToSpan().CopyTo(PreviousMix.ToSpan());
+            Mix.AsSpan().CopyTo(PreviousMix.AsSpan());
         }
     }
 }

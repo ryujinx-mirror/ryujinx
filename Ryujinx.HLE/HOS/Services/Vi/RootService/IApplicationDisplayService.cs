@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
                     Height            = height
                 };
 
-                Encoding.ASCII.GetBytes(name).AsSpan().CopyTo(displayInfo.Name.ToSpan());
+                Encoding.ASCII.GetBytes(name).AsSpan().CopyTo(displayInfo.Name.AsSpan());
 
                 _displayInfo.Add(displayInfo);
             }
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
                 return ResultCode.InvalidValue;
             }
 
-            int displayId = _displayInfo.FindIndex(display => Encoding.ASCII.GetString(display.Name.ToSpan()).Trim('\0') == name);
+            int displayId = _displayInfo.FindIndex(display => Encoding.ASCII.GetString(display.Name.AsSpan()).Trim('\0') == name);
 
             if (displayId == -1)
             {

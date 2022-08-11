@@ -1440,7 +1440,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 int timeZoneSize = Math.Min(StringUtils.LengthCstr(timeZoneAbbreviation), 8);
 
-                timeZoneAbbreviation[..timeZoneSize].CopyTo(calendarAdditionalInfo.TimezoneName.ToSpan());
+                timeZoneAbbreviation[..timeZoneSize].CopyTo(calendarAdditionalInfo.TimezoneName.AsSpan());
             }
 
             return result;

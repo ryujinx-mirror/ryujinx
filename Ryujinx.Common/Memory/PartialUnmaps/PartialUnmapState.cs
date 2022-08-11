@@ -83,7 +83,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         /// memory might be accessed but is unmapped. Users of the API must compensate for that by catching the
         /// access violation and retrying if it happened between the unmap and remap operation.
         /// This method can be used to decide if retrying in such cases is necessary or not.
-        /// 
+        ///
         /// This version of the function is not used, but serves as a reference for the native
         /// implementation in ARMeilleure.
         /// </remarks>
@@ -128,12 +128,12 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
             const uint ExitCodeStillActive = 259;
             const int ThreadQueryInformation = 0x40;
 
-            Span<int> ids = LocalCounts.ThreadIds.ToSpan();
+            Span<int> ids = LocalCounts.ThreadIds.AsSpan();
 
             for (int i = 0; i < ids.Length; i++)
             {
                 int id = ids[i];
-                
+
                 if (id != 0)
                 {
                     IntPtr handle = OpenThread(ThreadQueryInformation, false, (uint)id);

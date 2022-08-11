@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 
             OpusMultiStreamParametersEx parameters = context.Memory.Read<OpusMultiStreamParametersEx>(parametersAddress);
 
-            byte[] mappings = MemoryMarshal.Cast<uint, byte>(parameters.ChannelMappings.ToSpan()).ToArray();
+            byte[] mappings = MemoryMarshal.Cast<uint, byte>(parameters.ChannelMappings.AsSpan()).ToArray();
 
             // UseLargeFrameSize can be ignored due to not relying on fixed size buffers for storing the decoded result.
             MakeObject(context, new IHardwareOpusDecoder(

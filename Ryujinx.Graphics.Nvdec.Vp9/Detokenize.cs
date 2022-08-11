@@ -236,8 +236,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             ref MacroBlockDPlane pd = ref xd.Plane[plane];
             ref Array2<short> dequant = ref pd.SegDequant[segId];
             int eob;
-            Span<sbyte> a = pd.AboveContext.ToSpan().Slice(x);
-            Span<sbyte> l = pd.LeftContext.ToSpan().Slice(y);
+            Span<sbyte> a = pd.AboveContext.AsSpan().Slice(x);
+            Span<sbyte> l = pd.LeftContext.AsSpan().Slice(y);
             int ctx;
             int ctxShiftA = 0;
             int ctxShiftL = 0;
@@ -250,7 +250,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     eob = DecodeCoefs(
                         ref xd,
                         GetPlaneType(plane),
-                        pd.DqCoeff.ToSpan(),
+                        pd.DqCoeff.AsSpan(),
                         txSize,
                         ref dequant,
                         ctx,
@@ -266,7 +266,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     eob = DecodeCoefs(
                         ref xd,
                         GetPlaneType(plane),
-                        pd.DqCoeff.ToSpan(),
+                        pd.DqCoeff.AsSpan(),
                         txSize,
                         ref dequant,
                         ctx,
@@ -283,7 +283,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     eob = DecodeCoefs(
                         ref xd,
                         GetPlaneType(plane),
-                        pd.DqCoeff.ToSpan(),
+                        pd.DqCoeff.AsSpan(),
                         txSize,
                         ref dequant,
                         ctx,
@@ -303,7 +303,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     eob = DecodeCoefs(
                         ref xd,
                         GetPlaneType(plane),
-                        pd.DqCoeff.ToSpan(),
+                        pd.DqCoeff.AsSpan(),
                         txSize,
                         ref dequant,
                         ctx,

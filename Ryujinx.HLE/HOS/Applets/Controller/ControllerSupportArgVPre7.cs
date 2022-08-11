@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Applets
         {
             private byte element;
 
-            public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref element, 4 * 0x81);
+            public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref element, 4 * 0x81);
         }
     }
 #pragma warning restore CS0649

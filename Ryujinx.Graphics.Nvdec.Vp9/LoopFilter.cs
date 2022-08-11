@@ -359,8 +359,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     blockInsideLimit = 1;
                 }
 
-                lfi.Lfthr[lvl].Lim.ToSpan().Fill((byte)blockInsideLimit);
-                lfi.Lfthr[lvl].Mblim.ToSpan().Fill((byte)(2 * (lvl + 2) + blockInsideLimit));
+                lfi.Lfthr[lvl].Lim.AsSpan().Fill((byte)blockInsideLimit);
+                lfi.Lfthr[lvl].Mblim.AsSpan().Fill((byte)(2 * (lvl + 2) + blockInsideLimit));
             }
         }
 
@@ -395,7 +395,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 {
                     // We could get rid of this if we assume that deltas are set to
                     // zero when not in use; encoder always uses deltas
-                    MemoryMarshal.Cast<Array2<byte>, byte>(lfi.Lvl[segId].ToSpan()).Fill((byte)lvlSeg);
+                    MemoryMarshal.Cast<Array2<byte>, byte>(lfi.Lvl[segId].AsSpan()).Fill((byte)lvlSeg);
                 }
                 else
                 {

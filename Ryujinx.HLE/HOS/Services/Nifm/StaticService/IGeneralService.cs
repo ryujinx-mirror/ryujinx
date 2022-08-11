@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             networkProfile.IpSettingData.IpAddressSetting = new IpAddressSetting(interfaceProperties, unicastAddress);
             networkProfile.IpSettingData.DnsSetting       = new DnsSetting(interfaceProperties);
 
-            Encoding.ASCII.GetBytes("RyujinxNetwork").CopyTo(networkProfile.Name.ToSpan());
+            Encoding.ASCII.GetBytes("RyujinxNetwork").CopyTo(networkProfile.Name.AsSpan());
 
             context.Memory.Write(networkProfileDataPosition, networkProfile);
 

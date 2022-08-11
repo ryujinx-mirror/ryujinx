@@ -245,7 +245,7 @@ namespace Ryujinx.Graphics.Vulkan
             PipelineState pipeline = _state.ToVulkanPipelineState(_gd);
 
             // Copy the shader stage info to the pipeline.
-            var stages = pipeline.Stages.ToSpan();
+            var stages = pipeline.Stages.AsSpan();
 
             for (int i = 0; i < _shaders.Length; i++)
             {

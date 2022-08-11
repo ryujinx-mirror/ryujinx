@@ -11,8 +11,8 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
@@ -23,8 +23,8 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
@@ -35,8 +35,8 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
@@ -47,8 +47,8 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
@@ -59,8 +59,8 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
@@ -71,7 +71,7 @@ namespace Ryujinx.Common.Memory
         byte _element;
 
         public int Length => Size;
-        public ref byte this[int index] => ref ToSpan()[index];
-        public Span<byte> ToSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
 }

@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecordScissor(Vk api, CommandBuffer commandBuffer)
         {
-            api.CmdSetScissor(commandBuffer, 0, (uint)ScissorsCount, _scissors.ToSpan());
+            api.CmdSetScissor(commandBuffer, 0, (uint)ScissorsCount, _scissors.AsSpan());
         }
 
         private void RecordStencilMasks(Vk api, CommandBuffer commandBuffer)
@@ -132,7 +132,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecordViewport(Vk api, CommandBuffer commandBuffer)
         {
-            api.CmdSetViewport(commandBuffer, 0, (uint)ViewportsCount, Viewports.ToSpan());
+            api.CmdSetViewport(commandBuffer, 0, (uint)ViewportsCount, Viewports.AsSpan());
         }
     }
 }

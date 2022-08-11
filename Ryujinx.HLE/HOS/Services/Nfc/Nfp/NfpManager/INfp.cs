@@ -628,7 +628,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                                 Reserved2  = new Array6<byte>()
                             };
 
-                            Uuid.CopyTo(tagInfo.Uuid.ToSpan());
+                            Uuid.CopyTo(tagInfo.Uuid.AsSpan());
 
                             context.Memory.Write(outputPosition, tagInfo);
 
