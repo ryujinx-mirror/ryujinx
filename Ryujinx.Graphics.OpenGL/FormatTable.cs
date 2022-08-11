@@ -70,7 +70,6 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.D32Float,            new FormatInfo(1, false, false, All.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float));
             Add(Format.D24UnormS8Uint,      new FormatInfo(1, false, false, All.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248));
             Add(Format.D32FloatS8Uint,      new FormatInfo(1, false, false, All.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev));
-            Add(Format.R8G8B8X8Srgb,        new FormatInfo(4, false, false, All.Srgb8,             PixelFormat.Rgba,           PixelType.UnsignedByte));
             Add(Format.R8G8B8A8Srgb,        new FormatInfo(4, false, false, All.Srgb8Alpha8,       PixelFormat.Rgba,           PixelType.UnsignedByte));
             Add(Format.R4G4B4A4Unorm,       new FormatInfo(4, true,  false, All.Rgba4,             PixelFormat.Rgba,           PixelType.UnsignedShort4444Reversed));
             Add(Format.R5G5B5X1Unorm,       new FormatInfo(4, true,  false, All.Rgb5,              PixelFormat.Rgb,            PixelType.UnsignedShort1555Reversed));
@@ -124,18 +123,6 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.R10G10B10A2Sint,     new FormatInfo(4, false, false, All.Rgb10A2,           PixelFormat.RgbaInteger,    (PixelType)All.Int2101010Rev));
             Add(Format.R10G10B10A2Uscaled,  new FormatInfo(4, false, true,  All.Rgb10A2ui,         PixelFormat.RgbaInteger,    PixelType.UnsignedInt2101010Reversed));
             Add(Format.R10G10B10A2Sscaled,  new FormatInfo(4, false, true,  All.Rgb10A2,           PixelFormat.RgbaInteger,    PixelType.UnsignedInt2101010Reversed));
-            Add(Format.R8G8B8X8Unorm,       new FormatInfo(4, true,  false, All.Rgb8,              PixelFormat.Rgba,           PixelType.UnsignedByte));
-            Add(Format.R8G8B8X8Snorm,       new FormatInfo(4, true,  false, All.Rgb8Snorm,         PixelFormat.Rgba,           PixelType.Byte));
-            Add(Format.R8G8B8X8Uint,        new FormatInfo(4, false, false, All.Rgb8ui,            PixelFormat.RgbaInteger,    PixelType.UnsignedByte));
-            Add(Format.R8G8B8X8Sint,        new FormatInfo(4, false, false, All.Rgb8i,             PixelFormat.RgbaInteger,    PixelType.Byte));
-            Add(Format.R16G16B16X16Float,   new FormatInfo(4, false, false, All.Rgb16f,            PixelFormat.Rgba,           PixelType.HalfFloat));
-            Add(Format.R16G16B16X16Unorm,   new FormatInfo(4, true,  false, All.Rgb16,             PixelFormat.Rgba,           PixelType.UnsignedShort));
-            Add(Format.R16G16B16X16Snorm,   new FormatInfo(4, true,  false, All.Rgb16Snorm,        PixelFormat.Rgba,           PixelType.Short));
-            Add(Format.R16G16B16X16Uint,    new FormatInfo(4, false, false, All.Rgb16ui,           PixelFormat.RgbaInteger,    PixelType.UnsignedShort));
-            Add(Format.R16G16B16X16Sint,    new FormatInfo(4, false, false, All.Rgb16i,            PixelFormat.RgbaInteger,    PixelType.Short));
-            Add(Format.R32G32B32X32Float,   new FormatInfo(4, false, false, All.Rgb32f,            PixelFormat.Rgba,           PixelType.Float));
-            Add(Format.R32G32B32X32Uint,    new FormatInfo(4, false, false, All.Rgb32ui,           PixelFormat.RgbaInteger,    PixelType.UnsignedInt));
-            Add(Format.R32G32B32X32Sint,    new FormatInfo(4, false, false, All.Rgb32i,            PixelFormat.RgbaInteger,    PixelType.Int));
             Add(Format.Astc4x4Unorm,        new FormatInfo(4, true,  false, All.CompressedRgbaAstc4X4Khr));
             Add(Format.Astc5x4Unorm,        new FormatInfo(4, true,  false, All.CompressedRgbaAstc5X4Khr));
             Add(Format.Astc5x5Unorm,        new FormatInfo(4, true,  false, All.CompressedRgbaAstc5X5Khr));
@@ -165,12 +152,9 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.Astc12x10Srgb,       new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Astc12X10Khr));
             Add(Format.Astc12x12Srgb,       new FormatInfo(4, false, false, All.CompressedSrgb8Alpha8Astc12X12Khr));
             Add(Format.B5G6R5Unorm,         new FormatInfo(3, true,  false, All.Rgb565,            PixelFormat.Rgb,            PixelType.UnsignedShort565Reversed));
-            Add(Format.B5G5R5X1Unorm,       new FormatInfo(4, true,  false, All.Rgb5,              PixelFormat.Rgba,           PixelType.UnsignedShort1555Reversed));
             Add(Format.B5G5R5A1Unorm,       new FormatInfo(4, true,  false, All.Rgb5A1,            PixelFormat.Rgba,           PixelType.UnsignedShort1555Reversed));
             Add(Format.A1B5G5R5Unorm,       new FormatInfo(4, true,  false, All.Rgb5A1,            PixelFormat.Rgba,           PixelType.UnsignedShort5551));
-            Add(Format.B8G8R8X8Unorm,       new FormatInfo(4, true,  false, All.Rgba8,             PixelFormat.Rgba,           PixelType.UnsignedByte));
             Add(Format.B8G8R8A8Unorm,       new FormatInfo(4, true,  false, All.Rgba8,             PixelFormat.Rgba,           PixelType.UnsignedByte));
-            Add(Format.B8G8R8X8Srgb,        new FormatInfo(4, false, false, All.Srgb8,             PixelFormat.Rgba,           PixelType.UnsignedByte));
             Add(Format.B8G8R8A8Srgb,        new FormatInfo(4, false, false, All.Srgb8Alpha8,       PixelFormat.Rgba,           PixelType.UnsignedByte));
 
             Add(Format.R8Unorm,           SizedInternalFormat.R8);

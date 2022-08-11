@@ -66,7 +66,6 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.D32Float,            VkFormat.D32Sfloat);
             Add(Format.D24UnormS8Uint,      VkFormat.D24UnormS8Uint);
             Add(Format.D32FloatS8Uint,      VkFormat.D32SfloatS8Uint);
-            Add(Format.R8G8B8X8Srgb,        VkFormat.R8G8B8Srgb);
             Add(Format.R8G8B8A8Srgb,        VkFormat.R8G8B8A8Srgb);
             Add(Format.R4G4Unorm,           VkFormat.R4G4UnormPack8);
             Add(Format.R4G4B4A4Unorm,       VkFormat.R4G4B4A4UnormPack16);
@@ -119,18 +118,6 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.R10G10B10A2Sint,     VkFormat.A2B10G10R10SintPack32);
             Add(Format.R10G10B10A2Uscaled,  VkFormat.A2B10G10R10UscaledPack32);
             Add(Format.R10G10B10A2Sscaled,  VkFormat.A2B10G10R10SscaledPack32);
-            Add(Format.R8G8B8X8Unorm,       VkFormat.R8G8B8Unorm);
-            Add(Format.R8G8B8X8Snorm,       VkFormat.R8G8B8SNorm);
-            Add(Format.R8G8B8X8Uint,        VkFormat.R8G8B8Uint);
-            Add(Format.R8G8B8X8Sint,        VkFormat.R8G8B8Sint);
-            Add(Format.R16G16B16X16Float,   VkFormat.R16G16B16Sfloat);
-            Add(Format.R16G16B16X16Unorm,   VkFormat.R16G16B16Unorm);
-            Add(Format.R16G16B16X16Snorm,   VkFormat.R16G16B16SNorm);
-            Add(Format.R16G16B16X16Uint,    VkFormat.R16G16B16Uint);
-            Add(Format.R16G16B16X16Sint,    VkFormat.R16G16B16Sint);
-            Add(Format.R32G32B32X32Float,   VkFormat.R32G32B32Sfloat);
-            Add(Format.R32G32B32X32Uint,    VkFormat.R32G32B32Uint);
-            Add(Format.R32G32B32X32Sint,    VkFormat.R32G32B32Sint);
             Add(Format.Astc4x4Unorm,        VkFormat.Astc4x4UnormBlock);
             Add(Format.Astc5x4Unorm,        VkFormat.Astc5x4UnormBlock);
             Add(Format.Astc5x5Unorm,        VkFormat.Astc5x5UnormBlock);
@@ -160,12 +147,9 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.Astc12x10Srgb,       VkFormat.Astc12x10SrgbBlock);
             Add(Format.Astc12x12Srgb,       VkFormat.Astc12x12SrgbBlock);
             Add(Format.B5G6R5Unorm,         VkFormat.R5G6B5UnormPack16);
-            Add(Format.B5G5R5X1Unorm,       VkFormat.A1R5G5B5UnormPack16);
             Add(Format.B5G5R5A1Unorm,       VkFormat.A1R5G5B5UnormPack16);
             Add(Format.A1B5G5R5Unorm,       VkFormat.R5G5B5A1UnormPack16);
-            Add(Format.B8G8R8X8Unorm,       VkFormat.B8G8R8Unorm);
             Add(Format.B8G8R8A8Unorm,       VkFormat.B8G8R8A8Unorm);
-            Add(Format.B8G8R8X8Srgb,        VkFormat.B8G8R8Srgb);
             Add(Format.B8G8R8A8Srgb,        VkFormat.B8G8R8A8Srgb);
         }
 

@@ -42,6 +42,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private uint _prevFirstVertex;
         private bool _prevTfEnable;
 
+        private uint _prevRtNoAlphaMask;
+
         /// <summary>
         /// Creates a new instance of the state updater.
         /// </summary>
@@ -398,6 +400,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             int clipRegionHeight = int.MaxValue;
 
             bool changedScale = false;
+            uint rtNoAlphaMask = 0;
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
@@ -410,6 +413,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     changedScale |= _channel.TextureManager.SetRenderTargetColor(index, null);
 
                     continue;
+                }
+
+                if (colorState.Format.NoAlpha())
+                {
+                    rtNoAlphaMask |= 1u << index;
                 }
 
                 Image.Texture color = memoryManager.Physical.TextureCache.FindOrCreateTexture(
@@ -485,6 +493,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             _channel.TextureManager.SetClipRegion(clipRegionWidth, clipRegionHeight);
+
+            if (useControl && _prevRtNoAlphaMask != rtNoAlphaMask)
+            {
+                _prevRtNoAlphaMask = rtNoAlphaMask;
+
+                UpdateBlendState();
+            }
         }
 
         /// <summary>
@@ -1056,44 +1071,80 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool blendIndependent = _state.State.BlendIndependent;
             ColorF blendConstant = _state.State.BlendConstant;
 
-            for (int index = 0; index < Constants.TotalRenderTargets; index++)
+            if (blendIndependent)
             {
-                BlendDescriptor descriptor;
-
-                if (blendIndependent)
+                for (int index = 0; index < Constants.TotalRenderTargets; index++)
                 {
                     bool enable = _state.State.BlendEnable[index];
                     var blend = _state.State.BlendState[index];
 
-                    descriptor = new BlendDescriptor(
+                    var descriptor = new BlendDescriptor(
                         enable,
                         blendConstant,
                         blend.ColorOp,
-                        blend.ColorSrcFactor,
-                        blend.ColorDstFactor,
+                        FilterBlendFactor(blend.ColorSrcFactor, index),
+                        FilterBlendFactor(blend.ColorDstFactor, index),
                         blend.AlphaOp,
-                        blend.AlphaSrcFactor,
-                        blend.AlphaDstFactor);
-                }
-                else
-                {
-                    bool enable = _state.State.BlendEnable[0];
-                    var blend = _state.State.BlendStateCommon;
+                        FilterBlendFactor(blend.AlphaSrcFactor, index),
+                        FilterBlendFactor(blend.AlphaDstFactor, index));
 
-                    descriptor = new BlendDescriptor(
-                        enable,
-                        blendConstant,
-                        blend.ColorOp,
-                        blend.ColorSrcFactor,
-                        blend.ColorDstFactor,
-                        blend.AlphaOp,
-                        blend.AlphaSrcFactor,
-                        blend.AlphaDstFactor);
+                    _pipeline.BlendDescriptors[index] = descriptor;
+                    _context.Renderer.Pipeline.SetBlendState(index, descriptor);
                 }
-
-                _pipeline.BlendDescriptors[index] = descriptor;
-                _context.Renderer.Pipeline.SetBlendState(index, descriptor);
             }
+            else
+            {
+                bool enable = _state.State.BlendEnable[0];
+                var blend = _state.State.BlendStateCommon;
+
+                var descriptor = new BlendDescriptor(
+                    enable,
+                    blendConstant,
+                    blend.ColorOp,
+                    FilterBlendFactor(blend.ColorSrcFactor, 0),
+                    FilterBlendFactor(blend.ColorDstFactor, 0),
+                    blend.AlphaOp,
+                    FilterBlendFactor(blend.AlphaSrcFactor, 0),
+                    FilterBlendFactor(blend.AlphaDstFactor, 0));
+
+                for (int index = 0; index < Constants.TotalRenderTargets; index++)
+                {
+                    _pipeline.BlendDescriptors[index] = descriptor;
+                    _context.Renderer.Pipeline.SetBlendState(index, descriptor);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a blend factor for the color target currently.
+        /// This will return <paramref name="factor"/> unless the target format has no alpha component,
+        /// in which case it will replace destination alpha factor with a constant factor of one or zero.
+        /// </summary>
+        /// <param name="factor">Input factor</param>
+        /// <param name="index">Color target index</param>
+        /// <returns>New blend factor</returns>
+        private BlendFactor FilterBlendFactor(BlendFactor factor, int index)
+        {
+            // If any color target format without alpha is being used, we need to make sure that
+            // if blend is active, it will not use destination alpha as a factor.
+            // That is required because RGBX formats are emulated using host RGBA formats.
+
+            if (_state.State.RtColorState[index].Format.NoAlpha())
+            {
+                switch (factor)
+                {
+                    case BlendFactor.DstAlpha:
+                    case BlendFactor.DstAlphaGl:
+                        factor = BlendFactor.One;
+                        break;
+                    case BlendFactor.OneMinusDstAlpha:
+                    case BlendFactor.OneMinusDstAlphaGl:
+                        factor = BlendFactor.Zero;
+                        break;
+                }
+            }
+
+            return factor;
         }
 
         /// <summary>
@@ -1242,6 +1293,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
         }
 
+        /// <summary>
+        /// Gets the current texture pool state.
+        /// </summary>
+        /// <returns>Texture pool state</returns>
         private GpuChannelPoolState GetPoolState()
         {
             return new GpuChannelPoolState(
@@ -1286,6 +1341,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 ref attributeTypes);
         }
 
+        /// <summary>
+        /// Gets the depth mode that is currently being used (zero to one or minus one to one).
+        /// </summary>
+        /// <returns>Current depth mode</returns>
         private DepthMode GetDepthMode()
         {
             ref var transform = ref _state.State.ViewportTransform[0];

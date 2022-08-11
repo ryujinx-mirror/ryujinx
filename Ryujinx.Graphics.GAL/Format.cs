@@ -56,7 +56,6 @@ namespace Ryujinx.Graphics.GAL
         D32Float,
         D24UnormS8Uint,
         D32FloatS8Uint,
-        R8G8B8X8Srgb,
         R8G8B8A8Srgb,
         R4G4Unorm,
         R4G4B4A4Unorm,
@@ -113,18 +112,6 @@ namespace Ryujinx.Graphics.GAL
         R10G10B10A2Sint,
         R10G10B10A2Uscaled,
         R10G10B10A2Sscaled,
-        R8G8B8X8Unorm,
-        R8G8B8X8Snorm,
-        R8G8B8X8Uint,
-        R8G8B8X8Sint,
-        R16G16B16X16Float,
-        R16G16B16X16Unorm,
-        R16G16B16X16Snorm,
-        R16G16B16X16Uint,
-        R16G16B16X16Sint,
-        R32G32B32X32Float,
-        R32G32B32X32Uint,
-        R32G32B32X32Sint,
         Astc4x4Unorm,
         Astc5x4Unorm,
         Astc5x5Unorm,
@@ -154,12 +141,9 @@ namespace Ryujinx.Graphics.GAL
         Astc12x10Srgb,
         Astc12x12Srgb,
         B5G6R5Unorm,
-        B5G5R5X1Unorm,
         B5G5R5A1Unorm,
         A1B5G5R5Unorm,
-        B8G8R8X8Unorm,
         B8G8R8A8Unorm,
-        B8G8R8X8Srgb,
         B8G8R8A8Srgb
     }
 
@@ -272,7 +256,6 @@ namespace Ryujinx.Graphics.GAL
                 case Format.R8Snorm:
                 case Format.R8Sint:
                 case Format.R8Uint:
-                case Format.B5G5R5X1Unorm:
                     return true;
             }
 
@@ -357,11 +340,8 @@ namespace Ryujinx.Graphics.GAL
             switch (format)
             {
                 case Format.B5G6R5Unorm:
-                case Format.B5G5R5X1Unorm:
                 case Format.B5G5R5A1Unorm:
-                case Format.B8G8R8X8Unorm:
                 case Format.B8G8R8A8Unorm:
-                case Format.B8G8R8X8Srgb:
                 case Format.B8G8R8A8Srgb:
                     return true;
             }
@@ -412,9 +392,6 @@ namespace Ryujinx.Graphics.GAL
                 case Format.R16G16B16A16Uint:
                 case Format.R32G32B32A32Uint:
                 case Format.R10G10B10A2Uint:
-                case Format.R8G8B8X8Uint:
-                case Format.R16G16B16X16Uint:
-                case Format.R32G32B32X32Uint:
                     return true;
             }
 
@@ -443,9 +420,6 @@ namespace Ryujinx.Graphics.GAL
                 case Format.R16G16B16A16Sint:
                 case Format.R32G32B32A32Sint:
                 case Format.R10G10B10A2Sint:
-                case Format.R8G8B8X8Sint:
-                case Format.R16G16B16X16Sint:
-                case Format.R32G32B32X32Sint:
                     return true;
             }
 

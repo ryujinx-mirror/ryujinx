@@ -124,11 +124,42 @@ namespace Ryujinx.Graphics.Gpu.Engine.Types
                 ColorFormat.R8Snorm           => new FormatInfo(Format.R8Snorm,           1, 1, 1,  1),
                 ColorFormat.R8Sint            => new FormatInfo(Format.R8Sint,            1, 1, 1,  1),
                 ColorFormat.R8Uint            => new FormatInfo(Format.R8Uint,            1, 1, 1,  1),
-                ColorFormat.B5G5R5X1Unorm     => new FormatInfo(Format.B5G5R5X1Unorm,     1, 1, 2,  4),
+                ColorFormat.B5G5R5X1Unorm     => new FormatInfo(Format.B5G5R5A1Unorm,     1, 1, 2,  4),
                 ColorFormat.R8G8B8X8Unorm     => new FormatInfo(Format.R8G8B8A8Unorm,     1, 1, 4,  4),
                 ColorFormat.R8G8B8X8Srgb      => new FormatInfo(Format.R8G8B8A8Srgb,      1, 1, 4,  4),
                 _                             => FormatInfo.Default
             };
+        }
+
+        /// <summary>
+        /// Checks if a format has an alpha component.
+        /// </summary>
+        /// <param name="format">Format to be checked</param>
+        /// <returns>True if the format has no alpha component (RGBX), false if it does (RGBA)</returns>
+        public static bool NoAlpha(this ColorFormat format)
+        {
+            switch (format)
+            {
+                case ColorFormat.R32G32B32X32Float:
+                case ColorFormat.R32G32B32X32Sint:
+                case ColorFormat.R32G32B32X32Uint:
+                case ColorFormat.R16G16B16X16Unorm:
+                case ColorFormat.R16G16B16X16Snorm:
+                case ColorFormat.R16G16B16X16Sint:
+                case ColorFormat.R16G16B16X16Uint:
+                case ColorFormat.R16G16B16X16Float:
+                case ColorFormat.R8G8B8X8Snorm:
+                case ColorFormat.R8G8B8X8Sint:
+                case ColorFormat.R8G8B8X8Uint:
+                case ColorFormat.B8G8R8X8Unorm:
+                case ColorFormat.B8G8R8X8Srgb:
+                case ColorFormat.B5G5R5X1Unorm:
+                case ColorFormat.R8G8B8X8Unorm:
+                case ColorFormat.R8G8B8X8Srgb:
+                    return true;
+            }
+
+            return false;
         }
     }
 }
