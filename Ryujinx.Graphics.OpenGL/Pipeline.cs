@@ -236,7 +236,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PreDraw();
+            PreDraw(vertexCount);
 
             if (_primitiveType == PrimitiveType.Quads && !HwCapabilities.SupportsQuads)
             {
@@ -354,7 +354,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PreDraw();
+            PreDrawVbUnbounded();
 
             int indexElemSize = 1;
 
@@ -686,7 +686,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PreDraw();
+            PreDrawVbUnbounded();
 
             GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
             GL.BindBuffer((BufferTarget)All.ParameterBuffer, parameterBuffer.Handle.ToInt32());
@@ -709,7 +709,7 @@ namespace Ryujinx.Graphics.OpenGL
                 return;
             }
 
-            PreDraw();
+            PreDrawVbUnbounded();
 
             _vertexArray.SetRangeOfIndexBuffer();
 
@@ -1515,11 +1515,22 @@ namespace Ryujinx.Graphics.OpenGL
             _supportBuffer.Commit();
         }
 
+        private void PreDraw(int vertexCount)
+        {
+            _vertexArray.PreDraw(vertexCount);
+            PreDraw();
+        }
+
+        private void PreDrawVbUnbounded()
+        {
+            _vertexArray.PreDrawVbUnbounded();
+            PreDraw();
+        }
+
         private void PreDraw()
         {
             DrawCount++;
 
-            _vertexArray.Validate();
             _unit0Texture?.Bind(0);
             _supportBuffer.Commit();
         }

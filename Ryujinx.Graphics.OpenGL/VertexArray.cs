@@ -1,6 +1,7 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -16,12 +17,16 @@ namespace Ryujinx.Graphics.OpenGL
 
         private int _vertexAttribsCount;
         private int _vertexBuffersCount;
+        private int _minVertexCount;
 
         private uint _vertexAttribsInUse;
         private uint _vertexBuffersInUse;
+        private uint _vertexBuffersLimited;
 
         private BufferRange _indexBuffer;
         private BufferHandle _tempIndexBuffer;
+        private BufferHandle _tempVertexBuffer;
+        private int _tempVertexBufferSize;
 
         public VertexArray()
         {
@@ -40,6 +45,8 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void SetVertexBuffers(ReadOnlySpan<VertexBufferDescriptor> vertexBuffers)
         {
+            int minVertexCount = int.MaxValue;
+
             int bindingIndex;
             for (bindingIndex = 0; bindingIndex < vertexBuffers.Length; bindingIndex++)
             {
@@ -47,6 +54,12 @@ namespace Ryujinx.Graphics.OpenGL
 
                 if (vb.Buffer.Handle != BufferHandle.Null)
                 {
+                    int vertexCount = vb.Stride <= 0 ? 0 : vb.Buffer.Size / vb.Stride;
+                    if (minVertexCount > vertexCount)
+                    {
+                        minVertexCount = vertexCount;
+                    }
+
                     GL.BindVertexBuffer(bindingIndex, vb.Buffer.Handle.ToInt32(), (IntPtr)vb.Buffer.Offset, vb.Stride);
                     GL.VertexBindingDivisor(bindingIndex, vb.Divisor);
                     _vertexBuffersInUse |= 1u << bindingIndex;
@@ -64,6 +77,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             _vertexBuffersCount = bindingIndex;
+            _minVertexCount = minVertexCount;
             _needsAttribsUpdate = true;
         }
 
@@ -141,6 +155,101 @@ namespace Ryujinx.Graphics.OpenGL
         public void RestoreIndexBuffer()
         {
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer.Handle.ToInt32());
+        }
+
+        public void PreDraw(int vertexCount)
+        {
+            LimitVertexBuffers(vertexCount);
+            Validate();
+        }
+
+        public void PreDrawVbUnbounded()
+        {
+            UnlimitVertexBuffers();
+            Validate();
+        }
+
+        public void LimitVertexBuffers(int vertexCount)
+        {
+            // Is it possible for the draw to fetch outside the bounds of any vertex buffer currently bound?
+
+            if (vertexCount <= _minVertexCount)
+            {
+                return;
+            }
+
+            // If the draw can fetch out of bounds, let's ensure that it will only fetch zeros rather than memory garbage.
+
+            int currentTempVbOffset = 0;
+            uint buffersInUse = _vertexBuffersInUse;
+
+            while (buffersInUse != 0)
+            {
+                int vbIndex = BitOperations.TrailingZeroCount(buffersInUse);
+
+                ref var vb = ref _vertexBuffers[vbIndex];
+
+                int requiredSize = vertexCount * vb.Stride;
+
+                if (vb.Buffer.Size < requiredSize)
+                {
+                    BufferHandle tempVertexBuffer = EnsureTempVertexBufferSize(currentTempVbOffset + requiredSize);
+
+                    Buffer.Copy(vb.Buffer.Handle, tempVertexBuffer, vb.Buffer.Offset, currentTempVbOffset, vb.Buffer.Size);
+                    Buffer.Clear(tempVertexBuffer, currentTempVbOffset + vb.Buffer.Size, requiredSize - vb.Buffer.Size, 0);
+
+                    GL.BindVertexBuffer(vbIndex, tempVertexBuffer.ToInt32(), (IntPtr)currentTempVbOffset, vb.Stride);
+
+                    currentTempVbOffset += requiredSize;
+                    _vertexBuffersLimited |= 1u << vbIndex;
+                }
+
+                buffersInUse &= ~(1u << vbIndex);
+            }
+        }
+
+        private BufferHandle EnsureTempVertexBufferSize(int size)
+        {
+            BufferHandle tempVertexBuffer = _tempVertexBuffer;
+
+            if (_tempVertexBufferSize < size)
+            {
+                _tempVertexBufferSize = size;
+
+                if (tempVertexBuffer == BufferHandle.Null)
+                {
+                    tempVertexBuffer = Buffer.Create(size);
+                    _tempVertexBuffer = tempVertexBuffer;
+                    return tempVertexBuffer;
+                }
+
+                Buffer.Resize(_tempVertexBuffer, size);
+            }
+
+            return tempVertexBuffer;
+        }
+
+        public void UnlimitVertexBuffers()
+        {
+            uint buffersLimited = _vertexBuffersLimited;
+
+            if (buffersLimited == 0)
+            {
+                return;
+            }
+
+            while (buffersLimited != 0)
+            {
+                int vbIndex = BitOperations.TrailingZeroCount(buffersLimited);
+
+                ref var vb = ref _vertexBuffers[vbIndex];
+
+                GL.BindVertexBuffer(vbIndex, vb.Buffer.Handle.ToInt32(), (IntPtr)vb.Buffer.Offset, vb.Stride);
+
+                buffersLimited &= ~(1u << vbIndex);
+            }
+
+            _vertexBuffersLimited = 0;
         }
 
         public void Validate()
