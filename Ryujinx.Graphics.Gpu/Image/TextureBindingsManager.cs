@@ -553,7 +553,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 specStateMatches &= specState.MatchesTexture(stage, index, descriptor);
 
-                Sampler sampler = _samplerPool?.Get(samplerId);
+                Sampler sampler = samplerPool?.Get(samplerId);
 
                 ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                 ISampler hostSampler = sampler?.GetHostSampler(texture);
