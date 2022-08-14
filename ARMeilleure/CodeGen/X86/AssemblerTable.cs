@@ -4,6 +4,11 @@ namespace ARMeilleure.CodeGen.X86
 {
     partial class Assembler
     {
+        public static bool SupportsVexPrefix(X86Instruction inst)
+        {
+            return _instTable[(int)inst].Flags.HasFlag(InstructionFlags.Vex);
+        }
+
         private const int BadOp = 0;
 
         [Flags]
