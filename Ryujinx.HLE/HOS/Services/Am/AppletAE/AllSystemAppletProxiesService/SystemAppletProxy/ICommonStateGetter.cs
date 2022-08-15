@@ -224,6 +224,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandHipc(62)] // 4.0.0+
+        // GetHdcpAuthenticationState() -> s32 state
+        public ResultCode GetHdcpAuthenticationState(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(66)] // 6.0.0+
         // SetCpuBoostMode(u32 cpu_boost_mode)
         public ResultCode SetCpuBoostMode(ServiceCtx context)
