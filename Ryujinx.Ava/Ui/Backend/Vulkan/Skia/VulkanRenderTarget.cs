@@ -1,26 +1,90 @@
 using System;
+using Avalonia;
 using Avalonia.Skia;
 using Ryujinx.Ava.Ui.Vulkan;
 using Ryujinx.Ava.Ui.Vulkan.Surfaces;
+using Silk.NET.Vulkan;
 using SkiaSharp;
 
 namespace Ryujinx.Ava.Ui.Backend.Vulkan
 {
     internal class VulkanRenderTarget : ISkiaGpuRenderTarget
     {
-        public GRContext GrContext { get; set; }
+        public GRContext GrContext { get; private set; }
 
         private readonly VulkanSurfaceRenderTarget _surface;
+        private readonly VulkanPlatformInterface _vulkanPlatformInterface;
         private readonly IVulkanPlatformSurface _vulkanPlatformSurface;
+        private GRVkBackendContext _grVkBackend;
 
         public VulkanRenderTarget(VulkanPlatformInterface vulkanPlatformInterface, IVulkanPlatformSurface vulkanPlatformSurface)
         {
             _surface = vulkanPlatformInterface.CreateRenderTarget(vulkanPlatformSurface);
+            _vulkanPlatformInterface = vulkanPlatformInterface;
             _vulkanPlatformSurface = vulkanPlatformSurface;
+
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            GRVkGetProcedureAddressDelegate getProc = GetVulkanProcAddress;
+
+            _grVkBackend = new GRVkBackendContext()
+            {
+                VkInstance = _surface.Device.Handle,
+                VkPhysicalDevice = _vulkanPlatformInterface.PhysicalDevice.Handle,
+                VkDevice = _surface.Device.Handle,
+                VkQueue = _surface.Device.Queue.Handle,
+                GraphicsQueueIndex = _vulkanPlatformInterface.PhysicalDevice.QueueFamilyIndex,
+                GetProcedureAddress = getProc
+            };
+
+            GrContext = GRContext.CreateVulkan(_grVkBackend);
+
+            var gpu = AvaloniaLocator.Current.GetService<VulkanSkiaGpu>();
+
+            if (gpu.MaxResourceBytes.HasValue)
+            {
+                GrContext.SetResourceCacheLimit(gpu.MaxResourceBytes.Value);
+            }
+        }
+
+        private IntPtr GetVulkanProcAddress(string name, IntPtr instanceHandle, IntPtr deviceHandle)
+        {
+            IntPtr addr;
+
+            if (deviceHandle != IntPtr.Zero)
+            {
+                addr = _vulkanPlatformInterface.Api.GetDeviceProcAddr(new Device(deviceHandle), name);
+
+                if (addr != IntPtr.Zero)
+                {
+                    return addr;
+                }
+
+                addr = _vulkanPlatformInterface.Api.GetDeviceProcAddr(new Device(_surface.Device.Handle), name);
+
+                if (addr != IntPtr.Zero)
+                {
+                    return addr;
+                }
+            }
+
+            addr = _vulkanPlatformInterface.Api.GetInstanceProcAddr(new Instance(_vulkanPlatformInterface.Instance.Handle), name);
+
+            if (addr == IntPtr.Zero)
+            {
+                addr = _vulkanPlatformInterface.Api.GetInstanceProcAddr(new Instance(instanceHandle), name);
+            }
+
+            return addr;
         }
 
         public void Dispose()
         {
+            _grVkBackend.Dispose();
+            GrContext.Dispose();
             _surface.Dispose();
         }
 
@@ -45,20 +109,22 @@ namespace Ryujinx.Ava.Ui.Backend.Vulkan
                 {
                     GrContext.ResetContext();
 
+                    var image = _surface.GetImage();
+
                     var imageInfo = new GRVkImageInfo()
                     {
                         CurrentQueueFamily = disp.QueueFamilyIndex,
-                        Format = _surface.ImageFormat,
-                        Image = _surface.Image.Handle,
-                        ImageLayout = (uint)_surface.Image.CurrentLayout,
-                        ImageTiling = (uint)_surface.Image.Tiling,
+                        Format = (uint)image.Format,
+                        Image = image.Handle,
+                        ImageLayout = (uint)image.CurrentLayout,
+                        ImageTiling = (uint)image.Tiling,
                         ImageUsageFlags = _surface.UsageFlags,
                         LevelCount = _surface.MipLevels,
                         SampleCount = 1,
                         Protected = false,
                         Alloc = new GRVkAlloc()
                         {
-                            Memory = _surface.Image.MemoryHandle,
+                            Memory = image.MemoryHandle,
                             Flags = 0,
                             Offset = 0,
                             Size = _surface.MemorySize

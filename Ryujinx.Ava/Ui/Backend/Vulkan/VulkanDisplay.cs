@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using Avalonia;
 using Ryujinx.Ava.Ui.Vulkan.Surfaces;
-using Ryujinx.Ui.Common.Configuration;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -15,16 +14,19 @@ namespace Ryujinx.Ava.Ui.Vulkan
         private readonly VulkanInstance _instance;
         private readonly VulkanPhysicalDevice _physicalDevice;
         private readonly VulkanSemaphorePair _semaphorePair;
+        private readonly VulkanDevice _device;
         private uint _nextImage;
         private readonly VulkanSurface _surface;
         private SurfaceFormatKHR _surfaceFormat;
         private SwapchainKHR _swapchain;
         private Extent2D _swapchainExtent;
         private Image[] _swapchainImages;
-        private VulkanDevice _device { get; }
-        private ImageView[] _swapchainImageViews = new ImageView[0];
+        private ImageView[] _swapchainImageViews = Array.Empty<ImageView>();
         private bool _vsyncStateChanged;
         private bool _vsyncEnabled;
+        private bool _surfaceChanged;
+
+        public event EventHandler Presented;
 
         public VulkanCommandBufferPool CommandBufferPool { get; set; }
 
@@ -71,6 +73,14 @@ namespace Ryujinx.Ava.Ui.Vulkan
             DestroyCurrentImageViews();
             _swapchainExtension.DestroySwapchain(_device.InternalHandle, _swapchain, Span<AllocationCallbacks>.Empty);
             CommandBufferPool.Dispose();
+        }
+
+        public bool IsSurfaceChanged()
+        {
+            var changed = _surfaceChanged;
+            _surfaceChanged = false;
+
+            return changed;
         }
 
         private static unsafe SwapchainKHR CreateSwapchain(VulkanInstance instance, VulkanDevice device,
@@ -193,22 +203,23 @@ namespace Ryujinx.Ava.Ui.Vulkan
             }
 
             var modes = presentModes.ToList();
-            var presentMode = PresentModeKHR.PresentModeFifoKhr;
 
             if (!vsyncEnabled && modes.Contains(PresentModeKHR.PresentModeImmediateKhr))
             {
-                presentMode = PresentModeKHR.PresentModeImmediateKhr;
+                return PresentModeKHR.PresentModeImmediateKhr;
             }
             else if (modes.Contains(PresentModeKHR.PresentModeMailboxKhr))
             {
-                presentMode = PresentModeKHR.PresentModeMailboxKhr;
+                return PresentModeKHR.PresentModeMailboxKhr;
             }
-            else if (modes.Contains(PresentModeKHR.PresentModeImmediateKhr))
+            else if (modes.Contains(PresentModeKHR.PresentModeFifoKhr))
             {
-                presentMode = PresentModeKHR.PresentModeImmediateKhr;
+                return PresentModeKHR.PresentModeFifoKhr;
             }
-
-            return presentMode;
+            else
+            {
+                return PresentModeKHR.PresentModeImmediateKhr;
+            }
         }
 
         internal static VulkanDisplay CreateDisplay(VulkanInstance instance, VulkanDevice device,
@@ -266,6 +277,8 @@ namespace Ryujinx.Ava.Ui.Vulkan
             _swapchain = CreateSwapchain(_instance, _device, _physicalDevice, _surface, out _swapchainExtent, _swapchain, _vsyncEnabled);
 
             CreateSwapchainImages();
+
+            _surfaceChanged = true;
         }
 
         private unsafe ImageView CreateSwapchainImageView(Image swapchainImage, Format format)
@@ -306,7 +319,7 @@ namespace Ryujinx.Ava.Ui.Vulkan
             return true;
         }
 
-        internal VulkanCommandBufferPool.VulkanCommandBuffer StartPresentation(VulkanSurfaceRenderTarget renderTarget)
+        internal VulkanCommandBufferPool.VulkanCommandBuffer StartPresentation()
         {
             _nextImage = 0;
             while (true)
@@ -346,8 +359,10 @@ namespace Ryujinx.Ava.Ui.Vulkan
 
         internal void BlitImageToCurrentImage(VulkanSurfaceRenderTarget renderTarget, CommandBuffer commandBuffer)
         {
+            var image = renderTarget.GetImage();
+
             VulkanMemoryHelper.TransitionLayout(_device, commandBuffer,
-                renderTarget.Image.InternalHandle.Value, (ImageLayout)renderTarget.Image.CurrentLayout,
+                image.InternalHandle.Value, (ImageLayout)image.CurrentLayout,
                 AccessFlags.AccessNoneKhr,
                 ImageLayout.TransferSrcOptimal,
                 AccessFlags.AccessTransferReadBit,
@@ -381,7 +396,7 @@ namespace Ryujinx.Ava.Ui.Vulkan
                 }
             };
 
-            _device.Api.CmdBlitImage(commandBuffer, renderTarget.Image.InternalHandle.Value,
+            _device.Api.CmdBlitImage(commandBuffer, image.InternalHandle.Value,
                 ImageLayout.TransferSrcOptimal,
                 _swapchainImages[_nextImage],
                 ImageLayout.TransferDstOptimal,
@@ -390,9 +405,9 @@ namespace Ryujinx.Ava.Ui.Vulkan
                 Filter.Linear);
 
             VulkanMemoryHelper.TransitionLayout(_device, commandBuffer,
-                renderTarget.Image.InternalHandle.Value, ImageLayout.TransferSrcOptimal,
+                image.InternalHandle.Value, ImageLayout.TransferSrcOptimal,
                 AccessFlags.AccessTransferReadBit,
-                (ImageLayout)renderTarget.Image.CurrentLayout,
+                (ImageLayout)image.CurrentLayout,
                 AccessFlags.AccessNoneKhr,
                 renderTarget.MipLevels);
         }
@@ -434,6 +449,8 @@ namespace Ryujinx.Ava.Ui.Vulkan
             }
 
             CommandBufferPool.FreeUsedCommandBuffers();
+
+            Presented?.Invoke(this, null);
         }
     }
 }

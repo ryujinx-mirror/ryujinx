@@ -18,13 +18,11 @@ namespace Ryujinx.Ava.Ui.Vulkan
 
         public VulkanPhysicalDevice PhysicalDevice { get; private set; }
         public VulkanInstance Instance { get; }
-        public VulkanDevice Device { get; set; }
         public Vk Api { get; private set; }
         public VulkanSurfaceRenderTarget MainSurface { get; set; }
 
         public void Dispose()
         {
-            Device?.Dispose();
             Instance?.Dispose();
             Api?.Dispose();
         }
@@ -54,16 +52,9 @@ namespace Ryujinx.Ava.Ui.Vulkan
         {
             var surface = VulkanSurface.CreateSurface(Instance, platformSurface);
 
-            if (Device == null)
+            if (PhysicalDevice == null)
             {
                 PhysicalDevice = VulkanPhysicalDevice.FindSuitablePhysicalDevice(Instance, surface, _options.PreferDiscreteGpu, _options.PreferredDevice);
-                var device = VulkanInitialization.CreateDevice(Instance.Api,
-                                                               PhysicalDevice.InternalHandle,
-                                                               PhysicalDevice.QueueFamilyIndex,
-                                                               VulkanInitialization.GetSupportedExtensions(Instance.Api, PhysicalDevice.InternalHandle),
-                                                               PhysicalDevice.QueueCount);
-
-                Device = new VulkanDevice(device, PhysicalDevice, Instance.Api);
             }
 
             var renderTarget = new VulkanSurfaceRenderTarget(this, surface);
@@ -71,7 +62,6 @@ namespace Ryujinx.Ava.Ui.Vulkan
             if (MainSurface == null && surface != null)
             {
                 MainSurface = renderTarget;
-                MainSurface.Display.ChangeVSyncMode(false);
             }
 
             return renderTarget;

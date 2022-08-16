@@ -38,6 +38,8 @@ namespace Ryujinx.Ava.Ui.ViewModels
 {
     internal class MainWindowViewModel : BaseModel
     {
+        private const int HotKeyPressDelayMs = 500;
+
         private readonly MainWindow _owner;
         private ObservableCollection<ApplicationData> _applications;
         private string _aspectStatusText;
@@ -54,6 +56,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private bool _isLoading;
         private int _progressMaximum;
         private int _progressValue;
+        private long _lastFullscreenToggle = Environment.TickCount64;
         private bool _showLoadProgress;
         private bool _showMenuAndStatusBar = true;
         private bool _showStatusSeparator;
@@ -929,6 +932,13 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public void ToggleFullscreen()
         {
+            if (Environment.TickCount64 - _lastFullscreenToggle < HotKeyPressDelayMs)
+            {
+                return;
+            }
+
+            _lastFullscreenToggle = Environment.TickCount64;
+
             WindowState state = _owner.WindowState;
 
             if (state == WindowState.FullScreen)
@@ -1084,6 +1094,11 @@ namespace Ryujinx.Ava.Ui.ViewModels
             if (selection != null)
             {
                 selection.Favorite = !selection.Favorite;
+
+                _owner.ApplicationLibrary.LoadAndSaveMetaData(selection.TitleId, appMetadata =>
+                {
+                    appMetadata.Favorite = selection.Favorite;
+                });
 
                 RefreshView();
             }

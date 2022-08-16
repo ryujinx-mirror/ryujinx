@@ -58,6 +58,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         }
 
+        public void ChangeVSyncMode(bool vsyncEnabled) { }
+
         private void CreateStagingFramebuffer()
         {
             _stagingFrameBuffer = GL.GenFramebuffer();

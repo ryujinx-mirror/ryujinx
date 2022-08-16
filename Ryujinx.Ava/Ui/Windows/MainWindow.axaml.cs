@@ -656,7 +656,12 @@ namespace Ryujinx.Ava.Ui.Windows
                 {
                     AppHost = null;
 
-                    Dispatcher.UIThread.Post(Close);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        MainContent = null;
+
+                        Close();
+                    });
                 };
                 AppHost?.Stop();
 

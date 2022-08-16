@@ -37,7 +37,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
         public override void DestroyBackgroundContext()
         {
-            _image = null;
+            Image = null;
 
             if (_fence != IntPtr.Zero)
             {
@@ -57,6 +57,8 @@ namespace Ryujinx.Ava.Ui.Controls
             Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Image = (int)image;
+
+                InvalidateVisual();
             }).Wait();
 
             if (_fence != IntPtr.Zero)
@@ -66,7 +68,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
             _fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
 
-            QueueRender();
+            InvalidateVisual();
 
             _gameBackgroundWindow.SwapBuffers();
         }

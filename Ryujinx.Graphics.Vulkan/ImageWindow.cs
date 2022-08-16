@@ -7,7 +7,9 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class ImageWindow : WindowBase, IWindow, IDisposable
     {
-        private const int ImageCount = 5;
+        internal const VkFormat Format = VkFormat.R8G8B8A8Unorm;
+
+        private const int ImageCount = 3;
         private const int SurfaceWidth = 1280;
         private const int SurfaceHeight = 720;
 
@@ -18,19 +20,17 @@ namespace Ryujinx.Graphics.Vulkan
         private Auto<DisposableImage>[] _images;
         private Auto<DisposableImageView>[] _imageViews;
         private Auto<MemoryAllocation>[] _imageAllocationAuto;
+        private ImageState[] _states;
+        private PresentImageInfo[] _presentedImages;
+        private FenceHolder[] _fences;
+
         private ulong[] _imageSizes;
         private ulong[] _imageOffsets;
 
-        private Semaphore _imageAvailableSemaphore;
-        private Semaphore _renderFinishedSemaphore;
-
         private int _width = SurfaceWidth;
         private int _height = SurfaceHeight;
-        private VkFormat _format;
         private bool _recreateImages;
         private int _nextImage;
-
-        internal new bool ScreenCaptureRequested { get; set; }
 
         public unsafe ImageWindow(VulkanRenderer gd, PhysicalDevice physicalDevice, Device device)
         {
@@ -38,32 +38,31 @@ namespace Ryujinx.Graphics.Vulkan
             _physicalDevice = physicalDevice;
             _device = device;
 
-            _format = VkFormat.R8G8B8A8Unorm;
-
             _images = new Auto<DisposableImage>[ImageCount];
             _imageAllocationAuto = new Auto<MemoryAllocation>[ImageCount];
             _imageSizes = new ulong[ImageCount];
             _imageOffsets = new ulong[ImageCount];
+            _states = new ImageState[ImageCount];
+            _presentedImages = new PresentImageInfo[ImageCount];
 
             CreateImages();
-
-            var semaphoreCreateInfo = new SemaphoreCreateInfo()
-            {
-                SType = StructureType.SemaphoreCreateInfo
-            };
-
-            gd.Api.CreateSemaphore(device, semaphoreCreateInfo, null, out _imageAvailableSemaphore).ThrowOnError();
-            gd.Api.CreateSemaphore(device, semaphoreCreateInfo, null, out _renderFinishedSemaphore).ThrowOnError();
         }
 
         private void RecreateImages()
         {
             for (int i = 0; i < ImageCount; i++)
             {
-                _imageViews[i]?.Dispose();
-                _imageAllocationAuto[i]?.Dispose();
-                _images[i]?.Dispose();
+                lock (_states[i])
+                {
+                    _states[i].IsValid = false;
+                    _fences[i]?.Wait();
+                    _fences[i]?.Put();
+                    _imageViews[i]?.Dispose();
+                    _imageAllocationAuto[i]?.Dispose();
+                    _images[i]?.Dispose();
+                }
             }
+            _presentedImages = null;
 
             CreateImages();
         }
@@ -71,34 +70,35 @@ namespace Ryujinx.Graphics.Vulkan
         private unsafe void CreateImages()
         {
             _imageViews = new Auto<DisposableImageView>[ImageCount];
+            _fences = new FenceHolder[ImageCount];
+            _presentedImages = new PresentImageInfo[ImageCount];
 
+            _nextImage = 0;
             var cbs = _gd.CommandBufferPool.Rent();
+
+            var imageCreateInfo = new ImageCreateInfo
+            {
+                SType = StructureType.ImageCreateInfo,
+                ImageType = ImageType.ImageType2D,
+                Format = Format,
+                Extent = new Extent3D((uint?)_width, (uint?)_height, 1),
+                MipLevels = 1,
+                ArrayLayers = 1,
+                Samples = SampleCountFlags.SampleCount1Bit,
+                Tiling = ImageTiling.Optimal,
+                Usage = ImageUsageFlags.ImageUsageColorAttachmentBit | ImageUsageFlags.ImageUsageTransferSrcBit | ImageUsageFlags.ImageUsageTransferDstBit,
+                SharingMode = SharingMode.Exclusive,
+                InitialLayout = ImageLayout.Undefined,
+                Flags = ImageCreateFlags.ImageCreateMutableFormatBit
+            };
+
             for (int i = 0; i < _images.Length; i++)
             {
-                var imageCreateInfo = new ImageCreateInfo
-                {
-                    SType = StructureType.ImageCreateInfo,
-                    ImageType = ImageType.ImageType2D,
-                    Format = _format,
-                    Extent =
-                        new Extent3D((uint?)_width,
-                            (uint?)_height, 1),
-                    MipLevels = 1,
-                    ArrayLayers = 1,
-                    Samples = SampleCountFlags.SampleCount1Bit,
-                    Tiling = ImageTiling.Optimal,
-                    Usage = ImageUsageFlags.ImageUsageColorAttachmentBit | ImageUsageFlags.ImageUsageTransferSrcBit | ImageUsageFlags.ImageUsageTransferDstBit,
-                    SharingMode = SharingMode.Exclusive,
-                    InitialLayout = ImageLayout.Undefined,
-                    Flags = ImageCreateFlags.ImageCreateMutableFormatBit
-                };
-
                 _gd.Api.CreateImage(_device, imageCreateInfo, null, out var image).ThrowOnError();
                 _images[i] = new Auto<DisposableImage>(new DisposableImage(_gd.Api, _device, image));
 
                 _gd.Api.GetImageMemoryRequirements(_device, image,
                     out var memoryRequirements);
-
                 var allocation = _gd.MemoryAllocator.AllocateDeviceMemory(_physicalDevice, memoryRequirements, MemoryPropertyFlags.MemoryPropertyDeviceLocalBit);
 
                 _imageSizes[i] = allocation.Size;
@@ -108,7 +108,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _gd.Api.BindImageMemory(_device, image, allocation.Memory, allocation.Offset);
 
-                _imageViews[i] = CreateImageView(image, _format);
+                _imageViews[i] = CreateImageView(image, Format);
 
                 Transition(
                     cbs.CommandBuffer,
@@ -116,7 +116,9 @@ namespace Ryujinx.Graphics.Vulkan
                     0,
                     0,
                     ImageLayout.Undefined,
-                    ImageLayout.ColorAttachmentOptimal);
+                    ImageLayout.TransferSrcOptimal);
+
+                _states[i] = new ImageState();
             }
 
             _gd.CommandBufferPool.Return(cbs);
@@ -165,7 +167,7 @@ namespace Ryujinx.Graphics.Vulkan
                 image.GetUnsafe().Value,
                 0,
                 AccessFlags.AccessTransferWriteBit,
-                ImageLayout.ColorAttachmentOptimal,
+                ImageLayout.TransferSrcOptimal,
                 ImageLayout.General);
 
             var view = (TextureView)texture;
@@ -232,7 +234,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _imageViews[_nextImage],
                 _width,
                 _height,
-                _format,
+                Format,
                 new Extents2D(srcX0, srcY0, srcX1, srcY1),
                 new Extents2D(dstX0, dstY1, dstX1, dstY0),
                 true,
@@ -244,7 +246,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 0,
                 ImageLayout.General,
-                ImageLayout.ColorAttachmentOptimal);
+                ImageLayout.TransferSrcOptimal);
 
             _gd.CommandBufferPool.Return(
                 cbs,
@@ -252,12 +254,30 @@ namespace Ryujinx.Graphics.Vulkan
                 stackalloc[] { PipelineStageFlags.PipelineStageColorAttachmentOutputBit },
                 null);
 
-            var memory = _imageAllocationAuto[_nextImage].GetUnsafe().Memory;
-            var presentInfo = new PresentImageInfo(image.GetUnsafe().Value, memory, _imageSizes[_nextImage], _imageOffsets[_nextImage], _renderFinishedSemaphore, _imageAvailableSemaphore);
+            _fences[_nextImage]?.Put();
+            _fences[_nextImage] = cbs.GetFence();
+            cbs.GetFence().Get();
 
-            swapBuffersCallback(presentInfo);
+            PresentImageInfo info = _presentedImages[_nextImage];
 
-            _nextImage %= ImageCount;
+            if (info == null)
+            {
+                info = new PresentImageInfo(
+                    image,
+                    _imageAllocationAuto[_nextImage],
+                    _device,
+                    _physicalDevice,
+                    _imageSizes[_nextImage],
+                    _imageOffsets[_nextImage],
+                    new Extent2D((uint)_width, (uint)_height),
+                    _states[_nextImage]);
+
+                _presentedImages[_nextImage] = info;
+            }
+
+            swapBuffersCallback(info);
+
+            _nextImage = (_nextImage + 1) % ImageCount;
         }
 
         private unsafe void Transition(
@@ -320,11 +340,11 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 unsafe
                 {
-                    _gd.Api.DestroySemaphore(_device, _renderFinishedSemaphore, null);
-                    _gd.Api.DestroySemaphore(_device, _imageAvailableSemaphore, null);
-
                     for (int i = 0; i < ImageCount; i++)
                     {
+                        _states[i].IsValid = false;
+                        _fences[i]?.Wait();
+                        _fences[i]?.Put();
                         _imageViews[i]?.Dispose();
                         _imageAllocationAuto[i]?.Dispose();
                         _images[i]?.Dispose();
@@ -337,25 +357,73 @@ namespace Ryujinx.Graphics.Vulkan
         {
             Dispose(true);
         }
+
+        public override void ChangeVSyncMode(bool vsyncEnabled) { }
+    }
+
+    public class ImageState
+    {
+        private bool _isValid = true;
+
+        public bool IsValid
+        {
+            get => _isValid;
+            internal set
+            {
+                _isValid = value;
+
+                StateChanged?.Invoke(this, _isValid);
+            }
+        }
+
+        public event EventHandler<bool> StateChanged;
     }
 
     public class PresentImageInfo
     {
-        public Image Image { get; }
-        public DeviceMemory Memory { get; }
-        public ulong MemorySize { get; set; }
-        public ulong MemoryOffset { get; set; }
-        public Semaphore ReadySemaphore { get; }
-        public Semaphore AvailableSemaphore { get; }
+        private readonly Auto<DisposableImage> _image;
+        private readonly Auto<MemoryAllocation> _memory;
 
-        public PresentImageInfo(Image image, DeviceMemory memory, ulong memorySize, ulong memoryOffset, Semaphore readySemaphore, Semaphore availableSemaphore)
+        public Image Image => _image.GetUnsafe().Value;
+
+        public DeviceMemory Memory => _memory.GetUnsafe().Memory;
+
+        public Device Device { get; }
+        public PhysicalDevice PhysicalDevice { get; }
+        public ulong MemorySize { get; }
+        public ulong MemoryOffset { get; }
+        public Extent2D Extent { get; }
+        public ImageState State { get; internal set; }
+        internal PresentImageInfo(
+            Auto<DisposableImage> image,
+            Auto<MemoryAllocation> memory,
+            Device device,
+            PhysicalDevice physicalDevice,
+            ulong memorySize,
+            ulong memoryOffset,
+            Extent2D extent2D,
+            ImageState state)
         {
-            this.Image = image;
-            this.Memory = memory;
-            this.MemorySize = memorySize;
-            this.MemoryOffset = memoryOffset;
-            this.ReadySemaphore = readySemaphore;
-            this.AvailableSemaphore = availableSemaphore;
+            _image = image;
+            _memory = memory;
+            Device = device;
+            PhysicalDevice = physicalDevice;
+            MemorySize = memorySize;
+            MemoryOffset = memoryOffset;
+            Extent = extent2D;
+            State = state;
+        }
+
+        public void Get()
+        {
+            _memory.IncrementReferenceCount();
+            _image.IncrementReferenceCount();
+        }
+
+        public void Put()
+        {
+            _memory.DecrementReferenceCount();
+            _image.DecrementReferenceCount();
         }
     }
 }

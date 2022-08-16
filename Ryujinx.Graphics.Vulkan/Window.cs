@@ -25,6 +25,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private int _width;
         private int _height;
+        private bool _vsyncEnabled;
+        private bool _vsyncModeChanged;
         private VkFormat _format;
 
         public unsafe Window(VulkanRenderer gd, SurfaceKHR surface, PhysicalDevice physicalDevice, Device device)
@@ -47,6 +49,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecreateSwapchain()
         {
+            _vsyncModeChanged = false;
+
             for (int i = 0; i < _swapchainImageViews.Length; i++)
             {
                 _swapchainImageViews[i].Dispose();
@@ -110,7 +114,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ImageArrayLayers = 1,
                 PreTransform = capabilities.CurrentTransform,
                 CompositeAlpha = CompositeAlphaFlagsKHR.CompositeAlphaOpaqueBitKhr,
-                PresentMode = ChooseSwapPresentMode(presentModes),
+                PresentMode = ChooseSwapPresentMode(presentModes, _vsyncEnabled),
                 Clipped = true,
                 OldSwapchain = oldSwapchain
             };
@@ -178,15 +182,19 @@ namespace Ryujinx.Graphics.Vulkan
             return availableFormats[0];
         }
 
-        private static PresentModeKHR ChooseSwapPresentMode(PresentModeKHR[] availablePresentModes)
+        private static PresentModeKHR ChooseSwapPresentMode(PresentModeKHR[] availablePresentModes, bool vsyncEnabled)
         {
-            if (availablePresentModes.Contains(PresentModeKHR.PresentModeImmediateKhr))
+            if (!vsyncEnabled && availablePresentModes.Contains(PresentModeKHR.PresentModeImmediateKhr))
             {
                 return PresentModeKHR.PresentModeImmediateKhr;
             }
             else if (availablePresentModes.Contains(PresentModeKHR.PresentModeMailboxKhr))
             {
                 return PresentModeKHR.PresentModeMailboxKhr;
+            }
+            else if (availablePresentModes.Contains(PresentModeKHR.PresentModeFifoKhr))
+            {
+               return PresentModeKHR.PresentModeFifoKhr;
             }
             else
             {
@@ -224,7 +232,8 @@ namespace Ryujinx.Graphics.Vulkan
                     ref nextImage);
 
                 if (acquireResult == Result.ErrorOutOfDateKhr ||
-                    acquireResult == Result.SuboptimalKhr)
+                    acquireResult == Result.SuboptimalKhr ||
+                    _vsyncModeChanged)
                 {
                     RecreateSwapchain();
                 }
@@ -402,6 +411,12 @@ namespace Ryujinx.Graphics.Vulkan
         public override void SetSize(int width, int height)
         {
             // Not needed as we can get the size from the surface.
+        }
+
+        public override void ChangeVSyncMode(bool vsyncEnabled)
+        {
+            _vsyncEnabled = vsyncEnabled;
+            _vsyncModeChanged = true;
         }
 
         protected virtual void Dispose(bool disposing)

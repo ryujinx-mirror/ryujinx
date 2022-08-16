@@ -12,11 +12,6 @@ namespace Ryujinx.Ava.Ui.Vulkan
         public string ApplicationName { get; set; }
 
         /// <summary>
-        /// Specifies the Vulkan API version to use
-        /// </summary>
-        public Version VulkanVersion { get; set; } = new Version(1, 1, 0);
-
-        /// <summary>
         /// Specifies additional extensions to enable if available on the instance
         /// </summary>
         public IEnumerable<string> InstanceExtensions { get; set; } = Enumerable.Empty<string>();

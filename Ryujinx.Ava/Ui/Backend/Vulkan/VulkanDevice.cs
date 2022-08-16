@@ -14,12 +14,9 @@ namespace Ryujinx.Ava.Ui.Vulkan
 
             api.GetDeviceQueue(apiHandle, physicalDevice.QueueFamilyIndex, 0, out var queue);
 
-            var vulkanQueue = new VulkanQueue(this, queue);
-            Queue = vulkanQueue;
+            Queue = new VulkanQueue(this, queue);
 
-            PresentQueue = vulkanQueue;
-
-            CommandBufferPool = new VulkanCommandBufferPool(this, physicalDevice);
+            PresentQueue = Queue;
         }
 
         public IntPtr Handle => InternalHandle.Handle;
@@ -29,13 +26,12 @@ namespace Ryujinx.Ava.Ui.Vulkan
 
         public VulkanQueue Queue { get; private set; }
         public VulkanQueue PresentQueue { get; }
-        public VulkanCommandBufferPool CommandBufferPool { get; }
 
         public void Dispose()
         {
             WaitIdle();
-            CommandBufferPool?.Dispose();
             Queue = null;
+            Api.DestroyDevice(InternalHandle, Span<AllocationCallbacks>.Empty);
         }
 
         internal void Submit(SubmitInfo submitInfo, Fence fence = default)

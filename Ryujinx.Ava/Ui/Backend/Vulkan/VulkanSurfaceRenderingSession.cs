@@ -9,7 +9,6 @@ namespace Ryujinx.Ava.Ui.Vulkan
     {
         private readonly VulkanDevice _device;
         private readonly VulkanSurfaceRenderTarget _renderTarget;
-        private VulkanCommandBufferPool.VulkanCommandBuffer _commandBuffer;
 
         public VulkanSurfaceRenderingSession(VulkanDisplay display, VulkanDevice device,
             VulkanSurfaceRenderTarget renderTarget, float scaling)
@@ -32,17 +31,13 @@ namespace Ryujinx.Ava.Ui.Vulkan
         {
             if (!Display.EnsureSwapchainAvailable())
             {
-                _renderTarget.Invalidate();
+                _renderTarget.RecreateImage();
             }
         }
 
         public void Dispose()
         {
-            _commandBuffer = Display.StartPresentation(_renderTarget);
-
-            Display.BlitImageToCurrentImage(_renderTarget, _commandBuffer.InternalHandle);
-
-            Display.EndPresentation(_commandBuffer);
+            _renderTarget.EndDraw();
         }
     }
 }

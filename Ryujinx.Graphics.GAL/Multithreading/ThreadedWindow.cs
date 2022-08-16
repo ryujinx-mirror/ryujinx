@@ -30,5 +30,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         {
             _impl.Window.SetSize(width, height);
         }
+
+        public void ChangeVSyncMode(bool vsyncEnabled) { }
     }
 }

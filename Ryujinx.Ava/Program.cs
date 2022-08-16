@@ -94,7 +94,6 @@ namespace Ryujinx.Ava
                 .With(new Ui.Vulkan.VulkanOptions()
                 {
                     ApplicationName = "Ryujinx.Graphics.Vulkan",
-                    VulkanVersion = new Version(1, 2),
                     MaxQueueCount = 2,
                     PreferDiscreteGpu = true,
                     PreferredDevice = !PreviewerDetached ? "" : ConfigurationState.Instance.Graphics.PreferredGpu.Value,
@@ -180,6 +179,18 @@ namespace Ryujinx.Ava
             ReloadConfig();
 
             UseVulkan = PreviewerDetached ? ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan : false;
+
+            if (UseVulkan)
+            {
+                if (VulkanRenderer.GetPhysicalDevices().Length == 0)
+                {
+                    UseVulkan = false;
+
+                    ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.OpenGl;
+
+                    Logger.Warning?.PrintMsg(LogClass.Application, "A suitable Vulkan physical device is not available. Falling back to OpenGL");
+                }
+            }
 
             if (UseVulkan)
             {

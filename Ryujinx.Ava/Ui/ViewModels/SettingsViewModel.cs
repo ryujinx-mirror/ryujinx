@@ -48,6 +48,10 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private int _graphicsBackendMultithreadingIndex;
         private float _previousVolumeLevel;
         private float _volume;
+        private bool _isVulkanAvailable = true;
+        private List<string> _gpuIds = new List<string>();
+        private KeyboardHotkeys _keyboardHotkeys;
+        private int _graphicsBackendIndex;
 
         public int ResolutionScale
         {
@@ -92,6 +96,17 @@ namespace Ryujinx.Ava.Ui.ViewModels
             set
             {
                 _customResolutionScale = MathF.Round(value, 1);
+
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsVulkanAvailable
+        {
+            get => _isVulkanAvailable;
+            set
+            {
+                _isVulkanAvailable = value;
 
                 OnPropertyChanged();
             }
@@ -143,10 +158,10 @@ namespace Ryujinx.Ava.Ui.ViewModels
         public int BaseStyleIndex { get; set; }
         public int GraphicsBackendIndex
         {
-            get => graphicsBackendIndex;
+            get => _graphicsBackendIndex;
             set
             {
-                graphicsBackendIndex = value;
+                _graphicsBackendIndex = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsVulkanSelected));
             }
@@ -170,13 +185,8 @@ namespace Ryujinx.Ava.Ui.ViewModels
         public DateTimeOffset DateOffset { get; set; }
         public TimeSpan TimeOffset { get; set; }
         public AvaloniaList<TimeZone> TimeZones { get; set; }
-
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
-
-        private KeyboardHotkeys _keyboardHotkeys;
-        private int graphicsBackendIndex;
-        private List<string> _gpuIds = new List<string>();
 
         public KeyboardHotkeys KeyboardHotkeys
         {
@@ -233,20 +243,31 @@ namespace Ryujinx.Ava.Ui.ViewModels
             if (!Program.UseVulkan)
             {
                 var devices = VulkanRenderer.GetPhysicalDevices();
-                foreach (var device in devices)
+
+                if (devices.Length == 0)
                 {
-                    _gpuIds.Add(device.Id);
-                    names.Add($"{device.Name} {(device.IsDiscrete ? "(dGpu)" : "")}");
+                    IsVulkanAvailable = false;
+                    GraphicsBackendIndex = 1;
+                }
+                else
+                {
+                    foreach (var device in devices)
+                    {
+                        _gpuIds.Add(device.Id);
+                        names.Add($"{device.Name} {(device.IsDiscrete ? "(dGPU)" : "")}");
+                    }
                 }
             }
             else
             {
                 foreach (var device in VulkanPhysicalDevice.SuitableDevices)
                 {
-                    _gpuIds.Add(VulkanInitialization.StringFromIdPair(device.Value.VendorID, device.Value.DeviceID));
+                    _gpuIds.Add(
+                        VulkanInitialization.StringFromIdPair(device.Value.VendorID, device.Value.DeviceID));
                     var value = device.Value;
                     var name = value.DeviceName;
-                    names.Add($"{Marshal.PtrToStringAnsi((IntPtr)name)} {(device.Value.DeviceType == PhysicalDeviceType.DiscreteGpu ? "(dGpu)" : "")}");
+                    names.Add(
+                        $"{Marshal.PtrToStringAnsi((IntPtr)name)} {(device.Value.DeviceType == PhysicalDeviceType.DiscreteGpu ? "(dGPU)" : "")}");
                 }
             }
 
