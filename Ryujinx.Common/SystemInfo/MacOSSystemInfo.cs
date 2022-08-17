@@ -24,7 +24,7 @@ namespace Ryujinx.Common.SystemInfo
             if (sysctlbyname("hw.memsize", ref totalRAM) != 0)  // Bytes
             {
                 totalRAM = 0;
-            };
+            }
 
             CpuName = $"{cpuName} ; {LogicalCoreCount} logical";
             RamTotal = totalRAM;

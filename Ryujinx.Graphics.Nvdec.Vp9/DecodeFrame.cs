@@ -1187,7 +1187,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         if (cm.Mb.Corrupted)
                         {
                             cm.Error.InternalError(CodecErr.CodecCorruptFrame, "Failed to decode tile data");
-                        };
+                        }
                     }
                 }
             }

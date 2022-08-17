@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Vulkan
                     return ShaderKind.GlslFragmentShader;
                 case ShaderStage.Compute:
                     return ShaderKind.GlslComputeShader;
-            };
+            }
 
             Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(ShaderStage)} enum value: {stage}.");
 

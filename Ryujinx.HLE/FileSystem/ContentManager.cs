@@ -766,7 +766,7 @@ namespace Ryujinx.HLE.FileSystem
                                 metaEntries = meta.MetaEntries;
 
                                 updateNcas.Remove(SystemUpdateTitleId);
-                            };
+                            }
                         }
                     }
 
@@ -905,7 +905,7 @@ namespace Ryujinx.HLE.FileSystem
                             {
                                 metaEntries = meta.MetaEntries;
                             }
-                        };
+                        }
 
                         continue;
                     }

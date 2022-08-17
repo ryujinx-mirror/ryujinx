@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Shader
                 case TextureFormat.R16G16B16A16Sint:
                 case TextureFormat.R32G32B32A32Sint:
                     return VariableType.S32;
-            };
+            }
 
             return VariableType.F32;
         }

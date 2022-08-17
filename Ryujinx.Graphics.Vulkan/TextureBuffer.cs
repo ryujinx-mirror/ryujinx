@@ -111,7 +111,7 @@ namespace Ryujinx.Graphics.Vulkan
             _offset = buffer.Offset;
             _size = buffer.Size;
 
-            ReleaseImpl();;
+            ReleaseImpl();
         }
 
         public BufferView GetBufferView(CommandBufferScoped cbs)
