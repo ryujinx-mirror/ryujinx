@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -227,6 +228,20 @@ namespace Spv.Generator
         public bool Equals(Operand obj)
         {
             return obj is Instruction instruction && Equals(instruction);
+        }
+        
+        private static readonly Dictionary<Specification.Op, string[]> _operandLabels = new()
+        {
+            { Specification.Op.OpConstant, new [] { "Value" } },
+            { Specification.Op.OpTypeInt, new [] { "Width", "Signed" } },
+            { Specification.Op.OpTypeFloat, new [] { "Width" } }
+        };
+
+        public override string ToString()
+        {
+            var labels = _operandLabels.TryGetValue(Opcode, out var opLabels) ? opLabels : Array.Empty<string>();
+            var result = _resultType == null ? string.Empty : $"{_resultType} ";
+            return $"{result}{Opcode}{_operands.ToString(labels)}";
         }
     }
 }

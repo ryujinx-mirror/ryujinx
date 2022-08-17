@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Spv.Generator
@@ -48,6 +50,23 @@ namespace Spv.Generator
 
                 Overflow[Count++] = operand;
             }
+        }
+
+        private IEnumerable<Operand> AllOperands => new[] { Operand1, Operand2, Operand3, Operand4, Operand5 }
+            .Concat(Overflow ?? Array.Empty<Operand>())
+            .Take(Count);
+
+        public override string ToString()
+        {
+            return $"({string.Join(", ", AllOperands)})";
+        }
+
+        public string ToString(string[] labels)
+        {
+            var labeledParams = AllOperands.Zip(labels, (op, label) => $"{label}: {op}");
+            var unlabeledParams = AllOperands.Skip(labels.Length).Select(op => op.ToString());
+            var paramsToPrint = labeledParams.Concat(unlabeledParams);
+            return $"({string.Join(", ", paramsToPrint)})";
         }
     }
 }

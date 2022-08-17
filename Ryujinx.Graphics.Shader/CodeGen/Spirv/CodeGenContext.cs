@@ -234,12 +234,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     IrOperandType.Constant => GetConstant(type, operand),
                     IrOperandType.ConstantBuffer => GetConstantBuffer(type, operand),
                     IrOperandType.LocalVariable => GetLocal(type, operand),
-                    IrOperandType.Undefined => Constant(GetType(type), 0),
+                    IrOperandType.Undefined => GetUndefined(type),
                     _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\".")
                 };
             }
 
             throw new NotImplementedException(node.GetType().Name);
+        }
+
+        private Instruction GetUndefined(AggregateType type)
+        {
+            return type switch
+            {
+                AggregateType.Bool => ConstantFalse(TypeBool()),
+                AggregateType.FP32 => Constant(TypeFP32(), 0f),
+                AggregateType.FP64 => Constant(TypeFP64(), 0d),
+                _ => Constant(GetType(type), 0)
+            };
         }
 
         public Instruction GetAttributeElemPointer(int attr, bool isOutAttr, Instruction index, out AggregateType elemType)

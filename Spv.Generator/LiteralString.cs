@@ -48,5 +48,7 @@ namespace Spv.Generator
         {
             return obj is LiteralString literalString && Equals(literalString);
         }
+
+        public override string ToString() => _value;
     }
 }

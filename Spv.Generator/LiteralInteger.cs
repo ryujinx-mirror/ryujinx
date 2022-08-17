@@ -99,5 +99,7 @@ namespace Spv.Generator
         {
             return obj is LiteralInteger literalInteger && Equals(literalInteger);
         }
+
+        public override string ToString() => $"{_integerType} {_data}";
     }
 }
