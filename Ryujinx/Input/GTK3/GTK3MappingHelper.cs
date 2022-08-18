@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using GtkKey = Gdk.Key;
 
@@ -150,22 +151,15 @@ namespace Ryujinx.Input.GTK3
 
         static GTK3MappingHelper()
         {
-            var inputKeys = Enum.GetValues<Key>();
+            var inputKeys = Enum.GetValues<Key>().SkipLast(1);
 
             // GtkKey is not contiguous and quite large, so use a dictionary instead of an array.
             _gtkKeyMapping = new Dictionary<GtkKey, Key>();
 
             foreach (var key in inputKeys)
             {
-                try
-                {
-                    var index = ToGtkKey((Key)key);
-                    _gtkKeyMapping[index] = (Key)key;
-                }
-                catch
-                {
-                    // Skip invalid mappings.
-                }
+                var index = ToGtkKey(key);
+                _gtkKeyMapping[index] = key;
             }
         }
 
