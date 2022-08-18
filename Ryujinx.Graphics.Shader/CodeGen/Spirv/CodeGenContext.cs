@@ -3,7 +3,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static Spv.Specification;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv

@@ -4,7 +4,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
 using System;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 using static SDL2.SDL;

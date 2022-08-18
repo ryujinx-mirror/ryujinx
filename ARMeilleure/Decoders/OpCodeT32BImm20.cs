@@ -1,6 +1,4 @@
-﻿using ARMeilleure.Instructions;
-
-namespace ARMeilleure.Decoders
+﻿namespace ARMeilleure.Decoders
 {
     class OpCodeT32BImm20 : OpCodeT32, IOpCode32BImm
     {

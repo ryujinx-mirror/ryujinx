@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Graphics.Vulkan.Shaders
 {
     static class ShaderBinaries

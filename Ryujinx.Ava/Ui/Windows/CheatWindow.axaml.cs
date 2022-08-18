@@ -1,11 +1,9 @@
-﻿using Avalonia;
-using Avalonia.Collections;
+﻿using Avalonia.Collections;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Models;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 

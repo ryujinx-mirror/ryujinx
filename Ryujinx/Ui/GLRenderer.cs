@@ -1,6 +1,4 @@
-﻿using Gdk;
-using Gtk;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Input.HLE;

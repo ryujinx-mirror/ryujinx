@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ryujinx.Graphics.GAL
+﻿namespace Ryujinx.Graphics.GAL
 {
     public struct HardwareInfo
     {

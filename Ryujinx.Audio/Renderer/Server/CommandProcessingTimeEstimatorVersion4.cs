@@ -1,9 +1,5 @@
-using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Renderer.Dsp.Command;
-using Ryujinx.Audio.Renderer.Parameter.Effect;
-using System;
 using System.Diagnostics;
-using static Ryujinx.Audio.Renderer.Parameter.VoiceInParameter;
 
 namespace Ryujinx.Audio.Renderer.Server
 {

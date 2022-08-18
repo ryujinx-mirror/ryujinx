@@ -2,8 +2,6 @@ using ARMeilleure.Memory;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Instructions
 {

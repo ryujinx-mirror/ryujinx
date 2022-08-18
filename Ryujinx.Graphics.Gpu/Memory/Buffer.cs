@@ -1,4 +1,3 @@
-using Ryujinx.Common.Logging;
 using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Memory.Range;

@@ -1,5 +1,3 @@
-using Ryujinx.Graphics.Shader;
-
 namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 {
     /// <summary>

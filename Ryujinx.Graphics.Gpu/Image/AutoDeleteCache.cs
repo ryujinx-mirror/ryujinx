@@ -1,4 +1,3 @@
-using Ryujinx.Common.Logging;
 using System.Collections;
 using System.Collections.Generic;
 

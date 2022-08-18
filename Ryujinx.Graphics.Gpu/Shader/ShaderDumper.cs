@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Shader;
 using System.IO;
 
 namespace Ryujinx.Graphics.Gpu.Shader

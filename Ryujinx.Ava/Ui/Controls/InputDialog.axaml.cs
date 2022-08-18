@@ -1,9 +1,7 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Models;
-using Ryujinx.Ava.Ui.Windows;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Controls

@@ -1,7 +1,6 @@
 ﻿#define Alu32
 
 using NUnit.Framework;
-using System;
 
 namespace Ryujinx.Tests.Cpu
 {

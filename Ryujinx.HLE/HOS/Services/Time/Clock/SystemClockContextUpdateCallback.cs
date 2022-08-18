@@ -1,5 +1,4 @@
 ﻿using Ryujinx.HLE.HOS.Kernel.Threading;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 

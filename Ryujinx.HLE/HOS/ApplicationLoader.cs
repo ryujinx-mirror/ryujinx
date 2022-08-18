@@ -25,8 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-
-using static LibHac.Fs.ApplicationSaveDataManagement;
 using static Ryujinx.HLE.HOS.ModLoader;
 using ApplicationId = LibHac.Ncm.ApplicationId;
 using Path = System.IO.Path;

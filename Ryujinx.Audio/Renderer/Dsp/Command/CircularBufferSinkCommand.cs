@@ -1,6 +1,5 @@
 using Ryujinx.Audio.Renderer.Parameter.Sink;
 using Ryujinx.Audio.Renderer.Server.MemoryPool;
-using System;
 using System.Diagnostics;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command

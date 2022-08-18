@@ -1,5 +1,4 @@
-﻿using System;
-namespace SoundIOSharp
+﻿namespace SoundIOSharp
 {
     public struct SoundIOSampleRateRange
     {

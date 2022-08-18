@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
-using Ryujinx.Graphics.Gpu.Memory;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine.MME

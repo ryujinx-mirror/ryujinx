@@ -1,4 +1,3 @@
-using Ryujinx.HLE.HOS.Tamper.Conditions;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Tamper.Operations

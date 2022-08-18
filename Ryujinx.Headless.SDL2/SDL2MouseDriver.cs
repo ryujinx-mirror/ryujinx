@@ -1,5 +1,4 @@
-﻿using Ryujinx.Common.Logging;
-using Ryujinx.Input;
+﻿using Ryujinx.Input;
 using System;
 using System.Diagnostics;
 using System.Drawing;

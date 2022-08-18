@@ -1,12 +1,10 @@
-﻿using Ryujinx.Common;
-using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator.Types;
 using System;
-using System.IO;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
 {

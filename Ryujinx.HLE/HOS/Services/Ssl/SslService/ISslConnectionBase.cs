@@ -1,6 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd;
 using System;
-using System.Net.Sockets;
 
 namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 {

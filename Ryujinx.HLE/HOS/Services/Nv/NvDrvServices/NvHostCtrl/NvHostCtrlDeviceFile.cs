@@ -1,7 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Synchronization;
-using Ryujinx.HLE.HOS.Kernel.Common;
-using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
 using Ryujinx.HLE.HOS.Services.Settings;

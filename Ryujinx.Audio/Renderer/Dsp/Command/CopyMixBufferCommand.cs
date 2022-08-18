@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
     public class CopyMixBufferCommand : ICommand

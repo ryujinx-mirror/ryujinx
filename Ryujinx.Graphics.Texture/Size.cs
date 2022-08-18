@@ -1,6 +1,3 @@
-using Ryujinx.Common;
-using System;
-
 namespace Ryujinx.Graphics.Texture
 {
     public struct Size

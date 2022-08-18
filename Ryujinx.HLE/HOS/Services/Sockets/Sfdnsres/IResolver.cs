@@ -1,5 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Memory;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager;
 using Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Proxy;
@@ -11,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 

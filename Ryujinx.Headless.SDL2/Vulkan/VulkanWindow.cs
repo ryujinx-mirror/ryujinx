@@ -3,7 +3,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Input.HLE;
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using static SDL2.SDL;
 
 namespace Ryujinx.Headless.SDL2.Vulkan

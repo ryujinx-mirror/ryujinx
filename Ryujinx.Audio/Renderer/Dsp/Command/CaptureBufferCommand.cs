@@ -1,5 +1,4 @@
 using Ryujinx.Audio.Renderer.Dsp.State;
-using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Memory;
 using System;
 using System.Runtime.CompilerServices;

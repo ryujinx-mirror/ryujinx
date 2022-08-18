@@ -1,7 +1,6 @@
 ﻿#define Mul32
 
 using NUnit.Framework;
-using System;
 
 namespace Ryujinx.Tests.Cpu
 {

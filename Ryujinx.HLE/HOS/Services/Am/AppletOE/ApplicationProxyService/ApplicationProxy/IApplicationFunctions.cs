@@ -19,8 +19,6 @@ using Ryujinx.HLE.HOS.SystemState;
 using System;
 using System.Numerics;
 using System.Threading;
-
-using static LibHac.Fs.ApplicationSaveDataManagement;
 using AccountUid    = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
 using ApplicationId = LibHac.Ncm.ApplicationId;
 

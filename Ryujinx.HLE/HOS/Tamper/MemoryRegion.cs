@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ryujinx.HLE.HOS.Tamper
+﻿namespace Ryujinx.HLE.HOS.Tamper
 {
     /// <summary>
     /// The regions in the virtual address space of the process that are used as base address of memory operations.

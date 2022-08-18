@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Common.Pools;
 using Ryujinx.Memory.Range;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Tracking

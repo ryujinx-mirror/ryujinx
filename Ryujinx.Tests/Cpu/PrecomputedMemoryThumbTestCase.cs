@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Tests.Cpu
 {
     public struct PrecomputedMemoryThumbTestCase

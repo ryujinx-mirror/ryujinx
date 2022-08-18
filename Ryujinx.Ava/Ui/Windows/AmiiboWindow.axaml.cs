@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Interactivity;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Models;

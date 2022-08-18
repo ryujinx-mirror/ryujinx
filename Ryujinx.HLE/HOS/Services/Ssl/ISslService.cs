@@ -1,5 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Ssl.SslService;
 using Ryujinx.HLE.HOS.Services.Ssl.Types;
 using Ryujinx.Memory;

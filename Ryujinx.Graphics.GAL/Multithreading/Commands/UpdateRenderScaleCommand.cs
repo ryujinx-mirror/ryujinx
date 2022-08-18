@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Graphics.GAL.Multithreading.Model;
-using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {

@@ -17,7 +17,6 @@ using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
-using Ryujinx.Ui.Helper;
 using Ryujinx.Ui.Windows;
 using System;
 using System.Buffers;

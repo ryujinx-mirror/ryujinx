@@ -1,7 +1,5 @@
-﻿using Ryujinx.Common;
-using System;
+﻿using System;
 using System.Buffers.Binary;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Audio.Types

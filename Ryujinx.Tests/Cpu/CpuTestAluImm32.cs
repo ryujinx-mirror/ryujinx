@@ -1,7 +1,6 @@
 #define AluRs32
 
 using NUnit.Framework;
-using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Tests.Cpu
 {

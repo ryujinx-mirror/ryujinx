@@ -4,7 +4,6 @@ using Ryujinx.Memory;
 using Ryujinx.SDL2.Common;
 using System;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;

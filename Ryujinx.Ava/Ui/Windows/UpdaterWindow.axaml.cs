@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Modules;
 using System;

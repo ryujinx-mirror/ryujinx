@@ -7,7 +7,6 @@ using Ryujinx.Audio.Renderer.Server.Performance;
 using Ryujinx.Audio.Renderer.Server.Sink;
 using Ryujinx.Audio.Renderer.Server.Upsampler;
 using Ryujinx.Audio.Renderer.Server.Voice;
-using Ryujinx.Common.Memory;
 using System;
 using CpuAddress = System.UInt64;
 

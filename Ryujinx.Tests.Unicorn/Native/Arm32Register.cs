@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ryujinx.Tests.Unicorn.Native
+﻿namespace Ryujinx.Tests.Unicorn.Native
 {
     public enum Arm32Register
     {

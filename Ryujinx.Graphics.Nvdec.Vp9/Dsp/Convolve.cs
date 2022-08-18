@@ -2,7 +2,6 @@
 using Ryujinx.Graphics.Nvdec.Vp9.Common;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using static Ryujinx.Graphics.Nvdec.Vp9.Dsp.Filter;

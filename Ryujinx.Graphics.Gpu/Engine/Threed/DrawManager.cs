@@ -1,7 +1,6 @@
 ﻿using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.Types;
 using System;
-using System.Text;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {

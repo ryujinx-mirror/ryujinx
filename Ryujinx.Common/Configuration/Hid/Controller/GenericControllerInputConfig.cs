@@ -1,8 +1,6 @@
 ﻿using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using System;
-using System.ComponentModel;
 using System.Text.Json.Serialization;
-using NotImplementedException = System.NotImplementedException;
 
 namespace Ryujinx.Common.Configuration.Hid.Controller
 {

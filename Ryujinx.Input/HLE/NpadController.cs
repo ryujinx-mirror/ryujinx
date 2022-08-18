@@ -5,7 +5,6 @@ using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Hid;
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Numerics;
 using System.Runtime.CompilerServices;

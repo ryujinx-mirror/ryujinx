@@ -10,7 +10,6 @@ using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationPr
 using Ryujinx.HLE.Ui;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.Ui.Applet
 {

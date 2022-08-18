@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Kernel.Memory;
 using System;
 using System.Diagnostics;
 using System.Reflection;

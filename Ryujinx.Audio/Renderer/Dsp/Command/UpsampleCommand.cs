@@ -1,6 +1,5 @@
 using Ryujinx.Audio.Renderer.Server.Upsampler;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {

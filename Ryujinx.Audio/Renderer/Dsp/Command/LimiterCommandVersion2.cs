@@ -3,7 +3,6 @@ using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
+﻿namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
 {
     class SourceProgramRequest : IProgramRequest
     {

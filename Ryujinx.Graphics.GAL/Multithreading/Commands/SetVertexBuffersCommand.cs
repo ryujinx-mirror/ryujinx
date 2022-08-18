@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Graphics.GAL.Multithreading.Model;
 using System;
-using System.Buffers;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
