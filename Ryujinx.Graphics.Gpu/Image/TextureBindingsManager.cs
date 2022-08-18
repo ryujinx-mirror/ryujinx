@@ -47,6 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             public int TextureHandle;
             public int SamplerHandle;
+            public Format ImageFormat;
             public int InvalidatedSequence;
             public Texture CachedTexture;
             public Sampler CachedSampler;
@@ -564,6 +565,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Buffers are frequently re-created to accomodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
                     _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, bindingInfo.Format, false);
+
+                    // Cache is not used for buffer texture, it must always rebind.
+                    state.CachedTexture = null;
                 }
                 else
                 {
@@ -659,14 +663,16 @@ namespace Ryujinx.Graphics.Gpu.Image
                         cachedTexture?.SignalModified();
                     }
 
-                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
-                        UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage))
+                    Format format = bindingInfo.Format == 0 ? cachedTexture.Format : bindingInfo.Format;
+
+                    if (state.ImageFormat != format ||
+                        ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
+                        UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage)))
                     {
                         ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
 
-                        Format format = bindingInfo.Format == 0 ? cachedTexture.Format : bindingInfo.Format;
-
                         state.Texture = hostTextureRebind;
+                        state.ImageFormat = format;
 
                         _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTextureRebind, format);
                     }
@@ -696,6 +702,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
 
                     _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range.GetSubRange(0).Address, texture.Size, bindingInfo, format, true);
+
+                    // Cache is not used for buffer texture, it must always rebind.
+                    state.CachedTexture = null;
                 }
                 else
                 {
@@ -720,6 +729,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                         {
                             format = texture.Format;
                         }
+
+                        state.ImageFormat = format;
 
                         _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTexture, format);
                     }
