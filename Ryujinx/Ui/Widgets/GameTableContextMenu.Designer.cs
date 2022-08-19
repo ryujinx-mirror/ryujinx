@@ -154,9 +154,9 @@ namespace Ryujinx.Ui.Widgets
             //
             // _purgePtcCacheMenuItem
             //
-            _purgePtcCacheMenuItem = new MenuItem("Purge PPTC Cache")
+            _purgePtcCacheMenuItem = new MenuItem("Queue PPTC Rebuild")
             {
-                TooltipText = "Delete the Application's PPTC cache."
+                TooltipText = "Trigger PPTC to rebuild at boot time on the next game launch."
             };
             _purgePtcCacheMenuItem.Activated += PurgePtcCache_Clicked;
 
