@@ -27,7 +27,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _stageIndex = stageIndex;
         }
 
-        /// <inheritdoc/>
         public int QueryBindingConstantBuffer(int index)
         {
             if (_context.Capabilities.Api == TargetApi.Vulkan)
@@ -41,7 +40,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
-        /// <inheritdoc/>
         public int QueryBindingStorageBuffer(int index)
         {
             if (_context.Capabilities.Api == TargetApi.Vulkan)
@@ -54,7 +52,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
-        /// <inheritdoc/>
         public int QueryBindingTexture(int index, bool isBuffer)
         {
             if (_context.Capabilities.Api == TargetApi.Vulkan)
@@ -72,7 +69,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
-        /// <inheritdoc/>
         public int QueryBindingImage(int index, bool isBuffer)
         {
             if (_context.Capabilities.Api == TargetApi.Vulkan)
@@ -116,37 +112,26 @@ namespace Ryujinx.Graphics.Gpu.Shader
             };
         }
 
-        /// <inheritdoc/>
         public bool QueryHostHasFrontFacingBug() => _context.Capabilities.HasFrontFacingBug;
 
-        /// <inheritdoc/>
         public bool QueryHostHasVectorIndexingBug() => _context.Capabilities.HasVectorIndexingBug;
 
-        /// <inheritdoc/>
         public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsBgraFormat() => _context.Capabilities.SupportsBgraFormat;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsFragmentShaderInterlock() => _context.Capabilities.SupportsFragmentShaderInterlock;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsFragmentShaderOrderingIntel() => _context.Capabilities.SupportsFragmentShaderOrderingIntel;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsGeometryShaderPassthrough() => _context.Capabilities.SupportsGeometryShaderPassthrough;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsImageLoadFormatted() => _context.Capabilities.SupportsImageLoadFormatted;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsShaderBallot() => _context.Capabilities.SupportsShaderBallot;
 
-        /// <inheritdoc/>
         public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
         /// <summary>

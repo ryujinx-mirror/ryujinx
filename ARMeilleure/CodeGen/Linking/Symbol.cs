@@ -58,7 +58,6 @@ namespace ARMeilleure.CodeGen.Linking
         /// <param name="a">First instance</param>
         /// <param name="b">Second instance</param>
         /// <returns><see langword="true"/> if not equal; otherwise <see langword="false"/></returns>
-        /// <inheritdoc/>
         public static bool operator !=(Symbol a, Symbol b)
         {
             return !(a == b);

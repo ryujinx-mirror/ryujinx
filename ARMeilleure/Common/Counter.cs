@@ -9,6 +9,9 @@ namespace ARMeilleure.Common
     class Counter<T> : IDisposable where T : unmanaged
     {
         private bool _disposed;
+        /// <summary>
+        /// Index in the <see cref="EntryTable{T}"/>
+        /// </summary>
         private readonly int _index;
         private readonly EntryTable<T> _countTable;
 
@@ -17,7 +20,6 @@ namespace ARMeilleure.Common
         /// <see cref="EntryTable{T}"/> instance and index.
         /// </summary>
         /// <param name="countTable"><see cref="EntryTable{T}"/> instance</param>
-        /// <param name="index">Index in the <see cref="EntryTable{T}"/></param>
         /// <exception cref="ArgumentNullException"><paramref name="countTable"/> is <see langword="null"/></exception>
         /// <exception cref="ArgumentException"><typeparamref name="T"/> is unsupported</exception>
         public Counter(EntryTable<T> countTable)
@@ -68,7 +70,7 @@ namespace ARMeilleure.Common
         /// <summary>
         /// Releases all unmanaged and optionally managed resources used by the <see cref="Counter{T}"/> instance.
         /// </summary>
-        /// <param name="disposing"><see langword="true"/> to dispose managed resources also; otherwise just unmanaged resouces</param>
+        /// <param name="disposing"><see langword="true"/> to dispose managed resources also; otherwise just unmanaged resources</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
