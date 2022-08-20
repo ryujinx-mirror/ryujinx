@@ -1,9 +1,12 @@
+using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 namespace Ryujinx.Graphics.Shader
 {
     public enum AttributeType : byte
     {
+        // Generic types.
         Float,
         Sint,
         Uint
@@ -11,24 +14,35 @@ namespace Ryujinx.Graphics.Shader
 
     static class AttributeTypeExtensions
     {
-        public static string GetScalarType(this AttributeType type)
-        {
-            return type switch
-            {
-                AttributeType.Float => "float",
-                AttributeType.Sint => "int",
-                AttributeType.Uint => "uint",
-                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
-            };
-        }
-
-        public static string GetVec4Type(this AttributeType type)
+        public static string ToVec4Type(this AttributeType type)
         {
             return type switch
             {
                 AttributeType.Float => "vec4",
                 AttributeType.Sint => "ivec4",
                 AttributeType.Uint => "uvec4",
+                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
+            };
+        }
+
+        public static VariableType ToVariableType(this AttributeType type)
+        {
+            return type switch
+            {
+                AttributeType.Float => VariableType.F32,
+                AttributeType.Sint => VariableType.S32,
+                AttributeType.Uint => VariableType.U32,
+                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
+            };
+        }
+
+        public static AggregateType ToAggregateType(this AttributeType type)
+        {
+            return type switch
+            {
+                AttributeType.Float => AggregateType.FP32,
+                AttributeType.Sint => AggregateType.S32,
+                AttributeType.Uint => AggregateType.U32,
                 _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
             };
         }

@@ -211,7 +211,7 @@ namespace Ryujinx.Graphics.Vulkan
                 pipeline.Internal.VertexAttributeDescriptions[i] = new VertexInputAttributeDescription(
                     (uint)i,
                     (uint)bufferIndex,
-                    FormatTable.GetFormat(attribute.Format),
+                    gd.FormatCapabilities.ConvertToVertexVkFormat(attribute.Format),
                     (uint)attribute.Offset);
             }
 

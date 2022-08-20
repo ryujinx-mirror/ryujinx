@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Host hardware capabilities.
         /// </summary>
-        internal Capabilities Capabilities { get; private set; }
+        internal Capabilities Capabilities;
 
         /// <summary>
         /// Event for signalling shader cache loading progress.

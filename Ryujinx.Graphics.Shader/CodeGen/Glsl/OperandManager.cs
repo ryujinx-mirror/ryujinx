@@ -454,12 +454,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     AttributeType type = context.Config.GpuAccessor.QueryAttributeType(location);
 
-                    return type switch
-                    {
-                        AttributeType.Sint => VariableType.S32,
-                        AttributeType.Uint => VariableType.U32,
-                        _ => VariableType.F32
-                    };
+                    return type.ToVariableType();
                 }
             }
 

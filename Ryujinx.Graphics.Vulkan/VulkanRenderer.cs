@@ -377,7 +377,7 @@ namespace Ryujinx.Graphics.Vulkan
                 FormatFeatureFlags.FormatFeatureTransferSrcBit |
                 FormatFeatureFlags.FormatFeatureTransferDstBit;
 
-            bool supportsBc123CompressionFormat = FormatCapabilities.FormatsSupports(compressedFormatFeatureFlags,
+            bool supportsBc123CompressionFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
                 GAL.Format.Bc1RgbaSrgb,
                 GAL.Format.Bc1RgbaUnorm,
                 GAL.Format.Bc2Srgb,
@@ -385,13 +385,13 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.Format.Bc3Srgb,
                 GAL.Format.Bc3Unorm);
 
-            bool supportsBc45CompressionFormat = FormatCapabilities.FormatsSupports(compressedFormatFeatureFlags,
+            bool supportsBc45CompressionFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
                 GAL.Format.Bc4Snorm,
                 GAL.Format.Bc4Unorm,
                 GAL.Format.Bc5Snorm,
                 GAL.Format.Bc5Unorm);
 
-            bool supportsBc67CompressionFormat = FormatCapabilities.FormatsSupports(compressedFormatFeatureFlags,
+            bool supportsBc67CompressionFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
                 GAL.Format.Bc6HSfloat,
                 GAL.Format.Bc6HUfloat,
                 GAL.Format.Bc7Srgb,

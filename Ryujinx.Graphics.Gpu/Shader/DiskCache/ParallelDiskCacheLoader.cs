@@ -573,9 +573,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     RecompileGraphicsFromGuestCode(guestShaders, specState, programIndex);
                 }
             }
-            catch (DiskCacheLoadException diskCacheLoadException)
+            catch (Exception exception)
             {
-                Logger.Error?.Print(LogClass.Gpu, $"Error translating guest shader. {diskCacheLoadException.Message}");
+                Logger.Error?.Print(LogClass.Gpu, $"Error translating guest shader. {exception.Message}");
 
                 ErrorCount++;
                 SignalCompiled();

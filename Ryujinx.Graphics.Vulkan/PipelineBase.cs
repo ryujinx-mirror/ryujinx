@@ -730,6 +730,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs)
         {
+            var formatCapabilities = Gd.FormatCapabilities;
+
             int count = Math.Min(Constants.MaxVertexAttributes, vertexAttribs.Length);
 
             for (int i = 0; i < count; i++)
@@ -740,7 +742,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _newState.Internal.VertexAttributeDescriptions[i] = new VertexInputAttributeDescription(
                     (uint)i,
                     (uint)bufferIndex,
-                    FormatTable.GetFormat(attribute.Format),
+                    formatCapabilities.ConvertToVertexVkFormat(attribute.Format),
                     (uint)attribute.Offset);
             }
 

@@ -8,7 +8,8 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class FormatCapabilities
     {
-        private readonly FormatFeatureFlags[] _table;
+        private readonly FormatFeatureFlags[] _bufferTable;
+        private readonly FormatFeatureFlags[] _optimalTable;
 
         private readonly Vk _api;
         private readonly PhysicalDevice _physicalDevice;
@@ -17,14 +18,18 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _api = api;
             _physicalDevice = physicalDevice;
-            _table = new FormatFeatureFlags[Enum.GetNames(typeof(GAL.Format)).Length];
+
+            int totalFormats = Enum.GetNames(typeof(GAL.Format)).Length;
+
+            _bufferTable = new FormatFeatureFlags[totalFormats];
+            _optimalTable = new FormatFeatureFlags[totalFormats];
         }
 
-        public bool FormatsSupports(FormatFeatureFlags flags, params GAL.Format[] formats)
+        public bool BufferFormatsSupport(FormatFeatureFlags flags, params GAL.Format[] formats)
         {
             foreach (GAL.Format format in formats)
             {
-                if (!FormatSupports(flags, format))
+                if (!BufferFormatSupports(flags, format))
                 {
                     return false;
                 }
@@ -33,15 +38,42 @@ namespace Ryujinx.Graphics.Vulkan
             return true;
         }
 
-        public bool FormatSupports(FormatFeatureFlags flags, GAL.Format format)
+        public bool OptimalFormatsSupport(FormatFeatureFlags flags, params GAL.Format[] formats)
         {
-            var formatFeatureFlags = _table[(int)format];
+            foreach (GAL.Format format in formats)
+            {
+                if (!OptimalFormatSupports(flags, format))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool BufferFormatSupports(FormatFeatureFlags flags, GAL.Format format)
+        {
+            var formatFeatureFlags = _bufferTable[(int)format];
+
+            if (formatFeatureFlags == 0)
+            {
+                _api.GetPhysicalDeviceFormatProperties(_physicalDevice, FormatTable.GetFormat(format), out var fp);
+                formatFeatureFlags = fp.BufferFeatures;
+                _bufferTable[(int)format] = formatFeatureFlags;
+            }
+
+            return (formatFeatureFlags & flags) == flags;
+        }
+
+        public bool OptimalFormatSupports(FormatFeatureFlags flags, GAL.Format format)
+        {
+            var formatFeatureFlags = _optimalTable[(int)format];
 
             if (formatFeatureFlags == 0)
             {
                 _api.GetPhysicalDeviceFormatProperties(_physicalDevice, FormatTable.GetFormat(format), out var fp);
                 formatFeatureFlags = fp.OptimalTilingFeatures;
-                _table[(int)format] = formatFeatureFlags;
+                _optimalTable[(int)format] = formatFeatureFlags;
             }
 
             return (formatFeatureFlags & flags) == flags;
@@ -69,7 +101,7 @@ namespace Ryujinx.Graphics.Vulkan
                 requiredFeatures |= FormatFeatureFlags.FormatFeatureStorageImageBit;
             }
 
-            if (!FormatSupports(requiredFeatures, srcFormat) || (IsD24S8(srcFormat) && VulkanConfiguration.ForceD24S8Unsupported))
+            if (!OptimalFormatSupports(requiredFeatures, srcFormat) || (IsD24S8(srcFormat) && VulkanConfiguration.ForceD24S8Unsupported))
             {
                 // The format is not supported. Can we convert it to a higher precision format?
                 if (IsD24S8(srcFormat))
@@ -85,9 +117,44 @@ namespace Ryujinx.Graphics.Vulkan
             return format;
         }
 
+        public VkFormat ConvertToVertexVkFormat(GAL.Format srcFormat)
+        {
+            var format = FormatTable.GetFormat(srcFormat);
+
+            if (!BufferFormatSupports(FormatFeatureFlags.FormatFeatureVertexBufferBit, srcFormat) ||
+                (IsRGB16IntFloat(srcFormat) && VulkanConfiguration.ForceRGB16IntFloatUnsupported))
+            {
+                // The format is not supported. Can we convert it to an alternative format?
+                switch (srcFormat)
+                {
+                    case GAL.Format.R16G16B16Float:
+                        format = VkFormat.R16G16B16A16Sfloat;
+                        break;
+                    case GAL.Format.R16G16B16Sint:
+                        format = VkFormat.R16G16B16A16Sint;
+                        break;
+                    case GAL.Format.R16G16B16Uint:
+                        format = VkFormat.R16G16B16A16Uint;
+                        break;
+                    default:
+                        Logger.Error?.Print(LogClass.Gpu, $"Format {srcFormat} is not supported by the host.");
+                        break;
+                }
+            }
+
+            return format;
+        }
+
         public static bool IsD24S8(GAL.Format format)
         {
             return format == GAL.Format.D24UnormS8Uint || format == GAL.Format.S8UintD24Unorm;
+        }
+
+        private static bool IsRGB16IntFloat(GAL.Format format)
+        {
+            return format == GAL.Format.R16G16B16Float ||
+                   format == GAL.Format.R16G16B16Sint ||
+                   format == GAL.Format.R16G16B16Uint;
         }
     }
 }

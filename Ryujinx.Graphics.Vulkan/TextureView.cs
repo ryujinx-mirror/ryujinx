@@ -451,8 +451,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                     return;
                 }
-                else if (_gd.FormatCapabilities.FormatSupports(FormatFeatureFlags.FormatFeatureBlitSrcBit, srcFormat) &&
-                         _gd.FormatCapabilities.FormatSupports(FormatFeatureFlags.FormatFeatureBlitDstBit, dstFormat))
+                else if (_gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.FormatFeatureBlitSrcBit, srcFormat) &&
+                         _gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.FormatFeatureBlitDstBit, dstFormat))
                 {
                     TextureCopy.Blit(
                         _gd.Api,
@@ -761,8 +761,8 @@ namespace Ryujinx.Graphics.Vulkan
         private bool SupportsBlitFromD32FS8ToD32FAndS8()
         {
             var formatFeatureFlags = FormatFeatureFlags.FormatFeatureBlitSrcBit | FormatFeatureFlags.FormatFeatureBlitDstBit;
-            return _gd.FormatCapabilities.FormatSupports(formatFeatureFlags, GAL.Format.D32Float)  &&
-                   _gd.FormatCapabilities.FormatSupports(formatFeatureFlags, GAL.Format.S8Uint);
+            return _gd.FormatCapabilities.OptimalFormatSupports(formatFeatureFlags, GAL.Format.D32Float)  &&
+                   _gd.FormatCapabilities.OptimalFormatSupports(formatFeatureFlags, GAL.Format.S8Uint);
         }
 
         public TextureView GetView(GAL.Format format)

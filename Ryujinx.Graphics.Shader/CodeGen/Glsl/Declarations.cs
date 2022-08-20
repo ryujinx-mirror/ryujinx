@@ -553,11 +553,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 if (context.Config.Stage == ShaderStage.Vertex)
                 {
-                    type = context.Config.GpuAccessor.QueryAttributeType(attr).GetVec4Type();
+                    type = context.Config.GpuAccessor.QueryAttributeType(attr).ToVec4Type();
                 }
                 else
                 {
-                    type = AttributeType.Float.GetVec4Type();
+                    type = AttributeType.Float.ToVec4Type();
                 }
 
                 context.AppendLine($"layout ({pass}location = {attr}) {iq}in {type} {name}{suffix};");

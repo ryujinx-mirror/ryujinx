@@ -1317,10 +1317,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             for (int location = 0; location < attributeTypes.Length; location++)
             {
-                attributeTypes[location] = vertexAttribState[location].UnpackType() switch
+                VertexAttribType type = vertexAttribState[location].UnpackType();
+
+                attributeTypes[location] = type switch
                 {
-                    3 => AttributeType.Sint,
-                    4 => AttributeType.Uint,
+                    VertexAttribType.Sint => AttributeType.Sint,
+                    VertexAttribType.Uint => AttributeType.Uint,
                     _ => AttributeType.Float
                 };
             }

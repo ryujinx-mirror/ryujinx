@@ -268,6 +268,41 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     }
 
     /// <summary>
+    /// Vertex attribute vector and component size.
+    /// </summary>
+    enum VertexAttribSize
+    {
+        Size32x4 = 1,
+        Size32x3 = 2,
+        Size16x4 = 3,
+        Size32x2 = 4,
+        Size16x3 = 5,
+        Size8x4 = 0xa,
+        Size16x2 = 0xf,
+        Size32 = 0x12,
+        Size8x3 = 0x13,
+        Size8x2 = 0x18,
+        Size16 = 0x1b,
+        Size8 = 0x1d,
+        Rgb10A2 = 0x30,
+        Rg11B10 = 0x31
+    }
+
+    /// <summary>
+    /// Vertex attribute component type.
+    /// </summary>
+    enum VertexAttribType
+    {
+        Snorm = 1,
+        Unorm = 2,
+        Sint = 3,
+        Uint = 4,
+        Uscaled = 5,
+        Sscaled = 6,
+        Float = 7
+    }
+
+    /// <summary>
     /// Vertex buffer attribute state.
     /// </summary>
     struct VertexAttribState
@@ -312,13 +347,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             return Attribute & 0x3fe00000;
         }
 
-         /// <summary>
+        /// <summary>
+        /// Unpacks the Maxwell attribute size.
+        /// </summary>
+        /// <returns>Attribute size</returns>
+        public VertexAttribSize UnpackSize()
+        {
+            return (VertexAttribSize)((Attribute >> 21) & 0x3f);
+        }
+
+        /// <summary>
         /// Unpacks the Maxwell attribute component type.
         /// </summary>
         /// <returns>Attribute component type</returns>
-        public uint UnpackType()
+        public VertexAttribType UnpackType()
         {
-            return (Attribute >> 27) & 7;
+            return (VertexAttribType)((Attribute >> 27) & 7);
         }
     }
 
