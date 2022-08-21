@@ -34,6 +34,7 @@ namespace Ryujinx.Ui.Windows
 
         private long  _systemTimeOffset;
         private float _previousVolumeLevel;
+        private bool _directoryChanged = false;
 
 #pragma warning disable CS0649, IDE0044
         [GUI] CheckButton     _traceLogToggle;
@@ -501,14 +502,22 @@ namespace Ryujinx.Ui.Windows
 
         private void SaveSettings()
         {
-            List<string> gameDirs = new List<string>();
-
-            _gameDirsBoxStore.GetIterFirst(out TreeIter treeIter);
-            for (int i = 0; i < _gameDirsBoxStore.IterNChildren(); i++)
+            if (_directoryChanged)
             {
-                gameDirs.Add((string)_gameDirsBoxStore.GetValue(treeIter, 0));
+                List<string> gameDirs = new List<string>();
 
-                _gameDirsBoxStore.IterNext(ref treeIter);
+                _gameDirsBoxStore.GetIterFirst(out TreeIter treeIter);
+
+                for (int i = 0; i < _gameDirsBoxStore.IterNChildren(); i++)
+                {
+                    gameDirs.Add((string)_gameDirsBoxStore.GetValue(treeIter, 0));
+
+                    _gameDirsBoxStore.IterNext(ref treeIter);
+                }
+
+                ConfigurationState.Instance.Ui.GameDirs.Value = gameDirs;
+
+                _directoryChanged = false;
             }
 
             if (!float.TryParse(_resScaleText.Buffer.Text, out float resScaleCustom) || resScaleCustom <= 0.0f)
@@ -571,7 +580,6 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.System.SystemTimeOffset.Value             = _systemTimeOffset;
             ConfigurationState.Instance.Ui.CustomThemePath.Value                  = _custThemePath.Buffer.Text;
             ConfigurationState.Instance.Graphics.ShadersDumpPath.Value            = _graphicsShadersDumpPath.Buffer.Text;
-            ConfigurationState.Instance.Ui.GameDirs.Value                         = gameDirs;
             ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value        = (int)_fsLogSpinAdjustment.Value;
             ConfigurationState.Instance.Graphics.MaxAnisotropy.Value              = float.Parse(_anisotropy.ActiveId, CultureInfo.InvariantCulture);
             ConfigurationState.Instance.Graphics.AspectRatio.Value                = Enum.Parse<AspectRatio>(_aspectRatio.ActiveId);
@@ -655,27 +663,27 @@ namespace Ryujinx.Ui.Windows
 
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
+                    _directoryChanged = false;
                     foreach (string directory in fileChooser.Filenames)
                     {
-                        bool directoryAdded = false;
-
                         if (_gameDirsBoxStore.GetIterFirst(out TreeIter treeIter))
                         {
                             do
                             {
                                 if (directory.Equals((string)_gameDirsBoxStore.GetValue(treeIter, 0)))
                                 {
-                                    directoryAdded = true;
                                     break;
                                 }
                             } while(_gameDirsBoxStore.IterNext(ref treeIter));
                         }
 
-                        if (!directoryAdded)
+                        if (!_directoryChanged)
                         {
                             _gameDirsBoxStore.AppendValues(directory);
                         }
                     }
+
+                    _directoryChanged = true;
                 }
 
                 fileChooser.Dispose();
@@ -693,6 +701,8 @@ namespace Ryujinx.Ui.Windows
             if (selection.GetSelected(out TreeIter treeIter))
             {
                 _gameDirsBoxStore.Remove(ref treeIter);
+
+                _directoryChanged = true;
             }
 
             ((ToggleButton)sender).SetStateFlags(StateFlags.Normal, true);

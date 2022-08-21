@@ -49,6 +49,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private float _previousVolumeLevel;
         private float _volume;
         private bool _isVulkanAvailable = true;
+        private bool _directoryChanged = false;
         private List<string> _gpuIds = new List<string>();
         private KeyboardHotkeys _keyboardHotkeys;
         private int _graphicsBackendIndex;
@@ -107,6 +108,17 @@ namespace Ryujinx.Ava.Ui.ViewModels
             set
             {
                 _isVulkanAvailable = value;
+
+                OnPropertyChanged();
+            }
+        }
+
+        public bool DirectoryChanged
+        {
+            get => _directoryChanged;
+            set
+            {
+                _directoryChanged = value;
 
                 OnPropertyChanged();
             }
@@ -397,9 +409,13 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public async Task SaveSettings()
         {
-            List<string> gameDirs = new List<string>(GameDirectories);
-
             ConfigurationState config = ConfigurationState.Instance;
+
+            if (_directoryChanged)
+            {
+                List<string> gameDirs = new List<string>(GameDirectories);
+                config.Ui.GameDirs.Value = gameDirs;
+            }
 
             if (_validTzRegions.Contains(TimeZone))
             {
@@ -465,7 +481,6 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
             config.System.SystemTimeOffset.Value = systemTimeOffset.Seconds;
             config.Graphics.ShadersDumpPath.Value = ShaderDumpPath;
-            config.Ui.GameDirs.Value = gameDirs;
             config.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
 
