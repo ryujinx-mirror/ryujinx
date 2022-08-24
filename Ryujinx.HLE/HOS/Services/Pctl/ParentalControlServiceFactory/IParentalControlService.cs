@@ -14,11 +14,14 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private ParentalControlFlagValue _parentalControlFlag;
         private int[]                    _ratingAge;
 
+#pragma warning disable CS0414
         // TODO: Find where they are set.
         private bool _restrictionEnabled                  = false;
         private bool _featuresRestriction                 = false;
+        private bool _freeCommunicationEnabled            = false;
         private bool _stereoVisionRestrictionConfigurable = true;
         private bool _stereoVisionRestriction             = false;
+#pragma warning restore CS0414
 
         public IParentalControlService(ServiceCtx context, ulong pid, bool withInitialize, int permissionFlag)
         {
@@ -88,9 +91,18 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                 return ResultCode.FreeCommunicationDisabled;
             }
 
-            // NOTE: This sets an internal field to true. Usage have to be determined.
+            _freeCommunicationEnabled = true;
 
             Logger.Stub?.PrintStub(LogClass.ServicePctl);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(1017)] // 10.0.0+
+        // EndFreeCommunication()
+        public ResultCode EndFreeCommunication(ServiceCtx context)
+        {
+            _freeCommunicationEnabled = false;
 
             return ResultCode.Success;
         }
