@@ -350,7 +350,7 @@
   "DialogProfileDeleteProfileTitle": "Deleting Profile",
   "DialogProfileDeleteProfileMessage": "This action is irreversible, are you sure you want to continue?",
   "DialogWarning": "Warning",
-  "DialogPPTCDeletionMessage": "You are about to delete the PPTC cache for :\n\n{0}\n\nAre you sure you want to proceed?",
+  "DialogPPTCDeletionMessage": "You are about to queue a PPTC rebuild on the next boot of:\n\n{0}\n\nAre you sure you want to proceed?",
   "DialogPPTCDeletionErrorMessage": "Error purging PPTC cache at {0}: {1}",
   "DialogShaderDeletionMessage": "You are about to delete the Shader cache for :\n\n{0}\n\nAre you sure you want to proceed?",
   "DialogShaderDeletionErrorMessage": "Error purging Shader cache at {0}: {1}",

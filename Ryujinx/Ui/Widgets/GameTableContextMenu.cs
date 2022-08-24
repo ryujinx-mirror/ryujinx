@@ -522,7 +522,7 @@ namespace Ryujinx.Ui.Widgets
             DirectoryInfo mainDir   = new DirectoryInfo(System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "cpu", "0"));
             DirectoryInfo backupDir = new DirectoryInfo(System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "cpu", "1"));
 
-            MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to delete the PPTC cache for :\n\n<b>{_titleName}</b>\n\nAre you sure you want to proceed?");
+            MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to queue a PPTC rebuild on the next boot of:\n\n<b>{_titleName}</b>\n\nAre you sure you want to proceed?");
 
             List<FileInfo> cacheFiles = new List<FileInfo>();
 
