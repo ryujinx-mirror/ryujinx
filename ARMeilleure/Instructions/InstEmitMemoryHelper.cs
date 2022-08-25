@@ -547,7 +547,7 @@ namespace ARMeilleure.Instructions
         {
             switch (context.CurrOp)
             {
-                case OpCode32MemRsImm op: return GetMShiftedByImmediate(context, op, setCarry);
+                case IOpCode32MemRsImm op: return GetMShiftedByImmediate(context, op, setCarry);
 
                 case IOpCode32MemReg op: return GetIntA32(context, op.Rm);
 
@@ -564,7 +564,7 @@ namespace ARMeilleure.Instructions
             return new InvalidOperationException($"Invalid OpCode type \"{opCode?.GetType().Name ?? "null"}\".");
         }
 
-        public static Operand GetMShiftedByImmediate(ArmEmitterContext context, OpCode32MemRsImm op, bool setCarry)
+        public static Operand GetMShiftedByImmediate(ArmEmitterContext context, IOpCode32MemRsImm op, bool setCarry)
         {
             Operand m = GetIntA32(context, op.Rm);
 

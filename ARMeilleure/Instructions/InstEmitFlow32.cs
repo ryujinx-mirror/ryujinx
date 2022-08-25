@@ -88,7 +88,7 @@ namespace ARMeilleure.Instructions
         {
             OpCodeT16BImmCmp op = (OpCodeT16BImmCmp)context.CurrOp;
 
-            Operand value = GetIntOrZR(context, op.Rn);
+            Operand value = GetIntA32(context, op.Rn);
             Operand lblTarget = context.GetLabel((ulong)op.Immediate);
 
             if (onNotZero)

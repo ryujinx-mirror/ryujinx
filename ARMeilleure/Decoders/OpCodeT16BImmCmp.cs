@@ -1,10 +1,10 @@
 namespace ARMeilleure.Decoders
 {
-    class OpCodeT16BImmCmp : OpCodeT16
+    class OpCodeT16BImmCmp : OpCodeT16, IOpCode32BImm
     {
         public int Rn { get; }
 
-        public int Immediate { get; }
+        public long Immediate { get; }
 
         public static new OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeT16BImmCmp(inst, address, opCode);
 

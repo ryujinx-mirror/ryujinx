@@ -14,7 +14,7 @@ namespace ARMeilleure.Translation
         public BasicBlock Entry { get; }
         public IntrusiveList<BasicBlock> Blocks { get; }
         public BasicBlock[] PostOrderBlocks => _postOrderBlocks;
-        public int[] PostOrderMap => _postOrderMap; 
+        public int[] PostOrderMap => _postOrderMap;
 
         public ControlFlowGraph(BasicBlock entry, IntrusiveList<BasicBlock> blocks, int localsCount)
         {

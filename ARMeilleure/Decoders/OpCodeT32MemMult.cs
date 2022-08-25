@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace ARMeilleure.Decoders
 {
-    class OpCode32MemMult : OpCode32, IOpCode32MemMult
+    class OpCodeT32MemMult : OpCodeT32, IOpCode32MemMult
     {
         public int Rn { get; }
 
@@ -12,9 +12,9 @@ namespace ARMeilleure.Decoders
 
         public bool IsLoad { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32MemMult(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeT32MemMult(inst, address, opCode);
 
-        public OpCode32MemMult(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCodeT32MemMult(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Rn = (opCode >> 16) & 0xf;
 
