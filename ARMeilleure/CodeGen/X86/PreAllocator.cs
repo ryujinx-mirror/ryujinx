@@ -308,11 +308,13 @@ namespace ARMeilleure.CodeGen.X86
 
                 case Instruction.Extended:
                 {
+                    bool isBlend = node.Intrinsic == Intrinsic.X86Blendvpd ||
+                                   node.Intrinsic == Intrinsic.X86Blendvps ||
+                                   node.Intrinsic == Intrinsic.X86Pblendvb;
+
                     // BLENDVPD, BLENDVPS, PBLENDVB last operand is always implied to be XMM0 when VEX is not supported.
-                    if ((node.Intrinsic == Intrinsic.X86Blendvpd ||
-                         node.Intrinsic == Intrinsic.X86Blendvps ||
-                         node.Intrinsic == Intrinsic.X86Pblendvb) &&
-                         !HardwareCapabilities.SupportsVexEncoding)
+                    // SHA256RNDS2 always has an implied XMM0 as a last operand.
+                    if ((isBlend && !HardwareCapabilities.SupportsVexEncoding) || node.Intrinsic == Intrinsic.X86Sha256Rnds2)
                     {
                         Operand xmm0 = Xmm(X86Register.Xmm0, OperandType.V128);
 

@@ -21,6 +21,7 @@ namespace ARMeilleure
         public static bool UseFmaIfAvailable       { get; set; } = true;
         public static bool UseAesniIfAvailable     { get; set; } = true;
         public static bool UsePclmulqdqIfAvailable { get; set; } = true;
+        public static bool UseShaIfAvailable       { get; set; } = true;
 
         public static bool ForceLegacySse
         {
@@ -40,5 +41,6 @@ namespace ARMeilleure
         internal static bool UseFma       => UseFmaIfAvailable       && HardwareCapabilities.SupportsFma;
         internal static bool UseAesni     => UseAesniIfAvailable     && HardwareCapabilities.SupportsAesni;
         internal static bool UsePclmulqdq => UsePclmulqdqIfAvailable && HardwareCapabilities.SupportsPclmulqdq;
+        internal static bool UseSha       => UseShaIfAvailable       && HardwareCapabilities.SupportsSha;
     }
 }

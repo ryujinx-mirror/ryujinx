@@ -27,7 +27,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 3439; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 3585; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -946,9 +946,12 @@ namespace ARMeilleure.Translation.PTC
             return BitConverter.IsLittleEndian;
         }
 
-        private static ulong GetFeatureInfo()
+        private static FeatureInfo GetFeatureInfo()
         {
-            return (ulong)HardwareCapabilities.FeatureInfoEdx << 32 | (uint)HardwareCapabilities.FeatureInfoEcx;
+            return new FeatureInfo(
+                (uint)HardwareCapabilities.FeatureInfo1Ecx,
+                (uint)HardwareCapabilities.FeatureInfo1Edx,
+                (uint)HardwareCapabilities.FeatureInfo7Ebx);
         }
 
         private static byte GetMemoryManagerMode()
@@ -968,7 +971,7 @@ namespace ARMeilleure.Translation.PTC
             return osPlatform;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 50*/)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 54*/)]
         private struct OuterHeader
         {
             public ulong Magic;
@@ -976,7 +979,7 @@ namespace ARMeilleure.Translation.PTC
             public uint CacheFileVersion;
 
             public bool Endianness;
-            public ulong FeatureInfo;
+            public FeatureInfo FeatureInfo;
             public byte MemoryManagerMode;
             public uint OSPlatform;
 
@@ -998,6 +1001,9 @@ namespace ARMeilleure.Translation.PTC
                 return XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader).Slice(0, Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())) == HeaderHash;
             }
         }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 12*/)]
+        private record struct FeatureInfo(uint FeatureInfo0, uint FeatureInfo1, uint FeatureInfo2);
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 128*/)]
         private struct InnerHeader

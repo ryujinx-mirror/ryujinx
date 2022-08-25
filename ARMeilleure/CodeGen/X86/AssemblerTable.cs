@@ -157,6 +157,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Paddd,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000ffe, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Paddq,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fd4, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Paddw,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000ffd, InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Palignr,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a0f, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pand,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fdb, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pandn,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fdf, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Pavgb,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fe0, InstructionFlags.Vex | InstructionFlags.Prefix66));
@@ -239,6 +240,9 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Rsqrtss,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f52, InstructionFlags.Vex | InstructionFlags.PrefixF3));
             Add(X86Instruction.Sar,          new InstructionInfo(0x070000d3, 0x070000c1, BadOp,      BadOp,      BadOp,      InstructionFlags.None));
             Add(X86Instruction.Setcc,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f90, InstructionFlags.Reg8Dest));
+            Add(X86Instruction.Sha256Msg1,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38cc, InstructionFlags.None));
+            Add(X86Instruction.Sha256Msg2,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38cd, InstructionFlags.None));
+            Add(X86Instruction.Sha256Rnds2,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38cb, InstructionFlags.None));
             Add(X86Instruction.Shl,          new InstructionInfo(0x040000d3, 0x040000c1, BadOp,      BadOp,      BadOp,      InstructionFlags.None));
             Add(X86Instruction.Shr,          new InstructionInfo(0x050000d3, 0x050000c1, BadOp,      BadOp,      BadOp,      InstructionFlags.None));
             Add(X86Instruction.Shufpd,       new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fc6, InstructionFlags.Vex | InstructionFlags.Prefix66));

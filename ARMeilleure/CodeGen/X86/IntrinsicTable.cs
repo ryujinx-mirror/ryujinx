@@ -82,6 +82,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Paddd,        new IntrinsicInfo(X86Instruction.Paddd,        IntrinsicType.Binary));
             Add(Intrinsic.X86Paddq,        new IntrinsicInfo(X86Instruction.Paddq,        IntrinsicType.Binary));
             Add(Intrinsic.X86Paddw,        new IntrinsicInfo(X86Instruction.Paddw,        IntrinsicType.Binary));
+            Add(Intrinsic.X86Palignr,      new IntrinsicInfo(X86Instruction.Palignr,      IntrinsicType.TernaryImm));
             Add(Intrinsic.X86Pand,         new IntrinsicInfo(X86Instruction.Pand,         IntrinsicType.Binary));
             Add(Intrinsic.X86Pandn,        new IntrinsicInfo(X86Instruction.Pandn,        IntrinsicType.Binary));
             Add(Intrinsic.X86Pavgb,        new IntrinsicInfo(X86Instruction.Pavgb,        IntrinsicType.Binary));
@@ -151,6 +152,9 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Roundss,      new IntrinsicInfo(X86Instruction.Roundss,      IntrinsicType.BinaryImm));
             Add(Intrinsic.X86Rsqrtps,      new IntrinsicInfo(X86Instruction.Rsqrtps,      IntrinsicType.Unary));
             Add(Intrinsic.X86Rsqrtss,      new IntrinsicInfo(X86Instruction.Rsqrtss,      IntrinsicType.Unary));
+            Add(Intrinsic.X86Sha256Msg1,   new IntrinsicInfo(X86Instruction.Sha256Msg1,   IntrinsicType.Binary));
+            Add(Intrinsic.X86Sha256Msg2,   new IntrinsicInfo(X86Instruction.Sha256Msg2,   IntrinsicType.Binary));
+            Add(Intrinsic.X86Sha256Rnds2,  new IntrinsicInfo(X86Instruction.Sha256Rnds2,  IntrinsicType.Ternary));
             Add(Intrinsic.X86Shufpd,       new IntrinsicInfo(X86Instruction.Shufpd,       IntrinsicType.TernaryImm));
             Add(Intrinsic.X86Shufps,       new IntrinsicInfo(X86Instruction.Shufps,       IntrinsicType.TernaryImm));
             Add(Intrinsic.X86Sqrtpd,       new IntrinsicInfo(X86Instruction.Sqrtpd,       IntrinsicType.Unary));

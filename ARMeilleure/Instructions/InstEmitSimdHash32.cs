@@ -17,7 +17,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVecA32(op.Qn);
             Operand m = GetVecA32(op.Qm);
 
-            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashLower)), d, n, m);
+            Operand res = InstEmitSimdHashHelper.EmitSha256h(context, d, n, m, part2: false);
 
             context.Copy(GetVecA32(op.Qd), res);
         }
@@ -30,7 +30,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVecA32(op.Qn);
             Operand m = GetVecA32(op.Qm);
 
-            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.HashUpper)), d, n, m);
+            Operand res = InstEmitSimdHashHelper.EmitSha256h(context, n, d, m, part2: true);
 
             context.Copy(GetVecA32(op.Qd), res);
         }
@@ -42,7 +42,7 @@ namespace ARMeilleure.Instructions
             Operand d = GetVecA32(op.Qd);
             Operand m = GetVecA32(op.Qm);
 
-            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha256SchedulePart1)), d, m);
+            Operand res = InstEmitSimdHashHelper.EmitSha256su0(context, d, m);
 
             context.Copy(GetVecA32(op.Qd), res);
         }
@@ -55,7 +55,7 @@ namespace ARMeilleure.Instructions
             Operand n = GetVecA32(op.Qn);
             Operand m = GetVecA32(op.Qm);
 
-            Operand res = context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Sha256SchedulePart2)), d, n, m);
+            Operand res = InstEmitSimdHashHelper.EmitSha256su1(context, d, n, m);
 
             context.Copy(GetVecA32(op.Qd), res);
         }

@@ -1129,7 +1129,7 @@ namespace ARMeilleure.Instructions
             return Sha256Hash(hash_abcd, hash_efgh, wk, part1: true);
         }
 
-        public static V128 HashUpper(V128 hash_efgh, V128 hash_abcd, V128 wk)
+        public static V128 HashUpper(V128 hash_abcd, V128 hash_efgh, V128 wk)
         {
             return Sha256Hash(hash_abcd, hash_efgh, wk, part1: false);
         }
