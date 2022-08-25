@@ -253,7 +253,7 @@ namespace Ryujinx.HLE.Loaders.Mods
 
                     if (tokens[1][0] == '"')
                     {
-                        var patch = Encoding.ASCII.GetBytes(tokens[1].Trim('"'));
+                        var patch = Encoding.ASCII.GetBytes(tokens[1].Trim('"') + "\0");
                         patches.Add((uint)offset, patch);
                     }
                     else
