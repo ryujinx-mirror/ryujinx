@@ -163,6 +163,10 @@
                                     Header="Ελληνικά" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="pl_PL"
+                                    Header="Polish" />
+                                <MenuItem
+                                    Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="ru_RU"
                                     Header="Русский" />
                                 <MenuItem
