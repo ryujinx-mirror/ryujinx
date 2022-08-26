@@ -19,8 +19,6 @@ namespace ARMeilleure.Translation
 
         public int Count => _count;
 
-        public IntervalTree() { }
-
         #region Public Methods
 
         /// <summary>

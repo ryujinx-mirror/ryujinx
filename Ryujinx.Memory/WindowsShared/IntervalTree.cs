@@ -1,3 +1,4 @@
+using Ryujinx.Common.Collections;
 using System;
 using System.Collections.Generic;
 
@@ -8,18 +9,9 @@ namespace Ryujinx.Memory.WindowsShared
     /// </summary>
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
-    class IntervalTree<K, V> where K : IComparable<K>
+    class IntervalTree<K, V> : IntrusiveRedBlackTreeImpl<IntervalTreeNode<K, V>> where K : IComparable<K>
     {
         private const int ArrayGrowthSize = 32;
-
-        private const bool Black = true;
-        private const bool Red = false;
-        private IntervalTreeNode<K, V> _root = null;
-        private int _count = 0;
-
-        public int Count => _count;
-
-        public IntervalTree() { }
 
         #region Public Methods
 
@@ -53,7 +45,7 @@ namespace Ryujinx.Memory.WindowsShared
         /// <returns>Number of intervals found</returns>
         public int Get(K start, K end, ref IntervalTreeNode<K, V>[] overlaps, int overlapCount = 0)
         {
-            GetNodes(_root, start, end, ref overlaps, ref overlapCount);
+            GetNodes(Root, start, end, ref overlaps, ref overlapCount);
 
             return overlapCount;
         }
@@ -99,7 +91,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             Delete(nodeToDelete);
 
-            _count--;
+            Count--;
 
             return 1;
         }
@@ -112,7 +104,7 @@ namespace Ryujinx.Memory.WindowsShared
         {
             List<V> list = new List<V>();
 
-            AddToList(_root, list);
+            AddToList(Root, list);
 
             return list;
         }
@@ -153,7 +145,7 @@ namespace Ryujinx.Memory.WindowsShared
                 throw new ArgumentNullException(nameof(key));
             }
 
-            IntervalTreeNode<K, V> node = _root;
+            IntervalTreeNode<K, V> node = Root;
             while (node != null)
             {
                 int cmp = key.CompareTo(node.Start);
@@ -271,7 +263,7 @@ namespace Ryujinx.Memory.WindowsShared
         private bool BSTInsert(K start, K end, V value, Func<K, V, V> updateFactoryCallback, out IntervalTreeNode<K, V> outNode)
         {
             IntervalTreeNode<K, V> parent = null;
-            IntervalTreeNode<K, V> node = _root;
+            IntervalTreeNode<K, V> node = Root;
 
             while (node != null)
             {
@@ -319,7 +311,7 @@ namespace Ryujinx.Memory.WindowsShared
             IntervalTreeNode<K, V> newNode = new IntervalTreeNode<K, V>(start, end, value, parent);
             if (newNode.Parent == null)
             {
-                _root = newNode;
+                Root = newNode;
             }
             else if (start.CompareTo(parent.Start) < 0)
             {
@@ -331,7 +323,7 @@ namespace Ryujinx.Memory.WindowsShared
             }
 
             PropagateIncrease(newNode);
-            _count++;
+            Count++;
             RestoreBalanceAfterInsertion(newNode);
             outNode = newNode;
             return true;
@@ -351,7 +343,7 @@ namespace Ryujinx.Memory.WindowsShared
             }
             else
             {
-                replacementNode = PredecessorOf(nodeToDelete);
+                replacementNode = nodeToDelete.Predecessor;
             }
 
             IntervalTreeNode<K, V> tmp = LeftOf(replacementNode) ?? RightOf(replacementNode);
@@ -363,7 +355,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             if (ParentOf(replacementNode) == null)
             {
-                _root = tmp;
+                Root = tmp;
             }
             else if (replacementNode == LeftOf(ParentOf(replacementNode)))
             {
@@ -390,296 +382,28 @@ namespace Ryujinx.Memory.WindowsShared
             }
         }
 
-        /// <summary>
-        /// Returns the node with the largest key where <paramref name="node"/> is considered the root node.
-        /// </summary>
-        /// <param name="node">Root Node</param>
-        /// <returns>Node with the maximum key in the tree of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> Maximum(IntervalTreeNode<K, V> node)
-        {
-            IntervalTreeNode<K, V> tmp = node;
-            while (tmp.Right != null)
-            {
-                tmp = tmp.Right;
-            }
-
-            return tmp;
-        }
-
-        /// <summary>
-        /// Finds the node whose key is immediately less than <paramref name="node"/>.
-        /// </summary>
-        /// <param name="node">Node to find the predecessor of</param>
-        /// <returns>Predecessor of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> PredecessorOf(IntervalTreeNode<K, V> node)
-        {
-            if (node.Left != null)
-            {
-                return Maximum(node.Left);
-            }
-            IntervalTreeNode<K, V> parent = node.Parent;
-            while (parent != null && node == parent.Left)
-            {
-                node = parent;
-                parent = parent.Parent;
-            }
-            return parent;
-        }
-
         #endregion
 
         #region Private Methods (RBL)
 
-        private void RestoreBalanceAfterRemoval(IntervalTreeNode<K, V> balanceNode)
-        {
-            IntervalTreeNode<K, V> ptr = balanceNode;
-
-            while (ptr != _root && ColorOf(ptr) == Black)
-            {
-                if (ptr == LeftOf(ParentOf(ptr)))
-                {
-                    IntervalTreeNode<K, V> sibling = RightOf(ParentOf(ptr));
-
-                    if (ColorOf(sibling) == Red)
-                    {
-                        SetColor(sibling, Black);
-                        SetColor(ParentOf(ptr), Red);
-                        RotateLeft(ParentOf(ptr));
-                        sibling = RightOf(ParentOf(ptr));
-                    }
-                    if (ColorOf(LeftOf(sibling)) == Black && ColorOf(RightOf(sibling)) == Black)
-                    {
-                        SetColor(sibling, Red);
-                        ptr = ParentOf(ptr);
-                    }
-                    else
-                    {
-                        if (ColorOf(RightOf(sibling)) == Black)
-                        {
-                            SetColor(LeftOf(sibling), Black);
-                            SetColor(sibling, Red);
-                            RotateRight(sibling);
-                            sibling = RightOf(ParentOf(ptr));
-                        }
-                        SetColor(sibling, ColorOf(ParentOf(ptr)));
-                        SetColor(ParentOf(ptr), Black);
-                        SetColor(RightOf(sibling), Black);
-                        RotateLeft(ParentOf(ptr));
-                        ptr = _root;
-                    }
-                }
-                else
-                {
-                    IntervalTreeNode<K, V> sibling = LeftOf(ParentOf(ptr));
-
-                    if (ColorOf(sibling) == Red)
-                    {
-                        SetColor(sibling, Black);
-                        SetColor(ParentOf(ptr), Red);
-                        RotateRight(ParentOf(ptr));
-                        sibling = LeftOf(ParentOf(ptr));
-                    }
-                    if (ColorOf(RightOf(sibling)) == Black && ColorOf(LeftOf(sibling)) == Black)
-                    {
-                        SetColor(sibling, Red);
-                        ptr = ParentOf(ptr);
-                    }
-                    else
-                    {
-                        if (ColorOf(LeftOf(sibling)) == Black)
-                        {
-                            SetColor(RightOf(sibling), Black);
-                            SetColor(sibling, Red);
-                            RotateLeft(sibling);
-                            sibling = LeftOf(ParentOf(ptr));
-                        }
-                        SetColor(sibling, ColorOf(ParentOf(ptr)));
-                        SetColor(ParentOf(ptr), Black);
-                        SetColor(LeftOf(sibling), Black);
-                        RotateRight(ParentOf(ptr));
-                        ptr = _root;
-                    }
-                }
-            }
-            SetColor(ptr, Black);
-        }
-
-        private void RestoreBalanceAfterInsertion(IntervalTreeNode<K, V> balanceNode)
-        {
-            SetColor(balanceNode, Red);
-            while (balanceNode != null && balanceNode != _root && ColorOf(ParentOf(balanceNode)) == Red)
-            {
-                if (ParentOf(balanceNode) == LeftOf(ParentOf(ParentOf(balanceNode))))
-                {
-                    IntervalTreeNode<K, V> sibling = RightOf(ParentOf(ParentOf(balanceNode)));
-
-                    if (ColorOf(sibling) == Red)
-                    {
-                        SetColor(ParentOf(balanceNode), Black);
-                        SetColor(sibling, Black);
-                        SetColor(ParentOf(ParentOf(balanceNode)), Red);
-                        balanceNode = ParentOf(ParentOf(balanceNode));
-                    }
-                    else
-                    {
-                        if (balanceNode == RightOf(ParentOf(balanceNode)))
-                        {
-                            balanceNode = ParentOf(balanceNode);
-                            RotateLeft(balanceNode);
-                        }
-                        SetColor(ParentOf(balanceNode), Black);
-                        SetColor(ParentOf(ParentOf(balanceNode)), Red);
-                        RotateRight(ParentOf(ParentOf(balanceNode)));
-                    }
-                }
-                else
-                {
-                    IntervalTreeNode<K, V> sibling = LeftOf(ParentOf(ParentOf(balanceNode)));
-
-                    if (ColorOf(sibling) == Red)
-                    {
-                        SetColor(ParentOf(balanceNode), Black);
-                        SetColor(sibling, Black);
-                        SetColor(ParentOf(ParentOf(balanceNode)), Red);
-                        balanceNode = ParentOf(ParentOf(balanceNode));
-                    }
-                    else
-                    {
-                        if (balanceNode == LeftOf(ParentOf(balanceNode)))
-                        {
-                            balanceNode = ParentOf(balanceNode);
-                            RotateRight(balanceNode);
-                        }
-                        SetColor(ParentOf(balanceNode), Black);
-                        SetColor(ParentOf(ParentOf(balanceNode)), Red);
-                        RotateLeft(ParentOf(ParentOf(balanceNode)));
-                    }
-                }
-            }
-            SetColor(_root, Black);
-        }
-
-        private void RotateLeft(IntervalTreeNode<K, V> node)
+        protected override void RotateLeft(IntervalTreeNode<K, V> node)
         {
             if (node != null)
             {
-                IntervalTreeNode<K, V> right = RightOf(node);
-                node.Right = LeftOf(right);
-                if (node.Right != null)
-                {
-                    node.Right.Parent = node;
-                }
-                IntervalTreeNode<K, V> nodeParent = ParentOf(node);
-                right.Parent = nodeParent;
-                if (nodeParent == null)
-                {
-                    _root = right;
-                }
-                else if (node == LeftOf(nodeParent))
-                {
-                    nodeParent.Left = right;
-                }
-                else
-                {
-                    nodeParent.Right = right;
-                }
-                right.Left = node;
-                node.Parent = right;
+                base.RotateLeft(node);
 
                 PropagateFull(node);
             }
         }
 
-        private void RotateRight(IntervalTreeNode<K, V> node)
+        protected override void RotateRight(IntervalTreeNode<K, V> node)
         {
             if (node != null)
             {
-                IntervalTreeNode<K, V> left = LeftOf(node);
-                node.Left = RightOf(left);
-                if (node.Left != null)
-                {
-                    node.Left.Parent = node;
-                }
-                IntervalTreeNode<K, V> nodeParent = ParentOf(node);
-                left.Parent = nodeParent;
-                if (nodeParent == null)
-                {
-                    _root = left;
-                }
-                else if (node == RightOf(nodeParent))
-                {
-                    nodeParent.Right = left;
-                }
-                else
-                {
-                    nodeParent.Left = left;
-                }
-                left.Right = node;
-                node.Parent = left;
+                base.RotateRight(node);
 
                 PropagateFull(node);
             }
-        }
-
-        #endregion
-
-        #region Safety-Methods
-
-        // These methods save memory by allowing us to forego sentinel nil nodes, as well as serve as protection against NullReferenceExceptions.
-
-        /// <summary>
-        /// Returns the color of <paramref name="node"/>, or Black if it is null.
-        /// </summary>
-        /// <param name="node">Node</param>
-        /// <returns>The boolean color of <paramref name="node"/>, or black if null</returns>
-        private static bool ColorOf(IntervalTreeNode<K, V> node)
-        {
-            return node == null || node.Color;
-        }
-
-        /// <summary>
-        /// Sets the color of <paramref name="node"/> node to <paramref name="color"/>.
-        /// <br></br>
-        /// This method does nothing if <paramref name="node"/> is null.
-        /// </summary>
-        /// <param name="node">Node to set the color of</param>
-        /// <param name="color">Color (Boolean)</param>
-        private static void SetColor(IntervalTreeNode<K, V> node, bool color)
-        {
-            if (node != null)
-            {
-                node.Color = color;
-            }
-        }
-
-        /// <summary>
-        /// This method returns the left node of <paramref name="node"/>, or null if <paramref name="node"/> is null.
-        /// </summary>
-        /// <param name="node">Node to retrieve the left child from</param>
-        /// <returns>Left child of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> LeftOf(IntervalTreeNode<K, V> node)
-        {
-            return node?.Left;
-        }
-
-        /// <summary>
-        /// This method returns the right node of <paramref name="node"/>, or null if <paramref name="node"/> is null.
-        /// </summary>
-        /// <param name="node">Node to retrieve the right child from</param>
-        /// <returns>Right child of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> RightOf(IntervalTreeNode<K, V> node)
-        {
-            return node?.Right;
-        }
-
-        /// <summary>
-        /// Returns the parent node of <paramref name="node"/>, or null if <paramref name="node"/> is null.
-        /// </summary>
-        /// <param name="node">Node to retrieve the parent from</param>
-        /// <returns>Parent of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> ParentOf(IntervalTreeNode<K, V> node)
-        {
-            return node?.Parent;
         }
 
         #endregion
@@ -688,12 +412,6 @@ namespace Ryujinx.Memory.WindowsShared
         {
             return GetNode(key) != null;
         }
-
-        public void Clear()
-        {
-            _root = null;
-            _count = 0;
-        }
     }
 
     /// <summary>
@@ -701,13 +419,8 @@ namespace Ryujinx.Memory.WindowsShared
     /// </summary>
     /// <typeparam name="K">Key type of the node</typeparam>
     /// <typeparam name="V">Value type of the node</typeparam>
-    class IntervalTreeNode<K, V>
+    class IntervalTreeNode<K, V> : IntrusiveRedBlackTreeNode<IntervalTreeNode<K, V>>
     {
-        public bool Color = true;
-        public IntervalTreeNode<K, V> Left = null;
-        public IntervalTreeNode<K, V> Right = null;
-        public IntervalTreeNode<K, V> Parent = null;
-
         /// <summary>
         /// The start of the range.
         /// </summary>
