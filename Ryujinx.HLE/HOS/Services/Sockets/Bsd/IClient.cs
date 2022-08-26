@@ -219,9 +219,10 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int fdsCount = context.RequestData.ReadInt32();
             int timeout  = context.RequestData.ReadInt32();
 
-            (ulong bufferPosition, ulong bufferSize) = context.Request.GetBufferType0x21();
+            (ulong inputBufferPosition, ulong inputBufferSize) = context.Request.GetBufferType0x21();
+            (ulong outputBufferPosition, ulong outputBufferSize) = context.Request.GetBufferType0x22();
 
-            if (timeout < -1 || fdsCount < 0 || (ulong)(fdsCount * 8) > bufferSize)
+            if (timeout < -1 || fdsCount < 0 || (ulong)(fdsCount * 8) > inputBufferSize)
             {
                 return WriteBsdResult(context, -1, LinuxError.EINVAL);
             }
@@ -230,7 +231,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             for (int i = 0; i < fdsCount; i++)
             {
-                PollEventData pollEventData = context.Memory.Read<PollEventData>(bufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()));
+                PollEventData pollEventData = context.Memory.Read<PollEventData>(inputBufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()));
 
                 IFileDescriptor fileDescriptor = _context.RetrieveFileDescriptor(pollEventData.SocketFd);
 
@@ -277,7 +278,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             {
                 bool IsUnexpectedLinuxError(LinuxError error)
                 {
-                    return errno != LinuxError.SUCCESS && errno != LinuxError.ETIMEDOUT;
+                    return error != LinuxError.SUCCESS && error != LinuxError.ETIMEDOUT;
                 }
 
                 // Hybrid approach
@@ -332,7 +333,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             // TODO: Spanify
             for (int i = 0; i < fdsCount; i++)
             {
-                context.Memory.Write(bufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()), events[i].Data);
+                context.Memory.Write(outputBufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()), events[i].Data);
             }
 
             return WriteBsdResult(context, updateCount, errno);
