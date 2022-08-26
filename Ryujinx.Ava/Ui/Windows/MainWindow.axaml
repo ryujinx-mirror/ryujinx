@@ -131,56 +131,56 @@
                             <MenuItem Header="{locale:Locale MenuBarOptionsChangeLanguage}">
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="en_US"
-                                    Header="American English" />
+                                    CommandParameter="de_DE"
+                                    Header="Deutsch" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="pt_BR"
-                                    Header="Brazilian Portuguese" />
+                                    CommandParameter="en_US"
+                                    Header="English (US)" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="es_ES"
-                                    Header="Castilian Spanish" />
+                                    Header="Español (ES)" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="fr_FR"
-                                    Header="French" />
-                                <MenuItem
-                                    Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="de_DE"
-                                    Header="German" />
-                                <MenuItem
-                                    Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="el_GR"
-                                    Header="Greek" />
+                                    Header="Français" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="it_IT"
-                                    Header="Italian" />
+                                    Header="Italiano" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="ja_JP"
-                                    Header="Japanese" />
-                                <MenuItem
-                                    Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="ko_KR"
-                                    Header="Korean" />
-                                <MenuItem
-                                    Command="{ReflectionBinding ChangeLanguage}"
-                                    CommandParameter="ru_RU"
-                                    Header="Russian" />
+                                    CommandParameter="pt_BR"
+                                    Header="Português (BR)" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="tr_TR"
-                                    Header="Turkish" />
+                                    Header="Türkçe" />
+                                <MenuItem
+                                    Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="el_GR"
+                                    Header="Ελληνικά" />
+                                <MenuItem
+                                    Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="ru_RU"
+                                    Header="Русский" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="zh_CN"
-                                    Header="Simplified Chinese" />
+                                    Header="简体中文" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="zh_TW"
-                                    Header="Traditional Chinese (Taiwan)" />
+                                    Header="繁體中文" />
+                                <MenuItem                                    
+                                    Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="ja_JP"
+                                    Header="日本語" />
+                                <MenuItem
+                                    Command="{ReflectionBinding ChangeLanguage}"
+                                    CommandParameter="ko_KR"
+                                    Header="한국어" />
                             </MenuItem>
                             <Separator />
                             <MenuItem
