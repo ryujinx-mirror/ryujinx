@@ -819,7 +819,7 @@ namespace Ryujinx.Graphics.Vulkan
                 var buffer = bufferHolder.GetBuffer(cbs.CommandBuffer).Get(cbs).Value;
                 var image = GetImage().Get(cbs).Value;
 
-                CopyFromOrToBuffer(cbs.CommandBuffer, buffer, image, size, true, x, y, width, height);
+                CopyFromOrToBuffer(cbs.CommandBuffer, buffer, image, size, true, 0, 0, x, y, width, height);
             }
 
             bufferHolder.WaitForFences();
@@ -893,7 +893,12 @@ namespace Ryujinx.Graphics.Vulkan
             SetData(data, layer, level, 1, 1, singleSlice: true);
         }
 
-        private void SetData(ReadOnlySpan<byte> data, int layer, int level, int layers, int levels, bool singleSlice)
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        {
+            SetData(data, layer, level, 1, 1, singleSlice: true, region);
+        }
+
+        private void SetData(ReadOnlySpan<byte> data, int layer, int level, int layers, int levels, bool singleSlice, Rectangle<int>? region = null)
         {
             int bufferDataLength = GetBufferDataLength(data.Length);
 
@@ -917,7 +922,25 @@ namespace Ryujinx.Graphics.Vulkan
             var buffer = bufferHolder.GetBuffer(cbs.CommandBuffer).Get(cbs).Value;
             var image = imageAuto.Get(cbs).Value;
 
-            CopyFromOrToBuffer(cbs.CommandBuffer, buffer, image, bufferDataLength, false, layer, level, layers, levels, singleSlice);
+            if (region.HasValue)
+            {
+                CopyFromOrToBuffer(
+                    cbs.CommandBuffer,
+                    buffer,
+                    image,
+                    bufferDataLength,
+                    false,
+                    layer,
+                    level,
+                    region.Value.X,
+                    region.Value.Y,
+                    region.Value.Width,
+                    region.Value.Height);
+            }
+            else
+            {
+                CopyFromOrToBuffer(cbs.CommandBuffer, buffer, image, bufferDataLength, false, layer, level, layers, levels, singleSlice);
+            }
         }
 
         private int GetBufferDataLength(int length)
@@ -1059,6 +1082,8 @@ namespace Ryujinx.Graphics.Vulkan
             Image image,
             int size,
             bool to,
+            int dstLayer,
+            int dstLevel,
             int x,
             int y,
             int width,
@@ -1071,13 +1096,21 @@ namespace Ryujinx.Graphics.Vulkan
                 aspectFlags = ImageAspectFlags.ImageAspectDepthBit;
             }
 
-            var sl = new ImageSubresourceLayers(aspectFlags, (uint)FirstLevel, (uint)FirstLayer, 1);
+            var sl = new ImageSubresourceLayers(aspectFlags, (uint)(FirstLevel + dstLevel), (uint)(FirstLayer + dstLayer), 1);
 
             var extent = new Extent3D((uint)width, (uint)height, 1);
 
+            int rowLengthAlignment = Info.BlockWidth;
+
+            // We expect all data being written into the texture to have a stride aligned by 4.
+            if (!to && Info.BytesPerPixel < 4)
+            {
+                rowLengthAlignment = 4 / Info.BytesPerPixel;
+            }
+
             var region = new BufferImageCopy(
                 0,
-                (uint)AlignUpNpot(width, Info.BlockWidth),
+                (uint)AlignUpNpot(width, rowLengthAlignment),
                 (uint)AlignUpNpot(height, Info.BlockHeight),
                 sl,
                 new Offset3D(x, y, 0),

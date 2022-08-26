@@ -98,6 +98,11 @@ namespace Ryujinx.Graphics.Vulkan
             throw new NotSupportedException();
         }
 
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        {
+            throw new NotSupportedException();
+        }
+
         public void SetStorage(BufferRange buffer)
         {
             if (_bufferHandle == buffer.Handle &&

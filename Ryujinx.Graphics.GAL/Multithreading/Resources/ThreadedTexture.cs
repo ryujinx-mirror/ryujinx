@@ -119,6 +119,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
             _renderer.QueueCommand();
         }
 
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        {
+            _renderer.New<TextureSetDataSliceRegionCommand>().Set(Ref(this), Ref(data.ToArray()), layer, level, region);
+            _renderer.QueueCommand();
+        }
+
         public void SetStorage(BufferRange buffer)
         {
             _renderer.New<TextureSetStorageCommand>().Set(Ref(this), buffer);

@@ -762,6 +762,24 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Uploads new texture data to the host GPU for a specific layer/level and 2D sub-region.
+        /// </summary>
+        /// <param name="data">New data</param>
+        /// <param name="layer">Target layer</param>
+        /// <param name="level">Target level</param>
+        /// <param name="region">Target sub-region of the texture to update</param>
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        {
+            BlacklistScale();
+
+            HostTexture.SetData(data, layer, level, region);
+
+            _currentData = null;
+
+            _hasData = true;
+        }
+
+        /// <summary>
         /// Converts texture data to a format and layout that is supported by the host GPU.
         /// </summary>
         /// <param name="data">Data to be converted</param>

@@ -37,6 +37,7 @@
         TextureRelease,
         TextureSetData,
         TextureSetDataSlice,
+        TextureSetDataSliceRegion,
         TextureSetStorage,
 
         WindowPresent,

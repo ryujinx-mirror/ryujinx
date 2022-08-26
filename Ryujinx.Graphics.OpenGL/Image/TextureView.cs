@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using System;
 
@@ -385,7 +386,34 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     int width = Math.Max(Info.Width >> level, 1);
                     int height = Math.Max(Info.Height >> level, 1);
 
-                    ReadFrom2D((IntPtr)ptr, layer, level, width, height);
+                    ReadFrom2D((IntPtr)ptr, layer, level, 0, 0, width, height);
+                }
+            }
+        }
+
+        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        {
+            if (Format == Format.S8UintD24Unorm)
+            {
+                data = FormatConverter.ConvertS8D24ToD24S8(data);
+            }
+
+            int wInBlocks = BitUtils.DivRoundUp(region.Width, Info.BlockWidth);
+            int hInBlocks = BitUtils.DivRoundUp(region.Height, Info.BlockHeight);
+
+            unsafe
+            {
+                fixed (byte* ptr = data)
+                {
+                    ReadFrom2D(
+                        (IntPtr)ptr,
+                        layer,
+                        level,
+                        region.X,
+                        region.Y,
+                        region.Width,
+                        region.Height,
+                        BitUtils.AlignUp(wInBlocks * Info.BytesPerPixel, 4) * hInBlocks);
                 }
             }
         }
@@ -397,14 +425,19 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public void ReadFromPbo2D(int offset, int layer, int level, int width, int height)
         {
-            ReadFrom2D(IntPtr.Zero + offset, layer, level, width, height);
+            ReadFrom2D(IntPtr.Zero + offset, layer, level, 0, 0, width, height);
         }
 
-        private void ReadFrom2D(IntPtr data, int layer, int level, int width, int height)
+        private void ReadFrom2D(IntPtr data, int layer, int level, int x, int y, int width, int height)
+        {
+            int mipSize = Info.GetMipSize2D(level);
+
+            ReadFrom2D(data, layer, level, x, y, width, height, mipSize);
+        }
+
+        private void ReadFrom2D(IntPtr data, int layer, int level, int x, int y, int width, int height, int mipSize)
         {
             TextureTarget target = Target.Convert();
-
-            int mipSize = Info.GetMipSize2D(level);
 
             Bind(target, 0);
 
@@ -418,7 +451,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.CompressedTexSubImage1D(
                             target,
                             level,
-                            0,
+                            x,
                             width,
                             format.PixelFormat,
                             mipSize,
@@ -429,7 +462,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.TexSubImage1D(
                             target,
                             level,
-                            0,
+                            x,
                             width,
                             format.PixelFormat,
                             format.PixelType,
@@ -443,7 +476,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.CompressedTexSubImage2D(
                             target,
                             level,
-                            0,
+                            x,
                             layer,
                             width,
                             1,
@@ -456,7 +489,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.TexSubImage2D(
                             target,
                             level,
-                            0,
+                            x,
                             layer,
                             width,
                             1,
@@ -472,8 +505,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.CompressedTexSubImage2D(
                             target,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             width,
                             height,
                             format.PixelFormat,
@@ -485,8 +518,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.TexSubImage2D(
                             target,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             width,
                             height,
                             format.PixelFormat,
@@ -503,8 +536,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.CompressedTexSubImage3D(
                             target,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             layer,
                             width,
                             height,
@@ -518,8 +551,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.TexSubImage3D(
                             target,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             layer,
                             width,
                             height,
@@ -536,8 +569,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.CompressedTexSubImage2D(
                             TextureTarget.TextureCubeMapPositiveX + layer,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             width,
                             height,
                             format.PixelFormat,
@@ -549,8 +582,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
                         GL.TexSubImage2D(
                             TextureTarget.TextureCubeMapPositiveX + layer,
                             level,
-                            0,
-                            0,
+                            x,
+                            y,
                             width,
                             height,
                             format.PixelFormat,
