@@ -57,5 +57,19 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         {
             return _managerServer.StoreOpenContext(context);
         }
+
+        [CommandHipc(170)] // 6.0.0+
+        // LoadNetworkServiceLicenseKindAsync() -> object<nn::account::detail::IAsyncNetworkServiceLicenseKindContext>
+        public ResultCode LoadNetworkServiceLicenseKindAsync(ServiceCtx context)
+        {
+            ResultCode resultCode = _managerServer.LoadNetworkServiceLicenseKindAsync(context, out IAsyncNetworkServiceLicenseKindContext asyncContext);
+
+            if (resultCode == ResultCode.Success)
+            {
+                MakeObject(context, asyncContext);
+            }
+
+            return resultCode;
+        }
     }
 }

@@ -166,5 +166,22 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 
             return ResultCode.Success;
         }
+
+        public ResultCode LoadNetworkServiceLicenseKindAsync(ServiceCtx context, out IAsyncNetworkServiceLicenseKindContext asyncContext)
+        {
+            KEvent asyncEvent = new KEvent(context.Device.System.KernelContext);
+            AsyncExecution asyncExecution = new AsyncExecution(asyncEvent);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
+
+            // NOTE: This is an extension of the data retrieved from the id token cache.
+            asyncExecution.Initialize(1000, EnsureIdTokenCacheAsyncImpl);
+
+            asyncContext = new IAsyncNetworkServiceLicenseKindContext(asyncExecution, NetworkServiceLicenseKind.Subscribed);
+
+            // return ResultCode.NullObject if the IAsyncNetworkServiceLicenseKindContext pointer is null. Doesn't occur in our case.
+
+            return ResultCode.Success;
+        }
     }
 }
