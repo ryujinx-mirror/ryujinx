@@ -13,7 +13,7 @@ namespace Ryujinx.Memory.WindowsShared
 
         public int GetNodes(ulong start, ulong end, ref RangeNode<T>[] overlaps, int overlapCount = 0)
         {
-            RangeNode<T> node = GetNode(new RangeNode<T>(start, start + 1UL, default));
+            RangeNode<T> node = this.GetNodeByKey(start);
 
             for (; node != null; node = node.Successor)
             {
@@ -34,7 +34,7 @@ namespace Ryujinx.Memory.WindowsShared
         }
     }
 
-    class RangeNode<T> : IntrusiveRedBlackTreeNode<RangeNode<T>>, IComparable<RangeNode<T>>
+    class RangeNode<T> : IntrusiveRedBlackTreeNode<RangeNode<T>>, IComparable<RangeNode<T>>, IComparable<ulong>
     {
         public ulong Start { get; }
         public ulong End { get; private set; }
@@ -65,6 +65,22 @@ namespace Ryujinx.Memory.WindowsShared
             else
             {
                 return 1;
+            }
+        }
+
+        public int CompareTo(ulong address)
+        {
+            if (address < Start)
+            {
+                return 1;
+            }
+            else if (address <= End - 1UL)
+            {
+                return 0;
+            }
+            else
+            {
+                return -1;
             }
         }
     }

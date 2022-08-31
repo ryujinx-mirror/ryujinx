@@ -1,3 +1,4 @@
+using Ryujinx.Common.Collections;
 using Ryujinx.Common.Memory.PartialUnmaps;
 using System;
 using System.Diagnostics;
@@ -88,7 +89,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_mappings)
             {
-                RangeNode<ulong> node = _mappings.GetNode(new RangeNode<ulong>(address, address + 1UL, default));
+                RangeNode<ulong> node = _mappings.GetNodeByKey(address);
                 RangeNode<ulong> successorNode;
 
                 for (; node != null; node = successorNode)
@@ -379,7 +380,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_mappings)
             {
-                RangeNode<ulong> node = _mappings.GetNode(new RangeNode<ulong>(address, address + 1UL, default));
+                RangeNode<ulong> node = _mappings.GetNodeByKey(address);
 
                 if (node == null)
                 {
@@ -481,7 +482,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_mappings)
             {
-                RangeNode<ulong> node = _mappings.GetNode(new RangeNode<ulong>(reprotectAddress, reprotectAddress + 1UL, default));
+                RangeNode<ulong> node = _mappings.GetNodeByKey(reprotectAddress);
                 RangeNode<ulong> successorNode;
 
                 for (; node != null; node = successorNode)
@@ -580,7 +581,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_protections)
             {
-                RangeNode<MemoryPermission> node = _protections.GetNode(new RangeNode<MemoryPermission>(address, address + 1UL, default));
+                RangeNode<MemoryPermission> node = _protections.GetNodeByKey(address);
 
                 if (node != null &&
                     node.Start <= address &&
@@ -651,7 +652,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_protections)
             {
-                RangeNode<MemoryPermission> node = _protections.GetNode(new RangeNode<MemoryPermission>(address, address + 1UL, default));
+                RangeNode<MemoryPermission> node = _protections.GetNodeByKey(address);
                 RangeNode<MemoryPermission> successorNode;
 
                 for (; node != null; node = successorNode)
