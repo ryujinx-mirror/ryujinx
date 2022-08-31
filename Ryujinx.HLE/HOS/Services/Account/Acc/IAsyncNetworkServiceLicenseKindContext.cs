@@ -15,12 +15,12 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetNetworkServiceLicenseKind() -> nn::account::NetworkServiceLicenseKind
         public ResultCode GetNetworkServiceLicenseKind(ServiceCtx context)
         {
-            if (!_asyncExecution.IsInitialized)
+            if (!AsyncExecution.IsInitialized)
             {
                 return ResultCode.AsyncExecutionNotInitialized;
             }
 
-            if (!_asyncExecution.SystemEvent.ReadableEvent.IsSignaled())
+            if (!AsyncExecution.SystemEvent.ReadableEvent.IsSignaled())
             {
                 return ResultCode.Unknown41;
             }
