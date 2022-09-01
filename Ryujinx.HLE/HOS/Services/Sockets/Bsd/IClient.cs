@@ -573,14 +573,18 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
             LinuxError errno  = LinuxError.EBADF;
             ISocket    socket = _context.RetrieveSocket(socketFd);
-
             if (socket != null)
             {
-                errno = LinuxError.SUCCESS;
+                errno = LinuxError.ENOTCONN;
 
-                WriteSockAddr(context, bufferPosition, socket, true);
-                WriteBsdResult(context, 0, errno);
-                context.ResponseData.Write(Unsafe.SizeOf<BsdSockAddr>());
+                if (socket.RemoteEndPoint != null)
+                {
+                    errno = LinuxError.SUCCESS;
+
+                    WriteSockAddr(context, bufferPosition, socket, true);
+                    WriteBsdResult(context, 0, errno);
+                    context.ResponseData.Write(Unsafe.SizeOf<BsdSockAddr>());
+                }
             }
 
             return WriteBsdResult(context, 0, errno);
