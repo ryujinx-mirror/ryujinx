@@ -336,6 +336,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 context.Memory.Write(outputBufferPosition + (ulong)(i * Unsafe.SizeOf<PollEventData>()), events[i].Data);
             }
 
+            // In case of non blocking call timeout should not be returned.
+            if (timeout == 0 && errno == LinuxError.ETIMEDOUT)
+            {
+                errno = LinuxError.SUCCESS;
+            }
+
             return WriteBsdResult(context, updateCount, errno);
         }
 
