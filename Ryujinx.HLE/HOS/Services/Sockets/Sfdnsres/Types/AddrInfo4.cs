@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
         {
             Length  = (byte)Unsafe.SizeOf<Array4<byte>>();
             Family  = (byte)AddressFamily.InterNetwork;
-            Port    = port;
+            Port    = IPAddress.HostToNetworkOrder(port);
             Address = new Array4<byte>();
 
             address.TryWriteBytes(Address.AsSpan(), out _);
