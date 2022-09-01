@@ -38,12 +38,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             {
                 ManagedSocket socket = (ManagedSocket)evnt.FileDescriptor;
 
-                bool isValidEvent = false;
+                bool isValidEvent = evnt.Data.InputEvents == 0;
+
+                errorEvents.Add(socket.Socket);
 
                 if ((evnt.Data.InputEvents & PollEventTypeMask.Input) != 0)
                 {
                     readEvents.Add(socket.Socket);
-                    errorEvents.Add(socket.Socket);
 
                     isValidEvent = true;
                 }
@@ -51,7 +52,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 if ((evnt.Data.InputEvents & PollEventTypeMask.UrgentInput) != 0)
                 {
                     readEvents.Add(socket.Socket);
-                    errorEvents.Add(socket.Socket);
 
                     isValidEvent = true;
                 }
@@ -59,14 +59,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 if ((evnt.Data.InputEvents & PollEventTypeMask.Output) != 0)
                 {
                     writeEvents.Add(socket.Socket);
-                    errorEvents.Add(socket.Socket);
-
-                    isValidEvent = true;
-                }
-
-                if ((evnt.Data.InputEvents & PollEventTypeMask.Error) != 0)
-                {
-                    errorEvents.Add(socket.Socket);
 
                     isValidEvent = true;
                 }
@@ -93,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             {
                 Socket socket = ((ManagedSocket)evnt.FileDescriptor).Socket;
 
-                PollEventTypeMask outputEvents = 0;
+                PollEventTypeMask outputEvents = evnt.Data.OutputEvents & ~evnt.Data.InputEvents;
 
                 if (errorEvents.Contains(socket))
                 {
