@@ -1,5 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -355,6 +357,166 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         public LinuxError Write(out int writeSize, ReadOnlySpan<byte> buffer)
         {
             return Send(out writeSize, buffer, BsdSocketFlags.None);
+        }
+
+        private bool CanSupportMMsgHdr(BsdMMsgHdr message)
+        {
+            for (int i = 0; i < message.Messages.Length; i++)
+            {
+                if (message.Messages[i].Name != null ||
+                    message.Messages[i].Control != null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static IList<ArraySegment<byte>> ConvertMessagesToBuffer(BsdMMsgHdr message)
+        {
+            int segmentCount = 0;
+            int index = 0;
+
+            foreach (BsdMsgHdr msgHeader in message.Messages)
+            {
+                segmentCount += msgHeader.Iov.Length;
+            }
+
+            ArraySegment<byte>[] buffers = new ArraySegment<byte>[segmentCount];
+
+            foreach (BsdMsgHdr msgHeader in message.Messages)
+            {
+                foreach (byte[] iov in msgHeader.Iov)
+                {
+                    buffers[index++] = new ArraySegment<byte>(iov);
+                }
+
+                // Clear the length
+                msgHeader.Length = 0;
+            }
+
+            return buffers;
+        }
+
+        private static void UpdateMessages(out int vlen, BsdMMsgHdr message, int transferedSize)
+        {
+            int bytesLeft = transferedSize;
+            int index = 0;
+
+            while (bytesLeft > 0)
+            {
+                // First ensure we haven't finished all buffers
+                if (index >= message.Messages.Length)
+                {
+                    break;
+                }
+
+                BsdMsgHdr msgHeader = message.Messages[index];
+
+                int possiblyTransferedBytes = 0;
+
+                foreach (byte[] iov in msgHeader.Iov)
+                {
+                    possiblyTransferedBytes += iov.Length;
+                }
+
+                int storedBytes;
+
+                if (bytesLeft > possiblyTransferedBytes)
+                {
+                    storedBytes = possiblyTransferedBytes;
+                    index++;
+                }
+                else
+                {
+                    storedBytes = bytesLeft;
+                }
+
+                msgHeader.Length = (uint)storedBytes;
+                bytesLeft -= storedBytes;
+            }
+
+            Debug.Assert(bytesLeft == 0);
+
+            vlen = index + 1;
+        }
+
+        // TODO: Find a way to support passing the timeout somehow without changing the socket ReceiveTimeout.
+        public LinuxError RecvMMsg(out int vlen, BsdMMsgHdr message, BsdSocketFlags flags, TimeVal timeout)
+        {
+            vlen = 0;
+
+            if (message.Messages.Length == 0)
+            {
+                return LinuxError.SUCCESS;
+            }
+
+            if (!CanSupportMMsgHdr(message))
+            {
+                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported BsdMMsgHdr");
+
+                return LinuxError.EOPNOTSUPP;
+            }
+
+            if (message.Messages.Length == 0)
+            {
+                return LinuxError.SUCCESS;
+            }
+
+            try
+            {
+                int receiveSize = Socket.Receive(ConvertMessagesToBuffer(message), ConvertBsdSocketFlags(flags), out SocketError socketError);
+
+                if (receiveSize > 0)
+                {
+                    UpdateMessages(out vlen, message, receiveSize);
+                }
+
+                return WinSockHelper.ConvertError((WsaError)socketError);
+            }
+            catch (SocketException exception)
+            {
+                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+            }
+        }
+
+        public LinuxError SendMMsg(out int vlen, BsdMMsgHdr message, BsdSocketFlags flags)
+        {
+            vlen = 0;
+
+            if (message.Messages.Length == 0)
+            {
+                return LinuxError.SUCCESS;
+            }
+
+            if (!CanSupportMMsgHdr(message))
+            {
+                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported BsdMMsgHdr");
+
+                return LinuxError.EOPNOTSUPP;
+            }
+
+            if (message.Messages.Length == 0)
+            {
+                return LinuxError.SUCCESS;
+            }
+
+            try
+            {
+                int sendSize = Socket.Send(ConvertMessagesToBuffer(message), ConvertBsdSocketFlags(flags), out SocketError socketError);
+
+                if (sendSize > 0)
+                {
+                    UpdateMessages(out vlen, message, sendSize);
+                }
+
+                return WinSockHelper.ConvertError((WsaError)socketError);
+            }
+            catch (SocketException exception)
+            {
+                return WinSockHelper.ConvertError((WsaError)exception.ErrorCode);
+            }
         }
     }
 }

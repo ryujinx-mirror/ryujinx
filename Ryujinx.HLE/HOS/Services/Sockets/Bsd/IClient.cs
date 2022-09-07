@@ -886,6 +886,91 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return WriteBsdResult(context, newSockFd, errno);
         }
 
+
+        [CommandHipc(29)] // 7.0.0+
+        // RecvMMsg(u32 fd, u32 vlen, u32 flags, u32 reserved, nn::socket::TimeVal timeout) -> (i32 ret, u32 bsd_errno, buffer<bytes, 6> message);
+        public ResultCode RecvMMsg(ServiceCtx context)
+        {
+            int            socketFd    = context.RequestData.ReadInt32();
+            int            vlen        = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
+            uint           reserved    = context.RequestData.ReadUInt32();
+            TimeVal        timeout     = context.RequestData.ReadStruct<TimeVal>();
+
+            ulong receivePosition = context.Request.ReceiveBuff[0].Position;
+            ulong receiveLength = context.Request.ReceiveBuff[0].Size;
+
+            WritableRegion receiveRegion = context.Memory.GetWritableRegion(receivePosition, (int)receiveLength);
+
+            LinuxError errno  = LinuxError.EBADF;
+            ISocket    socket = _context.RetrieveSocket(socketFd);
+            int        result = -1;
+
+            if (socket != null)
+            {
+                errno = BsdMMsgHdr.Deserialize(out BsdMMsgHdr message, receiveRegion.Memory.Span, vlen);
+
+                if (errno == LinuxError.SUCCESS)
+                {
+                    errno = socket.RecvMMsg(out result, message, socketFlags, timeout);
+
+                    if (errno == LinuxError.SUCCESS)
+                    {
+                        errno = BsdMMsgHdr.Serialize(receiveRegion.Memory.Span, message);
+                    }
+                }
+            }
+
+            if (errno == LinuxError.SUCCESS)
+            {
+                SetResultErrno(socket, result);
+                receiveRegion.Dispose();
+            }
+
+            return WriteBsdResult(context, result, errno);
+        }
+
+        [CommandHipc(30)] // 7.0.0+
+        // SendMMsg(u32 fd, u32 vlen, u32 flags) -> (i32 ret, u32 bsd_errno, buffer<bytes, 6> message);
+        public ResultCode SendMMsg(ServiceCtx context)
+        {
+            int            socketFd    = context.RequestData.ReadInt32();
+            int            vlen        = context.RequestData.ReadInt32();
+            BsdSocketFlags socketFlags = (BsdSocketFlags)context.RequestData.ReadInt32();
+
+            ulong receivePosition = context.Request.ReceiveBuff[0].Position;
+            ulong receiveLength = context.Request.ReceiveBuff[0].Size;
+
+            WritableRegion receiveRegion = context.Memory.GetWritableRegion(receivePosition, (int)receiveLength);
+
+            LinuxError errno  = LinuxError.EBADF;
+            ISocket    socket = _context.RetrieveSocket(socketFd);
+            int        result = -1;
+
+            if (socket != null)
+            {
+                errno = BsdMMsgHdr.Deserialize(out BsdMMsgHdr message, receiveRegion.Memory.Span, vlen);
+
+                if (errno == LinuxError.SUCCESS)
+                {
+                    errno = socket.SendMMsg(out result, message, socketFlags);
+
+                    if (errno == LinuxError.SUCCESS)
+                    {
+                        errno = BsdMMsgHdr.Serialize(receiveRegion.Memory.Span, message);
+                    }
+                }
+            }
+
+            if (errno == LinuxError.SUCCESS)
+            {
+                SetResultErrno(socket, result);
+                receiveRegion.Dispose();
+            }
+
+            return WriteBsdResult(context, result, errno);
+        }
+
         [CommandHipc(31)] // 7.0.0+
         // EventFd(u64 initval, nn::socket::EventFdFlags flags) -> (i32 ret, u32 bsd_errno)
         public ResultCode EventFd(ServiceCtx context)
