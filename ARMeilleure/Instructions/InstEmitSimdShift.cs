@@ -1004,7 +1004,7 @@ namespace ARMeilleure.Instructions
                     e = EmitShrImm64(context, e, signedSrc, roundConst, shift); // shift <= 32
                 }
 
-                e = EmitSatQ(context, e, op.Size, signedSrc, signedDst);
+                e = signedSrc ? EmitSignedSrcSatQ(context, e, op.Size, signedDst) : EmitUnsignedSrcSatQ(context, e, op.Size, signedDst);
 
                 res = EmitVectorInsert(context, res, e, part + index, op.Size);
             }

@@ -91,7 +91,7 @@ namespace ARMeilleure.Instructions
                 }
                 else /* if (eSize != 64) */
                 {
-                    return SignedSrcSignedDstSatQ(value << shiftLsB, size);
+                    return SignedSrcSignedDstSatQ(value << shiftLsB, size); // InstEmitSimdHelper.EmitSignedSrcSatQ(signedDst: true).
                 }
             }
             else /* if (shiftLsB == 0) */
@@ -135,7 +135,7 @@ namespace ARMeilleure.Instructions
                 }
                 else /* if (eSize != 64) */
                 {
-                    return UnsignedSrcUnsignedDstSatQ(value << shiftLsB, size);
+                    return UnsignedSrcUnsignedDstSatQ(value << shiftLsB, size); // InstEmitSimdHelper.EmitUnsignedSrcSatQ(signedDst: false).
                 }
             }
             else /* if (shiftLsB == 0) */
@@ -509,7 +509,7 @@ namespace ARMeilleure.Instructions
 #endregion
 
 #region "Saturating"
-        public static long SignedSrcSignedDstSatQ(long op, int size)
+        private static long SignedSrcSignedDstSatQ(long op, int size)
         {
             ExecutionContext context = NativeInterface.GetContext();
 
@@ -536,54 +536,7 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static ulong SignedSrcUnsignedDstSatQ(long op, int size)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            int eSize = 8 << size;
-
-            ulong tMaxValue = (1UL << eSize) - 1UL;
-            ulong tMinValue =  0UL;
-
-            if (op > (long)tMaxValue)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return tMaxValue;
-            }
-            else if (op < (long)tMinValue)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return tMinValue;
-            }
-            else
-            {
-                return (ulong)op;
-            }
-        }
-
-        public static long UnsignedSrcSignedDstSatQ(ulong op, int size)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            int eSize = 8 << size;
-
-            long tMaxValue = (1L << (eSize - 1)) - 1L;
-
-            if (op > (ulong)tMaxValue)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return tMaxValue;
-            }
-            else
-            {
-                return (long)op;
-            }
-        }
-
-        public static ulong UnsignedSrcUnsignedDstSatQ(ulong op, int size)
+        private static ulong UnsignedSrcUnsignedDstSatQ(ulong op, int size)
         {
             ExecutionContext context = NativeInterface.GetContext();
 
@@ -600,208 +553,6 @@ namespace ARMeilleure.Instructions
             else
             {
                 return op;
-            }
-        }
-
-        public static long UnarySignedSatQAbsOrNeg(long op)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            if (op == long.MinValue)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return long.MaxValue;
-            }
-            else
-            {
-                return op;
-            }
-        }
-
-        public static long BinarySignedSatQAdd(long op1, long op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            long add = op1 + op2;
-
-            if ((~(op1 ^ op2) & (op1 ^ add)) < 0L)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                if (op1 < 0L)
-                {
-                    return long.MinValue;
-                }
-                else
-                {
-                    return long.MaxValue;
-                }
-            }
-            else
-            {
-                return add;
-            }
-        }
-
-        public static ulong BinaryUnsignedSatQAdd(ulong op1, ulong op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            ulong add = op1 + op2;
-
-            if ((add < op1) && (add < op2))
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return ulong.MaxValue;
-            }
-            else
-            {
-                return add;
-            }
-        }
-
-        public static long BinarySignedSatQSub(long op1, long op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            long sub = op1 - op2;
-
-            if (((op1 ^ op2) & (op1 ^ sub)) < 0L)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                if (op1 < 0L)
-                {
-                    return long.MinValue;
-                }
-                else
-                {
-                    return long.MaxValue;
-                }
-            }
-            else
-            {
-                return sub;
-            }
-        }
-
-        public static ulong BinaryUnsignedSatQSub(ulong op1, ulong op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            ulong sub = op1 - op2;
-
-            if (op1 < op2)
-            {
-                context.Fpsr |= FPSR.Qc;
-
-                return ulong.MinValue;
-            }
-            else
-            {
-                return sub;
-            }
-        }
-
-        public static long BinarySignedSatQAcc(ulong op1, long op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            if (op1 <= (ulong)long.MaxValue)
-            {
-                // op1 from ulong.MinValue to (ulong)long.MaxValue
-                // op2 from long.MinValue to long.MaxValue
-
-                long add = (long)op1 + op2;
-
-                if ((~op2 & add) < 0L)
-                {
-                    context.Fpsr |= FPSR.Qc;
-
-                    return long.MaxValue;
-                }
-                else
-                {
-                    return add;
-                }
-            }
-            else if (op2 >= 0L)
-            {
-                // op1 from (ulong)long.MaxValue + 1UL to ulong.MaxValue
-                // op2 from (long)ulong.MinValue to long.MaxValue
-
-                context.Fpsr |= FPSR.Qc;
-
-                return long.MaxValue;
-            }
-            else
-            {
-                // op1 from (ulong)long.MaxValue + 1UL to ulong.MaxValue
-                // op2 from long.MinValue to (long)ulong.MinValue - 1L
-
-                ulong add = op1 + (ulong)op2;
-
-                if (add > (ulong)long.MaxValue)
-                {
-                    context.Fpsr |= FPSR.Qc;
-
-                    return long.MaxValue;
-                }
-                else
-                {
-                    return (long)add;
-                }
-            }
-        }
-
-        public static ulong BinaryUnsignedSatQAcc(long op1, ulong op2)
-        {
-            ExecutionContext context = NativeInterface.GetContext();
-
-            if (op1 >= 0L)
-            {
-                // op1 from (long)ulong.MinValue to long.MaxValue
-                // op2 from ulong.MinValue to ulong.MaxValue
-
-                ulong add = (ulong)op1 + op2;
-
-                if ((add < (ulong)op1) && (add < op2))
-                {
-                    context.Fpsr |= FPSR.Qc;
-
-                    return ulong.MaxValue;
-                }
-                else
-                {
-                    return add;
-                }
-            }
-            else if (op2 > (ulong)long.MaxValue)
-            {
-                // op1 from long.MinValue to (long)ulong.MinValue - 1L
-                // op2 from (ulong)long.MaxValue + 1UL to ulong.MaxValue
-
-                return (ulong)op1 + op2;
-            }
-            else
-            {
-                // op1 from long.MinValue to (long)ulong.MinValue - 1L
-                // op2 from ulong.MinValue to (ulong)long.MaxValue
-
-                long add = op1 + (long)op2;
-
-                if (add < (long)ulong.MinValue)
-                {
-                    context.Fpsr |= FPSR.Qc;
-
-                    return ulong.MinValue;
-                }
-                else
-                {
-                    return (ulong)add;
-                }
             }
         }
 #endregion

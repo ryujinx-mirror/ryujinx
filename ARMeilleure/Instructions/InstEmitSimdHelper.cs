@@ -1352,7 +1352,7 @@ namespace ARMeilleure.Instructions
 
                 if (op.Size <= 2)
                 {
-                    de = EmitSatQ(context, emit(ne), op.Size, signedSrc: true, signedDst: true);
+                    de = EmitSignedSrcSatQ(context, emit(ne), op.Size, signedDst: true);
                 }
                 else /* if (op.Size == 3) */
                 {
@@ -1419,15 +1419,18 @@ namespace ARMeilleure.Instructions
                     {
                         Operand temp = add ? context.Add(ne, me) : context.Subtract(ne, me);
 
-                        de = EmitSatQ(context, temp, op.Size, signedSrc: true, signedDst: signed);
+                        de = EmitSignedSrcSatQ(context, temp, op.Size, signedDst: signed);
                     }
-                    else if (add) /* if (op.Size == 3) */
+                    else /* if (op.Size == 3) */
                     {
-                        de = EmitBinarySatQAdd(context, ne, me, signed);
-                    }
-                    else /* if (sub) */
-                    {
-                        de = EmitBinarySatQSub(context, ne, me, signed);
+                        if (add)
+                        {
+                            de = signed ? EmitBinarySignedSatQAdd(context, ne, me) : EmitBinaryUnsignedSatQAdd(context, ne, me);
+                        }
+                        else /* if (sub) */
+                        {
+                            de = signed ? EmitBinarySignedSatQSub(context, ne, me) : EmitBinaryUnsignedSatQSub(context, ne, me);
+                        }
                     }
 
                     res = EmitVectorInsert(context, res, de, index, op.Size);
@@ -1445,11 +1448,11 @@ namespace ARMeilleure.Instructions
                     {
                         Operand temp = context.Add(ne, me);
 
-                        de = EmitSatQ(context, temp, op.Size, signedSrc: true, signedDst: signed);
+                        de = EmitSignedSrcSatQ(context, temp, op.Size, signedDst: signed);
                     }
                     else /* if (op.Size == 3) */
                     {
-                        de = EmitBinarySatQAccumulate(context, ne, me, signed);
+                        de = signed ? EmitBinarySignedSatQAcc(context, ne, me) : EmitBinaryUnsignedSatQAcc(context, ne, me);
                     }
 
                     res = EmitVectorInsert(context, res, de, index, op.Size);
@@ -1475,7 +1478,7 @@ namespace ARMeilleure.Instructions
                         me = EmitVectorExtract(context, ((OpCodeSimdReg)op).Rm, index, op.Size, signed);
                     }
 
-                    Operand de = EmitSatQ(context, emit(ne, me), op.Size, true, signed);
+                    Operand de = EmitSignedSrcSatQ(context, emit(ne, me), op.Size, signedDst: signed);
 
                     res = EmitVectorInsert(context, res, de, index, op.Size);
                 }
@@ -1520,7 +1523,9 @@ namespace ARMeilleure.Instructions
             {
                 Operand ne = EmitVectorExtract(context, op.Rn, index, op.Size + 1, signedSrc);
 
-                Operand temp = EmitSatQ(context, ne, op.Size, signedSrc, signedDst);
+                Operand temp = signedSrc
+                    ? EmitSignedSrcSatQ(context, ne, op.Size, signedDst)
+                    : EmitUnsignedSrcSatQ(context, ne, op.Size, signedDst);
 
                 res = EmitVectorInsert(context, res, temp, part + index, op.Size);
             }
@@ -1528,74 +1533,248 @@ namespace ARMeilleure.Instructions
             context.Copy(d, res);
         }
 
-        // TSrc (16bit, 32bit, 64bit; signed, unsigned) > TDst (8bit, 16bit, 32bit; signed, unsigned).
-        public static Operand EmitSatQ(ArmEmitterContext context, Operand op, int sizeDst, bool signedSrc, bool signedDst)
+        // TSrc (16bit, 32bit, 64bit; signed) > TDst (8bit, 16bit, 32bit; signed, unsigned).
+        // long SignedSrcSignedDstSatQ(long op, int size); ulong SignedSrcUnsignedDstSatQ(long op, int size);
+        public static Operand EmitSignedSrcSatQ(ArmEmitterContext context, Operand op, int sizeDst, bool signedDst)
         {
-            if ((uint)sizeDst > 2u)
-            {
-                throw new ArgumentOutOfRangeException(nameof(sizeDst));
-            }
+            Debug.Assert(op.Type == OperandType.I64 && (uint)sizeDst <= 2u);
 
-            MethodInfo info;
+            Operand lbl1 = Label();
+            Operand lblEnd = Label();
 
-            if (signedSrc)
-            {
-                info = signedDst
-                    ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedSrcSignedDstSatQ))
-                    : typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedSrcUnsignedDstSatQ));
-            }
-            else
-            {
-                info = signedDst
-                    ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedSrcSignedDstSatQ))
-                    : typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedSrcUnsignedDstSatQ));
-            }
+            int eSize = 8 << sizeDst;
 
-            return context.Call(info, op, Const(sizeDst));
+            Operand maxT = signedDst ? Const((1L << (eSize - 1)) - 1L) : Const((1UL << eSize) - 1UL);
+            Operand minT = signedDst ? Const(-(1L << (eSize - 1))) : Const(0UL);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), op);
+
+            context.BranchIf(lbl1, res, maxT, Comparison.LessOrEqual);
+            context.Copy(res, maxT);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl1);
+            context.BranchIf(lblEnd, res, minT, Comparison.GreaterOrEqual);
+            context.Copy(res, minT);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
         }
 
-        // TSrc (64bit) == TDst (64bit); signed.
-        public static Operand EmitUnarySignedSatQAbsOrNeg(ArmEmitterContext context, Operand op)
+        // TSrc (16bit, 32bit, 64bit; unsigned) > TDst (8bit, 16bit, 32bit; signed, unsigned).
+        // long UnsignedSrcSignedDstSatQ(ulong op, int size); ulong UnsignedSrcUnsignedDstSatQ(ulong op, int size);
+        public static Operand EmitUnsignedSrcSatQ(ArmEmitterContext context, Operand op, int sizeDst, bool signedDst)
         {
-            Debug.Assert(((OpCodeSimd)context.CurrOp).Size == 3, "Invalid element size.");
+            Debug.Assert(op.Type == OperandType.I64 && (uint)sizeDst <= 2u);
 
-            return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnarySignedSatQAbsOrNeg)), op);
+            Operand lblEnd = Label();
+
+            int eSize = 8 << sizeDst;
+
+            Operand maxL = signedDst ? Const((1L << (eSize - 1)) - 1L) : Const((1UL << eSize) - 1UL);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), op);
+
+            context.BranchIf(lblEnd, res, maxL, Comparison.LessOrEqualUI);
+            context.Copy(res, maxL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
         }
 
-        // TSrcs (64bit) == TDst (64bit); signed, unsigned.
-        public static Operand EmitBinarySatQAdd(ArmEmitterContext context, Operand op1, Operand op2, bool signed)
+        // long UnarySignedSatQAbsOrNeg(long op);
+        private static Operand EmitUnarySignedSatQAbsOrNeg(ArmEmitterContext context, Operand op)
         {
-            Debug.Assert(((OpCodeSimd)context.CurrOp).Size == 3, "Invalid element size.");
+            Debug.Assert(op.Type == OperandType.I64);
 
-            MethodInfo info = signed
-                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQAdd))
-                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQAdd));
+            Operand lblEnd = Label();
 
-            return context.Call(info, op1, op2);
+            Operand minL = Const(long.MinValue);
+            Operand maxL = Const(long.MaxValue);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), op);
+
+            context.BranchIf(lblEnd, res, minL, Comparison.NotEqual);
+            context.Copy(res, maxL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
         }
 
-        // TSrcs (64bit) == TDst (64bit); signed, unsigned.
-        public static Operand EmitBinarySatQSub(ArmEmitterContext context, Operand op1, Operand op2, bool signed)
+        // long BinarySignedSatQAdd(long op1, long op2);
+        private static Operand EmitBinarySignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
         {
-            Debug.Assert(((OpCodeSimd)context.CurrOp).Size == 3, "Invalid element size.");
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
-            MethodInfo info = signed
-                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQSub))
-                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQSub));
+            Operand lblEnd = Label();
 
-            return context.Call(info, op1, op2);
+            Operand minL = Const(long.MinValue);
+            Operand maxL = Const(long.MaxValue);
+            Operand zero = Const(0L);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Add(op1, op2));
+
+            Operand left = context.BitwiseNot(context.BitwiseExclusiveOr(op1, op2));
+            Operand right = context.BitwiseExclusiveOr(op1, res);
+            context.BranchIf(lblEnd, context.BitwiseAnd(left, right), zero, Comparison.GreaterOrEqual);
+
+            Operand isPositive = context.ICompareGreaterOrEqual(op1, zero);
+            context.Copy(res, context.ConditionalSelect(isPositive, maxL, minL));
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
         }
 
-        // TSrcs (64bit) == TDst (64bit); signed, unsigned.
-        public static Operand EmitBinarySatQAccumulate(ArmEmitterContext context, Operand op1, Operand op2, bool signed)
+        // ulong BinaryUnsignedSatQAdd(ulong op1, ulong op2);
+        private static Operand EmitBinaryUnsignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
         {
-            Debug.Assert(((OpCodeSimd)context.CurrOp).Size == 3, "Invalid element size.");
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
-            MethodInfo info = signed
-                ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQAcc))
-                : typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQAcc));
+            Operand lblEnd = Label();
 
-            return context.Call(info, op1, op2);
+            Operand maxUL = Const(ulong.MaxValue);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Add(op1, op2));
+
+            context.BranchIf(lblEnd, res, op1, Comparison.GreaterOrEqualUI);
+            context.Copy(res, maxUL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
+        }
+
+        // long BinarySignedSatQSub(long op1, long op2);
+        private static Operand EmitBinarySignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
+        {
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
+
+            Operand lblEnd = Label();
+
+            Operand minL = Const(long.MinValue);
+            Operand maxL = Const(long.MaxValue);
+            Operand zero = Const(0L);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Subtract(op1, op2));
+
+            Operand left = context.BitwiseExclusiveOr(op1, op2);
+            Operand right = context.BitwiseExclusiveOr(op1, res);
+            context.BranchIf(lblEnd, context.BitwiseAnd(left, right), zero, Comparison.GreaterOrEqual);
+
+            Operand isPositive = context.ICompareGreaterOrEqual(op1, zero);
+            context.Copy(res, context.ConditionalSelect(isPositive, maxL, minL));
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
+        }
+
+        // ulong BinaryUnsignedSatQSub(ulong op1, ulong op2);
+        private static Operand EmitBinaryUnsignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
+        {
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
+
+            Operand lblEnd = Label();
+
+            Operand zero = Const(0L);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Subtract(op1, op2));
+
+            context.BranchIf(lblEnd, op1, op2, Comparison.GreaterOrEqualUI);
+            context.Copy(res, zero);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
+        }
+
+        // long BinarySignedSatQAcc(ulong op1, long op2);
+        private static Operand EmitBinarySignedSatQAcc(ArmEmitterContext context, Operand op1, Operand op2)
+        {
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
+
+            Operand lbl1 = Label();
+            Operand lbl2 = Label();
+            Operand lblEnd = Label();
+
+            Operand maxL = Const(long.MaxValue);
+            Operand zero = Const(0L);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Add(op1, op2));
+
+            context.BranchIf(lbl1, op1, maxL, Comparison.GreaterUI);
+            Operand notOp2AndRes = context.BitwiseAnd(context.BitwiseNot(op2), res);
+            context.BranchIf(lblEnd, notOp2AndRes, zero, Comparison.GreaterOrEqual);
+            context.Copy(res, maxL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl1);
+            context.BranchIf(lbl2, op2, zero, Comparison.Less);
+            context.Copy(res, maxL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl2);
+            context.BranchIf(lblEnd, res, maxL, Comparison.LessOrEqualUI);
+            context.Copy(res, maxL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
+        }
+
+        // ulong BinaryUnsignedSatQAcc(long op1, ulong op2);
+        private static Operand EmitBinaryUnsignedSatQAcc(ArmEmitterContext context, Operand op1, Operand op2)
+        {
+            Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
+
+            Operand lbl1 = Label();
+            Operand lblEnd = Label();
+
+            Operand maxUL = Const(ulong.MaxValue);
+            Operand maxL = Const(long.MaxValue);
+            Operand zero = Const(0L);
+
+            Operand res = context.Copy(context.AllocateLocal(OperandType.I64), context.Add(op1, op2));
+
+            context.BranchIf(lbl1, op1, zero, Comparison.Less);
+            context.BranchIf(lblEnd, res, op1, Comparison.GreaterOrEqualUI);
+            context.Copy(res, maxUL);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl1);
+            context.BranchIf(lblEnd, op2, maxL, Comparison.GreaterUI);
+            context.BranchIf(lblEnd, res, zero, Comparison.GreaterOrEqual);
+            context.Copy(res, zero);
+            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
         }
 
         public static Operand EmitFloatAbs(ArmEmitterContext context, Operand value, bool single, bool vector)

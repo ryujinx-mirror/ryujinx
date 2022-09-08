@@ -127,7 +127,7 @@ namespace ARMeilleure.Translation
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpcr)));
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpscr))); // A32 only.
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsr)));
-            SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc))); // A32 only.
+            SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl0)));
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl032))); // A32 only.
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SignalMemoryTracking)));
@@ -140,12 +140,6 @@ namespace ARMeilleure.Translation
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.WriteUInt64)));
             SetDelegateInfo(typeof(NativeInterface).GetMethod(nameof(NativeInterface.WriteVector128)));
 
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQAcc)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQAdd)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinarySignedSatQSub)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQAcc)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQAdd)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.BinaryUnsignedSatQSub)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.CountLeadingSigns)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.CountLeadingZeros)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Crc32b)));
@@ -188,8 +182,6 @@ namespace ARMeilleure.Translation
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedShlReg)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedShlRegSatQ)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedShrImm64)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedSrcSignedDstSatQ)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.SignedSrcUnsignedDstSatQ)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbl1)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbl2)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbl3)));
@@ -198,12 +190,9 @@ namespace ARMeilleure.Translation
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbx2)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbx3)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Tbx4)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnarySignedSatQAbsOrNeg)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedShlReg)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedShlRegSatQ)));
             SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedShrImm64)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedSrcSignedDstSatQ)));
-            SetDelegateInfo(typeof(SoftFallback).GetMethod(nameof(SoftFallback.UnsignedSrcUnsignedDstSatQ)));
 
             SetDelegateInfo(typeof(SoftFloat16_32).GetMethod(nameof(SoftFloat16_32.FPConvert)));
             SetDelegateInfo(typeof(SoftFloat16_64).GetMethod(nameof(SoftFloat16_64.FPConvert)));
