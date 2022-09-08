@@ -185,6 +185,34 @@ namespace Ryujinx.Graphics.Vulkan
             SignalDirty(DirtyFlags.Storage);
         }
 
+        public void SetStorageBuffers(CommandBuffer commandBuffer, int first, ReadOnlySpan<Auto<DisposableBuffer>> buffers)
+        {
+            for (int i = 0; i < buffers.Length; i++)
+            {
+                var vkBuffer = buffers[i];
+                int index = first + i;
+
+                ref Auto<DisposableBuffer> currentVkBuffer = ref _storageBufferRefs[index];
+
+                DescriptorBufferInfo info = new DescriptorBufferInfo()
+                {
+                    Offset = 0,
+                    Range = Vk.WholeSize
+                };
+                ref DescriptorBufferInfo currentInfo = ref _storageBuffers[index];
+
+                if (vkBuffer != currentVkBuffer || currentInfo.Offset != info.Offset || currentInfo.Range != info.Range)
+                {
+                    _storageSet[index] = false;
+
+                    currentInfo = info;
+                    currentVkBuffer = vkBuffer;
+                }
+            }
+
+            SignalDirty(DirtyFlags.Storage);
+        }
+
         public void SetTextureAndSampler(CommandBufferScoped cbs, ShaderStage stage, int binding, ITexture texture, ISampler sampler)
         {
             if (texture == null)
@@ -388,7 +416,14 @@ namespace Ryujinx.Graphics.Vulkan
                         }
 
                         ReadOnlySpan<DescriptorBufferInfo> storageBuffers = _storageBuffers;
-                        dsc.UpdateStorageBuffers(0, binding, storageBuffers.Slice(binding, count));
+                        if (program.HasMinimalLayout)
+                        {
+                            dsc.UpdateBuffers(0, binding, storageBuffers.Slice(binding, count), DescriptorType.StorageBuffer);
+                        }
+                        else
+                        {
+                            dsc.UpdateStorageBuffers(0, binding, storageBuffers.Slice(binding, count));
+                        }
                     }
                     else if (setIndex == PipelineBase.TextureSetIndex)
                     {

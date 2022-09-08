@@ -142,18 +142,20 @@ namespace Ryujinx.Graphics.Vulkan
             int stagesCount = shaders.Length;
 
             int uCount = 0;
+            int sCount = 0;
             int tCount = 0;
             int iCount = 0;
 
             foreach (var shader in shaders)
             {
                 uCount += shader.Bindings.UniformBufferBindings.Count;
+                sCount += shader.Bindings.StorageBufferBindings.Count;
                 tCount += shader.Bindings.TextureBindings.Count;
                 iCount += shader.Bindings.ImageBindings.Count;
             }
 
             DescriptorSetLayoutBinding* uLayoutBindings = stackalloc DescriptorSetLayoutBinding[uCount];
-            DescriptorSetLayoutBinding* sLayoutBindings = stackalloc DescriptorSetLayoutBinding[stagesCount];
+            DescriptorSetLayoutBinding* sLayoutBindings = stackalloc DescriptorSetLayoutBinding[sCount];
             DescriptorSetLayoutBinding* tLayoutBindings = stackalloc DescriptorSetLayoutBinding[tCount];
             DescriptorSetLayoutBinding* iLayoutBindings = stackalloc DescriptorSetLayoutBinding[iCount];
 
@@ -180,22 +182,11 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                 }
 
-                void SetStorage(DescriptorSetLayoutBinding* bindings, ref int start, int count)
-                {
-                    bindings[start++] = new DescriptorSetLayoutBinding
-                    {
-                        Binding = (uint)start,
-                        DescriptorType = DescriptorType.StorageBuffer,
-                        DescriptorCount = (uint)count,
-                        StageFlags = stageFlags
-                    };
-                }
-
                 // TODO: Support buffer textures and images here.
                 // This is only used for the helper shaders on the backend, and we don't use buffer textures on them
                 // so far, so it's not really necessary right now.
                 Set(uLayoutBindings, DescriptorType.UniformBuffer, ref uIndex, shader.Bindings.UniformBufferBindings);
-                SetStorage(sLayoutBindings, ref sIndex, shader.Bindings.StorageBufferBindings.Count);
+                Set(sLayoutBindings, DescriptorType.StorageBuffer, ref sIndex, shader.Bindings.StorageBufferBindings);
                 Set(tLayoutBindings, DescriptorType.CombinedImageSampler, ref tIndex, shader.Bindings.TextureBindings);
                 Set(iLayoutBindings, DescriptorType.StorageImage, ref iIndex, shader.Bindings.ImageBindings);
             }
@@ -213,7 +204,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.DescriptorSetLayoutCreateInfo,
                 PBindings = sLayoutBindings,
-                BindingCount = (uint)stagesCount
+                BindingCount = (uint)sCount
             };
 
             var tDescriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo()

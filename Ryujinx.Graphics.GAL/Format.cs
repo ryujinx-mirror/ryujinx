@@ -152,6 +152,190 @@ namespace Ryujinx.Graphics.GAL
     public static class FormatExtensions
     {
         /// <summary>
+        /// The largest scalar size for a buffer format.
+        /// </summary>
+        public const int MaxBufferFormatScalarSize = 4;
+
+        /// <summary>
+        /// Gets the byte size for a single component of this format, or its packed size.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>Byte size for a single component, or packed size</returns>
+        public static int GetScalarSize(this Format format)
+        {
+            switch (format)
+            {
+                case Format.R8Unorm:
+                case Format.R8Snorm:
+                case Format.R8Uint:
+                case Format.R8Sint:
+                case Format.R8G8Unorm:
+                case Format.R8G8Snorm:
+                case Format.R8G8Uint:
+                case Format.R8G8Sint:
+                case Format.R8G8B8Unorm:
+                case Format.R8G8B8Snorm:
+                case Format.R8G8B8Uint:
+                case Format.R8G8B8Sint:
+                case Format.R8G8B8A8Unorm:
+                case Format.R8G8B8A8Snorm:
+                case Format.R8G8B8A8Uint:
+                case Format.R8G8B8A8Sint:
+                case Format.R8G8B8A8Srgb:
+                case Format.R4G4Unorm:
+                case Format.R8Uscaled:
+                case Format.R8Sscaled:
+                case Format.R8G8Uscaled:
+                case Format.R8G8Sscaled:
+                case Format.R8G8B8Uscaled:
+                case Format.R8G8B8Sscaled:
+                case Format.R8G8B8A8Uscaled:
+                case Format.R8G8B8A8Sscaled:
+                case Format.B8G8R8A8Unorm:
+                case Format.B8G8R8A8Srgb:
+                    return 1;
+
+                case Format.R16Float:
+                case Format.R16Unorm:
+                case Format.R16Snorm:
+                case Format.R16Uint:
+                case Format.R16Sint:
+                case Format.R16G16Float:
+                case Format.R16G16Unorm:
+                case Format.R16G16Snorm:
+                case Format.R16G16Uint:
+                case Format.R16G16Sint:
+                case Format.R16G16B16Float:
+                case Format.R16G16B16Unorm:
+                case Format.R16G16B16Snorm:
+                case Format.R16G16B16Uint:
+                case Format.R16G16B16Sint:
+                case Format.R16G16B16A16Float:
+                case Format.R16G16B16A16Unorm:
+                case Format.R16G16B16A16Snorm:
+                case Format.R16G16B16A16Uint:
+                case Format.R16G16B16A16Sint:
+                case Format.R4G4B4A4Unorm:
+                case Format.R5G5B5X1Unorm:
+                case Format.R5G5B5A1Unorm:
+                case Format.R5G6B5Unorm:
+                case Format.R16Uscaled:
+                case Format.R16Sscaled:
+                case Format.R16G16Uscaled:
+                case Format.R16G16Sscaled:
+                case Format.R16G16B16Uscaled:
+                case Format.R16G16B16Sscaled:
+                case Format.R16G16B16A16Uscaled:
+                case Format.R16G16B16A16Sscaled:
+                case Format.B5G6R5Unorm:
+                case Format.B5G5R5A1Unorm:
+                case Format.A1B5G5R5Unorm:
+                    return 2;
+
+                case Format.R32Float:
+                case Format.R32Uint:
+                case Format.R32Sint:
+                case Format.R32G32Float:
+                case Format.R32G32Uint:
+                case Format.R32G32Sint:
+                case Format.R32G32B32Float:
+                case Format.R32G32B32Uint:
+                case Format.R32G32B32Sint:
+                case Format.R32G32B32A32Float:
+                case Format.R32G32B32A32Uint:
+                case Format.R32G32B32A32Sint:
+                case Format.R10G10B10A2Unorm:
+                case Format.R10G10B10A2Uint:
+                case Format.R11G11B10Float:
+                case Format.R9G9B9E5Float:
+                case Format.R32Uscaled:
+                case Format.R32Sscaled:
+                case Format.R32G32Uscaled:
+                case Format.R32G32Sscaled:
+                case Format.R32G32B32Uscaled:
+                case Format.R32G32B32Sscaled:
+                case Format.R32G32B32A32Uscaled:
+                case Format.R32G32B32A32Sscaled:
+                case Format.R10G10B10A2Snorm:
+                case Format.R10G10B10A2Sint:
+                case Format.R10G10B10A2Uscaled:
+                case Format.R10G10B10A2Sscaled:
+                    return 4;
+
+                case Format.S8Uint:
+                    return 1;
+                case Format.D16Unorm:
+                    return 2;
+                case Format.S8UintD24Unorm:
+                case Format.D32Float:
+                case Format.D24UnormS8Uint:
+                    return 4;
+                case Format.D32FloatS8Uint:
+                    return 8;
+
+                case Format.Bc1RgbaUnorm:
+                case Format.Bc1RgbaSrgb:
+                    return 8;
+
+                case Format.Bc2Unorm:
+                case Format.Bc3Unorm:
+                case Format.Bc2Srgb:
+                case Format.Bc3Srgb:
+                case Format.Bc4Unorm:
+                case Format.Bc4Snorm:
+                case Format.Bc5Unorm:
+                case Format.Bc5Snorm:
+                case Format.Bc7Unorm:
+                case Format.Bc7Srgb:
+                case Format.Bc6HSfloat:
+                case Format.Bc6HUfloat:
+                    return 16;
+
+                case Format.Etc2RgbUnorm:
+                case Format.Etc2RgbPtaUnorm:
+                case Format.Etc2RgbSrgb:
+                case Format.Etc2RgbPtaSrgb:
+                    return 8;
+
+                case Format.Etc2RgbaUnorm:
+                case Format.Etc2RgbaSrgb:
+                    return 16;
+
+                case Format.Astc4x4Unorm:
+                case Format.Astc5x4Unorm:
+                case Format.Astc5x5Unorm:
+                case Format.Astc6x5Unorm:
+                case Format.Astc6x6Unorm:
+                case Format.Astc8x5Unorm:
+                case Format.Astc8x6Unorm:
+                case Format.Astc8x8Unorm:
+                case Format.Astc10x5Unorm:
+                case Format.Astc10x6Unorm:
+                case Format.Astc10x8Unorm:
+                case Format.Astc10x10Unorm:
+                case Format.Astc12x10Unorm:
+                case Format.Astc12x12Unorm:
+                case Format.Astc4x4Srgb:
+                case Format.Astc5x4Srgb:
+                case Format.Astc5x5Srgb:
+                case Format.Astc6x5Srgb:
+                case Format.Astc6x6Srgb:
+                case Format.Astc8x5Srgb:
+                case Format.Astc8x6Srgb:
+                case Format.Astc8x8Srgb:
+                case Format.Astc10x5Srgb:
+                case Format.Astc10x6Srgb:
+                case Format.Astc10x8Srgb:
+                case Format.Astc10x10Srgb:
+                case Format.Astc12x10Srgb:
+                case Format.Astc12x12Srgb:
+                    return 16;
+            }
+
+            return 1;
+        }
+
+        /// <summary>
         /// Checks if the texture format is valid to use as image format.
         /// </summary>
         /// <param name="format">Texture format</param>

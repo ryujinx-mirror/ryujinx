@@ -202,6 +202,9 @@ namespace Ryujinx.Graphics.Vulkan
             pipeline.Topology = state.Topology.Convert();
 
             int vaCount = Math.Min(Constants.MaxVertexAttributes, state.VertexAttribCount);
+            int vbCount = Math.Min(Constants.MaxVertexBuffers, state.VertexBufferCount);
+
+            Span<int> vbScalarSizes = stackalloc int[vbCount];
 
             for (int i = 0; i < vaCount; i++)
             {
@@ -213,12 +216,15 @@ namespace Ryujinx.Graphics.Vulkan
                     (uint)bufferIndex,
                     gd.FormatCapabilities.ConvertToVertexVkFormat(attribute.Format),
                     (uint)attribute.Offset);
+
+                if (!attribute.IsZero && bufferIndex < vbCount)
+                {
+                    vbScalarSizes[bufferIndex - 1] = Math.Max(attribute.Format.GetScalarSize(), vbScalarSizes[bufferIndex - 1]);
+                }
             }
 
             int descriptorIndex = 1;
             pipeline.Internal.VertexBindingDescriptions[0] = new VertexInputBindingDescription(0, 0, VertexInputRate.Vertex);
-
-            int vbCount = Math.Min(Constants.MaxVertexBuffers, state.VertexBufferCount);
 
             for (int i = 0; i < vbCount; i++)
             {
@@ -228,10 +234,17 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     var inputRate = vertexBuffer.Divisor != 0 ? VertexInputRate.Instance : VertexInputRate.Vertex;
 
+                    int alignedStride = vertexBuffer.Stride;
+
+                    if (gd.NeedsVertexBufferAlignment(vbScalarSizes[i], out int alignment))
+                    {
+                        alignedStride = (vertexBuffer.Stride + (alignment - 1)) & -alignment;
+                    }
+
                     // TODO: Support divisor > 1
                     pipeline.Internal.VertexBindingDescriptions[descriptorIndex++] = new VertexInputBindingDescription(
                         (uint)i + 1,
-                        (uint)vertexBuffer.Stride,
+                        (uint)alignedStride,
                         inputRate);
                 }
             }

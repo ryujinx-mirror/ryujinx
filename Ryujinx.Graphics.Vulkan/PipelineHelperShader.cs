@@ -40,5 +40,15 @@ namespace Ryujinx.Graphics.Vulkan
         {
             EndRenderPass();
         }
+
+        public void Finish(VulkanRenderer gd, CommandBufferScoped cbs)
+        {
+            Finish();
+
+            if (gd.PipelineInternal.IsCommandBufferActive(cbs.CommandBuffer))
+            {
+                gd.PipelineInternal.Restore();
+            }
+        }
     }
 }

@@ -28,6 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_EXT_fragment_shader_interlock",
             "VK_EXT_index_type_uint8",
             "VK_EXT_robustness2",
+            "VK_KHR_shader_float16_int8",
             "VK_EXT_shader_subgroup_ballot",
             "VK_EXT_subgroup_size_control",
             "VK_NV_geometry_shader_passthrough"

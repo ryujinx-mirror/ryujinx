@@ -199,6 +199,16 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void Restore()
+        {
+            if (Pipeline != null)
+            {
+                Gd.Api.CmdBindPipeline(CommandBuffer, Pbp, Pipeline.Get(Cbs).Value);
+            }
+
+            SignalCommandBufferChange();
+        }
+
         public void FlushCommandsImpl()
         {
             EndRenderPass();
@@ -220,18 +230,13 @@ namespace Ryujinx.Graphics.Vulkan
 
             // Restore per-command buffer state.
 
-            if (Pipeline != null)
-            {
-                Gd.Api.CmdBindPipeline(CommandBuffer, Pbp, Pipeline.Get(Cbs).Value);
-            }
-
             foreach (var queryPool in _activeQueries)
             {
                 Gd.Api.CmdResetQueryPool(CommandBuffer, queryPool, 0, 1);
                 Gd.Api.CmdBeginQuery(CommandBuffer, queryPool, 0, 0);
             }
 
-            SignalCommandBufferChange();
+            Restore();
         }
 
         public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset)

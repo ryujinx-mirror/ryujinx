@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsFragmentShaderInterlock;
         public readonly bool SupportsGeometryShaderPassthrough;
         public readonly bool SupportsSubgroupSizeControl;
+        public readonly bool SupportsShaderInt8;
         public readonly bool SupportsConditionalRendering;
         public readonly bool SupportsExtendedDynamicState;
         public readonly bool SupportsMultiView;
@@ -29,6 +30,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsFragmentShaderInterlock,
             bool supportsGeometryShaderPassthrough,
             bool supportsSubgroupSizeControl,
+            bool supportsShaderInt8,
             bool supportsConditionalRendering,
             bool supportsExtendedDynamicState,
             bool supportsMultiView,
@@ -47,6 +49,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsFragmentShaderInterlock = supportsFragmentShaderInterlock;
             SupportsGeometryShaderPassthrough = supportsGeometryShaderPassthrough;
             SupportsSubgroupSizeControl = supportsSubgroupSizeControl;
+            SupportsShaderInt8 = supportsShaderInt8;
             SupportsConditionalRendering = supportsConditionalRendering;
             SupportsExtendedDynamicState = supportsExtendedDynamicState;
             SupportsMultiView = supportsMultiView;
