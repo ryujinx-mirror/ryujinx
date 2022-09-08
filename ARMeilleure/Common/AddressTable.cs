@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Diagnostics.EventSources;
+﻿using ARMeilleure.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -218,7 +218,7 @@ namespace ARMeilleure.Common
 
             _pages.Add(page);
 
-            AddressTableEventSource.Log.Allocated(size, leaf);
+            TranslatorEventSource.Log.AddressTableAllocated(size, leaf);
 
             return page;
         }

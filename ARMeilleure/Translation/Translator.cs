@@ -44,15 +44,11 @@ namespace ARMeilleure.Translation
         private readonly IJitMemoryAllocator _allocator;
         private readonly ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>> _oldFuncs;
 
-        private readonly ConcurrentDictionary<ulong, object> _backgroundSet;
-        private readonly ConcurrentStack<RejitRequest> _backgroundStack;
-        private readonly AutoResetEvent _backgroundTranslatorEvent;
-        private readonly ReaderWriterLock _backgroundTranslatorLock;
-
         internal TranslatorCache<TranslatedFunction> Functions { get; }
         internal AddressTable<ulong> FunctionTable { get; }
         internal EntryTable<uint> CountTable { get; }
         internal TranslatorStubs Stubs { get; }
+        internal TranslatorQueue Queue { get; }
         internal IMemoryManager Memory { get; }
 
         private volatile int _threadCount;
@@ -67,10 +63,7 @@ namespace ARMeilleure.Translation
 
             _oldFuncs = new ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>>();
 
-            _backgroundSet = new ConcurrentDictionary<ulong, object>();
-            _backgroundStack = new ConcurrentStack<RejitRequest>();
-            _backgroundTranslatorEvent = new AutoResetEvent(false);
-            _backgroundTranslatorLock = new ReaderWriterLock();
+            Queue = new TranslatorQueue();
 
             JitCache.Initialize(allocator);
 
@@ -85,43 +78,6 @@ namespace ARMeilleure.Translation
             {
                 NativeSignalHandler.InitializeSignalHandler();
             }
-        }
-
-        private void TranslateStackedSubs()
-        {
-            while (_threadCount != 0)
-            {
-                _backgroundTranslatorLock.AcquireReaderLock(Timeout.Infinite);
-
-                if (_backgroundStack.TryPop(out RejitRequest request) &&
-                    _backgroundSet.TryRemove(request.Address, out _))
-                {
-                    TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
-
-                    Functions.AddOrUpdate(request.Address, func.GuestSize, func, (key, oldFunc) =>
-                    {
-                        EnqueueForDeletion(key, oldFunc);
-                        return func;
-                    });
-
-                    if (PtcProfiler.Enabled)
-                    {
-                        PtcProfiler.UpdateEntry(request.Address, request.Mode, highCq: true);
-                    }
-
-                    RegisterFunction(request.Address, func);
-
-                    _backgroundTranslatorLock.ReleaseReaderLock();
-                }
-                else
-                {
-                    _backgroundTranslatorLock.ReleaseReaderLock();
-                    _backgroundTranslatorEvent.WaitOne();
-                }
-            }
-
-             // Wake up any other background translator threads, to encourage them to exit.
-            _backgroundTranslatorEvent.Set();
         }
 
         public void Execute(State.ExecutionContext context, ulong address)
@@ -155,7 +111,7 @@ namespace ARMeilleure.Translation
                 {
                     bool last = i != 0 && i == unboundedThreadCount - 1;
 
-                    Thread backgroundTranslatorThread = new Thread(TranslateStackedSubs)
+                    Thread backgroundTranslatorThread = new Thread(BackgroundTranslate)
                     {
                         Name = "CPU.BackgroundTranslatorThread." + i,
                         Priority = last ? ThreadPriority.Lowest : ThreadPriority.Normal
@@ -186,10 +142,9 @@ namespace ARMeilleure.Translation
 
             if (Interlocked.Decrement(ref _threadCount) == 0)
             {
-                _backgroundTranslatorEvent.Set();
-
                 ClearJitCache();
 
+                Queue.Dispose();
                 Stubs.Dispose();
                 FunctionTable.Dispose();
                 CountTable.Dispose();
@@ -315,6 +270,27 @@ namespace ARMeilleure.Translation
             Allocators.ResetAll();
 
             return new TranslatedFunction(func, counter, funcSize, highCq);
+        }
+
+        private void BackgroundTranslate()
+        {
+            while (_threadCount != 0 && Queue.TryDequeue(out RejitRequest request))
+            {
+                TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
+
+                Functions.AddOrUpdate(request.Address, func.GuestSize, func, (key, oldFunc) =>
+                {
+                    EnqueueForDeletion(key, oldFunc);
+                    return func;
+                });
+
+                if (PtcProfiler.Enabled)
+                {
+                    PtcProfiler.UpdateEntry(request.Address, request.Mode, highCq: true);
+                }
+
+                RegisterFunction(request.Address, func);
+            }
         }
 
         private struct Range
@@ -504,11 +480,7 @@ namespace ARMeilleure.Translation
 
         internal void EnqueueForRejit(ulong guestAddress, ExecutionMode mode)
         {
-            if (_backgroundSet.TryAdd(guestAddress, null))
-            {
-                _backgroundStack.Push(new RejitRequest(guestAddress, mode));
-                _backgroundTranslatorEvent.Set();
-            }
+            Queue.Enqueue(guestAddress, mode);
         }
 
         private void EnqueueForDeletion(ulong guestAddress, TranslatedFunction func)
@@ -542,26 +514,23 @@ namespace ARMeilleure.Translation
 
         private void ClearRejitQueue(bool allowRequeue)
         {
-            _backgroundTranslatorLock.AcquireWriterLock(Timeout.Infinite);
-
-            if (allowRequeue)
+            if (!allowRequeue)
             {
-                while (_backgroundStack.TryPop(out var request))
+                Queue.Clear();
+
+                return;
+            }
+
+            lock (Queue.Sync)
+            {
+                while (Queue.Count > 0 && Queue.TryDequeue(out RejitRequest request))
                 {
                     if (Functions.TryGetValue(request.Address, out var func) && func.CallCounter != null)
                     {
                         Volatile.Write(ref func.CallCounter.Value, 0);
                     }
-
-                    _backgroundSet.TryRemove(request.Address, out _);
                 }
             }
-            else
-            {
-                _backgroundStack.Clear();
-            }
-
-            _backgroundTranslatorLock.ReleaseWriterLock();
         }
     }
 }
