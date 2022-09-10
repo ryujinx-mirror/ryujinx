@@ -34,7 +34,14 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             KTransferMemory workBufferTransferMemory = context.Process.HandleTable.GetObject<KTransferMemory>(transferMemoryHandle);
             uint processHandle = (uint)context.Request.HandleDesc.ToCopy[1];
 
-            ResultCode result = _impl.OpenAudioRenderer(context, out IAudioRenderer renderer, ref parameter, workBufferSize, appletResourceUserId, workBufferTransferMemory, processHandle);
+            ResultCode result = _impl.OpenAudioRenderer(
+                context,
+                out IAudioRenderer renderer,
+                ref parameter,
+                workBufferSize,
+                appletResourceUserId,
+                workBufferTransferMemory,
+                processHandle);
 
             if (result == ResultCode.Success)
             {

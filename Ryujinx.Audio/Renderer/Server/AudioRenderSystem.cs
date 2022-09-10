@@ -55,7 +55,6 @@ namespace Ryujinx.Audio.Renderer.Server
         private uint _processHandle;
         private ulong _appletResourceId;
 
-        private WritableRegion _workBufferRegion;
         private MemoryHandle _workBufferMemoryPin;
 
         private Memory<float> _mixBuffer;
@@ -98,7 +97,15 @@ namespace Ryujinx.Audio.Renderer.Server
             _sessionId = 0;
         }
 
-        public ResultCode Initialize(ref AudioRendererConfiguration parameter, uint processHandle, CpuAddress workBuffer, ulong workBufferSize, int sessionId, ulong appletResourceId, IVirtualMemoryManager memoryManager)
+        public ResultCode Initialize(
+            ref AudioRendererConfiguration parameter,
+            uint processHandle,
+            Memory<byte> workBufferMemory,
+            CpuAddress workBuffer,
+            ulong workBufferSize,
+            int sessionId,
+            ulong appletResourceId,
+            IVirtualMemoryManager memoryManager)
         {
             if (!BehaviourContext.CheckValidRevision(parameter.Revision))
             {
@@ -134,11 +141,10 @@ namespace Ryujinx.Audio.Renderer.Server
 
             WorkBufferAllocator workBufferAllocator;
 
-            _workBufferRegion = MemoryManager.GetWritableRegion(workBuffer, (int)workBufferSize);
-            _workBufferRegion.Memory.Span.Fill(0);
-            _workBufferMemoryPin = _workBufferRegion.Memory.Pin();
+            workBufferMemory.Span.Fill(0);
+            _workBufferMemoryPin = workBufferMemory.Pin();
 
-            workBufferAllocator = new WorkBufferAllocator(_workBufferRegion.Memory);
+            workBufferAllocator = new WorkBufferAllocator(workBufferMemory);
 
             PoolMapper poolMapper = new PoolMapper(processHandle, false);
             poolMapper.InitializeSystemPool(ref _dspMemoryPoolState, workBuffer, workBufferSize);
@@ -841,7 +847,6 @@ namespace Ryujinx.Audio.Renderer.Server
                 _manager.Unregister(this);
                 _terminationEvent.Dispose();
                 _workBufferMemoryPin.Dispose();
-                _workBufferRegion.Dispose();
 
                 if (MemoryManager is IRefCounted rc)
                 {

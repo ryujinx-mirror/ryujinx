@@ -305,13 +305,34 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <param name="workBufferSize">The guest work buffer size.</param>
         /// <param name="processHandle">The process handle of the application.</param>
         /// <returns>A <see cref="ResultCode"/> reporting an error or a success.</returns>
-        public ResultCode OpenAudioRenderer(out AudioRenderSystem renderer, IVirtualMemoryManager memoryManager, ref AudioRendererConfiguration parameter, ulong appletResourceUserId, ulong workBufferAddress, ulong workBufferSize, uint processHandle, float volume)
+        public ResultCode OpenAudioRenderer(
+            out AudioRenderSystem renderer,
+            IVirtualMemoryManager memoryManager,
+            ref AudioRendererConfiguration parameter,
+            ulong appletResourceUserId,
+            ulong workBufferAddress,
+            ulong workBufferSize,
+            uint processHandle,
+            float volume)
         {
             int sessionId = AcquireSessionId();
 
             AudioRenderSystem audioRenderer = new AudioRenderSystem(this, _sessionsSystemEvent[sessionId]);
 
-            ResultCode result = audioRenderer.Initialize(ref parameter, processHandle, workBufferAddress, workBufferSize, sessionId, appletResourceUserId, memoryManager);
+            // TODO: Eventually, we should try to use the guest supplied work buffer instead of allocating
+            // our own. However, it was causing problems on some applications that would unmap the memory
+            // before the audio renderer was fully disposed.
+            Memory<byte> workBufferMemory = GC.AllocateArray<byte>((int)workBufferSize, pinned: true);
+
+            ResultCode result = audioRenderer.Initialize(
+                ref parameter,
+                processHandle,
+                workBufferMemory,
+                workBufferAddress,
+                workBufferSize,
+                sessionId,
+                appletResourceUserId,
+                memoryManager);
 
             if (result == ResultCode.Success)
             {
