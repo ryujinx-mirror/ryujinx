@@ -41,9 +41,10 @@ namespace Ryujinx.Tests.Cpu
         {
             return new uint[]
             {
+                0xf2880010u, // VSHR.S8  D0, D0, #8
                 0xf2880110u, // VSRA.S8  D0, D0, #8
                 0xf2880210u, // VRSHR.S8 D0, D0, #8
-                0xf2880010u  // VSHR.S8  D0, D0, #8
+                0xf2880310u  // VRSRA.S8 D0, D0, #8
             };
         }
 
@@ -51,9 +52,10 @@ namespace Ryujinx.Tests.Cpu
         {
             return new uint[]
             {
+                0xf2900010u, // VSHR.S16  D0, D0, #16
                 0xf2900110u, // VSRA.S16  D0, D0, #16
                 0xf2900210u, // VRSHR.S16 D0, D0, #16
-                0xf2900010u  // VSHR.S16  D0, D0, #16
+                0xf2900310u  // VRSRA.S16 D0, D0, #16
             };
         }
 
@@ -61,9 +63,10 @@ namespace Ryujinx.Tests.Cpu
         {
             return new uint[]
             {
+                0xf2a00010u, // VSHR.S32  D0, D0, #32
                 0xf2a00110u, // VSRA.S32  D0, D0, #32
                 0xf2a00210u, // VRSHR.S32 D0, D0, #32
-                0xf2a00010u  // VSHR.S32  D0, D0, #32
+                0xf2a00310u  // VRSRA.S32 D0, D0, #32
             };
         }
 
@@ -74,6 +77,25 @@ namespace Ryujinx.Tests.Cpu
                 0xf2800190u, // VSRA.S64  D0, D0, #64
                 0xf2800290u, // VRSHR.S64 D0, D0, #64
                 0xf2800090u  // VSHR.S64  D0, D0, #64
+            };
+        }
+
+        private static uint[] _Vqshrn_Vqrshrn_Vrshrn_Imm_()
+        {
+            return new uint[]
+            {
+                0xf2800910u, // VORR.I16 D0, #0 (immediate value changes it into QSHRN)
+                0xf2800950u, // VORR.I16 Q0, #0 (immediate value changes it into QRSHRN)
+                0xf2800850u  // VMOV.I16 Q0, #0 (immediate value changes it into RSHRN)
+            };
+        }
+
+        private static uint[] _Vqshrun_Vqrshrun_Imm_()
+        {
+            return new uint[]
+            {
+                0xf3800810u, // VMOV.I16 D0, #0x80 (immediate value changes it into QSHRUN)
+                0xf3800850u  // VMOV.I16 Q0, #0x80 (immediate value changes it into QRSHRUN)
             };
         }
 #endregion
@@ -230,18 +252,17 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("VQRSHRN.<type><size> <Vd>, <Vm>, #<imm>")]
-        public void Vqrshrn_Imm([Values(0u, 1u)] uint rd,
-                                [Values(2u, 0u)] uint rm,
-                                [Values(0u, 1u, 2u)] uint size,
-                                [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
-                                [Random(RndCnt)] ulong z,
-                                [Random(RndCnt)] ulong a,
-                                [Random(RndCnt)] ulong b,
-                                [Values] bool u)
+        [Test, Pairwise]
+        public void Vqshrn_Vqrshrn_Vrshrn_Imm([ValueSource("_Vqshrn_Vqrshrn_Vrshrn_Imm_")] uint opcode,
+                                              [Values(0u, 1u)] uint rd,
+                                              [Values(2u, 0u)] uint rm,
+                                              [Values(0u, 1u, 2u)] uint size,
+                                              [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
+                                              [Random(RndCnt)] ulong z,
+                                              [Random(RndCnt)] ulong a,
+                                              [Random(RndCnt)] ulong b,
+                                              [Values] bool u)
         {
-            uint opcode = 0xf2800950u; // VORR.I16 Q0, #0 (immediate value changes it into QRSHRN)
-
             uint imm = 1u << ((int)size + 3);
             imm |= shiftImm & (imm - 1);
 
@@ -265,17 +286,16 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
-        [Test, Pairwise, Description("VQRSHRUN.<type><size> <Vd>, <Vm>, #<imm>")]
-        public void Vqrshrun_Imm([Values(0u, 1u)] uint rd,
-                                 [Values(2u, 0u)] uint rm,
-                                 [Values(0u, 1u, 2u)] uint size,
-                                 [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
-                                 [Random(RndCnt)] ulong z,
-                                 [Random(RndCnt)] ulong a,
-                                 [Random(RndCnt)] ulong b)
+        [Test, Pairwise]
+        public void Vqshrun_Vqrshrun_Imm([ValueSource("_Vqshrun_Vqrshrun_Imm_")] uint opcode,
+                                         [Values(0u, 1u)] uint rd,
+                                         [Values(2u, 0u)] uint rm,
+                                         [Values(0u, 1u, 2u)] uint size,
+                                         [Random(RndCntShiftImm)] [Values(0u)] uint shiftImm,
+                                         [Random(RndCnt)] ulong z,
+                                         [Random(RndCnt)] ulong a,
+                                         [Random(RndCnt)] ulong b)
         {
-            uint opcode = 0xf3800850u; // VMOV.I16 Q0, #0x80 (immediate value changes it into QRSHRUN)
-
             uint imm = 1u << ((int)size + 3);
             imm |= shiftImm & (imm - 1);
 

@@ -219,6 +219,25 @@ namespace ARMeilleure.Instructions
 
         // Integer
 
+        public static void EmitVectorUnaryAccumulateOpI32(ArmEmitterContext context, Func1I emit, bool signed)
+        {
+            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+
+            Operand res = GetVecA32(op.Qd);
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand de = EmitVectorExtract32(context, op.Qd, op.Id + index, op.Size, signed);
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, signed);
+
+                res = EmitVectorInsert(context, res, context.Add(de, emit(me)), op.Id + index, op.Size);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
         public static void EmitVectorUnaryOpI32(ArmEmitterContext context, Func1I emit, bool signed)
         {
             OpCode32Simd op = (OpCode32Simd)context.CurrOp;
@@ -385,6 +404,18 @@ namespace ARMeilleure.Instructions
             EmitVectorUnaryOpI32(context, emit, true);
         }
 
+        public static void EmitVectorUnaryOpSx32(ArmEmitterContext context, Func1I emit, bool accumulate)
+        {
+            if (accumulate)
+            {
+                EmitVectorUnaryAccumulateOpI32(context, emit, true);
+            }
+            else
+            {
+                EmitVectorUnaryOpI32(context, emit, true);
+            }
+        }
+
         public static void EmitVectorBinaryOpSx32(ArmEmitterContext context, Func2I emit)
         {
             EmitVectorBinaryOpI32(context, emit, true);
@@ -398,6 +429,18 @@ namespace ARMeilleure.Instructions
         public static void EmitVectorUnaryOpZx32(ArmEmitterContext context, Func1I emit)
         {
             EmitVectorUnaryOpI32(context, emit, false);
+        }
+
+        public static void EmitVectorUnaryOpZx32(ArmEmitterContext context, Func1I emit, bool accumulate)
+        {
+            if (accumulate)
+            {
+                EmitVectorUnaryAccumulateOpI32(context, emit, false);
+            }
+            else
+            {
+                EmitVectorUnaryOpI32(context, emit, false);
+            }
         }
 
         public static void EmitVectorBinaryOpZx32(ArmEmitterContext context, Func2I emit)
@@ -587,6 +630,34 @@ namespace ARMeilleure.Instructions
 
                 res = EmitVectorInsert(context, res, emit(n1, n2), op.Id + index, op.Size);
                 res = EmitVectorInsert(context, res, emit(m1, m2), op.Id + index + pairs, op.Size);
+            }
+
+            context.Copy(GetVecA32(op.Qd), res);
+        }
+
+        public static void EmitVectorPairwiseLongOpI32(ArmEmitterContext context, Func2I emit, bool signed)
+        {
+            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+
+            int elems = (op.Q ? 16 : 8) >> op.Size;
+            int pairs = elems >> 1;
+            int id = (op.Vd & 1) * pairs;
+
+            Operand res = GetVecA32(op.Qd);
+
+            for (int index = 0; index < pairs; index++)
+            {
+                int pairIndex = index << 1;
+                Operand m1 = EmitVectorExtract32(context, op.Qm, op.Im + pairIndex, op.Size, signed);
+                Operand m2 = EmitVectorExtract32(context, op.Qm, op.Im + pairIndex + 1, op.Size, signed);
+
+                if (op.Size == 2)
+                {
+                    m1 = signed ? context.SignExtend32(OperandType.I64, m1) : context.ZeroExtend32(OperandType.I64, m1);
+                    m2 = signed ? context.SignExtend32(OperandType.I64, m2) : context.ZeroExtend32(OperandType.I64, m2);
+                }
+
+                res = EmitVectorInsert(context, res, emit(m1, m2), id + index, op.Size + 1);
             }
 
             context.Copy(GetVecA32(op.Qd), res);

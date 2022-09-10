@@ -12,11 +12,13 @@ namespace Ryujinx.Tests.Cpu
 #if SimdReg32
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _V_Add_Sub_Wide_I_()
+        private static uint[] _V_Add_Sub_Long_Wide_I_()
         {
             return new uint[]
             {
+                0xf2800000u, // VADDL.S8 Q0, D0, D0
                 0xf2800100u, // VADDW.S8 Q0, Q0, D0
+                0xf2800200u, // VSUBL.S8 Q0, D0, D0
                 0xf2800300u  // VSUBW.S8 Q0, Q0, D0
             };
         }
@@ -74,6 +76,15 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _Vmlal_Vmlsl_V_I_()
+        {
+            return new uint[]
+            {
+                0xf2800800u, // VMLAL.S8 Q0, D0, D0
+                0xf2800a00u  // VMLSL.S8 Q0, D0, D0
+            };
+        }
+
         private static uint[] _Vp_Add_Max_Min_F_()
         {
             return new uint[]
@@ -84,16 +95,30 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        // VPADD does not have an unsigned flag, so we check the opcode before setting it.
-        private static uint VpaddI8 = 0xf2000b10u; // VPADD.I8 D0, D0, D0
-
-        private static uint[] _Vp_Add_Max_Min_I_()
+        private static uint[] _Vp_Add_I_()
         {
             return new uint[]
             {
-                VpaddI8,
-                0xf2000a00u, // VPMAX.S8 D0, D0, D0
-                0xf2000a10u  // VPMIN.S8 D0, D0, D0
+                0xf2000b10u // VPADD.I8 D0, D0, D0
+            };
+        }
+
+        private static uint[] _V_Pmax_Pmin_Rhadd_I_()
+        {
+            return new uint[]
+            {
+                0xf2000a00u, // VPMAX .S8 D0, D0, D0
+                0xf2000a10u, // VPMIN .S8 D0, D0, D0
+                0xf2000100u, // VRHADD.S8 D0, D0, D0
+            };
+        }
+
+        private static uint[] _Vq_Add_Sub_I_()
+        {
+            return new uint[]
+            {
+                0xf2000050u, // VQADD.S8 Q0, Q0, Q0
+                0xf2000250u  // VQSUB.S8 Q0, Q0, Q0
             };
         }
 #endregion
@@ -350,7 +375,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Explicit]
         [Test, Pairwise, Description("VADD.f32 V0, V0, V0")]
-        public void Vadd_f32([Values(0u)] uint rd,
+        public void Vadd_F32([Values(0u)] uint rd,
                              [Values(0u, 1u)] uint rn,
                              [Values(0u, 2u)] uint rm,
                              [ValueSource("_2S_F_")] ulong z0,
@@ -384,15 +409,15 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void V_Add_Sub_Wide_I([ValueSource("_V_Add_Sub_Wide_I_")] uint opcode,
-                                     [Range(0u, 5u)] uint rd,
-                                     [Range(0u, 5u)] uint rn,
-                                     [Range(0u, 5u)] uint rm,
-                                     [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
-                                     [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
-                                     [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong b,
-                                     [Values(0u, 1u, 2u)] uint size, // <SU8, SU16, SU32>
-                                     [Values] bool u) // <S, U>
+        public void V_Add_Sub_Long_Wide_I([ValueSource("_V_Add_Sub_Long_Wide_I_")] uint opcode,
+                                          [Range(0u, 5u)] uint rd,
+                                          [Range(0u, 5u)] uint rn,
+                                          [Range(0u, 5u)] uint rm,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong b,
+                                          [Values(0u, 1u, 2u)] uint size, // <SU8, SU16, SU32>
+                                          [Values] bool u) // <S, U>
         {
             if (u)
             {
@@ -566,18 +591,17 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("VMLSL.<type><size> <Vd>, <Vn>, <Vm>")]
-        public void Vmlsl_I([Values(0u)] uint rd,
-                            [Values(1u, 0u)] uint rn,
-                            [Values(2u, 0u)] uint rm,
-                            [Values(0u, 1u, 2u)] uint size,
-                            [Random(RndCnt)] ulong z,
-                            [Random(RndCnt)] ulong a,
-                            [Random(RndCnt)] ulong b,
-                            [Values] bool u)
+        [Test, Pairwise]
+        public void Vmlal_Vmlsl_I([ValueSource(nameof(_Vmlal_Vmlsl_V_I_))] uint opcode,
+                                  [Values(0u)] uint rd,
+                                  [Values(1u, 0u)] uint rn,
+                                  [Values(2u, 0u)] uint rm,
+                                  [Values(0u, 1u, 2u)] uint size,
+                                  [Random(RndCnt)] ulong z,
+                                  [Random(RndCnt)] ulong a,
+                                  [Random(RndCnt)] ulong b,
+                                  [Values] bool u)
         {
-            uint opcode = 0xf2800a00u; // VMLSL.S8 Q0, D0, D0
-
             opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
@@ -736,17 +760,42 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Vp_Add_Max_Min_I([ValueSource("_Vp_Add_Max_Min_I_")] uint opcode,
-                                     [Values(0u)] uint rd,
-                                     [Range(0u, 5u)] uint rn,
-                                     [Range(0u, 5u)] uint rm,
-                                     [Values(0u, 1u, 2u)] uint size,
-                                     [Random(RndCnt)] ulong z,
-                                     [Random(RndCnt)] ulong a,
-                                     [Random(RndCnt)] ulong b,
-                                     [Values] bool u)
+        public void Vp_Add_I([ValueSource("_Vp_Add_I_")] uint opcode,
+                             [Values(0u)] uint rd,
+                             [Range(0u, 5u)] uint rn,
+                             [Range(0u, 5u)] uint rm,
+                             [Values(0u, 1u, 2u)] uint size,
+                             [Random(RndCnt)] ulong z,
+                             [Random(RndCnt)] ulong a,
+                             [Random(RndCnt)] ulong b)
         {
-            if (u && opcode != VpaddI8)
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+
+            opcode |= size << 20;
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void V_Pmax_Pmin_Rhadd_I([ValueSource("_V_Pmax_Pmin_Rhadd_I_")] uint opcode,
+                                        [Values(0u)] uint rd,
+                                        [Range(0u, 5u)] uint rn,
+                                        [Range(0u, 5u)] uint rm,
+                                        [Values(0u, 1u, 2u)] uint size,
+                                        [Random(RndCnt)] ulong z,
+                                        [Random(RndCnt)] ulong a,
+                                        [Random(RndCnt)] ulong b,
+                                        [Values] bool u)
+        {
+            if (u)
             {
                 opcode |= 1 << 24;
             }
@@ -760,6 +809,71 @@ namespace Ryujinx.Tests.Cpu
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(a, z);
             V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Vq_Add_Sub_I([ValueSource("_Vq_Add_Sub_I_")] uint opcode,
+                                 [Range(0u, 5u)] uint rd,
+                                 [Range(0u, 5u)] uint rn,
+                                 [Range(0u, 5u)] uint rm,
+                                 [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
+                                 [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong b,
+                                 [Values(0u, 1u, 2u)] uint size, // <SU8, SU16, SU32>
+                                 [Values] bool u) // <S, U>
+        {
+            if (u)
+            {
+                opcode |= 1 << 24;
+            }
+
+            rd >>= 1; rd <<= 1;
+            rn >>= 1; rn <<= 1;
+            rm >>= 1; rm <<= 1;
+
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            opcode |= (size & 0x3) << 20;
+
+            V128 v0 = MakeVectorE0E1(z, ~z);
+            V128 v1 = MakeVectorE0E1(a, ~a);
+            V128 v2 = MakeVectorE0E1(b, ~b);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VQDMULH.<S16, S32> <Qd>, <Qn>, <Qm>")]
+        public void Vqdmulh_I([Range(0u, 5u)] uint rd,
+                              [Range(0u, 5u)] uint rn,
+                              [Range(0u, 5u)] uint rm,
+                              [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
+                              [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong b,
+                              [Values(1u, 2u)] uint size) // <S16, S32>
+        {
+            rd >>= 1; rd <<= 1;
+            rn >>= 1; rn <<= 1;
+            rm >>= 1; rm <<= 1;
+
+            uint opcode = 0xf2100b40u & ~(3u << 20); // VQDMULH.S16 Q0, Q0, Q0
+
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rn & 0xf) << 16) | ((rn & 0x10) << 3);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            opcode |= (size & 0x3) << 20;
+
+            V128 v0 = MakeVectorE0E1(z, ~z);
+            V128 v1 = MakeVectorE0E1(a, ~a);
+            V128 v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 

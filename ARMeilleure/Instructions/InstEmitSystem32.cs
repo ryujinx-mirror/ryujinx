@@ -16,16 +16,11 @@ namespace ARMeilleure.Instructions
         {
             OpCode32System op = (OpCode32System)context.CurrOp;
 
-            if (op.Coproc != 15)
+            if (op.Coproc != 15 || op.Opc1 != 0)
             {
                 InstEmit.Und(context);
 
                 return;
-            }
-
-            if (op.Opc1 != 0)
-            {
-                throw new NotImplementedException($"Unknown MRC Opc1 0x{op.Opc1:X16} at 0x{op.Address:X16}.");
             }
 
             MethodInfo info;
@@ -35,7 +30,7 @@ namespace ARMeilleure.Instructions
                 case 13: // Process and Thread Info.
                     if (op.CRm != 0)
                     {
-                        throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X16} at 0x{op.Address:X16}.");
+                        throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
 
                     switch (op.Opc2)
@@ -44,7 +39,7 @@ namespace ARMeilleure.Instructions
                             info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl032)); break;
 
                         default:
-                            throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X16} at 0x{op.Address:X16}.");
+                            throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
 
                     break;
@@ -59,11 +54,11 @@ namespace ARMeilleure.Instructions
                                     return; // No-op.
 
                                 default:
-                                    throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X16} at 0x{op.Address:X16}.");
+                                    throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X16} at 0x{op.Address:X16} (0x{op.RawOpCode:X}).");
                             }
 
                         default:
-                            throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X16} at 0x{op.Address:X16}.");
+                            throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X16} at 0x{op.Address:X16} (0x{op.RawOpCode:X}).");
                     }
 
                 default:
@@ -77,16 +72,11 @@ namespace ARMeilleure.Instructions
         {
             OpCode32System op = (OpCode32System)context.CurrOp;
 
-            if (op.Coproc != 15)
+            if (op.Coproc != 15 || op.Opc1 != 0)
             {
                 InstEmit.Und(context);
 
                 return;
-            }
-
-            if (op.Opc1 != 0)
-            {
-                throw new NotImplementedException($"Unknown MRC Opc1 0x{op.Opc1:X16} at 0x{op.Address:X16}.");
             }
 
             MethodInfo info;
@@ -96,7 +86,7 @@ namespace ARMeilleure.Instructions
                 case 13: // Process and Thread Info.
                     if (op.CRm != 0)
                     {
-                        throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X16} at 0x{op.Address:X16}.");
+                        throw new NotImplementedException($"Unknown MRC CRm 0x{op.CRm:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
 
                     switch (op.Opc2)
@@ -108,13 +98,13 @@ namespace ARMeilleure.Instructions
                             info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidr32)); break;
 
                         default:
-                            throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X16} at 0x{op.Address:X16}.");
+                            throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
 
                     break;
 
                 default:
-                    throw new NotImplementedException($"Unknown MRC 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                    throw new NotImplementedException($"Unknown MRC 0x{op.RawOpCode:X} at 0x{op.Address:X}.");
             }
 
             if (op.Rt == RegisterAlias.Aarch32Pc)
@@ -154,13 +144,13 @@ namespace ARMeilleure.Instructions
                             info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0)); break;
 
                         default:
-                            throw new NotImplementedException($"Unknown MRRC Opc1 0x{opc:X16} at 0x{op.Address:X16}.");
+                            throw new NotImplementedException($"Unknown MRRC Opc1 0x{opc:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
 
                     break;
 
                 default:
-                    throw new NotImplementedException($"Unknown MRRC 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                    throw new NotImplementedException($"Unknown MRRC 0x{op.RawOpCode:X} at 0x{op.Address:X}.");
             }
 
             Operand result = context.Call(info);
@@ -265,7 +255,7 @@ namespace ARMeilleure.Instructions
                 case 0b1000: // FPEXC
                     throw new NotImplementedException("Supervisor Only");
                 default:
-                    throw new NotImplementedException($"Unknown VMRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                    throw new NotImplementedException($"Unknown VMRS 0x{op.RawOpCode:X} at 0x{op.Address:X}.");
             }
         }
 
@@ -288,7 +278,7 @@ namespace ARMeilleure.Instructions
                 case 0b1000: // FPEXC
                     throw new NotImplementedException("Supervisor Only");
                 default:
-                    throw new NotImplementedException($"Unknown VMSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                    throw new NotImplementedException($"Unknown VMSR 0x{op.RawOpCode:X} at 0x{op.Address:X}.");
             }
         }
 

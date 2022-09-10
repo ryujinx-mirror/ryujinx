@@ -1281,7 +1281,7 @@ namespace ARMeilleure.Instructions
 
         public static void EmitSseOrAvxExitFtzAndDazModesOpF(ArmEmitterContext context, Operand isTrue = default)
         {
-            isTrue = isTrue == default 
+            isTrue = isTrue == default
                 ? context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcrFz)))
                 : isTrue;
 
@@ -1612,7 +1612,7 @@ namespace ARMeilleure.Instructions
         }
 
         // long BinarySignedSatQAdd(long op1, long op2);
-        private static Operand EmitBinarySignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
+        public static Operand EmitBinarySignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
         {
             Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
@@ -1639,7 +1639,7 @@ namespace ARMeilleure.Instructions
         }
 
         // ulong BinaryUnsignedSatQAdd(ulong op1, ulong op2);
-        private static Operand EmitBinaryUnsignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
+        public static Operand EmitBinaryUnsignedSatQAdd(ArmEmitterContext context, Operand op1, Operand op2)
         {
             Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
@@ -1660,7 +1660,7 @@ namespace ARMeilleure.Instructions
         }
 
         // long BinarySignedSatQSub(long op1, long op2);
-        private static Operand EmitBinarySignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
+        public static Operand EmitBinarySignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
         {
             Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
@@ -1687,7 +1687,7 @@ namespace ARMeilleure.Instructions
         }
 
         // ulong BinaryUnsignedSatQSub(ulong op1, ulong op2);
-        private static Operand EmitBinaryUnsignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
+        public static Operand EmitBinaryUnsignedSatQSub(ArmEmitterContext context, Operand op1, Operand op2)
         {
             Debug.Assert(op1.Type == OperandType.I64 && op2.Type == OperandType.I64);
 
