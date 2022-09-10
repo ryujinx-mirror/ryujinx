@@ -36,8 +36,8 @@
 
 ## Compatibility
 
-As of January 2022, Ryujinx has been tested on approximately 3,500 titles; over 3,200 boot past menus and into gameplay, with roughly 2,500 of those being considered playable.
-You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues). Anyone is free to submit an updated test on an existing game entry; simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue. Use the search function to see if a game has been tested already!
+As of September 2022, Ryujinx has been tested on approximately 3,600 titles; over 3,400 boot past menus and into gameplay, with roughly 2,700 of those being considered playable. You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues).  
+Anyone is free to submit a new game test or update an existing game test entry; simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue. Use the search function to see if a game has been tested already!
 
 ## Usage
 
@@ -118,11 +118,11 @@ If you'd like to support the project financially, Ryujinx has an active Patreon 
     <img src="https://images.squarespace-cdn.com/content/v1/560c1d39e4b0b4fae0c9cf2a/1567548955044-WVD994WZP76EWF15T0L3/Patreon+Button.png?format=500w" width="150">
 </a>
 
-All the developers working on the project do so on their free time, but the project has several expenses:
+All developers working on the project do so in their free time, but the project has several expenses:
 * Hackable Nintendo Switch consoles to reverse-engineer the hardware
 * Additional computer hardware for testing purposes (e.g. GPUs to diagnose graphical bugs, etc.)
-* Licenses for various software development tools (e.g. Jetbrains, LDN servers, IDA)
-* Web hosting and infrastructure maintenance
+* Licenses for various software development tools (e.g. Jetbrains, IDA)
+* Web hosting and infrastructure maintenance (e.g. LDN servers)
 
 All funds received through Patreon are considered a donation to support the project. Patrons receive early access to progress reports and exclusive access to developer interviews.
 
