@@ -380,7 +380,7 @@ namespace Ryujinx.Graphics.Vulkan
             return BufferManager.GetData(buffer, offset, size);
         }
 
-        public Capabilities GetCapabilities()
+        public unsafe Capabilities GetCapabilities()
         {
             FormatFeatureFlags compressedFormatFeatureFlags =
                 FormatFeatureFlags.FormatFeatureSampledImageBit |
@@ -409,7 +409,19 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.Format.Bc7Srgb,
                 GAL.Format.Bc7Unorm);
 
-            Api.GetPhysicalDeviceFeatures(_physicalDevice, out var features);
+
+            PhysicalDeviceVulkan12Features featuresVk12 = new PhysicalDeviceVulkan12Features()
+            {
+                SType = StructureType.PhysicalDeviceVulkan12Features
+            };
+
+            PhysicalDeviceFeatures2 features2 = new PhysicalDeviceFeatures2()
+            {
+                SType = StructureType.PhysicalDeviceFeatures2,
+                PNext = &featuresVk12
+            };
+
+            Api.GetPhysicalDeviceFeatures2(_physicalDevice, &features2);
             Api.GetPhysicalDeviceProperties(_physicalDevice, out var properties);
 
             var limits = properties.Limits;
@@ -419,7 +431,7 @@ namespace Ryujinx.Graphics.Vulkan
                 GpuVendor,
                 hasFrontFacingBug: IsIntelWindows,
                 hasVectorIndexingBug: Vendor == Vendor.Qualcomm,
-                supportsAstcCompression: features.TextureCompressionAstcLdr,
+                supportsAstcCompression: features2.Features.TextureCompressionAstcLdr,
                 supportsBc123Compression: supportsBc123CompressionFormat,
                 supportsBc45Compression: supportsBc45CompressionFormat,
                 supportsBc67Compression: supportsBc67CompressionFormat,
@@ -429,12 +441,13 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsFragmentShaderInterlock: Capabilities.SupportsFragmentShaderInterlock,
                 supportsFragmentShaderOrderingIntel: false,
                 supportsGeometryShaderPassthrough: Capabilities.SupportsGeometryShaderPassthrough,
-                supportsImageLoadFormatted: features.ShaderStorageImageReadWithoutFormat,
+                supportsImageLoadFormatted: features2.Features.ShaderStorageImageReadWithoutFormat,
                 supportsMismatchingViewFormat: true,
                 supportsCubemapView: !IsAmdGcn,
                 supportsNonConstantTextureOffset: false,
                 supportsShaderBallot: false,
                 supportsTextureShadowLod: false,
+                supportsViewportIndex: featuresVk12.ShaderOutputViewportIndex,
                 supportsViewportSwizzle: false,
                 supportsIndirectParameters: Capabilities.SupportsIndirectParameters,
                 maximumUniformBuffersPerStage: Constants.MaxUniformBuffersPerStage,

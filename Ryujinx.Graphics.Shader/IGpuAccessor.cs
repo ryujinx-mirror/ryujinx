@@ -268,6 +268,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU shader viewport index output support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports shader viewport index output, false otherwise</returns>
+        bool QueryHostSupportsViewportIndex()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries the point size from the GPU state, used when it is not explicitly set on the shader.
         /// </summary>
         /// <returns>Current point size</returns>

@@ -134,6 +134,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
+        public bool QueryHostSupportsViewportIndex() => _context.Capabilities.SupportsViewportIndex;
+
         /// <summary>
         /// Converts a packed Maxwell texture format to the shader translator texture format.
         /// </summary>

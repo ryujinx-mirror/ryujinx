@@ -120,6 +120,7 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsNonConstantTextureOffset: HwCapabilities.SupportsNonConstantTextureOffset,
                 supportsShaderBallot: HwCapabilities.SupportsShaderBallot,
                 supportsTextureShadowLod: HwCapabilities.SupportsTextureShadowLod,
+                supportsViewportIndex: true,
                 supportsViewportSwizzle: HwCapabilities.SupportsViewportSwizzle,
                 supportsIndirectParameters: HwCapabilities.SupportsIndirectParameters,
                 maximumUniformBuffersPerStage: 13, // TODO: Avoid hardcoding those limits here and get from driver?
