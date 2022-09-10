@@ -251,6 +251,13 @@ namespace ARMeilleure.Decoders
                 return false;
             }
 
+            // Compare and branch instructions are always conditional.
+            if (opCode.Instruction.Name == InstName.Cbz ||
+                opCode.Instruction.Name == InstName.Cbnz)
+            {
+                return false;
+            }
+
             // Note: On ARM32, most instructions have conditional execution,
             // so there's no "Always" (unconditional) branch like on ARM64.
             // We need to check if the condition is "Always" instead.

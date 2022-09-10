@@ -545,6 +545,8 @@ namespace ARMeilleure.Instructions
         Strexh,
         Strh,
         Sxtb16,
+        Tbb,
+        Tbh,
         Teq,
         Trap,
         Tst,

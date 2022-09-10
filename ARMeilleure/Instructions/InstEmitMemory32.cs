@@ -204,15 +204,15 @@ namespace ARMeilleure.Instructions
 
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 
-                    Load(op.Rt,     0, WordSizeLog2);
-                    Load(op.Rt | 1, 4, WordSizeLog2);
+                    Load(op.Rt, 0, WordSizeLog2);
+                    Load(op.Rt2, 4, WordSizeLog2);
 
                     context.Branch(lblEnd);
 
                     context.MarkLabel(lblBigEndian);
 
-                    Load(op.Rt | 1, 0, WordSizeLog2);
-                    Load(op.Rt,     4, WordSizeLog2);
+                    Load(op.Rt2, 0, WordSizeLog2);
+                    Load(op.Rt, 4, WordSizeLog2);
 
                     context.MarkLabel(lblEnd);
                 }
@@ -237,15 +237,15 @@ namespace ARMeilleure.Instructions
 
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 
-                    Store(op.Rt,     0, WordSizeLog2);
-                    Store(op.Rt | 1, 4, WordSizeLog2);
+                    Store(op.Rt, 0, WordSizeLog2);
+                    Store(op.Rt2, 4, WordSizeLog2);
 
                     context.Branch(lblEnd);
 
                     context.MarkLabel(lblBigEndian);
 
-                    Store(op.Rt | 1, 0, WordSizeLog2);
-                    Store(op.Rt,     4, WordSizeLog2);
+                    Store(op.Rt2, 0, WordSizeLog2);
+                    Store(op.Rt, 4, WordSizeLog2);
 
                     context.MarkLabel(lblEnd);
                 }

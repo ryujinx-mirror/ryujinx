@@ -107,5 +107,30 @@ namespace ARMeilleure.Instructions
 
             context.SetIfThenBlockState(op.IfThenBlockConds);
         }
+
+        public static void Tbb(ArmEmitterContext context) => EmitTb(context, halfword: false);
+        public static void Tbh(ArmEmitterContext context)  => EmitTb(context, halfword: true);
+
+        private static void EmitTb(ArmEmitterContext context, bool halfword)
+        {
+            OpCodeT32Tb op = (OpCodeT32Tb)context.CurrOp;
+
+            Operand halfwords;
+
+            if (halfword)
+            {
+                Operand address = context.Add(GetIntA32(context, op.Rn), context.ShiftLeft(GetIntA32(context, op.Rm), Const(1)));
+                halfwords = InstEmitMemoryHelper.EmitReadInt(context, address, 1);
+            }
+            else
+            {
+                Operand address = context.Add(GetIntA32(context, op.Rn), GetIntA32(context, op.Rm));
+                halfwords = InstEmitMemoryHelper.EmitReadIntAligned(context, address, 0);
+            }
+
+            Operand targetAddress = context.Add(Const((int)op.GetPc()), context.ShiftLeft(halfwords, Const(1)));
+
+            EmitVirtualJump(context, targetAddress, isReturn: false);
+        }
     }
 }

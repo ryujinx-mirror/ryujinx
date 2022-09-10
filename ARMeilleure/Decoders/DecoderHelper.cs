@@ -151,7 +151,7 @@ namespace ARMeilleure.Decoders
 
         public static bool VectorArgumentsInvalid(bool q, params int[] args)
         {
-            if (q) 
+            if (q)
             {
                 for (int i = 0; i < args.Length; i++)
                 {

@@ -23,7 +23,7 @@ namespace ARMeilleure.Decoders
             Add   = ((opCode >> 23) & 1) != 0;
             WBack = ((opCode >> 21) & 1) != 0;
 
-            Immediate = opCode & 0xff;
+            Immediate = (opCode & 0xff) << 2;
 
             IsLoad = ((opCode >> 20) & 1) != 0;
         }

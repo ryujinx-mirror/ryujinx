@@ -123,6 +123,41 @@ namespace ARMeilleure.Instructions
                    context.CurrOp is OpCodeSimdMemSs);
         }
 
+        public static Operand EmitReadInt(ArmEmitterContext context, Operand address, int size)
+        {
+            Operand temp = context.AllocateLocal(size == 3 ? OperandType.I64 : OperandType.I32);
+
+            Operand lblSlowPath = Label();
+            Operand lblEnd      = Label();
+
+            Operand physAddr = EmitPtPointerLoad(context, address, lblSlowPath, write: false, size);
+
+            Operand value = default;
+
+            switch (size)
+            {
+                case 0: value = context.Load8 (physAddr);                  break;
+                case 1: value = context.Load16(physAddr);                  break;
+                case 2: value = context.Load  (OperandType.I32, physAddr); break;
+                case 3: value = context.Load  (OperandType.I64, physAddr); break;
+            }
+
+            context.Copy(temp, value);
+
+            if (!context.Memory.Type.IsHostMapped())
+            {
+                context.Branch(lblEnd);
+
+                context.MarkLabel(lblSlowPath, BasicBlockFrequency.Cold);
+
+                context.Copy(temp, EmitReadIntFallback(context, address, size));
+
+                context.MarkLabel(lblEnd);
+            }
+
+            return temp;
+        }
+
         private static void EmitReadInt(ArmEmitterContext context, Operand address, int rt, int size)
         {
             Operand lblSlowPath = Label();
@@ -420,6 +455,11 @@ namespace ARMeilleure.Instructions
 
         private static void EmitReadIntFallback(ArmEmitterContext context, Operand address, int rt, int size)
         {
+            SetInt(context, rt, EmitReadIntFallback(context, address, size));
+        }
+
+        private static Operand EmitReadIntFallback(ArmEmitterContext context, Operand address, int size)
+        {
             MethodInfo info = null;
 
             switch (size)
@@ -430,7 +470,7 @@ namespace ARMeilleure.Instructions
                 case 3: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.ReadUInt64)); break;
             }
 
-            SetInt(context, rt, context.Call(info, address));
+            return context.Call(info, address);
         }
 
         private static void EmitReadVectorFallback(
