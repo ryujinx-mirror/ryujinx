@@ -27,7 +27,7 @@ namespace ARMeilleure.Decoders
             int i2 = j2 ^ s ^ 1;
 
             int imm32 = imm11 | (imm10 << 11) | (i2 << 21) | (i1 << 22) | (s << 23);
-            imm32 = (imm32 << 9) >> 8;
+            imm32 = (imm32 << 8) >> 7;
 
             Immediate = pc + imm32;
         }

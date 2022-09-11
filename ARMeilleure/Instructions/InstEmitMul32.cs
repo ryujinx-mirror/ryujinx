@@ -25,7 +25,7 @@ namespace ARMeilleure.Instructions
 
         public static void Mla(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetAluN(context);
             Operand m = GetAluM(context);
@@ -43,7 +43,7 @@ namespace ARMeilleure.Instructions
 
         public static void Mls(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetAluN(context);
             Operand m = GetAluM(context);
@@ -71,7 +71,7 @@ namespace ARMeilleure.Instructions
 
         private static void EmitSmmul(ArmEmitterContext context, MullFlags flags)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rn));
             Operand m = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rm));
@@ -99,7 +99,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smla__(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
@@ -142,7 +142,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smlal__(ArmEmitterContext context)
         {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+            IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
@@ -180,7 +180,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smlaw_(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
@@ -210,7 +210,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smul__(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
@@ -240,7 +240,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smull(ArmEmitterContext context)
         {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+            IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
             Operand n = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rn));
             Operand m = context.SignExtend32(OperandType.I64, GetIntA32(context, op.Rm));
@@ -261,7 +261,7 @@ namespace ARMeilleure.Instructions
 
         public static void Smulw_(ArmEmitterContext context)
         {
-            OpCode32AluMla op = (OpCode32AluMla)context.CurrOp;
+            IOpCode32AluMla op = (IOpCode32AluMla)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);
@@ -285,7 +285,7 @@ namespace ARMeilleure.Instructions
 
         public static void Umaal(ArmEmitterContext context)
         {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+            IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
             Operand n   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rn));
             Operand m   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rm));
@@ -310,7 +310,7 @@ namespace ARMeilleure.Instructions
 
         public static void Umull(ArmEmitterContext context)
         {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+            IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
             Operand n = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rn));
             Operand m = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rm));
@@ -331,7 +331,7 @@ namespace ARMeilleure.Instructions
 
         private static void EmitMlal(ArmEmitterContext context, bool signed)
         {
-            OpCode32AluUmull op = (OpCode32AluUmull)context.CurrOp;
+            IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand m = GetIntA32(context, op.Rm);

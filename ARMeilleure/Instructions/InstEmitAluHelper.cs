@@ -205,7 +205,7 @@ namespace ARMeilleure.Instructions
                     return Const(op.Immediate);
                 }
 
-                case OpCode32AluImm16 op: return Const(op.Immediate);
+                case IOpCode32AluImm16 op: return Const(op.Immediate);
 
                 case IOpCode32AluRsImm op: return GetMShiftedByImmediate(context, op, setCarry);
                 case IOpCode32AluRsReg op: return GetMShiftedByReg(context, op, setCarry);

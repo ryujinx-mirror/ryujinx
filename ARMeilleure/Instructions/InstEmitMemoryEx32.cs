@@ -172,13 +172,13 @@ namespace ARMeilleure.Instructions
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 
                     SetIntA32(context, op.Rt, valueLow);
-                    SetIntA32(context, op.Rt | 1, valueHigh);
+                    SetIntA32(context, op.Rt2, valueHigh);
 
                     context.Branch(lblEnd);
 
                     context.MarkLabel(lblBigEndian);
 
-                    SetIntA32(context, op.Rt | 1, valueLow);
+                    SetIntA32(context, op.Rt2, valueLow);
                     SetIntA32(context, op.Rt, valueHigh);
 
                     context.MarkLabel(lblEnd);
@@ -195,7 +195,7 @@ namespace ARMeilleure.Instructions
                     // Split the result into 2 words (based on endianness)
 
                     Operand lo = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rt));
-                    Operand hi = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rt | 1));
+                    Operand hi = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rt2));
 
                     Operand lblBigEndian = Label();
                     Operand lblEnd = Label();

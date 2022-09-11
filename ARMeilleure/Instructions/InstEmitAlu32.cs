@@ -74,7 +74,7 @@ namespace ARMeilleure.Instructions
 
         public static void Bfc(ArmEmitterContext context)
         {
-            OpCode32AluBf op = (OpCode32AluBf)context.CurrOp;
+            IOpCode32AluBf op = (IOpCode32AluBf)context.CurrOp;
 
             Operand d = GetIntA32(context, op.Rd);
             Operand res = context.BitwiseAnd(d, Const(~op.DestMask));
@@ -84,7 +84,7 @@ namespace ARMeilleure.Instructions
 
         public static void Bfi(ArmEmitterContext context)
         {
-            OpCode32AluBf op = (OpCode32AluBf)context.CurrOp;
+            IOpCode32AluBf op = (IOpCode32AluBf)context.CurrOp;
 
             Operand n = GetIntA32(context, op.Rn);
             Operand d = GetIntA32(context, op.Rd);
@@ -185,7 +185,7 @@ namespace ARMeilleure.Instructions
 
         public static void Movt(ArmEmitterContext context)
         {
-            OpCode32AluImm16 op = (OpCode32AluImm16)context.CurrOp;
+            IOpCode32AluImm16 op = (IOpCode32AluImm16)context.CurrOp;
 
             Operand d = GetIntA32(context, op.Rd);
             Operand imm = Const(op.Immediate << 16); // Immeditate value as top halfword.
@@ -389,7 +389,7 @@ namespace ARMeilleure.Instructions
 
         public static void Sbfx(ArmEmitterContext context)
         {
-            OpCode32AluBf op = (OpCode32AluBf)context.CurrOp;
+            IOpCode32AluBf op = (IOpCode32AluBf)context.CurrOp;
 
             var msb = op.Lsb + op.Msb; // For this instruction, the msb is actually a width.
 
@@ -484,7 +484,7 @@ namespace ARMeilleure.Instructions
 
         public static void Ubfx(ArmEmitterContext context)
         {
-            OpCode32AluBf op = (OpCode32AluBf)context.CurrOp;
+            IOpCode32AluBf op = (IOpCode32AluBf)context.CurrOp;
 
             var msb = op.Lsb + op.Msb; // For this instruction, the msb is actually a width.
 

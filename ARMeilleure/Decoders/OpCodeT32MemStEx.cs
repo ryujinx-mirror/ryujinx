@@ -4,6 +4,7 @@ namespace ARMeilleure.Decoders
     {
         public int Rd { get; }
         public int Rt { get; }
+        public int Rt2 { get; }
         public int Rn { get; }
 
         public bool WBack => false;
@@ -18,6 +19,7 @@ namespace ARMeilleure.Decoders
         public OpCodeT32MemStEx(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
             Rd = (opCode >> 0) & 0xf;
+            Rt2 = (opCode >> 8) & 0xf;
             Rt = (opCode >> 12) & 0xf;
             Rn = (opCode >> 16) & 0xf;
         }

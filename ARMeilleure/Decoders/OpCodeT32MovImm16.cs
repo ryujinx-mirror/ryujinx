@@ -1,9 +1,6 @@
-using ARMeilleure.Common;
-using System.Runtime.Intrinsics;
-
 namespace ARMeilleure.Decoders
 {
-    class OpCodeT32MovImm16 : OpCodeT32Alu, IOpCode32AluImm
+    class OpCodeT32MovImm16 : OpCodeT32Alu, IOpCode32AluImm16
     {
         public int Immediate { get; }
 
