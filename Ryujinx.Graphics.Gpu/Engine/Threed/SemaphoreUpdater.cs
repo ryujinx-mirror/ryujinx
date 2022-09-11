@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Graphics.GAL;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -151,10 +152,21 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             ulong ticks = _context.GetTimestamp();
 
+            float divisor = type switch
+            {
+                ReportCounterType.SamplesPassed => _channel.TextureManager.RenderTargetScale * _channel.TextureManager.RenderTargetScale,
+                _ => 1f
+            };
+
             ICounterEvent counter = null;
 
             void resultHandler(object evt, ulong result)
             {
+                if (divisor != 1f)
+                {
+                    result = (ulong)MathF.Ceiling(result / divisor);
+                }
+
                 CounterData counterData = new CounterData
                 {
                     Counter = result,
