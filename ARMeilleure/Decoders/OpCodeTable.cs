@@ -791,7 +791,7 @@ namespace ARMeilleure.Decoders
             SetA32("<<<<01101110xxxxxxxxxx000111xxxx", InstName.Uxtb,    InstEmit32.Uxtb,    OpCode32AluUx.Create);
             SetA32("<<<<01101100xxxxxxxxxx000111xxxx", InstName.Uxtb16,  InstEmit32.Uxtb16,  OpCode32AluUx.Create);
             SetA32("<<<<01101111xxxxxxxxxx000111xxxx", InstName.Uxth,    InstEmit32.Uxth,    OpCode32AluUx.Create);
-            
+
             // VFP
             SetVfp("<<<<11101x110000xxxx101x11x0xxxx", InstName.Vabs,   InstEmit32.Vabs_S,   OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
             SetVfp("<<<<11100x11xxxxxxxx101xx0x0xxxx", InstName.Vadd,   InstEmit32.Vadd_S,   OpCode32SimdRegS.Create,        OpCode32SimdRegS.CreateT32);
@@ -959,6 +959,10 @@ namespace ARMeilleure.Decoders
             SetA32("111100100x00xxxxxxxx1111xxx1xxxx", InstName.Vrecps,      InstEmit32.Vrecps,      OpCode32SimdReg.Create);
             SetA32("111100111x11xx00xxxx000<<xx0xxxx", InstName.Vrev,        InstEmit32.Vrev,        OpCode32SimdRev.Create);
             SetA32("1111001x0x<<xxxxxxxx0001xxx0xxxx", InstName.Vrhadd,      InstEmit32.Vrhadd,      OpCode32SimdReg.Create);
+            SetA32("111100111x111010xxxx01010xx0xxxx", InstName.Vrinta,      InstEmit32.Vrinta_V,    OpCode32SimdCmpZ.Create);
+            SetA32("111100111x111010xxxx01101xx0xxxx", InstName.Vrintm,      InstEmit32.Vrintm_V,    OpCode32SimdCmpZ.Create);
+            SetA32("111100111x111010xxxx01000xx0xxxx", InstName.Vrintn,      InstEmit32.Vrintn_V,    OpCode32SimdCmpZ.Create);
+            SetA32("111100111x111010xxxx01111xx0xxxx", InstName.Vrintp,      InstEmit32.Vrintp_V,    OpCode32SimdCmpZ.Create);
             SetA32("1111001x1x>>>xxxxxxx0010>xx1xxxx", InstName.Vrshr,       InstEmit32.Vrshr,       OpCode32SimdShImm.Create);
             SetA32("111100101x>>>xxxxxxx100001x1xxx0", InstName.Vrshrn,      InstEmit32.Vrshrn,      OpCode32SimdShImmNarrow.Create);
             SetA32("111100111x111011xxxx010x1xx0xxxx", InstName.Vrsqrte,     InstEmit32.Vrsqrte,     OpCode32SimdSqrte.Create);

@@ -323,6 +323,60 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        // VRINTA (vector).
+        public static void Vrinta_V(ArmEmitterContext context)
+        {
+            EmitVectorUnaryOpF32(context, (m) => EmitRoundMathCall(context, MidpointRounding.AwayFromZero, m));
+        }
+
+        // VRINTM (vector).
+        public static void Vrintm_V(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitVectorUnaryOpSimd32(context, (m) =>
+                {
+                    return context.AddIntrinsic(Intrinsic.X86Roundps, m, Const(X86GetRoundControl(FPRoundingMode.TowardsMinusInfinity)));
+                });
+            }
+            else
+            {
+                EmitVectorUnaryOpF32(context, (m) => EmitUnaryMathCall(context, nameof(Math.Floor), m));
+            }
+        }
+
+        // VRINTN (vector).
+        public static void Vrintn_V(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitVectorUnaryOpSimd32(context, (m) =>
+                {
+                    return context.AddIntrinsic(Intrinsic.X86Roundps, m, Const(X86GetRoundControl(FPRoundingMode.ToNearest)));
+                });
+            }
+            else
+            {
+                EmitVectorUnaryOpF32(context, (m) => EmitRoundMathCall(context, MidpointRounding.ToEven, m));
+            }
+        }
+
+        // VRINTP (vector).
+        public static void Vrintp_V(ArmEmitterContext context)
+        {
+            if (Optimizations.UseSse2)
+            {
+                EmitVectorUnaryOpSimd32(context, (m) =>
+                {
+                    return context.AddIntrinsic(Intrinsic.X86Roundps, m, Const(X86GetRoundControl(FPRoundingMode.TowardsPlusInfinity)));
+                });
+            }
+            else
+            {
+                EmitVectorUnaryOpF32(context, (m) => EmitUnaryMathCall(context, nameof(Math.Ceiling), m));
+            }
+        }
+
         // VRINTZ (floating-point).
         public static void Vrint_Z(ArmEmitterContext context)
         {

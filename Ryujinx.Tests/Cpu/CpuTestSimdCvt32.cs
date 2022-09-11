@@ -13,6 +13,16 @@ namespace Ryujinx.Tests.Cpu
 #if SimdCvt32
 
 #region "ValueSource (Opcodes)"
+        private static uint[] _Vrint_AMNP_V_F32_()
+        {
+            return new uint[]
+            {
+                0xf3ba0500u, // VRINTA.F32 Q0, Q0
+                0xf3ba0680u, // VRINTM.F32 Q0, Q0
+                0xf3ba0400u, // VRINTN.F32 Q0, Q0
+                0xf3ba0780u  // VRINTP.F32 Q0, Q0
+            };
+        }
 #endregion
 
 #region "ValueSource (Types)"
@@ -61,6 +71,47 @@ namespace Ryujinx.Tests.Cpu
 
                 yield return (grbg << 32) | rnd1;
                 yield return (grbg << 32) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _2S_F_()
+        {
+            yield return 0xFF7FFFFFFF7FFFFFul; // -Max Normal    (float.MinValue)
+            yield return 0x8080000080800000ul; // -Min Normal
+            yield return 0x807FFFFF807FFFFFul; // -Max Subnormal
+            yield return 0x8000000180000001ul; // -Min Subnormal (-float.Epsilon)
+            yield return 0x7F7FFFFF7F7FFFFFul; // +Max Normal    (float.MaxValue)
+            yield return 0x0080000000800000ul; // +Min Normal
+            yield return 0x007FFFFF007FFFFFul; // +Max Subnormal
+            yield return 0x0000000100000001ul; // +Min Subnormal (float.Epsilon)
+
+            if (!NoZeros)
+            {
+                yield return 0x8000000080000000ul; // -Zero
+                yield return 0x0000000000000000ul; // +Zero
+            }
+
+            if (!NoInfs)
+            {
+                yield return 0xFF800000FF800000ul; // -Infinity
+                yield return 0x7F8000007F800000ul; // +Infinity
+            }
+
+            if (!NoNaNs)
+            {
+                yield return 0xFFC00000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
+                yield return 0xFFBFFFFFFFBFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x7FC000007FC00000ul; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
+                yield return 0x7FBFFFFF7FBFFFFFul; // +SNaN (all ones  payload)
+            }
+
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
+            {
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
+
+                yield return (rnd1 << 32) | rnd1;
+                yield return (rnd2 << 32) | rnd2;
             }
         }
 
@@ -224,6 +275,35 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
+        [Test, Pairwise] [Explicit]
+        public void Vrint_AMNP_V_F32([ValueSource(nameof(_Vrint_AMNP_V_F32_))] uint opcode,
+                                     [Values(0u, 1u, 2u, 3u)] uint rd,
+                                     [Values(0u, 1u, 2u, 3u)] uint rm,
+                                     [ValueSource(nameof(_2S_F_))] ulong d0,
+                                     [ValueSource(nameof(_2S_F_))] ulong d1,
+                                     [ValueSource(nameof(_2S_F_))] ulong d2,
+                                     [ValueSource(nameof(_2S_F_))] ulong d3,
+                                     [Values] bool q)
+        {
+            if (q)
+            {
+                opcode |= 1 << 6;
+
+                rd >>= 1; rd <<= 1;
+                rm >>= 1; rm <<= 1;
+            }
+
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+            V128 v1 = MakeVectorE0E1(d2, d3);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
         [Test, Pairwise, Description("VRINTX.F<size> <Sd>, <Sm>")]
         public void Vrintx_S([Values(0u, 1u)] uint rd,
                              [Values(0u, 1u)] uint rm,
@@ -253,7 +333,7 @@ namespace Ryujinx.Tests.Cpu
             }
 
             opcode |= ((size & 3) << 8);
-            
+
             int fpscr = (int)rMode << (int)Fpcr.RMode;
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, fpscr: fpscr);
 
