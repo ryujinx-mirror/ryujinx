@@ -12,10 +12,13 @@
         public bool DoubleWidth { get; }
         public bool Add { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemMult(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemMult(inst, address, opCode, false);
+        public static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemMult(inst, address, opCode, true);
 
-        public OpCode32SimdMemMult(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdMemMult(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)
         {
+            IsThumb = isThumb;
+
             Rn = (opCode >> 16) & 0xf;
 
             bool isLoad = (opCode & (1 << 20)) != 0;

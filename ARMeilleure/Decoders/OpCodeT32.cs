@@ -8,6 +8,7 @@
         {
             Cond = Condition.Al;
 
+            IsThumb = true;
             OpCodeSizeInBytes = 4;
         }
     }

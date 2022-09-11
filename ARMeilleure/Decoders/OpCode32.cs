@@ -13,16 +13,13 @@ namespace ARMeilleure.Decoders
             Cond = (Condition)((uint)opCode >> 28);
         }
 
-        public bool IsThumb()
-        {
-            return this is OpCodeT16 || this is OpCodeT32;
-        }
+        public bool IsThumb { get; protected init; } = false;
 
         public uint GetPc()
         {
             // Due to backwards compatibility and legacy behavior of ARMv4 CPUs pipeline,
             // the PC actually points 2 instructions ahead.
-            if (IsThumb())
+            if (IsThumb)
             {
                 // PC is ahead by 4 in thumb mode whether or not the current instruction
                 // is 16 or 32 bit.

@@ -7,10 +7,13 @@
         public int Size { get; }
         public int Elems { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdImm44(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdImm44(inst, address, opCode, false);
+        public static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdImm44(inst, address, opCode, true);
 
-        public OpCode32SimdImm44(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdImm44(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)
         {
+            IsThumb = isThumb;
+
             Size = (opCode >> 8) & 0x3;
 
             bool single = Size != 3;

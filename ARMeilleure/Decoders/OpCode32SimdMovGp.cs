@@ -11,10 +11,13 @@
         public int Opc1 { get; }
         public int Opc2 { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMovGp(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMovGp(inst, address, opCode, false);
+        public static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMovGp(inst, address, opCode, true);
 
-        public OpCode32SimdMovGp(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdMovGp(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)
         {
+            IsThumb = isThumb;
+
             // Which one is used is instruction dependant.
             Op = (opCode >> 20) & 0x1;
 

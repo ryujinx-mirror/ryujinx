@@ -8,10 +8,13 @@
         public bool Add { get; }
         public int Immediate { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemImm(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemImm(inst, address, opCode, false);
+        public static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemImm(inst, address, opCode, true);
 
-        public OpCode32SimdMemImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdMemImm(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)
         {
+            IsThumb = isThumb;
+
             Immediate = opCode & 0xff;
 
             Rn = (opCode >> 16) & 0xf;

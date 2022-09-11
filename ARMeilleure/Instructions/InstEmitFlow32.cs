@@ -34,7 +34,7 @@ namespace ARMeilleure.Instructions
 
             uint pc = op.GetPc();
 
-            bool isThumb = ((OpCode32)context.CurrOp).IsThumb();
+            bool isThumb = ((OpCode32)context.CurrOp).IsThumb;
 
             uint currentPc = isThumb
                 ? pc | 1
@@ -61,7 +61,7 @@ namespace ARMeilleure.Instructions
             Operand addr = context.Copy(GetIntA32(context, op.Rm));
             Operand bitOne = context.BitwiseAnd(addr, Const(1));
 
-            bool isThumb = ((OpCode32)context.CurrOp).IsThumb();
+            bool isThumb = ((OpCode32)context.CurrOp).IsThumb;
 
             uint currentPc = isThumb
                 ? (pc - 2) | 1
