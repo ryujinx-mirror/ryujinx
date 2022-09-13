@@ -12,7 +12,7 @@ namespace Ryujinx.Tests.Cpu
 #if SimdMemory32
         private const int RndCntImm = 2;
 
-        private uint[] LDSTModes =
+        private uint[] _ldStModes =
         {
             // LD1
             0b0111,
@@ -96,7 +96,7 @@ namespace Ryujinx.Tests.Cpu
                               [Values(0u, 13u)] uint rn,
                               [Values(1u, 13u, 15u)] uint rm,
                               [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
-                              [Range(0u, 3u)] uint mode,
+                              [Range(0u, 10u)] uint mode,
                               [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
@@ -104,7 +104,13 @@ namespace Ryujinx.Tests.Cpu
 
             uint opcode = 0xf4200000u; // VLD4.8 {D0, D1, D2, D3}, [R0], R0
 
-            opcode |= ((size & 3) << 6) | ((rn & 15) << 16) | (rm & 15) | (LDSTModes[mode] << 8);
+            if (mode > 3 && size == 3)
+            {
+                // A size of 3 is only valid for VLD1.
+                size = 2;
+            }
+
+            opcode |= ((size & 3) << 6) | ((rn & 15) << 16) | (rm & 15) | (_ldStModes[mode] << 8);
 
             opcode |= ((vd & 0x10) << 18);
             opcode |= ((vd & 0xf) << 12);
@@ -151,17 +157,23 @@ namespace Ryujinx.Tests.Cpu
                               [Values(0u, 13u)] uint rn,
                               [Values(1u, 13u, 15u)] uint rm,
                               [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
-                              [Range(0u, 3u)] uint mode,
+                              [Range(0u, 10u)] uint mode,
                               [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
 
             (V128 vec1, V128 vec2, V128 vec3, V128 vec4) = GenerateTestVectors();
-            
+
             uint opcode = 0xf4000000u; // VST4.8 {D0, D1, D2, D3}, [R0], R0
 
-            opcode |= ((size & 3) << 6) | ((rn & 15) << 16) | (rm & 15) | (LDSTModes[mode] << 8);
+            if (mode > 3 && size == 3)
+            {
+                // A size of 3 is only valid for VST1.
+                size = 2;
+            }
+
+            opcode |= ((size & 3) << 6) | ((rn & 15) << 16) | (rm & 15) | (_ldStModes[mode] << 8);
 
             opcode |= ((vd & 0x10) << 18);
             opcode |= ((vd & 0xf) << 12);
@@ -183,7 +195,8 @@ namespace Ryujinx.Tests.Cpu
 
             uint opcode = 0xec100a00u; // VST4.8 {D0, D1, D2, D3}, [R0], R0
 
-            uint[] vldmModes = {
+            uint[] vldmModes =
+            {
                 // Note: 3rd 0 leaves a space for "D".
                 0b0100, // Increment after.
                 0b0101, // Increment after. (!)
@@ -240,7 +253,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 opcode |= ((sd & 0x1) << 22);
                 opcode |= ((sd & 0x1e) << 11);
-            } 
+            }
             else
             {
                 opcode |= ((sd & 0x10) << 18);
