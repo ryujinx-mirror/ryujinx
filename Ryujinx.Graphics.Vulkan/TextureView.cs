@@ -74,17 +74,7 @@ namespace Ryujinx.Graphics.Vulkan
                 swizzleR = swizzleB;
                 swizzleB = temp;
             }
-            else if (info.Format == GAL.Format.R4G4B4A4Unorm)
-            {
-                var tempG = swizzleG;
-                var tempB = swizzleB;
-
-                swizzleB = swizzleA;
-                swizzleG = swizzleR;
-                swizzleR = tempG;
-                swizzleA = tempB;
-            }
-            else if (info.Format == GAL.Format.A1B5G5R5Unorm)
+            else if (VkFormat == VkFormat.R4G4B4A4UnormPack16 || info.Format == GAL.Format.A1B5G5R5Unorm)
             {
                 var tempB = swizzleB;
                 var tempA = swizzleA;

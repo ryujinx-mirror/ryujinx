@@ -108,6 +108,10 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     format = VkFormat.D32SfloatS8Uint;
                 }
+                else if (srcFormat == GAL.Format.R4G4B4A4Unorm)
+                {
+                    format = VkFormat.R4G4B4A4UnormPack16;
+                }
                 else
                 {
                     Logger.Error?.Print(LogClass.Gpu, $"Format {srcFormat} is not supported by the host.");

@@ -6,11 +6,11 @@ namespace Ryujinx.Graphics.Vulkan
 {
     static class FormatTable
     {
-        private static readonly VkFormat[] Table;
+        private static readonly VkFormat[] _table;
 
         static FormatTable()
         {
-            Table = new VkFormat[Enum.GetNames(typeof(Format)).Length];
+            _table = new VkFormat[Enum.GetNames(typeof(Format)).Length];
 
             Add(Format.R8Unorm,             VkFormat.R8Unorm);
             Add(Format.R8Snorm,             VkFormat.R8SNorm);
@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.D32FloatS8Uint,      VkFormat.D32SfloatS8Uint);
             Add(Format.R8G8B8A8Srgb,        VkFormat.R8G8B8A8Srgb);
             Add(Format.R4G4Unorm,           VkFormat.R4G4UnormPack8);
-            Add(Format.R4G4B4A4Unorm,       VkFormat.R4G4B4A4UnormPack16);
+            Add(Format.R4G4B4A4Unorm,       VkFormat.A4B4G4R4UnormPack16Ext);
             Add(Format.R5G5B5X1Unorm,       VkFormat.A1R5G5B5UnormPack16);
             Add(Format.R5G5B5A1Unorm,       VkFormat.A1R5G5B5UnormPack16);
             Add(Format.R5G6B5Unorm,         VkFormat.R5G6B5UnormPack16);
@@ -161,12 +161,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         private static void Add(Format format, VkFormat vkFormat)
         {
-            Table[(int)format] = vkFormat;
+            _table[(int)format] = vkFormat;
         }
 
         public static VkFormat GetFormat(Format format)
         {
-            return Table[(int)format];
+            return _table[(int)format];
         }
     }
 }
