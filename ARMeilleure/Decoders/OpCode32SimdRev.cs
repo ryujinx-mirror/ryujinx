@@ -2,9 +2,10 @@
 {
     class OpCode32SimdRev : OpCode32SimdCmpZ
     {
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRev(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRev(inst, address, opCode, false);
+        public new static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRev(inst, address, opCode, true);
 
-        public OpCode32SimdRev(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdRev(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode, isThumb)
         {
             if (Opc + Size >= 3)
             {

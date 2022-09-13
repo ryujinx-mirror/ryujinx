@@ -2,11 +2,12 @@
 {
     class OpCode32SimdRegElem : OpCode32SimdReg
     {
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRegElem(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRegElem(inst, address, opCode, false);
+        public new static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdRegElem(inst, address, opCode, true);
 
-        public OpCode32SimdRegElem(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdRegElem(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode, isThumb)
         {
-            Q = ((opCode >> 24) & 0x1) != 0;
+            Q = ((opCode >> (isThumb ? 28 : 24)) & 0x1) != 0;
             F = ((opCode >> 8) & 0x1) != 0;
             Size = (opCode >> 20) & 0x3;
 

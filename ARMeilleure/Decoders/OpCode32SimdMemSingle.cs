@@ -15,10 +15,13 @@ namespace ARMeilleure.Decoders
         public bool Replicate { get; }
         public int Increment { get; }
 
-        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemSingle(inst, address, opCode);
+        public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemSingle(inst, address, opCode, false);
+        public static OpCode CreateT32(InstDescriptor inst, ulong address, int opCode) => new OpCode32SimdMemSingle(inst, address, opCode, true);
 
-        public OpCode32SimdMemSingle(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
+        public OpCode32SimdMemSingle(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)
         {
+            IsThumb = isThumb;
+
             Vd = (opCode >> 12) & 0xf;
             Vd |= (opCode >> 18) & 0x10;
 
