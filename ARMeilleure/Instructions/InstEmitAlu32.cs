@@ -363,6 +363,11 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, res);
         }
 
+        public static void Sadd8(ArmEmitterContext context)
+        {
+            EmitAddSub8(context, add: true, unsigned: false);
+        }
+
         public static void Sbc(ArmEmitterContext context)
         {
             IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
@@ -401,17 +406,38 @@ namespace ARMeilleure.Instructions
 
         public static void Sdiv(ArmEmitterContext context)
         {
-            EmitDiv(context, false);
+            EmitDiv(context, unsigned: false);
+        }
+
+        public static void Sel(ArmEmitterContext context)
+        {
+            IOpCode32AluReg op = (IOpCode32AluReg)context.CurrOp;
+
+            Operand n = GetIntA32(context, op.Rn);
+            Operand m = GetIntA32(context, op.Rm);
+
+            Operand ge0 = context.ZeroExtend8(OperandType.I32, context.Negate(GetFlag(PState.GE0Flag)));
+            Operand ge1 = context.ZeroExtend8(OperandType.I32, context.Negate(GetFlag(PState.GE1Flag)));
+            Operand ge2 = context.ZeroExtend8(OperandType.I32, context.Negate(GetFlag(PState.GE2Flag)));
+            Operand ge3 = context.Negate(GetFlag(PState.GE3Flag));
+
+            Operand mask = context.BitwiseOr(ge0, context.ShiftLeft(ge1, Const(8)));
+            mask = context.BitwiseOr(mask, context.ShiftLeft(ge2, Const(16)));
+            mask = context.BitwiseOr(mask, context.ShiftLeft(ge3, Const(24)));
+
+            Operand res = context.BitwiseOr(context.BitwiseAnd(n, mask), context.BitwiseAnd(m, context.BitwiseNot(mask)));
+
+            SetIntA32(context, op.Rd, res);
         }
 
         public static void Shadd8(ArmEmitterContext context)
         {
-            EmitHadd8(context, false);
+            EmitHadd8(context, unsigned: false);
         }
 
         public static void Shsub8(ArmEmitterContext context)
         {
-            EmitHsub8(context, false);
+            EmitHsub8(context, unsigned: false);
         }
 
         public static void Ssat(ArmEmitterContext context)
@@ -426,6 +452,11 @@ namespace ARMeilleure.Instructions
             OpCode32Sat16 op = (OpCode32Sat16)context.CurrOp;
 
             EmitSat16(context, -(1 << op.SatImm), (1 << op.SatImm) - 1);
+        }
+
+        public static void Ssub8(ArmEmitterContext context)
+        {
+            EmitAddSub8(context, add: false, unsigned: false);
         }
 
         public static void Sub(ArmEmitterContext context)
@@ -482,6 +513,11 @@ namespace ARMeilleure.Instructions
             EmitNZFlagsCheck(context, res);
         }
 
+        public static void Uadd8(ArmEmitterContext context)
+        {
+            EmitAddSub8(context, add: true, unsigned: true);
+        }
+
         public static void Ubfx(ArmEmitterContext context)
         {
             IOpCode32AluBf op = (IOpCode32AluBf)context.CurrOp;
@@ -496,17 +532,17 @@ namespace ARMeilleure.Instructions
 
         public static void Udiv(ArmEmitterContext context)
         {
-            EmitDiv(context, true);
+            EmitDiv(context, unsigned: true);
         }
 
         public static void Uhadd8(ArmEmitterContext context)
         {
-            EmitHadd8(context, true);
+            EmitHadd8(context, unsigned: true);
         }
 
         public static void Uhsub8(ArmEmitterContext context)
         {
-            EmitHsub8(context, true);
+            EmitHsub8(context, unsigned: true);
         }
 
         public static void Usat(ArmEmitterContext context)
@@ -521,6 +557,11 @@ namespace ARMeilleure.Instructions
             OpCode32Sat16 op = (OpCode32Sat16)context.CurrOp;
 
             EmitSat16(context, 0, (1 << op.SatImm) - 1);
+        }
+
+        public static void Usub8(ArmEmitterContext context)
+        {
+            EmitAddSub8(context, add: false, unsigned: true);
         }
 
         public static void Uxtb(ArmEmitterContext context)
@@ -678,9 +719,40 @@ namespace ARMeilleure.Instructions
             context.MarkLabel(lblEnd);
         }
 
+        private static void EmitAddSub8(ArmEmitterContext context, bool add, bool unsigned)
+        {
+            IOpCode32AluReg op = (IOpCode32AluReg)context.CurrOp;
+
+            Operand n = GetIntA32(context, op.Rn);
+            Operand m = GetIntA32(context, op.Rm);
+
+            Operand res = Const(0);
+
+            for (int byteSel = 0; byteSel < 4; byteSel++)
+            {
+                Operand shift = Const(byteSel * 8);
+
+                Operand nByte = context.ShiftRightUI(n, shift);
+                Operand mByte = context.ShiftRightUI(m, shift);
+
+                nByte = unsigned ? context.ZeroExtend8(OperandType.I32, nByte) : context.SignExtend8(OperandType.I32, nByte);
+                mByte = unsigned ? context.ZeroExtend8(OperandType.I32, mByte) : context.SignExtend8(OperandType.I32, mByte);
+
+                Operand resByte = add ? context.Add(nByte, mByte) : context.Subtract(nByte, mByte);
+
+                res = context.BitwiseOr(res, context.ShiftLeft(context.ZeroExtend8(OperandType.I32, resByte), shift));
+
+                SetFlag(context, PState.GE0Flag + byteSel, unsigned && add
+                    ? context.ShiftRightUI(resByte, Const(8))
+                    : context.ShiftRightUI(context.BitwiseNot(resByte), Const(31)));
+            }
+
+            SetIntA32(context, op.Rd, res);
+        }
+
         private static void EmitHadd8(ArmEmitterContext context, bool unsigned)
         {
-            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+            IOpCode32AluReg op = (IOpCode32AluReg)context.CurrOp;
 
             Operand m = GetIntA32(context, op.Rm);
             Operand n = GetIntA32(context, op.Rn);
@@ -710,7 +782,7 @@ namespace ARMeilleure.Instructions
 
         private static void EmitHsub8(ArmEmitterContext context, bool unsigned)
         {
-            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+            IOpCode32AluReg op = (IOpCode32AluReg)context.CurrOp;
 
             Operand m = GetIntA32(context, op.Rm);
             Operand n = GetIntA32(context, op.Rn);
