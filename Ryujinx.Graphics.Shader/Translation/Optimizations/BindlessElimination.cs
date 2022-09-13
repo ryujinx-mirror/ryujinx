@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+﻿using Ryujinx.Graphics.Shader.Instructions;
+using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
@@ -30,11 +31,19 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     texOp.Inst == Instruction.TextureSize)
                 {
                     Operand bindlessHandle = Utils.FindLastOperation(texOp.GetSource(0), block);
-                    bool rewriteSamplerType = texOp.Inst == Instruction.TextureSize;
+
+                    // Some instructions do not encode an accurate sampler type:
+                    // - Most instructions uses the same type for 1D and Buffer.
+                    // - Query instructions may not have any type.
+                    // For those cases, we need to try getting the type from current GPU state,
+                    // as long bindless elimination is successful and we know where the texture descriptor is located.
+                    bool rewriteSamplerType =
+                        texOp.Type == SamplerType.TextureBuffer ||
+                        texOp.Inst == Instruction.TextureSize;
 
                     if (bindlessHandle.Type == OperandType.ConstantBuffer)
                     {
-                        SetHandle(config, texOp, bindlessHandle.GetCbufOffset(), bindlessHandle.GetCbufSlot(), rewriteSamplerType);
+                        SetHandle(config, texOp, bindlessHandle.GetCbufOffset(), bindlessHandle.GetCbufSlot(), rewriteSamplerType, isImage: false);
                         continue;
                     }
 
@@ -137,7 +146,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             texOp,
                             TextureHandle.PackOffsets(src0.GetCbufOffset(), ((src1.Value >> 20) & 0xfff), handleType),
                             TextureHandle.PackSlots(src0.GetCbufSlot(), 0),
-                            rewriteSamplerType);
+                            rewriteSamplerType,
+                            isImage: false);
                     }
                     else if (src1.Type == OperandType.ConstantBuffer)
                     {
@@ -146,7 +156,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             texOp,
                             TextureHandle.PackOffsets(src0.GetCbufOffset(), src1.GetCbufOffset(), handleType),
                             TextureHandle.PackSlots(src0.GetCbufSlot(), src1.GetCbufSlot()),
-                            rewriteSamplerType);
+                            rewriteSamplerType,
+                            isImage: false);
                     }
                 }
                 else if (texOp.Inst == Instruction.ImageLoad ||
@@ -172,7 +183,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             }
                         }
 
-                        SetHandle(config, texOp, cbufOffset, cbufSlot, false);
+                        bool rewriteSamplerType = texOp.Type == SamplerType.TextureBuffer;
+
+                        SetHandle(config, texOp, cbufOffset, cbufSlot, rewriteSamplerType, isImage: true);
                     }
                 }
             }
@@ -209,13 +222,39 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             return null;
         }
 
-        private static void SetHandle(ShaderConfig config, TextureOperation texOp, int cbufOffset, int cbufSlot, bool rewriteSamplerType)
+        private static void SetHandle(ShaderConfig config, TextureOperation texOp, int cbufOffset, int cbufSlot, bool rewriteSamplerType, bool isImage)
         {
             texOp.SetHandle(cbufOffset, cbufSlot);
 
             if (rewriteSamplerType)
             {
-                texOp.Type = config.GpuAccessor.QuerySamplerType(cbufOffset, cbufSlot);
+                SamplerType newType = config.GpuAccessor.QuerySamplerType(cbufOffset, cbufSlot);
+
+                if (texOp.Inst.IsTextureQuery())
+                {
+                    texOp.Type = newType;
+                }
+                else if (texOp.Type == SamplerType.TextureBuffer && newType == SamplerType.Texture1D)
+                {
+                    int coordsCount = 1;
+
+                    if (InstEmit.Sample1DAs2D)
+                    {
+                        newType = SamplerType.Texture2D;
+                        texOp.InsertSource(coordsCount++, OperandHelper.Const(0));
+                    }
+
+                    if (!isImage &&
+                        (texOp.Flags & TextureFlags.IntCoords) != 0 &&
+                        (texOp.Flags & TextureFlags.LodLevel) == 0)
+                    {
+                        // IntCoords textures must always have explicit LOD.
+                        texOp.SetLodLevelFlag();
+                        texOp.InsertSource(coordsCount, OperandHelper.Const(0));
+                    }
+
+                    texOp.Type = newType;
+                }
             }
 
             config.SetUsedTexture(texOp.Inst, texOp.Type, texOp.Format, texOp.Flags, cbufSlot, cbufOffset);

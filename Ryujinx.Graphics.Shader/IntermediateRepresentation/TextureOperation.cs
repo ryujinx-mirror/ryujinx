@@ -60,5 +60,10 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             CbufSlot = cbufSlot;
             Handle = handle;
         }
+
+        public void SetLodLevelFlag()
+        {
+            Flags |= TextureFlags.LodLevel;
+        }
     }
 }

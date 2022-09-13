@@ -180,6 +180,18 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             _sources[index] = source;
         }
 
+        public void InsertSource(int index, Operand source)
+        {
+            Operand[] newSources = new Operand[_sources.Length + 1];
+
+            Array.Copy(_sources, 0, newSources, 0, index);
+            Array.Copy(_sources, index, newSources, index + 1, _sources.Length - index);
+
+            newSources[index] = source;
+
+            _sources = newSources;
+        }
+
         protected void RemoveSource(int index)
         {
             SetSource(index, null);

@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             { 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b0000, 0b0000, 0b0000 }
         };
 
-        private const bool Sample1DAs2D = true;
+        public const bool Sample1DAs2D = true;
 
         private enum TexsType
         {
