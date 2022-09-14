@@ -15,11 +15,6 @@ namespace ARMeilleure.Instructions
         private const int DczSizeLog2 = 4; // Log2 size in words
         public const int DczSizeInBytes = 4 << DczSizeLog2;
 
-        public static void Hint(ArmEmitterContext context)
-        {
-            // Execute as no-op.
-        }
-
         public static void Isb(ArmEmitterContext context)
         {
             // Execute as no-op.
