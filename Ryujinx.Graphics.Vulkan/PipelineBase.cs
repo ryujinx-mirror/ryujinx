@@ -19,6 +19,8 @@ namespace Ryujinx.Graphics.Vulkan
         protected readonly Device Device;
         public readonly PipelineCache PipelineCache;
 
+        protected readonly AutoFlushCounter AutoFlush;
+
         private PipelineDynamicState _dynamicState;
         private PipelineState _newState;
         private bool _stateDirty;
@@ -69,6 +71,8 @@ namespace Ryujinx.Graphics.Vulkan
         {
             Gd = gd;
             Device = device;
+
+            AutoFlush = new AutoFlushCounter();
 
             var pipelineCacheCreateInfo = new PipelineCacheCreateInfo()
             {

@@ -10,8 +10,6 @@ namespace Ryujinx.Graphics.Vulkan
     {
         private const ulong MinByteWeightForFlush = 256 * 1024 * 1024; // MB
 
-        private bool _hasPendingQuery;
-
         private readonly List<QueryPool> _activeQueries;
         private CounterQueueEvent _activeConditionalRender;
 
@@ -158,9 +156,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void FlushPendingQuery()
         {
-            if (_hasPendingQuery)
+            if (AutoFlush.ShouldFlushQuery())
             {
-                _hasPendingQuery = false;
                 FlushCommandsImpl();
             }
         }
@@ -211,6 +208,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void FlushCommandsImpl()
         {
+            AutoFlush.RegisterFlush(DrawCount);
             EndRenderPass();
 
             foreach (var queryPool in _activeQueries)
@@ -277,12 +275,18 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _pendingQueryCopies.Add(query);
 
-            _hasPendingQuery = true;
+            if (AutoFlush.RegisterPendingQuery())
+            {
+                FlushCommandsImpl();
+            }
         }
 
         protected override void SignalAttachmentChange()
         {
-            FlushPendingQuery();
+            if (AutoFlush.ShouldFlush(DrawCount))
+            {
+                FlushCommandsImpl();
+            }
         }
 
         protected override void SignalRenderPassEnd()
