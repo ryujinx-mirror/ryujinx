@@ -73,7 +73,7 @@ namespace Ryujinx.Memory.WindowsShared
 
             lock (_protections)
             {
-                _protections.Add(new RangeNode<MemoryPermission>(address, size, MemoryPermission.None));
+                _protections.Add(new RangeNode<MemoryPermission>(address, address + size, MemoryPermission.None));
             }
         }
 
@@ -132,7 +132,7 @@ namespace Ryujinx.Memory.WindowsShared
             try
             {
                 UnmapViewInternal(sharedMemory, location, size, owner, updateProtection: false);
-                MapViewInternal(sharedMemory, srcOffset, location, size);
+                MapViewInternal(sharedMemory, srcOffset, location, size, updateProtection: true);
             }
             finally
             {
@@ -147,8 +147,9 @@ namespace Ryujinx.Memory.WindowsShared
         /// <param name="srcOffset">Offset in the shared memory to map</param>
         /// <param name="location">Address to map the view into</param>
         /// <param name="size">Size of the view in bytes</param>
+        /// <param name="updateProtection">Indicates if the memory protections should be updated after the map</param>
         /// <exception cref="WindowsApiException">Thrown when the Windows API returns an error mapping the memory</exception>
-        private void MapViewInternal(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size)
+        private void MapViewInternal(IntPtr sharedMemory, ulong srcOffset, IntPtr location, IntPtr size, bool updateProtection)
         {
             SplitForMap((ulong)location, (ulong)size, srcOffset);
 
@@ -168,7 +169,10 @@ namespace Ryujinx.Memory.WindowsShared
                 throw new WindowsApiException("MapViewOfFile3");
             }
 
-            UpdateProtection((ulong)location, (ulong)size, MemoryPermission.ReadAndWrite);
+            if (updateProtection)
+            {
+                UpdateProtection((ulong)location, (ulong)size, MemoryPermission.ReadAndWrite);
+            }
         }
 
         /// <summary>
@@ -330,7 +334,7 @@ namespace Ryujinx.Memory.WindowsShared
                             {
                                 ulong remapSize = startAddress - overlap.Start;
 
-                                MapViewInternal(sharedMemory, overlap.Value, (IntPtr)overlap.Start, (IntPtr)remapSize);
+                                MapViewInternal(sharedMemory, overlap.Value, (IntPtr)overlap.Start, (IntPtr)remapSize, updateProtection: false);
                                 RestoreRangeProtection(overlap.Start, remapSize);
                             }
 
@@ -341,7 +345,7 @@ namespace Ryujinx.Memory.WindowsShared
                                 ulong remapAddress = overlap.Start + overlappedSize;
                                 ulong remapSize = overlap.End - endAddress;
 
-                                MapViewInternal(sharedMemory, remapBackingOffset, (IntPtr)remapAddress, (IntPtr)remapSize);
+                                MapViewInternal(sharedMemory, remapBackingOffset, (IntPtr)remapAddress, (IntPtr)remapSize, updateProtection: false);
                                 RestoreRangeProtection(remapAddress, remapSize);
                             }
                         }
@@ -606,7 +610,7 @@ namespace Ryujinx.Memory.WindowsShared
 
                     _protections.Remove(protection);
 
-                    if (protection.Value == permission)
+                    if (protPermission == permission)
                     {
                         if (startAddress > protAddress)
                         {
