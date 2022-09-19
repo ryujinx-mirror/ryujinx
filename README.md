@@ -27,7 +27,7 @@
     </a>
     <br>
     <br>
-    <img src="https://raw.githubusercontent.com/Ryujinx/Ryujinx-Website/master/static/public/shell_fullsize.png">
+    <img src="https://raw.githubusercontent.com/Ryujinx/Ryujinx-Website/master/public/assets/images/shell.png">
 </p>
 
 <h5 align="center">
