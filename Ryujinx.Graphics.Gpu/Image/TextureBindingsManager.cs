@@ -806,7 +806,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 ? _channel.BufferManager.GetComputeUniformBufferAddress(textureBufferIndex)
                 : _channel.BufferManager.GetGraphicsUniformBufferAddress(stageIndex, textureBufferIndex);
 
-            int handle = _channel.MemoryManager.Physical.Read<int>(textureBufferAddress + (uint)textureWordOffset * 4);
+            int handle = textureBufferAddress != 0
+                ? _channel.MemoryManager.Physical.Read<int>(textureBufferAddress + (uint)textureWordOffset * 4)
+                : 0;
 
             // The "wordOffset" (which is really the immediate value used on texture instructions on the shader)
             // is a 13-bit value. However, in order to also support separate samplers and textures (which uses
@@ -824,7 +826,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                         ? _channel.BufferManager.GetComputeUniformBufferAddress(samplerBufferIndex)
                         : _channel.BufferManager.GetGraphicsUniformBufferAddress(stageIndex, samplerBufferIndex);
 
-                    samplerHandle = _channel.MemoryManager.Physical.Read<int>(samplerBufferAddress + (uint)samplerWordOffset * 4);
+                    samplerHandle = samplerBufferAddress != 0
+                        ? _channel.MemoryManager.Physical.Read<int>(samplerBufferAddress + (uint)samplerWordOffset * 4)
+                        : 0;
                 }
                 else
                 {
