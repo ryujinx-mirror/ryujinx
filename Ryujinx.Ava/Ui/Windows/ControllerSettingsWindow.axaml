@@ -35,7 +35,8 @@
                 Grid.Column="0"
                 Margin="0,0,2,0"
                 BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1">
+                BorderThickness="1"
+                Padding="2,0">
                 <StackPanel
                     Margin="2"
                     HorizontalAlignment="Center"
@@ -65,7 +66,8 @@
                 Grid.Column="1"
                 Margin="0,0,2,0"
                 BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1">
+                BorderThickness="1"
+                Padding="2,0">
                 <StackPanel
                     Margin="2"
                     HorizontalAlignment="Stretch"
@@ -103,7 +105,8 @@
                 Grid.Column="2"
                 Margin="0,0,2,0"
                 BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1">
+                BorderThickness="1"
+                Padding="2,0">
                 <Grid
                     Margin="2"
                     HorizontalAlignment="Stretch"
@@ -132,7 +135,8 @@
             <Border
                 Grid.Column="3"
                 BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1">
+                BorderThickness="1"
+                Padding="2,0" >
                 <StackPanel
                     Margin="2"
                     HorizontalAlignment="Center"
@@ -151,7 +155,7 @@
                             Items="{Binding ProfilesList}"
                             Text="{Binding ProfileName}" />
                         <Button
-                            MinWidth="60"
+                            MinWidth="0"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center"
                             ToolTip.Tip="{locale:Locale ControllerSettingsLoadProfileToolTip}"
@@ -162,7 +166,7 @@
                                 Height="20" />
                         </Button>
                         <Button
-                            MinWidth="60"
+                            MinWidth="0"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center"
                             ToolTip.Tip="{locale:Locale ControllerSettingsSaveProfileToolTip}"
@@ -173,7 +177,7 @@
                                 Height="20" />
                         </Button>
                         <Button
-                            MinWidth="60"
+                            MinWidth="0"
                             Margin="5,0,0,0"
                             VerticalAlignment="Center"
                             ToolTip.Tip="{locale:Locale ControllerSettingsRemoveProfileToolTip}"
@@ -522,7 +526,7 @@
                                         TextAlignment="Center" />
                                 </ToggleButton>
                             </StackPanel>
-                            
+
                             <!--  Left DPad Down  -->
                             <StackPanel Margin="0,0,0,4" Background="{DynamicResource ThemeDarkColor}" Orientation="Horizontal">
                                 <TextBlock
@@ -583,7 +587,7 @@
                     </StackPanel>
                 </Border>
             </Grid>
-            
+
             <!--  Triggers And Side Buttons-->
             <StackPanel Grid.Column="1" HorizontalAlignment="Stretch">
                 <Border
@@ -717,7 +721,7 @@
                                 MinWidth="0"
                                 Grid.Column="0"
                                 IsChecked="{Binding Configuration.EnableMotion, Mode=TwoWay}">
-                                <TextBlock Text="{locale:Locale ControllerSettingsMotion}" TextWrapping="WrapWithOverflow" />
+                                <TextBlock Text="{locale:Locale ControllerSettingsMotion}" />
                             </CheckBox>
                             <Button Margin="10" Grid.Column="1" Command="{Binding ShowMotionConfig}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsConfigureGeneral}" />
@@ -739,7 +743,7 @@
                                 MinWidth="0"
                                 Grid.Column="0"
                                 IsChecked="{Binding Configuration.EnableRumble, Mode=TwoWay}">
-                                <TextBlock Text="{locale:Locale ControllerSettingsRumble}" TextWrapping="WrapWithOverflow" />
+                                <TextBlock Text="{locale:Locale ControllerSettingsRumble}" />
                             </CheckBox>
                             <Button Margin="10" Grid.Column="1" Command="{Binding ShowRumbleConfig}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsConfigureGeneral}" />
@@ -780,8 +784,6 @@
                                 Margin="0,0,0,4"
                                 Grid.Column="1"
                                 Grid.Row="0"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
                                 Background="{DynamicResource ThemeDarkColor}"
                                 Orientation="Horizontal">
                                 <TextBlock
@@ -822,7 +824,7 @@
                                 </ToggleButton>
                             </StackPanel>
                             <StackPanel
-                                Margin="0,0,0,4"
+                                Margin="0,0,8,4"
                                 Grid.Column="0"
                                 Grid.Row="0"
                                 HorizontalAlignment="Right"
@@ -957,7 +959,6 @@
                 </Border>
                 <Border
                     Grid.Row="2"
-                    Margin="2,0,2,2"
                     Padding="10"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
@@ -1139,7 +1140,7 @@
                                         Text="{Binding Configuration.DeadzoneRight, StringFormat=\{0:0.00\}}" />
                                 </StackPanel>
                                 <TextBlock Text="{locale:Locale ControllerSettingsStickRange}" />
-                                <StackPanel 
+                                <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">

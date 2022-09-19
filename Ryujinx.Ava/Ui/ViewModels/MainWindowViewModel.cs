@@ -50,6 +50,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         private string _dockedStatusText;
         private string _fifoStatusText;
         private string _gameStatusText;
+        private string _volumeStatusText;
         private string _gpuStatusText;
         private bool _isAmiiboRequested;
         private bool _isGameRunning;
@@ -385,11 +386,12 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public string VolumeStatusText
         {
-            get
+            get => _volumeStatusText;
+            set
             {
-                string icon = Volume == 0 ? "🔇" : "🔊";
+                _volumeStatusText = value;
 
-                return $"{icon} {(int)(Volume * 100)}%";
+                OnPropertyChanged();
             }
         }
 

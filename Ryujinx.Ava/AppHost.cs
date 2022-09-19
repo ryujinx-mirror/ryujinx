@@ -879,7 +879,7 @@ namespace Ryujinx.Ava
 
             StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                 Device.EnableDeviceVsync,
-                Device.GetVolume(),
+                LocaleManager.Instance["VolumeShort"] + $": {(int)(Device.GetVolume() * 100)}%",
                 Renderer.IsVulkan ? "Vulkan" : "OpenGL",
                 dockedMode,
                 ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),

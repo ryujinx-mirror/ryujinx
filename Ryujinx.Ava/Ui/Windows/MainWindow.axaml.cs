@@ -138,6 +138,7 @@ namespace Ryujinx.Ava.Ui.Windows
                     ViewModel.DockedStatusText = args.DockedMode;
                     ViewModel.AspectRatioStatusText = args.AspectRatio;
                     ViewModel.GameStatusText = args.GameStatus;
+                    ViewModel.VolumeStatusText = args.VolumeStatus;
                     ViewModel.FifoStatusText = args.FifoStatus;
                     ViewModel.GpuNameText = args.GpuName;
                     ViewModel.BackendText = args.GpuBackend;

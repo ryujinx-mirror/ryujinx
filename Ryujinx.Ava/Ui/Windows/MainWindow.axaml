@@ -177,7 +177,7 @@
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="zh_TW"
                                     Header="繁體中文" />
-                                <MenuItem                                    
+                                <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="ja_JP"
                                     Header="日本語" />
@@ -662,12 +662,12 @@
                         IsVisible="{Binding !ShowLoadProgress}" />
                     <ui:ToggleSplitButton
                         Name="VolumeStatus"
-                        Margin="-2,0,-3,0"
-                        Padding="5,0,0,5"
+                        Padding="5"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
+                        VerticalContentAlignment="Center"
                         Background="{DynamicResource ThemeContentBackgroundColor}"
-                        BorderBrush="{DynamicResource ThemeContentBackgroundColor}"
+                        BorderThickness="0"
                         Content="{Binding VolumeStatusText}"
                         IsChecked="{Binding VolumeMuted}"
                         IsVisible="{Binding !ShowLoadProgress}">
