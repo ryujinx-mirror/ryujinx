@@ -9,8 +9,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
     {
         private readonly OpenGLRenderer _renderer;
 
-        public IntermmediatePool IntermmediatePool { get; }
-
         private int _srcFramebuffer;
         private int _dstFramebuffer;
 
@@ -20,7 +18,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public TextureCopy(OpenGLRenderer renderer)
         {
             _renderer = renderer;
-            IntermmediatePool = new IntermmediatePool(renderer);
         }
 
         public void Copy(
@@ -517,8 +514,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
                 _copyPboHandle = 0;
             }
-
-            IntermmediatePool.Dispose();
         }
     }
 }
