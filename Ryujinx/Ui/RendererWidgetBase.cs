@@ -119,7 +119,7 @@ namespace Ryujinx.Ui
 
         public abstract void InitializeRenderer();
 
-        public abstract void SwapBuffers(object image);
+        public abstract void SwapBuffers();
 
         protected abstract string GetGpuBackendName();
 
@@ -426,7 +426,7 @@ namespace Ryujinx.Ui
 
                     while (Device.ConsumeFrameAvailable())
                     {
-                        Device.PresentFrame((texture) => { SwapBuffers(texture);});
+                        Device.PresentFrame(SwapBuffers);
                     }
 
                     if (_ticks >= _ticksPerFrame)

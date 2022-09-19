@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -59,29 +60,63 @@ namespace Ryujinx.Ava.Ui.Controls
 
             string input = string.Empty;
 
+            var overlay = new ContentDialogOverlayWindow()
+            {
+                Height = window.Bounds.Height,
+                Width = window.Bounds.Width,
+                Position = window.PointToScreen(new Point())
+            };
+
+            window.PositionChanged += OverlayOnPositionChanged;
+
+            void OverlayOnPositionChanged(object sender, PixelPointEventArgs e)
+            {
+                overlay.Position = window.PointToScreen(new Point());
+            }
+
+            contentDialog = overlay.ContentDialog;
+
+            bool opened = false;
+
             content.SetInputLengthValidation(args.StringLengthMin, args.StringLengthMax);
 
-            if (contentDialog != null)
+            content._host = contentDialog;
+            contentDialog.Title = title;
+            contentDialog.PrimaryButtonText = args.SubmitText;
+            contentDialog.IsPrimaryButtonEnabled = content._checkLength(content.Message.Length);
+            contentDialog.SecondaryButtonText = "";
+            contentDialog.CloseButtonText = LocaleManager.Instance["InputDialogCancel"];
+            contentDialog.Content = content;
+
+            TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs> handler = (sender, eventArgs) =>
             {
-                content._host = contentDialog;
-                contentDialog.Title = title;
-                contentDialog.PrimaryButtonText = args.SubmitText;
-                contentDialog.IsPrimaryButtonEnabled = content._checkLength(content.Message.Length);
-                contentDialog.SecondaryButtonText = "";
-                contentDialog.CloseButtonText = LocaleManager.Instance["InputDialogCancel"];
-                contentDialog.Content = content;
-                TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs> handler = (sender, eventArgs) =>
+                if (eventArgs.Result == ContentDialogResult.Primary)
                 {
-                    if (eventArgs.Result == ContentDialogResult.Primary)
-                    {
-                        result = UserResult.Ok;
-                        input = content.Input.Text;
-                    }
-                };
-                contentDialog.Closed += handler;
+                    result = UserResult.Ok;
+                    input = content.Input.Text;
+                }
+            };
+            contentDialog.Closed += handler;
+
+            overlay.Opened += OverlayOnActivated;
+
+            async void OverlayOnActivated(object sender, EventArgs e)
+            {
+                if (opened)
+                {
+                    return;
+                }
+
+                opened = true;
+
+                overlay.Position = window.PointToScreen(new Point());
+
                 await contentDialog.ShowAsync();
                 contentDialog.Closed -= handler;
-            }
+                overlay.Close();
+            };
+
+            await overlay.ShowDialog(window);
 
             return (result, input);
         }

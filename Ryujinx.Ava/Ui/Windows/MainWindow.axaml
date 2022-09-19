@@ -462,6 +462,7 @@
                 VerticalAlignment="Stretch"
                 Background="{DynamicResource ThemeContentBackgroundColor}"
                 IsVisible="{Binding ShowLoadProgress}"
+                Name="LoadingView"
                 ZIndex="1000">
                 <Grid
                     Margin="40"

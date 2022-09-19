@@ -217,7 +217,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public unsafe override void Present(ITexture texture, ImageCrop crop, Action<object> swapBuffersCallback)
+        public unsafe override void Present(ITexture texture, ImageCrop crop, Action swapBuffersCallback)
         {
             uint nextImage = 0;
 

@@ -14,20 +14,27 @@ namespace Ryujinx.Ava.Input
         private Control _widget;
         private bool _isDisposed;
         private Size _size;
+        private readonly Window _window;
 
         public bool[] PressedButtons { get; }
 
         public Vector2 CurrentPosition { get; private set; }
         public Vector2 Scroll { get; private set; }
 
-        public AvaloniaMouseDriver(Control parent)
+        public AvaloniaMouseDriver(Window window, Control parent)
         {
             _widget = parent;
+            _window = window;
 
             _widget.PointerMoved += Parent_PointerMovedEvent;
             _widget.PointerPressed += Parent_PointerPressEvent;
             _widget.PointerReleased += Parent_PointerReleaseEvent;
             _widget.PointerWheelChanged += Parent_ScrollEvent;
+            
+            _window.PointerMoved += Parent_PointerMovedEvent;
+            _window.PointerPressed += Parent_PointerPressEvent;
+            _window.PointerReleased += Parent_PointerReleaseEvent;
+            _window.PointerWheelChanged += Parent_ScrollEvent;
 
             PressedButtons = new bool[(int)MouseButton.Count];
 
@@ -47,7 +54,6 @@ namespace Ryujinx.Ava.Input
 
         private void Parent_PointerReleaseEvent(object o, PointerReleasedEventArgs args)
         {
-            var pointerProperties = args.GetCurrentPoint(_widget).Properties;
             PressedButtons[(int)args.InitialPressMouseButton - 1] = false;
         }
 
@@ -124,6 +130,11 @@ namespace Ryujinx.Ava.Input
             _widget.PointerPressed -= Parent_PointerPressEvent;
             _widget.PointerReleased -= Parent_PointerReleaseEvent;
             _widget.PointerWheelChanged -= Parent_ScrollEvent;
+
+            _window.PointerMoved -= Parent_PointerMovedEvent;
+            _window.PointerPressed -= Parent_PointerPressEvent;
+            _window.PointerReleased -= Parent_PointerReleaseEvent;
+            _window.PointerWheelChanged -= Parent_ScrollEvent;
 
             _widget = null;
         }

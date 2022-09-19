@@ -12,11 +12,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private int _width;
         private int _height;
-        private bool _sizeChanged;
         private int _copyFramebufferHandle;
-        private int _stagingFrameBuffer;
-        private int[] _stagingTextures;
-        private int _currentTexture;
 
         internal BackgroundContextWorker BackgroundContext { get; private set; }
 
@@ -25,28 +21,15 @@ namespace Ryujinx.Graphics.OpenGL
         public Window(OpenGLRenderer renderer)
         {
             _renderer = renderer;
-            _stagingTextures = new int[TextureCount];
         }
 
-        public void Present(ITexture texture, ImageCrop crop, Action<object> swapBuffersCallback)
+        public void Present(ITexture texture, ImageCrop crop, Action swapBuffersCallback)
         {
             GL.Disable(EnableCap.FramebufferSrgb);
 
-            if (_sizeChanged)
-            {
-                if (_stagingFrameBuffer != 0)
-                {
-                    GL.DeleteTextures(_stagingTextures.Length, _stagingTextures);
-                    GL.DeleteFramebuffer(_stagingFrameBuffer);
-                }
-
-                CreateStagingFramebuffer();
-                _sizeChanged = false;
-            }
-
             (int oldDrawFramebufferHandle, int oldReadFramebufferHandle) = ((Pipeline)_renderer.Pipeline).GetBoundFramebuffers();
 
-            CopyTextureToFrameBufferRGB(_stagingFrameBuffer, GetCopyFramebufferHandleLazy(), (TextureView)texture, crop, swapBuffersCallback);
+            CopyTextureToFrameBufferRGB(0, GetCopyFramebufferHandleLazy(), (TextureView)texture, crop, swapBuffersCallback);
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldReadFramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
@@ -59,40 +42,16 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void ChangeVSyncMode(bool vsyncEnabled) { }
 
-        private void CreateStagingFramebuffer()
-        {
-            _stagingFrameBuffer = GL.GenFramebuffer();
-            GL.GenTextures(_stagingTextures.Length, _stagingTextures);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _stagingFrameBuffer);
-
-            foreach (var stagingTexture in _stagingTextures)
-            {
-                GL.BindTexture(TextureTarget.Texture2D, stagingTexture);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, _width, _height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-                GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, stagingTexture, 0);
-            }
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-        }
-
         public void SetSize(int width, int height)
         {
             _width = width;
             _height = height;
-            _sizeChanged = true;
         }
 
-        private void CopyTextureToFrameBufferRGB(int drawFramebuffer, int readFramebuffer, TextureView view, ImageCrop crop, Action<object> swapBuffersCallback)
+        private void CopyTextureToFrameBufferRGB(int drawFramebuffer, int readFramebuffer, TextureView view, ImageCrop crop, Action swapBuffersCallback)
         {
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, drawFramebuffer);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, readFramebuffer);
-
-            GL.FramebufferTexture2D(FramebufferTarget.DrawFramebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, _stagingTextures[_currentTexture], 0);
 
             TextureView viewConverted = view.Format.IsBgr() ? _renderer.TextureCopy.BgraSwap(view) : view;
 
@@ -189,12 +148,8 @@ namespace Ryujinx.Graphics.OpenGL
             // Set clip control, viewport and the framebuffer to the output to placate overlays and OBS capture.
             GL.ClipControl(ClipOrigin.LowerLeft, ClipDepthMode.NegativeOneToOne);
             GL.Viewport(0, 0, _width, _height);
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, drawFramebuffer);
 
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _stagingFrameBuffer);
-
-            swapBuffersCallback((object)_stagingTextures[_currentTexture]);
-            _currentTexture = ++_currentTexture % _stagingTextures.Length;
+            swapBuffersCallback();
 
             ((Pipeline)_renderer.Pipeline).RestoreClipControl();
             ((Pipeline)_renderer.Pipeline).RestoreScissor0Enable();
@@ -245,14 +200,6 @@ namespace Ryujinx.Graphics.OpenGL
                 GL.DeleteFramebuffer(_copyFramebufferHandle);
 
                 _copyFramebufferHandle = 0;
-            }
-
-            if (_stagingFrameBuffer != 0)
-            {
-                GL.DeleteTextures(_stagingTextures.Length, _stagingTextures);
-                GL.DeleteFramebuffer(_stagingFrameBuffer);
-                _stagingFrameBuffer = 0;
-                _stagingTextures = null;
             }
         }
     }
