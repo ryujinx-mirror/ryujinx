@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Shader.Translation;
 using Ryujinx.Graphics.Vulkan.Shaders;
 using Silk.NET.Vulkan;
 using System;
+using System.Collections.Generic;
 using VkFormat = Silk.NET.Vulkan.Format;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -397,6 +398,86 @@ namespace Ryujinx.Graphics.Vulkan
                 PipelineStageFlags.PipelineStageAllCommandsBit,
                 0,
                 newSize);
+        }
+
+        public unsafe void ConvertIndexBuffer(VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            BufferHolder src,
+            BufferHolder dst,
+            IndexBufferPattern pattern,
+            int indexSize,
+            int srcOffset,
+            int indexCount)
+        {
+            int convertedCount = pattern.GetConvertedCount(indexCount);
+            int outputIndexSize = 4;
+
+            // TODO: Do this with a compute shader?
+            var srcBuffer = src.GetBuffer().Get(cbs, srcOffset, indexCount * indexSize).Value;
+            var dstBuffer = dst.GetBuffer().Get(cbs, 0, convertedCount * outputIndexSize).Value;
+
+            gd.Api.CmdFillBuffer(cbs.CommandBuffer, dstBuffer, 0, Vk.WholeSize, 0);
+
+            var bufferCopy = new List<BufferCopy>();
+            int outputOffset = 0;
+
+            // Try to merge copies of adjacent indices to reduce copy count.
+            int sequenceStart = 0;
+            int sequenceLength = 0;
+
+            foreach (var index in pattern.GetIndexMapping(indexCount))
+            {
+                if (sequenceLength > 0)
+                {
+                    if (index == sequenceStart + sequenceLength && indexSize == outputIndexSize)
+                    {
+                        sequenceLength++;
+                        continue;
+                    }
+
+                    // Commit the copy so far.
+                    bufferCopy.Add(new BufferCopy((ulong)(srcOffset + sequenceStart * indexSize), (ulong)outputOffset, (ulong)(indexSize * sequenceLength)));
+                    outputOffset += outputIndexSize * sequenceLength;
+                }
+
+                sequenceStart = index;
+                sequenceLength = 1;
+            }
+
+            if (sequenceLength > 0)
+            {
+                // Commit final pending copy.
+                bufferCopy.Add(new BufferCopy((ulong)(srcOffset + sequenceStart * indexSize), (ulong)outputOffset, (ulong)(indexSize * sequenceLength)));
+            }
+
+            var bufferCopyArray = bufferCopy.ToArray();
+
+            BufferHolder.InsertBufferBarrier(
+                gd,
+                cbs.CommandBuffer,
+                dstBuffer,
+                BufferHolder.DefaultAccessFlags,
+                AccessFlags.AccessTransferWriteBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.PipelineStageTransferBit,
+                0,
+                convertedCount * outputIndexSize);
+
+            fixed (BufferCopy* pBufferCopy = bufferCopyArray)
+            {
+                gd.Api.CmdCopyBuffer(cbs.CommandBuffer, srcBuffer, dstBuffer, (uint)bufferCopyArray.Length, pBufferCopy);
+            }
+
+            BufferHolder.InsertBufferBarrier(
+                gd,
+                cbs.CommandBuffer,
+                dstBuffer,
+                AccessFlags.AccessTransferWriteBit,
+                BufferHolder.DefaultAccessFlags,
+                PipelineStageFlags.PipelineStageTransferBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                0,
+                convertedCount * outputIndexSize);
         }
 
         protected virtual void Dispose(bool disposing)

@@ -471,6 +471,25 @@ namespace Ryujinx.Graphics.Vulkan
             Logger.Notice.Print(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
         }
 
+        public GAL.PrimitiveTopology TopologyRemap(GAL.PrimitiveTopology topology)
+        {
+            return topology switch
+            {
+                GAL.PrimitiveTopology.Quads => GAL.PrimitiveTopology.Triangles,
+                GAL.PrimitiveTopology.QuadStrip => GAL.PrimitiveTopology.TriangleStrip,
+                _ => topology
+            };
+        }
+
+        public bool TopologyUnsupported(GAL.PrimitiveTopology topology)
+        {
+            return topology switch
+            {
+                GAL.PrimitiveTopology.Quads => true,
+                _ => false
+            };
+        }
+
         public void Initialize(GraphicsDebugLevel logLevel)
         {
             SetupContext(logLevel);

@@ -199,7 +199,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             pipeline.StencilTestEnable = state.StencilTest.TestEnable;
 
-            pipeline.Topology = state.Topology.Convert();
+            pipeline.Topology = gd.TopologyRemap(state.Topology).Convert();
 
             int vaCount = Math.Min(Constants.MaxVertexAttributes, state.VertexAttribCount);
             int vbCount = Math.Min(Constants.MaxVertexBuffers, state.VertexBufferCount);

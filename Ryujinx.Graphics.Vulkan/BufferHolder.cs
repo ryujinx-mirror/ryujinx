@@ -370,6 +370,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 holder = _gd.BufferManager.Create(_gd, (size * 2 + 3) & ~3);
 
+                _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ConvertI8ToI16(_gd, cbs, this, holder, offset, size);
 
                 _cachedConvertedBuffers.Add(offset, size, key, holder);
@@ -388,9 +389,33 @@ namespace Ryujinx.Graphics.Vulkan
 
                 holder = _gd.BufferManager.Create(_gd, (size / stride) * alignedStride);
 
+                _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ChangeStride(_gd, cbs, this, holder, offset, size, stride, alignedStride);
 
                 key.SetBuffer(holder.GetBuffer());
+
+                _cachedConvertedBuffers.Add(offset, size, key, holder);
+            }
+
+            return holder.GetBuffer();
+        }
+
+        public Auto<DisposableBuffer> GetBufferTopologyConversion(CommandBufferScoped cbs, int offset, int size, IndexBufferPattern pattern, int indexSize)
+        {
+            var key = new TopologyConversionCacheKey(_gd, pattern, indexSize);
+
+            if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
+            {
+                // The destination index size is always I32.
+
+                int indexCount = size / indexSize;
+
+                int convertedCount = pattern.GetConvertedCount(indexCount);
+
+                holder = _gd.BufferManager.Create(_gd, convertedCount * 4);
+
+                _gd.PipelineInternal.EndRenderPass();
+                _gd.HelperShader.ConvertIndexBuffer(_gd, cbs, this, holder, pattern, indexSize, offset, indexCount);
 
                 _cachedConvertedBuffers.Add(offset, size, key, holder);
             }

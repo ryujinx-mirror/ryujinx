@@ -10,14 +10,25 @@ namespace Ryujinx.Graphics.Vulkan
 
     struct I8ToI16CacheKey : ICacheKey
     {
-        public I8ToI16CacheKey() { }
+        // Used to notify the pipeline that bindings have invalidated on dispose.
+        private readonly VulkanRenderer _gd;
+        private Auto<DisposableBuffer> _buffer;
+
+        public I8ToI16CacheKey(VulkanRenderer gd)
+        {
+            _gd = gd;
+            _buffer = null;
+        }
 
         public bool KeyEqual(ICacheKey other)
         {
             return other is I8ToI16CacheKey;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            _gd.PipelineInternal.DirtyIndexBuffer(_buffer);
+        }
     }
 
     struct AlignedVertexBufferCacheKey : ICacheKey
@@ -52,6 +63,41 @@ namespace Ryujinx.Graphics.Vulkan
         public void Dispose()
         {
             _gd.PipelineInternal.DirtyVertexBuffer(_buffer);
+        }
+    }
+
+    struct TopologyConversionCacheKey : ICacheKey
+    {
+        private IndexBufferPattern _pattern;
+        private int _indexSize;
+
+        // Used to notify the pipeline that bindings have invalidated on dispose.
+        private readonly VulkanRenderer _gd;
+        private Auto<DisposableBuffer> _buffer;
+
+        public TopologyConversionCacheKey(VulkanRenderer gd, IndexBufferPattern pattern, int indexSize)
+        {
+            _gd = gd;
+            _pattern = pattern;
+            _indexSize = indexSize;
+            _buffer = null;
+        }
+
+        public bool KeyEqual(ICacheKey other)
+        {
+            return other is TopologyConversionCacheKey entry &&
+                entry._pattern == _pattern &&
+                entry._indexSize == _indexSize;
+        }
+
+        public void SetBuffer(Auto<DisposableBuffer> buffer)
+        {
+            _buffer = buffer;
+        }
+
+        public void Dispose()
+        {
+            _gd.PipelineInternal.DirtyIndexBuffer(_buffer);
         }
     }
 
