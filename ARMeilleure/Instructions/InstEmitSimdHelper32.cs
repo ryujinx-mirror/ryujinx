@@ -1181,7 +1181,11 @@ namespace ARMeilleure.Instructions
             Array.Resize(ref callArgs, callArgs.Length + 1);
             callArgs[callArgs.Length - 1] = Const(1);
 
-            return context.Call(info, callArgs);
+            context.StoreToContext();
+            Operand res = context.Call(info, callArgs);
+            context.LoadFromContext();
+
+            return res;
         }
 
         public static Operand EmitVectorExtractSx32(ArmEmitterContext context, int reg, int index, int size)

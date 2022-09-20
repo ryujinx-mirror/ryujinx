@@ -1,5 +1,6 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
@@ -378,7 +379,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIfFalse(lblNoSat, context.BitwiseOr(gt, lt));
 
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
 
             context.MarkLabel(lblNoSat);
 

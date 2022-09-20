@@ -76,7 +76,9 @@ namespace ARMeilleure.Instructions
                 {
                     Operand ne = context.VectorExtract(OperandType.FP32, GetVec(op.Rn), 0);
 
+                    context.StoreToContext();
                     Operand res = context.Call(typeof(SoftFloat32_16).GetMethod(nameof(SoftFloat32_16.FPConvert)), ne);
+                    context.LoadFromContext();
 
                     res = context.ZeroExtend16(OperandType.I64, res);
 
@@ -98,7 +100,9 @@ namespace ARMeilleure.Instructions
                 {
                     Operand ne = EmitVectorExtractZx(context, op.Rn, 0, 1);
 
+                    context.StoreToContext();
                     Operand res = context.Call(typeof(SoftFloat16_32).GetMethod(nameof(SoftFloat16_32.FPConvert)), ne);
+                    context.LoadFromContext();
 
                     context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
                 }
@@ -120,7 +124,9 @@ namespace ARMeilleure.Instructions
                 {
                     Operand ne = context.VectorExtract(OperandType.FP64, GetVec(op.Rn), 0);
 
+                    context.StoreToContext();
                     Operand res = context.Call(typeof(SoftFloat64_16).GetMethod(nameof(SoftFloat64_16.FPConvert)), ne);
+                    context.LoadFromContext();
 
                     res = context.ZeroExtend16(OperandType.I64, res);
 
@@ -143,7 +149,9 @@ namespace ARMeilleure.Instructions
                 {
                     Operand ne = EmitVectorExtractZx(context, op.Rn, 0, 1);
 
+                    context.StoreToContext();
                     Operand res = context.Call(typeof(SoftFloat16_64).GetMethod(nameof(SoftFloat16_64.FPConvert)), ne);
+                    context.LoadFromContext();
 
                     context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
                 }
@@ -224,7 +232,9 @@ namespace ARMeilleure.Instructions
                     {
                         Operand ne = EmitVectorExtractZx(context, op.Rn, part + index, 1);
 
+                        context.StoreToContext();
                         Operand e = context.Call(typeof(SoftFloat16_32).GetMethod(nameof(SoftFloat16_32.FPConvert)), ne);
+                        context.LoadFromContext();
 
                         res = context.VectorInsert(res, e, index);
                     }
@@ -333,7 +343,9 @@ namespace ARMeilleure.Instructions
 
                     if (sizeF == 0)
                     {
+                        context.StoreToContext();
                         Operand e = context.Call(typeof(SoftFloat32_16).GetMethod(nameof(SoftFloat32_16.FPConvert)), ne);
+                        context.LoadFromContext();
 
                         e = context.ZeroExtend16(OperandType.I64, e);
 

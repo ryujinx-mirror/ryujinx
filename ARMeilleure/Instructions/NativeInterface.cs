@@ -72,29 +72,6 @@ namespace ARMeilleure.Instructions
             return (ulong)GetContext().DczidEl0;
         }
 
-        public static ulong GetFpcr()
-        {
-            return (ulong)GetContext().Fpcr;
-        }
-
-        public static bool GetFpcrFz()
-        {
-            return (GetContext().Fpcr & FPCR.Fz) != 0;
-        }
-
-        public static ulong GetFpsr()
-        {
-            return (ulong)GetContext().Fpsr;
-        }
-
-        public static uint GetFpscr()
-        {
-            ExecutionContext context = GetContext();
-
-            return (uint)(context.Fpsr & FPSR.A32Mask & ~FPSR.Nzcv) |
-                   (uint)(context.Fpcr & FPCR.A32Mask);
-        }
-
         public static ulong GetTpidrEl0()
         {
             return (ulong)GetContext().TpidrEl0;
@@ -128,29 +105,6 @@ namespace ARMeilleure.Instructions
         public static ulong GetCntvctEl0()
         {
             return GetContext().CntvctEl0;
-        }
-
-        public static void SetFpcr(ulong value)
-        {
-            GetContext().Fpcr = (FPCR)value;
-        }
-
-        public static void SetFpsr(ulong value)
-        {
-            GetContext().Fpsr = (FPSR)value;
-        }
-
-        public static void SetFpsrQc()
-        {
-            GetContext().Fpsr |= FPSR.Qc;
-        }
-
-        public static void SetFpscr(uint fpscr)
-        {
-            ExecutionContext context = GetContext();
-
-            context.Fpsr = FPSR.A32Mask & (FPSR)fpscr;
-            context.Fpcr = FPCR.A32Mask & (FPCR)fpscr;
         }
 
         public static void SetTpidrEl0(ulong value)

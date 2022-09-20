@@ -12,8 +12,8 @@ namespace ARMeilleure.Instructions
             RecipSqrtEstimateTable = BuildRecipSqrtEstimateTable();
         }
 
-        internal static readonly byte[] RecipEstimateTable;
-        internal static readonly byte[] RecipSqrtEstimateTable;
+        public static readonly byte[] RecipEstimateTable;
+        public static readonly byte[] RecipSqrtEstimateTable;
 
         private static byte[] BuildRecipEstimateTable()
         {
@@ -93,6 +93,13 @@ namespace ARMeilleure.Instructions
             {
                 context.Fpsr |= (FPSR)(1 << (int)exc);
             }
+        }
+
+        public static FPRoundingMode GetRoundingMode(this FPCR fpcr)
+        {
+            const int RModeShift = 22;
+
+            return (FPRoundingMode)(((uint)fpcr >> RModeShift) & 3u);
         }
     }
 

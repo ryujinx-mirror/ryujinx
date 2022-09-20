@@ -726,7 +726,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorAcrossVectorOpF(context, (op1, op2) =>
                 {
-                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMaxNum)), op1, op2);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMaxNum), op1, op2);
                 });
             }
         }
@@ -774,7 +774,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorAcrossVectorOpF(context, (op1, op2) =>
                 {
-                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMax)), op1, op2);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMax), op1, op2);
                 });
             }
         }
@@ -900,7 +900,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorAcrossVectorOpF(context, (op1, op2) =>
                 {
-                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMinNum)), op1, op2);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMinNum), op1, op2);
                 });
             }
         }
@@ -948,7 +948,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitVectorAcrossVectorOpF(context, (op1, op2) =>
                 {
-                    return context.Call(typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPMin)), op1, op2);
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMin), op1, op2);
                 });
             }
         }
@@ -1633,37 +1633,17 @@ namespace ARMeilleure.Instructions
 
         public static void Frinti_S(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
             EmitScalarUnaryOpF(context, (op1) =>
             {
-                if (op.Size == 0)
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.RoundF)), op1);
-                }
-                else /* if (op.Size == 1) */
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Round)), op1);
-                }
+                return EmitRoundByRMode(context, op1);
             });
         }
 
         public static void Frinti_V(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
             EmitVectorUnaryOpF(context, (op1) =>
             {
-                if (sizeF == 0)
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.RoundF)), op1);
-                }
-                else /* if (sizeF == 1) */
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Round)), op1);
-                }
+                return EmitRoundByRMode(context, op1);
             });
         }
 
@@ -1759,37 +1739,17 @@ namespace ARMeilleure.Instructions
 
         public static void Frintx_S(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
             EmitScalarUnaryOpF(context, (op1) =>
             {
-                if (op.Size == 0)
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.RoundF)), op1);
-                }
-                else /* if (op.Size == 1) */
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Round)), op1);
-                }
+                return EmitRoundByRMode(context, op1);
             });
         }
 
         public static void Frintx_V(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
             EmitVectorUnaryOpF(context, (op1) =>
             {
-                if (sizeF == 0)
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.RoundF)), op1);
-                }
-                else /* if (sizeF == 1) */
-                {
-                    return context.Call(typeof(SoftFallback).GetMethod(nameof(SoftFallback.Round)), op1);
-                }
+                return EmitRoundByRMode(context, op1);
             });
         }
 

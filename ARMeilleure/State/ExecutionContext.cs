@@ -36,9 +36,24 @@ namespace ARMeilleure.State
             set => _nativeContext.SetPstate(value);
         }
 
-        public FPCR Fpcr { get; set; }
-        public FPSR Fpsr { get; set; }
+        public FPSR Fpsr
+        {
+            get => (FPSR)_nativeContext.GetFPState((uint)FPSR.Mask);
+            set => _nativeContext.SetFPState((uint)value, (uint)FPSR.Mask);
+        }
+
+        public FPCR Fpcr
+        {
+            get => (FPCR)_nativeContext.GetFPState((uint)FPCR.Mask);
+            set => _nativeContext.SetFPState((uint)value, (uint)FPCR.Mask);
+        }
         public FPCR StandardFpcrValue => (Fpcr & (FPCR.Ahp)) | FPCR.Dn | FPCR.Fz;
+
+        public FPSCR Fpscr
+        {
+            get => (FPSCR)_nativeContext.GetFPState((uint)FPSCR.Mask);
+            set => _nativeContext.SetFPState((uint)value, (uint)FPSCR.Mask);
+        }
 
         public bool IsAarch32 { get; set; }
 

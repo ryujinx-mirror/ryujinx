@@ -162,7 +162,7 @@ namespace Ryujinx.Tests.Cpu
             _context.SetPstateFlag(PState.ZFlag, zero);
             _context.SetPstateFlag(PState.NFlag, negative);
 
-            SetFpscr((uint)fpscr);
+            _context.Fpscr = (FPSCR)fpscr;
 
             _context.SetPstateFlag(PState.TFlag, thumb);
 
@@ -467,7 +467,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(_context.GetPstateFlag(PState.NFlag), Is.EqualTo(_unicornEmu.NegativeFlag), "NFlag");
             });
 
-            Assert.That((int)GetFpscr() & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpscr & (int)fpsrMask), "Fpscr");
+            Assert.That((int)_context.Fpscr & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpscr & (int)fpsrMask), "Fpscr");
 
             if (_usingMemory)
             {
@@ -649,29 +649,6 @@ namespace Ryujinx.Tests.Cpu
             while ((rnd & 0x000FFFFFFFFFFFFFul) == 0ul);
 
             return rnd & 0x800FFFFFFFFFFFFFul;
-        }
-
-        private uint GetFpscr()
-        {
-            uint fpscr = (uint)(_context.Fpsr & FPSR.A32Mask & ~FPSR.Nzcv) | (uint)(_context.Fpcr & FPCR.A32Mask);
-
-            fpscr |= _context.GetFPstateFlag(FPState.NFlag) ? (1u << (int)FPState.NFlag) : 0;
-            fpscr |= _context.GetFPstateFlag(FPState.ZFlag) ? (1u << (int)FPState.ZFlag) : 0;
-            fpscr |= _context.GetFPstateFlag(FPState.CFlag) ? (1u << (int)FPState.CFlag) : 0;
-            fpscr |= _context.GetFPstateFlag(FPState.VFlag) ? (1u << (int)FPState.VFlag) : 0;
-
-            return fpscr;
-        }
-
-        private void SetFpscr(uint fpscr)
-        {
-            _context.Fpsr = FPSR.A32Mask & (FPSR)fpscr;
-            _context.Fpcr = FPCR.A32Mask & (FPCR)fpscr;
-
-            _context.SetFPstateFlag(FPState.NFlag, (fpscr & (1u << (int)FPState.NFlag)) != 0);
-            _context.SetFPstateFlag(FPState.ZFlag, (fpscr & (1u << (int)FPState.ZFlag)) != 0);
-            _context.SetFPstateFlag(FPState.CFlag, (fpscr & (1u << (int)FPState.CFlag)) != 0);
-            _context.SetFPstateFlag(FPState.VFlag, (fpscr & (1u << (int)FPState.VFlag)) != 0);
         }
     }
 }

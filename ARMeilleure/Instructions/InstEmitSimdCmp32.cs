@@ -3,7 +3,6 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
-using System.Reflection;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -178,37 +177,20 @@ namespace ARMeilleure.Instructions
 
         private static void EmitCmpOpF32(ArmEmitterContext context, string name, bool zero)
         {
-            Operand one = Const(1);
             if (zero)
             {
                 EmitVectorUnaryOpF32(context, (m) =>
                 {
-                    OperandType type = m.Type;
+                    Operand zeroOp = m.Type == OperandType.FP64 ? ConstF(0.0d) : ConstF(0.0f);
 
-                    if (type == OperandType.FP64)
-                    {
-                        return context.Call(typeof(SoftFloat64).GetMethod(name), m, ConstF(0.0d), one);
-                    }
-                    else
-                    {
-                        return context.Call(typeof(SoftFloat32).GetMethod(name), m, ConstF(0.0f), one);
-                    }
+                    return EmitSoftFloatCallDefaultFpscr(context, name, m, zeroOp);
                 });
             }
             else
             {
                 EmitVectorBinaryOpF32(context, (n, m) =>
                 {
-                    OperandType type = n.Type;
-
-                    if (type == OperandType.FP64)
-                    {
-                        return context.Call(typeof(SoftFloat64).GetMethod(name), n, m, one);
-                    }
-                    else
-                    {
-                        return context.Call(typeof(SoftFloat32).GetMethod(name), n, m, one);
-                    }
+                    return EmitSoftFloatCallDefaultFpscr(context, name, n, m);
                 });
             }
         }
@@ -357,11 +339,7 @@ namespace ARMeilleure.Instructions
                     me = ExtractScalar(context, type, op.Vm);
                 }
 
-                MethodInfo info = sizeF != 0
-                    ? typeof(SoftFloat64).GetMethod(nameof(SoftFloat64.FPCompare))
-                    : typeof(SoftFloat32).GetMethod(nameof(SoftFloat32.FPCompare));
-
-                Operand nzcv = context.Call(info, ne, me, Const(signalNaNs));
+                Operand nzcv = EmitSoftFloatCall(context, nameof(SoftFloat32.FPCompare), ne, me, Const(signalNaNs));
 
                 EmitSetFpscrNzcv(context, nzcv);
             }

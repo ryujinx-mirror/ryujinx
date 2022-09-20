@@ -361,6 +361,54 @@ namespace ARMeilleure.Instructions
             return context.Call(info, n, Const((int)roundMode));
         }
 
+        public static Operand EmitGetRoundingMode(ArmEmitterContext context)
+        {
+            Operand rMode = context.ShiftLeft(GetFpFlag(FPState.RMode1Flag), Const(1));
+                    rMode = context.BitwiseOr(rMode, GetFpFlag(FPState.RMode0Flag));
+
+            return rMode;
+        }
+
+        public static Operand EmitRoundByRMode(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.FP32 || op.Type == OperandType.FP64);
+
+            Operand lbl1 = Label();
+            Operand lbl2 = Label();
+            Operand lbl3 = Label();
+            Operand lblEnd = Label();
+
+            Operand rN = Const((int)FPRoundingMode.ToNearest);
+            Operand rP = Const((int)FPRoundingMode.TowardsPlusInfinity);
+            Operand rM = Const((int)FPRoundingMode.TowardsMinusInfinity);
+
+            Operand res = context.AllocateLocal(op.Type);
+
+            Operand rMode = EmitGetRoundingMode(context);
+
+            context.BranchIf(lbl1, rMode, rN, Comparison.NotEqual);
+            context.Copy(res, EmitRoundMathCall(context, MidpointRounding.ToEven, op));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl1);
+            context.BranchIf(lbl2, rMode, rP, Comparison.NotEqual);
+            context.Copy(res, EmitUnaryMathCall(context, nameof(Math.Ceiling), op));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl2);
+            context.BranchIf(lbl3, rMode, rM, Comparison.NotEqual);
+            context.Copy(res, EmitUnaryMathCall(context, nameof(Math.Floor), op));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lbl3);
+            context.Copy(res, EmitUnaryMathCall(context, nameof(Math.Truncate), op));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblEnd);
+
+            return res;
+        }
+
         public static Operand EmitSoftFloatCall(ArmEmitterContext context, string name, params Operand[] callArgs)
         {
             IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
@@ -369,7 +417,11 @@ namespace ARMeilleure.Instructions
                 ? typeof(SoftFloat32).GetMethod(name)
                 : typeof(SoftFloat64).GetMethod(name);
 
-            return context.Call(info, callArgs);
+            context.StoreToContext();
+            Operand res = context.Call(info, callArgs);
+            context.LoadFromContext();
+
+            return res;
         }
 
         public static void EmitScalarBinaryOpByElemF(ArmEmitterContext context, Func2I emit)
@@ -1269,7 +1321,7 @@ namespace ARMeilleure.Instructions
 
         public static void EmitSseOrAvxEnterFtzAndDazModesOpF(ArmEmitterContext context, out Operand isTrue)
         {
-            isTrue = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcrFz)));
+            isTrue = GetFpFlag(FPState.FzFlag);
 
             Operand lblTrue = Label();
             context.BranchIfFalse(lblTrue, isTrue);
@@ -1281,9 +1333,7 @@ namespace ARMeilleure.Instructions
 
         public static void EmitSseOrAvxExitFtzAndDazModesOpF(ArmEmitterContext context, Operand isTrue = default)
         {
-            isTrue = isTrue == default
-                ? context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFpcrFz)))
-                : isTrue;
+            isTrue = isTrue == default ? GetFpFlag(FPState.FzFlag) : isTrue;
 
             Operand lblTrue = Label();
             context.BranchIfFalse(lblTrue, isTrue);
@@ -1552,13 +1602,13 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lbl1, op, zeroL, Comparison.LessOrEqual);
             context.Copy(res, maxT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lbl1);
             context.BranchIf(lblEnd, op, zeroL, Comparison.GreaterOrEqual);
             context.Copy(res, minT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1583,7 +1633,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lblEnd, op, zeroUL, Comparison.LessOrEqualUI);
             context.Copy(res, maxT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1610,13 +1660,13 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lbl1, op, maxT, Comparison.LessOrEqual);
             context.Copy(res, maxT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lbl1);
             context.BranchIf(lblEnd, op, minT, Comparison.GreaterOrEqual);
             context.Copy(res, minT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1641,7 +1691,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lblEnd, op, maxT, Comparison.LessOrEqualUI);
             context.Copy(res, maxT);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1663,7 +1713,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lblEnd, op, minL, Comparison.NotEqual);
             context.Copy(res, maxL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1691,7 +1741,7 @@ namespace ARMeilleure.Instructions
 
             Operand isPositive = context.ICompareGreaterOrEqual(op1, zeroL);
             context.Copy(res, context.ConditionalSelect(isPositive, maxL, minL));
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1713,7 +1763,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lblEnd, add, op1, Comparison.GreaterOrEqualUI);
             context.Copy(res, maxUL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1741,7 +1791,7 @@ namespace ARMeilleure.Instructions
 
             Operand isPositive = context.ICompareGreaterOrEqual(op1, zeroL);
             context.Copy(res, context.ConditionalSelect(isPositive, maxL, minL));
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1763,7 +1813,7 @@ namespace ARMeilleure.Instructions
 
             context.BranchIf(lblEnd, op1, op2, Comparison.GreaterOrEqualUI);
             context.Copy(res, zeroL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1790,19 +1840,19 @@ namespace ARMeilleure.Instructions
             Operand notOp2AndRes = context.BitwiseAnd(context.BitwiseNot(op2), add);
             context.BranchIf(lblEnd, notOp2AndRes, zeroL, Comparison.GreaterOrEqual);
             context.Copy(res, maxL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lbl1);
             context.BranchIf(lbl2, op2, zeroL, Comparison.Less);
             context.Copy(res, maxL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lbl2);
             context.BranchIf(lblEnd, add, maxL, Comparison.LessOrEqualUI);
             context.Copy(res, maxL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);
@@ -1828,14 +1878,14 @@ namespace ARMeilleure.Instructions
             context.BranchIf(lbl1, op1, zeroL, Comparison.Less);
             context.BranchIf(lblEnd, add, op1, Comparison.GreaterOrEqualUI);
             context.Copy(res, maxUL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lbl1);
             context.BranchIf(lblEnd, op2, maxL, Comparison.GreaterUI);
             context.BranchIf(lblEnd, add, zeroL, Comparison.GreaterOrEqual);
             context.Copy(res, zeroL);
-            context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetFpsrQc)));
+            SetFpFlag(context, FPState.QcFlag, Const(1));
             context.Branch(lblEnd);
 
             context.MarkLabel(lblEnd);

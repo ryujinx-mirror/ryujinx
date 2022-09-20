@@ -5,11 +5,14 @@ namespace ARMeilleure.State
     [Flags]
     public enum FPSR : uint
     {
+        Ioc = 1u << 0,
+        Dzc = 1u << 1,
+        Ofc = 1u << 2,
         Ufc = 1u << 3,
-        Qc  = 1u << 27,
+        Ixc = 1u << 4,
+        Idc = 1u << 7,
+        Qc = 1u << 27,
 
-        Nzcv = (1u << 31) | (1u << 30) | (1u << 29) | (1u << 28),
-
-        A32Mask = 0xF800009Fu
+        Mask = Qc | Idc | Ixc | Ufc | Ofc | Dzc | Ioc // 0x0800009Fu
     }
 }

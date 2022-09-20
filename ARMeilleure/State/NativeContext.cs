@@ -140,6 +140,34 @@ namespace ARMeilleure.State
             GetStorage().FpFlags[(int)flag] = value ? 1u : 0u;
         }
 
+        public unsafe uint GetFPState(uint mask = uint.MaxValue)
+        {
+            uint value = 0;
+            for (int flag = 0; flag < RegisterConsts.FpFlagsCount; flag++)
+            {
+                uint bit = 1u << flag;
+
+                if ((mask & bit) == bit)
+                {
+                    value |= GetStorage().FpFlags[flag] != 0 ? bit : 0u;
+                }
+            }
+            return value;
+        }
+
+        public unsafe void SetFPState(uint value, uint mask = uint.MaxValue)
+        {
+            for (int flag = 0; flag < RegisterConsts.FpFlagsCount; flag++)
+            {
+                uint bit = 1u << flag;
+
+                if ((mask & bit) == bit)
+                {
+                    GetStorage().FpFlags[flag] = (value & bit) == bit ? 1u : 0u;
+                }
+            }
+        }
+
         public int GetCounter() => GetStorage().Counter;
         public void SetCounter(int value) => GetStorage().Counter = value;
 
