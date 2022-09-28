@@ -162,7 +162,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 
         public ResultCode StoreOpenContext(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
+            context.Device.System.AccountManager.StoreOpenedUsers();
 
             return ResultCode.Success;
         }

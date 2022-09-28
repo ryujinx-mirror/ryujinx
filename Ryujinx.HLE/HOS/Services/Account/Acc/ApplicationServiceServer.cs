@@ -201,6 +201,11 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
+        public ResultCode ListOpenContextStoredUsers(ServiceCtx context)
+        {
+            return WriteUserList(context, context.Device.System.AccountManager.GetStoredOpenedUsers());
+        }
+
         public ResultCode ListQualifiedUsers(ServiceCtx context)
         {
             // TODO: Determine how users are "qualified". We assume all users are "qualified" for now.

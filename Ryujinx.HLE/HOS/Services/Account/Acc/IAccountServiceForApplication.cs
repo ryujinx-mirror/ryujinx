@@ -1,5 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AccountService;
 using Ryujinx.HLE.HOS.Services.Arp;
 
@@ -139,20 +138,21 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return _applicationServiceServer.ClearSaveDataThumbnail(context);
         }
 
+        [CommandHipc(130)] // 5.0.0+
+        // LoadOpenContext(nn::account::Uid)
+        public ResultCode LoadOpenContext(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(60)] // 5.0.0-5.1.0
         [CommandHipc(131)] // 6.0.0+
         // ListOpenContextStoredUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListOpenContextStoredUsers(ServiceCtx context)
         {
-            ulong outputPosition = context.Request.RecvListBuff[0].Position;
-            ulong outputSize     = context.Request.RecvListBuff[0].Size;
-
-            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
-
-            // TODO: This seems to write stored userids of the OpenContext in the buffer. We needs to determine them.
-            
-            Logger.Stub?.PrintStub(LogClass.ServiceAcc);
-
-            return ResultCode.Success;
+            return _applicationServiceServer.ListOpenContextStoredUsers(context);
         }
 
         [CommandHipc(141)] // 6.0.0+

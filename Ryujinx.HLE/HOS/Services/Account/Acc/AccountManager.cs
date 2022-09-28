@@ -22,7 +22,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // outside of the AccountManager.
         private readonly HorizonClient _horizonClient;
 
-        private ConcurrentDictionary<string, UserProfile> _profiles;
+        private readonly ConcurrentDictionary<string, UserProfile> _profiles;
+        private UserProfile[] _storedOpenedUsers;
 
         public UserProfile LastOpenedUser { get; private set; }
 
@@ -31,6 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             _horizonClient = horizonClient;
 
             _profiles = new ConcurrentDictionary<string, UserProfile>();
+            _storedOpenedUsers = Array.Empty<UserProfile>();
 
             _accountSaveDataManager = new AccountSaveDataManager(_profiles);
 
@@ -44,9 +46,9 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
             else
             {
-                UserId commandLineUserProfileOverride = default; 
+                UserId commandLineUserProfileOverride = default;
                 if (!string.IsNullOrEmpty(initialProfileName))
-                { 
+                {
                     commandLineUserProfileOverride = _profiles.Values.FirstOrDefault(x => x.Name == initialProfileName)?.UserId ?? default;
                     if (commandLineUserProfileOverride.IsNull)
                         Logger.Warning?.Print(LogClass.Application, $"The command line specified profile named '{initialProfileName}' was not found");
@@ -219,6 +221,16 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         internal IEnumerable<UserProfile> GetOpenedUsers()
         {
             return _profiles.Values.Where(x => x.AccountState == AccountState.Open);
+        }
+
+        internal IEnumerable<UserProfile> GetStoredOpenedUsers()
+        {
+            return _storedOpenedUsers;
+        }
+
+        internal void StoreOpenedUsers()
+        {
+            _storedOpenedUsers = _profiles.Values.Where(x => x.AccountState == AccountState.Open).ToArray();
         }
 
         internal UserProfile GetFirst()
