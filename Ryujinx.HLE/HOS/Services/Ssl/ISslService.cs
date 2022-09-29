@@ -29,42 +29,40 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             return ResultCode.Success;
         }
 
-        private uint ComputeCertificateBufferSizeRequired(ReadOnlySpan<BuiltInCertificateManager.CertStoreEntry> entries)
-        {
-            uint totalSize = 0;
-
-            for (int i = 0; i < entries.Length; i++)
-            {
-                totalSize += (uint)Unsafe.SizeOf<BuiltInCertificateInfo>();
-                totalSize += (uint)entries[i].Data.Length;
-            }
-
-            return totalSize;
-        }
-
         [CommandHipc(2)]
         // GetCertificates(buffer<CaCertificateId, 5> ids) -> (u32 certificates_count, buffer<bytes, 6> certificates)
         public ResultCode GetCertificates(ServiceCtx context)
         {
             ReadOnlySpan<CaCertificateId> ids = MemoryMarshal.Cast<byte, CaCertificateId>(context.Memory.GetSpan(context.Request.SendBuff[0].Position, (int)context.Request.SendBuff[0].Size));
 
-            if (!BuiltInCertificateManager.Instance.TryGetCertificates(ids, out BuiltInCertificateManager.CertStoreEntry[] entries))
+            if (!BuiltInCertificateManager.Instance.TryGetCertificates(
+                ids,
+                out BuiltInCertificateManager.CertStoreEntry[] entries,
+                out bool hasAllCertificates,
+                out int requiredSize))
             {
                 throw new InvalidOperationException();
             }
 
-            if (ComputeCertificateBufferSizeRequired(entries) > context.Request.ReceiveBuff[0].Size)
+            if ((uint)requiredSize > (uint)context.Request.ReceiveBuff[0].Size)
             {
                 return ResultCode.InvalidCertBufSize;
+            }
+
+            int infosCount = entries.Length;
+
+            if (hasAllCertificates)
+            {
+                infosCount++;
             }
 
             using (WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size))
             {
                 Span<byte> rawData = region.Memory.Span;
-                Span<BuiltInCertificateInfo> infos = MemoryMarshal.Cast<byte, BuiltInCertificateInfo>(rawData)[..entries.Length];
-                Span<byte> certificatesData = rawData[(Unsafe.SizeOf<BuiltInCertificateInfo>() * entries.Length)..];
+                Span<BuiltInCertificateInfo> infos = MemoryMarshal.Cast<byte, BuiltInCertificateInfo>(rawData)[..infosCount];
+                Span<byte> certificatesData = rawData[(Unsafe.SizeOf<BuiltInCertificateInfo>() * infosCount)..];
 
-                for (int i = 0; i < infos.Length; i++)
+                for (int i = 0; i < entries.Length; i++)
                 {
                     entries[i].Data.CopyTo(certificatesData);
 
@@ -77,6 +75,17 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
                     };
 
                     certificatesData = certificatesData[entries[i].Data.Length..];
+                }
+
+                if (hasAllCertificates)
+                {
+                    infos[entries.Length] = new BuiltInCertificateInfo
+                    {
+                        Id = CaCertificateId.All,
+                        Status = TrustedCertStatus.Invalid,
+                        CertificateDataSize = 0,
+                        CertificateDataOffset = 0
+                    };
                 }
             }
 
@@ -91,12 +100,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         {
             ReadOnlySpan<CaCertificateId> ids = MemoryMarshal.Cast<byte, CaCertificateId>(context.Memory.GetSpan(context.Request.SendBuff[0].Position, (int)context.Request.SendBuff[0].Size));
 
-            if (!BuiltInCertificateManager.Instance.TryGetCertificates(ids, out BuiltInCertificateManager.CertStoreEntry[] entries))
+            if (!BuiltInCertificateManager.Instance.TryGetCertificates(ids, out _, out _, out int requiredSize))
             {
                 throw new InvalidOperationException();
             }
 
-            context.ResponseData.Write(ComputeCertificateBufferSizeRequired(entries));
+            context.ResponseData.Write(requiredSize);
 
             return ResultCode.Success;
         }
