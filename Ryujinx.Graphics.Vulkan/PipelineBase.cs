@@ -68,6 +68,8 @@ namespace Ryujinx.Graphics.Vulkan
         private bool _tfEnabled;
         private bool _tfActive;
 
+        private PipelineColorBlendAttachmentState[] _storedBlend;
+
         public ulong DrawCount { get; private set; }
 
         public unsafe PipelineBase(VulkanRenderer gd, Device device)
@@ -104,6 +106,8 @@ namespace Ryujinx.Graphics.Vulkan
             _newState.Initialize();
             _newState.LineWidth = 1f;
             _newState.SamplesCount = 1;
+
+            _storedBlend = new PipelineColorBlendAttachmentState[8];
         }
 
         public void Initialize()
@@ -498,13 +502,28 @@ namespace Ryujinx.Graphics.Vulkan
         {
             ref var vkBlend = ref _newState.Internal.ColorBlendAttachmentState[index];
 
-            vkBlend.BlendEnable = blend.Enable;
-            vkBlend.SrcColorBlendFactor = blend.ColorSrcFactor.Convert();
-            vkBlend.DstColorBlendFactor = blend.ColorDstFactor.Convert();
-            vkBlend.ColorBlendOp = blend.ColorOp.Convert();
-            vkBlend.SrcAlphaBlendFactor = blend.AlphaSrcFactor.Convert();
-            vkBlend.DstAlphaBlendFactor = blend.AlphaDstFactor.Convert();
-            vkBlend.AlphaBlendOp = blend.AlphaOp.Convert();
+            if (blend.Enable)
+            {
+                vkBlend.BlendEnable = blend.Enable;
+                vkBlend.SrcColorBlendFactor = blend.ColorSrcFactor.Convert();
+                vkBlend.DstColorBlendFactor = blend.ColorDstFactor.Convert();
+                vkBlend.ColorBlendOp = blend.ColorOp.Convert();
+                vkBlend.SrcAlphaBlendFactor = blend.AlphaSrcFactor.Convert();
+                vkBlend.DstAlphaBlendFactor = blend.AlphaDstFactor.Convert();
+                vkBlend.AlphaBlendOp = blend.AlphaOp.Convert();
+            }
+            else
+            {
+                vkBlend = new PipelineColorBlendAttachmentState(
+                    colorWriteMask: vkBlend.ColorWriteMask);
+            }
+
+            if (vkBlend.ColorWriteMask == 0)
+            {
+                _storedBlend[index] = vkBlend;
+
+                vkBlend = new PipelineColorBlendAttachmentState();
+            }
 
             _newState.BlendConstantR = blend.BlendConstant.Red;
             _newState.BlendConstantG = blend.BlendConstant.Green;
@@ -669,8 +688,25 @@ namespace Ryujinx.Graphics.Vulkan
             for (int i = 0; i < count; i++)
             {
                 ref var vkBlend = ref _newState.Internal.ColorBlendAttachmentState[i];
+                var newMask = (ColorComponentFlags)componentMask[i];
 
-                vkBlend.ColorWriteMask = (ColorComponentFlags)componentMask[i];
+                // When color write mask is 0, remove all blend state to help the pipeline cache.
+                // Restore it when the mask becomes non-zero.
+                if (vkBlend.ColorWriteMask != newMask)
+                {
+                    if (newMask == 0)
+                    {
+                        _storedBlend[i] = vkBlend;
+
+                        vkBlend = new PipelineColorBlendAttachmentState();
+                    }
+                    else if (vkBlend.ColorWriteMask == 0)
+                    {
+                        vkBlend = _storedBlend[i];
+                    }
+                }
+
+                vkBlend.ColorWriteMask = newMask;
 
                 if (componentMask[i] != 0)
                 {

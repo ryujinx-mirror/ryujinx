@@ -257,15 +257,23 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 var blend = state.BlendDescriptors[i];
 
-                pipeline.Internal.ColorBlendAttachmentState[i] = new PipelineColorBlendAttachmentState(
-                    blend.Enable,
-                    blend.ColorSrcFactor.Convert(),
-                    blend.ColorDstFactor.Convert(),
-                    blend.ColorOp.Convert(),
-                    blend.AlphaSrcFactor.Convert(),
-                    blend.AlphaDstFactor.Convert(),
-                    blend.AlphaOp.Convert(),
-                    (ColorComponentFlags)state.ColorWriteMask[i]);
+                if (blend.Enable && state.ColorWriteMask[i] != 0)
+                {
+                    pipeline.Internal.ColorBlendAttachmentState[i] = new PipelineColorBlendAttachmentState(
+                        blend.Enable,
+                        blend.ColorSrcFactor.Convert(),
+                        blend.ColorDstFactor.Convert(),
+                        blend.ColorOp.Convert(),
+                        blend.AlphaSrcFactor.Convert(),
+                        blend.AlphaDstFactor.Convert(),
+                        blend.AlphaOp.Convert(),
+                        (ColorComponentFlags)state.ColorWriteMask[i]);
+                }
+                else
+                {
+                    pipeline.Internal.ColorBlendAttachmentState[i] = new PipelineColorBlendAttachmentState(
+                        colorWriteMask: (ColorComponentFlags)state.ColorWriteMask[i]);
+                }
             }
 
             int maxAttachmentIndex = 0;
