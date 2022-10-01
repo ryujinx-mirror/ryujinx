@@ -382,16 +382,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public Instruction GetAttributePerPatchElemPointer(int attr, bool isOutAttr, out AggregateType elemType)
         {
             var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrInfo = AttributeInfo.From(Config, attr, isOutAttr);
+            var attrInfo = AttributeInfo.FromPatch(Config, attr, isOutAttr);
 
             int attrOffset = attrInfo.BaseValue;
-            Instruction ioVariable;
-
-            bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
+            Instruction ioVariable = isOutAttr ? OutputsPerPatch[attrOffset] : InputsPerPatch[attrOffset];
 
             elemType = attrInfo.Type & AggregateType.ElementTypeMask;
-
-            ioVariable = isOutAttr ? OutputsPerPatch[attrOffset] : InputsPerPatch[attrOffset];
 
             if ((attrInfo.Type & (AggregateType.Array | AggregateType.Vector)) == 0)
             {
@@ -404,7 +400,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public Instruction GetAttributePerPatch(AggregateType type, int attr, bool isOutAttr)
         {
-            if (!AttributeInfo.Validate(Config, attr, isOutAttr: false))
+            if (!AttributeInfo.ValidatePerPatch(Config, attr, isOutAttr: false))
             {
                 return GetConstant(type, new AstOperand(IrOperandType.Constant, 0));
             }

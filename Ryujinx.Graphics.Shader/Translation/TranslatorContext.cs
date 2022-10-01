@@ -1,6 +1,7 @@
 ﻿using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
+using System.Linq;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 using static Ryujinx.Graphics.Shader.Translation.Translator;
@@ -137,7 +138,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (other != null)
             {
-                other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes, 0);
+                other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes, Enumerable.Empty<int>());
 
                 FunctionCode[] otherCode = EmitShader(other._program, other._config, initializeOutputs: true, out int aStart);
 

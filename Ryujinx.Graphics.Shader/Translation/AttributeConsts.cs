@@ -54,6 +54,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int UserAttributeBase   = 0x80;
         public const int UserAttributeEnd    = UserAttributeBase + UserAttributesCount * 16;
 
+        public const int UserAttributePerPatchBase = 0x18;
+        public const int UserAttributePerPatchEnd  = 0x200;
+
         public const int LoadOutputMask = 1 << 30;
         public const int Mask = 0x3fffffff;
 

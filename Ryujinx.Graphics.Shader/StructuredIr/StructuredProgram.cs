@@ -97,7 +97,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 if (src1.Type == OperandType.Constant && src2.Type == OperandType.Constant)
                 {
                     int attrOffset = (src1.Value & AttributeConsts.Mask) + (src2.Value << 2);
-                    context.Info.Inputs.Add(attrOffset);
+
+                    if ((src1.Value & AttributeConsts.LoadOutputMask) != 0)
+                    {
+                        context.Info.Outputs.Add(attrOffset);
+                    }
+                    else
+                    {
+                        context.Info.Inputs.Add(attrOffset);
+                    }
                 }
             }
 

@@ -50,16 +50,16 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool NextUsesFixedFuncAttributes { get; private set; }
         public int UsedInputAttributes { get; private set; }
         public int UsedOutputAttributes { get; private set; }
-        public int UsedInputAttributesPerPatch { get; private set; }
-        public int UsedOutputAttributesPerPatch { get; private set; }
+        public HashSet<int> UsedInputAttributesPerPatch { get; }
+        public HashSet<int> UsedOutputAttributesPerPatch { get; }
+        public HashSet<int> NextUsedInputAttributesPerPatch { get; private set; }
         public int PassthroughAttributes { get; private set; }
         private int _nextUsedInputAttributes;
         private int _thisUsedInputAttributes;
+        private Dictionary<int, int> _perPatchAttributeLocations;
 
         public UInt128 NextInputAttributesComponents { get; private set; }
         public UInt128 ThisInputAttributesComponents { get; private set; }
-        public UInt128 NextInputAttributesPerPatchComponents { get; private set; }
-        public UInt128 ThisInputAttributesPerPatchComponents { get; private set; }
 
         private int _usedConstantBuffers;
         private int _usedStorageBuffers;
@@ -119,9 +119,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderConfig(IGpuAccessor gpuAccessor, TranslationOptions options)
         {
-            Stage         = ShaderStage.Compute;
-            GpuAccessor   = gpuAccessor;
-            Options       = options;
+            Stage       = ShaderStage.Compute;
+            GpuAccessor = gpuAccessor;
+            Options     = options;
+
+            UsedInputAttributesPerPatch  = new HashSet<int>();
+            UsedOutputAttributesPerPatch = new HashSet<int>();
+
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
         }
@@ -244,41 +248,63 @@ namespace Ryujinx.Graphics.Shader.Translation
             UsedOutputAttributes |= 1 << index;
         }
 
-        public void SetInputUserAttribute(int index, int component, bool perPatch)
+        public void SetInputUserAttribute(int index, int component)
         {
-            if (perPatch)
-            {
-                UsedInputAttributesPerPatch |= 1 << index;
-                ThisInputAttributesPerPatchComponents |= UInt128.Pow2(index * 4 + component);
-            }
-            else
-            {
-                int mask = 1 << index;
+            int mask = 1 << index;
 
-                UsedInputAttributes |= mask;
-                _thisUsedInputAttributes |= mask;
-                ThisInputAttributesComponents |= UInt128.Pow2(index * 4 + component);
-            }
+            UsedInputAttributes |= mask;
+            _thisUsedInputAttributes |= mask;
+            ThisInputAttributesComponents |= UInt128.Pow2(index * 4 + component);
         }
 
-        public void SetOutputUserAttribute(int index, bool perPatch)
+        public void SetInputUserAttributePerPatch(int index)
         {
-            if (perPatch)
-            {
-                UsedOutputAttributesPerPatch |= 1 << index;
-            }
-            else
-            {
-                UsedOutputAttributes |= 1 << index;
-            }
+            UsedInputAttributesPerPatch.Add(index);
+        }
+
+        public void SetOutputUserAttribute(int index)
+        {
+            UsedOutputAttributes |= 1 << index;
+        }
+
+        public void SetOutputUserAttributePerPatch(int index)
+        {
+            UsedOutputAttributesPerPatch.Add(index);
         }
 
         public void MergeFromtNextStage(ShaderConfig config)
         {
             NextInputAttributesComponents = config.ThisInputAttributesComponents;
-            NextInputAttributesPerPatchComponents = config.ThisInputAttributesPerPatchComponents;
+            NextUsedInputAttributesPerPatch = config.UsedInputAttributesPerPatch;
             NextUsesFixedFuncAttributes = config.UsedFeatures.HasFlag(FeatureFlags.FixedFuncAttr);
             MergeOutputUserAttributes(config.UsedInputAttributes, config.UsedInputAttributesPerPatch);
+
+            if (UsedOutputAttributesPerPatch.Count != 0)
+            {
+                // Regular and per-patch input/output locations can't overlap,
+                // so we must assign on our location using unused regular input/output locations.
+
+                Dictionary<int, int> locationsMap = new Dictionary<int, int>();
+
+                int freeMask = ~UsedOutputAttributes;
+
+                foreach (int attr in UsedOutputAttributesPerPatch)
+                {
+                    int location = BitOperations.TrailingZeroCount(freeMask);
+                    if (location == 32)
+                    {
+                        config.GpuAccessor.Log($"No enough free locations for patch input/output 0x{attr:X}.");
+                        break;
+                    }
+
+                    locationsMap.Add(attr, location);
+                    freeMask &= ~(1 << location);
+                }
+
+                // Both stages must agree on the locations, so use the same "map" for both.
+                _perPatchAttributeLocations = locationsMap;
+                config._perPatchAttributeLocations = locationsMap;
+            }
 
             if (config.Stage != ShaderStage.Fragment)
             {
@@ -286,7 +312,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        public void MergeOutputUserAttributes(int mask, int maskPerPatch)
+        public void MergeOutputUserAttributes(int mask, IEnumerable<int> perPatch)
         {
             _nextUsedInputAttributes = mask;
 
@@ -297,8 +323,18 @@ namespace Ryujinx.Graphics.Shader.Translation
             else
             {
                 UsedOutputAttributes |= mask;
-                UsedOutputAttributesPerPatch |= maskPerPatch;
+                UsedOutputAttributesPerPatch.UnionWith(perPatch);
             }
+        }
+
+        public int GetPerPatchAttributeLocation(int index)
+        {
+            if (_perPatchAttributeLocations == null || !_perPatchAttributeLocations.TryGetValue(index, out int location))
+            {
+                return index;
+            }
+
+            return location;
         }
 
         public bool IsUsedOutputAttribute(int attr)

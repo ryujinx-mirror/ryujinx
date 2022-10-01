@@ -2,6 +2,7 @@ using Ryujinx.Common;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -163,9 +164,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (context.Config.Stage == ShaderStage.TessellationEvaluation)
                 {
+                    bool tessCw = context.Config.GpuAccessor.QueryTessCw();
+
+                    if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+                    {
+                        // We invert the front face on Vulkan backend, so we need to do that here aswell.
+                        tessCw = !tessCw;
+                    }
+
                     string patchType = context.Config.GpuAccessor.QueryTessPatchType().ToGlsl();
                     string spacing = context.Config.GpuAccessor.QueryTessSpacing().ToGlsl();
-                    string windingOrder = context.Config.GpuAccessor.QueryTessCw() ? "cw" : "ccw";
+                    string windingOrder = tessCw ? "cw" : "ccw";
 
                     context.AppendLine($"layout ({patchType}, {spacing}, {windingOrder}) in;");
                     context.AppendLine();
@@ -185,14 +194,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     context.AppendLine();
                 }
 
-                if (context.Config.UsedInputAttributesPerPatch != 0)
+                if (context.Config.UsedInputAttributesPerPatch.Count != 0)
                 {
                     DeclareInputAttributesPerPatch(context, context.Config.UsedInputAttributesPerPatch);
 
                     context.AppendLine();
                 }
 
-                if (context.Config.UsedOutputAttributesPerPatch != 0)
+                if (context.Config.UsedOutputAttributesPerPatch.Count != 0)
                 {
                     DeclareUsedOutputAttributesPerPatch(context, context.Config.UsedOutputAttributesPerPatch);
 
@@ -509,13 +518,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static void DeclareInputAttributesPerPatch(CodeGenContext context, int usedAttributes)
+        private static void DeclareInputAttributesPerPatch(CodeGenContext context, HashSet<int> attrs)
         {
-            while (usedAttributes != 0)
+            foreach (int attr in attrs.OrderBy(x => x))
             {
-                int index = BitOperations.TrailingZeroCount(usedAttributes);
-                DeclareInputAttributePerPatch(context, index);
-                usedAttributes &= ~(1 << index);
+                DeclareInputAttributePerPatch(context, attr);
             }
         }
 
@@ -566,16 +573,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareInputAttributePerPatch(CodeGenContext context, int attr)
         {
-            string layout = string.Empty;
-
-            if (context.Config.Options.TargetApi == TargetApi.Vulkan)
-            {
-                layout = $"layout (location = {32 + attr}) ";
-            }
-
+            int location = context.Config.GetPerPatchAttributeLocation(attr);
             string name = $"{DefaultNames.PerPatchAttributePrefix}{attr}";
 
-            context.AppendLine($"{layout}patch in vec4 {name};");
+            context.AppendLine($"layout (location = {location}) patch in vec4 {name};");
         }
 
         private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info)
@@ -624,28 +625,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static void DeclareUsedOutputAttributesPerPatch(CodeGenContext context, int usedAttributes)
+        private static void DeclareUsedOutputAttributesPerPatch(CodeGenContext context, HashSet<int> attrs)
         {
-            while (usedAttributes != 0)
+            foreach (int attr in attrs.OrderBy(x => x))
             {
-                int index = BitOperations.TrailingZeroCount(usedAttributes);
-                DeclareOutputAttributePerPatch(context, index);
-                usedAttributes &= ~(1 << index);
+                DeclareOutputAttributePerPatch(context, attr);
             }
         }
 
         private static void DeclareOutputAttributePerPatch(CodeGenContext context, int attr)
         {
-            string layout = string.Empty;
-
-            if (context.Config.Options.TargetApi == TargetApi.Vulkan)
-            {
-                layout = $"layout (location = {32 + attr}) ";
-            }
-
+            int location = context.Config.GetPerPatchAttributeLocation(attr);
             string name = $"{DefaultNames.PerPatchAttributePrefix}{attr}";
 
-            context.AppendLine($"{layout}patch out vec4 {name};");
+            context.AppendLine($"layout (location = {location}) patch out vec4 {name};");
         }
 
         private static void DeclareSupportUniformBlock(CodeGenContext context, ShaderStage stage, int scaleElements)

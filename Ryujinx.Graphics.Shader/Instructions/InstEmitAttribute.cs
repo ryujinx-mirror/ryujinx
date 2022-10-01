@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.FlagAttributeRead(offset);
 
-                    if (op.O)
+                    if (op.O && CanLoadOutput(offset))
                     {
                         offset |= AttributeConsts.LoadOutputMask;
                     }
@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.FlagAttributeRead(offset);
 
-                    if (op.O)
+                    if (op.O && CanLoadOutput(offset))
                     {
                         offset |= AttributeConsts.LoadOutputMask;
                     }
@@ -239,6 +239,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.EndPrimitive();
             }
+        }
+
+        private static bool CanLoadOutput(int attr)
+        {
+            return attr != AttributeConsts.TessCoordX && attr != AttributeConsts.TessCoordY;
         }
 
         private static bool TryFixedFuncToUserAttributeIpa(EmitterContext context, int attr, out Operand selectedAttr)

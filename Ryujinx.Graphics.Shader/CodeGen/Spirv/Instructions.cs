@@ -882,7 +882,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             if (src2 is AstOperand operand && operand.Type == OperandType.Constant)
             {
                 int attrOffset = (baseAttr.Value & AttributeConsts.Mask) + (operand.Value << 2);
-                return new OperationResult(resultType, context.GetAttribute(resultType, attrOffset, isOutAttr: false, index));
+                bool isOutAttr = (baseAttr.Value & AttributeConsts.LoadOutputMask) != 0;
+                return new OperationResult(resultType, context.GetAttribute(resultType, attrOffset, isOutAttr, index));
             }
             else
             {

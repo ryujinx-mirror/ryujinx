@@ -191,7 +191,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                             break;
                     }
 
-                    if (context.Config.GpuAccessor.QueryTessCw())
+                    bool tessCw = context.Config.GpuAccessor.QueryTessCw();
+
+                    if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+                    {
+                        // We invert the front face on Vulkan backend, so we need to do that here aswell.
+                        tessCw = !tessCw;
+                    }
+
+                    if (tessCw)
                     {
                         context.AddExecutionMode(spvFunc, ExecutionMode.VertexOrderCw);
                     }
@@ -375,9 +383,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     }
                     else if (dest.Type == OperandType.Attribute || dest.Type == OperandType.AttributePerPatch)
                     {
-                        if (AttributeInfo.Validate(context.Config, dest.Value, isOutAttr: true))
+                        bool perPatch = dest.Type == OperandType.AttributePerPatch;
+
+                        if (AttributeInfo.Validate(context.Config, dest.Value, isOutAttr: true, perPatch))
                         {
-                            bool perPatch = dest.Type == OperandType.AttributePerPatch;
                             AggregateType elemType;
 
                             var elemPointer = perPatch

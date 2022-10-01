@@ -403,7 +403,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             foreach (int attr in inputs)
             {
-                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: false))
+                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: false, perPatch))
                 {
                     continue;
                 }
@@ -459,7 +459,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             foreach (int attr in outputs)
             {
-                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: true))
+                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: true, perPatch))
                 {
                     continue;
                 }
@@ -519,7 +519,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 ? (isOutAttr ? context.OutputsPerPatch : context.InputsPerPatch)
                 : (isOutAttr ? context.Outputs : context.Inputs);
 
-            var attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr);
+            var attrInfo = perPatch
+                ? AttributeInfo.FromPatch(context.Config, attr, isOutAttr)
+                : AttributeInfo.From(context.Config, attr, isOutAttr);
 
             if (dict.ContainsKey(attrInfo.BaseValue))
             {
@@ -544,11 +546,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var spvType = context.TypePointer(storageClass, attrType);
             var spvVar = context.Variable(spvType, storageClass);
 
-            if (perPatch)
-            {
-                context.Decorate(spvVar, Decoration.Patch);
-            }
-
             if (builtInPassthrough)
             {
                 context.Decorate(spvVar, Decoration.PassthroughNV);
@@ -556,6 +553,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             if (attrInfo.IsBuiltin)
             {
+                if (perPatch)
+                {
+                    context.Decorate(spvVar, Decoration.Patch);
+                }
+
                 context.Decorate(spvVar, Decoration.BuiltIn, (LiteralInteger)GetBuiltIn(context, attrInfo.BaseValue));
 
                 if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline && isOutAttr)
@@ -568,6 +570,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         context.Decorate(spvVar, Decoration.Offset, (LiteralInteger)tfOutput.Offset);
                     }
                 }
+            }
+            else if (perPatch)
+            {
+                context.Decorate(spvVar, Decoration.Patch);
+
+                int location = context.Config.GetPerPatchAttributeLocation((attr - AttributeConsts.UserAttributePerPatchBase) / 16);
+
+                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
             }
             else if (isUserAttr)
             {

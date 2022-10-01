@@ -204,14 +204,12 @@ namespace Ryujinx.Graphics.Shader.Translation
                 InitializeOutputComponent(context, AttributeConsts.UserAttributeBase + index * 4, perPatch: false);
             }
 
-            UInt128 usedAttributesPerPatch = context.Config.NextInputAttributesPerPatchComponents;
-            while (usedAttributesPerPatch != UInt128.Zero)
+            if (context.Config.NextUsedInputAttributesPerPatch != null)
             {
-                int index = usedAttributesPerPatch.TrailingZeroCount();
-
-                InitializeOutputComponent(context, AttributeConsts.UserAttributeBase + index * 4, perPatch: true);
-
-                usedAttributesPerPatch &= ~UInt128.Pow2(index);
+                foreach (int vecIndex in context.Config.NextUsedInputAttributesPerPatch.OrderBy(x => x))
+                {
+                    InitializeOutput(context, AttributeConsts.UserAttributePerPatchBase + vecIndex * 16, perPatch: true);
+                }
             }
 
             if (config.NextUsesFixedFuncAttributes)
@@ -236,7 +234,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             for (int c = 0; c < 4; c++)
             {
                 int attrOffset = baseAttr + c * 4;
-                context.Copy(perPatch ? AttributePerPatch(attrOffset) : Attribute(attrOffset), ConstF(c == 3 ? 1f : 0f));
+                InitializeOutputComponent(context, attrOffset, perPatch);
             }
         }
 
