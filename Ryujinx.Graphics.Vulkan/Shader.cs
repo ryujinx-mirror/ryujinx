@@ -9,17 +9,19 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    class Shader
+    class Shader : IDisposable
     {
         // The shaderc.net dependency's Options constructor and dispose are not thread safe.
         // Take this lock when using them.
         private static object _shaderOptionsLock = new object();
 
+        private static readonly IntPtr _ptrMainEntryPointName = Marshal.StringToHGlobalAnsi("main");
+
         private readonly Vk _api;
         private readonly Device _device;
         private readonly ShaderStageFlags _stage;
 
-        private IntPtr _entryPointName;
+        private bool _disposed;
         private ShaderModule _module;
 
         public ShaderStageFlags StageFlags => _stage;
@@ -39,7 +41,6 @@ namespace Ryujinx.Graphics.Vulkan
             CompileStatus = ProgramLinkStatus.Incomplete;
 
             _stage = shaderSource.Stage.Convert();
-            _entryPointName = Marshal.StringToHGlobalAnsi("main");
 
             CompileTask = Task.Run(() =>
             {
@@ -145,7 +146,7 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PipelineShaderStageCreateInfo,
                 Stage = _stage,
                 Module = _module,
-                PName = (byte*)_entryPointName
+                PName = (byte*)_ptrMainEntryPointName
             };
         }
 
@@ -156,11 +157,10 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe void Dispose()
         {
-            if (_entryPointName != IntPtr.Zero)
+            if (!_disposed)
             {
                 _api.DestroyShaderModule(_device, _module, null);
-                Marshal.FreeHGlobal(_entryPointName);
-                _entryPointName = IntPtr.Zero;
+                _disposed = true;
             }
         }
     }
