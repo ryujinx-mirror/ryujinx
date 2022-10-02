@@ -6,7 +6,6 @@
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
-    Title="Ryujinx - About"
     Width="850"
     Height="550"
     MinWidth="500"
