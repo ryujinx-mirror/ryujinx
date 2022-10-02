@@ -243,6 +243,21 @@ namespace ARMeilleure.Instructions
             throw new ArgumentException($"Invalid rounding mode \"{roundMode}\".");
         }
 
+        public static ulong X86GetGf2p8LogicalShiftLeft(int shift)
+        {
+            ulong identity = 
+                (0b00000001UL << 56) |
+                (0b00000010UL << 48) |
+                (0b00000100UL << 40) |
+                (0b00001000UL << 32) |
+                (0b00010000UL << 24) |
+                (0b00100000UL << 16) |
+                (0b01000000UL <<  8) |
+                (0b10000000UL <<  0);
+
+            return shift >= 0 ? identity >> (shift * 8) : identity << (-shift * 8);
+        }
+
         public static Operand EmitCountSetBits8(ArmEmitterContext context, Operand op) // "size" is 8 (SIMD&FP Inst.).
         {
             Debug.Assert(op.Type == OperandType.I32 || op.Type == OperandType.I64);

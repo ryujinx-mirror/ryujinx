@@ -336,20 +336,45 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
-            Operand res = context.VectorZero();
-
-            int elems = op.RegisterSize == RegisterSize.Simd128 ? 16 : 8;
-
-            for (int index = 0; index < elems; index++)
+            if (Optimizations.UseGfni)
             {
-                Operand ne = EmitVectorExtractZx(context, op.Rn, index, 0);
+                const long bitMatrix =
+                    (0b10000000L << 56) |
+                    (0b01000000L << 48) |
+                    (0b00100000L << 40) |
+                    (0b00010000L << 32) |
+                    (0b00001000L << 24) |
+                    (0b00000100L << 16) |
+                    (0b00000010L <<  8) |
+                    (0b00000001L <<  0);
 
-                Operand de = EmitReverseBits8Op(context, ne);
+                Operand vBitMatrix = X86GetAllElements(context, bitMatrix);
 
-                res = EmitVectorInsert(context, res, de, index, 0);
+                Operand res = context.AddIntrinsic(Intrinsic.X86Gf2p8affineqb, GetVec(op.Rn), vBitMatrix, Const(0));
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
             }
+            else
+            {
+                Operand res = context.VectorZero();
+                int elems = op.RegisterSize == RegisterSize.Simd128 ? 16 : 8;
 
-            context.Copy(GetVec(op.Rd), res);
+                for (int index = 0; index < elems; index++)
+                {
+                    Operand ne = EmitVectorExtractZx(context, op.Rn, index, 0);
+
+                    Operand de = EmitReverseBits8Op(context, ne);
+
+                    res = EmitVectorInsert(context, res, de, index, 0);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
         }
 
         private static Operand EmitReverseBits8Op(ArmEmitterContext context, Operand op)

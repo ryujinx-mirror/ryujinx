@@ -54,6 +54,7 @@ namespace ARMeilleure.CodeGen.X86
         Divps,
         Divsd,
         Divss,
+        Gf2p8affineqb,
         Haddpd,
         Haddps,
         Idiv,
