@@ -257,6 +257,22 @@
                                     TextAlignment="Center" />
                             </ToggleButton>
                         </StackPanel>
+                        <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysVolumeUpHotkey}" Width="230" />
+                            <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                                <TextBlock
+                                    Text="{Binding KeyboardHotkeys.VolumeUp, Mode=TwoWay, Converter={StaticResource Key}}"
+                                    TextAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysVolumeDownHotkey}" Width="230" />
+                            <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                                <TextBlock
+                                    Text="{Binding KeyboardHotkeys.VolumeDown, Mode=TwoWay, Converter={StaticResource Key}}"
+                                    TextAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </ScrollViewer>

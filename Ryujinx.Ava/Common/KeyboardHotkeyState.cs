@@ -9,6 +9,8 @@
         Pause,
         ToggleMute,
         ResScaleUp,
-        ResScaleDown
+        ResScaleDown,
+        VolumeUp,
+        VolumeDown
     }
 }

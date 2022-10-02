@@ -58,6 +58,8 @@ namespace Ryujinx.Ava
         private const float MaxResolutionScale = 4.0f; // Max resolution hotkeys can scale to before wrapping.
         private const int TargetFps = 60;
 
+        private const float VolumeDelta = 0.05f;
+
         private static readonly Cursor InvisibleCursor = new Cursor(StandardCursorType.None);        
 
         private readonly long _ticksPerFrame;
@@ -73,6 +75,7 @@ namespace Ryujinx.Ava
         private bool _isStopped;
         private bool _isActive;
         private long _lastCursorMoveTime;
+        private float _newVolume;
         private long _ticks = 0;
 
         private KeyboardHotkeyState _prevHotkeyState;
@@ -1003,6 +1006,18 @@ namespace Ryujinx.Ava
                             GraphicsConfig.ResScale =
                             (MaxResolutionScale + GraphicsConfig.ResScale - 2) % MaxResolutionScale + 1;
                             break;
+                        case KeyboardHotkeyState.VolumeUp:
+                            _newVolume = MathF.Round((Device.GetVolume() + VolumeDelta), 2);
+                            Device.SetVolume(_newVolume);
+
+                            _parent.ViewModel.Volume = Device.GetVolume();
+                            break;
+                        case KeyboardHotkeyState.VolumeDown:
+                            _newVolume = MathF.Round((Device.GetVolume() - VolumeDelta), 2);
+                            Device.SetVolume(_newVolume);
+
+                            _parent.ViewModel.Volume = Device.GetVolume();
+                            break;
                         case KeyboardHotkeyState.None:
                             (_keyboardInterface as AvaloniaKeyboard).Clear();
                             break;
@@ -1067,6 +1082,14 @@ namespace Ryujinx.Ava
             else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ResScaleDown))
             {
                 state = KeyboardHotkeyState.ResScaleDown;
+            }
+            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.VolumeUp))
+            {
+                state = KeyboardHotkeyState.VolumeUp;
+            }
+            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.VolumeDown))
+            {
+                state = KeyboardHotkeyState.VolumeDown;
             }
 
             return state;

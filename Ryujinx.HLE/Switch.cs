@@ -124,7 +124,7 @@ namespace Ryujinx.HLE
 
         public void SetVolume(float volume)
         {
-            System.SetVolume(volume);
+            System.SetVolume(Math.Clamp(volume, 0, 1));
         }
 
         public float GetVolume()

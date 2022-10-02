@@ -9,5 +9,7 @@
         public Key ToggleMute { get; set; }
         public Key ResScaleUp { get; set; }
         public Key ResScaleDown { get; set; }
+        public Key VolumeUp { get; set; }
+        public Key VolumeDown { get; set; }
     }
 }
