@@ -453,7 +453,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Item  = item
             };
 
-            _device.Gpu.Window.EnqueueFrameThreadSafe(
+            if (_device.Gpu.Window.EnqueueFrameThreadSafe(
                 layer.Owner,
                 frameBufferAddress,
                 frameBufferWidth,
@@ -466,20 +466,25 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 crop,
                 AcquireBuffer,
                 ReleaseBuffer,
-                textureCallbackInformation);
-
-            if (item.Fence.FenceCount == 0)
+                textureCallbackInformation))
             {
-                _device.Gpu.Window.SignalFrameReady();
-                _device.Gpu.GPFifo.Interrupt();
-            }
-            else
-            {
-                item.Fence.RegisterCallback(_device.Gpu, (x) =>
+                if (item.Fence.FenceCount == 0)
                 {
                     _device.Gpu.Window.SignalFrameReady();
                     _device.Gpu.GPFifo.Interrupt();
-                });
+                }
+                else
+                {
+                    item.Fence.RegisterCallback(_device.Gpu, (x) =>
+                    {
+                        _device.Gpu.Window.SignalFrameReady();
+                        _device.Gpu.GPFifo.Interrupt();
+                    });
+                }
+            }
+            else
+            {
+                ReleaseBuffer(textureCallbackInformation);
             }
         }
 
