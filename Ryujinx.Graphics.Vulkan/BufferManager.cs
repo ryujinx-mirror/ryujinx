@@ -38,6 +38,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private readonly IdList<BufferHolder> _buffers;
 
+        public int BufferCount { get; private set; }
+
         public StagingBuffer StagingBuffer { get; }
 
         public BufferManager(VulkanRenderer gd, PhysicalDevice physicalDevice, Device device)
@@ -55,6 +57,8 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 return BufferHandle.Null;
             }
+
+            BufferCount++;
 
             ulong handle64 = (uint)_buffers.Add(holder);
 

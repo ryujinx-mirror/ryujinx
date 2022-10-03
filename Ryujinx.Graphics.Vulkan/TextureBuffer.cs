@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.Vulkan
         private Auto<DisposableBufferView> _bufferView;
         private Dictionary<GAL.Format, Auto<DisposableBufferView>> _selfManagedViews;
 
+        private int _bufferCount;
+
         public int Width { get; }
         public int Height { get; }
 
@@ -107,7 +109,8 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (_bufferHandle == buffer.Handle &&
                 _offset == buffer.Offset &&
-                _size == buffer.Size)
+                _size == buffer.Size &&
+                _bufferCount == _gd.BufferManager.BufferCount)
             {
                 return;
             }
@@ -115,6 +118,7 @@ namespace Ryujinx.Graphics.Vulkan
             _bufferHandle = buffer.Handle;
             _offset = buffer.Offset;
             _size = buffer.Size;
+            _bufferCount = _gd.BufferManager.BufferCount;
 
             ReleaseImpl();
         }
