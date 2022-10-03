@@ -24,6 +24,11 @@
 
         public void Add(int cbIndex, int offset, int size)
         {
+            if (size == 0)
+            {
+                return;
+            }
+
             // Some usages can be out of bounds (vertex buffer on amd), so bound if necessary.
             if (offset + size > _size)
             {
@@ -39,6 +44,11 @@
 
         public bool OverlapsWith(int cbIndex, int offset, int size)
         {
+            if (size == 0)
+            {
+                return false;
+            }
+
             int cbBase = cbIndex * _bitsPerCb;
             int start = cbBase + offset / _granularity;
             int end = cbBase + (offset + size - 1) / _granularity;
