@@ -1,4 +1,6 @@
+using Avalonia.Controls;
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
@@ -11,11 +13,13 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -39,6 +43,8 @@ namespace Ryujinx.Modules
         private static long _buildSize;
 
         private static readonly string[] WindowsDependencyDirs = Array.Empty<string>();
+
+        public static bool UpdateSuccessful { get; private set; }
 
         public static async Task BeginParse(MainWindow mainWindow, bool showVersionUpToDate)
         {
@@ -198,11 +204,18 @@ namespace Ryujinx.Modules
                     _buildSize = -1;
                 }
             }
+
             Dispatcher.UIThread.Post(async () =>
             {
                 // Show a message asking the user if they want to update
-                UpdaterWindow updateDialog = new(mainWindow, newVersion, _buildUrl);
-                await updateDialog.ShowDialog(mainWindow);
+                var shouldUpdate = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance["RyujinxUpdater"],
+                    LocaleManager.Instance["RyujinxUpdaterMessage"],
+                    $"{Program.Version} -> {newVersion}");
+
+                if (shouldUpdate)
+                {
+                    UpdateRyujinx(mainWindow, _buildUrl);
+                }
             });
         }
 
@@ -216,8 +229,10 @@ namespace Ryujinx.Modules
             return result;
         }
 
-        public static void UpdateRyujinx(UpdaterWindow updateDialog, string downloadUrl)
+        public static async void UpdateRyujinx(Window parent, string downloadUrl)
         {
+            UpdateSuccessful = false;
+
             // Empty update dir, although it shouldn't ever have anything inside it
             if (Directory.Exists(UpdateDir))
             {
@@ -228,25 +243,56 @@ namespace Ryujinx.Modules
 
             string updateFile = Path.Combine(UpdateDir, "update.bin");
 
-            // Download the update .zip
-            updateDialog.MainText.Text = LocaleManager.Instance["UpdaterDownloading"];
-            updateDialog.ProgressBar.Value = 0;
-            updateDialog.ProgressBar.Maximum = 100;
+            var taskDialog = new TaskDialog()
+            {
+                Header = LocaleManager.Instance["RyujinxUpdater"],
+                SubHeader = LocaleManager.Instance["UpdaterDownloading"],
+                IconSource = new SymbolIconSource { Symbol = Symbol.Download },
+                Buttons = { },
+                ShowProgressBar = true
+            };
 
-            Task.Run(() =>
+            taskDialog.XamlRoot = parent;
+
+            taskDialog.Opened += (s, e) =>
             {
                 if (_buildSize >= 0)
                 {
-                    DoUpdateWithMultipleThreads(updateDialog, downloadUrl, updateFile);
+                    DoUpdateWithMultipleThreads(taskDialog, downloadUrl, updateFile);
                 }
                 else
                 {
-                    DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+                    DoUpdateWithSingleThread(taskDialog, downloadUrl, updateFile);
                 }
-            });
+            };
+
+            await taskDialog.ShowAsync(true);
+
+            if (UpdateSuccessful)
+            {
+                var shouldRestart = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance["RyujinxUpdater"],
+                    LocaleManager.Instance["DialogUpdaterCompleteMessage"],
+                    LocaleManager.Instance["DialogUpdaterRestartMessage"]);
+
+                if (shouldRestart)
+                {
+                    string ryuName = Path.GetFileName(Environment.ProcessPath);
+                    string ryuExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ryuName);
+                    string ryuArg = string.Join(" ", Environment.GetCommandLineArgs().Skip(1).ToArray());
+
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        chmod(ryuExe, Convert.ToUInt32("0777", 8));
+                    }
+
+                    Process.Start(ryuExe, ryuArg);
+
+                    Environment.Exit(0);
+                }
+            }
         }
 
-        private static void DoUpdateWithMultipleThreads(UpdaterWindow updateDialog, string downloadUrl, string updateFile)
+        private static void DoUpdateWithMultipleThreads(TaskDialog taskDialog, string downloadUrl, string updateFile)
         {
             // Multi-Threaded Updater
             long chunkSize = _buildSize / ConnectionCount;
@@ -290,7 +336,7 @@ namespace Ryujinx.Modules
                         Interlocked.Exchange(ref progressPercentage[index], args.ProgressPercentage);
                         Interlocked.Add(ref totalProgressPercentage, args.ProgressPercentage);
 
-                        updateDialog.ProgressBar.Value = totalProgressPercentage / ConnectionCount;
+                        taskDialog.SetProgressBarState(totalProgressPercentage / ConnectionCount, TaskDialogProgressState.Normal);
                     };
 
                     client.DownloadDataCompleted += (_, args) =>
@@ -300,6 +346,8 @@ namespace Ryujinx.Modules
                         if (args.Cancelled)
                         {
                             webClients[index].Dispose();
+
+                            taskDialog.Hide();
 
                             return;
                         }
@@ -320,14 +368,14 @@ namespace Ryujinx.Modules
 
                             try
                             {
-                                InstallUpdate(updateDialog, updateFile);
+                                InstallUpdate(taskDialog, updateFile);
                             }
                             catch (Exception e)
                             {
                                 Logger.Warning?.Print(LogClass.Application, e.Message);
                                 Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
 
-                                DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+                                DoUpdateWithSingleThread(taskDialog, downloadUrl, updateFile);
 
                                 return;
                             }
@@ -348,7 +396,7 @@ namespace Ryujinx.Modules
                             webClients[j].CancelAsync();
                         }
 
-                        DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+                        DoUpdateWithSingleThread(taskDialog, downloadUrl, updateFile);
 
                         return;
                     }
@@ -356,7 +404,7 @@ namespace Ryujinx.Modules
             }
         }
 
-        private static void DoUpdateWithSingleThreadWorker(UpdaterWindow updateDialog, string downloadUrl, string updateFile)
+        private static void DoUpdateWithSingleThreadWorker(TaskDialog taskDialog, string downloadUrl, string updateFile)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -384,19 +432,26 @@ namespace Ryujinx.Modules
 
                             byteWritten += readSize;
 
-                            updateDialog.ProgressBar.Value = ((double)byteWritten / totalBytes) * 100;
+                            taskDialog.SetProgressBarState(GetPercentage(byteWritten, totalBytes), TaskDialogProgressState.Normal);
+
                             updateFileStream.Write(buffer, 0, readSize);
                         }
                     }
                 }
 
-                InstallUpdate(updateDialog, updateFile);
+                InstallUpdate(taskDialog, updateFile);
             }
         }
 
-        private static void DoUpdateWithSingleThread(UpdaterWindow updateDialog, string downloadUrl, string updateFile)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double GetPercentage(double value, double max)
         {
-            Thread worker = new Thread(() => DoUpdateWithSingleThreadWorker(updateDialog, downloadUrl, updateFile));
+            return max == 0 ? 0 : value / max * 100;
+        }
+
+        private static void DoUpdateWithSingleThread(TaskDialog taskDialog, string downloadUrl, string updateFile)
+        {
+            Thread worker = new Thread(() => DoUpdateWithSingleThreadWorker(taskDialog, downloadUrl, updateFile));
             worker.Name = "Updater.SingleThreadWorker";
             worker.Start();
         }
@@ -414,11 +469,11 @@ namespace Ryujinx.Modules
             }
         }
 
-        private static async void InstallUpdate(UpdaterWindow updateDialog, string updateFile)
+        private static async void InstallUpdate(TaskDialog taskDialog, string updateFile)
         {
             // Extract Update
-            updateDialog.MainText.Text = LocaleManager.Instance["UpdaterExtracting"];
-            updateDialog.ProgressBar.Value = 0;
+            taskDialog.SubHeader = LocaleManager.Instance["UpdaterExtracting"];
+            taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
 
             if (OperatingSystem.IsLinux())
             {
@@ -426,8 +481,6 @@ namespace Ryujinx.Modules
                 using (Stream gzipStream = new GZipInputStream(inStream))
                 using (TarInputStream tarStream = new TarInputStream(gzipStream, Encoding.ASCII))
                 {
-                    updateDialog.ProgressBar.Maximum = inStream.Length;
-
                     await Task.Run(() =>
                     {
                         TarEntry tarEntry;
@@ -450,12 +503,12 @@ namespace Ryujinx.Modules
 
                             Dispatcher.UIThread.Post(() =>
                             {
-                                updateDialog.ProgressBar.Value += entry.Size;
+                                taskDialog.SetProgressBarState(GetPercentage(entry.Size, inStream.Length), TaskDialogProgressState.Normal);
                             });
                         }
                     });
 
-                    updateDialog.ProgressBar.Value = inStream.Length;
+                    taskDialog.SetProgressBarState(100, TaskDialogProgressState.Normal);
                 }
             }
             else
@@ -463,12 +516,12 @@ namespace Ryujinx.Modules
                 using (Stream inStream = File.OpenRead(updateFile))
                 using (ZipFile zipFile = new ZipFile(inStream))
                 {
-                    updateDialog.ProgressBar.Maximum = zipFile.Count;
-
                     await Task.Run(() =>
                     {
+                        double count = 0;
                         foreach (ZipEntry zipEntry in zipFile)
                         {
+                            count++;
                             if (zipEntry.IsDirectory) continue;
 
                             string outPath = Path.Combine(UpdateDir, zipEntry.Name);
@@ -485,7 +538,7 @@ namespace Ryujinx.Modules
 
                             Dispatcher.UIThread.Post(() =>
                             {
-                                updateDialog.ProgressBar.Value++;
+                                taskDialog.SetProgressBarState(GetPercentage(count, zipFile.Count), TaskDialogProgressState.Normal);
                             });
                         }
                     });
@@ -497,22 +550,23 @@ namespace Ryujinx.Modules
 
             List<string> allFiles = EnumerateFilesToDelete().ToList();
 
-            updateDialog.MainText.Text = LocaleManager.Instance["UpdaterRenaming"];
-            updateDialog.ProgressBar.Value = 0;
-            updateDialog.ProgressBar.Maximum = allFiles.Count;
+            taskDialog.SubHeader = LocaleManager.Instance["UpdaterRenaming"];
+            taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
 
             // Replace old files
             await Task.Run(() =>
             {
+                double count = 0;
                 foreach (string file in allFiles)
                 {
+                    count++;
                     try
                     {
                         File.Move(file, file + ".ryuold");
 
                         Dispatcher.UIThread.Post(() =>
                         {
-                            updateDialog.ProgressBar.Value++;
+                            taskDialog.SetProgressBarState(GetPercentage(count, allFiles.Count), TaskDialogProgressState.Normal);
                         });
                     }
                     catch
@@ -523,23 +577,20 @@ namespace Ryujinx.Modules
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    updateDialog.MainText.Text = LocaleManager.Instance["UpdaterAddingFiles"];
-                    updateDialog.ProgressBar.Value = 0;
-                    updateDialog.ProgressBar.Maximum = Directory.GetFiles(UpdatePublishDir, "*", SearchOption.AllDirectories).Length;
+                    taskDialog.SubHeader = LocaleManager.Instance["UpdaterAddingFiles"];
+                    taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
                 });
 
-                MoveAllFilesOver(UpdatePublishDir, HomeDir, updateDialog);
+                MoveAllFilesOver(UpdatePublishDir, HomeDir, taskDialog);
             });
 
             Directory.Delete(UpdateDir, true);
 
             SetUnixPermissions();
 
-            updateDialog.MainText.Text = LocaleManager.Instance["DialogUpdaterCompleteMessage"];
-            updateDialog.SecondaryText.Text = LocaleManager.Instance["DialogUpdaterRestartMessage"];
+            UpdateSuccessful = true;
 
-            updateDialog.ProgressBar.IsVisible = false;
-            updateDialog.ButtonBox.IsVisible = true;
+            taskDialog.Hide();
         }
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -618,8 +669,9 @@ namespace Ryujinx.Modules
             return files;
         }
 
-        private static void MoveAllFilesOver(string root, string dest, UpdaterWindow dialog)
+        private static void MoveAllFilesOver(string root, string dest, TaskDialog taskDialog)
         {
+            var total = Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length;
             foreach (string directory in Directory.GetDirectories(root))
             {
                 string dirName = Path.GetFileName(directory);
@@ -629,16 +681,18 @@ namespace Ryujinx.Modules
                     Directory.CreateDirectory(Path.Combine(dest, dirName));
                 }
 
-                MoveAllFilesOver(directory, Path.Combine(dest, dirName), dialog);
+                MoveAllFilesOver(directory, Path.Combine(dest, dirName), taskDialog);
             }
 
+            double count = 0;
             foreach (string file in Directory.GetFiles(root))
             {
+                count++;
                 File.Move(file, Path.Combine(dest, Path.GetFileName(file)), true);
 
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    dialog.ProgressBar.Value++;
+                    taskDialog.SetProgressBarState(GetPercentage(count, total), TaskDialogProgressState.Normal);
                 });
             }
         }
