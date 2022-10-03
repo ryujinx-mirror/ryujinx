@@ -257,7 +257,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     DeclareSupportUniformBlock(context, context.Config.Stage, scaleElements);
 
-                    if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling))
+                    if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling) && scaleElements != 0)
                     {
                         AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
                         context.AppendLine();

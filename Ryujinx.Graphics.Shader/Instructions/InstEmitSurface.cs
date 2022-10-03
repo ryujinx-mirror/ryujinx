@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstSuldB op = context.GetOp<InstSuldB>();
 
-            EmitSuld(context, op.CacheOp, op.Dim, 0, 0, op.Rgba, op.SrcA, op.Dest, 0, useComponents: true, false, isBindless: true);
+            EmitSuld(context, op.CacheOp, op.Dim, 0, 0, op.Rgba, op.SrcA, op.Dest, op.SrcC, useComponents: true, false, isBindless: true);
         }
 
         public static void Suld(EmitterContext context)
