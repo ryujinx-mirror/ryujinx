@@ -142,14 +142,13 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // GetHostName(buffer<bytes, 6>) -> u32
         public ResultCode GetHostName(ServiceCtx context)
         {
-            ulong hostNameDataPosition = context.Request.ReceiveBuff[0].Position;
-            ulong hostNameDataSize = context.Request.ReceiveBuff[0].Size;
+            ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            byte[] hostNameData = new byte[hostNameDataSize];
-
-            Encoding.ASCII.GetBytes(_hostName, hostNameData);
-
-            context.Memory.Write(hostNameDataPosition, hostNameData);
+            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+            {
+                Encoding.ASCII.GetBytes(_hostName, region.Memory.Span);
+            }
 
             context.ResponseData.Write((uint)_hostName.Length);
 

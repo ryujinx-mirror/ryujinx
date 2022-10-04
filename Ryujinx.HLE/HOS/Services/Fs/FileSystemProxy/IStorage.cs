@@ -23,21 +23,21 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             if (context.Request.ReceiveBuff.Count > 0)
             {
-                IpcBuffDesc buffDesc = context.Request.ReceiveBuff[0];
+                ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
+                ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
                 // Use smaller length to avoid overflows.
-                if (size > buffDesc.Size)
+                if (size > bufferLen)
                 {
-                    size = buffDesc.Size;
+                    size = bufferLen;
                 }
 
-                byte[] data = new byte[size];
+                using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+                {
+                    Result result = _baseStorage.Get.Read((long)offset, new OutBuffer(region.Memory.Span), (long)size);
 
-                Result result = _baseStorage.Get.Read((long)offset, new OutBuffer(data), (long)size);
-
-                context.Memory.Write(buffDesc.Position, data);
-
-                return (ResultCode)result.Value;
+                    return (ResultCode)result.Value;
+                }
             }
 
             return ResultCode.Success;

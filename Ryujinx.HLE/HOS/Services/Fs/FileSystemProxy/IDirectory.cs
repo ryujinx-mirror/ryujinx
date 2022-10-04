@@ -17,17 +17,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
         public ResultCode Read(ServiceCtx context)
         {
-            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
             ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            byte[] entryBuffer = new byte[bufferLen];
+            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+            {
+                Result result = _baseDirectory.Get.Read(out long entriesRead, new OutBuffer(region.Memory.Span));
 
-            Result result = _baseDirectory.Get.Read(out long entriesRead, new OutBuffer(entryBuffer));
+                context.ResponseData.Write(entriesRead);
 
-            context.Memory.Write(bufferPosition, entryBuffer);
-            context.ResponseData.Write(entriesRead);
-
-            return (ResultCode)result.Value;
+                return (ResultCode)result.Value;
+            }
         }
 
         [CommandHipc(1)]

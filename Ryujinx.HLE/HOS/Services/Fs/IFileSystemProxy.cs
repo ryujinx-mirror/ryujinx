@@ -500,16 +500,16 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataFilter filter = context.RequestData.ReadStruct<SaveDataFilter>();
 
-            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
             ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            byte[] infoBuffer = new byte[bufferLen];
+            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+            {
+                Result result = _baseFileSystemProxy.Get.FindSaveDataWithFilter(out long count, new OutBuffer(region.Memory.Span), spaceId, in filter);
+                if (result.IsFailure()) return (ResultCode)result.Value;
 
-            Result result = _baseFileSystemProxy.Get.FindSaveDataWithFilter(out long count, new OutBuffer(infoBuffer), spaceId, in filter);
-            if (result.IsFailure()) return (ResultCode)result.Value;
-
-            context.Memory.Write(bufferPosition, infoBuffer);
-            context.ResponseData.Write(count);
+                context.ResponseData.Write(count);
+            }
 
             return ResultCode.Success;
         }

@@ -197,13 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             context.ResponseData.Write(timestamp.Created);
             context.ResponseData.Write(timestamp.Modified);
             context.ResponseData.Write(timestamp.Accessed);
-
-            byte[] data = new byte[8];
-
-            // is valid?
-            data[0] = 1;
-
-            context.ResponseData.Write(data);
+            context.ResponseData.Write(1L); // Is valid?
 
             return (ResultCode)result.Value;
         }

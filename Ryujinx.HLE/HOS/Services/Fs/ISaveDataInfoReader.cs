@@ -17,17 +17,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // ReadSaveDataInfo() -> (u64, buffer<unknown, 6>)
         public ResultCode ReadSaveDataInfo(ServiceCtx context)
         {
-            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
             ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            byte[] infoBuffer = new byte[bufferLen];
+            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+            {
+                Result result = _baseReader.Get.Read(out long readCount, new OutBuffer(region.Memory.Span));
 
-            Result result = _baseReader.Get.Read(out long readCount, new OutBuffer(infoBuffer));
+                context.ResponseData.Write(readCount);
 
-            context.Memory.Write(bufferPosition, infoBuffer);
-            context.ResponseData.Write(readCount);
-
-            return (ResultCode)result.Value;
+                return (ResultCode)result.Value;
+            }
         }
 
         protected override void Dispose(bool isDisposing)

@@ -38,20 +38,19 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         // Read(u64) -> (u64, buffer<bytes, 6>)
         public ResultCode Read(ServiceCtx context)
         {
-            ulong position = context.Request.ReceiveBuff[0].Position;
-            ulong size = context.Request.ReceiveBuff[0].Size;
+            ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
             long offset = context.RequestData.ReadInt64();
 
-            byte[] data = new byte[size];
+            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
+            {
+                Result result = _base.Get.Read(out long bytesRead, offset, region.Memory.Span);
 
-            Result result = _base.Get.Read(out long bytesRead, offset, data);
+                context.ResponseData.Write(bytesRead);
 
-            context.Memory.Write(position, data);
-
-            context.ResponseData.Write(bytesRead);
-
-            return (ResultCode)result.Value;
+                return (ResultCode)result.Value;
+            }
         }
 
         [CommandHipc(2)]
