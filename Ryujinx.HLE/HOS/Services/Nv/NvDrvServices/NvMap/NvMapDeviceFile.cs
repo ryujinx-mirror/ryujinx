@@ -3,7 +3,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Memory;
 using System;
-using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 {
@@ -11,13 +10,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
     {
         private const int FlagNotFreedYet = 1;
 
-        private static ConcurrentDictionary<ulong, IdDictionary> _maps = new ConcurrentDictionary<ulong, IdDictionary>();
+        private static NvMapIdDictionary _maps = new NvMapIdDictionary();
 
         public NvMapDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
-            IdDictionary dict = _maps.GetOrAdd(Owner, (key) => new IdDictionary());
-
-            dict.Add(0, new NvMapHandle());
         }
 
         public override NvInternalResult Ioctl(NvIoctl command, Span<byte> arguments)
@@ -232,19 +228,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
         private int CreateHandleFromMap(NvMapHandle map)
         {
-            IdDictionary dict = _maps.GetOrAdd(Owner, (key) => new IdDictionary());
-
-            return dict.Add(map);
+            return _maps.Add(map);
         }
 
         private static bool DeleteMapWithHandle(ulong pid, int handle)
         {
-            if (_maps.TryGetValue(pid, out IdDictionary dict))
-            {
-                return dict.Delete(handle) != null;
-            }
-
-            return false;
+            return _maps.Delete(handle) != null;
         }
 
         public static void IncrementMapRefCount(ulong pid, int handle)
@@ -277,12 +266,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
 
         public static NvMapHandle GetMapFromHandle(ulong pid, int handle)
         {
-            if (_maps.TryGetValue(pid, out IdDictionary dict))
-            {
-                return dict.GetData<NvMapHandle>(handle);
-            }
-
-            return null;
+            return _maps.Get(handle);
         }
     }
 }
