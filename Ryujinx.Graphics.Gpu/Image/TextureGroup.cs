@@ -1,4 +1,5 @@
-﻿using Ryujinx.Cpu.Tracking;
+﻿using Ryujinx.Common.Memory;
+using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
@@ -348,9 +349,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                             ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
 
-                            data = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel, true);
+                            SpanOrArray<byte> result = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel, true);
 
-                            Storage.SetData(data, info.BaseLayer, info.BaseLevel);
+                            Storage.SetData(result, info.BaseLayer, info.BaseLevel);
 
                             offsetIndex++;
                         }

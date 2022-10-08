@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.GAL;
+﻿using Ryujinx.Common.Memory;
+using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
@@ -90,17 +91,17 @@ namespace Ryujinx.Graphics.Vulkan
             _bufferView = null;
         }
 
-        public void SetData(ReadOnlySpan<byte> data)
+        public void SetData(SpanOrArray<byte> data)
         {
             _gd.SetBufferData(_bufferHandle, _offset, data);
         }
 
-        public void SetData(ReadOnlySpan<byte> data, int layer, int level)
+        public void SetData(SpanOrArray<byte> data, int layer, int level)
         {
             throw new NotSupportedException();
         }
 
-        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        public void SetData(SpanOrArray<byte> data, int layer, int level, Rectangle<int> region)
         {
             throw new NotSupportedException();
         }

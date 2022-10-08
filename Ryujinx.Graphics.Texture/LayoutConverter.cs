@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Texture
             };
         }
 
-        public static Span<byte> ConvertBlockLinearToLinear(
+        public static byte[] ConvertBlockLinearToLinear(
             int width,
             int height,
             int depth,
@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.Texture
                 blockHeight,
                 bytesPerPixel);
 
-            Span<byte> output = new byte[outSize];
+            byte[] output = new byte[outSize];
 
             int outOffs = 0;
 
@@ -246,7 +246,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static Span<byte> ConvertLinearStridedToLinear(
+        public static byte[] ConvertLinearStridedToLinear(
             int width,
             int height,
             int blockWidth,
@@ -262,14 +262,15 @@ namespace Ryujinx.Graphics.Texture
             int outStride = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
             lineSize = Math.Min(lineSize, outStride);
 
-            Span<byte> output = new byte[h * outStride];
+            byte[] output = new byte[h * outStride];
+            Span<byte> outSpan = output;
 
             int outOffs = 0;
             int inOffs = 0;
 
             for (int y = 0; y < h; y++)
             {
-                data.Slice(inOffs, lineSize).CopyTo(output.Slice(outOffs, lineSize));
+                data.Slice(inOffs, lineSize).CopyTo(outSpan.Slice(outOffs, lineSize));
 
                 inOffs += stride;
                 outOffs += outStride;

@@ -1,5 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
@@ -720,9 +721,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            data = ConvertToHostCompatibleFormat(data);
+            SpanOrArray<byte> result = ConvertToHostCompatibleFormat(data);
 
-            HostTexture.SetData(data);
+            HostTexture.SetData(result);
 
             _hasData = true;
         }
@@ -731,7 +732,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Uploads new texture data to the host GPU.
         /// </summary>
         /// <param name="data">New data</param>
-        public void SetData(ReadOnlySpan<byte> data)
+        public void SetData(SpanOrArray<byte> data)
         {
             BlacklistScale();
 
@@ -750,7 +751,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="data">New data</param>
         /// <param name="layer">Target layer</param>
         /// <param name="level">Target level</param>
-        public void SetData(ReadOnlySpan<byte> data, int layer, int level)
+        public void SetData(SpanOrArray<byte> data, int layer, int level)
         {
             BlacklistScale();
 
@@ -786,7 +787,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="level">Mip level to convert</param>
         /// <param name="single">True to convert a single slice</param>
         /// <returns>Converted data</returns>
-        public ReadOnlySpan<byte> ConvertToHostCompatibleFormat(ReadOnlySpan<byte> data, int level = 0, bool single = false)
+        public SpanOrArray<byte> ConvertToHostCompatibleFormat(ReadOnlySpan<byte> data, int level = 0, bool single = false)
         {
             int width = Info.Width;
             int height = Info.Height;
@@ -799,9 +800,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             height = Math.Max(height >> level, 1);
             depth = Math.Max(depth >> level, 1);
 
+            SpanOrArray<byte> result;
+
             if (Info.IsLinear)
             {
-                data = LayoutConverter.ConvertLinearStridedToLinear(
+                result = LayoutConverter.ConvertLinearStridedToLinear(
                     width,
                     height,
                     Info.FormatInfo.BlockWidth,
@@ -813,7 +816,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                data = LayoutConverter.ConvertBlockLinearToLinear(
+                result = LayoutConverter.ConvertBlockLinearToLinear(
                     width,
                     height,
                     depth,
@@ -836,7 +839,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (!_context.Capabilities.SupportsAstcCompression && Format.IsAstc())
             {
                 if (!AstcDecoder.TryDecodeToRgba8P(
-                    data.ToArray(),
+                    result.ToArray(),
                     Info.FormatInfo.BlockWidth,
                     Info.FormatInfo.BlockHeight,
                     width,
@@ -856,11 +859,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                     decoded = BCnEncoder.EncodeBC7(decoded, width, height, depth, levels, layers);
                 }
 
-                data = decoded;
+                result = decoded;
             }
             else if (!_context.Capabilities.SupportsR4G4Format && Format == Format.R4G4Unorm)
             {
-                data = PixelConverter.ConvertR4G4ToR4G4B4A4(data);
+                result = PixelConverter.ConvertR4G4ToR4G4B4A4(result);
             }
             else if (!TextureCompatibility.HostSupportsBcFormat(Format, Target, _context.Capabilities))
             {
@@ -868,36 +871,36 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     case Format.Bc1RgbaSrgb:
                     case Format.Bc1RgbaUnorm:
-                        data = BCnDecoder.DecodeBC1(data, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC1(result, width, height, depth, levels, layers);
                         break;
                     case Format.Bc2Srgb:
                     case Format.Bc2Unorm:
-                        data = BCnDecoder.DecodeBC2(data, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC2(result, width, height, depth, levels, layers);
                         break;
                     case Format.Bc3Srgb:
                     case Format.Bc3Unorm:
-                        data = BCnDecoder.DecodeBC3(data, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC3(result, width, height, depth, levels, layers);
                         break;
                     case Format.Bc4Snorm:
                     case Format.Bc4Unorm:
-                        data = BCnDecoder.DecodeBC4(data, width, height, depth, levels, layers, Format == Format.Bc4Snorm);
+                        result = BCnDecoder.DecodeBC4(result, width, height, depth, levels, layers, Format == Format.Bc4Snorm);
                         break;
                     case Format.Bc5Snorm:
                     case Format.Bc5Unorm:
-                        data = BCnDecoder.DecodeBC5(data, width, height, depth, levels, layers, Format == Format.Bc5Snorm);
+                        result = BCnDecoder.DecodeBC5(result, width, height, depth, levels, layers, Format == Format.Bc5Snorm);
                         break;
                     case Format.Bc6HSfloat:
                     case Format.Bc6HUfloat:
-                        data = BCnDecoder.DecodeBC6(data, width, height, depth, levels, layers, Format == Format.Bc6HSfloat);
+                        result = BCnDecoder.DecodeBC6(result, width, height, depth, levels, layers, Format == Format.Bc6HSfloat);
                         break;
                     case Format.Bc7Srgb:
                     case Format.Bc7Unorm:
-                        data = BCnDecoder.DecodeBC7(data, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC7(result, width, height, depth, levels, layers);
                         break;
                 }
             }
 
-            return data;
+            return result;
         }
 
         /// <summary>

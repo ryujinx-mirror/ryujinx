@@ -1,5 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using System;
 
@@ -317,32 +318,36 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
         }
 
-        public void SetData(ReadOnlySpan<byte> data)
+        public void SetData(SpanOrArray<byte> data)
         {
+            var dataSpan = data.AsSpan();
+
             if (Format == Format.S8UintD24Unorm)
             {
-                data = FormatConverter.ConvertS8D24ToD24S8(data);
+                dataSpan = FormatConverter.ConvertS8D24ToD24S8(dataSpan);
             }
 
             unsafe
             {
-                fixed (byte* ptr = data)
+                fixed (byte* ptr = dataSpan)
                 {
-                    ReadFrom((IntPtr)ptr, data.Length);
+                    ReadFrom((IntPtr)ptr, dataSpan.Length);
                 }
             }
         }
 
-        public void SetData(ReadOnlySpan<byte> data, int layer, int level)
+        public void SetData(SpanOrArray<byte> data, int layer, int level)
         {
+            var dataSpan = data.AsSpan();
+
             if (Format == Format.S8UintD24Unorm)
             {
-                data = FormatConverter.ConvertS8D24ToD24S8(data);
+                dataSpan = FormatConverter.ConvertS8D24ToD24S8(dataSpan);
             }
 
             unsafe
             {
-                fixed (byte* ptr = data)
+                fixed (byte* ptr = dataSpan)
                 {
                     int width = Math.Max(Info.Width >> level, 1);
                     int height = Math.Max(Info.Height >> level, 1);
@@ -352,11 +357,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
         }
 
-        public void SetData(ReadOnlySpan<byte> data, int layer, int level, Rectangle<int> region)
+        public void SetData(SpanOrArray<byte> data, int layer, int level, Rectangle<int> region)
         {
+            var dataSpan = data.AsSpan();
+
             if (Format == Format.S8UintD24Unorm)
             {
-                data = FormatConverter.ConvertS8D24ToD24S8(data);
+                dataSpan = FormatConverter.ConvertS8D24ToD24S8(dataSpan);
             }
 
             int wInBlocks = BitUtils.DivRoundUp(region.Width, Info.BlockWidth);
@@ -364,7 +371,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             unsafe
             {
-                fixed (byte* ptr = data)
+                fixed (byte* ptr = dataSpan)
                 {
                     ReadFrom2D(
                         (IntPtr)ptr,

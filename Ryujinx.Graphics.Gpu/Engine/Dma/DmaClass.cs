@@ -229,7 +229,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
 
                     if (target != null)
                     {
-                        ReadOnlySpan<byte> data;
+                        byte[] data;
                         if (srcLinear)
                         {
                             data = LayoutConverter.ConvertLinearStridedToLinear(
