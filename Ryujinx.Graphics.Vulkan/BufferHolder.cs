@@ -109,10 +109,32 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (isWrite)
             {
-                _cachedConvertedBuffers.Clear();
+                SignalWrite(0, Size);
             }
 
             return _buffer;
+        }
+
+        public Auto<DisposableBuffer> GetBuffer(CommandBuffer commandBuffer, int offset, int size, bool isWrite = false)
+        {
+            if (isWrite)
+            {
+                SignalWrite(offset, size);
+            }
+
+            return _buffer;
+        }
+
+        public void SignalWrite(int offset, int size)
+        {
+            if (offset == 0 && size == Size)
+            {
+                _cachedConvertedBuffers.Clear();
+            }
+            else
+            {
+                _cachedConvertedBuffers.ClearRange(offset, size);
+            }
         }
 
         public BufferHandle GetHandle()
@@ -183,6 +205,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                     data.Slice(0, dataSize).CopyTo(new Span<byte>((void*)(_map + offset), dataSize));
 
+                    SignalWrite(offset, dataSize);
+
                     return;
                 }
             }
@@ -240,7 +264,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             endRenderPass?.Invoke();
 
-            var dstBuffer = GetBuffer(cbs.CommandBuffer, true).Get(cbs, dstOffset, data.Length).Value;
+            var dstBuffer = GetBuffer(cbs.CommandBuffer, dstOffset, data.Length, true).Get(cbs, dstOffset, data.Length).Value;
 
             InsertBufferBarrier(
                 _gd,
@@ -364,7 +388,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public Auto<DisposableBuffer> GetBufferI8ToI16(CommandBufferScoped cbs, int offset, int size)
         {
-            var key = new I8ToI16CacheKey();
+            var key = new I8ToI16CacheKey(_gd);
 
             if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
             {
@@ -372,6 +396,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ConvertI8ToI16(_gd, cbs, this, holder, offset, size);
+
+                key.SetBuffer(holder.GetBuffer());
 
                 _cachedConvertedBuffers.Add(offset, size, key, holder);
             }
@@ -416,6 +442,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ConvertIndexBuffer(_gd, cbs, this, holder, pattern, indexSize, offset, indexCount);
+
+                key.SetBuffer(holder.GetBuffer());
 
                 _cachedConvertedBuffers.Add(offset, size, key, holder);
             }

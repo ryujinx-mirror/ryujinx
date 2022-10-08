@@ -204,6 +204,8 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             SignalCommandBufferChange();
+
+            DynamicState.ReplayIfDirty(Gd.Api, CommandBuffer);
         }
 
         public void FlushCommandsImpl()

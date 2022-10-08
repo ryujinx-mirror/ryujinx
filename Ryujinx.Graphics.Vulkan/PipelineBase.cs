@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         protected readonly AutoFlushCounter AutoFlush;
 
-        private PipelineDynamicState _dynamicState;
+        protected PipelineDynamicState DynamicState;
         private PipelineState _newState;
         private bool _stateDirty;
         private GAL.PrimitiveTopology _topology;
@@ -150,7 +150,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             EndRenderPass();
 
-            var dst = Gd.BufferManager.GetBuffer(CommandBuffer, destination, true).Get(Cbs, offset, size).Value;
+            var dst = Gd.BufferManager.GetBuffer(CommandBuffer, destination, offset, size, true).Get(Cbs, offset, size).Value;
 
             BufferHolder.InsertBufferBarrier(
                 Gd,
@@ -238,8 +238,8 @@ namespace Ryujinx.Graphics.Vulkan
         {
             EndRenderPass();
 
-            var src = Gd.BufferManager.GetBuffer(CommandBuffer, source, false);
-            var dst = Gd.BufferManager.GetBuffer(CommandBuffer, destination, true);
+            var src = Gd.BufferManager.GetBuffer(CommandBuffer, source, srcOffset, size, false);
+            var dst = Gd.BufferManager.GetBuffer(CommandBuffer, destination, dstOffset, size, true);
 
             BufferHolder.Copy(Gd, Cbs, src, dst, srcOffset, dstOffset, size);
         }
@@ -388,7 +388,7 @@ namespace Ryujinx.Graphics.Vulkan
                 var oldDepthTestEnable = _newState.DepthTestEnable;
                 var oldDepthWriteEnable = _newState.DepthWriteEnable;
                 var oldTopology = _newState.Topology;
-                var oldViewports = _dynamicState.Viewports;
+                var oldViewports = DynamicState.Viewports;
                 var oldViewportsCount = _newState.ViewportsCount;
 
                 _newState.CullMode = CullModeFlags.CullModeNone;
@@ -411,9 +411,9 @@ namespace Ryujinx.Graphics.Vulkan
                 _newState.DepthWriteEnable = oldDepthWriteEnable;
                 _newState.Topology = oldTopology;
 
-                _dynamicState.Viewports = oldViewports;
-                _dynamicState.ViewportsCount = (int)oldViewportsCount;
-                _dynamicState.SetViewportsDirty();
+                DynamicState.Viewports = oldViewports;
+                DynamicState.ViewportsCount = (int)oldViewportsCount;
+                DynamicState.SetViewportsDirty();
 
                 _newState.ViewportsCount = oldViewportsCount;
                 SignalStateChange();
@@ -448,8 +448,13 @@ namespace Ryujinx.Graphics.Vulkan
             ResumeTransformFeedbackInternal();
             DrawCount++;
 
-            var buffer = Gd.BufferManager.GetBuffer(CommandBuffer, indirectBuffer.Handle, true).Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
-            var countBuffer = Gd.BufferManager.GetBuffer(CommandBuffer, parameterBuffer.Handle, true).Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
+            var buffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, true)
+                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+            var countBuffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
+                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
 
             Gd.DrawIndirectCountApi.CmdDrawIndirectCount(
                 CommandBuffer,
@@ -478,8 +483,13 @@ namespace Ryujinx.Graphics.Vulkan
             ResumeTransformFeedbackInternal();
             DrawCount++;
 
-            var buffer = Gd.BufferManager.GetBuffer(CommandBuffer, indirectBuffer.Handle, true).Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
-            var countBuffer = Gd.BufferManager.GetBuffer(CommandBuffer, parameterBuffer.Handle, true).Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
+            var buffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, indirectBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
+                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+            var countBuffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
+                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
 
             Gd.DrawIndirectCountApi.CmdDrawIndexedIndirectCount(
                 CommandBuffer,
@@ -535,7 +545,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp)
         {
-            _dynamicState.SetDepthBias(factor, units, clamp);
+            DynamicState.SetDepthBias(factor, units, clamp);
 
             _newState.DepthBiasEnable = enables != 0;
             SignalStateChange();
@@ -753,10 +763,10 @@ namespace Ryujinx.Graphics.Vulkan
                 var offset = new Offset2D(region.X, region.Y);
                 var extent = new Extent2D((uint)region.Width, (uint)region.Height);
 
-                _dynamicState.SetScissor(i, new Rect2D(offset, extent));
+                DynamicState.SetScissor(i, new Rect2D(offset, extent));
             }
 
-            _dynamicState.ScissorsCount = count;
+            DynamicState.ScissorsCount = count;
 
             _newState.ScissorsCount = (uint)count;
             SignalStateChange();
@@ -764,7 +774,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetStencilTest(StencilTestDescriptor stencilTest)
         {
-            _dynamicState.SetStencilMasks(
+            DynamicState.SetStencilMasks(
                 (uint)stencilTest.BackFuncMask,
                 (uint)stencilTest.BackMask,
                 (uint)stencilTest.BackFuncRef,
@@ -813,7 +823,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (range.Handle != BufferHandle.Null)
                 {
-                    _transformFeedbackBuffers[i] = new BufferState(Gd.BufferManager.GetBuffer(CommandBuffer, range.Handle, true), range.Offset, range.Size);
+                    _transformFeedbackBuffers[i] = 
+                        new BufferState(Gd.BufferManager.GetBuffer(CommandBuffer, range.Handle, range.Offset, range.Size, true), range.Offset, range.Size);
                     _transformFeedbackBuffers[i].BindTransformFeedbackBuffer(Gd, Cbs, (uint)i);
                 }
                 else
@@ -975,7 +986,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 var viewport = viewports[i];
 
-                _dynamicState.SetViewport(i, new Silk.NET.Vulkan.Viewport(
+                DynamicState.SetViewport(i, new Silk.NET.Vulkan.Viewport(
                     viewport.Region.X,
                     viewport.Region.Y,
                     viewport.Region.Width == 0f ? 1f : viewport.Region.Width,
@@ -984,7 +995,7 @@ namespace Ryujinx.Graphics.Vulkan
                     Clamp(viewport.DepthFar)));
             }
 
-            _dynamicState.ViewportsCount = count;
+            DynamicState.ViewportsCount = count;
 
             float disableTransformF = disableTransform ? 1.0f : 0.0f;
             if (SupportBufferUpdater.Data.ViewportInverse.W != disableTransformF || disableTransform)
@@ -1063,7 +1074,7 @@ namespace Ryujinx.Graphics.Vulkan
             _vertexBuffersDirty = ulong.MaxValue >> (64 - _vertexBuffers.Length);
 
             _descriptorSetUpdater.SignalCommandBufferChange();
-            _dynamicState.ForceAllDirty();
+            DynamicState.ForceAllDirty();
             _currentPipelineHandle = 0;
         }
 
@@ -1201,7 +1212,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecreatePipelineIfNeeded(PipelineBindPoint pbp)
         {
-            _dynamicState.ReplayIfDirty(Gd.Api, CommandBuffer);
+            DynamicState.ReplayIfDirty(Gd.Api, CommandBuffer);
 
             // Commit changes to the support buffer before drawing.
             SupportBufferUpdater.Commit();

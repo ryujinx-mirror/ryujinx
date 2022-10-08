@@ -25,6 +25,11 @@ namespace Ryujinx.Graphics.Vulkan
             return other is I8ToI16CacheKey;
         }
 
+        public void SetBuffer(Auto<DisposableBuffer> buffer)
+        {
+            _buffer = buffer;
+        }
+
         public void Dispose()
         {
             _gd.PipelineInternal.DirtyIndexBuffer(_buffer);
@@ -160,6 +165,44 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void ClearRange(int offset, int size)
+        {
+            if (_ranges != null && _ranges.Count > 0)
+            {
+                int end = offset + size;
+
+                List<ulong> toRemove = null;
+
+                foreach (KeyValuePair<ulong, List<Entry>> range in _ranges)
+                {
+                    (int rOffset, int rSize) = UnpackRange(range.Key);
+
+                    int rEnd = rOffset + rSize;
+
+                    if (rEnd > offset && rOffset < end)
+                    {
+                        List<Entry> entries = range.Value;
+
+                        foreach (Entry entry in entries)
+                        {
+                            entry.Key.Dispose();
+                            entry.Value.Dispose();
+                        }
+
+                        (toRemove ??= new List<ulong>()).Add(range.Key);
+                    }
+                }
+
+                if (toRemove != null)
+                {
+                    foreach (ulong range in toRemove)
+                    {
+                        _ranges.Remove(range);
+                    }
+                }
+            }
+        }
+
         private List<Entry> GetEntries(int offset, int size)
         {
             if (_ranges == null)
@@ -182,6 +225,11 @@ namespace Ryujinx.Graphics.Vulkan
         private static ulong PackRange(int offset, int size)
         {
             return (uint)offset | ((ulong)size << 32);
+        }
+
+        private static (int offset, int size) UnpackRange(ulong range)
+        {
+            return ((int)range, (int)(range >> 32));
         }
 
         public void Dispose()
