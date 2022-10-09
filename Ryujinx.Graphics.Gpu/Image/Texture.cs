@@ -138,11 +138,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public LinkedListNode<Texture> CacheNode { get; set; }
 
         /// <summary>
-        /// Event to fire when texture data is disposed.
-        /// </summary>
-        public event Action<Texture> Disposed;
-
-        /// <summary>
         /// Physical memory ranges where the texture data is located.
         /// </summary>
         public MultiRange Range { get; private set; }
@@ -1448,7 +1443,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             DisposeTextures();
 
             HostTexture = hostTexture;
-            InvalidatedSequence++;
         }
 
         /// <summary>
@@ -1603,6 +1597,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         private void DisposeTextures()
         {
+            InvalidatedSequence++;
+
             _currentData = null;
             HostTexture.Release();
 
@@ -1636,8 +1632,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void Dispose()
         {
             DisposeTextures();
-
-            Disposed?.Invoke(this);
 
             if (Group.Storage == this)
             {
