@@ -41,24 +41,82 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand address = context.IAdd(Register(op.SrcA, RegisterType.Gpr), Const(offset));
 
-            // Sorting the target addresses in descending order improves the code,
-            // since it will always check the most distant targets first, then the
-            // near ones. This can be easily transformed into if/else statements.
-            var sortedTargets = context.CurrBlock.Successors.Skip(startIndex).OrderByDescending(x => x.Address);
+            var targets = context.CurrBlock.Successors.Skip(startIndex);
 
-            Block lastTarget = sortedTargets.LastOrDefault();
+            bool allTargetsSinglePred = true;
+            int total = context.CurrBlock.Successors.Count - startIndex;
+            int count = 0;
 
-            foreach (Block possibleTarget in sortedTargets)
+            foreach (var target in targets.OrderBy(x => x.Address))
             {
-                Operand label = context.GetLabel(possibleTarget.Address);
-
-                if (possibleTarget != lastTarget)
+                if (++count < total && (target.Predecessors.Count > 1 || target.Address <= context.CurrBlock.Address))
                 {
-                    context.BranchIfTrue(label, context.ICompareEqual(address, Const((int)possibleTarget.Address)));
+                    allTargetsSinglePred = false;
+                    break;
                 }
-                else
+            }
+
+            if (allTargetsSinglePred)
+            {
+                // Chain blocks, each target block will check if the BRX target address
+                // matches its own address, if not, it jumps to the next target which will do the same check,
+                // until it reaches the last possible target, which executed unconditionally.
+                // We can only do this if the BRX block is the only predecessor of all target blocks.
+                // Additionally, this is not supported for blocks located before the current block,
+                // since it will be too late to insert a label, but this is something that can be improved
+                // in the future if necessary.
+
+                var sortedTargets = targets.OrderBy(x => x.Address);
+
+                Block currentTarget = null;
+                ulong firstTargetAddress = 0;
+
+                foreach (Block nextTarget in sortedTargets)
                 {
-                    context.Branch(label);
+                    if (currentTarget != null)
+                    {
+                        if (currentTarget.Address != nextTarget.Address)
+                        {
+                            context.SetBrxTarget(currentTarget.Address, address, (int)currentTarget.Address, nextTarget.Address);
+                        }
+                    }
+                    else
+                    {
+                        firstTargetAddress = nextTarget.Address;
+                    }
+
+                    currentTarget = nextTarget;
+                }
+
+                context.Branch(context.GetLabel(firstTargetAddress));
+            }
+            else
+            {
+                // Emit the branches sequentially.
+                // This generates slightly worse code, but should work for all cases.
+
+                var sortedTargets = targets.OrderByDescending(x => x.Address);
+                ulong lastTargetAddress = ulong.MaxValue;
+
+                count = 0;
+
+                foreach (Block target in sortedTargets)
+                {
+                    Operand label = context.GetLabel(target.Address);
+
+                    if (++count < total)
+                    {
+                        if (target.Address != lastTargetAddress)
+                        {
+                            context.BranchIfTrue(label, context.ICompareEqual(address, Const((int)target.Address)));
+                        }
+
+                        lastTargetAddress = target.Address;
+                    }
+                    else
+                    {
+                        context.Branch(label);
+                    }
                 }
             }
         }

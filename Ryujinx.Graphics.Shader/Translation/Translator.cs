@@ -162,7 +162,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     context.CurrBlock = block;
 
-                    context.MarkLabel(context.GetLabel(block.Address));
+                    context.EnterBlock(block.Address);
 
                     EmitOps(context, block);
                 }

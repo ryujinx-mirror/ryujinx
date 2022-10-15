@@ -377,6 +377,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                 if (lastOp.Name == InstName.Brx && block.Successors.Count == (hasNext ? 1 : 0))
                 {
+                    HashSet<ulong> visited = new HashSet<ulong>();
+
                     InstBrx opBrx = new InstBrx(lastOp.RawOpCode);
                     ulong baseOffset = lastOp.GetAbsoluteAddress();
 
@@ -392,9 +394,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     for (int i = 0; i < cbOffsetsCount; i++)
                     {
                         uint targetOffset = config.ConstantBuffer1Read(cbBaseOffset + i * 4);
-                        Block target = getBlock(baseOffset + targetOffset);
-                        target.Predecessors.Add(block);
-                        block.Successors.Add(target);
+                        ulong targetAddress = baseOffset + targetOffset;
+
+                        if (visited.Add(targetAddress))
+                        {
+                            Block target = getBlock(targetAddress);
+                            target.Predecessors.Add(block);
+                            block.Successors.Add(target);
+                        }
                     }
                 }
             }

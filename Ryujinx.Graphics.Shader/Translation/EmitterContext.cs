@@ -21,8 +21,33 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int OperationsCount => _operations.Count;
 
+        private struct BrxTarget
+        {
+            public readonly Operand Selector;
+            public readonly int ExpectedValue;
+            public readonly ulong NextTargetAddress;
+
+            public BrxTarget(Operand selector, int expectedValue, ulong nextTargetAddress)
+            {
+                Selector = selector;
+                ExpectedValue = expectedValue;
+                NextTargetAddress = nextTargetAddress;
+            }
+        }
+
+        private class BlockLabel
+        {
+            public readonly Operand Label;
+            public BrxTarget BrxTarget;
+
+            public BlockLabel(Operand label)
+            {
+                Label = label;
+            }
+        }
+
         private readonly List<Operation> _operations;
-        private readonly Dictionary<ulong, Operand> _labels;
+        private readonly Dictionary<ulong, BlockLabel> _labels;
 
         public EmitterContext(DecodedProgram program, ShaderConfig config, bool isNonMain)
         {
@@ -30,7 +55,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             Config = config;
             IsNonMain = isNonMain;
             _operations = new List<Operation>();
-            _labels = new Dictionary<ulong, Operand>();
+            _labels = new Dictionary<ulong, BlockLabel>();
 
             EmitStart();
         }
@@ -158,14 +183,40 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public Operand GetLabel(ulong address)
         {
-            if (!_labels.TryGetValue(address, out Operand label))
-            {
-                label = Label();
+            return EnsureBlockLabel(address).Label;
+        }
 
-                _labels.Add(address, label);
+        public void SetBrxTarget(ulong address, Operand selector, int targetValue, ulong nextTargetAddress)
+        {
+            BlockLabel blockLabel = EnsureBlockLabel(address);
+            Debug.Assert(blockLabel.BrxTarget.Selector == null);
+            blockLabel.BrxTarget = new BrxTarget(selector, targetValue, nextTargetAddress);
+        }
+
+        public void EnterBlock(ulong address)
+        {
+            BlockLabel blockLabel = EnsureBlockLabel(address);
+
+            MarkLabel(blockLabel.Label);
+
+            BrxTarget brxTarget = blockLabel.BrxTarget;
+
+            if (brxTarget.Selector != null)
+            {
+                this.BranchIfFalse(GetLabel(brxTarget.NextTargetAddress), this.ICompareEqual(brxTarget.Selector, Const(brxTarget.ExpectedValue)));
+            }
+        }
+
+        private BlockLabel EnsureBlockLabel(ulong address)
+        {
+            if (!_labels.TryGetValue(address, out BlockLabel blockLabel))
+            {
+                blockLabel = new BlockLabel(Label());
+
+                _labels.Add(address, blockLabel);
             }
 
-            return label;
+            return blockLabel;
         }
 
         public void PrepareForVertexReturn()
