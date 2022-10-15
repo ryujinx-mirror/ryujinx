@@ -235,6 +235,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                     shouldBlockAfterOperation = true;
                 }
 
+                if (!Socket.IsBound)
+                {
+                    receiveSize = -1;
+
+                    return LinuxError.EOPNOTSUPP;
+                }
+
                 receiveSize = Socket.ReceiveFrom(buffer[..size], ConvertBsdSocketFlags(flags), ref temp);
 
                 remoteEndPoint = (IPEndPoint)temp;
