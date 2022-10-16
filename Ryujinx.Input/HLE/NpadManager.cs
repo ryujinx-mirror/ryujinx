@@ -51,7 +51,16 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                _device.Hid.RefreshInputConfig(_inputConfig);
+                List<InputConfig> validInputs = new List<InputConfig>();
+                foreach (var inputConfigEntry in _inputConfig)
+                {
+                    if (_controllers[(int)inputConfigEntry.PlayerIndex] != null)
+                    {
+                        validInputs.Add(inputConfigEntry);
+                    }
+                }
+
+                _device.Hid.RefreshInputConfig(validInputs);
             }
         }
 
@@ -103,6 +112,8 @@ namespace Ryujinx.Input.HLE
                     _controllers[i] = null;
                 }
 
+                List<InputConfig> validInputs = new List<InputConfig>();
+
                 foreach (InputConfig inputConfigEntry in inputConfig)
                 {
                     NpadController controller = new NpadController(_cemuHookClient);
@@ -116,6 +127,7 @@ namespace Ryujinx.Input.HLE
                     else
                     {
                         _controllers[(int)inputConfigEntry.PlayerIndex] = controller;
+                        validInputs.Add(inputConfigEntry);
                     }
                 }
 
@@ -123,7 +135,7 @@ namespace Ryujinx.Input.HLE
                 _enableKeyboard = enableKeyboard;
                 _enableMouse    = enableMouse;
 
-                _device.Hid.RefreshInputConfig(inputConfig);
+                _device.Hid.RefreshInputConfig(validInputs);
             }
         }
 
