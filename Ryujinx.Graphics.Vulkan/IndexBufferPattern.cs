@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public int GetPrimitiveCount(int vertexCount)
         {
-            return Math.Max(0, ((vertexCount - BaseIndex) + IndexStride - 1) / IndexStride);
+            return Math.Max(0, (vertexCount - BaseIndex) / IndexStride);
         }
 
         public int GetConvertedCount(int indexCount)
