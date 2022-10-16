@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Tamper.Conditions
 
         public bool Evaluate()
         {
-            return (_input.Value & _mask) != 0;
+            return (_input.Value & _mask) == _mask;
         }
     }
 }
