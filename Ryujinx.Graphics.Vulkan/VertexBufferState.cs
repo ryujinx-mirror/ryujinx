@@ -57,37 +57,48 @@ namespace Ryujinx.Graphics.Vulkan
                 if (gd.NeedsVertexBufferAlignment(AttributeScalarAlignment, out int alignment) && (_stride % alignment) != 0)
                 {
                     autoBuffer = gd.BufferManager.GetAlignedVertexBuffer(cbs, _handle, _offset, _size, _stride, alignment);
-                    int stride = (_stride + (alignment - 1)) & -alignment;
 
-                    var buffer = autoBuffer.Get(cbs, _offset, _size).Value;
-
-                    if (gd.Capabilities.SupportsExtendedDynamicState)
+                    if (autoBuffer != null)
                     {
-                        gd.ExtendedDynamicStateApi.CmdBindVertexBuffers2(
-                            cbs.CommandBuffer,
-                            binding,
-                            1,
-                            buffer,
-                            0,
-                            (ulong)(_size / _stride) * (ulong)stride,
-                            (ulong)stride);
-                    }
-                    else
-                    {
-                        gd.Api.CmdBindVertexBuffers(cbs.CommandBuffer, binding, 1, buffer, 0);
+                        int stride = (_stride + (alignment - 1)) & -alignment;
+                        int newSize = (_size / _stride) * stride;
+
+                        var buffer = autoBuffer.Get(cbs, 0, newSize).Value;
+
+                        if (gd.Capabilities.SupportsExtendedDynamicState)
+                        {
+                            gd.ExtendedDynamicStateApi.CmdBindVertexBuffers2(
+                                cbs.CommandBuffer,
+                                binding,
+                                1,
+                                buffer,
+                                0,
+                                (ulong)newSize,
+                                (ulong)stride);
+                        }
+                        else
+                        {
+                            gd.Api.CmdBindVertexBuffers(cbs.CommandBuffer, binding, 1, buffer, 0);
+                        }
+
+                        _buffer = autoBuffer;
                     }
 
-                    _buffer = autoBuffer;
-                    state.Internal.VertexBindingDescriptions[DescriptorIndex].Stride = (uint)stride;
+                    state.Internal.VertexBindingDescriptions[DescriptorIndex].Stride = (uint)_stride;
 
                     return;
                 }
                 else
                 {
-                    autoBuffer = gd.BufferManager.GetBuffer(cbs.CommandBuffer, _handle, false, out int _);
+                    autoBuffer = gd.BufferManager.GetBuffer(cbs.CommandBuffer, _handle, false, out int size);
 
                     // The original stride must be reapplied in case it was rewritten.
                     state.Internal.VertexBindingDescriptions[DescriptorIndex].Stride = (uint)_stride;
+
+                    if (_offset >= size)
+                    {
+                        autoBuffer = null;
+                    }
                 }
             }
 

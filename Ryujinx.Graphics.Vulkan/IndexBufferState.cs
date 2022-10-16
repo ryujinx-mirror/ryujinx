@@ -49,7 +49,12 @@ namespace Ryujinx.Graphics.Vulkan
             }
             else
             {
-                autoBuffer = gd.BufferManager.GetBuffer(cbs.CommandBuffer, _handle, false, out int _);
+                autoBuffer = gd.BufferManager.GetBuffer(cbs.CommandBuffer, _handle, false, out int bufferSize);
+
+                if (_offset >= bufferSize)
+                {
+                    autoBuffer = null;
+                }
 
                 offset = _offset;
                 size = _size;

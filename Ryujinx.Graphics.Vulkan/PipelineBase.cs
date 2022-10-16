@@ -95,7 +95,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             using var emptyVb = gd.BufferManager.Create(gd, EmptyVbSize);
             emptyVb.SetData(0, new byte[EmptyVbSize]);
-            _vertexBuffers[0] = new VertexBufferState(emptyVb.GetBuffer(), 0, EmptyVbSize, 0);
+            _vertexBuffers[0] = new VertexBufferState(emptyVb.GetBuffer(), 0, 0, EmptyVbSize, 0);
             _vertexBuffersDirty = ulong.MaxValue >> (64 - _vertexBuffers.Length);
 
             ClearScissor = new Rectangle<int>(0, 0, 0xffff, 0xffff);
@@ -1243,7 +1243,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                     _vertexBuffers[i].BindVertexBuffer(Gd, Cbs, (uint)i, ref _newState);
 
-                    _vertexBuffersDirty &= ~(1u << i);
+                    _vertexBuffersDirty &= ~(1UL << i);
                 }
             }
 

@@ -386,8 +386,25 @@ namespace Ryujinx.Graphics.Vulkan
             _waitable.WaitForFences(_gd.Api, _device, offset, size);
         }
 
+        private bool BoundToRange(int offset, ref int size)
+        {
+            if (offset >= Size)
+            {
+                return false;
+            }
+
+            size = Math.Min(Size - offset, size);
+
+            return true;
+        }
+
         public Auto<DisposableBuffer> GetBufferI8ToI16(CommandBufferScoped cbs, int offset, int size)
         {
+            if (!BoundToRange(offset, ref size))
+            {
+                return null;
+            }
+
             var key = new I8ToI16CacheKey(_gd);
 
             if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
@@ -407,6 +424,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public Auto<DisposableBuffer> GetAlignedVertexBuffer(CommandBufferScoped cbs, int offset, int size, int stride, int alignment)
         {
+            if (!BoundToRange(offset, ref size))
+            {
+                return null;
+            }
+
             var key = new AlignedVertexBufferCacheKey(_gd, stride, alignment);
 
             if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
@@ -428,6 +450,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public Auto<DisposableBuffer> GetBufferTopologyConversion(CommandBufferScoped cbs, int offset, int size, IndexBufferPattern pattern, int indexSize)
         {
+            if (!BoundToRange(offset, ref size))
+            {
+                return null;
+            }
+
             var key = new TopologyConversionCacheKey(_gd, pattern, indexSize);
 
             if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
