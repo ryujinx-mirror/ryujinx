@@ -12,6 +12,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
+using System;
 using System.IO;
 
 using static Ryujinx.HLE.Utilities.StringUtils;
@@ -778,6 +779,26 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
+            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            using var sharedStorage = new SharedRef<LibHac.Fs.IStorage>(storage);
+            using var sfStorage = new SharedRef<IStorage>(new StorageInterfaceAdapter(ref sharedStorage.Ref()));
+
+            MakeObject(context, new FileSystemProxy.IStorage(ref sfStorage.Ref()));
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(205)]
+        // OpenDataStorageWithProgramIndex(u8 program_index) -> object<nn::fssrv::sf::IStorage>
+        public ResultCode OpenDataStorageWithProgramIndex(ServiceCtx context)
+        {
+            byte programIndex = context.RequestData.ReadByte();
+
+            if ((context.Device.Application.TitleId & 0xf) != programIndex)
+            {
+                throw new NotImplementedException($"Accessing storage from other programs is not supported (program index = {programIndex}).");
+            }
+
             var storage = context.Device.FileSystem.RomFs.AsStorage(true);
             using var sharedStorage = new SharedRef<LibHac.Fs.IStorage>(storage);
             using var sfStorage = new SharedRef<IStorage>(new StorageInterfaceAdapter(ref sharedStorage.Ref()));
