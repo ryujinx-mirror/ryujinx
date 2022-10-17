@@ -37,7 +37,7 @@ namespace Ryujinx.Ava.Ui.Windows
             InitializeComponent();
             Load();
 
-            FuncMultiValueConverter<string, string> converter = new(parts => string.Format("{0}  {1}   {2}", parts.ToArray()));
+            FuncMultiValueConverter<string, string> converter = new(parts => string.Format("{0}  {1}   {2}", parts.ToArray()).Trim());
             MultiBinding tzMultiBinding = new() { Converter = converter };
             tzMultiBinding.Bindings.Add(new Binding("UtcDifference"));
             tzMultiBinding.Bindings.Add(new Binding("Location"));

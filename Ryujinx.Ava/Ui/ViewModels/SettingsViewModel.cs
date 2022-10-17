@@ -295,8 +295,6 @@ namespace Ryujinx.Ava.Ui.ViewModels
             if (_validTzRegions.Contains(location))
             {
                 TimeZone = location;
-
-                OnPropertyChanged(nameof(TimeZone));
             }
         }
 
