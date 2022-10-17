@@ -2540,11 +2540,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 for (int attempt = 0; attempt < 8; attempt++)
                 {
-                    address = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, alignment);
+                    ulong aslrAddress = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, alignment);
+                    ulong aslrEndAddr = aslrAddress + totalNeededSize;
 
-                    ulong endAddr = address + totalNeededSize;
-
-                    KMemoryInfo info = _blockManager.FindBlock(address).GetInfo();
+                    KMemoryInfo info = _blockManager.FindBlock(aslrAddress).GetInfo();
 
                     if (info.State != MemoryState.Unmapped)
                     {
@@ -2554,11 +2553,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     ulong currBaseAddr = info.Address + reservedPagesCount * PageSize;
                     ulong currEndAddr = info.Address + info.Size;
 
-                    if (address >= regionStart &&
-                        address >= currBaseAddr &&
-                        endAddr - 1 <= regionEndAddr - 1 &&
-                        endAddr - 1 <= currEndAddr - 1)
+                    if (aslrAddress >= regionStart &&
+                        aslrAddress >= currBaseAddr &&
+                        aslrEndAddr - 1 <= regionEndAddr - 1 &&
+                        aslrEndAddr - 1 <= currEndAddr - 1)
                     {
+                        address = aslrAddress;
                         break;
                     }
                 }
@@ -2603,7 +2603,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             ulong totalNeededSize = reservedSize + neededPagesCount * PageSize;
 
-            ulong regionEndAddr = regionStart + regionPagesCount * PageSize;
+            ulong regionEndAddr = (regionStart + regionPagesCount * PageSize) - 1;
 
             KMemoryBlock currBlock = _blockManager.FindBlock(regionStart);
 
