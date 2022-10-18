@@ -278,7 +278,7 @@ namespace Ryujinx.Modules
                 {
                     string ryuName = Path.GetFileName(Environment.ProcessPath);
                     string ryuExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ryuName);
-                    string ryuArg = string.Join(" ", Environment.GetCommandLineArgs().Skip(1).ToArray());
+                    var ryuArg = Environment.GetCommandLineArgs().Skip(1);
 
                     if (!OperatingSystem.IsWindows())
                     {
