@@ -480,6 +480,8 @@ namespace Ryujinx.Graphics.Vulkan
             if (--_viewsCount == 0)
             {
                 _gd.PipelineInternal?.FlushCommandsIfWeightExceeding(_imageAuto, _size);
+
+                Dispose();
             }
         }
 

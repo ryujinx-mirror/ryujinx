@@ -310,7 +310,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal TextureView CreateTextureView(TextureCreateInfo info, float scale)
         {
             // This should be disposed when all views are destroyed.
-            using var storage = CreateTextureStorage(info, scale);
+            var storage = CreateTextureStorage(info, scale);
             return storage.CreateView(info, 0, 0);
         }
 
