@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.Utilities
 
             for (int index = 0; index < bytesInHex; index++)
             {
-                output[index] = byte.Parse(hexString.Substring(index * 2, 2), NumberStyles.HexNumber);
+                output[index] = byte.Parse(hexString.AsSpan(index * 2, 2), NumberStyles.HexNumber);
             }
 
             return output;

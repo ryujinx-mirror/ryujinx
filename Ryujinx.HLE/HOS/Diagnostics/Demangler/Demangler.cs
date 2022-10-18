@@ -918,7 +918,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return -1;
             }
 
-            return int.Parse(part.Substring(0, numberLength));
+            return int.Parse(part.AsSpan(0, numberLength));
         }
 
         private string ParseNumber(bool isSigned = false)

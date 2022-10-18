@@ -122,9 +122,8 @@ namespace Ryujinx.HLE.HOS.Tamper
                 for (int nybbleIndex = 0; nybbleIndex < wordSize; nybbleIndex++)
                 {
                     int index = wordIndex * wordSize + nybbleIndex;
-                    string byteData = word.Substring(nybbleIndex, 1);
 
-                    instruction[index] = byte.Parse(byteData, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    instruction[index] = byte.Parse(word.AsSpan(nybbleIndex, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 }
             }
 

@@ -132,7 +132,7 @@ namespace Ryujinx.HLE.Loaders.Mods
         {
             if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
             {
-                return int.TryParse(str.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out value);
+                return int.TryParse(str.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out value);
             }
             else
             {

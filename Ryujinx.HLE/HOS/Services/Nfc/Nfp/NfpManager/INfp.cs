@@ -816,11 +816,11 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                                 Reserved = new Array57<byte>()
                             };
 
-                            modelInfo.CharacterId      = BinaryPrimitives.ReverseEndianness(ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(0, 4), NumberStyles.HexNumber));
-                            modelInfo.CharacterVariant = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(4, 2), NumberStyles.HexNumber);
-                            modelInfo.Series           = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(12, 2), NumberStyles.HexNumber);
-                            modelInfo.ModelNumber      = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(8, 4), NumberStyles.HexNumber);
-                            modelInfo.Type             = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.Substring(6, 2), NumberStyles.HexNumber);
+                            modelInfo.CharacterId      = BinaryPrimitives.ReverseEndianness(ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(0, 4), NumberStyles.HexNumber));
+                            modelInfo.CharacterVariant = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(4, 2), NumberStyles.HexNumber);
+                            modelInfo.Series           = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(12, 2), NumberStyles.HexNumber);
+                            modelInfo.ModelNumber      = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(8, 4), NumberStyles.HexNumber);
+                            modelInfo.Type             = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(6, 2), NumberStyles.HexNumber);
 
                             context.Memory.Write(outputPosition, modelInfo);
 
