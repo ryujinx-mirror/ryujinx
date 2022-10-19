@@ -33,6 +33,14 @@ namespace ARMeilleure.Instructions
         };
 
         public static readonly long ZeroMask = 128L << 56 | 128L << 48 | 128L << 40 | 128L << 32 | 128L << 24 | 128L << 16 | 128L << 8 | 128L << 0;
+
+        public static ulong X86GetGf2p8LogicalShiftLeft(int shift)
+        {
+            ulong identity = (0b00000001UL << 56) | (0b00000010UL << 48) | (0b00000100UL << 40) | (0b00001000UL << 32) |
+                             (0b00010000UL << 24) | (0b00100000UL << 16) | (0b01000000UL <<  8) | (0b10000000UL <<  0);
+
+            return shift >= 0 ? identity >> (shift * 8) : identity << (-shift * 8);
+        }
 #endregion
 
 #region "X86 SSE Intrinsics"
@@ -243,19 +251,44 @@ namespace ARMeilleure.Instructions
             throw new ArgumentException($"Invalid rounding mode \"{roundMode}\".");
         }
 
-        public static ulong X86GetGf2p8LogicalShiftLeft(int shift)
+        public static Operand EmitSse41RoundToNearestWithTiesToAwayOpF(ArmEmitterContext context, Operand n, bool scalar)
         {
-            ulong identity = 
-                (0b00000001UL << 56) |
-                (0b00000010UL << 48) |
-                (0b00000100UL << 40) |
-                (0b00001000UL << 32) |
-                (0b00010000UL << 24) |
-                (0b00100000UL << 16) |
-                (0b01000000UL <<  8) |
-                (0b10000000UL <<  0);
+            Debug.Assert(n.Type == OperandType.V128);
 
-            return shift >= 0 ? identity >> (shift * 8) : identity << (-shift * 8);
+            Operand nCopy = context.Copy(n);
+
+            Operand rC = Const(X86GetRoundControl(FPRoundingMode.TowardsZero));
+
+            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+
+            if ((op.Size & 1) == 0)
+            {
+                Operand signMask = scalar ? X86GetScalar(context, int.MinValue) : X86GetAllElements(context, int.MinValue);
+                        signMask = context.AddIntrinsic(Intrinsic.X86Pand, signMask, nCopy);
+
+                // 0x3EFFFFFF == BitConverter.SingleToInt32Bits(0.5f) - 1
+                Operand valueMask = scalar ? X86GetScalar(context, 0x3EFFFFFF) : X86GetAllElements(context, 0x3EFFFFFF);
+                        valueMask = context.AddIntrinsic(Intrinsic.X86Por, valueMask, signMask);
+
+                nCopy = context.AddIntrinsic(scalar ? Intrinsic.X86Addss : Intrinsic.X86Addps, nCopy, valueMask);
+
+                nCopy = context.AddIntrinsic(scalar ? Intrinsic.X86Roundss : Intrinsic.X86Roundps, nCopy, rC);
+            }
+            else
+            {
+                Operand signMask = scalar ? X86GetScalar(context, long.MinValue) : X86GetAllElements(context, long.MinValue);
+                        signMask = context.AddIntrinsic(Intrinsic.X86Pand, signMask, nCopy);
+
+                // 0x3FDFFFFFFFFFFFFFL == BitConverter.DoubleToInt64Bits(0.5d) - 1L
+                Operand valueMask = scalar ? X86GetScalar(context, 0x3FDFFFFFFFFFFFFFL) : X86GetAllElements(context, 0x3FDFFFFFFFFFFFFFL);
+                        valueMask = context.AddIntrinsic(Intrinsic.X86Por, valueMask, signMask);
+
+                nCopy = context.AddIntrinsic(scalar ? Intrinsic.X86Addsd : Intrinsic.X86Addpd, nCopy, valueMask);
+
+                nCopy = context.AddIntrinsic(scalar ? Intrinsic.X86Roundsd : Intrinsic.X86Roundpd, nCopy, rC);
+            }
+
+            return nCopy;
         }
 
         public static Operand EmitCountSetBits8(ArmEmitterContext context, Operand op) // "size" is 8 (SIMD&FP Inst.).
