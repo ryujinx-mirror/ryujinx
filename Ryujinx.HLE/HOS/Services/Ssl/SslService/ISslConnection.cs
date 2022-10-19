@@ -349,7 +349,11 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // GetSessionCacheMode() -> nn::ssl::sf::SessionCacheMode
         public ResultCode GetSessionCacheMode(ServiceCtx context)
         {
-            throw new ServiceNotImplementedException(this, context);
+            context.ResponseData.Write((uint)_sessionCacheMode);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceSsl, new { _sessionCacheMode });
+
+            return ResultCode.Success;
         }
 
         [CommandHipc(19)]
