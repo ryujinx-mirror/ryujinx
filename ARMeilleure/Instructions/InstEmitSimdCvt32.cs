@@ -261,6 +261,68 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vcvt_TB(ArmEmitterContext context)
+        {
+            OpCode32SimdCvtTB op = (OpCode32SimdCvtTB)context.CurrOp;
+
+            if (Optimizations.UseF16c)
+            {
+                Debug.Assert(!Optimizations.ForceLegacySse);
+
+                if (op.Op)
+                {
+                    Operand res = ExtractScalar(context, op.Size == 1 ? OperandType.FP64 : OperandType.FP32, op.Vm);
+                    if (op.Size == 1)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Cvtsd2ss, context.VectorZero(), res);
+                    }
+                    res = context.AddIntrinsic(Intrinsic.X86Vcvtps2ph, res, Const(X86GetRoundControl(FPRoundingMode.ToNearest)));
+                    res = context.VectorExtract16(res, 0);
+                    InsertScalar16(context, op.Vd, op.T, res);
+                }
+                else
+                {
+                    Operand res = context.VectorCreateScalar(ExtractScalar16(context, op.Vm, op.T));
+                    res = context.AddIntrinsic(Intrinsic.X86Vcvtph2ps, res);
+                    if (op.Size == 1)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Cvtss2sd, context.VectorZero(), res);
+                    }
+                    res = context.VectorExtract(op.Size == 1 ? OperandType.I64 : OperandType.I32, res, 0);
+                    InsertScalar(context, op.Vd, res);
+                }
+            }
+            else
+            {
+                if (op.Op)
+                {
+                    // Convert to half
+
+                    Operand src = ExtractScalar(context, op.Size == 1 ? OperandType.FP64 : OperandType.FP32, op.Vm);
+
+                    MethodInfo method = op.Size == 1
+                        ? typeof(SoftFloat64_16).GetMethod(nameof(SoftFloat64_16.FPConvert))
+                        : typeof(SoftFloat32_16).GetMethod(nameof(SoftFloat32_16.FPConvert));
+                    Operand res = context.Call(method, src);
+
+                    InsertScalar16(context, op.Vd, op.T, res);
+                }
+                else
+                {
+                    // Convert from half
+
+                    Operand src = ExtractScalar16(context, op.Vm, op.T);
+
+                    MethodInfo method = op.Size == 1
+                        ? typeof(SoftFloat16_64).GetMethod(nameof(SoftFloat16_64.FPConvert))
+                        : typeof(SoftFloat16_32).GetMethod(nameof(SoftFloat16_32.FPConvert));
+                    Operand res = context.Call(method, src);
+
+                    InsertScalar(context, op.Vd, res);
+                }
+            }
+        }
+
         // VRINTA/M/N/P (floating-point).
         public static void Vrint_RM(ArmEmitterContext context)
         {

@@ -339,6 +339,93 @@ namespace Ryujinx.Tests.Cpu
 
             CompareAgainstUnicorn();
         }
+
+        [Explicit]
+        [Test, Pairwise, Description("VCVT<top>.F16.F32 <Sd>, <Dm>")]
+        public void Vcvt_F32_F16([Values(0u, 1u, 2u, 3u)] uint rd,
+                                 [Values(0u, 1u, 2u, 3u)] uint rm,
+                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s0,
+                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s1,
+                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s2,
+                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s3,
+                                 [Values] bool top)
+        {
+            uint opcode = 0xeeb30a40; // VCVTB.F16.F32 S0, D0
+
+            if (top)
+            {
+                opcode |= 1 << 7;
+            }
+
+            opcode |= ((rd & 0x1e) << 11) | ((rd & 0x1) << 22);
+            opcode |= ((rm & 0x1e) >> 1) | ((rm & 0x1) << 5);
+
+            V128 v0 = MakeVectorE0E1E2E3(s0, s1, s2, s3);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Explicit]
+        [Test, Pairwise, Description("VCVT<top>.F16.F64 <Sd>, <Dm>")]
+        public void Vcvt_F64_F16([Values(0u, 1u, 2u, 3u)] uint rd,
+                                 [Values(0u, 1u)] uint rm,
+                                 [ValueSource(nameof(_1D_F_))] ulong d0,
+                                 [ValueSource(nameof(_1D_F_))] ulong d1,
+                                 [Values] bool top)
+        {
+            uint opcode = 0xeeb30b40; // VCVTB.F16.F64 S0, D0
+
+            if (top)
+            {
+                opcode |= 1 << 7;
+            }
+
+            opcode |= ((rd & 0x1e) << 11) | ((rd & 0x1) << 22);
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Explicit]
+        [Test, Pairwise, Description("VCVT<top>.F<size>.F16 <Vd>, <Sm>")]
+        public void Vcvt_F16_Fx([Values(0u, 1u, 2u, 3u)] uint rd,
+                                 [Values(0u, 1u, 2u, 3u)] uint rm,
+                                 [ValueSource(nameof(_1D_F_))] ulong d0,
+                                 [ValueSource(nameof(_1D_F_))] ulong d1,
+                                 [Values] bool top,
+                                 [Values] bool sz)
+        {
+            uint opcode = 0xeeb20a40; // VCVTB.F32.F16 S0, S0
+
+            if (top)
+            {
+                opcode |= 1 << 7;
+            }
+
+            if (sz)
+            {
+                opcode |= 1 << 8;
+                opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            }
+            else
+            {
+                opcode |= ((rd & 0x1e) << 11) | ((rd & 0x1) << 22);
+            }
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+
+            V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
 #endif
     }
 }

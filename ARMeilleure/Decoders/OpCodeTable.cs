@@ -828,6 +828,7 @@ namespace ARMeilleure.Decoders
             SetVfp("<<<<11101x11110xxxxx101x11x0xxxx", InstName.Vcvt,   InstEmit32.Vcvt_FI,  OpCode32SimdCvtFI.Create,       OpCode32SimdCvtFI.CreateT32); // FP32 to int.
             SetVfp("<<<<11101x111000xxxx101xx1x0xxxx", InstName.Vcvt,   InstEmit32.Vcvt_FI,  OpCode32SimdCvtFI.Create,       OpCode32SimdCvtFI.CreateT32); // Int to FP32.
             SetVfp("111111101x1111xxxxxx101xx1x0xxxx", InstName.Vcvt,   InstEmit32.Vcvt_RM,  OpCode32SimdCvtFI.Create,       OpCode32SimdCvtFI.CreateT32); // The many FP32 to int encodings (fp).
+            SetVfp("<<<<11101x11001xxxxx101xx1x0xxxx", InstName.Vcvt,   InstEmit32.Vcvt_TB,  OpCode32SimdCvtTB.Create,       OpCode32SimdCvtTB.CreateT32);
             SetVfp("<<<<11101x00xxxxxxxx101xx0x0xxxx", InstName.Vdiv,   InstEmit32.Vdiv_S,   OpCode32SimdRegS.Create,        OpCode32SimdRegS.CreateT32);
             SetVfp("<<<<11101xx0xxxxxxxx1011x0x10000", InstName.Vdup,   InstEmit32.Vdup,     OpCode32SimdDupGP.Create,       OpCode32SimdDupGP.CreateT32);
             SetVfp("<<<<11101x10xxxxxxxx101xx0x0xxxx", InstName.Vfma,   InstEmit32.Vfma_S,   OpCode32SimdRegS.Create,        OpCode32SimdRegS.CreateT32);
