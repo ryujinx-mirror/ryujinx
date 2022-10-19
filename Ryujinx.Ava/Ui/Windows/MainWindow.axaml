@@ -164,7 +164,7 @@
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="pl_PL"
-                                    Header="Polish" />
+                                    Header="Polski" />
                                 <MenuItem
                                     Command="{ReflectionBinding ChangeLanguage}"
                                     CommandParameter="ru_RU"

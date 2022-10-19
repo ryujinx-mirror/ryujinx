@@ -588,5 +588,9 @@
   "SettingsTabGraphicsPreferredGpuTooltip": "Wybierz kartę graficzną, która będzie używana z backendem graficznym Vulkan.\n\nNie wpływa na GPU używane przez OpenGL.\n\nW razie wątpliwości ustaw flagę GPU jako \"dGPU\". Jeśli żadnej nie ma, pozostaw nietknięte.",
   "SettingsAppRequiredRestartMessage": "Wymagane Zrestartowanie Ryujinx",
   "SettingsGpuBackendRestartMessage": "Zmieniono ustawienia Backendu Graficznego lub GPU. Będzie to wymagało ponownego uruchomienia",
-  "SettingsGpuBackendRestartSubMessage": "Czy chcesz zrestartować teraz?"
+  "SettingsGpuBackendRestartSubMessage": "Czy chcesz zrestartować teraz?",
+  "RyujinxUpdaterMessage": "Czy chcesz zaktualizować Ryujinx do najnowszej wersji?",
+  "SettingsTabHotkeysVolumeUpHotkey": "Zwiększ Głośność:",
+  "SettingsTabHotkeysVolumeDownHotkey": "Zmniejsz Głośność:",
+  "VolumeShort": "Głoś"
 }
