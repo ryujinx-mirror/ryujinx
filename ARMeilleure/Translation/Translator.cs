@@ -455,12 +455,15 @@ namespace ARMeilleure.Translation
 
         public void InvalidateJitCacheRegion(ulong address, ulong size)
         {
-            // If rejit is running, stop it as it may be trying to rejit a function on the invalidated region.
-            ClearRejitQueue(allowRequeue: true);
-
             ulong[] overlapAddresses = Array.Empty<ulong>();
 
             int overlapsCount = Functions.GetOverlaps(address, size, ref overlapAddresses);
+
+            if (overlapsCount != 0)
+            {
+                // If rejit is running, stop it as it may be trying to rejit a function on the invalidated region.
+                ClearRejitQueue(allowRequeue: true);
+            }
 
             for (int index = 0; index < overlapsCount; index++)
             {

@@ -296,27 +296,33 @@ namespace ARMeilleure.Instructions
             {
                 if (op.Op)
                 {
-                    // Convert to half
+                    // Convert to half.
 
                     Operand src = ExtractScalar(context, op.Size == 1 ? OperandType.FP64 : OperandType.FP32, op.Vm);
 
                     MethodInfo method = op.Size == 1
                         ? typeof(SoftFloat64_16).GetMethod(nameof(SoftFloat64_16.FPConvert))
                         : typeof(SoftFloat32_16).GetMethod(nameof(SoftFloat32_16.FPConvert));
+
+                    context.StoreToContext();
                     Operand res = context.Call(method, src);
+                    context.LoadFromContext();
 
                     InsertScalar16(context, op.Vd, op.T, res);
                 }
                 else
                 {
-                    // Convert from half
+                    // Convert from half.
 
                     Operand src = ExtractScalar16(context, op.Vm, op.T);
 
                     MethodInfo method = op.Size == 1
                         ? typeof(SoftFloat16_64).GetMethod(nameof(SoftFloat16_64.FPConvert))
                         : typeof(SoftFloat16_32).GetMethod(nameof(SoftFloat16_32.FPConvert));
+
+                    context.StoreToContext();
                     Operand res = context.Call(method, src);
+                    context.LoadFromContext();
 
                     InsertScalar(context, op.Vd, res);
                 }
