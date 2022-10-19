@@ -92,5 +92,31 @@ namespace Ryujinx.Memory.Tests
                 }
             }
         }
+
+        [Test]
+        public void Test_AliasMapLeak()
+        {
+            if (OperatingSystem.IsMacOS())
+            {
+                // Memory aliasing tests fail on CI at the moment.
+                return;
+            }
+
+            ulong pageSize = 4096;
+            ulong size = 100000 * pageSize; // The mappings limit on Linux is usually around 65K, so let's make sure we are above that.
+
+            using MemoryBlock backing = new MemoryBlock(pageSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new MemoryBlock(size, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+
+            for (ulong offset = 0; offset < size; offset += pageSize)
+            {
+                toAlias.MapView(backing, 0, offset, pageSize);
+
+                toAlias.Write(offset, 0xbadc0de);
+                Assert.AreEqual(0xbadc0de, backing.Read<int>(0));
+
+                toAlias.UnmapView(backing, offset, pageSize);
+            }
+        }
     }
 }
