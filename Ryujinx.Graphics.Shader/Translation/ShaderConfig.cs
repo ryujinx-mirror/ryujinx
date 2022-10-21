@@ -306,7 +306,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                 config._perPatchAttributeLocations = locationsMap;
             }
 
-            if (config.Stage != ShaderStage.Fragment)
+            // We don't consider geometry shaders using the geometry shader passthrough feature
+            // as being the last because when this feature is used, it can't actually modify any of the outputs,
+            // so the stage that comes before it is the last one that can do modifications.
+            if (config.Stage != ShaderStage.Fragment && (config.Stage != ShaderStage.Geometry || !config.GpPassthrough))
             {
                 LastInVertexPipeline = false;
             }
