@@ -48,21 +48,21 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       RYUJINX_BASE_VERSION: "1.1.0"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.0.x
       - name: Ensure NuGet Source
         uses: fabriciomurta/ensure-nuget-source@v1
       - name: Get git short hash
         id: git_short_hash
-        run: echo "::set-output name=result::$(git rev-parse --short "${{ github.sha }}")"
+        run: echo "result=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
         run: dotnet build -c "${{ matrix.configuration }}" /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
       - name: Test
-        run: dotnet test -c "${{ matrix.configuration }}"
+        run: dotnet test --no-build -c "${{ matrix.configuration }}"
       - name: Publish Ryujinx
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
         if: github.event_name == 'pull_request'
@@ -73,19 +73,19 @@ jobs:
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_ava /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Ava
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
           path: publish
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx.Headless.SDL2 artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sdl2-ryujinx-headless-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
           path: publish_sdl2_headless
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx.Ava artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ava-ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.RELEASE_ZIP_OS_NAME }}
           path: publish_ava
