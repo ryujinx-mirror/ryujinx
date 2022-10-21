@@ -10,3 +10,15 @@ updates:
       - marysaka
     commit-message:
       prefix: "ci"
+
+  - package-ecosystem: nuget
+    directory: /
+    open-pull-requests-limit: 5
+    schedule:
+      interval: daily
+    labels:
+      - "infra"
+    reviewers:
+      - marysaka
+    commit-message:
+      prefix: nuget
