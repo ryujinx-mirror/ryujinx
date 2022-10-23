@@ -16,7 +16,7 @@ jobs:
             const pull_head_sha = '${{github.event.workflow_run.head_sha}}';
 
             const issue_number = await (async () => {
-              const pulls = await github.pulls.list({owner, repo});
+              const pulls = await github.rest.pulls.list({owner, repo});
               for await (const {data} of github.paginate.iterator(pulls)) {
                 for (const pull of data) {
                   if (pull.head.sha === pull_head_sha) {
@@ -31,7 +31,7 @@ jobs:
               return core.error(`No matching pull request found`);
             }
 
-            const {data: {artifacts}} = await github.actions.listWorkflowRunArtifacts({owner, repo, run_id});
+            const {data: {artifacts}} = await github.rest.actions.listWorkflowRunArtifacts({owner, repo, run_id});
             if (!artifacts.length) {
               return core.error(`No artifacts found`);
             }
@@ -57,12 +57,12 @@ jobs:
             body += hidden_headless_artifacts;
             body += hidden_debug_artifacts;
 
-            const {data: comments} = await github.issues.listComments({repo, owner, issue_number});
+            const {data: comments} = await github.rest.issues.listComments({repo, owner, issue_number});
             const existing_comment = comments.find((c) => c.user.login === 'github-actions[bot]');
             if (existing_comment) {
               core.info(`Updating comment ${existing_comment.id}`);
-              await github.issues.updateComment({repo, owner, comment_id: existing_comment.id, body});
+              await github.rest.issues.updateComment({repo, owner, comment_id: existing_comment.id, body});
             } else {
               core.info(`Creating a comment`);
-              await github.issues.createComment({repo, owner, issue_number, body});
+              await github.rest.issues.createComment({repo, owner, issue_number, body});
             }
