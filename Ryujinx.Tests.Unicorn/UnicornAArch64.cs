@@ -3,9 +3,10 @@ using System;
 
 namespace Ryujinx.Tests.Unicorn
 {
-    public class UnicornAArch64
+    public class UnicornAArch64 : IDisposable
     {
         internal readonly IntPtr uc;
+        private bool _isDisposed = false;
 
         public IndexedProperty<int, ulong> X
         {
@@ -96,7 +97,22 @@ namespace Ryujinx.Tests.Unicorn
 
         ~UnicornAArch64()
         {
-            Interface.Checked(Native.Interface.uc_close(uc));
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                Interface.Checked(Native.Interface.uc_close(uc));
+                _isDisposed = true;
+            }
         }
 
         public void RunForCount(ulong count)

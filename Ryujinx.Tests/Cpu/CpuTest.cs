@@ -80,6 +80,12 @@ namespace Ryujinx.Tests.Cpu
         [TearDown]
         public void Teardown()
         {
+            if (_unicornAvailable)
+            {
+                _unicornEmu.Dispose();
+                _unicornEmu = null;
+            }
+
             _memory.DecrementReferenceCount();
             _context.Dispose();
             _ram.Dispose();
