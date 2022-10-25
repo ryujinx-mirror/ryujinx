@@ -19,20 +19,33 @@ namespace Ryujinx.Graphics.Vulkan
         private uint _frontWriteMask;
         private uint _frontReference;
 
+        private Array4<float> _blendConstants;
+
         public int ViewportsCount;
         public Array16<Viewport> Viewports;
 
         private enum DirtyFlags
         {
             None = 0,
-            DepthBias = 1 << 0,
-            Scissor = 1 << 1,
-            Stencil = 1 << 2,
-            Viewport = 1 << 3,
-            All = DepthBias | Scissor | Stencil | Viewport
+            Blend = 1 << 0,
+            DepthBias = 1 << 1,
+            Scissor = 1 << 2,
+            Stencil = 1 << 3,
+            Viewport = 1 << 4,
+            All = Blend | DepthBias | Scissor | Stencil | Viewport
         }
 
         private DirtyFlags _dirty;
+
+        public void SetBlendConstants(float r, float g, float b, float a)
+        {
+            _blendConstants[0] = r;
+            _blendConstants[1] = g;
+            _blendConstants[2] = b;
+            _blendConstants[3] = a;
+
+            _dirty |= DirtyFlags.Blend;
+        }
 
         public void SetDepthBias(float slopeFactor, float constantFactor, float clamp)
         {
@@ -87,6 +100,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void ReplayIfDirty(Vk api, CommandBuffer commandBuffer)
         {
+            if (_dirty.HasFlag(DirtyFlags.Blend))
+            {
+                RecordBlend(api, commandBuffer);
+            }
+
             if (_dirty.HasFlag(DirtyFlags.DepthBias))
             {
                 RecordDepthBias(api, commandBuffer);
@@ -108,6 +126,11 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             _dirty = DirtyFlags.None;
+        }
+
+        private void RecordBlend(Vk api, CommandBuffer commandBuffer)
+        {
+            api.CmdSetBlendConstants(commandBuffer, _blendConstants.AsSpan());
         }
 
         private void RecordDepthBias(Vk api, CommandBuffer commandBuffer)

@@ -499,7 +499,7 @@ namespace Ryujinx.Graphics.Vulkan
                 colorBlendState.BlendConstants[3] = BlendConstantA;
 
                 bool supportsExtDynamicState = gd.Capabilities.SupportsExtendedDynamicState;
-                int dynamicStatesCount = supportsExtDynamicState ? 8 : 7;
+                int dynamicStatesCount = supportsExtDynamicState ? 9 : 8;
 
                 DynamicState* dynamicStates = stackalloc DynamicState[dynamicStatesCount];
 
@@ -510,10 +510,11 @@ namespace Ryujinx.Graphics.Vulkan
                 dynamicStates[4] = DynamicState.StencilCompareMask;
                 dynamicStates[5] = DynamicState.StencilWriteMask;
                 dynamicStates[6] = DynamicState.StencilReference;
+                dynamicStates[7] = DynamicState.BlendConstants;
 
                 if (supportsExtDynamicState)
                 {
-                    dynamicStates[7] = DynamicState.VertexInputBindingStrideExt;
+                    dynamicStates[8] = DynamicState.VertexInputBindingStrideExt;
                 }
 
                 var pipelineDynamicStateCreateInfo = new PipelineDynamicStateCreateInfo()

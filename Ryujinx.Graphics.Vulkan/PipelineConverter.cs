@@ -135,11 +135,6 @@ namespace Ryujinx.Graphics.Vulkan
 
             // It is assumed that Dynamic State is enabled when this conversion is used.
 
-            pipeline.BlendConstantA = state.BlendDescriptors[0].BlendConstant.Alpha;
-            pipeline.BlendConstantB = state.BlendDescriptors[0].BlendConstant.Blue;
-            pipeline.BlendConstantG = state.BlendDescriptors[0].BlendConstant.Green;
-            pipeline.BlendConstantR = state.BlendDescriptors[0].BlendConstant.Red;
-
             pipeline.CullMode = state.CullEnable ? state.CullMode.Convert() : CullModeFlags.CullModeNone;
 
             pipeline.DepthBoundsTestEnable = false; // Not implemented.

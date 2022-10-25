@@ -535,10 +535,11 @@ namespace Ryujinx.Graphics.Vulkan
                 vkBlend = new PipelineColorBlendAttachmentState();
             }
 
-            _newState.BlendConstantR = blend.BlendConstant.Red;
-            _newState.BlendConstantG = blend.BlendConstant.Green;
-            _newState.BlendConstantB = blend.BlendConstant.Blue;
-            _newState.BlendConstantA = blend.BlendConstant.Alpha;
+            DynamicState.SetBlendConstants(
+                blend.BlendConstant.Red,
+                blend.BlendConstant.Green,
+                blend.BlendConstant.Blue,
+                blend.BlendConstant.Alpha);
 
             SignalStateChange();
         }
