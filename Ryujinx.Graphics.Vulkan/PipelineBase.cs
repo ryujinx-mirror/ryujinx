@@ -228,10 +228,26 @@ namespace Ryujinx.Graphics.Vulkan
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
         }
 
-        public void CommandBufferBarrier()
+        public unsafe void CommandBufferBarrier()
         {
-            // TODO: More specific barrier?
-            Barrier();
+            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            {
+                SType = StructureType.MemoryBarrier,
+                SrcAccessMask = BufferHolder.DefaultAccessFlags,
+                DstAccessMask = AccessFlags.AccessIndirectCommandReadBit
+            };
+
+            Gd.Api.CmdPipelineBarrier(
+                CommandBuffer,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.PipelineStageDrawIndirectBit,
+                0,
+                1,
+                memoryBarrier,
+                0,
+                null,
+                0,
+                null);
         }
 
         public void CopyBuffer(BufferHandle source, BufferHandle destination, int srcOffset, int dstOffset, int size)
@@ -824,7 +840,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (range.Handle != BufferHandle.Null)
                 {
-                    _transformFeedbackBuffers[i] = 
+                    _transformFeedbackBuffers[i] =
                         new BufferState(Gd.BufferManager.GetBuffer(CommandBuffer, range.Handle, range.Offset, range.Size, true), range.Offset, range.Size);
                     _transformFeedbackBuffers[i].BindTransformFeedbackBuffer(Gd, Cbs, (uint)i);
                 }

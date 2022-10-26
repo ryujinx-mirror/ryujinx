@@ -12,13 +12,12 @@ namespace Ryujinx.Graphics.Vulkan
         private const int MaxUpdateBufferSize = 0x10000;
 
         public const AccessFlags DefaultAccessFlags =
+            AccessFlags.AccessIndirectCommandReadBit |
             AccessFlags.AccessShaderReadBit |
             AccessFlags.AccessShaderWriteBit |
             AccessFlags.AccessTransferReadBit |
             AccessFlags.AccessTransferWriteBit |
-            AccessFlags.AccessUniformReadBit |
-            AccessFlags.AccessShaderReadBit |
-            AccessFlags.AccessShaderWriteBit;
+            AccessFlags.AccessUniformReadBit;
 
         private readonly VulkanRenderer _gd;
         private readonly Device _device;
