@@ -32,6 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private bool _handlesRequestToDisplay            = false;
         private bool _autoSleepDisabled                  = false;
         private bool _albumImageTakenNotificationEnabled = false;
+        private bool _recordVolumeMuted = false;
 
         private uint _screenShotImageOrientation = 0;
         private uint _idleTimeDetectionExtension = 0;
@@ -386,6 +387,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             }
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { albumReportOption });
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(130)] // 13.0.0+
+        // SetRecordVolumeMuted(b8)
+        public ResultCode SetRecordVolumeMuted(ServiceCtx context)
+        {
+            bool recordVolumeMuted = context.RequestData.ReadBoolean();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { recordVolumeMuted });
+
+            _recordVolumeMuted = recordVolumeMuted;
 
             return ResultCode.Success;
         }
