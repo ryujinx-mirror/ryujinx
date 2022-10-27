@@ -203,6 +203,18 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
+        [CommandHipc(318)] // 4.0.0+
+        // StopImageProcessorAsync(nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, pid)
+        public ResultCode StopImageProcessorAsync(ServiceCtx context)
+        {
+            int  irCameraHandle       = context.RequestData.ReadInt32();
+            long appletResourceUserId = context.RequestData.ReadInt64();
+
+            Logger.Stub?.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId, irCameraHandle });
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(319)] // 4.0.0+
         // ActivateIrsensorWithFunctionLevel(nn::applet::AppletResourceUserId, nn::irsensor::PackedFunctionLevel, pid)
         public ResultCode ActivateIrsensorWithFunctionLevel(ServiceCtx context)
