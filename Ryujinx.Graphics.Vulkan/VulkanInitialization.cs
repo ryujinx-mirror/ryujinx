@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Vulkan
             "VUID-VkSubpassDependency-srcSubpass-00867"
         };
 
-        internal static Instance CreateInstance(Vk api, GraphicsDebugLevel logLevel, string[] requiredExtensions, out ExtDebugReport debugReport, out DebugReportCallbackEXT debugReportCallback)
+        internal static Instance CreateInstance(Vk api, GraphicsDebugLevel logLevel, string[] requiredExtensions, out ExtDebugUtils debugUtils, out DebugUtilsMessengerEXT debugUtilsMessenger)
         {
             var enabledLayers = new List<string>();
 
@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Vulkan
                 AddAvailableLayer("VK_LAYER_KHRONOS_validation");
             }
 
-            var enabledExtensions = requiredExtensions.Append(ExtDebugReport.ExtensionName).ToArray();
+            var enabledExtensions = requiredExtensions.Append(ExtDebugUtils.ExtensionName).ToArray();
 
             var appName = Marshal.StringToHGlobalAnsi(AppName);
 
@@ -139,22 +139,18 @@ namespace Ryujinx.Graphics.Vulkan
                 Marshal.FreeHGlobal(ppEnabledLayers[i]);
             }
 
-            CreateDebugCallbacks(api, logLevel, instance, out debugReport, out debugReportCallback);
+            CreateDebugMessenger(api, logLevel, instance, out debugUtils, out debugUtilsMessenger);
 
             return instance;
         }
 
-        private unsafe static uint DebugReport(
-            uint flags,
-            DebugReportObjectTypeEXT objectType,
-            ulong @object,
-            nuint location,
-            int messageCode,
-            byte* layerPrefix,
-            byte* message,
-            void* userData)
+        private unsafe static uint DebugMessenger(
+            DebugUtilsMessageSeverityFlagsEXT messageSeverity,
+            DebugUtilsMessageTypeFlagsEXT messageTypes,
+            DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+            void* pUserData)
         {
-            var msg = Marshal.PtrToStringAnsi((IntPtr)message);
+            var msg = Marshal.PtrToStringAnsi((IntPtr)pCallbackData->PMessage);
 
             foreach (string excludedMessagePart in _excludedMessages)
             {
@@ -164,26 +160,20 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            DebugReportFlagsEXT debugFlags = (DebugReportFlagsEXT)flags;
-
-            if (debugFlags.HasFlag(DebugReportFlagsEXT.DebugReportErrorBitExt))
+            if (messageSeverity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt))
             {
                 Logger.Error?.Print(LogClass.Gpu, msg);
                 //throw new Exception(msg);
             }
-            else if (debugFlags.HasFlag(DebugReportFlagsEXT.DebugReportWarningBitExt))
+            else if (messageSeverity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityWarningBitExt))
             {
                 Logger.Warning?.Print(LogClass.Gpu, msg);
             }
-            else if (debugFlags.HasFlag(DebugReportFlagsEXT.DebugReportInformationBitExt))
+            else if (messageSeverity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityInfoBitExt))
             {
                 Logger.Info?.Print(LogClass.Gpu, msg);
             }
-            else if (debugFlags.HasFlag(DebugReportFlagsEXT.DebugReportPerformanceWarningBitExt))
-            {
-                Logger.Warning?.Print(LogClass.Gpu, msg);
-            }
-            else
+            else // if (messageSeverity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityVerboseBitExt))
             {
                 Logger.Debug?.Print(LogClass.Gpu, msg);
             }
@@ -551,46 +541,59 @@ namespace Ryujinx.Graphics.Vulkan
             return new CommandBufferPool(api, device, queue, queueLock, queueFamilyIndex);
         }
 
-        internal unsafe static void CreateDebugCallbacks(
+        internal unsafe static void CreateDebugMessenger(
             Vk api,
             GraphicsDebugLevel logLevel,
             Instance instance,
-            out ExtDebugReport debugReport,
-            out DebugReportCallbackEXT debugReportCallback)
+            out ExtDebugUtils debugUtils,
+            out DebugUtilsMessengerEXT debugUtilsMessenger)
         {
-            debugReport = default;
+            debugUtils = default;
 
             if (logLevel != GraphicsDebugLevel.None)
             {
-                if (!api.TryGetInstanceExtension(instance, out debugReport))
+                if (!api.TryGetInstanceExtension(instance, out debugUtils))
                 {
-                    debugReportCallback = default;
+                    debugUtilsMessenger = default;
                     return;
                 }
 
-                var flags = logLevel switch
+                var filterLogType = logLevel switch
                 {
-                    GraphicsDebugLevel.Error => DebugReportFlagsEXT.DebugReportErrorBitExt,
-                    GraphicsDebugLevel.Slowdowns => DebugReportFlagsEXT.DebugReportErrorBitExt | DebugReportFlagsEXT.DebugReportPerformanceWarningBitExt,
-                    GraphicsDebugLevel.All => DebugReportFlagsEXT.DebugReportInformationBitExt |
-                                              DebugReportFlagsEXT.DebugReportWarningBitExt |
-                                              DebugReportFlagsEXT.DebugReportPerformanceWarningBitExt |
-                                              DebugReportFlagsEXT.DebugReportErrorBitExt |
-                                              DebugReportFlagsEXT.DebugReportDebugBitExt,
+                    GraphicsDebugLevel.Error => DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypeValidationBitExt,
+                    GraphicsDebugLevel.Slowdowns => DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypeValidationBitExt |
+                                                    DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypePerformanceBitExt,
+                    GraphicsDebugLevel.All => DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypeGeneralBitExt |
+                                              DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypeValidationBitExt |
+                                              DebugUtilsMessageTypeFlagsEXT.DebugUtilsMessageTypePerformanceBitExt,
                     _ => throw new ArgumentException($"Invalid log level \"{logLevel}\".")
                 };
-                var debugReportCallbackCreateInfo = new DebugReportCallbackCreateInfoEXT()
+
+                var filterLogSeverity = logLevel switch
                 {
-                    SType = StructureType.DebugReportCallbackCreateInfoExt,
-                    Flags = flags,
-                    PfnCallback = new PfnDebugReportCallbackEXT(DebugReport)
+                    GraphicsDebugLevel.Error => DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt,
+                    GraphicsDebugLevel.Slowdowns => DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt |
+                                                    DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityWarningBitExt,
+                    GraphicsDebugLevel.All => DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityInfoBitExt |
+                                              DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityWarningBitExt |
+                                              DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityVerboseBitExt |
+                                              DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt,
+                    _ => throw new ArgumentException($"Invalid log level \"{logLevel}\".")
                 };
 
-                debugReport.CreateDebugReportCallback(instance, in debugReportCallbackCreateInfo, null, out debugReportCallback).ThrowOnError();
+                var debugUtilsMessengerCreateInfo = new DebugUtilsMessengerCreateInfoEXT()
+                {
+                    SType = StructureType.DebugUtilsMessengerCreateInfoExt,
+                    MessageType = filterLogType,
+                    MessageSeverity = filterLogSeverity,
+                    PfnUserCallback = new PfnDebugUtilsMessengerCallbackEXT(DebugMessenger)
+                };
+
+                debugUtils.CreateDebugUtilsMessenger(instance, in debugUtilsMessengerCreateInfo, null, out debugUtilsMessenger).ThrowOnError();
             }
             else
             {
-                debugReportCallback = default;
+                debugUtilsMessenger = default;
             }
         }
     }
