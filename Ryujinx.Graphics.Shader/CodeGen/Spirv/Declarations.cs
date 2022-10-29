@@ -473,6 +473,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
                         attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
 
+                        if (context.Config.Stage == ShaderStage.TessellationControl)
+                        {
+                            attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
+                        }
+
                         var spvType = context.TypePointer(StorageClass.Output, attrType);
                         var spvVar = context.Variable(spvType, StorageClass.Output);
 
@@ -541,6 +546,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 {
                     builtInPassthrough = true;
                 }
+            }
+
+            if (context.Config.Stage == ShaderStage.TessellationControl && isOutAttr && !perPatch)
+            {
+                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
             }
 
             var spvType = context.TypePointer(storageClass, attrType);
@@ -632,6 +642,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 int arraySize = context.Config.Stage == ShaderStage.Geometry ? context.InputVertices : 32;
                 attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)arraySize));
+            }
+
+            if (context.Config.Stage == ShaderStage.TessellationControl && isOutAttr)
+            {
+                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
             }
 
             var spvType = context.TypePointer(storageClass, attrType);

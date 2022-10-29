@@ -37,7 +37,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             Config = config;
 
-            if (config.GpPassthrough)
+            if (config.Stage == ShaderStage.TessellationControl)
+            {
+                // Required to index outputs.
+                Info.Inputs.Add(AttributeConsts.InvocationId);
+            }
+            else if (config.GpPassthrough)
             {
                 int passthroughAttributes = config.PassthroughAttributes;
                 while (passthroughAttributes != 0)

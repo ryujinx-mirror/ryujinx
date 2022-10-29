@@ -262,6 +262,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             Instruction ioVariable, elemIndex;
 
+            Instruction invocationId = null;
+
+            if (Config.Stage == ShaderStage.TessellationControl && isOutAttr)
+            {
+                invocationId = Load(TypeS32(), Inputs[AttributeConsts.InvocationId]);
+            }
+
             bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
 
             if (isUserAttr &&
@@ -273,7 +280,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 elemIndex = Constant(TypeU32(), attrInfo.GetInnermostIndex());
                 var vecIndex = Constant(TypeU32(), (attr - AttributeConsts.UserAttributeBase) >> 4);
 
-                if (AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr))
+                bool isArray = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr);
+
+                if (invocationId != null && isArray)
+                {
+                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, vecIndex, elemIndex);
+                }
+                else if (invocationId != null)
+                {
+                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, vecIndex, elemIndex);
+                }
+                else if (isArray)
                 {
                     return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, vecIndex, elemIndex);
                 }
@@ -308,12 +325,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             if ((type & (AggregateType.Array | AggregateType.Vector)) == 0)
             {
-                return isIndexed ? AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index) : ioVariable;
+                if (invocationId != null)
+                {
+                    return isIndexed
+                        ? AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index)
+                        : AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId);
+                }
+                else
+                {
+                    return isIndexed ? AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index) : ioVariable;
+                }
             }
 
             elemIndex = Constant(TypeU32(), attrInfo.GetInnermostIndex());
 
-            if (isIndexed)
+            if (invocationId != null && isIndexed)
+            {
+                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, elemIndex);
+            }
+            else if (invocationId != null)
+            {
+                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, elemIndex);
+            }
+            else if (isIndexed)
             {
                 return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, elemIndex);
             }
@@ -327,12 +361,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         {
             var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
 
+            Instruction invocationId = null;
+
+            if (Config.Stage == ShaderStage.TessellationControl && isOutAttr)
+            {
+                invocationId = Load(TypeS32(), Inputs[AttributeConsts.InvocationId]);
+            }
+
             elemType = AggregateType.FP32;
             var ioVariable = isOutAttr ? OutputsArray : InputsArray;
             var vecIndex = ShiftRightLogical(TypeS32(), attrIndex, Constant(TypeS32(), 2));
             var elemIndex = BitwiseAnd(TypeS32(), attrIndex, Constant(TypeS32(), 3));
 
-            if (AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr))
+            bool isArray = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr);
+
+            if (invocationId != null && isArray)
+            {
+                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, vecIndex, elemIndex);
+            }
+            else if (invocationId != null)
+            {
+                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, vecIndex, elemIndex);
+            }
+            else if (isArray)
             {
                 return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, vecIndex, elemIndex);
             }
