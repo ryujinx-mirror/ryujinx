@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Ryujinx.Memory.Tracking
 {
     /// <summary>
     /// A region handle that tracks a large region using many smaller handles, to provide
-    /// granular tracking that can be used to track partial updates.
+    /// granular tracking that can be used to track partial updates. Backed by a bitmap
+    /// to improve performance when scanning large regions.
     /// </summary>
     public class MultiRegionHandle : IMultiRegionHandle
     {
@@ -17,12 +21,21 @@ namespace Ryujinx.Memory.Tracking
         private readonly ulong Granularity;
         private readonly ulong Size;
 
+        private ConcurrentBitmap _dirtyBitmap;
+
+        private int _sequenceNumber;
+        private BitMap _sequenceNumberBitmap;
+        private int _uncheckedHandles;
+
         public bool Dirty { get; private set; } = true;
 
         internal MultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
         {
             _handles = new RegionHandle[size / granularity];
             Granularity = granularity;
+
+            _dirtyBitmap = new ConcurrentBitmap(_handles.Length, true);
+            _sequenceNumberBitmap = new BitMap(_handles.Length);
 
             int i = 0;
 
@@ -40,37 +53,43 @@ namespace Ryujinx.Memory.Tracking
                     // Fill any gap left before this handle.
                     while (i < startIndex)
                     {
-                        RegionHandle fillHandle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
+                        RegionHandle fillHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
                         fillHandle.Parent = this;
                         _handles[i++] = fillHandle;
                     }
 
-                    if (handle.Size == granularity)
+                    lock (tracking.TrackingLock)
                     {
-                        handle.Parent = this;
-                        _handles[i++] = handle;
-                    }
-                    else
-                    {
-                        int endIndex = (int)((handle.EndAddress - address) / granularity);
-
-                        while (i < endIndex)
+                        if (handle is RegionHandle bitHandle && handle.Size == granularity)
                         {
-                            RegionHandle splitHandle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
-                            splitHandle.Parent = this;
+                            handle.Parent = this;
 
-                            splitHandle.Reprotect(handle.Dirty);
+                            bitHandle.ReplaceBitmap(_dirtyBitmap, i);
 
-                            RegionSignal signal = handle.PreAction;
-                            if (signal != null)
+                            _handles[i++] = bitHandle;
+                        }
+                        else
+                        {
+                            int endIndex = (int)((handle.EndAddress - address) / granularity);
+
+                            while (i < endIndex)
                             {
-                                splitHandle.RegisterAction(signal);
+                                RegionHandle splitHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
+                                splitHandle.Parent = this;
+
+                                splitHandle.Reprotect(handle.Dirty);
+
+                                RegionSignal signal = handle.PreAction;
+                                if (signal != null)
+                                {
+                                    splitHandle.RegisterAction(signal);
+                                }
+
+                                _handles[i++] = splitHandle;
                             }
 
-                            _handles[i++] = splitHandle;
+                            handle.Dispose();
                         }
-
-                        handle.Dispose();
                     }
                 }
             }
@@ -78,13 +97,25 @@ namespace Ryujinx.Memory.Tracking
             // Fill any remaining space with new handles.
             while (i < _handles.Length)
             {
-                RegionHandle handle = tracking.BeginTracking(address + (ulong)i * granularity, granularity);
+                RegionHandle handle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
                 handle.Parent = this;
                 _handles[i++] = handle;
             }
 
+            _uncheckedHandles = _handles.Length;
+
             Address = address;
             Size = size;
+        }
+
+        public void SignalWrite()
+        {
+            Dirty = true;
+        }
+
+        public IEnumerable<RegionHandle> GetHandles()
+        {
+            return _handles;
         }
 
         public void ForceDirty(ulong address, ulong size)
@@ -96,19 +127,13 @@ namespace Ryujinx.Memory.Tracking
 
             for (int i = startHandle; i <= lastHandle; i++)
             {
-                _handles[i].SequenceNumber--;
+                if (_sequenceNumberBitmap.Clear(i))
+                {
+                    _uncheckedHandles++;
+                }
+
                 _handles[i].ForceDirty();
             }
-        }
-
-        public IEnumerable<RegionHandle> GetHandles()
-        {
-            return _handles;
-        }
-
-        public void SignalWrite()
-        {
-            Dirty = true;
         }
 
         public void QueryModified(Action<ulong, ulong> modifiedAction)
@@ -123,33 +148,95 @@ namespace Ryujinx.Memory.Tracking
             QueryModified(Address, Size, modifiedAction);
         }
 
-        public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ParseDirtyBits(long dirtyBits, ref int baseBit, ref int prevHandle, ref ulong rgStart, ref ulong rgSize, Action<ulong, ulong> modifiedAction)
         {
-            int startHandle = (int)((address - Address) / Granularity);
-            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
-
-            ulong rgStart = _handles[startHandle].Address;
-            ulong rgSize = 0;
-
-            for (int i = startHandle; i <= lastHandle; i++)
+            while (dirtyBits != 0)
             {
-                RegionHandle handle = _handles[i];
+                int bit = BitOperations.TrailingZeroCount(dirtyBits);
+
+                dirtyBits &= ~(1L << bit);
+
+                int handleIndex = baseBit + bit;
+
+                RegionHandle handle = _handles[handleIndex];
+
+                if (handleIndex != prevHandle + 1)
+                {
+                    // Submit handles scanned until the gap as dirty
+                    if (rgSize != 0)
+                    {
+                        modifiedAction(rgStart, rgSize);
+                        rgSize = 0;
+                    }
+                    rgStart = handle.Address;
+                }
 
                 if (handle.Dirty)
                 {
                     rgSize += handle.Size;
                     handle.Reprotect();
                 }
-                else
+
+                prevHandle = handleIndex;
+            }
+
+            baseBit += ConcurrentBitmap.IntSize;
+        }
+
+        public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction)
+        {
+            int startHandle = (int)((address - Address) / Granularity);
+            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
+
+            ulong rgStart = _handles[startHandle].Address;
+
+            if (startHandle == lastHandle)
+            {
+                RegionHandle handle = _handles[startHandle];
+
+                if (handle.Dirty)
                 {
-                    // Submit the region scanned so far as dirty
-                    if (rgSize != 0)
-                    {
-                        modifiedAction(rgStart, rgSize);
-                        rgSize = 0;
-                    }
-                    rgStart = handle.EndAddress;
+                    handle.Reprotect();
+                    modifiedAction(rgStart, handle.Size);
                 }
+
+                return;
+            }
+
+            ulong rgSize = 0;
+
+            long[] masks = _dirtyBitmap.Masks;
+
+            int startIndex = startHandle >> ConcurrentBitmap.IntShift;
+            int startBit = startHandle & ConcurrentBitmap.IntMask;
+            long startMask = -1L << startBit;
+
+            int endIndex = lastHandle >> ConcurrentBitmap.IntShift;
+            int endBit = lastHandle & ConcurrentBitmap.IntMask;
+            long endMask = (long)(ulong.MaxValue >> (ConcurrentBitmap.IntMask - endBit));
+
+            long startValue = Volatile.Read(ref masks[startIndex]);
+
+            int baseBit = startIndex << ConcurrentBitmap.IntShift;
+            int prevHandle = startHandle - 1;
+
+            if (startIndex == endIndex)
+            {
+                ParseDirtyBits(startValue & startMask & endMask, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+            }
+            else
+            {
+                ParseDirtyBits(startValue & startMask, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+
+                for (int i = startIndex + 1; i < endIndex; i++)
+                {
+                    ParseDirtyBits(Volatile.Read(ref masks[i]), ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                }
+
+                long endValue = Volatile.Read(ref masks[endIndex]);
+
+                ParseDirtyBits(endValue & endMask, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
             }
 
             if (rgSize != 0)
@@ -158,35 +245,120 @@ namespace Ryujinx.Memory.Tracking
             }
         }
 
-        public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction, int sequenceNumber)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ParseDirtyBits(long dirtyBits, long mask, int index, long[] seqMasks, ref int baseBit, ref int prevHandle, ref ulong rgStart, ref ulong rgSize, Action<ulong, ulong> modifiedAction)
         {
-            int startHandle = (int)((address - Address) / Granularity);
-            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
+            long seqMask = mask & ~seqMasks[index];
+            dirtyBits &= seqMask;
 
-            ulong rgStart = _handles[startHandle].Address;
-            ulong rgSize = 0;
-
-            for (int i = startHandle; i <= lastHandle; i++)
+            while (dirtyBits != 0)
             {
-                RegionHandle handle = _handles[i];
+                int bit = BitOperations.TrailingZeroCount(dirtyBits);
 
-                if (sequenceNumber != handle.SequenceNumber && handle.DirtyOrVolatile())
+                dirtyBits &= ~(1L << bit);
+
+                int handleIndex = baseBit + bit;
+
+                RegionHandle handle = _handles[handleIndex];
+
+                if (handleIndex != prevHandle + 1)
                 {
-                    rgSize += handle.Size;
-                    handle.Reprotect();
-                }
-                else
-                {
-                    // Submit the region scanned so far as dirty
+                    // Submit handles scanned until the gap as dirty
                     if (rgSize != 0)
                     {
                         modifiedAction(rgStart, rgSize);
                         rgSize = 0;
                     }
-                    rgStart = handle.EndAddress;
+                    rgStart = handle.Address;
                 }
 
-                handle.SequenceNumber = sequenceNumber;
+                rgSize += handle.Size;
+                handle.Reprotect();
+
+                prevHandle = handleIndex;
+            }
+
+            seqMasks[index] |= mask;
+            _uncheckedHandles -= BitOperations.PopCount((ulong)seqMask);
+
+            baseBit += ConcurrentBitmap.IntSize;
+        }
+
+        public void QueryModified(ulong address, ulong size, Action<ulong, ulong> modifiedAction, int sequenceNumber)
+        {
+            int startHandle = (int)((address - Address) / Granularity);
+            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
+
+            ulong rgStart = Address + (ulong)startHandle * Granularity;
+
+            if (sequenceNumber != _sequenceNumber)
+            {
+                if (_uncheckedHandles != _handles.Length)
+                {
+                    _sequenceNumberBitmap.Clear();
+                    _uncheckedHandles = _handles.Length;
+                }
+
+                _sequenceNumber = sequenceNumber;
+            }
+
+            if (startHandle == lastHandle)
+            {
+                var handle = _handles[startHandle];
+                if (_sequenceNumberBitmap.Set(startHandle))
+                {
+                    _uncheckedHandles--;
+
+                    if (handle.DirtyOrVolatile())
+                    {
+                        handle.Reprotect();
+
+                        modifiedAction(rgStart, handle.Size);
+                    }
+                }
+
+                return;
+            }
+
+            if (_uncheckedHandles == 0)
+            {
+                return;
+            }
+
+            ulong rgSize = 0;
+
+            long[] seqMasks = _sequenceNumberBitmap.Masks;
+            long[] masks = _dirtyBitmap.Masks;
+
+            int startIndex = startHandle >> ConcurrentBitmap.IntShift;
+            int startBit = startHandle & ConcurrentBitmap.IntMask;
+            long startMask = -1L << startBit;
+
+            int endIndex = lastHandle >> ConcurrentBitmap.IntShift;
+            int endBit = lastHandle & ConcurrentBitmap.IntMask;
+            long endMask = (long)(ulong.MaxValue >> (ConcurrentBitmap.IntMask - endBit));
+
+            long startValue = Volatile.Read(ref masks[startIndex]);
+
+            int baseBit = startIndex << ConcurrentBitmap.IntShift;
+            int prevHandle = startHandle - 1;
+
+            if (startIndex == endIndex)
+            {
+                ParseDirtyBits(startValue, startMask & endMask, startIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+            }
+            else
+            {
+                ParseDirtyBits(startValue, startMask, startIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+
+                for (int i = startIndex + 1; i < endIndex; i++)
+                {
+                    ParseDirtyBits(Volatile.Read(ref masks[i]), -1L, i, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                }
+
+                long endValue = Volatile.Read(ref masks[endIndex]);
+
+                ParseDirtyBits(endValue, endMask, endIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
             }
 
             if (rgSize != 0)

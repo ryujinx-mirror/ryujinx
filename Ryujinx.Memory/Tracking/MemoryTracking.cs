@@ -177,6 +177,26 @@ namespace Ryujinx.Memory.Tracking
         }
 
         /// <summary>
+        /// Obtains a memory tracking handle for the given virtual region. This should be disposed when finished with.
+        /// </summary>
+        /// <param name="address">CPU virtual address of the region</param>
+        /// <param name="size">Size of the region</param>
+        /// <param name="bitmap">The bitmap owning the dirty flag for this handle</param>
+        /// <param name="bit">The bit of this handle within the dirty flag</param>
+        /// <returns>The memory tracking handle</returns>
+        internal RegionHandle BeginTrackingBitmap(ulong address, ulong size, ConcurrentBitmap bitmap, int bit)
+        {
+            (address, size) = PageAlign(address, size);
+
+            lock (TrackingLock)
+            {
+                RegionHandle handle = new RegionHandle(this, address, size, bitmap, bit, _memoryManager.IsRangeMapped(address, size));
+
+                return handle;
+            }
+        }
+
+        /// <summary>
         /// Signal that a virtual memory event happened at the given location (one byte).
         /// </summary>
         /// <param name="address">Virtual address accessed</param>
