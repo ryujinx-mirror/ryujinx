@@ -57,6 +57,7 @@ jobs:
       - name: Get git short hash
         id: git_short_hash
         run: echo "result=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
+        shell: bash
       - name: Clear
         run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
