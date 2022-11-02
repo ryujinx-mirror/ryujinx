@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
         public unsafe IntPtr PrivClass;
         public IntPtr Profiles;
         public unsafe byte* WrapperName;
+        public IntPtr ChLayouts;
 #pragma warning restore CS0649
     }
 }

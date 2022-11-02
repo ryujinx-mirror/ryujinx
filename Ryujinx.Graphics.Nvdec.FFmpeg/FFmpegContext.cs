@@ -7,7 +7,9 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg
 {
     unsafe class FFmpegContext : IDisposable
     {
-        private readonly FFCodec.AVCodec_decode _decodeFrame;
+        private unsafe delegate int AVCodec_decode(AVCodecContext* avctx, void* outdata, int* got_frame_ptr, AVPacket* avpkt);
+
+        private readonly AVCodec_decode _decodeFrame;
         private static readonly FFmpegApi.av_log_set_callback_callback _logFunc;
         private readonly AVCodec* _codec;
         private AVPacket* _packet;
@@ -53,17 +55,17 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg
             // libavcodec 59.24 changed AvCodec to move its private API and also move the codec function to an union.
             if (avCodecMajorVersion > 59 || (avCodecMajorVersion == 59 && avCodecMinorVersion > 24))
             {
-                _decodeFrame = Marshal.GetDelegateForFunctionPointer<FFCodec.AVCodec_decode>(((FFCodec*)_codec)->CodecCallback);
+                _decodeFrame = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(((FFCodec<AVCodec>*)_codec)->CodecCallback);
             }
             // libavcodec 59.x changed AvCodec private API layout.
             else if (avCodecMajorVersion == 59)
             {
-                _decodeFrame = Marshal.GetDelegateForFunctionPointer<FFCodec.AVCodec_decode>(((FFCodecLegacy<AVCodec>*)_codec)->Decode);
+                _decodeFrame = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(((FFCodecLegacy<AVCodec501>*)_codec)->Decode);
             }
             // libavcodec 58.x and lower
             else
             {
-                _decodeFrame = Marshal.GetDelegateForFunctionPointer<FFCodec.AVCodec_decode>(((FFCodecLegacy<AVCodecLegacy>*)_codec)->Decode);
+                _decodeFrame = Marshal.GetDelegateForFunctionPointer<AVCodec_decode>(((FFCodecLegacy<AVCodec>*)_codec)->Decode);
             }
         }
 

@@ -2,12 +2,10 @@
 
 namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 {
-    struct FFCodec
+    struct FFCodec<T> where T: struct
     {
-        public unsafe delegate int AVCodec_decode(AVCodecContext* avctx, void* outdata, int* got_frame_ptr, AVPacket* avpkt);
-
 #pragma warning disable CS0649
-        public AVCodec Base;
+        public T Base;
         public int CapsInternalOrCbType;
         public int PrivDataSize;
         public IntPtr UpdateThreadContext;

@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
         public unsafe IntPtr AvClass;
         public int LogLevelOffset;
         public int CodecType;
-        public unsafe AVCodecLegacy* Codec;
+        public unsafe AVCodec* Codec;
         public AVCodecID CodecId;
         public uint CodecTag;
         public IntPtr PrivData;
