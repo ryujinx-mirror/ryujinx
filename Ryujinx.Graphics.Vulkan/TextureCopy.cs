@@ -355,5 +355,122 @@ namespace Ryujinx.Graphics.Vulkan
                 dstLayers,
                 levels);
         }
+
+        public unsafe static void ResolveDepthStencil(
+            VulkanRenderer gd,
+            Device device,
+            CommandBufferScoped cbs,
+            TextureView src,
+            TextureView dst)
+        {
+            var dsAttachmentReference = new AttachmentReference2(StructureType.AttachmentReference2, null, 0, ImageLayout.General);
+            var dsResolveAttachmentReference = new AttachmentReference2(StructureType.AttachmentReference2, null, 1, ImageLayout.General);
+
+            var subpassDsResolve = new SubpassDescriptionDepthStencilResolve()
+            {
+                SType = StructureType.SubpassDescriptionDepthStencilResolve,
+                PDepthStencilResolveAttachment = &dsResolveAttachmentReference,
+                DepthResolveMode = ResolveModeFlags.ResolveModeSampleZeroBit,
+                StencilResolveMode = ResolveModeFlags.ResolveModeSampleZeroBit
+            };
+
+            var subpass = new SubpassDescription2()
+            {
+                SType = StructureType.SubpassDescription2,
+                PipelineBindPoint = PipelineBindPoint.Graphics,
+                PDepthStencilAttachment = &dsAttachmentReference,
+                PNext = &subpassDsResolve
+            };
+
+            AttachmentDescription2[] attachmentDescs = new AttachmentDescription2[2];
+
+            attachmentDescs[0] = new AttachmentDescription2(
+                StructureType.AttachmentDescription2,
+                null,
+                0,
+                src.VkFormat,
+                TextureStorage.ConvertToSampleCountFlags((uint)src.Info.Samples),
+                AttachmentLoadOp.Load,
+                AttachmentStoreOp.Store,
+                AttachmentLoadOp.Load,
+                AttachmentStoreOp.Store,
+                ImageLayout.General,
+                ImageLayout.General);
+
+            attachmentDescs[1] = new AttachmentDescription2(
+                StructureType.AttachmentDescription2,
+                null,
+                0,
+                dst.VkFormat,
+                TextureStorage.ConvertToSampleCountFlags((uint)dst.Info.Samples),
+                AttachmentLoadOp.Load,
+                AttachmentStoreOp.Store,
+                AttachmentLoadOp.Load,
+                AttachmentStoreOp.Store,
+                ImageLayout.General,
+                ImageLayout.General);
+
+            var subpassDependency = PipelineConverter.CreateSubpassDependency2();
+
+            fixed (AttachmentDescription2* pAttachmentDescs = attachmentDescs)
+            {
+                var renderPassCreateInfo = new RenderPassCreateInfo2()
+                {
+                    SType = StructureType.RenderPassCreateInfo2,
+                    PAttachments = pAttachmentDescs,
+                    AttachmentCount = (uint)attachmentDescs.Length,
+                    PSubpasses = &subpass,
+                    SubpassCount = 1,
+                    PDependencies = &subpassDependency,
+                    DependencyCount = 1
+                };
+
+                gd.Api.CreateRenderPass2(device, renderPassCreateInfo, null, out var renderPass).ThrowOnError();
+
+                using var rp = new Auto<DisposableRenderPass>(new DisposableRenderPass(gd.Api, device, renderPass));
+
+                ImageView* attachments = stackalloc ImageView[2];
+
+                var srcView = src.GetImageViewForAttachment();
+                var dstView = dst.GetImageViewForAttachment();
+
+                attachments[0] = srcView.Get(cbs).Value;
+                attachments[1] = dstView.Get(cbs).Value;
+
+                var framebufferCreateInfo = new FramebufferCreateInfo()
+                {
+                    SType = StructureType.FramebufferCreateInfo,
+                    RenderPass = rp.Get(cbs).Value,
+                    AttachmentCount = 2,
+                    PAttachments = attachments,
+                    Width = (uint)src.Width,
+                    Height = (uint)src.Height,
+                    Layers = (uint)src.Layers
+                };
+
+                gd.Api.CreateFramebuffer(device, framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
+                using var fb = new Auto<DisposableFramebuffer>(new DisposableFramebuffer(gd.Api, device, framebuffer), null, new[] { srcView, dstView });
+
+                var renderArea = new Rect2D(null, new Extent2D((uint)src.Info.Width, (uint)src.Info.Height));
+                var clearValue = new ClearValue();
+
+                var renderPassBeginInfo = new RenderPassBeginInfo()
+                {
+                    SType = StructureType.RenderPassBeginInfo,
+                    RenderPass = rp.Get(cbs).Value,
+                    Framebuffer = fb.Get(cbs).Value,
+                    RenderArea = renderArea,
+                    PClearValues = &clearValue,
+                    ClearValueCount = 1
+                };
+
+                // The resolve operation happens at the end of the subpass, so let's just do a begin/end
+                // to resolve the depth-stencil texture.
+                // TODO: Do speculative resolve and part of the same render pass as the draw to avoid
+                // ending the current render pass?
+                gd.Api.CmdBeginRenderPass(cbs.CommandBuffer, renderPassBeginInfo, SubpassContents.Inline);
+                gd.Api.CmdEndRenderPass(cbs.CommandBuffer);
+            }
+        }
     }
 }

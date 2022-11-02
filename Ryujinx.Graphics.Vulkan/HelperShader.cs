@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programColorBlitClearAlpha;
         private readonly IProgram _programColorClear;
         private readonly IProgram _programStrideChange;
+        private readonly IProgram _programColorCopyBetweenMsNonMs;
 
         public HelperShader(VulkanRenderer gd, Device device)
         {
@@ -72,6 +73,20 @@ namespace Ryujinx.Graphics.Vulkan
             _programStrideChange = gd.CreateProgramWithMinimalLayout(new[]
             {
                 new ShaderSource(ShaderBinaries.ChangeBufferStrideShaderSource, strideChangeBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+            });
+
+            var colorCopyMSBindings = new ShaderBindings(
+                new[] { 0 },
+                Array.Empty<int>(),
+                new[] { 0 },
+                new[] { 0 });
+
+            _programColorCopyBetweenMsNonMs = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorCopyBetweenMsNonMs, colorCopyMSBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+            }, new[]
+            {
+                new SpecDescription((0, SpecConstType.Int32))
             });
         }
 
@@ -136,11 +151,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
-            Span<BufferRange> bufferRanges = stackalloc BufferRange[1];
-
-            bufferRanges[0] = new BufferRange(bufferHandle, 0, RegionBufferSize);
-
-            _pipeline.SetUniformBuffers(1, bufferRanges);
+            _pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, RegionBufferSize) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -203,11 +214,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, clearColor);
 
-            Span<BufferRange> bufferRanges = stackalloc BufferRange[1];
-
-            bufferRanges[0] = new BufferRange(bufferHandle, 0, ClearColorBufferSize);
-
-            _pipeline.SetUniformBuffers(1, bufferRanges);
+            _pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, ClearColorBufferSize) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -269,11 +276,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
-            Span<BufferRange> bufferRanges = stackalloc BufferRange[1];
-
-            bufferRanges[0] = new BufferRange(bufferHandle, 0, RegionBufferSize);
-
-            pipeline.SetUniformBuffers(1, bufferRanges);
+            pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, RegionBufferSize) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -351,11 +354,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _pipeline.SetCommandBuffer(cbs);
 
-                Span<BufferRange> cbRanges = stackalloc BufferRange[1];
-
-                cbRanges[0] = new BufferRange(bufferHandle, 0, ParamsBufferSize);
-
-                _pipeline.SetUniformBuffers(0, cbRanges);
+                _pipeline.SetUniformBuffers(0, stackalloc[] { new BufferRange(bufferHandle, 0, ParamsBufferSize) });
 
                 Span<Auto<DisposableBuffer>> sbRanges = new Auto<DisposableBuffer>[2];
 
@@ -480,12 +479,207 @@ namespace Ryujinx.Graphics.Vulkan
                 convertedCount * outputIndexSize);
         }
 
+        public void CopyMSToNonMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
+        {
+            CopyMS(gd, cbs, src, dst, srcLayer, dstLayer, depth, src.Info.Samples, dst.Info.Width, dst.Info.Height);
+        }
+
+        public void CopyNonMSToMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
+        {
+            CopyMS(gd, cbs, src, dst, srcLayer, dstLayer, depth, dst.Info.Samples, src.Info.Width, src.Info.Height);
+        }
+
+        private void CopyMS(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            TextureView src,
+            TextureView dst,
+            int srcLayer,
+            int dstLayer,
+            int depth,
+            int samples,
+            int nonMSWidth,
+            int nonMSHeight)
+        {
+            const int ParamsBufferSize = 16;
+
+            Span<int> shaderParams = stackalloc int[ParamsBufferSize / sizeof(int)];
+
+            // X and Y are the expected texture samples.
+            // Z and W are the actual texture samples used.
+            // They may differ if the GPU does not support the samples count requested and we had to use a lower amount.
+            (shaderParams[0], shaderParams[1]) = GetSampleCountXYLog2(samples);
+            (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags((uint)samples));
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+
+            gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                src.GetImage().Get(cbs).Value,
+                TextureStorage.DefaultAccessMask,
+                AccessFlags.AccessShaderReadBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.PipelineStageComputeShaderBit,
+                ImageAspectFlags.ImageAspectColorBit,
+                src.FirstLayer + srcLayer,
+                src.FirstLevel,
+                depth,
+                1);
+
+            _pipeline.SetCommandBuffer(cbs);
+
+            _pipeline.SetProgram(_programColorCopyBetweenMsNonMs);
+
+            var format = GetFormat(src.Info.BytesPerPixel);
+
+            int dispatchX = (nonMSWidth + 31) / 32;
+            int dispatchY = (nonMSHeight + 31) / 32;
+
+            // Specialize shader.
+            bool srcIsMs = src.Info.Target.IsMultisample();
+            int conversionType = srcIsMs ? src.Info.BytesPerPixel : -src.Info.BytesPerPixel;
+            _pipeline.Specialize(conversionType);
+
+            _pipeline.SetUniformBuffers(0, stackalloc[] { new BufferRange(bufferHandle, 0, ParamsBufferSize) });
+
+            if (src.Info.Target == Target.Texture2DMultisampleArray ||
+                dst.Info.Target == Target.Texture2DMultisampleArray)
+            {
+                for (int z = 0; z < depth; z++)
+                {
+                    var srcView = Create2DLayerView(src, srcLayer + z, format);
+                    var dstView = Create2DLayerView(dst, dstLayer + z);
+
+                    _pipeline.SetTextureAndSampler(ShaderStage.Compute, 0, srcView, null);
+                    _pipeline.SetImage(0, dstView, format);
+
+                    _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
+
+                    srcView.Release();
+                    dstView.Release();
+                }
+            }
+            else
+            {
+                var srcView = Create2DLayerView(src, srcLayer, format);
+
+                _pipeline.SetTextureAndSampler(ShaderStage.Compute, 0, srcView, null);
+                _pipeline.SetImage(0, dst, format);
+
+                _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
+
+                srcView.Release();
+            }
+
+            gd.BufferManager.Delete(bufferHandle);
+
+            _pipeline.Finish(gd, cbs);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                dst.GetImage().Get(cbs).Value,
+                AccessFlags.AccessShaderWriteBit,
+                TextureStorage.DefaultAccessMask,
+                PipelineStageFlags.PipelineStageComputeShaderBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                ImageAspectFlags.ImageAspectColorBit,
+                dst.FirstLayer + dstLayer,
+                dst.FirstLevel,
+                depth,
+                1);
+        }
+
+        private static (int, int) GetSampleCountXYLog2(int samples)
+        {
+            int samplesInXLog2 = 0;
+            int samplesInYLog2 = 0;
+
+            switch (samples)
+            {
+                case 2: // 2x1
+                    samplesInXLog2 = 1;
+                    break;
+                case 4: // 2x2
+                    samplesInXLog2 = 1;
+                    samplesInYLog2 = 1;
+                    break;
+                case 8: // 4x2
+                    samplesInXLog2 = 2;
+                    samplesInYLog2 = 1;
+                    break;
+                case 16: // 4x4
+                    samplesInXLog2 = 2;
+                    samplesInYLog2 = 2;
+                    break;
+                case 32: // 8x4
+                    samplesInXLog2 = 3;
+                    samplesInYLog2 = 2;
+                    break;
+                case 64: // 8x8
+                    samplesInXLog2 = 3;
+                    samplesInYLog2 = 3;
+                    break;
+            }
+
+            return (samplesInXLog2, samplesInYLog2);
+        }
+
+        private static ITexture Create2DLayerView(TextureView from, int layer, GAL.Format? format = null)
+        {
+            var target = from.Info.Target switch
+            {
+                Target.Texture1DArray => Target.Texture1D,
+                Target.Texture2DArray => Target.Texture2D,
+                Target.Texture2DMultisampleArray => Target.Texture2DMultisample,
+                _ => from.Info.Target
+            };
+
+            var info = new TextureCreateInfo(
+                from.Info.Width,
+                from.Info.Height,
+                from.Info.Depth,
+                1,
+                from.Info.Samples,
+                from.Info.BlockWidth,
+                from.Info.BlockHeight,
+                from.Info.BytesPerPixel,
+                format ?? from.Info.Format,
+                from.Info.DepthStencilMode,
+                target,
+                from.Info.SwizzleR,
+                from.Info.SwizzleG,
+                from.Info.SwizzleB,
+                from.Info.SwizzleA);
+
+            return from.CreateView(info, layer, 0);
+        }
+
+        private static GAL.Format GetFormat(int bytesPerPixel)
+        {
+            return bytesPerPixel switch
+            {
+                1 => GAL.Format.R8Uint,
+                2 => GAL.Format.R16Uint,
+                4 => GAL.Format.R32Uint,
+                8 => GAL.Format.R32G32Uint,
+                16 => GAL.Format.R32G32B32A32Uint,
+                _ => throw new ArgumentException($"Invalid bytes per pixel {bytesPerPixel}.")
+            };
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
                 _programColorBlitClearAlpha.Dispose();
                 _programColorBlit.Dispose();
+                _programColorClear.Dispose();
+                _programStrideChange.Dispose();
+                _programColorCopyBetweenMsNonMs.Dispose();
                 _samplerNearest.Dispose();
                 _samplerLinear.Dispose();
                 _pipeline.Dispose();

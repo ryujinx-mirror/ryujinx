@@ -1,0 +1,89 @@
+#version 450 core
+
+// +ve for MsToNonMs, -ve for reverse
+layout (constant_id = 0) const int convType = 0;
+
+layout (std140, binding = 0) uniform sample_counts_log2_in
+{
+    ivec4 sample_counts_log2;
+};
+
+#define R8_ID       1
+#define R16_ID      2
+#define R32_ID      4
+#define RG32_ID     8
+#define RGBA32_ID   16
+
+#define R8_TYPE     r8ui
+#define R16_TYPE    r16ui
+#define R32_TYPE    r32ui
+#define RG32_TYPE   rg32ui
+#define RGBA32_TYPE rgba32ui
+
+#define DECLARE_BINDINGS(type) layout (set = 3, binding = 0, type##_TYPE) uniform uimage2DMS dstMS ## type; \
+                               layout (set = 3, binding = 0, type##_TYPE) uniform uimage2D dst ## type;
+
+#define CASE_SIZE(type) case type##_ID: imageSz = imageSize(dst ## type); break;
+
+#define CASE_CONVERT(type) case  type##_ID: imageStore(dst ## type, ivec2(coords), texelFetch(srcMS, shiftedCoords, sampleIdx)); break; \
+                           case -type##_ID: imageStore(dstMS ## type, shiftedCoords, sampleIdx, texelFetch(src, ivec2(coords), 0)); break;
+
+// src tex
+layout (set = 2, binding = 0) uniform usampler2DMS srcMS;
+layout (set = 2, binding = 0) uniform usampler2D src;
+
+// dst img
+DECLARE_BINDINGS(R8)
+DECLARE_BINDINGS(R16)
+DECLARE_BINDINGS(R32)
+DECLARE_BINDINGS(RG32)
+DECLARE_BINDINGS(RGBA32)
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main()
+{
+    uvec2 coords = gl_GlobalInvocationID.xy;
+
+    ivec2 imageSz = ivec2(0, 0);
+
+    switch (convType)
+    {
+        case 0: break;
+        CASE_SIZE(R8    )
+        CASE_SIZE(R16   )
+        CASE_SIZE(R32   )
+        CASE_SIZE(RG32  )
+        CASE_SIZE(RGBA32)
+        default:
+            imageSz = textureSize(src, 0);
+            break;
+    }
+
+    if (int(coords.x) >= imageSz.x || int(coords.y) >= imageSz.y)
+    {
+        return;
+    }
+
+    int deltaX = sample_counts_log2.x - sample_counts_log2.z;
+    int deltaY = sample_counts_log2.y - sample_counts_log2.w;
+    int samplesInXLog2 = sample_counts_log2.z;
+    int samplesInYLog2 = sample_counts_log2.w;
+    int samplesInX = 1 << samplesInXLog2;
+    int samplesInY = 1 << samplesInYLog2;
+    int sampleIdx = ((int(coords.x) >> deltaX) & (samplesInX - 1)) | (((int(coords.y) >> deltaY) & (samplesInY - 1)) << samplesInXLog2);
+
+    samplesInXLog2 = sample_counts_log2.x;
+    samplesInYLog2 = sample_counts_log2.y;
+
+    ivec2 shiftedCoords = ivec2(int(coords.x) >> samplesInXLog2, int(coords.y) >> samplesInYLog2);
+
+    switch (convType)
+    {
+        CASE_CONVERT(R8    )
+        CASE_CONVERT(R16   )
+        CASE_CONVERT(R32   )
+        CASE_CONVERT(RG32  )
+        CASE_CONVERT(RGBA32)
+    }
+}

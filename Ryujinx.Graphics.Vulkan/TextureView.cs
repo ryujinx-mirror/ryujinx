@@ -169,12 +169,15 @@ namespace Ryujinx.Graphics.Vulkan
             var srcImage = src.GetImage().Get(cbs).Value;
             var dstImage = dst.GetImage().Get(cbs).Value;
 
-            if (src.Info.Target.IsMultisample())
+            if (!dst.Info.Target.IsMultisample() && Info.Target.IsMultisample())
             {
-                int depth = Math.Min(src.Info.Depth, dst.Info.Depth - firstLayer);
-                int levels = Math.Min(src.Info.Levels, dst.Info.Levels - firstLevel);
-
-                CopyMSToNonMS(_gd, cbs, src, dst, srcImage, dstImage, 0, firstLayer, 0, firstLevel, depth, levels);
+                int layers = Math.Min(Info.GetLayers(), dst.Info.GetLayers() - firstLayer);
+                _gd.HelperShader.CopyMSToNonMS(_gd, cbs, src, dst, 0, firstLayer, layers);
+            }
+            else if (dst.Info.Target.IsMultisample() && !Info.Target.IsMultisample())
+            {
+                int layers = Math.Min(Info.GetLayers(), dst.Info.GetLayers() - firstLayer);
+                _gd.HelperShader.CopyNonMSToMS(_gd, cbs, src, dst, 0, firstLayer, layers);
             }
             else
             {
@@ -213,9 +216,13 @@ namespace Ryujinx.Graphics.Vulkan
             var srcImage = src.GetImage().Get(cbs).Value;
             var dstImage = dst.GetImage().Get(cbs).Value;
 
-            if (src.Info.Target.IsMultisample())
+            if (!dst.Info.Target.IsMultisample() && Info.Target.IsMultisample())
             {
-                CopyMSToNonMS(_gd, cbs, src, dst, srcImage, dstImage, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
+                _gd.HelperShader.CopyMSToNonMS(_gd, cbs, src, dst, srcLayer, dstLayer, 1);
+            }
+            else if (dst.Info.Target.IsMultisample() && !Info.Target.IsMultisample())
+            {
+                _gd.HelperShader.CopyNonMSToMS(_gd, cbs, src, dst, srcLayer, dstLayer, 1);
             }
             else
             {
@@ -237,142 +244,6 @@ namespace Ryujinx.Graphics.Vulkan
                     1,
                     1);
             }
-        }
-
-        private static void CopyMSToNonMS(
-            VulkanRenderer gd,
-            CommandBufferScoped cbs,
-            TextureView src,
-            TextureView dst,
-            Image srcImage,
-            Image dstImage,
-            int srcLayer,
-            int dstLayer,
-            int srcLevel,
-            int dstLevel,
-            int layers,
-            int levels)
-        {
-            bool differentFormats = src.Info.Format != dst.Info.Format;
-
-            var target = src.Info.Target switch
-            {
-                Target.Texture2D => Target.Texture2DMultisample,
-                Target.Texture2DArray => Target.Texture2DMultisampleArray,
-                Target.Texture2DMultisampleArray => Target.Texture2DArray,
-                _ => Target.Texture2D
-            };
-
-            var intermmediateTarget = differentFormats ? dst.Info.Target : target;
-            using var intermmediate = CreateIntermmediateTexture(gd, src, ref dst._info, intermmediateTarget, layers, levels);
-            var intermmediateImage = intermmediate.GetImage().Get(cbs).Value;
-
-            if (differentFormats)
-            {
-                // If the formats are different, the resolve would perform format conversion.
-                // So we need yet another intermmediate texture and do a copy to reinterpret the
-                // data into the correct (destination) format, without doing any sort of conversion.
-                using var intermmediate2 = CreateIntermmediateTexture(gd, src, ref src._info, target, layers, levels);
-                var intermmediate2Image = intermmediate2.GetImage().Get(cbs).Value;
-
-                TextureCopy.Copy(
-                    gd.Api,
-                    cbs.CommandBuffer,
-                    srcImage,
-                    intermmediate2Image,
-                    src.Info,
-                    intermmediate2.Info,
-                    src.FirstLayer,
-                    0,
-                    src.FirstLevel,
-                    0,
-                    srcLayer,
-                    0,
-                    srcLevel,
-                    0,
-                    layers,
-                    levels);
-
-                TextureCopy.Copy(
-                    gd.Api,
-                    cbs.CommandBuffer,
-                    intermmediate2Image,
-                    intermmediateImage,
-                    intermmediate2.Info,
-                    intermmediate.Info,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    layers,
-                    levels);
-            }
-            else
-            {
-                TextureCopy.Copy(
-                    gd.Api,
-                    cbs.CommandBuffer,
-                    srcImage,
-                    intermmediateImage,
-                    src.Info,
-                    intermmediate.Info,
-                    src.FirstLayer,
-                    0,
-                    src.FirstLevel,
-                    0,
-                    srcLayer,
-                    0,
-                    srcLevel,
-                    0,
-                    layers,
-                    levels);
-            }
-
-            var srcRegion = new Extents2D(0, 0, src.Width, src.Height);
-            var dstRegion = new Extents2D(0, 0, dst.Width, dst.Height);
-
-            TextureCopy.Blit(
-                gd.Api,
-                cbs.CommandBuffer,
-                intermmediateImage,
-                dstImage,
-                intermmediate.Info,
-                dst.Info,
-                srcRegion,
-                dstRegion,
-                0,
-                dst.FirstLevel + dstLevel,
-                0,
-                dst.FirstLayer + dstLayer,
-                layers,
-                levels,
-                true,
-                ImageAspectFlags.ImageAspectColorBit,
-                ImageAspectFlags.ImageAspectColorBit);
-        }
-
-        private static TextureView CreateIntermmediateTexture(VulkanRenderer gd, TextureView src, ref TextureCreateInfo formatInfo, Target target, int depth, int levels)
-        {
-            return gd.CreateTextureView(new GAL.TextureCreateInfo(
-                src.Width,
-                src.Height,
-                depth,
-                levels,
-                1,
-                formatInfo.BlockWidth,
-                formatInfo.BlockHeight,
-                formatInfo.BytesPerPixel,
-                formatInfo.Format,
-                DepthStencilMode.Depth,
-                target,
-                SwizzleComponent.Red,
-                SwizzleComponent.Green,
-                SwizzleComponent.Blue,
-                SwizzleComponent.Alpha), 1f);
         }
 
         public void CopyTo(ITexture destination, Extents2D srcRegion, Extents2D dstRegion, bool linearFilter)
@@ -422,23 +293,32 @@ namespace Ryujinx.Graphics.Vulkan
                     src.Height == dst.Height &&
                     src.VkFormat == dst.VkFormat)
                 {
-                    TextureCopy.Copy(
-                        _gd.Api,
-                        cbs.CommandBuffer,
-                        src.GetImage().Get(cbs).Value,
-                        dst.GetImage().Get(cbs).Value,
-                        src.Info,
-                        dst.Info,
-                        src.FirstLayer,
-                        dst.FirstLayer,
-                        src.FirstLevel,
-                        dst.FirstLevel,
-                        0,
-                        0,
-                        0,
-                        0,
-                        layers,
-                        levels);
+                    if (src.Info.Samples > 1 && src.Info.Samples != dst.Info.Samples && src.Info.Format.IsDepthOrStencil())
+                    {
+                        // CmdResolveImage does not support depth-stencil resolve, so we need to use an alternative path
+                        // for those textures.
+                        TextureCopy.ResolveDepthStencil(_gd, _device, cbs, src, dst);
+                    }
+                    else
+                    {
+                        TextureCopy.Copy(
+                            _gd.Api,
+                            cbs.CommandBuffer,
+                            src.GetImage().Get(cbs).Value,
+                            dst.GetImage().Get(cbs).Value,
+                            src.Info,
+                            dst.Info,
+                            src.FirstLayer,
+                            dst.FirstLayer,
+                            src.FirstLevel,
+                            dst.FirstLevel,
+                            0,
+                            0,
+                            0,
+                            0,
+                            layers,
+                            levels);
+                    }
 
                     return;
                 }

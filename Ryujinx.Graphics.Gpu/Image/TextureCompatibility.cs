@@ -710,7 +710,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                     break;
                 case Target.Texture2DMultisample:
                 case Target.Texture2DMultisampleArray:
-                    if (rhs.Target == Target.Texture2D || rhs.Target == Target.Texture2DArray)
+                    // We don't support copy between multisample and non-multisample depth-stencil textures
+                    // because there's no way to emulate that since most GPUs don't support writing a
+                    // custom stencil value into the texture, among several other API limitations.
+
+                    if ((rhs.Target == Target.Texture2D || rhs.Target == Target.Texture2DArray) &&
+                        !rhs.FormatInfo.Format.IsDepthOrStencil())
                     {
                         return TextureViewCompatibility.CopyOnly;
                     }

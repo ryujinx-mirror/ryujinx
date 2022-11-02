@@ -3,6 +3,8 @@ using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -697,6 +699,18 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
+        public void Specialize<T>(in T data) where T : unmanaged
+        {
+            var dataSpan = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1));
+
+            if (!dataSpan.SequenceEqual(_newState.SpecializationData.Span))
+            {
+                _newState.SpecializationData = new SpecData(dataSpan);
+                
+                SignalStateChange();
+            }
+        }
+
         protected virtual void SignalAttachmentChange()
         {
         }
@@ -1188,14 +1202,7 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            var subpassDependency = new SubpassDependency(
-                0,
-                0,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessColorAttachmentWriteBit,
-                AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessShaderReadBit,
-                0);
+            var subpassDependency = PipelineConverter.CreateSubpassDependency();
 
             fixed (AttachmentDescription* pAttachmentDescs = attachmentDescs)
             {

@@ -6,6 +6,9 @@ namespace Ryujinx.Graphics.Vulkan
 {
     static class PipelineConverter
     {
+        private const AccessFlags SubpassSrcAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessColorAttachmentWriteBit;
+        private const AccessFlags SubpassDstAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessShaderReadBit;
+
         public static unsafe DisposableRenderPass ToRenderPass(this ProgramPipelineState state, VulkanRenderer gd, Device device)
         {
             const int MaxAttachments = Constants.MaxRenderTargets + 1;
@@ -100,14 +103,7 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            var subpassDependency = new SubpassDependency(
-                0,
-                0,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit,
-                AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit,
-                0);
+            var subpassDependency = CreateSubpassDependency();
 
             fixed (AttachmentDescription* pAttachmentDescs = attachmentDescs)
             {
@@ -126,6 +122,32 @@ namespace Ryujinx.Graphics.Vulkan
 
                 return new DisposableRenderPass(gd.Api, device, renderPass);
             }
+        }
+
+        public static SubpassDependency CreateSubpassDependency()
+        {
+            return new SubpassDependency(
+                0,
+                0,
+                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                SubpassSrcAccessMask,
+                SubpassDstAccessMask,
+                0);
+        }
+
+        public unsafe static SubpassDependency2 CreateSubpassDependency2()
+        {
+            return new SubpassDependency2(
+                StructureType.SubpassDependency2,
+                null,
+                0,
+                0,
+                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                SubpassSrcAccessMask,
+                SubpassDstAccessMask,
+                0);
         }
 
         public static PipelineState ToVulkanPipelineState(this ProgramPipelineState state, VulkanRenderer gd)

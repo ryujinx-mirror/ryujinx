@@ -312,6 +312,7 @@ namespace Ryujinx.Graphics.Vulkan
         public NativeArray<PipelineShaderStageCreateInfo> Stages;
         public NativeArray<PipelineShaderStageRequiredSubgroupSizeCreateInfoEXT> StageRequiredSubgroupSizes;
         public PipelineLayout PipelineLayout;
+        public SpecData SpecializationData;
 
         public void Initialize()
         {
@@ -334,7 +335,7 @@ namespace Ryujinx.Graphics.Vulkan
             ShaderCollection program,
             PipelineCache cache)
         {
-            if (program.TryGetComputePipeline(out var pipeline))
+            if (program.TryGetComputePipeline(ref SpecializationData, out var pipeline))
             {
                 return pipeline;
             }
@@ -354,18 +355,34 @@ namespace Ryujinx.Graphics.Vulkan
 
             Pipeline pipelineHandle = default;
 
-            gd.Api.CreateComputePipelines(device, cache, 1, &pipelineCreateInfo, null, &pipelineHandle).ThrowOnError();
+            bool hasSpec = program.SpecDescriptions != null;
+                
+            var desc = hasSpec ? program.SpecDescriptions[0] : SpecDescription.Empty;
+
+            if (hasSpec && SpecializationData.Length < (int)desc.Info.DataSize)
+            {
+                throw new InvalidOperationException("Specialization data size does not match description");
+            }
+
+            fixed (SpecializationInfo* info = &desc.Info)
+            fixed (SpecializationMapEntry* map = desc.Map)
+            fixed (byte* data = SpecializationData.Span)
+            {
+                if (hasSpec)
+                {
+                    info->PMapEntries = map;
+                    info->PData = data;
+                    pipelineCreateInfo.Stage.PSpecializationInfo = info;
+                }
+
+                gd.Api.CreateComputePipelines(device, cache, 1, &pipelineCreateInfo, null, &pipelineHandle).ThrowOnError();
+            }
 
             pipeline = new Auto<DisposablePipeline>(new DisposablePipeline(gd.Api, device, pipelineHandle));
 
-            program.AddComputePipeline(pipeline);
+            program.AddComputePipeline(ref SpecializationData, pipeline);
 
             return pipeline;
-        }
-
-        public unsafe void DestroyComputePipeline(ShaderCollection program)
-        {
-            program.RemoveComputePipeline();
         }
 
         public unsafe Auto<DisposablePipeline> CreateGraphicsPipeline(

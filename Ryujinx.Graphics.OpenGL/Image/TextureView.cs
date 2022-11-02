@@ -139,7 +139,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
             if (!destinationView.Target.IsMultisample() && Target.IsMultisample())
             {
-                _renderer.TextureCopyMS.CopyMSToNonMS(this, destinationView, srcLayer, dstLayer,1);
+                _renderer.TextureCopyMS.CopyMSToNonMS(this, destinationView, srcLayer, dstLayer, 1);
             }
             else if (destinationView.Target.IsMultisample() && !Target.IsMultisample())
             {
