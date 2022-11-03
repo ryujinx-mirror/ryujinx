@@ -94,6 +94,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
         {
             var memoryManager = _channel.MemoryManager;
 
+            // Since we're going to change the state, make sure any pending instanced draws are done.
+            _3dEngine.PerformDeferredDraws();
+
+            // Make sure all pending uniform buffer data is written to memory.
             _3dEngine.FlushUboDirty();
 
             uint qmdAddress = _state.State.SendPcasA;
