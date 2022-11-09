@@ -1,11 +1,12 @@
 ﻿using LibHac.Common;
 using Ryujinx.HLE.Utilities;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Mii.Types
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 4, Size = Size)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = Size)]
     struct StoreData : IStoredData<StoreData>
     {
         public const int Size = 0x44;

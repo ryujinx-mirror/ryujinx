@@ -10,6 +10,7 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Audio.Output;
 using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.Cpu.Jit;
 using Ryujinx.HLE.FileSystem;
@@ -35,7 +36,6 @@ using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -201,7 +201,7 @@ namespace Ryujinx.HLE.HOS
 
             // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
-            UInt128 clockSourceId = new UInt128(Guid.NewGuid().ToByteArray());
+            UInt128 clockSourceId = UInt128Utils.CreateRandom();
             IRtcManager.GetExternalRtcValue(out ulong rtcValue);
 
             // We assume the rtc is system time.

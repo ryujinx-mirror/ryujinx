@@ -150,7 +150,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         /// <param name="inputHeader">The splitter header.</param>
         /// <param name="input">The raw data after the splitter header.</param>
-        private void UpdateState(ref SplitterInParameterHeader inputHeader, ref ReadOnlySpan<byte> input)
+        private void UpdateState(scoped ref SplitterInParameterHeader inputHeader, ref ReadOnlySpan<byte> input)
         {
             for (int i = 0; i < inputHeader.SplitterCount; i++)
             {
@@ -177,7 +177,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         /// <param name="inputHeader">The splitter header.</param>
         /// <param name="input">The raw data after the splitter header.</param>
-        private void UpdateData(ref SplitterInParameterHeader inputHeader, ref ReadOnlySpan<byte> input)
+        private void UpdateData(scoped ref SplitterInParameterHeader inputHeader, ref ReadOnlySpan<byte> input)
         {
             for (int i = 0; i < inputHeader.SplitterDestinationCount; i++)
             {

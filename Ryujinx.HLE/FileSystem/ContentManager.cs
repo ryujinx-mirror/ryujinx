@@ -9,10 +9,10 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Tools.Ncm;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Ssl;
 using Ryujinx.HLE.HOS.Services.Time;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -293,7 +293,7 @@ namespace Ryujinx.HLE.FileSystem
                 }
 
                 aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage()).OpenStorage(NcaSectionType.Data, integrityCheckLevel);
-                
+
                 return true;
             }
 
@@ -354,7 +354,7 @@ namespace Ryujinx.HLE.FileSystem
             {
                 if (_contentDictionary.ContainsKey((titleId, contentType)))
                 {
-                    return new UInt128(_contentDictionary[(titleId, contentType)]);
+                    return UInt128Utils.FromHex(_contentDictionary[(titleId, contentType)]);
                 }
             }
 
@@ -407,7 +407,7 @@ namespace Ryujinx.HLE.FileSystem
             {
                 return false;
             }
-            
+
             string installedPath = _virtualFileSystem.SwitchPathToSystemPath(locationEntry.ContentPath);
 
             if (!string.IsNullOrWhiteSpace(installedPath))

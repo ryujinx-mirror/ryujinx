@@ -413,10 +413,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateCachedBuffer(
             int stageIndex,
-            ref int cachedTextureBufferIndex,
-            ref int cachedSamplerBufferIndex,
-            ref ReadOnlySpan<int> cachedTextureBuffer,
-            ref ReadOnlySpan<int> cachedSamplerBuffer,
+            scoped ref int cachedTextureBufferIndex,
+            scoped ref int cachedSamplerBufferIndex,
+            scoped ref ReadOnlySpan<int> cachedTextureBuffer,
+            scoped ref ReadOnlySpan<int> cachedSamplerBuffer,
             int textureBufferIndex,
             int samplerBufferIndex)
         {

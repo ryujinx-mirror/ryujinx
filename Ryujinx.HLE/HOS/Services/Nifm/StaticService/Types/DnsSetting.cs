@@ -14,14 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
 
         public DnsSetting(IPInterfaceProperties interfaceProperties)
         {
-            try
-            {
-                IsDynamicDnsEnabled = interfaceProperties.IsDynamicDnsEnabled;
-            }
-            catch (PlatformNotSupportedException)
-            {
-                IsDynamicDnsEnabled = false;
-            }
+            IsDynamicDnsEnabled = OperatingSystem.IsWindows() && interfaceProperties.IsDynamicDnsEnabled;
 
             if (interfaceProperties.DnsAddresses.Count == 0)
             {

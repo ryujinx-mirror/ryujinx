@@ -53,5 +53,11 @@ namespace Ryujinx.Common
 
             writer.Write(data);
         }
+
+        public static void Write(this BinaryWriter writer, UInt128 value)
+        {
+            writer.Write((ulong)value);
+            writer.Write((ulong)(value >> 64));
+        }
     }
 }

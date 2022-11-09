@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
             /// <param name="item">The item on the table, if found, otherwise unmodified</param>
             /// <param name="data">The data on the table, if found, otherwise unmodified</param>
             /// <returns>Table lookup result</returns>
-            public PartitionHashTable<T>.SearchResult TryFindItem(ref SmartDataAccessor dataAccessor, ref T item, ref byte[] data)
+            public PartitionHashTable<T>.SearchResult TryFindItem(scoped ref SmartDataAccessor dataAccessor, scoped ref T item, scoped ref byte[] data)
             {
                 return _table.TryFindItem(ref dataAccessor, Size, ref item, ref data);
             }

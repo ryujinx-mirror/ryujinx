@@ -254,7 +254,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             UsedInputAttributes |= mask;
             _thisUsedInputAttributes |= mask;
-            ThisInputAttributesComponents |= UInt128.Pow2(index * 4 + component);
+            ThisInputAttributesComponents |= UInt128.One << (index * 4 + component);
         }
 
         public void SetInputUserAttributePerPatch(int index)

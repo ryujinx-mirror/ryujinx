@@ -229,8 +229,8 @@ namespace Ryujinx.Graphics.Vic.Image
 
         private static RentedBuffer ReadBuffer(
             ResourceManager rm,
-            ref SlotConfig config,
-            ref Array8<PlaneOffsets> offsets,
+            scoped ref SlotConfig config,
+            scoped ref Array8<PlaneOffsets> offsets,
             bool linear,
             int plane,
             int width,

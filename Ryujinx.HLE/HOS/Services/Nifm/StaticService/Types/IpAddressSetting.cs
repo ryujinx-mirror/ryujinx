@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
@@ -14,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
 
         public IpAddressSetting(IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastIPAddressInformation)
         {
-            IsDhcpEnabled  = interfaceProperties.DhcpServerAddresses.Count != 0;
+            IsDhcpEnabled  = !OperatingSystem.IsMacOS() && interfaceProperties.DhcpServerAddresses.Count != 0;
             Address        = new IpV4Address(unicastIPAddressInformation.Address);
             IPv4Mask       = new IpV4Address(unicastIPAddressInformation.IPv4Mask);
             GatewayAddress = new IpV4Address(interfaceProperties.GatewayAddresses[0].Address);

@@ -350,7 +350,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <param name="item">The item on the table, if found, otherwise unmodified</param>
         /// <param name="data">The data on the table, if found, otherwise unmodified</param>
         /// <returns>Table lookup result</returns>
-        public SearchResult TryFindItem(ref SmartDataAccessor dataAccessor, int size, ref T item, ref byte[] data)
+        public SearchResult TryFindItem(scoped ref SmartDataAccessor dataAccessor, int size, scoped ref T item, scoped ref byte[] data)
         {
             if (_count == 0)
             {

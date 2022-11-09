@@ -62,7 +62,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 If you wish to build the emulator yourself, follow these steps:
 
 ### Step 1
-Install the X64 version of [.NET 6.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/6.0).
+Install the X64 version of [.NET 7.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet/7.0).
 
 ### Step 2
 Either use `git clone https://github.com/Ryujinx/Ryujinx` on the command line to clone the repository or use Code --> Download zip button to get the files.

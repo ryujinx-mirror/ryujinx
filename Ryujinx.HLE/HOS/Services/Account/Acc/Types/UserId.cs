@@ -1,5 +1,4 @@
 ﻿using LibHac.Account;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.IO;
 using System.Linq;
@@ -83,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public readonly UInt128 ToUInt128()
         {
-            return new UInt128(Low, High);
+            return new UInt128((ulong)High, (ulong)Low);
         }
     }
 }

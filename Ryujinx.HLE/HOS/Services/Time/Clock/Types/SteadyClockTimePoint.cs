@@ -1,10 +1,10 @@
-﻿using Ryujinx.HLE.Utilities;
+﻿using Ryujinx.Common.Utilities;
 using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct SteadyClockTimePoint
     {
         public long    TimePoint;
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             return new SteadyClockTimePoint
             {
                 TimePoint     = 0,
-                ClockSourceId = new UInt128(Guid.NewGuid().ToByteArray())
+                ClockSourceId = UInt128Utils.CreateRandom()
             };
         }
     }
