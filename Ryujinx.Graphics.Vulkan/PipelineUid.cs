@@ -21,15 +21,13 @@ namespace Ryujinx.Graphics.Vulkan
 
         public ulong Id8;
         public ulong Id9;
-        public ulong Id10;
-        public ulong Id11;
 
-        private uint VertexAttributeDescriptionsCount => (byte)((Id8 >> 38) & 0xFF);
-        private uint VertexBindingDescriptionsCount => (byte)((Id8 >> 46) & 0xFF);
-        private uint ViewportsCount => (byte)((Id8 >> 54) & 0xFF);
-        private uint ScissorsCount => (byte)((Id9 >> 0) & 0xFF);
-        private uint ColorBlendAttachmentStateCount => (byte)((Id9 >> 8) & 0xFF);
-        private bool HasDepthStencil => ((Id9 >> 63) & 0x1) != 0UL;
+        private uint VertexAttributeDescriptionsCount => (byte)((Id6 >> 38) & 0xFF);
+        private uint VertexBindingDescriptionsCount => (byte)((Id6 >> 46) & 0xFF);
+        private uint ViewportsCount => (byte)((Id6 >> 54) & 0xFF);
+        private uint ScissorsCount => (byte)((Id7 >> 0) & 0xFF);
+        private uint ColorBlendAttachmentStateCount => (byte)((Id7 >> 8) & 0xFF);
+        private bool HasDepthStencil => ((Id7 >> 63) & 0x1) != 0UL;
 
         public Array32<VertexInputAttributeDescription> VertexAttributeDescriptions;
         public Array33<VertexInputBindingDescription> VertexBindingDescriptions;
@@ -47,7 +45,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (!Unsafe.As<ulong, Vector256<byte>>(ref Id0).Equals(Unsafe.As<ulong, Vector256<byte>>(ref other.Id0)) ||
                 !Unsafe.As<ulong, Vector256<byte>>(ref Id4).Equals(Unsafe.As<ulong, Vector256<byte>>(ref other.Id4)) ||
-                !Unsafe.As<ulong, Vector256<byte>>(ref Id8).Equals(Unsafe.As<ulong, Vector256<byte>>(ref other.Id8)))
+                !Unsafe.As<ulong, Vector128<byte>>(ref Id8).Equals(Unsafe.As<ulong, Vector128<byte>>(ref other.Id8)))
             {
                 return false;
             }
@@ -91,9 +89,7 @@ namespace Ryujinx.Graphics.Vulkan
                            Id6 * 23 ^
                            Id7 * 23 ^
                            Id8 * 23 ^
-                           Id9 * 23 ^
-                           Id10 * 23 ^
-                           Id11 * 23;
+                           Id9 * 23;
 
             for (int i = 0; i < (int)VertexAttributeDescriptionsCount; i++)
             {

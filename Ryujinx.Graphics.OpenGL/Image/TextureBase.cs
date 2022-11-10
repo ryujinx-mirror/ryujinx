@@ -34,5 +34,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             GL.ActiveTexture(TextureUnit.Texture0 + unit);
             GL.BindTexture(target, Handle);
         }
+
+        public static void ClearBinding(int unit)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + unit);
+            GL.BindTextureUnit(unit, 0);
+        }
     }
 }

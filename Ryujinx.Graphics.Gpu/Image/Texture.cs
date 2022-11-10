@@ -708,11 +708,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 else
                 {
                     bool dataMatches = _currentData != null && data.SequenceEqual(_currentData);
-                    _currentData = data.ToArray();
                     if (dataMatches)
                     {
                         return;
                     }
+
+                    _currentData = data.ToArray();
                 }
             }
 

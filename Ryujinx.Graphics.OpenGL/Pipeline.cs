@@ -919,6 +919,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (texture == null)
             {
+                GL.BindImageTexture(binding, 0, 0, true, 0, TextureAccess.ReadWrite, SizedInternalFormat.Rgba8);
                 return;
             }
 
@@ -1274,6 +1275,10 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     ((TextureBase)texture).Bind(binding);
                 }
+            }
+            else
+            {
+                TextureBase.ClearBinding(binding);
             }
 
             Sampler glSampler = (Sampler)sampler;
