@@ -704,8 +704,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AttributeConsts.ClipDistance0 => BuiltIn.ClipDistance,
                 AttributeConsts.PointCoordX => BuiltIn.PointCoord,
                 AttributeConsts.TessCoordX => BuiltIn.TessCoord,
-                AttributeConsts.InstanceId => BuiltIn.InstanceId, // FIXME: Invalid
-                AttributeConsts.VertexId => BuiltIn.VertexId, // FIXME: Invalid
+                AttributeConsts.InstanceId => BuiltIn.InstanceId,
+                AttributeConsts.VertexId => BuiltIn.VertexId,
+                AttributeConsts.BaseInstance => BuiltIn.BaseInstance,
+                AttributeConsts.BaseVertex => BuiltIn.BaseVertex,
+                AttributeConsts.InstanceIndex => BuiltIn.InstanceIndex,
+                AttributeConsts.VertexIndex => BuiltIn.VertexIndex,
                 AttributeConsts.FrontFacing => BuiltIn.FrontFacing,
                 AttributeConsts.FragmentOutputDepth => BuiltIn.FragDepth,
                 AttributeConsts.ThreadKill => BuiltIn.HelperInvocation,

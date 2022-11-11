@@ -27,6 +27,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             { AttributeConsts.TessCoordY,    new AttributeInfo(AttributeConsts.TessCoordX,    1, 3, AggregateType.Vector | AggregateType.FP32) },
             { AttributeConsts.InstanceId,    new AttributeInfo(AttributeConsts.InstanceId,    0, 1, AggregateType.S32) },
             { AttributeConsts.VertexId,      new AttributeInfo(AttributeConsts.VertexId,      0, 1, AggregateType.S32) },
+            { AttributeConsts.BaseInstance,  new AttributeInfo(AttributeConsts.BaseInstance,  0, 1, AggregateType.S32) },
+            { AttributeConsts.BaseVertex,    new AttributeInfo(AttributeConsts.BaseVertex,    0, 1, AggregateType.S32) },
+            { AttributeConsts.InstanceIndex, new AttributeInfo(AttributeConsts.InstanceIndex, 0, 1, AggregateType.S32) },
+            { AttributeConsts.VertexIndex,   new AttributeInfo(AttributeConsts.VertexIndex,   0, 1, AggregateType.S32) },
             { AttributeConsts.FrontFacing,   new AttributeInfo(AttributeConsts.FrontFacing,   0, 1, AggregateType.Bool) },
 
             // Special.

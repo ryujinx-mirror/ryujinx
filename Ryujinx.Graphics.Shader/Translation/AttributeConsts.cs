@@ -95,5 +95,10 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int LtMask = 0x2000040;
 
         public const int ThreadKill = 0x2000044;
+
+        public const int BaseInstance = 0x2000050;
+        public const int BaseVertex = 0x2000054;
+        public const int InstanceIndex = 0x2000058;
+        public const int VertexIndex = 0x200005c;
     }
 }

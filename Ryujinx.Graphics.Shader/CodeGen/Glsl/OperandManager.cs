@@ -48,6 +48,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             { AttributeConsts.TessCoordY,    new BuiltInAttribute("gl_TessCoord.y",     VariableType.F32)  },
             { AttributeConsts.InstanceId,    new BuiltInAttribute("gl_InstanceID",      VariableType.S32)  },
             { AttributeConsts.VertexId,      new BuiltInAttribute("gl_VertexID",        VariableType.S32)  },
+            { AttributeConsts.BaseInstance,  new BuiltInAttribute("gl_BaseInstance",    VariableType.S32)  },
+            { AttributeConsts.BaseVertex,    new BuiltInAttribute("gl_BaseVertex",      VariableType.S32)  },
+            { AttributeConsts.InstanceIndex, new BuiltInAttribute("gl_InstanceIndex",   VariableType.S32)  },
+            { AttributeConsts.VertexIndex,   new BuiltInAttribute("gl_VertexIndex",     VariableType.S32)  },
             { AttributeConsts.FrontFacing,   new BuiltInAttribute("gl_FrontFacing",     VariableType.Bool) },
 
             // Special.

@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         offset |= AttributeConsts.LoadOutputMask;
                     }
 
-                    Operand src = op.P ? AttributePerPatch(offset) : Attribute(offset);
+                    Operand src = op.P ? AttributePerPatch(offset) : CreateInputAttribute(context, offset);
 
                     context.Copy(Register(rd), src);
                 }
@@ -311,6 +311,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             return attr;
+        }
+
+        private static Operand CreateInputAttribute(EmitterContext context, int attr)
+        {
+            if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+            {
+                if (attr == AttributeConsts.InstanceId)
+                {
+                    return context.ISubtract(Attribute(AttributeConsts.InstanceIndex), Attribute(AttributeConsts.BaseInstance));
+                }
+                else if (attr == AttributeConsts.VertexId)
+                {
+                    return Attribute(AttributeConsts.VertexIndex);
+                }
+            }
+
+            return Attribute(attr);
         }
     }
 }
