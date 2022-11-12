@@ -6,10 +6,11 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.System;
 using Ryujinx.Common.SystemInfo;
-using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Modules;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Common;
+using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.Ui.Common.Helper;
 using Ryujinx.Ui.Widgets;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
@@ -28,8 +29,6 @@ namespace Ryujinx
 
         public static string ConfigurationPath { get; set; }
 
-        public static string CommandLineProfile { get; set; }
-
         [DllImport("libX11")]
         private extern static int XInitThreads();
 
@@ -47,46 +46,13 @@ namespace Ryujinx
                 MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MB_ICONWARNING);
             }
 
-            // Parse Arguments.
-            string launchPathArg      = null;
-            string baseDirPathArg     = null;
-            bool   startFullscreenArg = false;
+            // Parse arguments
+            CommandLineState.ParseArguments(args);
 
-            for (int i = 0; i < args.Length; ++i)
-            {
-                string arg = args[i];
-
-                if (arg == "-r" || arg == "--root-data-dir")
-                {
-                    if (i + 1 >= args.Length)
-                    {
-                        Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
-
-                        continue;
-                    }
-
-                    baseDirPathArg = args[++i];
-                }
-                else if (arg == "-p" || arg == "--profile")
-                {
-                    if (i + 1 >= args.Length)
-                    {
-                        Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
-
-                        continue;
-                    }
-
-                    CommandLineProfile = args[++i];
-                }
-                else if (arg == "-f" || arg == "--fullscreen")
-                {
-                    startFullscreenArg = true;
-                }
-                else if (launchPathArg == null)
-                {
-                    launchPathArg = arg;
-                }
-            }
+            // Hook unhandled exception and process exit events.
+            GLib.ExceptionManager.UnhandledException   += (GLib.UnhandledExceptionArgs e)                => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            AppDomain.CurrentDomain.ProcessExit        += (object sender, EventArgs e)                   => Exit();
 
             // Make process DPI aware for proper window sizing on high-res screens.
             ForceDpiAware.Windows();
@@ -94,8 +60,6 @@ namespace Ryujinx
 
             // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);
-
-            Console.Title = $"Ryujinx Console {Version}";
 
             // NOTE: GTK3 doesn't init X11 in a multi threaded way.
             // This ends up causing race condition and abort of XCB when a context is created by SPB (even if SPB do call XInitThreads).
@@ -107,13 +71,8 @@ namespace Ryujinx
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
             Environment.SetEnvironmentVariable("Path", $"{Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin")};{systemPath}");
 
-            // Hook unhandled exception and process exit events.
-            GLib.ExceptionManager.UnhandledException   += (GLib.UnhandledExceptionArgs e)                => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
-            AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
-            AppDomain.CurrentDomain.ProcessExit        += (object sender, EventArgs e)                   => Exit();
-
             // Setup base data directory.
-            AppDataManager.Initialize(baseDirPathArg);
+            AppDataManager.Initialize(CommandLineState.BaseDirPathArg);
 
             // Initialize the configuration.
             ConfigurationState.Initialize();
@@ -173,6 +132,21 @@ namespace Ryujinx
                 }
             }
 
+            // Check if graphics backend was overridden
+            if (CommandLineState.OverrideGraphicsBackend != null)
+            {
+                if (CommandLineState.OverrideGraphicsBackend.ToLower() == "opengl")
+                {
+                    ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.OpenGl;
+                    showVulkanPrompt = false;
+                }
+                else if (CommandLineState.OverrideGraphicsBackend.ToLower() == "vulkan")
+                {
+                    ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.Vulkan;
+                    showVulkanPrompt = false;
+                }
+            }
+
             // Logging system information.
             PrintSystemInfo();
 
@@ -195,9 +169,9 @@ namespace Ryujinx
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
 
-            if (launchPathArg != null)
+            if (CommandLineState.LaunchPathArg != null)
             {
-                mainWindow.LoadApplication(launchPathArg, startFullscreenArg);
+                mainWindow.LoadApplication(CommandLineState.LaunchPathArg, CommandLineState.StartFullscreenArg);
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))

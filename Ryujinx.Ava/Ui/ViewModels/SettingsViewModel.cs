@@ -21,14 +21,10 @@ using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.Input;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Configuration.System;
-using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using TimeZone = Ryujinx.Ava.Ui.Models.TimeZone;
 
 namespace Ryujinx.Ava.Ui.ViewModels

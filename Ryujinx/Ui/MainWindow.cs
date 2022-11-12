@@ -179,7 +179,7 @@ namespace Ryujinx.Ui
             VirtualFileSystem.FixExtraData(_libHacHorizonManager.RyujinxClient);
 
             _contentManager         = new ContentManager(_virtualFileSystem);
-            _accountManager         = new AccountManager(_libHacHorizonManager.RyujinxClient, Program.CommandLineProfile);
+            _accountManager         = new AccountManager(_libHacHorizonManager.RyujinxClient, CommandLineState.Profile);
             _userChannelPersistence = new UserChannelPersistence();
 
             // Instantiate GUI objects.
