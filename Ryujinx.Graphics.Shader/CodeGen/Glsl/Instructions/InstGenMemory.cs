@@ -205,7 +205,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             if (src2 is AstOperand operand && operand.Type == OperandType.Constant)
             {
                 int attrOffset = baseAttr.Value + (operand.Value << 2);
-                return OperandManager.GetAttributeName(attrOffset, context.Config, perPatch: false, isOutAttr: false, indexExpr);
+                return OperandManager.GetAttributeName(context, attrOffset, perPatch: false, isOutAttr: false, indexExpr);
             }
             else
             {
@@ -332,7 +332,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             if (src2 is AstOperand operand && operand.Type == OperandType.Constant)
             {
                 int attrOffset = baseAttr.Value + (operand.Value << 2);
-                attrName = OperandManager.GetAttributeName(attrOffset, context.Config, perPatch: false, isOutAttr: true);
+                attrName = OperandManager.GetAttributeName(context, attrOffset, perPatch: false, isOutAttr: true);
             }
             else
             {

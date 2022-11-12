@@ -440,11 +440,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 {
                     PixelImap iq = PixelImap.Unused;
 
-                    if (context.Config.Stage == ShaderStage.Fragment &&
-                        attr >= AttributeConsts.UserAttributeBase &&
-                        attr < AttributeConsts.UserAttributeEnd)
+                    if (context.Config.Stage == ShaderStage.Fragment)
                     {
-                        iq = context.Config.ImapTypes[(attr - AttributeConsts.UserAttributeBase) / 16].GetFirstUsedType();
+                        if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
+                        {
+                            iq = context.Config.ImapTypes[(attr - AttributeConsts.UserAttributeBase) / 16].GetFirstUsedType();
+                        }
+                        else
+                        {
+                            AttributeInfo attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr: false);
+                            AggregateType elemType = attrInfo.Type & AggregateType.ElementTypeMask;
+
+                            if (attrInfo.IsBuiltin && (elemType == AggregateType.S32 || elemType == AggregateType.U32))
+                            {
+                                iq = PixelImap.Constant;
+                            }
+                        }
                     }
 
                     DeclareInputOrOutput(context, attr, perPatch, isOutAttr: false, iq);
@@ -516,7 +527,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 ((isOutAttr && context.Config.LastInVertexPipeline) ||
                 (!isOutAttr && context.Config.Stage == ShaderStage.Fragment)))
             {
-                DeclareInputOrOutput(context, attr, (attr >> 2) & 3, isOutAttr, iq);
+                DeclareTransformFeedbackInputOrOutput(context, attr, isOutAttr, iq);
                 return;
             }
 
@@ -572,7 +583,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline && isOutAttr)
                 {
-                    var tfOutput = context.GetTransformFeedbackOutput(attrInfo.BaseValue);
+                    var tfOutput = context.Info.GetTransformFeedbackOutput(attrInfo.BaseValue);
                     if (tfOutput.Valid)
                     {
                         context.Decorate(spvVar, Decoration.XfbBuffer, (LiteralInteger)tfOutput.Buffer);
@@ -595,24 +606,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
 
-                if (!isOutAttr)
+                if (!isOutAttr &&
+                    !perPatch &&
+                    (context.Config.PassthroughAttributes & (1 << location)) != 0 &&
+                    context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
-                    if (!perPatch &&
-                        (context.Config.PassthroughAttributes & (1 << location)) != 0 &&
-                        context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
-                    {
-                        context.Decorate(spvVar, Decoration.PassthroughNV);
-                    }
-
-                    switch (iq)
-                    {
-                        case PixelImap.Constant:
-                            context.Decorate(spvVar, Decoration.Flat);
-                            break;
-                        case PixelImap.ScreenLinear:
-                            context.Decorate(spvVar, Decoration.NoPerspective);
-                            break;
-                    }
+                    context.Decorate(spvVar, Decoration.PassthroughNV);
                 }
             }
             else if (attr >= AttributeConsts.FragmentOutputColorBase && attr < AttributeConsts.FragmentOutputColorEnd)
@@ -621,14 +620,44 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
             }
 
+            if (!isOutAttr)
+            {
+                switch (iq)
+                {
+                    case PixelImap.Constant:
+                        context.Decorate(spvVar, Decoration.Flat);
+                        break;
+                    case PixelImap.ScreenLinear:
+                        context.Decorate(spvVar, Decoration.NoPerspective);
+                        break;
+                }
+            }
+
             context.AddGlobalVariable(spvVar);
             dict.Add(attrInfo.BaseValue, spvVar);
         }
 
-        private static void DeclareInputOrOutput(CodeGenContext context, int attr, int component, bool isOutAttr, PixelImap iq = PixelImap.Unused)
+        private static void DeclareTransformFeedbackInputOrOutput(CodeGenContext context, int attr, bool isOutAttr, PixelImap iq = PixelImap.Unused)
         {
             var dict = isOutAttr ? context.Outputs : context.Inputs;
             var attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr);
+
+            bool hasComponent = true;
+            int component = (attr >> 2) & 3;
+            int components = 1;
+            var type = attrInfo.Type & AggregateType.ElementTypeMask;
+
+            if (context.Config.LastInPipeline && isOutAttr)
+            {
+                components = context.Info.GetTransformFeedbackOutputComponents(attr);
+
+                if (components > 1)
+                {
+                    attr &= ~0xf;
+                    type = AggregateType.Vector | AggregateType.FP32;
+                    hasComponent = false;
+                }
+            }
 
             if (dict.ContainsKey(attr))
             {
@@ -636,7 +665,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
 
             var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrType = context.GetType(attrInfo.Type & AggregateType.ElementTypeMask);
+            var attrType = context.GetType(type, components);
 
             if (AttributeInfo.IsArrayAttributeSpirv(context.Config.Stage, isOutAttr) && (!attrInfo.IsBuiltin || AttributeInfo.IsArrayBuiltIn(attr)))
             {
@@ -656,11 +685,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             int location = (attr - AttributeConsts.UserAttributeBase) / 16;
 
             context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
-            context.Decorate(spvVar, Decoration.Component, (LiteralInteger)component);
+
+            if (hasComponent)
+            {
+                context.Decorate(spvVar, Decoration.Component, (LiteralInteger)component);
+            }
 
             if (isOutAttr)
             {
-                var tfOutput = context.GetTransformFeedbackOutput(location, component);
+                var tfOutput = context.Info.GetTransformFeedbackOutput(attr);
                 if (tfOutput.Valid)
                 {
                     context.Decorate(spvVar, Decoration.XfbBuffer, (LiteralInteger)tfOutput.Buffer);

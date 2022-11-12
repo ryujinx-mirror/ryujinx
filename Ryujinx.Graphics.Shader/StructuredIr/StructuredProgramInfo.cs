@@ -42,5 +42,40 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             TransformFeedbackOutputs = new TransformFeedbackOutput[0xc0];
         }
+
+        public TransformFeedbackOutput GetTransformFeedbackOutput(int attr)
+        {
+            int index = attr / 4;
+            return TransformFeedbackOutputs[index];
+        }
+
+        public int GetTransformFeedbackOutputComponents(int attr)
+        {
+            int index = attr / 4;
+            int baseIndex = index & ~3;
+
+            int count = 1;
+
+            for (; count < 4; count++)
+            {
+                ref var prev = ref TransformFeedbackOutputs[baseIndex + count - 1];
+                ref var curr = ref TransformFeedbackOutputs[baseIndex + count];
+
+                int prevOffset = prev.Offset;
+                int currOffset = curr.Offset;
+
+                if (!prev.Valid || !curr.Valid || prevOffset + 4 != currOffset)
+                {
+                    break;
+                }
+            }
+
+            if (baseIndex + count <= index)
+            {
+                return 1;
+            }
+
+            return count;
+        }
     }
 }

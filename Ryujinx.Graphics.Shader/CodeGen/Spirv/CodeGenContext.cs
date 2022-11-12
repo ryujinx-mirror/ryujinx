@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         private const uint SpirvVersionRevision = 0;
         private const uint SpirvVersionPacked = (SpirvVersionMajor << 16) | (SpirvVersionMinor << 8) | SpirvVersionRevision;
 
-        private readonly StructuredProgramInfo _info;
+        public StructuredProgramInfo Info { get; }
 
         public ShaderConfig Config { get; }
 
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             GeneratorPool<Instruction> instPool,
             GeneratorPool<LiteralInteger> integerPool) : base(SpirvVersionPacked, instPool, integerPool)
         {
-            _info = info;
+            Info = info;
             Config = config;
 
             if (config.Stage == ShaderStage.Geometry)
@@ -317,6 +317,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 attrOffset = attr;
                 type = elemType;
+
+                if (Config.LastInPipeline && isOutAttr)
+                {
+                    int components = Info.GetTransformFeedbackOutputComponents(attr);
+
+                    if (components > 1)
+                    {
+                        attrOffset &= ~0xf;
+                        type = AggregateType.Vector | AggregateType.FP32;
+                        attrInfo = new AttributeInfo(attrOffset, (attr - attrOffset) / 4, components, type, false);
+                    }
+                }
             }
 
             ioVariable = isOutAttr ? Outputs[attrOffset] : Inputs[attrOffset];
@@ -534,18 +546,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public (StructuredFunction, Instruction) GetFunction(int funcIndex)
         {
             return _functions[funcIndex];
-        }
-
-        public TransformFeedbackOutput GetTransformFeedbackOutput(int location, int component)
-        {
-            int index = (AttributeConsts.UserAttributeBase / 4) + location * 4 + component;
-            return _info.TransformFeedbackOutputs[index];
-        }
-
-        public TransformFeedbackOutput GetTransformFeedbackOutput(int location)
-        {
-            int index = location / 4;
-            return _info.TransformFeedbackOutputs[index];
         }
 
         public Instruction GetType(AggregateType type, int length = 1)
