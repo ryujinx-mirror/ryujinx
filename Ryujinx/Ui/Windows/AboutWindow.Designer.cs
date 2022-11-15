@@ -113,7 +113,7 @@ namespace Ryujinx.Ui.Windows
             //
             // _ryujinxPhoneticLabel
             //
-            _ryujinxPhoneticLabel = new Label("(REE-YOU-JI-NX)")
+            _ryujinxPhoneticLabel = new Label("(REE-YOU-JINX)")
             {
                 Justify = Justification.Center
             };
