@@ -32,8 +32,6 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         private KProcess _owner;
         private IVirtualMemoryManager _ownerMm;
 
-        private static Random _random = new Random();
-
         public IRoInterface(ServiceCtx context)
         {
             _nrrInfos = new List<NrrInfo>(MaxNrr);
@@ -283,7 +281,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             {
                 while (true)
                 {
-                    ulong randomOffset = (ulong)(uint)_random.Next(0, (int)addressSpacePageLimit) << 12;
+                    ulong randomOffset = (ulong)(uint)Random.Shared.Next(0, (int)addressSpacePageLimit) << 12;
 
                     targetAddress = memMgr.GetAddrSpaceBaseAddr() + randomOffset;
 

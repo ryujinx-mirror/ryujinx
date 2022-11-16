@@ -266,9 +266,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // NOTE: Calls nn::friends::detail::service::core::PlayHistoryManager::GetInstance and stores the instance.
 
             byte[] randomBytes = new byte[8];
-            Random random      = new Random();
 
-            random.NextBytes(randomBytes);
+            Random.Shared.NextBytes(randomBytes);
 
             // NOTE: Calls nn::friends::detail::service::core::UuidManager::GetInstance and stores the instance.
             //       Then call nn::friends::detail::service::core::AccountStorageManager::GetInstance and store the instance.

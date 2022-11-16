@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
             {
                 byte[] randomBuffer = new byte[8];
 
-                new Random().NextBytes(randomBuffer);
+                Random.Shared.NextBytes(randomBuffer);
 
                 _systemSessionId = BitConverter.ToUInt64(randomBuffer, 0);
             }
