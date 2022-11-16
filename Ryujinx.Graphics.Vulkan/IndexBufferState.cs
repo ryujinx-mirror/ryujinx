@@ -1,5 +1,4 @@
 ﻿using Silk.NET.Vulkan;
-using System;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -68,17 +67,18 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public void BindConvertedIndexBuffer(VulkanRenderer gd, CommandBufferScoped cbs, int firstIndex, int indexCount, int convertedCount, IndexBufferPattern pattern)
+        public void BindConvertedIndexBuffer(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            int firstIndex,
+            int indexCount,
+            int convertedCount,
+            IndexBufferPattern pattern)
         {
             Auto<DisposableBuffer> autoBuffer;
 
             // Convert the index buffer using the given pattern.
-            int indexSize = _type switch
-            {
-                IndexType.Uint32 => 4,
-                IndexType.Uint16 => 2,
-                _ => 1,
-            };
+            int indexSize = GetIndexSize();
 
             int firstIndexOffset = firstIndex * indexSize;
 
@@ -92,6 +92,54 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 gd.Api.CmdBindIndexBuffer(cbs.CommandBuffer, autoBuffer.Get(cbs, 0, size).Value, 0, IndexType.Uint32);
             }
+        }
+
+        public Auto<DisposableBuffer> BindConvertedIndexBufferIndirect(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            GAL.BufferRange indirectBuffer,
+            GAL.BufferRange drawCountBuffer,
+            IndexBufferPattern pattern,
+            bool hasDrawCount,
+            int maxDrawCount,
+            int indirectDataStride)
+        {
+            // Convert the index buffer using the given pattern.
+            int indexSize = GetIndexSize();
+
+            (var indexBufferAuto, var indirectBufferAuto) = gd.BufferManager.GetBufferTopologyConversionIndirect(
+                gd,
+                cbs,
+                new GAL.BufferRange(_handle, _offset, _size),
+                indirectBuffer,
+                drawCountBuffer,
+                pattern,
+                indexSize,
+                hasDrawCount,
+                maxDrawCount,
+                indirectDataStride);
+
+            int convertedCount = pattern.GetConvertedCount(_size / indexSize);
+            int size = convertedCount * 4;
+
+            _buffer = indexBufferAuto;
+
+            if (indexBufferAuto != null)
+            {
+                gd.Api.CmdBindIndexBuffer(cbs.CommandBuffer, indexBufferAuto.Get(cbs, 0, size).Value, 0, IndexType.Uint32);
+            }
+
+            return indirectBufferAuto;
+        }
+
+        private int GetIndexSize()
+        {
+            return _type switch
+            {
+                IndexType.Uint32 => 4,
+                IndexType.Uint16 => 2,
+                _ => 1,
+            };
         }
 
         public bool BoundEquals(Auto<DisposableBuffer> buffer)

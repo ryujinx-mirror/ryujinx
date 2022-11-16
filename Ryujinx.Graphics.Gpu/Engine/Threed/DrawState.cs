@@ -23,6 +23,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public bool DrawIndexed;
 
         /// <summary>
+        /// Indicates if the next draw will be a indirect draw.
+        /// </summary>
+        public bool DrawIndirect;
+
+        /// <summary>
         /// Indicates if any of the currently used vertex shaders reads the instance ID.
         /// </summary>
         public bool VsUsesInstanceId;
@@ -31,6 +36,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// Indicates if any of the currently used vertex buffers is instanced.
         /// </summary>
         public bool IsAnyVbInstanced;
+
+        /// <summary>
+        /// Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0.
+        /// </summary>
+        public bool HasConstantBufferDrawParameters;
 
         /// <summary>
         /// Primitive topology for the next draw.

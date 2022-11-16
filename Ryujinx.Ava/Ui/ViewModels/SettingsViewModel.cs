@@ -134,6 +134,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
         public bool ExpandDramSize { get; set; }
         public bool EnableShaderCache { get; set; }
         public bool EnableTextureRecompression { get; set; }
+        public bool EnableMacroHLE { get; set; }
         public bool EnableFileLog { get; set; }
         public bool EnableStub { get; set; }
         public bool EnableInfo { get; set; }
@@ -335,6 +336,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             ExpandDramSize = config.System.ExpandRam;
             EnableShaderCache = config.Graphics.EnableShaderCache;
             EnableTextureRecompression = config.Graphics.EnableTextureRecompression;
+            EnableMacroHLE = config.Graphics.EnableMacroHLE;
             EnableFileLog = config.Logger.EnableFileLog;
             EnableStub = config.Logger.EnableStub;
             EnableInfo = config.Logger.EnableInfo;
@@ -418,6 +420,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             config.Graphics.EnableVsync.Value = EnableVsync;
             config.Graphics.EnableShaderCache.Value = EnableShaderCache;
             config.Graphics.EnableTextureRecompression.Value = EnableTextureRecompression;
+            config.Graphics.EnableMacroHLE.Value = EnableMacroHLE;
             config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;
             config.System.EnablePtc.Value = EnablePptc;
             config.System.EnableInternetAccess.Value = EnableInternetAccess;

@@ -35,7 +35,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             foreach (var entry in _entries)
             {
-                if (entry.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, true))
+                bool usesDrawParameters = entry.Shaders[1]?.Info.UsesDrawParameters ?? false;
+
+                if (entry.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, usesDrawParameters, true))
                 {
                     program = entry;
                     return true;

@@ -556,5 +556,7 @@
   "SettingsSelectThemeFileDialogTitle" : "Selecionar arquivo do tema",
   "SettingsXamlThemeFile" : "Arquivo de tema Xaml",
   "SettingsTabHotkeysResScaleUpHotkey": "Aumentar a resolução:",
-  "SettingsTabHotkeysResScaleDownHotkey": "Diminuir a resolução:"
+  "SettingsTabHotkeysResScaleDownHotkey": "Diminuir a resolução:",
+  "SettingsEnableMacroHLE": "Habilitar emulação de alto nível para Macros",
+  "SettingsEnableMacroHLETooltip": "Habilita emulação de alto nível de códigos Macro da GPU.\n\nMelhora a performance, mas pode causar problemas gráficos em alguns jogos.\n\nEm caso de dúvida, deixe ATIVADO."
 }

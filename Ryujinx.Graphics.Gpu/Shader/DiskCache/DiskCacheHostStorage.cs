@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const ushort FileFormatVersionMajor = 1;
         private const ushort FileFormatVersionMinor = 2;
         private const uint FileFormatVersionPacked = ((uint)FileFormatVersionMajor << 16) | FileFormatVersionMinor;
-        private const uint CodeGenVersion = 3831;
+        private const uint CodeGenVersion = 3747;
 
         private const string SharedTocFileName = "shared.toc";
         private const string SharedDataFileName = "shared.data";
@@ -159,6 +159,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             /// Bit mask of the render target components written by the fragment stage.
             /// </summary>
             public int FragmentOutputMap;
+
+            /// <summary>
+            /// Indicates if the vertex shader accesses draw parameters.
+            /// </summary>
+            public bool UsesDrawParameters;
         }
 
         private readonly DiskCacheGuestStorage _guestStorage;
@@ -771,6 +776,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 images,
                 dataInfo.Stage,
                 dataInfo.UsesInstanceId,
+                dataInfo.UsesDrawParameters,
                 dataInfo.UsesRtLayer,
                 dataInfo.ClipDistancesWritten,
                 dataInfo.FragmentOutputMap);
@@ -796,6 +802,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             dataInfo.ImagesCount = (ushort)info.Images.Count;
             dataInfo.Stage = info.Stage;
             dataInfo.UsesInstanceId = info.UsesInstanceId;
+            dataInfo.UsesDrawParameters = info.UsesDrawParameters;
             dataInfo.UsesRtLayer = info.UsesRtLayer;
             dataInfo.ClipDistancesWritten = info.ClipDistancesWritten;
             dataInfo.FragmentOutputMap = info.FragmentOutputMap;

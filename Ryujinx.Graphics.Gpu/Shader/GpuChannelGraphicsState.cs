@@ -78,6 +78,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public Array32<AttributeType> AttributeTypes;
 
         /// <summary>
+        /// Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0.
+        /// </summary>
+        public readonly bool HasConstantBufferDrawParameters;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
@@ -93,6 +98,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="alphaTestCompare">When alpha test is enabled, indicates the comparison that decides if the fragment should be discarded</param>
         /// <param name="alphaTestReference">When alpha test is enabled, indicates the value to compare with the fragment output alpha</param>
         /// <param name="attributeTypes">Type of the vertex attributes consumed by the shader</param>
+        /// <param name="hasConstantBufferDrawParameters">Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0</param>
         public GpuChannelGraphicsState(
             bool earlyZForce,
             PrimitiveTopology topology,
@@ -106,7 +112,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             bool alphaTestEnable,
             CompareOp alphaTestCompare,
             float alphaTestReference,
-            ref Array32<AttributeType> attributeTypes)
+            ref Array32<AttributeType> attributeTypes,
+            bool hasConstantBufferDrawParameters)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
@@ -121,6 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             AlphaTestCompare = alphaTestCompare;
             AlphaTestReference = alphaTestReference;
             AttributeTypes = attributeTypes;
+            HasConstantBufferDrawParameters = hasConstantBufferDrawParameters;
         }
     }
 }

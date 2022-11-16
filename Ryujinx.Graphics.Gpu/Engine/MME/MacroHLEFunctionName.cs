@@ -8,6 +8,9 @@
         None,
         ClearColor,
         ClearDepthStencil,
+        DrawArraysInstanced,
+        DrawElementsInstanced,
+        DrawElementsIndirect,
         MultiDrawElementsIndirectCount
     }
 }

@@ -1,0 +1,58 @@
+#version 450 core
+
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_8bit_storage : require
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+
+layout (std430, set = 0, binding = 0) uniform index_buffer_pattern
+{
+    int ibp_pattern[8];
+    int ibp_primitive_vertices;
+    int ibp_primitive_vertices_out;
+    int ibp_index_size;
+    int ibp_index_size_out;
+    int ibp_base_index;
+    int ibp_index_stride;
+    int src_offset;
+    int total_primitives;
+};
+
+layout (std430, set = 1, binding = 1) buffer in_s
+{
+    uint8_t[] in_data;
+};
+
+layout (std430, set = 1, binding = 2) buffer out_s
+{
+    uint8_t[] out_data;
+};
+
+void main()
+{
+    int primitiveIndex = int(gl_GlobalInvocationID.x);
+    if (primitiveIndex >= total_primitives)
+    {
+        return;
+    }
+
+    int inOffset = primitiveIndex * ibp_index_stride;
+    int outOffset = primitiveIndex * ibp_primitive_vertices_out;
+
+    for (int i = 0; i < ibp_primitive_vertices_out; i++)
+    {
+        int j;
+        int io = max(0, inOffset + ibp_base_index + ibp_pattern[i]) * ibp_index_size;
+        int oo = (outOffset + i) * ibp_index_size_out;
+
+        for (j = 0; j < ibp_index_size; j++)
+        {
+            out_data[oo + j] = in_data[src_offset + io + j];
+        }
+
+        for (; j < ibp_index_size_out; j++)
+        {
+            out_data[oo + j] = uint8_t(0);
+        }
+    }
+}

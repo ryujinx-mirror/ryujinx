@@ -294,6 +294,19 @@ namespace Ryujinx.Graphics.Vulkan
             Gd.Api.CmdDispatch(CommandBuffer, (uint)groupsX, (uint)groupsY, (uint)groupsZ);
         }
 
+        public void DispatchComputeIndirect(Auto<DisposableBuffer> indirectBuffer, int indirectBufferOffset)
+        {
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            EndRenderPass();
+            RecreatePipelineIfNeeded(PipelineBindPoint.Compute);
+
+            Gd.Api.CmdDispatchIndirect(CommandBuffer, indirectBuffer.Get(Cbs, indirectBufferOffset, 12).Value, (ulong)indirectBufferOffset);
+        }
+
         public void Draw(int vertexCount, int instanceCount, int firstVertex, int firstInstance)
         {
             if (!_program.IsLinked)
@@ -395,6 +408,204 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void DrawIndexedIndirect(BufferRange indirectBuffer)
+        {
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            UpdateIndexBufferPattern();
+            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
+            BeginRenderPass();
+            DrawCount++;
+
+            if (_indexBufferPattern != null)
+            {
+                // Convert the index buffer into a supported topology.
+                IndexBufferPattern pattern = _indexBufferPattern;
+
+                Auto<DisposableBuffer> indirectBufferAuto = _indexBuffer.BindConvertedIndexBufferIndirect(
+                    Gd,
+                    Cbs,
+                    indirectBuffer,
+                    BufferRange.Empty,
+                    pattern,
+                    false,
+                    1,
+                    indirectBuffer.Size);
+
+                _needsIndexBufferRebind = false;
+
+                BeginRenderPass(); // May have been interrupted to set buffer data.
+                ResumeTransformFeedbackInternal();
+
+                Gd.Api.CmdDrawIndexedIndirect(CommandBuffer, indirectBufferAuto.Get(Cbs, 0, indirectBuffer.Size).Value, 0, 1, (uint)indirectBuffer.Size);
+            }
+            else
+            {
+                var buffer = Gd.BufferManager
+                    .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, false)
+                    .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+                ResumeTransformFeedbackInternal();
+
+                Gd.Api.CmdDrawIndexedIndirect(CommandBuffer, buffer, (ulong)indirectBuffer.Offset, 1, (uint)indirectBuffer.Size);
+            }
+        }
+
+        public void DrawIndexedIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
+        {
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            UpdateIndexBufferPattern();
+            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
+            BeginRenderPass();
+            DrawCount++;
+
+            var countBuffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, false)
+                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
+
+            if (_indexBufferPattern != null)
+            {
+                // Convert the index buffer into a supported topology.
+                IndexBufferPattern pattern = _indexBufferPattern;
+
+                Auto<DisposableBuffer> indirectBufferAuto = _indexBuffer.BindConvertedIndexBufferIndirect(
+                    Gd,
+                    Cbs,
+                    indirectBuffer,
+                    parameterBuffer,
+                    pattern,
+                    true,
+                    maxDrawCount,
+                    stride);
+
+                _needsIndexBufferRebind = false;
+
+                BeginRenderPass(); // May have been interrupted to set buffer data.
+                ResumeTransformFeedbackInternal();
+
+                if (Gd.Capabilities.SupportsIndirectParameters)
+                {
+                    Gd.DrawIndirectCountApi.CmdDrawIndexedIndirectCount(
+                        CommandBuffer,
+                        indirectBufferAuto.Get(Cbs, 0, indirectBuffer.Size).Value,
+                        0,
+                        countBuffer,
+                        (ulong)parameterBuffer.Offset,
+                        (uint)maxDrawCount,
+                        (uint)stride);
+                }
+                else
+                {
+                    // This is also fine because the indirect data conversion always zeros
+                    // the entries that are past the current draw count.
+
+                    Gd.Api.CmdDrawIndexedIndirect(
+                        CommandBuffer,
+                        indirectBufferAuto.Get(Cbs, 0, indirectBuffer.Size).Value,
+                        0,
+                        (uint)maxDrawCount,
+                        (uint)stride);
+                }
+
+            }
+            else
+            {
+                var buffer = Gd.BufferManager
+                    .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, false)
+                    .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+                ResumeTransformFeedbackInternal();
+
+                if (Gd.Capabilities.SupportsIndirectParameters)
+                {
+                    Gd.DrawIndirectCountApi.CmdDrawIndexedIndirectCount(
+                        CommandBuffer,
+                        buffer,
+                        (ulong)indirectBuffer.Offset,
+                        countBuffer,
+                        (ulong)parameterBuffer.Offset,
+                        (uint)maxDrawCount,
+                        (uint)stride);
+                }
+                else
+                {
+                    // Not fully correct, but we can't do much better if the host does not support indirect count.
+                    Gd.Api.CmdDrawIndexedIndirect(
+                        CommandBuffer,
+                        buffer,
+                        (ulong)indirectBuffer.Offset,
+                        (uint)maxDrawCount,
+                        (uint)stride);
+                }
+            }
+        }
+
+        public void DrawIndirect(BufferRange indirectBuffer)
+        {
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            // TODO: Support quads and other unsupported topologies.
+
+            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
+            BeginRenderPass();
+            ResumeTransformFeedbackInternal();
+            DrawCount++;
+
+            var buffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, false)
+                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+            Gd.Api.CmdDrawIndirect(CommandBuffer, buffer, (ulong)indirectBuffer.Offset, 1, (uint)indirectBuffer.Size);
+        }
+
+        public void DrawIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
+        {
+            if (!Gd.Capabilities.SupportsIndirectParameters)
+            {
+                // TODO: Fallback for when this is not supported.
+                throw new NotSupportedException();
+            }
+
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            // TODO: Support quads and other unsupported topologies.
+
+            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
+            BeginRenderPass();
+            ResumeTransformFeedbackInternal();
+            DrawCount++;
+
+            var buffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, false)
+                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
+
+            var countBuffer = Gd.BufferManager
+                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, false)
+                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
+
+            Gd.DrawIndirectCountApi.CmdDrawIndirectCount(
+                CommandBuffer,
+                buffer,
+                (ulong)indirectBuffer.Offset,
+                countBuffer,
+                (ulong)parameterBuffer.Offset,
+                (uint)maxDrawCount,
+                (uint)stride);
+        }
+
         public void DrawTexture(ITexture texture, ISampler sampler, Extents2DF srcRegion, Extents2DF dstRegion)
         {
             if (texture is TextureView srcTexture)
@@ -447,76 +658,6 @@ namespace Ryujinx.Graphics.Vulkan
         public bool IsCommandBufferActive(CommandBuffer cb)
         {
             return CommandBuffer.Handle == cb.Handle;
-        }
-
-        public void MultiDrawIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
-        {
-            if (!Gd.Capabilities.SupportsIndirectParameters)
-            {
-                throw new NotSupportedException();
-            }
-
-            if (_program.LinkStatus != ProgramLinkStatus.Success)
-            {
-                return;
-            }
-
-            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
-            BeginRenderPass();
-            ResumeTransformFeedbackInternal();
-            DrawCount++;
-
-            var buffer = Gd.BufferManager
-                .GetBuffer(CommandBuffer, indirectBuffer.Handle, indirectBuffer.Offset, indirectBuffer.Size, true)
-                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
-
-            var countBuffer = Gd.BufferManager
-                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
-                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
-
-            Gd.DrawIndirectCountApi.CmdDrawIndirectCount(
-                CommandBuffer,
-                buffer,
-                (ulong)indirectBuffer.Offset,
-                countBuffer,
-                (ulong)parameterBuffer.Offset,
-                (uint)maxDrawCount,
-                (uint)stride);
-        }
-
-        public void MultiDrawIndexedIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
-        {
-            if (!Gd.Capabilities.SupportsIndirectParameters)
-            {
-                throw new NotSupportedException();
-            }
-
-            if (_program.LinkStatus != ProgramLinkStatus.Success)
-            {
-                return;
-            }
-
-            RecreatePipelineIfNeeded(PipelineBindPoint.Graphics);
-            BeginRenderPass();
-            ResumeTransformFeedbackInternal();
-            DrawCount++;
-
-            var buffer = Gd.BufferManager
-                .GetBuffer(CommandBuffer, indirectBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
-                .Get(Cbs, indirectBuffer.Offset, indirectBuffer.Size).Value;
-
-            var countBuffer = Gd.BufferManager
-                .GetBuffer(CommandBuffer, parameterBuffer.Handle, parameterBuffer.Offset, parameterBuffer.Size, true)
-                .Get(Cbs, parameterBuffer.Offset, parameterBuffer.Size).Value;
-
-            Gd.DrawIndirectCountApi.CmdDrawIndexedIndirectCount(
-                CommandBuffer,
-                buffer,
-                (ulong)indirectBuffer.Offset,
-                countBuffer,
-                (ulong)parameterBuffer.Offset,
-                (uint)maxDrawCount,
-                (uint)stride);
         }
 
         public void SetAlphaTest(bool enable, float reference, GAL.CompareOp op)
@@ -706,7 +847,7 @@ namespace Ryujinx.Graphics.Vulkan
             if (!dataSpan.SequenceEqual(_newState.SpecializationData.Span))
             {
                 _newState.SpecializationData = new SpecData(dataSpan);
-                
+
                 SignalStateChange();
             }
         }

@@ -743,6 +743,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AttributeConsts.BaseVertex => BuiltIn.BaseVertex,
                 AttributeConsts.InstanceIndex => BuiltIn.InstanceIndex,
                 AttributeConsts.VertexIndex => BuiltIn.VertexIndex,
+                AttributeConsts.DrawIndex => BuiltIn.DrawIndex,
                 AttributeConsts.FrontFacing => BuiltIn.FrontFacing,
                 AttributeConsts.FragmentOutputDepth => BuiltIn.FragDepth,
                 AttributeConsts.ThreadKill => BuiltIn.HelperInvocation,

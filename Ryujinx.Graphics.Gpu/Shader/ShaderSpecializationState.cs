@@ -481,9 +481,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
         /// <param name="graphicsState">Graphics state</param>
+        /// <param name="usesDrawParameters">Indicates whether the vertex shader accesses draw parameters</param>
         /// <param name="checkTextures">Indicates whether texture descriptors should be checked</param>
         /// <returns>True if the state matches, false otherwise</returns>
-        public bool MatchesGraphics(GpuChannel channel, GpuChannelPoolState poolState, GpuChannelGraphicsState graphicsState, bool checkTextures)
+        public bool MatchesGraphics(
+            GpuChannel channel,
+            GpuChannelPoolState poolState,
+            GpuChannelGraphicsState graphicsState,
+            bool usesDrawParameters,
+            bool checkTextures)
         {
             if (graphicsState.ViewportTransformDisable != GraphicsState.ViewportTransformDisable)
             {
@@ -516,6 +522,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             if (!graphicsState.AttributeTypes.AsSpan().SequenceEqual(GraphicsState.AttributeTypes.AsSpan()))
+            {
+                return false;
+            }
+
+            if (usesDrawParameters && graphicsState.HasConstantBufferDrawParameters != GraphicsState.HasConstantBufferDrawParameters)
             {
                 return false;
             }

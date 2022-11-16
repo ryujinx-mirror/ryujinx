@@ -444,7 +444,8 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceVulkan12Features,
                 PNext = pExtendedFeatures,
                 DescriptorIndexing = supportedExtensions.Contains("VK_EXT_descriptor_indexing"),
-                DrawIndirectCount = supportedExtensions.Contains(KhrDrawIndirectCount.ExtensionName)
+                DrawIndirectCount = supportedExtensions.Contains(KhrDrawIndirectCount.ExtensionName),
+                UniformBufferStandardLayout = supportedExtensions.Contains("VK_KHR_uniform_buffer_standard_layout")
             };
 
             pExtendedFeatures = &featuresVk12;

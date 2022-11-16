@@ -52,7 +52,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public BufferHandle CreateWithHandle(VulkanRenderer gd, int size, bool deviceLocal)
         {
-            var holder = Create(gd, size, deviceLocal: deviceLocal);
+            return CreateWithHandle(gd, size, deviceLocal, out _);
+        }
+
+        public BufferHandle CreateWithHandle(VulkanRenderer gd, int size, bool deviceLocal, out BufferHolder holder)
+        {
+            holder = Create(gd, size, deviceLocal: deviceLocal);
             if (holder == null)
             {
                 return BufferHandle.Null;
@@ -162,6 +167,141 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return null;
+        }
+
+        public (Auto<DisposableBuffer>, Auto<DisposableBuffer>) GetBufferTopologyConversionIndirect(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            BufferRange indexBuffer,
+            BufferRange indirectBuffer,
+            BufferRange drawCountBuffer,
+            IndexBufferPattern pattern,
+            int indexSize,
+            bool hasDrawCount,
+            int maxDrawCount,
+            int indirectDataStride)
+        {
+            BufferHolder drawCountBufferHolder = null;
+
+            if (!TryGetBuffer(indexBuffer.Handle, out var indexBufferHolder) ||
+                !TryGetBuffer(indirectBuffer.Handle, out var indirectBufferHolder) ||
+                (hasDrawCount && !TryGetBuffer(drawCountBuffer.Handle, out drawCountBufferHolder)))
+            {
+                return (null, null);
+            }
+
+            var indexBufferKey = new TopologyConversionIndirectCacheKey(
+                gd,
+                pattern,
+                indexSize,
+                indirectBufferHolder,
+                indirectBuffer.Offset,
+                indirectBuffer.Size);
+
+            bool hasConvertedIndexBuffer = indexBufferHolder.TryGetCachedConvertedBuffer(
+                indexBuffer.Offset,
+                indexBuffer.Size,
+                indexBufferKey,
+                out var convertedIndexBuffer);
+
+            var indirectBufferKey = new IndirectDataCacheKey(pattern);
+            bool hasConvertedIndirectBuffer = indirectBufferHolder.TryGetCachedConvertedBuffer(
+                indirectBuffer.Offset,
+                indirectBuffer.Size,
+                indirectBufferKey,
+                out var convertedIndirectBuffer);
+
+            var drawCountBufferKey = new DrawCountCacheKey();
+            bool hasCachedDrawCount = true;
+
+            if (hasDrawCount)
+            {
+                hasCachedDrawCount = drawCountBufferHolder.TryGetCachedConvertedBuffer(
+                    drawCountBuffer.Offset,
+                    drawCountBuffer.Size,
+                    drawCountBufferKey,
+                    out _);
+            }
+
+            if (!hasConvertedIndexBuffer || !hasConvertedIndirectBuffer || !hasCachedDrawCount)
+            {
+                // The destination index size is always I32.
+
+                int indexCount = indexBuffer.Size / indexSize;
+
+                int convertedCount = pattern.GetConvertedCount(indexCount);
+
+                if (!hasConvertedIndexBuffer)
+                {
+                    convertedIndexBuffer = Create(gd, convertedCount * 4);
+                    indexBufferKey.SetBuffer(convertedIndexBuffer.GetBuffer());
+                    indexBufferHolder.AddCachedConvertedBuffer(indexBuffer.Offset, indexBuffer.Size, indexBufferKey, convertedIndexBuffer);
+                }
+
+                if (!hasConvertedIndirectBuffer)
+                {
+                    convertedIndirectBuffer = Create(gd, indirectBuffer.Size);
+                    indirectBufferHolder.AddCachedConvertedBuffer(indirectBuffer.Offset, indirectBuffer.Size, indirectBufferKey, convertedIndirectBuffer);
+                }
+
+                gd.PipelineInternal.EndRenderPass();
+                gd.HelperShader.ConvertIndexBufferIndirect(
+                    gd,
+                    cbs,
+                    indirectBufferHolder,
+                    convertedIndirectBuffer,
+                    drawCountBuffer,
+                    indexBufferHolder,
+                    convertedIndexBuffer,
+                    pattern,
+                    indexSize,
+                    indexBuffer.Offset,
+                    indexBuffer.Size,
+                    indirectBuffer.Offset,
+                    hasDrawCount,
+                    maxDrawCount,
+                    indirectDataStride);
+
+                // Any modification of the indirect buffer should invalidate the index buffers that are associated with it,
+                // since we used the indirect data to find the range of the index buffer that is used.
+
+                var indexBufferDependency = new Dependency(
+                    indexBufferHolder,
+                    indexBuffer.Offset,
+                    indexBuffer.Size,
+                    indexBufferKey);
+
+                indirectBufferHolder.AddCachedConvertedBufferDependency(
+                    indirectBuffer.Offset,
+                    indirectBuffer.Size,
+                    indirectBufferKey,
+                    indexBufferDependency);
+
+                if (hasDrawCount)
+                {
+                    if (!hasCachedDrawCount)
+                    {
+                        drawCountBufferHolder.AddCachedConvertedBuffer(drawCountBuffer.Offset, drawCountBuffer.Size, drawCountBufferKey, null);
+                    }
+
+                    // If we have a draw count, any modification of the draw count should invalidate all indirect buffers
+                    // where we used it to find the range of indirect data that is actually used.
+
+                    var indirectBufferDependency = new Dependency(
+                        indirectBufferHolder,
+                        indirectBuffer.Offset,
+                        indirectBuffer.Size,
+                        indirectBufferKey);
+
+                    drawCountBufferHolder.AddCachedConvertedBufferDependency(
+                        drawCountBuffer.Offset,
+                        drawCountBuffer.Size,
+                        drawCountBufferKey,
+                        indirectBufferDependency);
+                }
+            }
+
+            return (convertedIndexBuffer.GetBuffer(), convertedIndirectBuffer.GetBuffer());
         }
 
         public Auto<DisposableBuffer> GetBuffer(CommandBuffer commandBuffer, BufferHandle handle, bool isWrite, out int size)

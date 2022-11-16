@@ -169,6 +169,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries whenever the current draw has written the base vertex and base instance into Constant Buffer 0.
+        /// </summary>
+        /// <returns>True if the shader translator can assume that the constant buffer contains the base IDs, false otherwise</returns>
+        bool QueryHasConstantBufferDrawParameters()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Queries host about the presence of the FrontFacing built-in variable bug.
         /// </summary>
         /// <returns>True if the bug is present on the host device used, false otherwise</returns>

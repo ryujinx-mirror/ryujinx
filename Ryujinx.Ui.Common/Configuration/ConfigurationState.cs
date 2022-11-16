@@ -417,6 +417,11 @@ namespace Ryujinx.Ui.Common.Configuration
             public ReactiveObject<bool> EnableTextureRecompression { get; private set; }
 
             /// <summary>
+            /// Enables or disables Macro high-level emulation
+            /// </summary>
+            public ReactiveObject<bool> EnableMacroHLE { get; private set; }
+
+            /// <summary>
             /// Graphics backend
             /// </summary>
             public ReactiveObject<GraphicsBackend> GraphicsBackend { get; private set; }
@@ -449,6 +454,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 GraphicsBackend.Event            += static (sender, e) => LogValueChange(sender, e, nameof(GraphicsBackend));
                 PreferredGpu                     = new ReactiveObject<string>();
                 PreferredGpu.Event               += static (sender, e) => LogValueChange(sender, e, nameof(PreferredGpu));
+                EnableMacroHLE                   = new ReactiveObject<bool>();
+                EnableMacroHLE.Event             += static (sender, e) => LogValueChange(sender, e, nameof(EnableMacroHLE));
             }
         }
 
@@ -549,6 +556,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 EnableVsync                = Graphics.EnableVsync,
                 EnableShaderCache          = Graphics.EnableShaderCache,
                 EnableTextureRecompression = Graphics.EnableTextureRecompression,
+                EnableMacroHLE             = Graphics.EnableMacroHLE,
                 EnablePtc                  = System.EnablePtc,
                 EnableInternetAccess       = System.EnableInternetAccess,
                 EnableFsIntegrityChecks    = System.EnableFsIntegrityChecks,
@@ -634,6 +642,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.EnableVsync.Value                = true;
             Graphics.EnableShaderCache.Value          = true;
             Graphics.EnableTextureRecompression.Value = false;
+            Graphics.EnableMacroHLE.Value             = true;
             System.EnablePtc.Value                    = true;
             System.EnableInternetAccess.Value         = false;
             System.EnableFsIntegrityChecks.Value      = true;
@@ -1176,6 +1185,13 @@ namespace Ryujinx.Ui.Common.Configuration
                 };
             }
 
+            if (configurationFileFormat.Version < 42)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 42.");
+
+                configurationFileFormat.EnableMacroHLE = true;
+            }
+
             Logger.EnableFileLog.Value                = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                   = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value             = configurationFileFormat.ResScaleCustom;
@@ -1207,6 +1223,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.EnableVsync.Value                = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value          = configurationFileFormat.EnableShaderCache;
             Graphics.EnableTextureRecompression.Value = configurationFileFormat.EnableTextureRecompression;
+            Graphics.EnableMacroHLE.Value             = configurationFileFormat.EnableMacroHLE;
             System.EnablePtc.Value                    = configurationFileFormat.EnablePtc;
             System.EnableInternetAccess.Value         = configurationFileFormat.EnableInternetAccess;
             System.EnableFsIntegrityChecks.Value      = configurationFileFormat.EnableFsIntegrityChecks;

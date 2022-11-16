@@ -587,10 +587,12 @@
   "SettingsTabGraphicsPreferredGpu": "Preferred GPU",
   "SettingsTabGraphicsPreferredGpuTooltip": "Select the graphics card that will be used with the Vulkan graphics backend.\n\nDoes not affect the GPU that OpenGL will use.\n\nSet to the GPU flagged as \"dGPU\" if unsure. If there isn't one, leave untouched.",
   "SettingsAppRequiredRestartMessage": "Ryujinx Restart Required",
-  "SettingsGpuBackendRestartMessage": "Graphics Backend or Gpu settings have been modified. This will require a restart to be applied",
+  "SettingsGpuBackendRestartMessage": "Graphics Backend or GPU settings have been modified. This will require a restart to be applied",
   "SettingsGpuBackendRestartSubMessage": "Do you want to restart now?",
   "RyujinxUpdaterMessage": "Do you want to update Ryujinx to the latest version?",
   "SettingsTabHotkeysVolumeUpHotkey": "Increase Volume:",
   "SettingsTabHotkeysVolumeDownHotkey": "Decrease Volume:",
-  "VolumeShort": "Vol"
+  "VolumeShort": "Vol",
+  "SettingsEnableMacroHLE": "Enable Macro HLE",
+  "SettingsEnableMacroHLETooltip": "High-level emulation of GPU Macro code.\n\nImproves performance, but may cause graphical glitches in some games.\n\nLeave ON if unsure."
 }

@@ -586,6 +586,95 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public void DrawIndexedIndirect(BufferRange indirectBuffer)
+        {
+            if (!_program.IsLinked)
+            {
+                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
+                return;
+            }
+
+            PreDrawVbUnbounded();
+
+            _vertexArray.SetRangeOfIndexBuffer();
+
+            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
+
+            GL.DrawElementsIndirect(_primitiveType, _elementsType, (IntPtr)indirectBuffer.Offset);
+
+            _vertexArray.RestoreIndexBuffer();
+
+            PostDraw();
+        }
+
+        public void DrawIndexedIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
+        {
+            if (!_program.IsLinked)
+            {
+                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
+                return;
+            }
+
+            PreDrawVbUnbounded();
+
+            _vertexArray.SetRangeOfIndexBuffer();
+
+            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
+            GL.BindBuffer((BufferTarget)All.ParameterBuffer, parameterBuffer.Handle.ToInt32());
+
+            GL.MultiDrawElementsIndirectCount(
+                _primitiveType,
+                (All)_elementsType,
+                (IntPtr)indirectBuffer.Offset,
+                (IntPtr)parameterBuffer.Offset,
+                maxDrawCount,
+                stride);
+
+            _vertexArray.RestoreIndexBuffer();
+
+            PostDraw();
+        }
+
+        public void DrawIndirect(BufferRange indirectBuffer)
+        {
+            if (!_program.IsLinked)
+            {
+                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
+                return;
+            }
+
+            PreDrawVbUnbounded();
+
+            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
+
+            GL.DrawArraysIndirect(_primitiveType, (IntPtr)indirectBuffer.Offset);
+
+            PostDraw();
+        }
+
+        public void DrawIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
+        {
+            if (!_program.IsLinked)
+            {
+                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
+                return;
+            }
+
+            PreDrawVbUnbounded();
+
+            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
+            GL.BindBuffer((BufferTarget)All.ParameterBuffer, parameterBuffer.Handle.ToInt32());
+
+            GL.MultiDrawArraysIndirectCount(
+                _primitiveType,
+                (IntPtr)indirectBuffer.Offset,
+                (IntPtr)parameterBuffer.Offset,
+                maxDrawCount,
+                stride);
+
+            PostDraw();
+        }
+
         public void DrawTexture(ITexture texture, ISampler sampler, Extents2DF srcRegion, Extents2DF dstRegion)
         {
             if (texture is TextureView view && sampler is Sampler samp)
@@ -681,57 +770,6 @@ namespace Ryujinx.Graphics.OpenGL
         {
             GL.EndTransformFeedback();
             _tfEnabled = false;
-        }
-
-        public void MultiDrawIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
-        {
-            if (!_program.IsLinked)
-            {
-                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
-                return;
-            }
-
-            PreDrawVbUnbounded();
-
-            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
-            GL.BindBuffer((BufferTarget)All.ParameterBuffer, parameterBuffer.Handle.ToInt32());
-
-            GL.MultiDrawArraysIndirectCount(
-                _primitiveType,
-                (IntPtr)indirectBuffer.Offset,
-                (IntPtr)parameterBuffer.Offset,
-                maxDrawCount,
-                stride);
-
-            PostDraw();
-        }
-
-        public void MultiDrawIndexedIndirectCount(BufferRange indirectBuffer, BufferRange parameterBuffer, int maxDrawCount, int stride)
-        {
-            if (!_program.IsLinked)
-            {
-                Logger.Debug?.Print(LogClass.Gpu, "Draw error, shader not linked.");
-                return;
-            }
-
-            PreDrawVbUnbounded();
-
-            _vertexArray.SetRangeOfIndexBuffer();
-
-            GL.BindBuffer((BufferTarget)All.DrawIndirectBuffer, indirectBuffer.Handle.ToInt32());
-            GL.BindBuffer((BufferTarget)All.ParameterBuffer, parameterBuffer.Handle.ToInt32());
-
-            GL.MultiDrawElementsIndirectCount(
-                _primitiveType,
-                (All)_elementsType,
-                (IntPtr)indirectBuffer.Offset,
-                (IntPtr)parameterBuffer.Offset,
-                maxDrawCount,
-                stride);
-
-            _vertexArray.RestoreIndexBuffer();
-
-            PostDraw();
         }
 
         public void SetAlphaTest(bool enable, float reference, CompareOp op)

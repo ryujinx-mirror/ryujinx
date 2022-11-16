@@ -89,6 +89,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 context.AddCapability(Capability.Tessellation);
             }
+            else if (config.Stage == ShaderStage.Vertex)
+            {
+                context.AddCapability(Capability.DrawParameters);
+            }
 
             context.AddExtension("SPV_KHR_shader_ballot");
             context.AddExtension("SPV_KHR_subgroup_vote");

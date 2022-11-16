@@ -12,6 +12,9 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
         {
+            bool isVertexShader = config.Stage == ShaderStage.Vertex;
+            bool hasConstantBufferDrawParameters = config.GpuAccessor.QueryHasConstantBufferDrawParameters();
+
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
                 BasicBlock block = blocks[blkIndex];
@@ -21,6 +24,21 @@ namespace Ryujinx.Graphics.Shader.Translation
                     if (node.Value is not Operation operation)
                     {
                         continue;
+                    }
+
+                    if (isVertexShader)
+                    {
+                        if (hasConstantBufferDrawParameters)
+                        {
+                            if (ReplaceConstantBufferWithDrawParameters(operation))
+                            {
+                                config.SetUsedFeature(FeatureFlags.DrawParameters);
+                            }
+                        }
+                        else if (HasConstantBufferDrawParameters(operation))
+                        {
+                            config.SetUsedFeature(FeatureFlags.DrawParameters);
+                        }
                     }
 
                     if (UsesGlobalMemory(operation.Inst))
@@ -527,6 +545,58 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             return node;
+        }
+
+        private static bool ReplaceConstantBufferWithDrawParameters(Operation operation)
+        {
+            bool modified = false;
+
+            for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
+            {
+                Operand src = operation.GetSource(srcIndex);
+
+                if (src.Type == OperandType.ConstantBuffer && src.GetCbufSlot() == 0)
+                {
+                    switch (src.GetCbufOffset())
+                    {
+                        case Constants.NvnBaseVertexByteOffset / 4:
+                            operation.SetSource(srcIndex, Attribute(AttributeConsts.BaseVertex));
+                            modified = true;
+                            break;
+                        case Constants.NvnBaseInstanceByteOffset / 4:
+                            operation.SetSource(srcIndex, Attribute(AttributeConsts.BaseInstance));
+                            modified = true;
+                            break;
+                        case Constants.NvnDrawIndexByteOffset / 4:
+                            operation.SetSource(srcIndex, Attribute(AttributeConsts.DrawIndex));
+                            modified = true;
+                            break;
+                    }
+                }
+            }
+
+            return modified;
+        }
+
+        private static bool HasConstantBufferDrawParameters(Operation operation)
+        {
+            for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
+            {
+                Operand src = operation.GetSource(srcIndex);
+
+                if (src.Type == OperandType.ConstantBuffer && src.GetCbufSlot() == 0)
+                {
+                    switch (src.GetCbufOffset())
+                    {
+                        case Constants.NvnBaseVertexByteOffset / 4:
+                        case Constants.NvnBaseInstanceByteOffset / 4:
+                        case Constants.NvnDrawIndexByteOffset / 4:
+                            return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

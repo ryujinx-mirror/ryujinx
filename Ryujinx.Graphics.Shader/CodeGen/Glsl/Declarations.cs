@@ -46,6 +46,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
             else
             {
+                if (context.Config.Stage == ShaderStage.Vertex)
+                {
+                    context.AppendLine("#extension GL_ARB_shader_draw_parameters : enable");
+                }
+
                 context.AppendLine("#extension GL_ARB_shader_viewport_layer_array : enable");
             }
 

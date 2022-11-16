@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             else
             {
                 evt.Flush();
-                return (memoryManager.Read<ulong>(gpuVa) != 0) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
+                return (memoryManager.Read<ulong>(gpuVa, true) != 0) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
             }
         }
 
@@ -108,8 +108,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 evt?.Flush();
                 evt2?.Flush();
 
-                ulong x = memoryManager.Read<ulong>(gpuVa);
-                ulong y = memoryManager.Read<ulong>(gpuVa + 16);
+                ulong x = memoryManager.Read<ulong>(gpuVa, true);
+                ulong y = memoryManager.Read<ulong>(gpuVa + 16, true);
 
                 return (isEqual ? x == y : x != y) ? ConditionalRenderEnabled.True : ConditionalRenderEnabled.False;
             }

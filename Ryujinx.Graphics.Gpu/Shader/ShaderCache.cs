@@ -520,7 +520,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, true);
+            bool usesDrawParameters = gpShaders.Shaders[1]?.Info.UsesDrawParameters ?? false;
+
+            return gpShaders.SpecializationState.MatchesGraphics(channel, poolState, graphicsState, usesDrawParameters, true);
         }
 
         /// <summary>

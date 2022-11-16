@@ -12,6 +12,7 @@ namespace Ryujinx.Graphics.Shader
 
         public ShaderStage Stage { get; }
         public bool UsesInstanceId { get; }
+        public bool UsesDrawParameters { get; }
         public bool UsesRtLayer { get; }
         public byte ClipDistancesWritten { get; }
         public int FragmentOutputMap { get; }
@@ -23,6 +24,7 @@ namespace Ryujinx.Graphics.Shader
             TextureDescriptor[] images,
             ShaderStage stage,
             bool usesInstanceId,
+            bool usesDrawParameters,
             bool usesRtLayer,
             byte clipDistancesWritten,
             int fragmentOutputMap)
@@ -34,6 +36,7 @@ namespace Ryujinx.Graphics.Shader
 
             Stage = stage;
             UsesInstanceId = usesInstanceId;
+            UsesDrawParameters = usesDrawParameters;
             UsesRtLayer = usesRtLayer;
             ClipDistancesWritten = clipDistancesWritten;
             FragmentOutputMap = fragmentOutputMap;

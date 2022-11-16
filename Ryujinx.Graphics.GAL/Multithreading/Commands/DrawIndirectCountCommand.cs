@@ -1,8 +1,8 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct MultiDrawIndirectCountCommand : IGALCommand
+    struct DrawIndirectCountCommand : IGALCommand
     {
-        public CommandType CommandType => CommandType.MultiDrawIndirectCount;
+        public CommandType CommandType => CommandType.DrawIndirectCount;
         private BufferRange _indirectBuffer;
         private BufferRange _parameterBuffer;
         private int _maxDrawCount;
@@ -16,9 +16,9 @@
             _stride = stride;
         }
 
-        public static void Run(ref MultiDrawIndirectCountCommand command, ThreadedRenderer threaded, IRenderer renderer)
+        public static void Run(ref DrawIndirectCountCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {
-            renderer.Pipeline.MultiDrawIndirectCount(
+            renderer.Pipeline.DrawIndirectCount(
                 threaded.Buffers.MapBufferRange(command._indirectBuffer),
                 threaded.Buffers.MapBufferRange(command._parameterBuffer),
                 command._maxDrawCount,

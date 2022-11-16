@@ -31,6 +31,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             { AttributeConsts.BaseVertex,    new AttributeInfo(AttributeConsts.BaseVertex,    0, 1, AggregateType.S32) },
             { AttributeConsts.InstanceIndex, new AttributeInfo(AttributeConsts.InstanceIndex, 0, 1, AggregateType.S32) },
             { AttributeConsts.VertexIndex,   new AttributeInfo(AttributeConsts.VertexIndex,   0, 1, AggregateType.S32) },
+            { AttributeConsts.DrawIndex,     new AttributeInfo(AttributeConsts.DrawIndex,     0, 1, AggregateType.S32) },
             { AttributeConsts.FrontFacing,   new AttributeInfo(AttributeConsts.FrontFacing,   0, 1, AggregateType.Bool) },
 
             // Special.

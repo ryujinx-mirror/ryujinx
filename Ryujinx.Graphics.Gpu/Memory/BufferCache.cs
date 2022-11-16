@@ -27,6 +27,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private Buffer[] _bufferOverlaps;
 
         private readonly Dictionary<ulong, BufferCacheEntry> _dirtyCache;
+        private readonly Dictionary<ulong, BufferCacheEntry> _modifiedCache;
 
         public event Action NotifyBuffersModified;
 
@@ -45,6 +46,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _bufferOverlaps = new Buffer[OverlapsBufferInitialCapacity];
 
             _dirtyCache = new Dictionary<ulong, BufferCacheEntry>();
+
+            // There are a lot more entries on the modified cache, so it is separate from the one for ForceDirty.
+            _modifiedCache = new Dictionary<ulong, BufferCacheEntry>();
         }
 
         /// <summary>
@@ -143,6 +147,30 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
 
             result.Buffer.ForceDirty(result.Address, size);
+        }
+
+        /// <summary>
+        /// Checks if the given buffer range has been GPU modifed.
+        /// </summary>
+        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the buffer</param>
+        /// <returns>True if modified, false otherwise</returns>
+        public bool CheckModified(MemoryManager memoryManager, ulong gpuVa, ulong size, out ulong outAddr)
+        {
+            if (!_modifiedCache.TryGetValue(gpuVa, out BufferCacheEntry result) ||
+                result.EndGpuAddress < gpuVa + size ||
+                result.UnmappedSequence != result.Buffer.UnmappedSequence)
+            {
+                ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa, size);
+                result = new BufferCacheEntry(address, gpuVa, GetBuffer(address, size));
+
+                _modifiedCache[gpuVa] = result;
+            }
+
+            outAddr = result.Address;
+
+            return result.Buffer.IsModified(result.Address, size);
         }
 
         /// <summary>
@@ -324,18 +352,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _context.Renderer.Pipeline.ClearBuffer(buffer.Handle, offset, (int)size, value);
 
             buffer.SignalModified(address, size);
-        }
-
-        /// <summary>
-        /// Gets a buffer sub-range for a given GPU memory range.
-        /// </summary>
-        /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
-        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
-        /// <param name="size">Size in bytes of the buffer</param>
-        /// <returns>The buffer sub-range for the given range</returns>
-        public BufferRange GetGpuBufferRange(MemoryManager memoryManager, ulong gpuVa, ulong size)
-        {
-            return GetBufferRange(TranslateAndCreateBuffer(memoryManager, gpuVa, size), size);
         }
 
         /// <summary>

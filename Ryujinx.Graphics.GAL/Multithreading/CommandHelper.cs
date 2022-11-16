@@ -141,16 +141,20 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 DrawCommand.Run(ref GetCommand<DrawCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.DrawIndexed] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 DrawIndexedCommand.Run(ref GetCommand<DrawIndexedCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.DrawIndexedIndirect] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                DrawIndexedIndirectCommand.Run(ref GetCommand<DrawIndexedIndirectCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.DrawIndexedIndirectCount] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                DrawIndexedIndirectCountCommand.Run(ref GetCommand<DrawIndexedIndirectCountCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.DrawIndirect] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                DrawIndirectCommand.Run(ref GetCommand<DrawIndirectCommand>(memory), threaded, renderer);
+            _lookup[(int)CommandType.DrawIndirectCount] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
+                DrawIndirectCountCommand.Run(ref GetCommand<DrawIndirectCountCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.DrawTexture] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 DrawTextureCommand.Run(ref GetCommand<DrawTextureCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.EndHostConditionalRendering] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 EndHostConditionalRenderingCommand.Run(renderer);
             _lookup[(int)CommandType.EndTransformFeedback] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 EndTransformFeedbackCommand.Run(ref GetCommand<EndTransformFeedbackCommand>(memory), threaded, renderer);
-            _lookup[(int)CommandType.MultiDrawIndirectCount] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
-                MultiDrawIndirectCountCommand.Run(ref GetCommand<MultiDrawIndirectCountCommand>(memory), threaded, renderer);
-            _lookup[(int)CommandType.MultiDrawIndexedIndirectCount] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
-                MultiDrawIndexedIndirectCountCommand.Run(ref GetCommand<MultiDrawIndexedIndirectCountCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetAlphaTest] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>
                 SetAlphaTestCommand.Run(ref GetCommand<SetAlphaTestCommand>(memory), threaded, renderer);
             _lookup[(int)CommandType.SetBlendState] = (Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer) =>

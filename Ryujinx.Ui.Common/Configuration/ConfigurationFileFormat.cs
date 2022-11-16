@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 41;
+        public const int CurrentVersion = 42;
 
         /// <summary>
         /// Version of the configuration file format
@@ -165,6 +165,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables or disables texture recompression
         /// </summary>
         public bool EnableTextureRecompression { get; set; }
+
+        /// <summary>
+        /// Enables or disables Macro high-level emulation
+        /// </summary>
+        public bool EnableMacroHLE { get; set; }
 
         /// <summary>
         /// Enables or disables profiled translation cache persistency

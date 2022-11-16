@@ -568,6 +568,10 @@
                                     ToolTip.Tip="{locale:Locale SettingsEnableTextureRecompressionTooltip}">
                                     <TextBlock Text="{locale:Locale SettingsEnableTextureRecompression}" />
                                 </CheckBox>
+                                <CheckBox IsChecked="{Binding EnableMacroHLE}"
+                                    ToolTip.Tip="{locale:Locale SettingsEnableMacroHLETooltip}">
+                                    <TextBlock Text="{locale:Locale SettingsEnableMacroHLE}" />
+                                </CheckBox>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center"
