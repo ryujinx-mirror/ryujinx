@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             new int[] { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
         };
 
-        private static readonly byte[] TimeZoneDefaultRule = Encoding.ASCII.GetBytes(",M4.1.0,M10.5.0");
+        private static ReadOnlySpan<byte> TimeZoneDefaultRule => ",M4.1.0,M10.5.0"u8;
 
         [StructLayout(LayoutKind.Sequential, Pack = 0x4, Size = 0x10)]
         private struct CalendarTimeInternal

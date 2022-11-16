@@ -20,10 +20,10 @@ namespace Ryujinx.HLE.Loaders.Mods
 
         private static MemPatch ParseIps(BinaryReader reader)
         {
-            Span<byte> IpsHeaderMagic   = Encoding.ASCII.GetBytes("PATCH").AsSpan();
-            Span<byte> IpsTailMagic     = Encoding.ASCII.GetBytes("EOF").AsSpan();
-            Span<byte> Ips32HeaderMagic = Encoding.ASCII.GetBytes("IPS32").AsSpan();
-            Span<byte> Ips32TailMagic   = Encoding.ASCII.GetBytes("EEOF").AsSpan();
+            ReadOnlySpan<byte> IpsHeaderMagic   = "PATCH"u8;
+            ReadOnlySpan<byte> IpsTailMagic     = "EOF"u8;
+            ReadOnlySpan<byte> Ips32HeaderMagic = "IPS32"u8;
+            ReadOnlySpan<byte> Ips32TailMagic   = "EEOF"u8;
 
             MemPatch patches = new MemPatch();
             var header = reader.ReadBytes(IpsHeaderMagic.Length).AsSpan();
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.Loaders.Mods
             }
 
             bool is32;
-            Span<byte> tailSpan;
+            ReadOnlySpan<byte> tailSpan;
 
             if (header.SequenceEqual(IpsHeaderMagic))
             {

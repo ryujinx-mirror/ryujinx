@@ -34,10 +34,10 @@ namespace Ryujinx.Audio.Renderer.Utils
 
             writer.Seek(0, SeekOrigin.Begin);
 
-            writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+            writer.Write("RIFF"u8);
             writer.Write((int)(writer.BaseStream.Length - 8));
-            writer.Write(Encoding.ASCII.GetBytes("WAVE"));
-            writer.Write(Encoding.ASCII.GetBytes("fmt "));
+            writer.Write("WAVE"u8);
+            writer.Write("fmt "u8);
             writer.Write(16);
             writer.Write((short)1);
             writer.Write((short)GetChannelCount());
@@ -45,7 +45,7 @@ namespace Ryujinx.Audio.Renderer.Utils
             writer.Write(GetSampleRate() * GetChannelCount() * sizeof(short));
             writer.Write((short)(GetChannelCount() * sizeof(short)));
             writer.Write((short)(sizeof(short) * 8));
-            writer.Write(Encoding.ASCII.GetBytes("data"));
+            writer.Write("data"u8);
             writer.Write((int)(writer.BaseStream.Length - HeaderSize));
 
             writer.Seek((int)currentPos, SeekOrigin.Begin);
