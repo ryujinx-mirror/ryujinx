@@ -81,22 +81,22 @@ namespace Ryujinx.Ui.Helper
             string aValue = model.GetValue(a, 8).ToString();
             string bValue = model.GetValue(b, 8).ToString();
 
-            if (aValue[^2..] == "GB")
+            if (aValue[^3..] == "GiB")
             {
-                aValue = (float.Parse(aValue[0..^2]) * 1024).ToString();
+                aValue = (float.Parse(aValue[0..^3]) * 1024).ToString();
             }
             else
             {
-                aValue = aValue[0..^2];
+                aValue = aValue[0..^3];
             }
 
-            if (bValue[^2..] == "GB")
+            if (bValue[^3..] == "GiB")
             {
-                bValue = (float.Parse(bValue[0..^2]) * 1024).ToString();
+                bValue = (float.Parse(bValue[0..^3]) * 1024).ToString();
             }
             else
             {
-                bValue = bValue[0..^2];
+                bValue = bValue[0..^3];
             }
 
             if (float.Parse(aValue) > float.Parse(bValue))

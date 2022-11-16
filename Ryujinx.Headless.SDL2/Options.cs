@@ -175,7 +175,7 @@ namespace Ryujinx.Headless.SDL2
 
         // Hacks
 
-        [Option("expand-ram", Required = false, Default = false, HelpText = "Expands the RAM amount on the emulated system from 4GB to 6GB.")]
+        [Option("expand-ram", Required = false, Default = false, HelpText = "Expands the RAM amount on the emulated system from 4GiB to 6GiB.")]
         public bool? ExpandRam { get; set; }
 
         [Option("ignore-missing-services", Required = false, Default = false, HelpText = "Enable ignoring missing services.")]

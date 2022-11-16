@@ -1749,11 +1749,11 @@
                                 <property name="orientation">vertical</property>
                                 <child>
                                   <object class="GtkCheckButton" id="_expandRamToggle">
-                                    <property name="label" translatable="yes">Expand DRAM Size to 6GB</property>
+                                    <property name="label" translatable="yes">Expand DRAM Size to 6GiB</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
-                                    <property name="tooltip-text" translatable="yes">Increases the amount of memory on the emulated system from 4GB to 6GB.&#13;This is only useful for higher-resolution texture packs or 4k resolution mods. Does NOT improve performance.&#13;Leave OFF if unsure.</property>
+                                    <property name="tooltip-text" translatable="yes">Increases the amount of memory on the emulated system from 4GiB to 6GiB.&#13;This is only useful for higher-resolution texture packs or 4k resolution mods. Does NOT improve performance.&#13;Leave OFF if unsure.</property>
                                     <property name="halign">start</property>
                                     <property name="margin-top">5</property>
                                     <property name="margin-bottom">5</property>

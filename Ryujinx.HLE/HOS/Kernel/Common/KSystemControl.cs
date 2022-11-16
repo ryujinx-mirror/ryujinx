@@ -5,11 +5,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 {
     static class KSystemControl
     {
-        private const ulong Kb = 1024;
-        private const ulong Mb = 1024 * Kb;
-        private const ulong Gb = 1024 * Mb;
+        private const ulong KiB = 1024;
+        private const ulong MiB = 1024 * KiB;
+        private const ulong GiB = 1024 * MiB;
 
-        private const ulong PageSize = 4 * Kb;
+        private const ulong PageSize = 4 * KiB;
 
         private const ulong RequiredNonSecureSystemPoolSizeVi = 0x2238 * PageSize;
         private const ulong RequiredNonSecureSystemPoolSizeNvservices = 0x710 * PageSize;
@@ -24,12 +24,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             return arrange switch
             {
-                MemoryArrange.MemoryArrange4GB or
-                MemoryArrange.MemoryArrange4GBSystemDev or
-                MemoryArrange.MemoryArrange6GBAppletDev => 3285 * Mb,
-                MemoryArrange.MemoryArrange4GBAppletDev => 2048 * Mb,
-                MemoryArrange.MemoryArrange6GB or
-                MemoryArrange.MemoryArrange8GB => 4916 * Mb,
+                MemoryArrange.MemoryArrange4GiB or
+                MemoryArrange.MemoryArrange4GiBSystemDev or
+                MemoryArrange.MemoryArrange6GiBAppletDev => 3285 * MiB,
+                MemoryArrange.MemoryArrange4GiBAppletDev => 2048 * MiB,
+                MemoryArrange.MemoryArrange6GiB or
+                MemoryArrange.MemoryArrange8GiB => 4916 * MiB,
                 _ => throw new ArgumentException($"Invalid memory arrange \"{arrange}\".")
             };
         }
@@ -38,12 +38,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             return arrange switch
             {
-                MemoryArrange.MemoryArrange4GB => 507 * Mb,
-                MemoryArrange.MemoryArrange4GBAppletDev => 1554 * Mb,
-                MemoryArrange.MemoryArrange4GBSystemDev => 448 * Mb,
-                MemoryArrange.MemoryArrange6GB => 562 * Mb,
-                MemoryArrange.MemoryArrange6GBAppletDev or
-                MemoryArrange.MemoryArrange8GB => 2193 * Mb,
+                MemoryArrange.MemoryArrange4GiB => 507 * MiB,
+                MemoryArrange.MemoryArrange4GiBAppletDev => 1554 * MiB,
+                MemoryArrange.MemoryArrange4GiBSystemDev => 448 * MiB,
+                MemoryArrange.MemoryArrange6GiB => 562 * MiB,
+                MemoryArrange.MemoryArrange6GiBAppletDev or
+                MemoryArrange.MemoryArrange8GiB => 2193 * MiB,
                 _ => throw new ArgumentException($"Invalid memory arrange \"{arrange}\".")
             };
         }
@@ -68,9 +68,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             return size switch
             {
-                MemorySize.MemorySize4GB => 4 * Gb,
-                MemorySize.MemorySize6GB => 6 * Gb,
-                MemorySize.MemorySize8GB => 8 * Gb,
+                MemorySize.MemorySize4GiB => 4 * GiB,
+                MemorySize.MemorySize6GiB => 6 * GiB,
+                MemorySize.MemorySize8GiB => 8 * GiB,
                 _ => throw new ArgumentException($"Invalid memory size \"{size}\".")
             };
         }

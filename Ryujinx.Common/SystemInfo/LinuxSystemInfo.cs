@@ -36,13 +36,13 @@ namespace Ryujinx.Common.SystemInfo
 
             ParseKeyValues("/proc/meminfo", memDict);
 
-            // Entries are in KB
-            ulong.TryParse(memDict["MemTotal"]?.Split(' ')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong totalKB);
-            ulong.TryParse(memDict["MemAvailable"]?.Split(' ')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong availableKB);
+            // Entries are in KiB
+            ulong.TryParse(memDict["MemTotal"]?.Split(' ')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong totalKiB);
+            ulong.TryParse(memDict["MemAvailable"]?.Split(' ')[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out ulong availableKiB);
 
             CpuName = $"{cpuName} ; {LogicalCoreCount} logical";
-            RamTotal = totalKB * 1024;
-            RamAvailable = availableKB * 1024;
+            RamTotal = totalKiB * 1024;
+            RamAvailable = availableKiB * 1024;
         }
 
         private static void ParseKeyValues(string filePath, Dictionary<string, string> itemDict)

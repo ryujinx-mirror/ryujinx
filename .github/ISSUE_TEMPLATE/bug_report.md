@@ -34,7 +34,7 @@ about: Something doesn't work correctly in Ryujinx. Note that game-specific issu
   - OS: *(e.g. Windows 10)*
   - CPU: *(e.g. i7-6700)*
   - GPU: *(e.g. NVIDIA RTX 2070)*
-  - RAM: *(e.g. 16GB)*
+  - RAM: *(e.g. 16GiB)*
 - Applied Mods : [ Yes (Which ones) / No ]
 
 ### Additional context?

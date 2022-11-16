@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class PipelineFull : PipelineBase, IPipeline
     {
-        private const ulong MinByteWeightForFlush = 256 * 1024 * 1024; // MB
+        private const ulong MinByteWeightForFlush = 256 * 1024 * 1024; // MiB
 
         private readonly List<QueryPool> _activeQueries;
         private CounterQueueEvent _activeConditionalRender;

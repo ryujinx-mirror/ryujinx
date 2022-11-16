@@ -41,7 +41,7 @@ You can check out the compatibility list [here](https://github.com/Ryujinx/Ryuji
 
 ## Usage
 
-To run this emulator, your PC must be equipped with at least 8GB of RAM; failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
+To run this emulator, your PC must be equipped with at least 8GiB of RAM; failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
 
 See our [Setup & Configuration Guide](https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide) on how to set up the emulator.
 

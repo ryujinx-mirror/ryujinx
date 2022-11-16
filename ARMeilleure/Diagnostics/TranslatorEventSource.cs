@@ -25,13 +25,13 @@ namespace ARMeilleure.Diagnostics
             _funcTabSizeCounter = new PollingCounter("addr-tab-alloc", this, () => _funcTabSize / 1024d / 1024d)
             {
                 DisplayName = "AddressTable Total Bytes Allocated",
-                DisplayUnits = "MB"
+                DisplayUnits = "MiB"
             };
 
             _funcTabLeafSizeCounter = new PollingCounter("addr-tab-leaf-alloc", this, () => _funcTabLeafSize / 1024d / 1024d)
             {
                 DisplayName = "AddressTable Total Leaf Bytes Allocated",
-                DisplayUnits = "MB"
+                DisplayUnits = "MiB"
             };
         }
 

@@ -20,13 +20,13 @@ namespace Ryujinx.Common.SystemInfo
             CpuName = "Unknown";
         }
 
-        private static string ToMBString(ulong bytesValue) => (bytesValue == 0) ? "Unknown" : $"{bytesValue / 1024 / 1024} MB";
+        private static string ToMiBString(ulong bytesValue) => (bytesValue == 0) ? "Unknown" : $"{bytesValue / 1024 / 1024} MiB";
 
         public void Print()
         {
             Logger.Notice.Print(LogClass.Application, $"Operating System: {OsDescription}");
             Logger.Notice.Print(LogClass.Application, $"CPU: {CpuName}");
-            Logger.Notice.Print(LogClass.Application, $"RAM: Total {ToMBString(RamTotal)} ; Available {ToMBString(RamAvailable)}");
+            Logger.Notice.Print(LogClass.Application, $"RAM: Total {ToMiBString(RamTotal)} ; Available {ToMiBString(RamAvailable)}");
         }
 
         public static SystemInfo Gather()

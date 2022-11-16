@@ -5,28 +5,28 @@ namespace Ryujinx.HLE
 {
     public enum MemoryConfiguration
     {
-        MemoryConfiguration4GB          = 0,
-        MemoryConfiguration4GBAppletDev = 1,
-        MemoryConfiguration4GBSystemDev = 2,
-        MemoryConfiguration6GB          = 3,
-        MemoryConfiguration6GBAppletDev = 4,
-        MemoryConfiguration8GB          = 5
+        MemoryConfiguration4GiB          = 0,
+        MemoryConfiguration4GiBAppletDev = 1,
+        MemoryConfiguration4GiBSystemDev = 2,
+        MemoryConfiguration6GiB          = 3,
+        MemoryConfiguration6GiBAppletDev = 4,
+        MemoryConfiguration8GiB          = 5
     }
 
     static class MemoryConfigurationExtensions
     {
-        private const ulong Gb = 1024 * 1024 * 1024;
+        private const ulong GiB = 1024 * 1024 * 1024;
 
         public static MemoryArrange ToKernelMemoryArrange(this MemoryConfiguration configuration)
         {
             return configuration switch
             {
-                MemoryConfiguration.MemoryConfiguration4GB          => MemoryArrange.MemoryArrange4GB,
-                MemoryConfiguration.MemoryConfiguration4GBAppletDev => MemoryArrange.MemoryArrange4GBAppletDev,
-                MemoryConfiguration.MemoryConfiguration4GBSystemDev => MemoryArrange.MemoryArrange4GBSystemDev,
-                MemoryConfiguration.MemoryConfiguration6GB          => MemoryArrange.MemoryArrange6GB,
-                MemoryConfiguration.MemoryConfiguration6GBAppletDev => MemoryArrange.MemoryArrange6GBAppletDev,
-                MemoryConfiguration.MemoryConfiguration8GB          => MemoryArrange.MemoryArrange8GB,
+                MemoryConfiguration.MemoryConfiguration4GiB          => MemoryArrange.MemoryArrange4GiB,
+                MemoryConfiguration.MemoryConfiguration4GiBAppletDev => MemoryArrange.MemoryArrange4GiBAppletDev,
+                MemoryConfiguration.MemoryConfiguration4GiBSystemDev => MemoryArrange.MemoryArrange4GiBSystemDev,
+                MemoryConfiguration.MemoryConfiguration6GiB          => MemoryArrange.MemoryArrange6GiB,
+                MemoryConfiguration.MemoryConfiguration6GiBAppletDev => MemoryArrange.MemoryArrange6GiBAppletDev,
+                MemoryConfiguration.MemoryConfiguration8GiB          => MemoryArrange.MemoryArrange8GiB,
                 _ => throw new AggregateException($"Invalid memory configuration \"{configuration}\".")
             };
         }
@@ -35,12 +35,12 @@ namespace Ryujinx.HLE
         {
             return configuration switch
             {
-                MemoryConfiguration.MemoryConfiguration4GB or
-                MemoryConfiguration.MemoryConfiguration4GBAppletDev or
-                MemoryConfiguration.MemoryConfiguration4GBSystemDev => MemorySize.MemorySize4GB,
-                MemoryConfiguration.MemoryConfiguration6GB or
-                MemoryConfiguration.MemoryConfiguration6GBAppletDev => MemorySize.MemorySize6GB,
-                MemoryConfiguration.MemoryConfiguration8GB          => MemorySize.MemorySize8GB,
+                MemoryConfiguration.MemoryConfiguration4GiB or
+                MemoryConfiguration.MemoryConfiguration4GiBAppletDev or
+                MemoryConfiguration.MemoryConfiguration4GiBSystemDev => MemorySize.MemorySize4GiB,
+                MemoryConfiguration.MemoryConfiguration6GiB or
+                MemoryConfiguration.MemoryConfiguration6GiBAppletDev => MemorySize.MemorySize6GiB,
+                MemoryConfiguration.MemoryConfiguration8GiB          => MemorySize.MemorySize8GiB,
                 _ => throw new AggregateException($"Invalid memory configuration \"{configuration}\".")
             };
         }
@@ -49,12 +49,12 @@ namespace Ryujinx.HLE
         {
             return configuration switch
             {
-                MemoryConfiguration.MemoryConfiguration4GB or
-                MemoryConfiguration.MemoryConfiguration4GBAppletDev or
-                MemoryConfiguration.MemoryConfiguration4GBSystemDev => 4 * Gb,
-                MemoryConfiguration.MemoryConfiguration6GB or
-                MemoryConfiguration.MemoryConfiguration6GBAppletDev => 6 * Gb,
-                MemoryConfiguration.MemoryConfiguration8GB          => 8 * Gb,
+                MemoryConfiguration.MemoryConfiguration4GiB or
+                MemoryConfiguration.MemoryConfiguration4GiBAppletDev or
+                MemoryConfiguration.MemoryConfiguration4GiBSystemDev => 4 * GiB,
+                MemoryConfiguration.MemoryConfiguration6GiB or
+                MemoryConfiguration.MemoryConfiguration6GiBAppletDev => 6 * GiB,
+                MemoryConfiguration.MemoryConfiguration8GiB          => 8 * GiB,
                 _ => throw new AggregateException($"Invalid memory configuration \"{configuration}\".")
             };
         }

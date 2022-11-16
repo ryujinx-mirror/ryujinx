@@ -67,17 +67,17 @@ namespace Ryujinx.HLE.HOS.Services.Spl
                     configValue = 0;
                     break;
                 case ConfigItem.DramId:
-                    if (memorySize == MemorySize.MemorySize8GB)
+                    if (memorySize == MemorySize.MemorySize8GiB)
                     {
-                        configValue = (ulong)DramId.IowaSamsung8GB;
+                        configValue = (ulong)DramId.IowaSamsung8GiB;
                     }
-                    else if (memorySize == MemorySize.MemorySize6GB)
+                    else if (memorySize == MemorySize.MemorySize6GiB)
                     {
-                        configValue = (ulong)DramId.IcosaSamsung6GB;
+                        configValue = (ulong)DramId.IcosaSamsung6GiB;
                     }
                     else
                     {
-                        configValue = (ulong)DramId.IcosaSamsung4GB;
+                        configValue = (ulong)DramId.IcosaSamsung4GiB;
                     }
                     break;
                 case ConfigItem.SecurityEngineInterruptNumber: 

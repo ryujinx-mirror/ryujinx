@@ -549,8 +549,8 @@ namespace Ryujinx.Ui
             }
 
             var memoryConfiguration = ConfigurationState.Instance.System.ExpandRam.Value
-                ? HLE.MemoryConfiguration.MemoryConfiguration6GB
-                : HLE.MemoryConfiguration.MemoryConfiguration4GB;
+                ? HLE.MemoryConfiguration.MemoryConfiguration6GiB
+                : HLE.MemoryConfiguration.MemoryConfiguration4GiB;
 
             IntegrityCheckLevel fsIntegrityCheckLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None;
 
