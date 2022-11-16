@@ -207,7 +207,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (context.Config.NextUsedInputAttributesPerPatch != null)
             {
-                foreach (int vecIndex in context.Config.NextUsedInputAttributesPerPatch.OrderBy(x => x))
+                foreach (int vecIndex in context.Config.NextUsedInputAttributesPerPatch.Order())
                 {
                     InitializeOutput(context, AttributeConsts.UserAttributePerPatchBase + vecIndex * 16, perPatch: true);
                 }
