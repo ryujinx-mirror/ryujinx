@@ -204,12 +204,11 @@ namespace Ryujinx.HLE.HOS.Applets
             else
             {
                 // Call the configured GUI handler to get user's input.
-
                 var args = new SoftwareKeyboardUiArgs
                 {
-                    HeaderText = _keyboardForegroundConfig.HeaderText,
-                    SubtitleText = _keyboardForegroundConfig.SubtitleText,
-                    GuideText = _keyboardForegroundConfig.GuideText,
+                    HeaderText = StripUnicodeControlCodes(_keyboardForegroundConfig.HeaderText),
+                    SubtitleText = StripUnicodeControlCodes(_keyboardForegroundConfig.SubtitleText),
+                    GuideText = StripUnicodeControlCodes(_keyboardForegroundConfig.GuideText),
                     SubmitText = (!string.IsNullOrWhiteSpace(_keyboardForegroundConfig.SubmitText) ?
                     _keyboardForegroundConfig.SubmitText : "OK"),
                     StringLengthMin = _keyboardForegroundConfig.StringLengthMin,
@@ -762,6 +761,41 @@ namespace Ryujinx.HLE.HOS.Applets
                     _interactiveSession.Push(stream.ToArray());
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes all Unicode control code characters from the input string.
+        /// This includes CR/LF, tabs, null characters, escape characters,
+        /// and special control codes which are used for formatting by the real keyboard applet.
+        /// </summary>
+        /// <remarks>
+        /// Some games send special control codes (such as 0x13 "Device Control 3") as part of the string.
+        /// Future implementations of the emulated keyboard applet will need to handle these as well.
+        /// </remarks>
+        /// <param name="input">The input string to sanitize (may be null).</param>
+        /// <returns>The sanitized string.</returns>
+        internal static string StripUnicodeControlCodes(string input)
+        {
+            if (input is null)
+            {
+                return null;
+            }
+            
+            if (input.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            StringBuilder sb = new StringBuilder(capacity: input.Length);
+            foreach (char c in input)
+            {
+                if (!char.IsControl(c))
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
         }
 
         private static T ReadStruct<T>(byte[] data)
