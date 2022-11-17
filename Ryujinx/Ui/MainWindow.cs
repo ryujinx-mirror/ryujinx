@@ -148,10 +148,10 @@ namespace Ryujinx.Ui
 
             // Apply custom theme if needed.
             ThemeHelper.ApplyTheme();
-
+            Gdk.Monitor monitor = Display.GetMonitor(0);
             // Sets overridden fields.
-            int monitorWidth  = Display.PrimaryMonitor.Geometry.Width  * Display.PrimaryMonitor.ScaleFactor;
-            int monitorHeight = Display.PrimaryMonitor.Geometry.Height * Display.PrimaryMonitor.ScaleFactor;
+            int monitorWidth  = monitor.Geometry.Width  * monitor.ScaleFactor;
+            int monitorHeight = monitor.Geometry.Height * monitor.ScaleFactor;
 
             DefaultWidth  = monitorWidth  < 1280 ? monitorWidth  : 1280;
             DefaultHeight = monitorHeight < 760  ? monitorHeight : 760;
