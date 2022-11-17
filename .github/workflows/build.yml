@@ -52,26 +52,22 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 7.0.x
-      - name: Ensure NuGet Source
-        uses: fabriciomurta/ensure-nuget-source@v1
       - name: Get git short hash
         id: git_short_hash
         run: echo "result=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
         shell: bash
-      - name: Clear
-        run: dotnet clean && dotnet nuget locals all --clear
       - name: Build
-        run: dotnet build -c "${{ matrix.configuration }}" /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER
+        run: dotnet build -c "${{ matrix.configuration }}" -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER
       - name: Test
         run: dotnet test --no-build -c "${{ matrix.configuration }}"
       - name: Publish Ryujinx
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx --self-contained true
         if: github.event_name == 'pull_request'
       - name: Publish Ryujinx.Headless.SDL2
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless /p:Version="${{ env.RYUJINX_BASE_VERSION }}" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_sdl2_headless -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Headless.SDL2 --self-contained true
         if: github.event_name == 'pull_request'
       - name: Publish Ryujinx.Ava
-        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_ava /p:Version="1.0.0" /p:DebugType=embedded /p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" /p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Ava
+        run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_ava -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER Ryujinx.Ava --self-contained true
         if: github.event_name == 'pull_request'
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v3
