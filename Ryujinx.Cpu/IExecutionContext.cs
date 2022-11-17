@@ -27,7 +27,7 @@ namespace Ryujinx.Cpu
         long TpidrroEl0 { get; set; }
 
         /// <summary>
-        /// Processor State register.
+        /// Processor State Register.
         /// </summary>
         uint Pstate { get; set; }
 
