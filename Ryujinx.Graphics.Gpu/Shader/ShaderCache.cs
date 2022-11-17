@@ -203,12 +203,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             GpuChannelComputeState computeState,
             ulong gpuVa)
         {
-            if (_cpPrograms.TryGetValue(gpuVa, out var cpShader) && IsShaderEqual(channel, poolState, cpShader, gpuVa))
+            if (_cpPrograms.TryGetValue(gpuVa, out var cpShader) && IsShaderEqual(channel, poolState, computeState, cpShader, gpuVa))
             {
                 return cpShader;
             }
 
-            if (_computeShaderCache.TryFind(channel, poolState, gpuVa, out cpShader, out byte[] cachedGuestCode))
+            if (_computeShaderCache.TryFind(channel, poolState, computeState, gpuVa, out cpShader, out byte[] cachedGuestCode))
             {
                 _cpPrograms[gpuVa] = cpShader;
                 return cpShader;
@@ -473,18 +473,20 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel using the shader</param>
         /// <param name="poolState">GPU channel state to verify shader compatibility</param>
+        /// <param name="computeState">GPU channel compute state to verify shader compatibility</param>
         /// <param name="cpShader">Cached compute shader</param>
         /// <param name="gpuVa">GPU virtual address of the shader code in memory</param>
         /// <returns>True if the code is different, false otherwise</returns>
         private static bool IsShaderEqual(
             GpuChannel channel,
             GpuChannelPoolState poolState,
+            GpuChannelComputeState computeState,
             CachedShaderProgram cpShader,
             ulong gpuVa)
         {
             if (IsShaderEqual(channel.MemoryManager, cpShader.Shaders[0], gpuVa))
             {
-                return cpShader.SpecializationState.MatchesCompute(channel, poolState, true);
+                return cpShader.SpecializationState.MatchesCompute(channel, poolState, computeState, true);
             }
 
             return false;

@@ -17,6 +17,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
 
+        private int _unalignedStorageBuffers;
+        public bool HasUnalignedStorageBuffers => _unalignedStorageBuffers > 0;
+
         private IndexBuffer _indexBuffer;
         private readonly VertexBuffer[] _vertexBuffers;
         private readonly BufferBounds[] _transformFeedbackBuffers;
@@ -39,6 +42,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             public BufferBounds[] Buffers { get; }
 
             /// <summary>
+            /// Flag indicating if this binding is unaligned.
+            /// </summary>
+            public bool[] Unaligned { get; }
+
+            /// <summary>
             /// Total amount of buffers used on the shader.
             /// </summary>
             public int Count { get; private set; }
@@ -51,6 +59,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 Bindings = new BufferDescriptor[count];
                 Buffers = new BufferBounds[count];
+                Unaligned = new bool[count];
             }
 
             /// <summary>
@@ -203,6 +212,31 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Records the alignment of a storage buffer.
+        /// Unaligned storage buffers disable some optimizations on the shader.
+        /// </summary>
+        /// <param name="buffers">The binding list to modify</param>
+        /// <param name="index">Index of the storage buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        private void RecordStorageAlignment(BuffersPerStage buffers, int index, ulong gpuVa)
+        {
+            bool unaligned = (gpuVa & (Constants.StorageAlignment - 1)) != 0;
+
+            if (unaligned || HasUnalignedStorageBuffers)
+            {
+                // Check if the alignment changed for this binding.
+
+                ref bool currentUnaligned = ref buffers.Unaligned[index];
+
+                if (currentUnaligned != unaligned)
+                {
+                    currentUnaligned = unaligned;
+                    _unalignedStorageBuffers += unaligned ? 1 : -1;
+                }
+            }
+        }
+
+        /// <summary>
         /// Sets a storage buffer on the compute pipeline.
         /// Storage buffers can be read and written to on shaders.
         /// </summary>
@@ -213,6 +247,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public void SetComputeStorageBuffer(int index, ulong gpuVa, ulong size, BufferUsageFlags flags)
         {
             size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
+
+            RecordStorageAlignment(_cpStorageBuffers, index, gpuVa);
 
             gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
 
@@ -234,17 +270,21 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
 
+            BuffersPerStage buffers = _gpStorageBuffers[stage];
+
+            RecordStorageAlignment(buffers, index, gpuVa);
+
             gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
 
             ulong address = _channel.MemoryManager.Physical.BufferCache.TranslateAndCreateBuffer(_channel.MemoryManager, gpuVa, size);
 
-            if (_gpStorageBuffers[stage].Buffers[index].Address != address ||
-                _gpStorageBuffers[stage].Buffers[index].Size != size)
+            if (buffers.Buffers[index].Address != address ||
+                buffers.Buffers[index].Size != size)
             {
                 _gpStorageBuffersDirty = true;
             }
 
-            _gpStorageBuffers[stage].SetBounds(index, address, size, flags);
+            buffers.SetBounds(index, address, size, flags);
         }
 
         /// <summary>

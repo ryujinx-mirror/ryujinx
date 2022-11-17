@@ -138,7 +138,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 qmd.CtaThreadDimension1,
                 qmd.CtaThreadDimension2,
                 localMemorySize,
-                sharedMemorySize);
+                sharedMemorySize,
+                _channel.BufferManager.HasUnalignedStorageBuffers);
 
             CachedShaderProgram cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, poolState, computeState, shaderGpuVa);
 
@@ -149,6 +150,33 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
             _channel.TextureManager.SetComputeTextureBufferIndex(_state.State.SetBindlessTextureConstantBufferSlotSelect);
 
             ShaderProgramInfo info = cs.Shaders[0].Info;
+
+            bool hasUnaligned = _channel.BufferManager.HasUnalignedStorageBuffers;
+
+            for (int index = 0; index < info.SBuffers.Count; index++)
+            {
+                BufferDescriptor sb = info.SBuffers[index];
+
+                ulong sbDescAddress = _channel.BufferManager.GetComputeUniformBufferAddress(0);
+
+                int sbDescOffset = 0x310 + sb.Slot * 0x10;
+
+                sbDescAddress += (ulong)sbDescOffset;
+
+                SbDescriptor sbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(sbDescAddress);
+
+                _channel.BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size, sb.Flags);
+            }
+
+            if ((_channel.BufferManager.HasUnalignedStorageBuffers) != hasUnaligned)
+            {
+                // Refetch the shader, as assumptions about storage buffer alignment have changed.
+                cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, poolState, computeState, shaderGpuVa);
+
+                _context.Renderer.Pipeline.SetProgram(cs.HostProgram);
+
+                info = cs.Shaders[0].Info;
+            }
 
             for (int index = 0; index < info.CBuffers.Count; index++)
             {
@@ -172,21 +200,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 SbDescriptor cbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(cbDescAddress);
 
                 _channel.BufferManager.SetComputeUniformBuffer(cb.Slot, cbDescriptor.PackAddress(), (uint)cbDescriptor.Size);
-            }
-
-            for (int index = 0; index < info.SBuffers.Count; index++)
-            {
-                BufferDescriptor sb = info.SBuffers[index];
-
-                ulong sbDescAddress = _channel.BufferManager.GetComputeUniformBufferAddress(0);
-
-                int sbDescOffset = 0x310 + sb.Slot * 0x10;
-
-                sbDescAddress += (ulong)sbDescOffset;
-
-                SbDescriptor sbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(sbDescAddress);
-
-                _channel.BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size, sb.Flags);
             }
 
             _channel.BufferManager.SetComputeStorageBufferBindings(info.SBuffers);

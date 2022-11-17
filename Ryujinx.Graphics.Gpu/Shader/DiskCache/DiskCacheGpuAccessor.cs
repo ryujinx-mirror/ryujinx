@@ -226,6 +226,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        public bool QueryHasUnalignedStorageBuffer()
+        {
+            return _oldSpecState.GraphicsState.HasUnalignedStorageBuffer || _oldSpecState.ComputeState.HasUnalignedStorageBuffer;
+        }
+
+        /// <inheritdoc/>
         public bool QueryViewportTransformDisable()
         {
             return _oldSpecState.GraphicsState.ViewportTransformDisable;

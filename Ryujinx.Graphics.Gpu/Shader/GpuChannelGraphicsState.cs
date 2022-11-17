@@ -83,6 +83,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public readonly bool HasConstantBufferDrawParameters;
 
         /// <summary>
+        /// Indicates that any storage buffer use is unaligned.
+        /// </summary>
+        public readonly bool HasUnalignedStorageBuffer;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
@@ -99,6 +104,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="alphaTestReference">When alpha test is enabled, indicates the value to compare with the fragment output alpha</param>
         /// <param name="attributeTypes">Type of the vertex attributes consumed by the shader</param>
         /// <param name="hasConstantBufferDrawParameters">Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0</param>
+        /// <param name="hasUnalignedStorageBuffer">Indicates that any storage buffer use is unaligned</param>
         public GpuChannelGraphicsState(
             bool earlyZForce,
             PrimitiveTopology topology,
@@ -113,7 +119,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             CompareOp alphaTestCompare,
             float alphaTestReference,
             ref Array32<AttributeType> attributeTypes,
-            bool hasConstantBufferDrawParameters)
+            bool hasConstantBufferDrawParameters,
+            bool hasUnalignedStorageBuffer)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
@@ -129,6 +136,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             AlphaTestReference = alphaTestReference;
             AttributeTypes = attributeTypes;
             HasConstantBufferDrawParameters = hasConstantBufferDrawParameters;
+            HasUnalignedStorageBuffer = hasUnalignedStorageBuffer;
         }
     }
 }

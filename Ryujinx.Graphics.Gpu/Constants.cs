@@ -95,5 +95,10 @@ namespace Ryujinx.Graphics.Gpu
         /// Byte alignment for block linear textures
         /// </summary>
         public const int GobAlignment = 64;
+
+        /// <summary>
+        /// Expected byte alignment for storage buffers
+        /// </summary>
+        public const int StorageAlignment = 16;
     }
 }

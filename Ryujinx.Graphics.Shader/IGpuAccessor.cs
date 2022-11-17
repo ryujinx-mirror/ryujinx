@@ -178,6 +178,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries whenever the current draw uses unaligned storage buffer addresses.
+        /// </summary>
+        /// <returns>True if any storage buffer address is not aligned to 16 bytes, false otherwise</returns>
+        bool QueryHasUnalignedStorageBuffer()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Queries host about the presence of the FrontFacing built-in variable bug.
         /// </summary>
         /// <returns>True if the bug is present on the host device used, false otherwise</returns>

@@ -531,6 +531,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return false;
             }
 
+            if (graphicsState.HasUnalignedStorageBuffer != GraphicsState.HasUnalignedStorageBuffer)
+            {
+                return false;
+            }
+
             return Matches(channel, poolState, checkTextures, isCompute: false);
         }
 
@@ -539,10 +544,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="computeState">Compute state</param>
         /// <param name="checkTextures">Indicates whether texture descriptors should be checked</param>
         /// <returns>True if the state matches, false otherwise</returns>
-        public bool MatchesCompute(GpuChannel channel, GpuChannelPoolState poolState, bool checkTextures)
+        public bool MatchesCompute(GpuChannel channel, GpuChannelPoolState poolState, GpuChannelComputeState computeState, bool checkTextures)
         {
+            if (computeState.HasUnalignedStorageBuffer != ComputeState.HasUnalignedStorageBuffer)
+            {
+                return false;
+            }
+
             return Matches(channel, poolState, checkTextures, isCompute: true);
         }
 

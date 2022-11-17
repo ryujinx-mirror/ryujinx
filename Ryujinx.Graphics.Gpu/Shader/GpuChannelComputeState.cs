@@ -33,6 +33,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public readonly int SharedMemorySize;
 
         /// <summary>
+        /// Indicates that any storage buffer use is unaligned.
+        /// </summary>
+        public readonly bool HasUnalignedStorageBuffer;
+
+        /// <summary>
         /// Creates a new GPU compute state.
         /// </summary>
         /// <param name="localSizeX">Local group size X of the compute shader</param>
@@ -40,18 +45,21 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="localSizeZ">Local group size Z of the compute shader</param>
         /// <param name="localMemorySize">Local memory size of the compute shader</param>
         /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
+        /// <param name="hasUnalignedStorageBuffer">Indicates that any storage buffer use is unaligned</param>
         public GpuChannelComputeState(
             int localSizeX,
             int localSizeY,
             int localSizeZ,
             int localMemorySize,
-            int sharedMemorySize)
+            int sharedMemorySize,
+            bool hasUnalignedStorageBuffer)
         {
             LocalSizeX = localSizeX;
             LocalSizeY = localSizeY;
             LocalSizeZ = localSizeZ;
             LocalMemorySize = localMemorySize;
             SharedMemorySize = sharedMemorySize;
+            HasUnalignedStorageBuffer = hasUnalignedStorageBuffer;
         }
     }
 }

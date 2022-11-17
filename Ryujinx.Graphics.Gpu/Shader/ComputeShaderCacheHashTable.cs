@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="channel">GPU channel</param>
         /// <param name="poolState">Texture pool state</param>
+        /// <param name="computeState">Compute state</param>
         /// <param name="gpuVa">GPU virtual address of the compute shader</param>
         /// <param name="program">Cached host program for the given state, if found</param>
         /// <param name="cachedGuestCode">Cached guest code, if any found</param>
@@ -43,6 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool TryFind(
             GpuChannel channel,
             GpuChannelPoolState poolState,
+            GpuChannelComputeState computeState,
             ulong gpuVa,
             out CachedShaderProgram program,
             out byte[] cachedGuestCode)
@@ -50,7 +52,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             program = null;
             ShaderCodeAccessor codeAccessor = new ShaderCodeAccessor(channel.MemoryManager, gpuVa);
             bool hasSpecList = _cache.TryFindItem(codeAccessor, out var specList, out cachedGuestCode);
-            return hasSpecList && specList.TryFindForCompute(channel, poolState, out program);
+            return hasSpecList && specList.TryFindForCompute(channel, poolState, computeState, out program);
         }
 
         /// <summary>
