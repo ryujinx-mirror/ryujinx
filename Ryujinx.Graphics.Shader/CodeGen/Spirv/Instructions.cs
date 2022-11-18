@@ -1829,7 +1829,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 if (texOp.Index < 2 || (type & SamplerType.Mask) == SamplerType.Texture3D)
                 {
-                    result = ScalingHelpers.ApplyUnscaling(context, texOp, result, isBindless, isIndexed);
+                    result = ScalingHelpers.ApplyUnscaling(context, texOp.WithType(type), result, isBindless, isIndexed);
                 }
 
                 return new OperationResult(AggregateType.S32, result);

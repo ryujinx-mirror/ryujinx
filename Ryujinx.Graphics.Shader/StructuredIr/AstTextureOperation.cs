@@ -27,5 +27,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             CbufSlot = cbufSlot;
             Handle = handle;
         }
+
+        public AstTextureOperation WithType(SamplerType type)
+        {
+            return new AstTextureOperation(Inst, type, Format, Flags, CbufSlot, Handle, Index);
+        }
     }
 }
