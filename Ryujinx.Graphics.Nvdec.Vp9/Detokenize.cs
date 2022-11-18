@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             short dqv = dq[0];
             ReadOnlySpan<byte> cat6Prob = (xd.Bd == 12)
                 ? Luts.Vp9Cat6ProbHigh12
-                : (xd.Bd == 10) ? new ReadOnlySpan<byte>(Luts.Vp9Cat6ProbHigh12).Slice(2) : Luts.Vp9Cat6Prob;
+                : (xd.Bd == 10) ? Luts.Vp9Cat6ProbHigh12.Slice(2) : Luts.Vp9Cat6Prob;
             int cat6Bits = (xd.Bd == 12) ? 18 : (xd.Bd == 10) ? 16 : 14;
             // Keep value, range, and count as locals.  The compiler produces better
             // results with the locals than using r directly.

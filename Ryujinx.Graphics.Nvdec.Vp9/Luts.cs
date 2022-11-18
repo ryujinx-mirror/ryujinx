@@ -1,14 +1,12 @@
 ﻿using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.Nvdec.Vp9.Types;
+using System;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9
 {
     internal static class Luts
     {
-        public static readonly byte[] SizeGroupLookup = new byte[]
-        {
-            0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3
-        };
+        public static ReadOnlySpan<byte> SizeGroupLookup => new byte[] { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
 
         public static readonly BlockSize[][] SubsizeLookup = new BlockSize[][]
         {
@@ -1070,18 +1068,18 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             -(sbyte)MvClassType.MvClass10,
         };
 
-        public static readonly sbyte[] Vp9MvFPTree = new sbyte[] { -0, 2, -1, 4, -2, -3 };
+        public static ReadOnlySpan<sbyte> Vp9MvFPTree => new sbyte[] { -0, 2, -1, 4, -2, -3 };
 
         // Entropy
 
-        public static readonly byte[] Vp9Cat1Prob = new byte[] { 159 };
-        public static readonly byte[] Vp9Cat2Prob = new byte[] { 165, 145 };
-        public static readonly byte[] Vp9Cat3Prob = new byte[] { 173, 148, 140 };
-        public static readonly byte[] Vp9Cat4Prob = new byte[] { 176, 155, 140, 135 };
-        public static readonly byte[] Vp9Cat5Prob = new byte[] { 180, 157, 141, 134, 130 };
-        public static readonly byte[] Vp9Cat6Prob = new byte[] { 254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129 };
+        public static ReadOnlySpan<byte> Vp9Cat1Prob => new byte[] { 159 };
+        public static ReadOnlySpan<byte> Vp9Cat2Prob => new byte[] { 165, 145 };
+        public static ReadOnlySpan<byte> Vp9Cat3Prob => new byte[] { 173, 148, 140 };
+        public static ReadOnlySpan<byte> Vp9Cat4Prob => new byte[] { 176, 155, 140, 135 };
+        public static ReadOnlySpan<byte> Vp9Cat5Prob => new byte[] { 180, 157, 141, 134, 130 };
+        public static ReadOnlySpan<byte> Vp9Cat6Prob => new byte[] { 254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129 };
 
-        public static readonly byte[] Vp9Cat6ProbHigh12 = new byte[]
+        public static ReadOnlySpan<byte> Vp9Cat6ProbHigh12 => new byte[]
         {
             255, 255, 255, 255, 254, 254, 54, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129
         };
@@ -1131,12 +1129,12 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
         };
 
-        private static readonly byte[] Vp9CoefbandTrans4X4 = new byte[]
+        private static ReadOnlySpan<byte> Vp9CoefbandTrans4X4 => new byte[]
         {
             0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5,
         };
 
-        public static byte[] get_band_translate(TxSize txSize)
+        public static ReadOnlySpan<byte> get_band_translate(TxSize txSize)
         {
             return txSize == TxSize.Tx4x4 ? Vp9CoefbandTrans4X4 : Vp9CoefbandTrans8X8Plus;
         }
