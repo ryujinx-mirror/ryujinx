@@ -49,7 +49,6 @@ namespace Ryujinx.Graphics.Vulkan
         private Auto<DisposableFramebuffer> _framebuffer;
         private Auto<DisposableRenderPass> _renderPass;
         private int _writtenAttachmentCount;
-        private bool _renderPassActive;
 
         private readonly DescriptorSetUpdater _descriptorSetUpdater;
 
@@ -73,6 +72,7 @@ namespace Ryujinx.Graphics.Vulkan
         private PipelineColorBlendAttachmentState[] _storedBlend;
 
         public ulong DrawCount { get; private set; }
+        public bool RenderPassActive { get; private set; }
 
         public unsafe PipelineBase(VulkanRenderer gd, Device device)
         {
@@ -838,6 +838,11 @@ namespace Ryujinx.Graphics.Vulkan
             stages.CopyTo(_newState.Stages.AsSpan().Slice(0, stages.Length));
 
             SignalStateChange();
+
+            if (_program.IsCompute)
+            {
+                EndRenderPass();
+            }
         }
 
         public void Specialize<T>(in T data) where T : unmanaged
@@ -1451,7 +1456,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private unsafe void BeginRenderPass()
         {
-            if (!_renderPassActive)
+            if (!RenderPassActive)
             {
                 var renderArea = new Rect2D(null, new Extent2D(FramebufferParams.Width, FramebufferParams.Height));
                 var clearValue = new ClearValue();
@@ -1467,18 +1472,18 @@ namespace Ryujinx.Graphics.Vulkan
                 };
 
                 Gd.Api.CmdBeginRenderPass(CommandBuffer, renderPassBeginInfo, SubpassContents.Inline);
-                _renderPassActive = true;
+                RenderPassActive = true;
             }
         }
 
         public void EndRenderPass()
         {
-            if (_renderPassActive)
+            if (RenderPassActive)
             {
                 PauseTransformFeedbackInternal();
                 Gd.Api.CmdEndRenderPass(CommandBuffer);
                 SignalRenderPassEnd();
-                _renderPassActive = false;
+                RenderPassActive = false;
             }
         }
 

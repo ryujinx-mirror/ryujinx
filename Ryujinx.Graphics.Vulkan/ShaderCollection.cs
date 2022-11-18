@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public bool HasMinimalLayout { get; }
         public bool UsePushDescriptors { get; }
+        public bool IsCompute { get; }
 
         public uint Stages { get; }
 
@@ -47,7 +48,6 @@ namespace Ryujinx.Graphics.Vulkan
         private VulkanRenderer _gd;
         private Device _device;
         private bool _initialized;
-        private bool _isCompute;
 
         private ProgramPipelineState _state;
         private DisposableRenderPass _dummyRenderPass;
@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (shader.StageFlags == ShaderStageFlags.ShaderStageComputeBit)
                 {
-                    _isCompute = true;
+                    IsCompute = true;
                 }
 
                 internalShaders[i] = shader;
@@ -163,7 +163,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             try
             {
-                if (_isCompute)
+                if (IsCompute)
                 {
                     CreateBackgroundComputePipeline();
                 }
