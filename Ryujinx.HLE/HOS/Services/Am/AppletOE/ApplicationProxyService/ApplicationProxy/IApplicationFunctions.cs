@@ -26,8 +26,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 {
     class IApplicationFunctions : IpcService
     {
-        private ulong _defaultSaveDataSize        = 200000000;
-        private ulong _defaultJournalSaveDataSize = 200000000;
+        private long _defaultSaveDataSize        = 200000000;
+        private long _defaultJournalSaveDataSize = 200000000;
 
         private KEvent _gpuErrorDetectedSystemEvent;
         private KEvent _friendInvitationStorageChannelEvent;
@@ -203,13 +203,13 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         }
 
         [CommandHipc(25)] // 3.0.0+
-        // ExtendSaveData(u8 save_data_type, nn::account::Uid, u64 save_size, u64 journal_size) -> u64 result_code
+        // ExtendSaveData(u8 save_data_type, nn::account::Uid, s64 save_size, s64 journal_size) -> u64 result_code
         public ResultCode ExtendSaveData(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
             Uid          userId       = context.RequestData.ReadStruct<Uid>();
-            ulong        saveDataSize = context.RequestData.ReadUInt64();
-            ulong        journalSize  = context.RequestData.ReadUInt64();
+            long        saveDataSize  = context.RequestData.ReadInt64();
+            long        journalSize   = context.RequestData.ReadInt64();
 
             // NOTE: Service calls nn::fs::ExtendApplicationSaveData.
             //       Since LibHac currently doesn't support this method, we can stub it for now.
@@ -225,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         }
 
         [CommandHipc(26)] // 3.0.0+
-        // GetSaveDataSize(u8 save_data_type, nn::account::Uid) -> (u64 save_size, u64 journal_size)
+        // GetSaveDataSize(u8 save_data_type, nn::account::Uid) -> (s64 save_size, s64 journal_size)
         public ResultCode GetSaveDataSize(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
@@ -264,6 +264,23 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
             context.ResponseData.Write((ulong)storageTarget);
             context.ResponseData.Write(requiredSize);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(28)] // 11.0.0+
+        // GetSaveDataSizeMax() -> (s64 save_size_max, s64 journal_size_max)
+        public ResultCode GetSaveDataSizeMax(ServiceCtx context)
+        {
+            // NOTE: We are currently using a stub for GetSaveDataSize() which returns the default values.
+            //       For this method we shouldn't return anything lower than that, but since we aren't interacting
+            //       with fs to get the actual sizes, we return the default values here as well.
+            //       This also helps in case ExtendSaveData() has been executed and the default values were modified.
+
+            context.ResponseData.Write(_defaultSaveDataSize);
+            context.ResponseData.Write(_defaultJournalSaveDataSize);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }
