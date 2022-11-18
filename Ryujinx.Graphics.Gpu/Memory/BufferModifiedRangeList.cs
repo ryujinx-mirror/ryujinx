@@ -325,13 +325,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public void ReregisterRanges(Action<ulong, ulong> rangeAction)
         {
             ref var ranges = ref ThreadStaticArray<BufferModifiedRange>.Get();
+            int count;
 
             // Range list must be consistent for this operation.
             lock (_lock)
             {
-                if (ranges.Length < Count)
+                count = Count;
+                if (ranges.Length < count)
                 {
-                    Array.Resize(ref ranges, Count);
+                    Array.Resize(ref ranges, count);
                 }
 
                 int i = 0;
@@ -342,7 +344,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
 
             ulong currentSync = _context.SyncNumber;
-            for (int i = 0; i < Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 BufferModifiedRange range = ranges[i];
                 if (range.SyncNumber != currentSync)
