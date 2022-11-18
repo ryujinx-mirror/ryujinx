@@ -263,15 +263,15 @@ namespace Ryujinx.Memory.Tracking
         /// </summary>
         public void ForceDirty()
         {
-            _checkCount++;
-
             Dirty = true;
         }
 
         /// <summary>
         /// Consume the dirty flag for this handle, and reprotect so it can be set on the next write.
         /// </summary>
-        public void Reprotect(bool asDirty = false)
+        /// <param name="asDirty">True if the handle should be reprotected as dirty, rather than have it cleared</param>
+        /// <param name="consecutiveCheck">True if this reprotect is the result of consecutive dirty checks</param>
+        public void Reprotect(bool asDirty, bool consecutiveCheck = false)
         {
             if (_volatile) return;
 
@@ -296,7 +296,7 @@ namespace Ryujinx.Memory.Tracking
             }
             else if (!asDirty)
             {
-                if (_checkCount > 0 && _checkCount < CheckCountForInfrequent)
+                if (consecutiveCheck || (_checkCount > 0 && _checkCount < CheckCountForInfrequent))
                 {
                     if (++_volatileCount >= VolatileThreshold && _preAction == null)
                     {
@@ -311,6 +311,15 @@ namespace Ryujinx.Memory.Tracking
 
                 _checkCount = 0;
             }
+        }
+
+        /// <summary>
+        /// Consume the dirty flag for this handle, and reprotect so it can be set on the next write.
+        /// </summary>
+        /// <param name="asDirty">True if the handle should be reprotected as dirty, rather than have it cleared</param>
+        public void Reprotect(bool asDirty = false)
+        {
+            Reprotect(asDirty, false);
         }
 
         /// <summary>

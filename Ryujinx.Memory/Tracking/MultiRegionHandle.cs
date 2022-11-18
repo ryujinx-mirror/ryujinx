@@ -25,6 +25,7 @@ namespace Ryujinx.Memory.Tracking
 
         private int _sequenceNumber;
         private BitMap _sequenceNumberBitmap;
+        private BitMap _dirtyCheckedBitmap;
         private int _uncheckedHandles;
 
         public bool Dirty { get; private set; } = true;
@@ -36,6 +37,7 @@ namespace Ryujinx.Memory.Tracking
 
             _dirtyBitmap = new ConcurrentBitmap(_handles.Length, true);
             _sequenceNumberBitmap = new BitMap(_handles.Length);
+            _dirtyCheckedBitmap = new BitMap(_handles.Length);
 
             int i = 0;
 
@@ -246,16 +248,18 @@ namespace Ryujinx.Memory.Tracking
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ParseDirtyBits(long dirtyBits, long mask, int index, long[] seqMasks, ref int baseBit, ref int prevHandle, ref ulong rgStart, ref ulong rgSize, Action<ulong, ulong> modifiedAction)
+        private void ParseDirtyBits(long dirtyBits, long mask, int index, long[] seqMasks, long[] checkMasks, ref int baseBit, ref int prevHandle, ref ulong rgStart, ref ulong rgSize, Action<ulong, ulong> modifiedAction)
         {
             long seqMask = mask & ~seqMasks[index];
+            long checkMask = (~dirtyBits) & seqMask;
             dirtyBits &= seqMask;
 
             while (dirtyBits != 0)
             {
                 int bit = BitOperations.TrailingZeroCount(dirtyBits);
+                long bitValue = 1L << bit;
 
-                dirtyBits &= ~(1L << bit);
+                dirtyBits &= ~bitValue;
 
                 int handleIndex = baseBit + bit;
 
@@ -273,11 +277,14 @@ namespace Ryujinx.Memory.Tracking
                 }
 
                 rgSize += handle.Size;
-                handle.Reprotect();
+                handle.Reprotect(false, (checkMasks[index] & bitValue) == 0);
+
+                checkMasks[index] &= ~bitValue;
 
                 prevHandle = handleIndex;
             }
 
+            checkMasks[index] |= checkMask;
             seqMasks[index] |= mask;
             _uncheckedHandles -= BitOperations.PopCount((ulong)seqMask);
 
@@ -328,6 +335,7 @@ namespace Ryujinx.Memory.Tracking
             ulong rgSize = 0;
 
             long[] seqMasks = _sequenceNumberBitmap.Masks;
+            long[] checkedMasks = _dirtyCheckedBitmap.Masks;
             long[] masks = _dirtyBitmap.Masks;
 
             int startIndex = startHandle >> ConcurrentBitmap.IntShift;
@@ -345,20 +353,20 @@ namespace Ryujinx.Memory.Tracking
 
             if (startIndex == endIndex)
             {
-                ParseDirtyBits(startValue, startMask & endMask, startIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                ParseDirtyBits(startValue, startMask & endMask, startIndex, seqMasks, checkedMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
             }
             else
             {
-                ParseDirtyBits(startValue, startMask, startIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                ParseDirtyBits(startValue, startMask, startIndex, seqMasks, checkedMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
 
                 for (int i = startIndex + 1; i < endIndex; i++)
                 {
-                    ParseDirtyBits(Volatile.Read(ref masks[i]), -1L, i, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                    ParseDirtyBits(Volatile.Read(ref masks[i]), -1L, i, seqMasks, checkedMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
                 }
 
                 long endValue = Volatile.Read(ref masks[endIndex]);
 
-                ParseDirtyBits(endValue, endMask, endIndex, seqMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
+                ParseDirtyBits(endValue, endMask, endIndex, seqMasks, checkedMasks, ref baseBit, ref prevHandle, ref rgStart, ref rgSize, modifiedAction);
             }
 
             if (rgSize != 0)
