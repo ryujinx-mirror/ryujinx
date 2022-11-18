@@ -28,6 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private readonly Dictionary<ulong, BufferCacheEntry> _dirtyCache;
         private readonly Dictionary<ulong, BufferCacheEntry> _modifiedCache;
+        private bool _pruneCaches;
 
         public event Action NotifyBuffersModified;
 
@@ -136,6 +137,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">Size in bytes of the buffer</param>
         public void ForceDirty(MemoryManager memoryManager, ulong gpuVa, ulong size)
         {
+            if (_pruneCaches)
+            {
+                Prune();
+            }
+
             if (!_dirtyCache.TryGetValue(gpuVa, out BufferCacheEntry result) ||
                 result.EndGpuAddress < gpuVa + size ||
                 result.UnmappedSequence != result.Buffer.UnmappedSequence)
@@ -158,17 +164,29 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <returns>True if modified, false otherwise</returns>
         public bool CheckModified(MemoryManager memoryManager, ulong gpuVa, ulong size, out ulong outAddr)
         {
-            if (!_modifiedCache.TryGetValue(gpuVa, out BufferCacheEntry result) ||
-                result.EndGpuAddress < gpuVa + size ||
-                result.UnmappedSequence != result.Buffer.UnmappedSequence)
+            if (_pruneCaches)
             {
-                ulong address = TranslateAndCreateBuffer(memoryManager, gpuVa, size);
-                result = new BufferCacheEntry(address, gpuVa, GetBuffer(address, size));
-
-                _modifiedCache[gpuVa] = result;
+                Prune();
             }
 
-            outAddr = result.Address;
+            // Align the address to avoid creating too many entries on the quick lookup dictionary.
+            ulong mask = BufferAlignmentMask;
+            ulong alignedGpuVa = gpuVa & (~mask);
+            ulong alignedEndGpuVa = (gpuVa + size + mask) & (~mask);
+
+            size = alignedEndGpuVa - alignedGpuVa;
+
+            if (!_modifiedCache.TryGetValue(alignedGpuVa, out BufferCacheEntry result) ||
+                result.EndGpuAddress < alignedEndGpuVa ||
+                result.UnmappedSequence != result.Buffer.UnmappedSequence)
+            {
+                ulong address = TranslateAndCreateBuffer(memoryManager, alignedGpuVa, size);
+                result = new BufferCacheEntry(address, alignedGpuVa, GetBuffer(address, size));
+
+                _modifiedCache[alignedGpuVa] = result;
+            }
+
+            outAddr = result.Address | (gpuVa & mask);
 
             return result.Buffer.IsModified(result.Address, size);
         }
@@ -433,6 +451,54 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 buffer.SynchronizeMemory(address, size);
             }
+        }
+
+        /// <summary>
+        /// Prune any invalid entries from a quick access dictionary.
+        /// </summary>
+        /// <param name="dictionary">Dictionary to prune</param>
+        /// <param name="toDelete">List used to track entries to delete</param>
+        private void Prune(Dictionary<ulong, BufferCacheEntry> dictionary, ref List<ulong> toDelete)
+        {
+            foreach (var entry in dictionary)
+            {
+                if (entry.Value.UnmappedSequence != entry.Value.Buffer.UnmappedSequence)
+                {
+                    (toDelete ??= new()).Add(entry.Key);
+                }
+            }
+
+            if (toDelete != null)
+            {
+                foreach (ulong entry in toDelete)
+                {
+                    dictionary.Remove(entry);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Prune any invalid entries from the quick access dictionaries.
+        /// </summary>
+        private void Prune()
+        {
+            List<ulong> toDelete = null;
+
+            Prune(_dirtyCache, ref toDelete);
+
+            toDelete?.Clear();
+
+            Prune(_modifiedCache, ref toDelete);
+
+            _pruneCaches = false;
+        }
+
+        /// <summary>
+        /// Queues a prune of invalid entries the next time a dictionary cache is accessed.
+        /// </summary>
+        public void QueuePrune()
+        {
+            _pruneCaches = true;
         }
 
         /// <summary>
