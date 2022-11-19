@@ -636,6 +636,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
             List<ShaderProgram> translatedStages = new List<ShaderProgram>();
 
+            TranslatorContext previousStage = null;
+
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
                 TranslatorContext currentStage = translatorContexts[stageIndex + 1];
@@ -668,6 +670,16 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     {
                         translatedStages.Add(program);
                     }
+
+                    previousStage = currentStage;
+                }
+                else if (
+                    previousStage != null &&
+                    previousStage.LayerOutputWritten &&
+                    stageIndex == 3 &&
+                    !_context.Capabilities.SupportsLayerVertexTessellation)
+                {
+                    translatedStages.Add(previousStage.GenerateGeometryPassthrough());
                 }
             }
 

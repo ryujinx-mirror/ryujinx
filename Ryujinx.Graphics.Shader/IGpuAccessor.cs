@@ -259,6 +259,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host support for writes to Layer from vertex or tessellation shader stages.
+        /// </summary>
+        /// <returns>True if writes to layer from vertex or tessellation are supported, false otherwise</returns>
+        bool QueryHostSupportsLayerVertexTessellation()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU non-constant texture offset support.
         /// </summary>
         /// <returns>True if the GPU and driver supports non-constant texture offsets, false otherwise</returns>

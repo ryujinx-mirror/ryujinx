@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsFragmentShaderOrderingIntel;
         public readonly bool SupportsGeometryShaderPassthrough;
         public readonly bool SupportsImageLoadFormatted;
+        public readonly bool SupportsLayerVertexTessellation;
         public readonly bool SupportsMismatchingViewFormat;
         public readonly bool SupportsCubemapView;
         public readonly bool SupportsNonConstantTextureOffset;
@@ -55,6 +56,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsFragmentShaderOrderingIntel,
             bool supportsGeometryShaderPassthrough,
             bool supportsImageLoadFormatted,
+            bool supportsLayerVertexTessellation,
             bool supportsMismatchingViewFormat,
             bool supportsCubemapView,
             bool supportsNonConstantTextureOffset,
@@ -86,6 +88,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsFragmentShaderOrderingIntel = supportsFragmentShaderOrderingIntel;
             SupportsGeometryShaderPassthrough = supportsGeometryShaderPassthrough;
             SupportsImageLoadFormatted = supportsImageLoadFormatted;
+            SupportsLayerVertexTessellation = supportsLayerVertexTessellation;
             SupportsMismatchingViewFormat = supportsMismatchingViewFormat;
             SupportsCubemapView = supportsCubemapView;
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;

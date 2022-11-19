@@ -48,6 +48,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int Cb1DataSize { get; private set; }
 
+        public bool LayerOutputWritten { get; private set; }
+        public int LayerOutputAttribute { get; private set; }
+
         public bool NextUsesFixedFuncAttributes { get; private set; }
         public int UsedInputAttributes { get; private set; }
         public int UsedOutputAttributes { get; private set; }
@@ -129,6 +132,20 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
+        }
+
+        public ShaderConfig(
+            ShaderStage stage,
+            OutputTopology outputTopology,
+            int maxOutputVertices,
+            IGpuAccessor gpuAccessor,
+            TranslationOptions options) : this(gpuAccessor, options)
+        {
+            Stage                    = stage;
+            ThreadsPerInputPrimitive = 1;
+            OutputTopology           = outputTopology;
+            MaxOutputVertices        = maxOutputVertices;
+            TransformFeedbackEnabled = gpuAccessor.QueryTransformFeedbackEnabled();
         }
 
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(gpuAccessor, options)
@@ -238,6 +255,12 @@ namespace Ryujinx.Graphics.Shader.Translation
                     _usedImages[kv.Key] = MergeTextureMeta(kv.Value, _usedImages[kv.Key]);
                 }
             }
+        }
+
+        public void SetLayerOutputAttribute(int attr)
+        {
+            LayerOutputWritten = true;
+            LayerOutputAttribute = attr;
         }
 
         public void SetInputUserAttributeFixedFunc(int index)
@@ -693,6 +716,21 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int FindImageDescriptorIndex(AstTextureOperation texOp)
         {
             return FindDescriptorIndex(GetImageDescriptors(), texOp);
+        }
+
+        public ShaderProgramInfo CreateProgramInfo()
+        {
+            return new ShaderProgramInfo(
+                GetConstantBufferDescriptors(),
+                GetStorageBufferDescriptors(),
+                GetTextureDescriptors(),
+                GetImageDescriptors(),
+                Stage,
+                UsedFeatures.HasFlag(FeatureFlags.InstanceId),
+                UsedFeatures.HasFlag(FeatureFlags.DrawParameters),
+                UsedFeatures.HasFlag(FeatureFlags.RtLayer),
+                ClipDistancesWritten,
+                OmapTargets);
         }
     }
 }

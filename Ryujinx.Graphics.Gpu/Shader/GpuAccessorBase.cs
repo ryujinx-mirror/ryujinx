@@ -128,6 +128,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public bool QueryHostSupportsImageLoadFormatted() => _context.Capabilities.SupportsImageLoadFormatted;
 
+        public bool QueryHostSupportsLayerVertexTessellation() => _context.Capabilities.SupportsLayerVertexTessellation;
+
         public bool QueryHostSupportsNonConstantTextureOffset() => _context.Capabilities.SupportsNonConstantTextureOffset;
 
         public bool QueryHostSupportsShaderBallot() => _context.Capabilities.SupportsShaderBallot;

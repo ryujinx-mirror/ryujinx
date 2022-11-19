@@ -396,6 +396,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsFragmentShaderOrderingIntel: false,
                 supportsGeometryShaderPassthrough: Capabilities.SupportsGeometryShaderPassthrough,
                 supportsImageLoadFormatted: features2.Features.ShaderStorageImageReadWithoutFormat,
+                supportsLayerVertexTessellation: featuresVk12.ShaderOutputLayer,
                 supportsMismatchingViewFormat: true,
                 supportsCubemapView: !IsAmdGcn,
                 supportsNonConstantTextureOffset: false,

@@ -356,6 +356,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             CachedShaderStage[] shaders = new CachedShaderStage[Constants.ShaderStages + 1];
             List<ShaderSource> shaderSources = new List<ShaderSource>();
 
+            TranslatorContext previousStage = null;
+
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
                 TranslatorContext currentStage = translatorContexts[stageIndex + 1];
@@ -392,6 +394,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     {
                         shaderSources.Add(CreateShaderSource(program));
                     }
+
+                    previousStage = currentStage;
+                }
+                else if (
+                    previousStage != null &&
+                    previousStage.LayerOutputWritten &&
+                    stageIndex == 3 &&
+                    !_context.Capabilities.SupportsLayerVertexTessellation)
+                {
+                    shaderSources.Add(CreateShaderSource(previousStage.GenerateGeometryPassthrough()));
                 }
             }
 
