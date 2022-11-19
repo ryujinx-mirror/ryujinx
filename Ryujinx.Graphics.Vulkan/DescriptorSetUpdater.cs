@@ -130,6 +130,12 @@ namespace Ryujinx.Graphics.Vulkan
                 1f));
         }
 
+        public void Initialize()
+        {
+            Span<byte> dummyTextureData = stackalloc byte[4];
+            _dummyTexture.SetData(dummyTextureData);
+        }
+
         public void SetProgram(ShaderCollection program)
         {
             _program = program;

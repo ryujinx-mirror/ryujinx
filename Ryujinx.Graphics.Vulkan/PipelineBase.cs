@@ -114,6 +114,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Initialize()
         {
+            _descriptorSetUpdater.Initialize();
+
             SupportBufferUpdater = new SupportBufferUpdater(Gd);
             SupportBufferUpdater.UpdateRenderScale(_renderScale, 0, SupportBuffer.RenderScaleMaxCount);
 
