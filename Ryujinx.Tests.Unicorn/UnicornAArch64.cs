@@ -1,4 +1,5 @@
 using Ryujinx.Tests.Unicorn.Native;
+using Ryujinx.Tests.Unicorn.Native.Const;
 using System;
 
 namespace Ryujinx.Tests.Unicorn
@@ -30,38 +31,38 @@ namespace Ryujinx.Tests.Unicorn
 
         public ulong LR
         {
-            get => GetRegister(ArmRegister.LR);
-            set => SetRegister(ArmRegister.LR, value);
+            get => GetRegister(Arm64.REG_LR);
+            set => SetRegister(Arm64.REG_LR, value);
         }
 
         public ulong SP
         {
-            get => GetRegister(ArmRegister.SP);
-            set => SetRegister(ArmRegister.SP, value);
+            get => GetRegister(Arm64.REG_SP);
+            set => SetRegister(Arm64.REG_SP, value);
         }
 
         public ulong PC
         {
-            get => GetRegister(ArmRegister.PC);
-            set => SetRegister(ArmRegister.PC, value);
+            get => GetRegister(Arm64.REG_PC);
+            set => SetRegister(Arm64.REG_PC, value);
         }
 
         public uint Pstate
         {
-            get => (uint)GetRegister(ArmRegister.PSTATE);
-            set =>       SetRegister(ArmRegister.PSTATE, (uint)value);
+            get => (uint)GetRegister(Arm64.REG_PSTATE);
+            set =>       SetRegister(Arm64.REG_PSTATE, (uint)value);
         }
 
         public int Fpcr
         {
-            get => (int)GetRegister(ArmRegister.FPCR);
-            set =>      SetRegister(ArmRegister.FPCR, (uint)value);
+            get => (int)GetRegister(Arm64.REG_FPCR);
+            set =>      SetRegister(Arm64.REG_FPCR, (uint)value);
         }
 
         public int Fpsr
         {
-            get => (int)GetRegister(ArmRegister.FPSR);
-            set =>      SetRegister(ArmRegister.FPSR, (uint)value);
+            get => (int)GetRegister(Arm64.REG_FPSR);
+            set =>      SetRegister(Arm64.REG_FPSR, (uint)value);
         }
 
         public bool OverflowFlag
@@ -90,9 +91,9 @@ namespace Ryujinx.Tests.Unicorn
 
         public UnicornAArch64()
         {
-            Interface.Checked(Interface.uc_open(UnicornArch.UC_ARCH_ARM64, UnicornMode.UC_MODE_LITTLE_ENDIAN, out uc));
+            Interface.Checked(Interface.uc_open(Arch.ARM64, Mode.LITTLE_ENDIAN, out uc));
 
-            SetRegister(ArmRegister.CPACR_EL1, 0x00300000);
+            SetRegister(Arm64.REG_CPACR_EL1, 0x00300000);
         }
 
         ~UnicornAArch64()
@@ -125,75 +126,75 @@ namespace Ryujinx.Tests.Unicorn
             RunForCount(1);
         }
 
-        private static ArmRegister[] XRegisters = new ArmRegister[31]
+        private static Arm64[] XRegisters = new Arm64[31]
         {
-            ArmRegister.X0,
-            ArmRegister.X1,
-            ArmRegister.X2,
-            ArmRegister.X3,
-            ArmRegister.X4,
-            ArmRegister.X5,
-            ArmRegister.X6,
-            ArmRegister.X7,
-            ArmRegister.X8,
-            ArmRegister.X9,
-            ArmRegister.X10,
-            ArmRegister.X11,
-            ArmRegister.X12,
-            ArmRegister.X13,
-            ArmRegister.X14,
-            ArmRegister.X15,
-            ArmRegister.X16,
-            ArmRegister.X17,
-            ArmRegister.X18,
-            ArmRegister.X19,
-            ArmRegister.X20,
-            ArmRegister.X21,
-            ArmRegister.X22,
-            ArmRegister.X23,
-            ArmRegister.X24,
-            ArmRegister.X25,
-            ArmRegister.X26,
-            ArmRegister.X27,
-            ArmRegister.X28,
-            ArmRegister.X29,
-            ArmRegister.X30,
+            Arm64.REG_X0,
+            Arm64.REG_X1,
+            Arm64.REG_X2,
+            Arm64.REG_X3,
+            Arm64.REG_X4,
+            Arm64.REG_X5,
+            Arm64.REG_X6,
+            Arm64.REG_X7,
+            Arm64.REG_X8,
+            Arm64.REG_X9,
+            Arm64.REG_X10,
+            Arm64.REG_X11,
+            Arm64.REG_X12,
+            Arm64.REG_X13,
+            Arm64.REG_X14,
+            Arm64.REG_X15,
+            Arm64.REG_X16,
+            Arm64.REG_X17,
+            Arm64.REG_X18,
+            Arm64.REG_X19,
+            Arm64.REG_X20,
+            Arm64.REG_X21,
+            Arm64.REG_X22,
+            Arm64.REG_X23,
+            Arm64.REG_X24,
+            Arm64.REG_X25,
+            Arm64.REG_X26,
+            Arm64.REG_X27,
+            Arm64.REG_X28,
+            Arm64.REG_X29,
+            Arm64.REG_X30,
         };
 
-        private static ArmRegister[] QRegisters = new ArmRegister[32]
+        private static Arm64[] QRegisters = new Arm64[32]
         {
-            ArmRegister.Q0,
-            ArmRegister.Q1,
-            ArmRegister.Q2,
-            ArmRegister.Q3,
-            ArmRegister.Q4,
-            ArmRegister.Q5,
-            ArmRegister.Q6,
-            ArmRegister.Q7,
-            ArmRegister.Q8,
-            ArmRegister.Q9,
-            ArmRegister.Q10,
-            ArmRegister.Q11,
-            ArmRegister.Q12,
-            ArmRegister.Q13,
-            ArmRegister.Q14,
-            ArmRegister.Q15,
-            ArmRegister.Q16,
-            ArmRegister.Q17,
-            ArmRegister.Q18,
-            ArmRegister.Q19,
-            ArmRegister.Q20,
-            ArmRegister.Q21,
-            ArmRegister.Q22,
-            ArmRegister.Q23,
-            ArmRegister.Q24,
-            ArmRegister.Q25,
-            ArmRegister.Q26,
-            ArmRegister.Q27,
-            ArmRegister.Q28,
-            ArmRegister.Q29,
-            ArmRegister.Q30,
-            ArmRegister.Q31,
+            Arm64.REG_Q0,
+            Arm64.REG_Q1,
+            Arm64.REG_Q2,
+            Arm64.REG_Q3,
+            Arm64.REG_Q4,
+            Arm64.REG_Q5,
+            Arm64.REG_Q6,
+            Arm64.REG_Q7,
+            Arm64.REG_Q8,
+            Arm64.REG_Q9,
+            Arm64.REG_Q10,
+            Arm64.REG_Q11,
+            Arm64.REG_Q12,
+            Arm64.REG_Q13,
+            Arm64.REG_Q14,
+            Arm64.REG_Q15,
+            Arm64.REG_Q16,
+            Arm64.REG_Q17,
+            Arm64.REG_Q18,
+            Arm64.REG_Q19,
+            Arm64.REG_Q20,
+            Arm64.REG_Q21,
+            Arm64.REG_Q22,
+            Arm64.REG_Q23,
+            Arm64.REG_Q24,
+            Arm64.REG_Q25,
+            Arm64.REG_Q26,
+            Arm64.REG_Q27,
+            Arm64.REG_Q28,
+            Arm64.REG_Q29,
+            Arm64.REG_Q30,
+            Arm64.REG_Q31,
         };
 
         public ulong GetX(int index)
@@ -236,7 +237,7 @@ namespace Ryujinx.Tests.Unicorn
             SetVector(QRegisters[index], value);
         }
 
-        private ulong GetRegister(ArmRegister register)
+        private ulong GetRegister(Arm64 register)
         {
             byte[] data = new byte[8];
 
@@ -245,14 +246,14 @@ namespace Ryujinx.Tests.Unicorn
             return (ulong)BitConverter.ToInt64(data, 0);
         }
 
-        private void SetRegister(ArmRegister register, ulong value)
+        private void SetRegister(Arm64 register, ulong value)
         {
             byte[] data = BitConverter.GetBytes(value);
 
             Interface.Checked(Interface.uc_reg_write(uc, (int)register, data));
         }
 
-        private SimdValue GetVector(ArmRegister register)
+        private SimdValue GetVector(Arm64 register)
         {
             byte[] data = new byte[16];
 
@@ -261,7 +262,7 @@ namespace Ryujinx.Tests.Unicorn
             return new SimdValue(data);
         }
 
-        private void SetVector(ArmRegister register, SimdValue value)
+        private void SetVector(Arm64 register, SimdValue value)
         {
             byte[] data = value.ToArray();
 
@@ -315,13 +316,10 @@ namespace Ryujinx.Tests.Unicorn
             try
             {
                 Interface.uc_version(out _, out _);
+            }
+            catch (DllNotFoundException) {  }
 
-                return true;
-            }
-            catch (DllNotFoundException)
-            {
-                return false;
-            }
+            return Interface.IsUnicornAvailable;
         }
     }
 }

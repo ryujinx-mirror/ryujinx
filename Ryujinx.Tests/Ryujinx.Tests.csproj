@@ -34,7 +34,17 @@
   </ItemGroup>
 
   <Target Name="CopyUnicorn" AfterTargets="Build">
-    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\unicorn.dll" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+    <ItemGroup>
+      <UnicornLib Include="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\*unicorn.*"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(UnicornLib)" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="CleanUnicorn" BeforeTargets="Clean">
+    <ItemGroup>
+      <UnicornLib Include="$(OutputPath)/unicorn.*"/>
+    </ItemGroup>
+    <Delete Files="@(UnicornLib)" />
   </Target>
 
 </Project>

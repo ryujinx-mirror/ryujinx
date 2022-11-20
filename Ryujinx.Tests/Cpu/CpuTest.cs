@@ -38,14 +38,11 @@ namespace Ryujinx.Tests.Cpu
 
         private bool _usingMemory;
 
-        static CpuTest()
+        [OneTimeSetUp]
+        public void OneTimeSetup()
         {
             _unicornAvailable = UnicornAArch64.IsAvailable();
-
-            if (!_unicornAvailable)
-            {
-                Console.WriteLine("WARNING: Could not find Unicorn.");
-            }
+            Assume.That(_unicornAvailable, "Unicorn is not available");
         }
 
         [SetUp]
