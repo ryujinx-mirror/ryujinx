@@ -133,6 +133,7 @@ namespace Ryujinx.Graphics.Gpu
             {
                 oldMemoryManager.Physical.BufferCache.NotifyBuffersModified -= BufferManager.Rebind;
                 oldMemoryManager.Physical.DecrementReferenceCount();
+                oldMemoryManager.MemoryUnmapped -= MemoryUnmappedHandler;
             }
         }
     }
