@@ -372,7 +372,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             float srcX1 = ((float)_state.State.DrawTextureDuDx / (1UL << 32)) * dstWidth + srcX0;
             float srcY1 = ((float)_state.State.DrawTextureDvDy / (1UL << 32)) * dstHeight + srcY0;
 
-            engine.UpdateState();
+            engine.UpdateState(ulong.MaxValue & ~(1UL << StateUpdater.ShaderStateIndex));
+
+            _channel.TextureManager.UpdateRenderTargets();
 
             int textureId = _state.State.DrawTextureTextureId;
             int samplerId = _state.State.DrawTextureSamplerId;
