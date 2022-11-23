@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Ava.Ui.ViewModels;
 using Ryujinx.Common;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Configuration;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -93,7 +94,7 @@ namespace Ryujinx.Ava.Common.Locale
                 return;
             }
 
-            var strings = JsonSerializer.Deserialize<Dictionary<string, string>>(languageJson);
+            var strings = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
 
             foreach (var item in strings)
             {

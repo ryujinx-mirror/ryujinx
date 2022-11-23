@@ -8,6 +8,7 @@ using Ryujinx.Ava.Ui.Models;
 using Ryujinx.Ava.Ui.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -189,7 +190,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             {
                 amiiboJsonString = File.ReadAllText(_amiiboJsonPath);
 
-                if (await NeedsUpdate(JsonSerializer.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).LastUpdated))
+                if (await NeedsUpdate(JsonHelper.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).LastUpdated))
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
@@ -206,7 +207,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 }
             }
 
-            _amiiboList = JsonSerializer.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).Amiibo;
+            _amiiboList = JsonHelper.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).Amiibo;
             _amiiboList = _amiiboList.OrderBy(amiibo => amiibo.AmiiboSeries).ToList();
 
             ParseAmiiboData();
