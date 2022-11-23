@@ -1,6 +1,7 @@
 ﻿using LibHac;
 using LibHac.Common;
-using LibHac.Fs;
+
+using GameCardHandle = System.UInt32;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
@@ -41,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         {
             Result result = _baseOperator.Get.GetGameCardHandle(out GameCardHandle handle);
 
-            context.ResponseData.Write(handle.Value);
+            context.ResponseData.Write(handle);
 
             return (ResultCode)result.Value;
         }

@@ -172,9 +172,11 @@ namespace Ryujinx.HLE.FileSystem
             fsServerClient = horizon.CreatePrivilegedHorizonClient();
             var fsServer = new FileSystemServer(fsServerClient);
 
-            DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet, fsServer);
+            RandomDataGenerator randomGenerator = buffer => Random.Shared.NextBytes(buffer);
 
-            // Use our own encrypted fs creator that always uses all-zero keys
+            DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet, fsServer, randomGenerator);
+
+            // Use our own encrypted fs creator that doesn't actually do any encryption
             fsServerObjects.FsCreators.EncryptedFileSystemCreator = new EncryptedFileSystemCreator();
 
             GameCard = fsServerObjects.GameCard;
@@ -186,7 +188,8 @@ namespace Ryujinx.HLE.FileSystem
             {
                 DeviceOperator = fsServerObjects.DeviceOperator,
                 ExternalKeySet = KeySet.ExternalKeySet,
-                FsCreators = fsServerObjects.FsCreators
+                FsCreators = fsServerObjects.FsCreators,
+                RandomGenerator = randomGenerator
             };
 
             FileSystemServerInitializer.InitializeWithConfig(fsServerClient, fsServer, fsServerConfig);

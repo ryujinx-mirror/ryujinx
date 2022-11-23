@@ -19,6 +19,7 @@ using static Ryujinx.HLE.Utilities.StringUtils;
 using IFileSystem = LibHac.FsSrv.Sf.IFileSystem;
 using IStorage = LibHac.FsSrv.Sf.IStorage;
 using RightsId = LibHac.Fs.RightsId;
+using GameCardHandle = System.UInt32;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {
@@ -239,7 +240,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenGameCardStorage(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenGameCardStorage(ServiceCtx context)
         {
-            GameCardHandle handle = new GameCardHandle(context.RequestData.ReadInt32());
+            GameCardHandle handle = context.RequestData.ReadUInt32();
             GameCardPartitionRaw partitionId = (GameCardPartitionRaw)context.RequestData.ReadInt32();
             using var storage = new SharedRef<IStorage>();
 
@@ -255,7 +256,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenGameCardFileSystem(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenGameCardFileSystem(ServiceCtx context)
         {
-            GameCardHandle handle = new GameCardHandle(context.RequestData.ReadInt32());
+            GameCardHandle handle = context.RequestData.ReadUInt32();
             GameCardPartition partitionId = (GameCardPartition)context.RequestData.ReadInt32();
             using var fileSystem = new SharedRef<IFileSystem>();
 
@@ -313,6 +314,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             HashSalt hashSalt = context.RequestData.ReadStruct<HashSalt>();
 
             return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystemWithHashSalt(in attribute, in creationInfo, in metaCreateInfo, in hashSalt).Value;
+        }
+
+        [CommandHipc(37)] // 14.0.0+
+        // CreateSaveDataFileSystemWithCreationInfo2(buffer<nn::fs::SaveDataCreationInfo2, 25> creationInfo) -> ()
+        public ResultCode CreateSaveDataFileSystemWithCreationInfo2(ServiceCtx context)
+        {
+            byte[] creationInfoBuffer = new byte[context.Request.SendBuff[0].Size];
+            context.Memory.Read(context.Request.SendBuff[0].Position, creationInfoBuffer);
+            ref readonly SaveDataCreationInfo2 creationInfo = ref SpanHelpers.AsReadOnlyStruct<SaveDataCreationInfo2>(creationInfoBuffer);
+
+            return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystemWithCreationInfo2(in creationInfo).Value;
         }
 
         [CommandHipc(51)]
