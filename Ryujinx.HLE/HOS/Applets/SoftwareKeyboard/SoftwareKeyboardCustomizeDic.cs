@@ -5,10 +5,9 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
     /// <summary>
     /// A structure used by SetCustomizeDic request to software keyboard.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    [StructLayout(LayoutKind.Sequential, Size = 0x70)]
     struct SoftwareKeyboardCustomizeDic
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 112)]
-        public byte[] Unknown;
+        // Unknown
     }
 }

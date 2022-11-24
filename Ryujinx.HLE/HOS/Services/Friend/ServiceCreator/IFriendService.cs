@@ -236,23 +236,14 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             ulong position = context.Request.PtrBuff[0].Position;
             ulong size     = context.Request.PtrBuff[0].Size;
 
-            byte[] bufferContent = new byte[size];
-
-            context.Memory.Read(position, bufferContent);
+            ReadOnlySpan<UserPresence> userPresenceInputArray = MemoryMarshal.Cast<byte, UserPresence>(context.Memory.GetSpan(position, (int)size));
 
             if (uuid.IsNull)
             {
                 return ResultCode.InvalidArgument;
             }
 
-            int elementCount = bufferContent.Length / Marshal.SizeOf<UserPresence>();
-
-            using (BinaryReader bufferReader = new BinaryReader(new MemoryStream(bufferContent)))
-            {
-                UserPresence[] userPresenceInputArray = bufferReader.ReadStructArray<UserPresence>(elementCount);
-
-                Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), userPresenceInputArray });
-            }
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), userPresenceInputArray = userPresenceInputArray.ToArray() });
 
             return ResultCode.Success;
         }

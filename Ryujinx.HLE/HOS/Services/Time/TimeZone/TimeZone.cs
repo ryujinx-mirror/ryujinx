@@ -5,6 +5,7 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -890,14 +891,14 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             long streamLength = reader.BaseStream.Length;
 
-            if (streamLength < Marshal.SizeOf<TzifHeader>())
+            if (streamLength < Unsafe.SizeOf<TzifHeader>())
             {
                 return false;
             }
 
             TzifHeader header = reader.ReadStruct<TzifHeader>();
 
-            streamLength -= Marshal.SizeOf<TzifHeader>();
+            streamLength -= Unsafe.SizeOf<TzifHeader>();
 
             int ttisGMTCount = Detzcode32(header.TtisGMTCount);
             int ttisSTDCount = Detzcode32(header.TtisSTDCount);

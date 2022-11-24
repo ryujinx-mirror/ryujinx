@@ -1,4 +1,5 @@
-﻿using Ryujinx.Common.Configuration.Hid;
+﻿using Ryujinx.Common;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets.SoftwareKeyboard;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
@@ -9,6 +10,7 @@ using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -78,13 +80,13 @@ namespace Ryujinx.HLE.HOS.Applets
                 var launchParams   = _normalSession.Pop();
                 var keyboardConfig = _normalSession.Pop();
 
-                _isBackground = keyboardConfig.Length == Marshal.SizeOf<SoftwareKeyboardInitialize>();
+                _isBackground = keyboardConfig.Length == Unsafe.SizeOf<SoftwareKeyboardInitialize>();
 
                 if (_isBackground)
                 {
                     // Initialize the keyboard applet in background mode.
 
-                    _keyboardBackgroundInitialize = ReadStruct<SoftwareKeyboardInitialize>(keyboardConfig);
+                    _keyboardBackgroundInitialize = MemoryMarshal.Read<SoftwareKeyboardInitialize>(keyboardConfig);
                     _backgroundState              = InlineKeyboardState.Uninitialized;
 
                     if (_device.UiHandler == null)
@@ -342,7 +344,7 @@ namespace Ryujinx.HLE.HOS.Applets
                         else
                         {
                             int wordsCount = reader.ReadInt32();
-                            int wordSize = Marshal.SizeOf<SoftwareKeyboardUserWord>();
+                            int wordSize = Unsafe.SizeOf<SoftwareKeyboardUserWord>();
                             remaining = stream.Length - stream.Position;
 
                             if (wordsCount > MaxUserWords)
@@ -359,8 +361,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
                                 for (int word = 0; word < wordsCount; word++)
                                 {
-                                    byte[] wordData = reader.ReadBytes(wordSize);
-                                    _keyboardBackgroundUserWords[word] = ReadStruct<SoftwareKeyboardUserWord>(wordData);
+                                    _keyboardBackgroundUserWords[word] = reader.ReadStruct<SoftwareKeyboardUserWord>();
                                 }
                             }
                         }
@@ -369,27 +370,25 @@ namespace Ryujinx.HLE.HOS.Applets
                     case InlineKeyboardRequest.SetCustomizeDic:
                         // Read the custom dic data.
                         remaining = stream.Length - stream.Position;
-                        if (remaining != Marshal.SizeOf<SoftwareKeyboardCustomizeDic>())
+                        if (remaining != Unsafe.SizeOf<SoftwareKeyboardCustomizeDic>())
                         {
                             Logger.Warning?.Print(LogClass.ServiceAm, $"Received invalid Software Keyboard Customize Dic of {remaining} bytes");
                         }
                         else
                         {
-                            var keyboardDicData = reader.ReadBytes((int)remaining);
-                            _keyboardBackgroundDic = ReadStruct<SoftwareKeyboardCustomizeDic>(keyboardDicData);
+                            _keyboardBackgroundDic = reader.ReadStruct<SoftwareKeyboardCustomizeDic>();
                         }
                         break;
                     case InlineKeyboardRequest.SetCustomizedDictionaries:
                         // Read the custom dictionaries data.
                         remaining = stream.Length - stream.Position;
-                        if (remaining != Marshal.SizeOf<SoftwareKeyboardDictSet>())
+                        if (remaining != Unsafe.SizeOf<SoftwareKeyboardDictSet>())
                         {
                             Logger.Warning?.Print(LogClass.ServiceAm, $"Received invalid Software Keyboard DictSet of {remaining} bytes");
                         }
                         else
                         {
-                            var keyboardDictData = reader.ReadBytes((int)remaining);
-                            _keyboardBackgroundDictSet = ReadStruct<SoftwareKeyboardDictSet>(keyboardDictData);
+                            _keyboardBackgroundDictSet = reader.ReadStruct<SoftwareKeyboardDictSet>();
                         }
                         break;
                     case InlineKeyboardRequest.Calc:

@@ -8,7 +8,9 @@ using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
@@ -281,7 +283,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             byte type = context.RequestData.ReadByte();
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<ClockSnapshot>());
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Unsafe.SizeOf<ClockSnapshot>());
 
             context.RequestData.BaseStream.Position += 7;
 
@@ -372,12 +374,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 return result;
             }
 
-            char[] tzName       = deviceLocationName.ToCharArray();
-            char[] locationName = new char[0x24];
+            ReadOnlySpan<byte> tzName = Encoding.ASCII.GetBytes(deviceLocationName);
 
-            Array.Copy(tzName, locationName, tzName.Length);
-
-            clockSnapshot.LocationName = locationName;
+            tzName.CopyTo(clockSnapshot.LocationName);
 
             result = ClockSnapshot.GetCurrentTime(out clockSnapshot.UserTime, currentTimePoint, clockSnapshot.UserContext);
 
@@ -414,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         private ClockSnapshot ReadClockSnapshotFromBuffer(ServiceCtx context, IpcPtrBuffDesc ipcDesc)
         {
-            Debug.Assert(ipcDesc.Size == (ulong)Marshal.SizeOf<ClockSnapshot>());
+            Debug.Assert(ipcDesc.Size == (ulong)Unsafe.SizeOf<ClockSnapshot>());
 
             byte[] temp = new byte[ipcDesc.Size];
 

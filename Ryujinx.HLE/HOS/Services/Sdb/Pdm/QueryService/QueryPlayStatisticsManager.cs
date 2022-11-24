@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
@@ -75,7 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 
             for (int i = 0; i < filteredApplicationPlayStatistics.Count(); i++)
             {
-                MemoryHelper.Write(context.Memory, outputPosition + (ulong)(i * Marshal.SizeOf<ApplicationPlayStatistics>()), filteredApplicationPlayStatistics.ElementAt(i).Value);
+                MemoryHelper.Write(context.Memory, outputPosition + (ulong)(i * Unsafe.SizeOf<ApplicationPlayStatistics>()), filteredApplicationPlayStatistics.ElementAt(i).Value);
             }
 
             context.ResponseData.Write(filteredApplicationPlayStatistics.Count());

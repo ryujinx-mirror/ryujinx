@@ -1,6 +1,7 @@
 ﻿using Ryujinx.Memory;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -23,34 +24,18 @@ namespace Ryujinx.Cpu
             }
         }
 
-        public unsafe static T Read<T>(IVirtualMemoryManager memory, ulong position) where T : struct
+        public unsafe static T Read<T>(IVirtualMemoryManager memory, ulong position) where T : unmanaged
         {
-            long size = Marshal.SizeOf<T>();
-
-            byte[] data = new byte[size];
-
-            memory.Read(position, data);
-
-            fixed (byte* ptr = data)
-            {
-                return Marshal.PtrToStructure<T>((IntPtr)ptr);
-            }
+            return MemoryMarshal.Cast<byte, T>(memory.GetSpan(position, Unsafe.SizeOf<T>()))[0];
         }
 
-        public unsafe static ulong Write<T>(IVirtualMemoryManager memory, ulong position, T value) where T : struct
+        public unsafe static ulong Write<T>(IVirtualMemoryManager memory, ulong position, T value) where T : unmanaged
         {
-            long size = Marshal.SizeOf<T>();
-
-            byte[] data = new byte[size];
-
-            fixed (byte* ptr = data)
-            {
-                Marshal.StructureToPtr<T>(value, (IntPtr)ptr, false);
-            }
+            ReadOnlySpan<byte> data = MemoryMarshal.Cast<T, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
 
             memory.Write(position, data);
 
-            return (ulong)size;
+            return (ulong)data.Length;
         }
 
         public static string ReadAsciiString(IVirtualMemoryManager memory, ulong position, long maxSize = -1)

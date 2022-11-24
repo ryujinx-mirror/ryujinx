@@ -1,4 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Services.Time.TimeZone;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
@@ -16,13 +17,21 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         public CalendarAdditionalInfo NetworkCalendarAdditionalTime;
         public SteadyClockTimePoint   SteadyClockTimePoint;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x24)]
-        public char[] LocationName;
+        private LocationNameStorageHolder _locationName;
+
+        public Span<byte> LocationName => MemoryMarshal.Cast<LocationNameStorageHolder, byte>(MemoryMarshal.CreateSpan(ref _locationName, LocationNameStorageHolder.Size));
 
         [MarshalAs(UnmanagedType.I1)]
         public bool   IsAutomaticCorrectionEnabled;
         public byte   Type;
         public ushort Unknown;
+
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1, Size = Size)]
+        private struct LocationNameStorageHolder
+        {
+            public const int Size = 0x24;
+        }
 
         public static ResultCode GetCurrentTime(out long currentTime, SteadyClockTimePoint steadyClockTimePoint, SystemClockContext context)
         {

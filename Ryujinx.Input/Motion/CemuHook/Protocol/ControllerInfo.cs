@@ -1,21 +1,20 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Input.Motion.CemuHook.Protocol
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct ControllerInfoResponse
     {
-        public  SharedResponse Shared;
-        private byte           _zero;
+        public SharedResponse Shared;
+        private byte _zero;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct ControllerInfoRequest
     {
         public MessageType Type;
-        public int         PortsCount;
-
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public byte[] PortIndices;
+        public int PortsCount;
+        public Array4<byte> PortIndices;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
@@ -21,8 +22,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         /// <summary>
         /// Array of word entries in the buffer.
         /// </summary>
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 24)]
-        public ulong[] Entries;
+        public Array24<ulong> Entries;
 
         /// <summary>
         /// Number of used entries in the Entries field.

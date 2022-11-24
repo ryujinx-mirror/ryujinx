@@ -1,16 +1,15 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Input.Motion.CemuHook.Protocol
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct ControllerDataRequest
     {
-        public MessageType    Type;
+        public MessageType Type;
         public SubscriberType SubscriberType;
-        public byte           Slot;
-
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public byte[] MacAddress;
+        public byte Slot;
+        public Array6<byte> MacAddress;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -27,11 +26,8 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
         public uint           DPadAnalog;
         public ulong          MainButtonsAnalog;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public byte[] Touch1;
-
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public byte[] Touch2;
+        public Array6<byte> Touch1;
+        public Array6<byte> Touch2;
 
         public ulong MotionTimestamp;
         public float AccelerometerX;

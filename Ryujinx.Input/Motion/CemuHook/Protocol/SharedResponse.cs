@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Ryujinx.Common.Memory;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Input.Motion.CemuHook.Protocol
 {
@@ -11,8 +12,7 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
         public DeviceModelType ModelType;
         public ConnectionType  ConnectionType;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public byte[]        MacAddress;
+        public Array6<byte> MacAddress;
         public BatteryStatus BatteryStatus;
     }
 
