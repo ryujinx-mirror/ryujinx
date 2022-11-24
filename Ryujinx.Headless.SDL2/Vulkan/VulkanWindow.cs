@@ -40,20 +40,16 @@ namespace Ryujinx.Headless.SDL2.Vulkan
             return (IntPtr)surfaceHandle;
         }
 
-        // TODO: Fix this in SDL2-CS.
-        [DllImport("SDL2", EntryPoint = "SDL_Vulkan_GetInstanceExtensions", CallingConvention = CallingConvention.Cdecl)]
-        public static extern SDL_bool SDL_Vulkan_GetInstanceExtensions_Workaround(IntPtr window, out uint count, IntPtr names);
-
         public unsafe string[] GetRequiredInstanceExtensions()
         {
-            if (SDL_Vulkan_GetInstanceExtensions_Workaround(WindowHandle, out uint extensionsCount, IntPtr.Zero) == SDL_bool.SDL_TRUE)
+            if (SDL_Vulkan_GetInstanceExtensions(WindowHandle, out uint extensionsCount, IntPtr.Zero) == SDL_bool.SDL_TRUE)
             {
                 IntPtr[] rawExtensions = new IntPtr[(int)extensionsCount];
                 string[] extensions = new string[(int)extensionsCount];
 
                 fixed (IntPtr* rawExtensionsPtr = rawExtensions)
                 {
-                    if (SDL_Vulkan_GetInstanceExtensions_Workaround(WindowHandle, out extensionsCount, (IntPtr)rawExtensionsPtr) == SDL_bool.SDL_TRUE)
+                    if (SDL_Vulkan_GetInstanceExtensions(WindowHandle, out extensionsCount, (IntPtr)rawExtensionsPtr) == SDL_bool.SDL_TRUE)
                     {
                         for (int i = 0; i < extensions.Length; i++)
                         {

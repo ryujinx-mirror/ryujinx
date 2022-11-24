@@ -43,6 +43,8 @@ namespace Ryujinx.SDL2.Common
 
         private SDL2Driver() {}
 
+        private const string SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS = "SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS";
+
         public void Initialize()
         {
             lock (_lock)
@@ -59,6 +61,11 @@ namespace Ryujinx.SDL2.Common
                 SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
                 SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_SWITCH_HOME_LED, "0");
                 SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, "1");
+
+
+                // NOTE: As of SDL2 2.24.0, joycons are combined by default but the motion source only come from one of them.
+                // We disable this behavior for now.
+                SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS, "0");
 
                 if (SDL_Init(SdlInitFlags) != 0)
                 {
