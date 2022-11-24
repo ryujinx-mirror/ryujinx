@@ -52,15 +52,34 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
             public uint EntryCount;
 
             /// <summary>
+            /// Get the entries for the command buffer from memory.
+            /// </summary>
+            /// <param name="memoryManager">The memory manager used to fetch the data</param>
+            /// <param name="flush">If true, flushes potential GPU written data before reading the command buffer</param>
+            /// <returns>The fetched data</returns>
+            private ReadOnlySpan<int> GetWords(MemoryManager memoryManager, bool flush)
+            {
+                return MemoryMarshal.Cast<byte, int>(memoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, flush));
+            }
+
+            /// <summary>
+            /// Prefetch the command buffer.
+            /// </summary>
+            /// <param name="memoryManager">The memory manager used to fetch the data</param>
+            public void Prefetch(MemoryManager memoryManager)
+            {
+                Words = GetWords(memoryManager, true).ToArray();
+            }
+
+            /// <summary>
             /// Fetch the command buffer.
             /// </summary>
+            /// <param name="memoryManager">The memory manager used to fetch the data</param>
             /// <param name="flush">If true, flushes potential GPU written data before reading the command buffer</param>
-            public void Fetch(MemoryManager memoryManager, bool flush = true)
+            /// <returns>The command buffer words</returns>
+            public ReadOnlySpan<int> Fetch(MemoryManager memoryManager, bool flush)
             {
-                if (Words == null)
-                {
-                    Words = MemoryMarshal.Cast<byte, int>(memoryManager.GetSpan(EntryAddress, (int)EntryCount * 4, flush)).ToArray();
-                }
+                return Words ?? GetWords(memoryManager, flush);
             }
         }
 
@@ -158,7 +177,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 
                 if (beforeBarrier && commandBuffer.Type == CommandBufferType.Prefetch)
                 {
-                    commandBuffer.Fetch(processor.MemoryManager);
+                    commandBuffer.Prefetch(processor.MemoryManager);
                 }
 
                 if (commandBuffer.Type == CommandBufferType.NoPrefetch)
@@ -199,7 +218,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                 }
 
                 _currentCommandBuffer = entry;
-                _currentCommandBuffer.Fetch(entry.Processor.MemoryManager, flushCommandBuffer);
+                ReadOnlySpan<int> words = entry.Fetch(entry.Processor.MemoryManager, flushCommandBuffer);
 
                 // If we are changing the current channel,
                 // we need to force all the host state to be updated.
@@ -209,7 +228,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                     entry.Processor.ForceAllDirty();
                 }
 
-                entry.Processor.Process(entry.EntryAddress, _currentCommandBuffer.Words);
+                entry.Processor.Process(entry.EntryAddress, words);
             }
 
             _interrupt = false;
