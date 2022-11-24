@@ -1296,9 +1296,9 @@ namespace Ryujinx.Graphics.OpenGL
             _stencilFrontMask = stencilTest.FrontMask;
         }
 
-        public void SetStorageBuffers(int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetStorageBuffers(ReadOnlySpan<BufferAssignment> buffers)
         {
-            SetBuffers(first, buffers, isStorage: true);
+            SetBuffers(buffers, isStorage: true);
         }
 
         public void SetTextureAndSampler(ShaderStage stage, int binding, ITexture texture, ISampler sampler)
@@ -1366,9 +1366,9 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetUniformBuffers(int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetUniformBuffers(ReadOnlySpan<BufferAssignment> buffers)
         {
-            SetBuffers(first, buffers, isStorage: false);
+            SetBuffers(buffers, isStorage: false);
         }
 
         public void SetUserClipDistance(int index, bool enableClip)
@@ -1460,21 +1460,22 @@ namespace Ryujinx.Graphics.OpenGL
             GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
         }
 
-        private void SetBuffers(int first, ReadOnlySpan<BufferRange> buffers, bool isStorage)
+        private void SetBuffers(ReadOnlySpan<BufferAssignment> buffers, bool isStorage)
         {
             BufferRangeTarget target = isStorage ? BufferRangeTarget.ShaderStorageBuffer : BufferRangeTarget.UniformBuffer;
 
             for (int index = 0; index < buffers.Length; index++)
             {
-                BufferRange buffer = buffers[index];
+                BufferAssignment assignment = buffers[index];
+                BufferRange buffer = assignment.Range;
 
                 if (buffer.Handle == BufferHandle.Null)
                 {
-                    GL.BindBufferRange(target, first + index, 0, IntPtr.Zero, 0);
+                    GL.BindBufferRange(target, assignment.Binding, 0, IntPtr.Zero, 0);
                     continue;
                 }
 
-                GL.BindBufferRange(target, first + index, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
+                GL.BindBufferRange(target, assignment.Binding, buffer.Handle.ToInt32(), (IntPtr)buffer.Offset, buffer.Size);
             }
         }
 

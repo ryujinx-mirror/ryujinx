@@ -177,7 +177,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
-            _pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, RegionBufferSize) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(1, new BufferRange(bufferHandle, 0, RegionBufferSize)) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -240,7 +240,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, clearColor);
 
-            _pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, ClearColorBufferSize) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(1, new BufferRange(bufferHandle, 0, ClearColorBufferSize)) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -302,7 +302,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
-            pipeline.SetUniformBuffers(1, stackalloc[] { new BufferRange(bufferHandle, 0, RegionBufferSize) });
+            pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(1, new BufferRange(bufferHandle, 0, RegionBufferSize)) });
 
             Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
 
@@ -380,7 +380,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _pipeline.SetCommandBuffer(cbs);
 
-                _pipeline.SetUniformBuffers(0, stackalloc[] { new BufferRange(bufferHandle, 0, ParamsBufferSize) });
+                _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
 
                 Span<Auto<DisposableBuffer>> sbRanges = new Auto<DisposableBuffer>[2];
 
@@ -571,7 +571,7 @@ namespace Ryujinx.Graphics.Vulkan
             int conversionType = srcIsMs ? src.Info.BytesPerPixel : -src.Info.BytesPerPixel;
             _pipeline.Specialize(conversionType);
 
-            _pipeline.SetUniformBuffers(0, stackalloc[] { new BufferRange(bufferHandle, 0, ParamsBufferSize) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
 
             if (src.Info.Target == Target.Texture2DMultisampleArray ||
                 dst.Info.Target == Target.Texture2DMultisampleArray)
@@ -776,7 +776,7 @@ namespace Ryujinx.Graphics.Vulkan
                 srcIndirectBufferOffset,
                 indirectDataSize);
 
-            _pipeline.SetUniformBuffers(0, stackalloc[] { drawCountBufferAligned });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, drawCountBufferAligned) });
             _pipeline.SetStorageBuffers(1, new[] { srcIndirectBuffer.GetBuffer(), dstIndirectBuffer.GetBuffer(), patternBuffer.GetBuffer() });
 
             _pipeline.SetProgram(_programConvertIndirectData);
@@ -804,7 +804,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 convertedCount * outputIndexSize);
 
-            _pipeline.SetUniformBuffers(0, stackalloc[] { new BufferRange(patternBufferHandle, 0, ParamsBufferSize) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(patternBufferHandle, 0, ParamsBufferSize)) });
             _pipeline.SetStorageBuffers(1, new[] { srcIndexBuffer.GetBuffer(), dstIndexBuffer.GetBuffer() });
 
             _pipeline.SetProgram(_programConvertIndexBuffer);

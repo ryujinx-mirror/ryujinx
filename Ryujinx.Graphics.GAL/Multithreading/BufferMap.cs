@@ -142,6 +142,30 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return ranges;
         }
 
+        internal Span<BufferAssignment> MapBufferRanges(Span<BufferAssignment> ranges)
+        {
+            // Rewrite the buffer ranges to point to the mapped handles.
+
+            lock (_bufferMap)
+            {
+                for (int i = 0; i < ranges.Length; i++)
+                {
+                    ref BufferAssignment assignment = ref ranges[i];
+                    BufferRange range = assignment.Range;
+                    BufferHandle result;
+
+                    if (!_bufferMap.TryGetValue(range.Handle, out result))
+                    {
+                        result = BufferHandle.Null;
+                    }
+
+                    assignment = new BufferAssignment(ranges[i].Binding, new BufferRange(result, range.Offset, range.Size));
+                }
+            }
+
+            return ranges;
+        }
+
         internal Span<VertexBufferDescriptor> MapBufferRanges(Span<VertexBufferDescriptor> ranges)
         {
             // Rewrite the buffer ranges to point to the mapped handles.

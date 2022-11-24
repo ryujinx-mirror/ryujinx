@@ -163,12 +163,13 @@ namespace Ryujinx.Graphics.Vulkan
             SignalDirty(DirtyFlags.Image);
         }
 
-        public void SetStorageBuffers(CommandBuffer commandBuffer, int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetStorageBuffers(CommandBuffer commandBuffer, ReadOnlySpan<BufferAssignment> buffers)
         {
             for (int i = 0; i < buffers.Length; i++)
             {
-                var buffer = buffers[i];
-                int index = first + i;
+                var assignment = buffers[i];
+                var buffer = assignment.Range;
+                int index = assignment.Binding;
 
                 Auto<DisposableBuffer> vkBuffer = _gd.BufferManager.GetBuffer(commandBuffer, buffer.Handle, false);
                 ref Auto<DisposableBuffer> currentVkBuffer = ref _storageBufferRefs[index];
@@ -243,12 +244,13 @@ namespace Ryujinx.Graphics.Vulkan
             SignalDirty(DirtyFlags.Texture);
         }
 
-        public void SetUniformBuffers(CommandBuffer commandBuffer, int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetUniformBuffers(CommandBuffer commandBuffer, ReadOnlySpan<BufferAssignment> buffers)
         {
             for (int i = 0; i < buffers.Length; i++)
             {
-                var buffer = buffers[i];
-                int index = first + i;
+                var assignment = buffers[i];
+                var buffer = assignment.Range;
+                int index = assignment.Binding;
 
                 Auto<DisposableBuffer> vkBuffer = _gd.BufferManager.GetBuffer(commandBuffer, buffer.Handle, false);
                 ref Auto<DisposableBuffer> currentVkBuffer = ref _uniformBufferRefs[index];

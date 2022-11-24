@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private readonly VertexBuffer[] _vertexBuffers;
         private readonly BufferBounds[] _transformFeedbackBuffers;
         private readonly List<BufferTextureBinding> _bufferTextures;
-        private readonly BufferRange[] _ranges;
+        private readonly BufferAssignment[] _ranges;
 
         /// <summary>
         /// Holds shader stage buffer state and binding information.
@@ -134,7 +134,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             _bufferTextures = new List<BufferTextureBinding>();
 
-            _ranges = new BufferRange[Constants.TotalGpUniformBuffers * Constants.ShaderStages];
+            _ranges = new BufferAssignment[Constants.TotalGpUniformBuffers * Constants.ShaderStages];
         }
 
 
@@ -618,10 +618,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBuffers(BufferCache bufferCache, BuffersPerStage[] bindings, bool isStorage)
         {
-            int rangesFirst = 0;
             int rangesCount = 0;
 
-            Span<BufferRange> ranges = _ranges;
+            Span<BufferAssignment> ranges = _ranges;
 
             for (ShaderStage stage = ShaderStage.Vertex; stage <= ShaderStage.Fragment; stage++)
             {
@@ -640,25 +639,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
                             ? bufferCache.GetBufferRangeTillEnd(bounds.Address, bounds.Size, isWrite)
                             : bufferCache.GetBufferRange(bounds.Address, bounds.Size);
 
-                        if (rangesCount == 0)
-                        {
-                            rangesFirst = bindingInfo.Binding;
-                        }
-                        else if (bindingInfo.Binding != rangesFirst + rangesCount)
-                        {
-                            SetHostBuffers(ranges, rangesFirst, rangesCount, isStorage);
-                            rangesFirst = bindingInfo.Binding;
-                            rangesCount = 0;
-                        }
-
-                        ranges[rangesCount++] = range;
+                        ranges[rangesCount++] = new BufferAssignment(bindingInfo.Binding, range);
                     }
                 }
             }
 
             if (rangesCount != 0)
             {
-                SetHostBuffers(ranges, rangesFirst, rangesCount, isStorage);
+                SetHostBuffers(ranges, rangesCount, isStorage);
             }
         }
 
@@ -671,10 +659,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBuffers(BufferCache bufferCache, BuffersPerStage buffers, bool isStorage)
         {
-            int rangesFirst = 0;
             int rangesCount = 0;
 
-            Span<BufferRange> ranges = _ranges;
+            Span<BufferAssignment> ranges = _ranges;
 
             for (int index = 0; index < buffers.Count; index++)
             {
@@ -689,24 +676,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         ? bufferCache.GetBufferRangeTillEnd(bounds.Address, bounds.Size, isWrite)
                         : bufferCache.GetBufferRange(bounds.Address, bounds.Size);
 
-                    if (rangesCount == 0)
-                    {
-                        rangesFirst = bindingInfo.Binding;
-                    }
-                    else if (bindingInfo.Binding != rangesFirst + rangesCount)
-                    {
-                        SetHostBuffers(ranges, rangesFirst, rangesCount, isStorage);
-                        rangesFirst = bindingInfo.Binding;
-                        rangesCount = 0;
-                    }
-
-                    ranges[rangesCount++] = range;
+                    ranges[rangesCount++] = new BufferAssignment(bindingInfo.Binding, range);
                 }
             }
 
             if (rangesCount != 0)
             {
-                SetHostBuffers(ranges, rangesFirst, rangesCount, isStorage);
+                SetHostBuffers(ranges, rangesCount, isStorage);
             }
         }
 
@@ -718,15 +694,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="count">Number of bindings</param>
         /// <param name="isStorage">Indicates if the buffers are storage or uniform buffers</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetHostBuffers(ReadOnlySpan<BufferRange> ranges, int first, int count, bool isStorage)
+        private void SetHostBuffers(ReadOnlySpan<BufferAssignment> ranges, int count, bool isStorage)
         {
             if (isStorage)
             {
-                _context.Renderer.Pipeline.SetStorageBuffers(first, ranges.Slice(0, count));
+                _context.Renderer.Pipeline.SetStorageBuffers(ranges.Slice(0, count));
             }
             else
             {
-                _context.Renderer.Pipeline.SetUniformBuffers(first, ranges.Slice(0, count));
+                _context.Renderer.Pipeline.SetUniformBuffers(ranges.Slice(0, count));
             }
         }
 

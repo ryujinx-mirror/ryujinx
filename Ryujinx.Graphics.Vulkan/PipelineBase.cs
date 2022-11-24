@@ -973,9 +973,9 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetStorageBuffers(int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetStorageBuffers(ReadOnlySpan<BufferAssignment> buffers)
         {
-            _descriptorSetUpdater.SetStorageBuffers(CommandBuffer, first, buffers);
+            _descriptorSetUpdater.SetStorageBuffers(CommandBuffer, buffers);
         }
 
         public void SetStorageBuffers(int first, ReadOnlySpan<Auto<DisposableBuffer>> buffers)
@@ -1013,9 +1013,9 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public void SetUniformBuffers(int first, ReadOnlySpan<BufferRange> buffers)
+        public void SetUniformBuffers(ReadOnlySpan<BufferAssignment> buffers)
         {
-            _descriptorSetUpdater.SetUniformBuffers(CommandBuffer, first, buffers);
+            _descriptorSetUpdater.SetUniformBuffers(CommandBuffer, buffers);
         }
 
         public void SetUserClipDistance(int index, bool enableClip)
