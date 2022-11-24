@@ -60,7 +60,7 @@ namespace Ryujinx.Ava
 
         private const float VolumeDelta = 0.05f;
 
-        private static readonly Cursor InvisibleCursor = new Cursor(StandardCursorType.None);        
+        private static readonly Cursor InvisibleCursor = new Cursor(StandardCursorType.None);
 
         private readonly long _ticksPerFrame;
         private readonly Stopwatch _chrono;
@@ -349,7 +349,10 @@ namespace Ryujinx.Ava
 
             _isActive = false;
 
-            _renderingThread.Join();
+            if (_renderingThread.IsAlive)
+            {
+                _renderingThread.Join();
+            }
 
             DisplaySleep.Restore();
 
@@ -378,7 +381,7 @@ namespace Ryujinx.Ava
 
             _gpuCancellationTokenSource.Cancel();
             _gpuCancellationTokenSource.Dispose();
-            
+
             _chrono.Stop();
         }
 
@@ -393,7 +396,7 @@ namespace Ryujinx.Ava
             Renderer?.MakeCurrent();
 
             Device.DisposeGpu();
-            
+
             Renderer?.MakeCurrent(null);
         }
 
@@ -417,7 +420,6 @@ namespace Ryujinx.Ava
         public async Task<bool> LoadGuestApplication()
         {
             InitializeSwitchInstance();
-
             MainWindow.UpdateGraphicsConfig();
 
             SystemVersion firmwareVersion = ContentManager.GetCurrentFirmwareVersion();
@@ -428,17 +430,16 @@ namespace Ryujinx.Ava
                 {
                     if (userError == UserError.NoFirmware)
                     {
-                        string message = string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedMessage"],
-                            firmwareVersion.VersionString);
-
                         UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
-                            LocaleManager.Instance["DialogFirmwareNoFirmwareInstalledMessage"], message,
-                            LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], "");
+                            LocaleManager.Instance["DialogFirmwareNoFirmwareInstalledMessage"],
+                            string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedMessage"], firmwareVersion.VersionString),
+                            LocaleManager.Instance["InputDialogYes"],
+                            LocaleManager.Instance["InputDialogNo"],
+                            "");
 
                         if (result != UserResult.Yes)
                         {
-                            Dispatcher.UIThread.Post(async () => await
-                                UserErrorDialog.ShowUserErrorDialog(userError, _parent));
+                            await UserErrorDialog.ShowUserErrorDialog(userError, _parent);
                             Device.Dispose();
 
                             return false;
@@ -447,8 +448,7 @@ namespace Ryujinx.Ava
 
                     if (!SetupValidator.TryFixStartApplication(ContentManager, ApplicationPath, userError, out _))
                     {
-                        Dispatcher.UIThread.Post(async () => await
-                            UserErrorDialog.ShowUserErrorDialog(userError, _parent));
+                        await UserErrorDialog.ShowUserErrorDialog(userError, _parent);
                         Device.Dispose();
 
                         return false;
@@ -461,11 +461,9 @@ namespace Ryujinx.Ava
 
                         _parent.RefreshFirmwareStatus();
 
-                        string message = string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedSuccessMessage"], firmwareVersion.VersionString);
-
                         await ContentDialogHelper.CreateInfoDialog(
                             string.Format(LocaleManager.Instance["DialogFirmwareInstalledMessage"], firmwareVersion.VersionString),
-                            message,
+                            string.Format(LocaleManager.Instance["DialogFirmwareInstallEmbeddedSuccessMessage"], firmwareVersion.VersionString),
                             LocaleManager.Instance["InputDialogOk"],
                             "",
                             LocaleManager.Instance["RyujinxInfo"]);
@@ -473,9 +471,7 @@ namespace Ryujinx.Ava
                 }
                 else
                 {
-                    Dispatcher.UIThread.Post(async () => await
-                        UserErrorDialog.ShowUserErrorDialog(userError, _parent));
-
+                    await UserErrorDialog.ShowUserErrorDialog(userError, _parent);
                     Device.Dispose();
 
                     return false;
@@ -514,7 +510,7 @@ namespace Ryujinx.Ava
             }
             else if (File.Exists(ApplicationPath))
             {
-                switch (System.IO.Path.GetExtension(ApplicationPath).ToLowerInvariant())
+                switch (Path.GetExtension(ApplicationPath).ToLowerInvariant())
                 {
                     case ".xci":
                         {
@@ -602,7 +598,7 @@ namespace Ryujinx.Ava
             if (Renderer.IsVulkan)
             {
                 string preferredGpu = ConfigurationState.Instance.Graphics.PreferredGpu.Value;
-                
+
                 renderer = new VulkanRenderer(Renderer.CreateVulkanSurface, VulkanHelper.GetRequiredInstanceExtensions, preferredGpu);
             }
             else

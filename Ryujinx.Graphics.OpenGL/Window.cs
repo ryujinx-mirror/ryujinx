@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.OpenGL
         private const int TextureCount = 3;
         private readonly OpenGLRenderer _renderer;
 
+        private bool _initialized;
+
         private int _width;
         private int _height;
         private int _copyFramebufferHandle;
@@ -179,6 +181,7 @@ namespace Ryujinx.Graphics.OpenGL
         public void InitializeBackgroundContext(IOpenGLContext baseContext)
         {
             BackgroundContext = new BackgroundContextWorker(baseContext);
+            _initialized = true;
         }
 
         public void CaptureFrame(int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY)
@@ -193,6 +196,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Dispose()
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             BackgroundContext.Dispose();
 
             if (_copyFramebufferHandle != 0)

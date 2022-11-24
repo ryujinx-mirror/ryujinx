@@ -735,7 +735,6 @@ namespace Ryujinx.Ui
 
                                 _emulationContext.Dispose();
                                 SwitchToGameTable();
-                                RendererWidget.Dispose();
 
                                 return;
                             }
@@ -747,7 +746,6 @@ namespace Ryujinx.Ui
 
                             _emulationContext.Dispose();
                             SwitchToGameTable();
-                            RendererWidget.Dispose();
 
                             return;
                         }
@@ -770,7 +768,6 @@ namespace Ryujinx.Ui
 
                         _emulationContext.Dispose();
                         SwitchToGameTable();
-                        RendererWidget.Dispose();
 
                         return;
                     }

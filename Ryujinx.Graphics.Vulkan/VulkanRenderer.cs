@@ -22,6 +22,8 @@ namespace Ryujinx.Graphics.Vulkan
         private Device _device;
         private WindowBase _window;
 
+        private bool _initialized;
+
         internal FormatCapabilities FormatCapabilities { get; private set; }
         internal HardwareCapabilities Capabilities;
 
@@ -266,6 +268,8 @@ namespace Ryujinx.Graphics.Vulkan
             LoadFeatures(supportedExtensions, maxQueueCount, queueFamilyIndex);
 
             _window = new Window(this, _surface, _physicalDevice, _device);
+
+            _initialized = true;
         }
 
         public BufferHandle CreateBuffer(int size)
@@ -573,6 +577,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe void Dispose()
         {
+            if (!_initialized)
+            {
+                return;
+            }
+
             CommandBufferPool.Dispose();
             BackgroundResources.Dispose();
             _counters.Dispose();

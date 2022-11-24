@@ -49,7 +49,7 @@ namespace Ryujinx.Ava.Ui.Controls
             {
                 throw new PlatformNotSupportedException();
             }
-            
+
             var flags = OpenGLContextFlags.Compat;
             if (_graphicsDebugLevel != GraphicsDebugLevel.None)
             {
@@ -69,12 +69,12 @@ namespace Ryujinx.Ava.Ui.Controls
 
         public void MakeCurrent()
         {
-            Context.MakeCurrent(_window);
+            Context?.MakeCurrent(_window);
         }
 
         public void MakeCurrent(NativeWindowBase window)
         {
-            Context.MakeCurrent(window);
+            Context?.MakeCurrent(window);
         }
 
         public void SwapBuffers()

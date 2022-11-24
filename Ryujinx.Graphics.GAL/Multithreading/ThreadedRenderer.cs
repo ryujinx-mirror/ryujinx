@@ -422,7 +422,11 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
             // Stop the GPU thread.
             _disposed = true;
-            _gpuThread.Join();
+
+            if (_gpuThread != null && _gpuThread.IsAlive)
+            {
+                _gpuThread.Join();
+            }
 
             // Dispose the renderer.
             _baseRenderer.Dispose();

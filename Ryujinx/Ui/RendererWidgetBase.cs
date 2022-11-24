@@ -519,10 +519,14 @@ namespace Ryujinx.Ui
             _gpuCancellationTokenSource.Cancel();
 
             _isStopped = true;
-            _isActive = false;
+            
+            if (_isActive)
+            {
+                _isActive = false;
 
-            _exitEvent.WaitOne();
-            _exitEvent.Dispose();
+                _exitEvent.WaitOne();
+                _exitEvent.Dispose();
+            }
         }
 
         private void NVStutterWorkaround()
