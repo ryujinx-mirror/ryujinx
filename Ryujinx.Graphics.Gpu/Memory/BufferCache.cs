@@ -22,6 +22,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private readonly GpuContext _context;
         private readonly PhysicalMemory _physicalMemory;
 
+        /// <remarks>
+        /// Only modified from the GPU thread. Must lock for add/remove.
+        /// Must lock for any access from other threads.
+        /// </remarks>
         private readonly RangeList<Buffer> _buffers;
 
         private Buffer[] _bufferOverlaps;
@@ -200,12 +204,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">Size in bytes of the buffer</param>
         private void CreateBufferAligned(ulong address, ulong size)
         {
-            int overlapsCount;
-
-            lock (_buffers)
-            {
-                overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref _bufferOverlaps);
-            }
+            int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref _bufferOverlaps);
 
             if (overlapsCount != 0)
             {
@@ -410,10 +409,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (size != 0)
             {
-                lock (_buffers)
-                {
-                    buffer = _buffers.FindFirstOverlap(address, size);
-                }
+                buffer = _buffers.FindFirstOverlap(address, size);
 
                 buffer.SynchronizeMemory(address, size);
 
@@ -424,10 +420,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
             else
             {
-                lock (_buffers)
-                {
-                    buffer = _buffers.FindFirstOverlap(address, 1);
-                }
+                buffer = _buffers.FindFirstOverlap(address, 1);
             }
 
             return buffer;
@@ -442,12 +435,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (size != 0)
             {
-                Buffer buffer;
-
-                lock (_buffers)
-                {
-                    buffer = _buffers.FindFirstOverlap(address, size);
-                }
+                Buffer buffer = _buffers.FindFirstOverlap(address, size);
 
                 buffer.SynchronizeMemory(address, size);
             }
