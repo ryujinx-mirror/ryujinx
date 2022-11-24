@@ -44,6 +44,11 @@ namespace Ryujinx.Memory.Tests
             throw new NotImplementedException();
         }
 
+        public bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data)
+        {
+            throw new NotImplementedException();
+        }
+
         public ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false)
         {
             throw new NotImplementedException();

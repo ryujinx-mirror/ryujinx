@@ -137,6 +137,14 @@ namespace Ryujinx.Memory
         }
 
         /// <inheritdoc/>
+        public bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data)
+        {
+            Write(va, data);
+
+            return true;
+        }
+
+        /// <inheritdoc/>
         public ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false)
         {
             if (size == 0)

@@ -180,6 +180,37 @@ namespace Ryujinx.Cpu.Jit
             WriteImpl(va, data);
         }
 
+        /// <inheritdoc/>
+        public bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data)
+        {
+            if (data.Length == 0)
+            {
+                return false;
+            }
+
+            SignalMemoryTracking(va, (ulong)data.Length, false);
+
+            if (IsContiguousAndMapped(va, data.Length))
+            {
+                var target = _backingMemory.GetSpan(GetPhysicalAddressInternal(va), data.Length);
+
+                bool changed = !data.SequenceEqual(target);
+
+                if (changed)
+                {
+                    data.CopyTo(target);
+                }
+
+                return changed;
+            }
+            else
+            {
+                WriteImpl(va, data);
+
+                return true;
+            }
+        }
+
         /// <summary>
         /// Writes data to CPU mapped memory.
         /// </summary>
