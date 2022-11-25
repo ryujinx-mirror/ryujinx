@@ -30,13 +30,11 @@ namespace Ryujinx.Ava.Ui.Windows
         private readonly string     _titleUpdateJsonPath;
         private TitleUpdateMetadata _titleUpdateWindowData;
 
-        public VirtualFileSystem VirtualFileSystem { get; }
+        private VirtualFileSystem              _virtualFileSystem { get; }
+        private AvaloniaList<TitleUpdateModel> _titleUpdates      { get; set; }
 
-        internal AvaloniaList<TitleUpdateModel> TitleUpdates { get; set; } = new AvaloniaList<TitleUpdateModel>();
-        public string TitleId { get; }
-        public string TitleName { get; }
-
-        public string Heading => string.Format(LocaleManager.Instance["GameUpdateWindowHeading"], TitleName, TitleId.ToUpper());
+        private ulong  _titleId   { get; }
+        private string _titleName { get; }
 
         public TitleUpdateWindow()
         {
@@ -44,16 +42,18 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
             
-            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["UpdateWindowTitle"];
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["UpdateWindowTitle"]} - {_titleName} ({_titleId:X16})";
         }
 
-        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, string titleId, string titleName)
+        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
         {
-            VirtualFileSystem = virtualFileSystem;
-            TitleId           = titleId;
-            TitleName         = titleName;
+            _virtualFileSystem = virtualFileSystem;
+            _titleUpdates      = new AvaloniaList<TitleUpdateModel>();
 
-            _titleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId, "updates.json");
+            _titleId   = titleId;
+            _titleName = titleName;
+
+            _titleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "updates.json");
 
             try
             {
@@ -64,7 +64,7 @@ namespace Ryujinx.Ava.Ui.Windows
                 _titleUpdateWindowData = new TitleUpdateMetadata 
                 {
                     Selected = "",
-                    Paths = new List<string>()
+                    Paths    = new List<string>()
                 };
             }
 
@@ -72,14 +72,20 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
 
-            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["UpdateWindowTitle"];
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["UpdateWindowTitle"]} - {_titleName} ({_titleId:X16})";
 
             LoadUpdates();
+            PrintHeading();
+        }
+
+        private void PrintHeading()
+        {
+            Heading.Text = string.Format(LocaleManager.Instance["GameUpdateWindowHeading"], _titleUpdates.Count, _titleName, _titleId.ToString("X16"));
         }
 
         private void LoadUpdates()
         {
-            TitleUpdates.Add(new TitleUpdateModel(default, string.Empty, true));
+            _titleUpdates.Add(new TitleUpdateModel(default, string.Empty, true));
 
             foreach (string path in _titleUpdateWindowData.Paths)
             {
@@ -88,12 +94,12 @@ namespace Ryujinx.Ava.Ui.Windows
 
             if (_titleUpdateWindowData.Selected == "")
             {
-                TitleUpdates[0].IsEnabled = true;
+                _titleUpdates[0].IsEnabled = true;
             }
             else
             {
-                TitleUpdateModel       selected = TitleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected);
-                List<TitleUpdateModel> enabled  = TitleUpdates.Where(x => x.IsEnabled).ToList();
+                TitleUpdateModel       selected = _titleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected);
+                List<TitleUpdateModel> enabled  = _titleUpdates.Where(x => x.IsEnabled).ToList();
 
                 foreach (TitleUpdateModel update in enabled)
                 {
@@ -111,49 +117,46 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private void AddUpdate(string path)
         {
-            if (File.Exists(path) && !TitleUpdates.Any(x => x.Path == path))
+            if (File.Exists(path) && !_titleUpdates.Any(x => x.Path == path))
             {
-                using (FileStream file = new(path, FileMode.Open, FileAccess.Read))
+                using FileStream file = new(path, FileMode.Open, FileAccess.Read);
+
+                try
                 {
-                    PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+                    (Nca patchNca, Nca controlNca) = ApplicationLoader.GetGameUpdateDataFromPartition(_virtualFileSystem, new PartitionFileSystem(file.AsStorage()), _titleId.ToString("x16"), 0);
 
-                    try
+                    if (controlNca != null && patchNca != null)
                     {
-                        (Nca patchNca, Nca controlNca) = ApplicationLoader.GetGameUpdateDataFromPartition(VirtualFileSystem, nsp, TitleId, 0);
+                        ApplicationControlProperty controlData = new();
 
-                        if (controlNca != null && patchNca != null)
+                        using UniqueRef<IFile> nacpFile = new();
+
+                        controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
+
+                        _titleUpdates.Add(new TitleUpdateModel(controlData, path));
+
+                        foreach (var update in _titleUpdates)
                         {
-                            ApplicationControlProperty controlData = new ApplicationControlProperty();
-
-                            using var nacpFile = new UniqueRef<IFile>();
-
-                            controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-                            nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
-
-                            TitleUpdates.Add(new TitleUpdateModel(controlData, path));
-
-                            foreach (var update in TitleUpdates)
-                            {
-                                update.IsEnabled = false;
-                            }
-
-                            TitleUpdates.Last().IsEnabled = true;
+                            update.IsEnabled = false;
                         }
-                        else
-                        {
-                            Dispatcher.UIThread.Post(async () =>
-                            {
-                                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogUpdateAddUpdateErrorMessage"]);
-                            });
-                        }
+
+                        _titleUpdates.Last().IsEnabled = true;
                     }
-                    catch (Exception ex)
+                    else
                     {
                         Dispatcher.UIThread.Post(async () =>
                         {
-                            await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, path));
+                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogUpdateAddUpdateErrorMessage"]);
                         });
                     }
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, path));
+                    });
                 }
             }
         }
@@ -162,16 +165,17 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             if (removeSelectedOnly)
             {
-                TitleUpdates.RemoveAll(TitleUpdates.Where(x => x.IsEnabled && !x.IsNoUpdate).ToList());
+                _titleUpdates.RemoveAll(_titleUpdates.Where(x => x.IsEnabled && !x.IsNoUpdate).ToList());
             }
             else
             {
-                TitleUpdates.RemoveAll(TitleUpdates.Where(x => !x.IsNoUpdate).ToList());
+                _titleUpdates.RemoveAll(_titleUpdates.Where(x => !x.IsNoUpdate).ToList());
             }
 
-            TitleUpdates.FirstOrDefault(x => x.IsNoUpdate).IsEnabled = true;
+            _titleUpdates.FirstOrDefault(x => x.IsNoUpdate).IsEnabled = true;
 
             SortUpdates();
+            PrintHeading();
         }
 
         public void RemoveSelected()
@@ -186,7 +190,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         public async void Add()
         {
-            OpenFileDialog dialog = new OpenFileDialog()
+            OpenFileDialog dialog = new()
             {
                 Title         = LocaleManager.Instance["SelectUpdateDialogTitle"],
                 AllowMultiple = true
@@ -209,11 +213,12 @@ namespace Ryujinx.Ava.Ui.Windows
             }
 
             SortUpdates();
+            PrintHeading();
         }
 
         private void SortUpdates()
         {
-            var list = TitleUpdates.ToList();
+            var list = _titleUpdates.ToList();
 
             list.Sort((first, second) =>
             {
@@ -229,8 +234,8 @@ namespace Ryujinx.Ava.Ui.Windows
                 return Version.Parse(first.Control.DisplayVersionString.ToString()).CompareTo(Version.Parse(second.Control.DisplayVersionString.ToString())) * -1;
             });
 
-            TitleUpdates.Clear();
-            TitleUpdates.AddRange(list);
+            _titleUpdates.Clear();
+            _titleUpdates.AddRange(list);
         }
 
         public void Save()
@@ -239,7 +244,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             _titleUpdateWindowData.Selected = "";
 
-            foreach (TitleUpdateModel update in TitleUpdates)
+            foreach (TitleUpdateModel update in _titleUpdates)
             {
                 _titleUpdateWindowData.Paths.Add(update.Path);
 

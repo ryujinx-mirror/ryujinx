@@ -1283,7 +1283,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
             ApplicationData selection = SelectedApplication;
             if (selection != null)
             {
-                await new TitleUpdateWindow(_owner.VirtualFileSystem, selection.TitleId, selection.TitleName).ShowDialog(_owner);
+                await new TitleUpdateWindow(_owner.VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName).ShowDialog(_owner);
             }
         }
 

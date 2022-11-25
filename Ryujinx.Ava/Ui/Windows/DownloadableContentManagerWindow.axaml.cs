@@ -8,7 +8,6 @@ using LibHac.FsSystem;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
-using LibHac.Tools.FsSystem.Save;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.Controls;
 using Ryujinx.Ava.Ui.Models;
@@ -17,8 +16,6 @@ using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -36,8 +33,8 @@ namespace Ryujinx.Ava.Ui.Windows
         private VirtualFileSystem                      _virtualFileSystem    { get; }
         private AvaloniaList<DownloadableContentModel> _downloadableContents { get; set; }
 
-        private ulong  TitleId   { get; }
-        private string TitleName { get; }
+        private ulong  _titleId   { get; }
+        private string _titleName { get; }
 
         public DownloadableContentManagerWindow()
         {
@@ -45,15 +42,16 @@ namespace Ryujinx.Ava.Ui.Windows
 
             InitializeComponent();
 
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {TitleName} ({TitleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {_titleName} ({_titleId:X16})";
         }
 
         public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
         {
             _virtualFileSystem    = virtualFileSystem;
             _downloadableContents = new AvaloniaList<DownloadableContentModel>();
-            TitleId               = titleId;
-            TitleName             = titleName;
+
+            _titleId   = titleId;
+            _titleName = titleName;
 
             _downloadableContentJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "dlc.json");
 
@@ -74,7 +72,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
             DlcDataGrid.SelectionChanged += DlcDataGrid_SelectionChanged;
 
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {TitleName} ({TitleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {_titleName} ({_titleId:X16})";
 
             LoadDownloadableContents();
             PrintHeading();
@@ -87,7 +85,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private void PrintHeading()
         {
-            Heading.Text = string.Format(LocaleManager.Instance["DlcWindowHeading"], _downloadableContents.Count, TitleName, TitleId.ToString("X16"));
+            Heading.Text = string.Format(LocaleManager.Instance["DlcWindowHeading"], _downloadableContents.Count, _titleName, _titleId.ToString("X16"));
         }
 
         private void LoadDownloadableContents()
@@ -98,15 +96,15 @@ namespace Ryujinx.Ava.Ui.Windows
                 {
                     using FileStream containerFile = File.OpenRead(downloadableContentContainer.ContainerPath);
 
-                    PartitionFileSystem pfs = new(containerFile.AsStorage());
+                    PartitionFileSystem partitionFileSystem = new(containerFile.AsStorage());
 
-                    _virtualFileSystem.ImportTickets(pfs);
+                    _virtualFileSystem.ImportTickets(partitionFileSystem);
 
                     foreach (DownloadableContentNca downloadableContentNca in downloadableContentContainer.DownloadableContentNcaList)
                     {
                         using UniqueRef<IFile> ncaFile = new();
 
-                        pfs.OpenFile(ref ncaFile.Ref(), downloadableContentNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        partitionFileSystem.OpenFile(ref ncaFile.Ref(), downloadableContentNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                         Nca nca = TryOpenNca(ncaFile.Get.AsStorage(), downloadableContentContainer.ContainerPath);
                         if (nca != null)
@@ -169,7 +167,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
                 if (nca.Header.ContentType == NcaContentType.PublicData)
                 {
-                    if ((nca.Header.TitleId & 0xFFFFFFFFFFFFE000) != TitleId)
+                    if ((nca.Header.TitleId & 0xFFFFFFFFFFFFE000) != _titleId)
                     {
                         break;
                     }
