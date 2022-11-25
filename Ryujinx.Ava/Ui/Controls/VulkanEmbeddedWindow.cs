@@ -20,7 +20,7 @@ namespace Ryujinx.Ava.Ui
             }
             else if (OperatingSystem.IsLinux())
             {
-                _window = X11Window;
+                _window = new SimpleX11Window(new NativeHandle(X11Display), new NativeHandle(WindowHandle));
             }
             else
             {

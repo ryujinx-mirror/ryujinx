@@ -6,8 +6,8 @@ using SPB.Graphics;
 using SPB.Platform;
 using SPB.Platform.GLX;
 using SPB.Platform.X11;
+using SPB.Windowing;
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -96,11 +96,13 @@ namespace Ryujinx.Ava.Ui.Controls
         [SupportedOSPlatform("linux")]
         IPlatformHandle CreateLinux(IPlatformHandle parent)
         {
-            X11Window = PlatformHelper.CreateOpenGLWindow(FramebufferFormat.Default, 0, 0, 100, 100) as GLXWindow;
+            X11Window = new GLXWindow(new NativeHandle(X11.DefaultDisplay), new NativeHandle(parent.Handle));
 
             WindowHandle = X11Window.WindowHandle.RawHandle;
 
             X11Display = X11Window.DisplayHandle.RawHandle;
+
+            X11Window.Hide();
 
             return new PlatformHandle(WindowHandle, "X11");
         }
