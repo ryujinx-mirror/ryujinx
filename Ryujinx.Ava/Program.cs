@@ -23,19 +23,18 @@ namespace Ryujinx.Ava
 {
     internal class Program
     {
-        public static double WindowScaleFactor { get; set; }
-        public static double ActualScaleFactor { get; set; }
-        public static string Version { get; private set; }
-        public static string ConfigurationPath { get; private set; }
-        public static bool PreviewerDetached { get; private set; }
-
-        public static RenderTimer RenderTimer { get; private set; }
+        public static double      WindowScaleFactor { get; set; }
+        public static double      ActualScaleFactor { get; set; }
+        public static string      Version           { get; private set; }
+        public static string      ConfigurationPath { get; private set; }
+        public static bool        PreviewerDetached { get; private set; }
+        public static RenderTimer RenderTimer       { get; private set; }
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int MessageBoxA(IntPtr hWnd, string text, string caption, uint type);
 
         private const uint MB_ICONWARNING = 0x30;
-        private const int BaseDpi = 96;
+        private const int  BaseDpi        = 96;
 
         public static void Main(string[] args)
         {
@@ -43,7 +42,7 @@ namespace Ryujinx.Ava
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))
             {
-                MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MB_ICONWARNING);
+                _ = MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MB_ICONWARNING);
             }
 
             PreviewerDetached = true;
@@ -64,16 +63,16 @@ namespace Ryujinx.Ava
                 .With(new X11PlatformOptions
                 {
                     EnableMultiTouch = true,
-                    EnableIme = true,
-                    UseEGL = false,
-                    UseGpu = false
+                    EnableIme        = true,
+                    UseEGL           = false,
+                    UseGpu           = false
                 })
                 .With(new Win32PlatformOptions
                 {
-                    EnableMultitouch = true,
-                    UseWgl = false,
-                    AllowEglInitialization = false,
-                    CompositionBackdropCornerRadius = 8f,
+                    EnableMultitouch                = true,
+                    UseWgl                          = false,
+                    AllowEglInitialization          = false,
+                    CompositionBackdropCornerRadius = 8.0f,
                 })
                 .UseSkia()
                 .AfterSetup(_ =>
@@ -122,12 +121,10 @@ namespace Ryujinx.Ava
             PrintSystemInfo();
 
             // Enable OGL multithreading on the driver, when available.
-            BackendThreading threadingMode = ConfigurationState.Instance.Graphics.BackendThreading;
-            DriverUtilities.ToggleOGLThreading(threadingMode == BackendThreading.Off);
+            DriverUtilities.ToggleOGLThreading(ConfigurationState.Instance.Graphics.BackendThreading == BackendThreading.Off);
 
             // Check if keys exists.
-            bool hasSystemProdKeys = File.Exists(Path.Combine(AppDataManager.KeysDirPath, "prod.keys"));
-            if (!hasSystemProdKeys)
+            if (!File.Exists(Path.Combine(AppDataManager.KeysDirPath, "prod.keys")))
             {
                 if (!(AppDataManager.Mode == AppDataManager.LaunchMode.UserProfile && File.Exists(Path.Combine(AppDataManager.KeysDirPathUser, "prod.keys"))))
                 {
@@ -143,7 +140,7 @@ namespace Ryujinx.Ava
 
         public static void ReloadConfig()
         {
-            string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
             string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
@@ -197,8 +194,7 @@ namespace Ryujinx.Ava
             Logger.Notice.Print(LogClass.Application, $"Ryujinx Version: {Version}");
             SystemInfo.Gather().Print();
 
-            var enabledLogs = Logger.GetEnabledLevels();
-            Logger.Notice.Print(LogClass.Application, $"Logs Enabled: {(enabledLogs.Count == 0 ? "<None>" : string.Join(", ", enabledLogs))}");
+            Logger.Notice.Print(LogClass.Application, $"Logs Enabled: {(Logger.GetEnabledLevels().Count == 0 ? "<None>" : string.Join(", ", Logger.GetEnabledLevels()))}");
 
             if (AppDataManager.Mode == AppDataManager.LaunchMode.Custom)
             {

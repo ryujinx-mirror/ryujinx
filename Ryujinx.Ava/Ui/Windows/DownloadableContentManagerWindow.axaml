@@ -3,89 +3,126 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
-    SizeToContent="Height"
-    Width="600" MinHeight="500" Height="500"
-    WindowStartupLocation="CenterOwner"
+    Width="800"
+    Height="500"
     MinWidth="600"
+    MinHeight="500"
+    SizeToContent="Height"
+    WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <Grid Name="DownloadableContentGrid" Margin="15">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock
+            Name="Heading"
             Grid.Row="1"
+            MaxWidth="500"
             Margin="20,15,20,20"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            MaxWidth="500"
             LineHeight="18"
-            TextWrapping="Wrap"
-            Text="{Binding Heading}"
-            TextAlignment="Center" />
-        <Border
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        <DockPanel
             Grid.Row="2"
+            Margin="0"
+            HorizontalAlignment="Left">
+            <Button
+                Name="EnableAllButton"
+                MinWidth="90"
+                Margin="5"
+                Command="{Binding EnableAll}">
+                <TextBlock Text="{locale:Locale DlcManagerEnableAllButton}" />
+            </Button>
+            <Button
+                Name="DisableAllButton"
+                MinWidth="90"
+                Margin="5"
+                Command="{Binding DisableAll}">
+                <TextBlock Text="{locale:Locale DlcManagerDisableAllButton}" />
+            </Button>
+        </DockPanel>
+        <Border
+            Grid.Row="3"
             Margin="5"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             BorderBrush="Gray"
             BorderThickness="1">
-            <DataGrid
-                MinHeight="200"
-                HorizontalAlignment="Stretch"
+            <ScrollViewer
                 VerticalAlignment="Stretch"
                 HorizontalScrollBarVisibility="Auto"
-                Items="{Binding DownloadableContents}"
                 VerticalScrollBarVisibility="Auto">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="90">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox
-                                    Width="50"
-                                    MinWidth="40"
-                                    HorizontalAlignment="Right"
-                                    IsChecked="{Binding Enabled}" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.Header>
-                            <TextBlock Text="{locale:Locale DlcManagerTableHeadingEnabledLabel}" />
-                        </DataGridTemplateColumn.Header>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn
-                        Width="190"
-                        Binding="{Binding TitleId}"
-                        CanUserResize="True">
-                        <DataGridTextColumn.Header>
-                            <TextBlock Text="{locale:Locale DlcManagerTableHeadingTitleIdLabel}" />
-                        </DataGridTextColumn.Header>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn
-                        Width="*"
-                        Binding="{Binding ContainerPath}"
-                        CanUserResize="True">
-                        <DataGridTextColumn.Header>
-                            <TextBlock Text="{locale:Locale DlcManagerTableHeadingContainerPathLabel}" />
-                        </DataGridTextColumn.Header>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn
-                        Width="*"
-                        Binding="{Binding FullPath}"
-                        CanUserResize="True">
-                        <DataGridTextColumn.Header>
-                            <TextBlock Text="{locale:Locale DlcManagerTableHeadingFullPathLabel}" />
-                        </DataGridTextColumn.Header>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                <DataGrid
+                    Name="DlcDataGrid"
+                    MinHeight="200"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    HorizontalScrollBarVisibility="Auto"
+                    Items="{Binding _downloadableContents}"
+                    SelectionMode="Extended"
+                    VerticalScrollBarVisibility="Auto">
+                    <DataGrid.Styles>
+                        <Styles>
+                            <Style Selector="DataGridCell:nth-child(3), DataGridCell:nth-child(4)">
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                            </Style>
+                        </Styles>
+                        <Styles>
+                            <Style Selector="DataGridCell:nth-child(1)">
+                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                <Setter Property="HorizontalContentAlignment" Value="Right" />
+                            </Style>
+                        </Styles>
+                    </DataGrid.Styles>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="90">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        Width="50"
+                                        MinWidth="40"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding Enabled}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.Header>
+                                <TextBlock Text="{locale:Locale DlcManagerTableHeadingEnabledLabel}" />
+                            </DataGridTemplateColumn.Header>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Width="140" Binding="{Binding TitleId}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{locale:Locale DlcManagerTableHeadingTitleIdLabel}" />
+                            </DataGridTextColumn.Header>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="280" Binding="{Binding FullPath}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{locale:Locale DlcManagerTableHeadingFullPathLabel}" />
+                            </DataGridTextColumn.Header>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Binding="{Binding ContainerPath}">
+                            <DataGridTextColumn.Header>
+                                <TextBlock Text="{locale:Locale DlcManagerTableHeadingContainerPathLabel}" />
+                            </DataGridTextColumn.Header>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </ScrollViewer>
         </Border>
         <DockPanel
-            Grid.Row="3"
+            Grid.Row="4"
             Margin="0"
             HorizontalAlignment="Stretch">
             <DockPanel Margin="0" HorizontalAlignment="Left">

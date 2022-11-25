@@ -75,7 +75,7 @@
                             Spacing="10">
                             <ListBox
                                 Name="GameList"
-                                MinHeight="150"
+                                MinHeight="250"
                                 Items="{Binding GameDirectories}" />
                             <Grid HorizontalAlignment="Stretch">
                                 <Grid.ColumnDefinitions>

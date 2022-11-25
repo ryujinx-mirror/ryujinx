@@ -131,6 +131,13 @@ namespace Ryujinx.Ava.Ui.Windows
                             nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
                             TitleUpdates.Add(new TitleUpdateModel(controlData, path));
+
+                            foreach (var update in TitleUpdates)
+                            {
+                                update.IsEnabled = false;
+                            }
+
+                            TitleUpdates.Last().IsEnabled = true;
                         }
                         else
                         {

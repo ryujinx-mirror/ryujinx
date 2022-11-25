@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using TimeZone = Ryujinx.Ava.Ui.Models.TimeZone;
 
 namespace Ryujinx.Ava.Ui.Windows
@@ -31,7 +30,7 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["Settings"]}";
 
-            ViewModel = new SettingsViewModel(virtualFileSystem, contentManager, this);
+            ViewModel   = new SettingsViewModel(virtualFileSystem, contentManager, this);
             DataContext = ViewModel;
 
             InitializeComponent();
@@ -48,7 +47,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         public SettingsWindow()
         {
-            ViewModel = new SettingsViewModel();
+            ViewModel   = new SettingsViewModel();
             DataContext = ViewModel;
 
             InitializeComponent();
@@ -79,7 +78,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
                     PointerPressed += MouseClick;
 
-                    IKeyboard keyboard = (IKeyboard)ViewModel.AvaloniaKeyboardDriver.GetGamepad(ViewModel.AvaloniaKeyboardDriver.GamepadsIds[0]);
+                    IKeyboard       keyboard = (IKeyboard)ViewModel.AvaloniaKeyboardDriver.GetGamepad(ViewModel.AvaloniaKeyboardDriver.GamepadsIds[0]);
                     IButtonAssigner assigner = new KeyboardKeyAssigner(keyboard);
 
                     _currentAssigner.GetInputAndAssign(assigner);
@@ -92,6 +91,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
                         _currentAssigner.Cancel();
                         _currentAssigner = null;
+
                         button.IsChecked = false;
                     }
                 }
@@ -122,36 +122,19 @@ namespace Ryujinx.Ava.Ui.Windows
         {
             if (e.SelectedItem is NavigationViewItem navitem)
             {
-                switch (navitem.Tag.ToString())
+                NavPanel.Content = navitem.Tag.ToString() switch
                 {
-                    case "UiPage":
-                        NavPanel.Content = UiPage;
-                        break;
-                    case "InputPage":
-                        NavPanel.Content = InputPage;
-                        break;
-                    case "HotkeysPage":
-                        NavPanel.Content = HotkeysPage;
-                        break;
-                    case "SystemPage":
-                        NavPanel.Content = SystemPage;
-                        break;
-                    case "CpuPage":
-                        NavPanel.Content = CpuPage;
-                        break;
-                    case "GraphicsPage":
-                        NavPanel.Content = GraphicsPage;
-                        break;
-                    case "AudioPage":
-                        NavPanel.Content = AudioPage;
-                        break;
-                    case "NetworkPage":
-                        NavPanel.Content = NetworkPage;
-                        break;
-                    case "LoggingPage":
-                        NavPanel.Content = LoggingPage;
-                        break;
-                }
+                    "UiPage"       => UiPage,
+                    "InputPage"    => InputPage,
+                    "HotkeysPage"  => HotkeysPage,
+                    "SystemPage"   => SystemPage,
+                    "CpuPage"      => CpuPage,
+                    "GraphicsPage" => GraphicsPage,
+                    "AudioPage"    => AudioPage,
+                    "NetworkPage"  => NetworkPage,
+                    "LoggingPage"  => LoggingPage,
+                    _              => throw new NotImplementedException()
+                };
             }
         }
 
@@ -178,12 +161,17 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private void RemoveButton_OnClick(object sender, RoutedEventArgs e)
         {
-            List<string> selected = new(GameList.SelectedItems.Cast<string>());
+            int oldIndex = GameList.SelectedIndex;
 
-            foreach (string path in selected)
+            foreach (string path in new List<string>(GameList.SelectedItems.Cast<string>()))
             {
                 ViewModel.GameDirectories.Remove(path);
                 ViewModel.DirectoryChanged = true;
+            }
+
+            if (GameList.ItemCount > 0)
+            {
+                GameList.SelectedIndex = oldIndex < GameList.ItemCount ? oldIndex : 0;
             }
         }
 
@@ -214,7 +202,6 @@ namespace Ryujinx.Ava.Ui.Windows
         private void SaveButton_Clicked(object sender, RoutedEventArgs e)
         {
             SaveSettings();
-
             Close();
         }
 
@@ -232,7 +219,6 @@ namespace Ryujinx.Ava.Ui.Windows
         private void SaveSettings()
         {
             ViewModel.SaveSettings();
-
             ControllerSettings?.SaveCurrentProfile();
 
             if (Owner is MainWindow window && ViewModel.DirectoryChanged)
@@ -246,8 +232,10 @@ namespace Ryujinx.Ava.Ui.Windows
         protected override void OnClosed(EventArgs e)
         {
             ControllerSettings.Dispose();
+
             _currentAssigner?.Cancel();
             _currentAssigner = null;
+            
             base.OnClosed(e);
         }
     }
