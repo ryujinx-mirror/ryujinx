@@ -15,12 +15,12 @@ using static Ryujinx.Ava.Ui.Controls.Win32NativeInterop;
 
 namespace Ryujinx.Ava.Ui.Controls
 {
-    public unsafe class EmbeddedWindow : NativeControlHost
+    public class EmbeddedWindow : NativeControlHost
     {
         private WindowProc _wndProcDelegate;
         private string _className;
 
-        protected GLXWindow X11Window { get; private set; }
+        protected GLXWindow X11Window { get; set; }
         protected IntPtr WindowHandle { get; set; }
         protected IntPtr X11Display { get; set; }
 
@@ -94,21 +94,17 @@ namespace Ryujinx.Ava.Ui.Controls
         }
 
         [SupportedOSPlatform("linux")]
-        IPlatformHandle CreateLinux(IPlatformHandle parent)
+        protected virtual IPlatformHandle CreateLinux(IPlatformHandle parent)
         {
-            X11Window = new GLXWindow(new NativeHandle(X11.DefaultDisplay), new NativeHandle(parent.Handle));
-
+            X11Window    = PlatformHelper.CreateOpenGLWindow(FramebufferFormat.Default, 0, 0, 100, 100) as GLXWindow;
             WindowHandle = X11Window.WindowHandle.RawHandle;
-
-            X11Display = X11Window.DisplayHandle.RawHandle;
-
-            X11Window.Hide();
+            X11Display   = X11Window.DisplayHandle.RawHandle;
 
             return new PlatformHandle(WindowHandle, "X11");
         }
 
         [SupportedOSPlatform("windows")]
-        unsafe IPlatformHandle CreateWin32(IPlatformHandle parent)
+        IPlatformHandle CreateWin32(IPlatformHandle parent)
         {
             _className = "NativeWindow-" + Guid.NewGuid();
             _wndProcDelegate = WndProc;
@@ -144,7 +140,7 @@ namespace Ryujinx.Ava.Ui.Controls
         }
 
         [SupportedOSPlatform("windows")]
-        internal IntPtr WndProc(IntPtr hWnd, WindowsMessages msg, IntPtr wParam, IntPtr lParam)
+        IntPtr WndProc(IntPtr hWnd, WindowsMessages msg, IntPtr wParam, IntPtr lParam)
         {
             var point = new Point((long)lParam & 0xFFFF, ((long)lParam >> 16) & 0xFFFF);
             var root = VisualRoot as Window;
