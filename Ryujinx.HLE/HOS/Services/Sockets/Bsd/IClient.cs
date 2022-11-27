@@ -315,6 +315,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                         }
                     }
 
+                    if (updateCount > 0)
+                    {
+                        break;
+                    }
+
                     // If we are here, that mean nothing was availaible, sleep for 50ms
                     context.Device.System.KernelContext.Syscall.SleepThread(50 * 1000000);
                 }
@@ -972,11 +977,12 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         }
 
         [CommandHipc(31)] // 7.0.0+
-        // EventFd(u64 initval, nn::socket::EventFdFlags flags) -> (i32 ret, u32 bsd_errno)
+        // EventFd(nn::socket::EventFdFlags flags, u64 initval) -> (i32 ret, u32 bsd_errno)
         public ResultCode EventFd(ServiceCtx context)
         {
-            ulong initialValue = context.RequestData.ReadUInt64();
             EventFdFlags flags = (EventFdFlags)context.RequestData.ReadUInt32();
+            context.RequestData.BaseStream.Position += 4; // Padding
+            ulong initialValue = context.RequestData.ReadUInt64();
 
             EventFileDescriptor newEventFile = new EventFileDescriptor(initialValue, flags);
 

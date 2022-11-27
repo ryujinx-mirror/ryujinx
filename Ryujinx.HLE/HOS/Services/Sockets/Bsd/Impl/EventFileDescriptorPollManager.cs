@@ -68,20 +68,37 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             {
                 for (int i = 0; i < events.Count; i++)
                 {
+                    PollEventTypeMask outputEvents = 0;
+
                     PollEvent evnt = events[i];
 
                     EventFileDescriptor socket = (EventFileDescriptor)evnt.FileDescriptor;
 
-                    if ((evnt.Data.InputEvents.HasFlag(PollEventTypeMask.Input) ||
-                        evnt.Data.InputEvents.HasFlag(PollEventTypeMask.UrgentInput))
-                        && socket.ReadEvent.WaitOne(0))
+                    if (socket.ReadEvent.WaitOne(0))
                     {
-                        waiters.Add(socket.ReadEvent);
+                        if (evnt.Data.InputEvents.HasFlag(PollEventTypeMask.Input))
+                        {
+                            outputEvents |= PollEventTypeMask.Input;
+                        }
+
+                        if (evnt.Data.InputEvents.HasFlag(PollEventTypeMask.UrgentInput))
+                        {
+                            outputEvents |= PollEventTypeMask.UrgentInput;
+                        }
                     }
+
                     if ((evnt.Data.InputEvents.HasFlag(PollEventTypeMask.Output))
                         && socket.WriteEvent.WaitOne(0))
                     {
-                        waiters.Add(socket.WriteEvent);
+                        outputEvents |= PollEventTypeMask.Output;
+                    }
+
+
+                    if (outputEvents != 0)
+                    {
+                        evnt.Data.OutputEvents = outputEvents;
+
+                        updatedCount++;
                     }
                 }
             }
