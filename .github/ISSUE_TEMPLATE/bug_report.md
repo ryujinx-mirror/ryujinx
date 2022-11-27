@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Something doesn't work correctly in Ryujinx. Note that game-specific issues should be instead posted on the Game Compatibility List at https://github.com/Ryujinx/Ryujinx-Games-List, unless it is a provable regression.
+about: Something doesn't work correctly in Ryujinx. Game-specific issues should be posted at https://github.com/Ryujinx/Ryujinx-Games-List instead, unless it is a provable regression.
 #assignees:
 ---
 
