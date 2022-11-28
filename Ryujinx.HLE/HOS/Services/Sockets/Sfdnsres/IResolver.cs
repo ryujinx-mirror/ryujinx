@@ -566,7 +566,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
         private static List<AddrInfoSerialized> DeserializeAddrInfos(IVirtualMemoryManager memory, ulong address, ulong size)
         {
-            List<AddrInfoSerialized> result = new List<AddrInfoSerialized>();
+            List<AddrInfoSerialized> result = new();
 
             ReadOnlySpan<byte> data = memory.GetSpan(address, (int)size);
 
@@ -606,9 +606,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                     }
 
                     // NOTE: 0 = Any
-                    AddrInfoSerializedHeader header = new AddrInfoSerializedHeader(ip, 0);
-                    AddrInfo4 addr = new AddrInfo4(ip, (short)port);
-                    AddrInfoSerialized info = new AddrInfoSerialized(header, addr, null, hostEntry.HostName);
+                    AddrInfoSerializedHeader header = new(ip, 0);
+                    AddrInfo4                addr   = new(ip, (short)port);
+                    AddrInfoSerialized       info   = new(header, addr, null, hostEntry.HostName);
 
                     data = info.Write(data);
                 }

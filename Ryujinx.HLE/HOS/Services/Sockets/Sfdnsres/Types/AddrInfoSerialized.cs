@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
 
             AddrInfo4? socketAddress = null;
             Array4<byte>? rawIPv4Address = null;
-            string canonicalName = null;
+            string canonicalName;
 
             buffer = buffer[Unsafe.SizeOf<AddrInfoSerializedHeader>()..];
 
@@ -49,6 +49,13 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
             }
 
             Debug.Assert(header.Magic == SfdnsresContants.AddrInfoMagic);
+
+            if (header.AddressLength == 0)
+            {
+                rest = buffer;
+
+                return null;
+            }
 
             if (header.Family == (int)AddressFamily.InterNetwork)
             {

@@ -14,6 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
         public byte         Family;
         public short        Port;
         public Array4<byte> Address;
+        public Array8<byte> Padding;
 
         public AddrInfo4(IPAddress address, short port)
         {
