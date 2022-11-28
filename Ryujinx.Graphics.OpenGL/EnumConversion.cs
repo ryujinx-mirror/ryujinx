@@ -331,7 +331,7 @@ namespace Ryujinx.Graphics.OpenGL
                 case PrimitiveTopology.QuadStrip:
                     return PrimitiveType.QuadStrip;
                 case PrimitiveTopology.Polygon:
-                    return PrimitiveType.Polygon;
+                    return PrimitiveType.TriangleFan;
                 case PrimitiveTopology.LinesAdjacency:
                     return PrimitiveType.LinesAdjacency;
                 case PrimitiveTopology.LineStripAdjacency:

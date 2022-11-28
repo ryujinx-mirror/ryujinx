@@ -180,6 +180,7 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.PrimitiveTopology.TrianglesAdjacency => Silk.NET.Vulkan.PrimitiveTopology.TriangleListWithAdjacency,
                 GAL.PrimitiveTopology.TriangleStripAdjacency => Silk.NET.Vulkan.PrimitiveTopology.TriangleStripWithAdjacency,
                 GAL.PrimitiveTopology.Patches => Silk.NET.Vulkan.PrimitiveTopology.PatchList,
+                GAL.PrimitiveTopology.Polygon => Silk.NET.Vulkan.PrimitiveTopology.TriangleFan,
                 GAL.PrimitiveTopology.Quads => throw new NotSupportedException("Quad topology is not available in Vulkan."),
                 GAL.PrimitiveTopology.QuadStrip => throw new NotSupportedException("QuadStrip topology is not available in Vulkan."),
                 _ => LogInvalidAndReturn(topology, nameof(GAL.PrimitiveTopology), Silk.NET.Vulkan.PrimitiveTopology.TriangleList)
