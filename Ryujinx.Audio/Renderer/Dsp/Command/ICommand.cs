@@ -8,7 +8,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType { get; }
 
-        public ulong EstimatedProcessingTime { get; }
+        public uint EstimatedProcessingTime { get; }
 
         public void Process(CommandList context);
 

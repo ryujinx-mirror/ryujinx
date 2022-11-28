@@ -14,7 +14,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.DeviceSink;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public string DeviceName { get; }
 

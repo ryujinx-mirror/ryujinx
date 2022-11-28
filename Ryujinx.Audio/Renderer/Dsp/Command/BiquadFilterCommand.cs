@@ -12,7 +12,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.BiquadFilter;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public Memory<BiquadFilterState> BiquadFilterState { get; }
         public int InputBufferIndex { get; }

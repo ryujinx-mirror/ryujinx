@@ -13,7 +13,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.PcmFloatDataSourceVersion1;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public ushort OutputBufferIndex { get; }
         public uint SampleRate { get; }

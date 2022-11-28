@@ -94,8 +94,9 @@ namespace Ryujinx.Audio.Renderer.Server
         /// REV11:
         /// The "legacy" effects (Delay, Reverb and Reverb 3D) were updated to match the standard channel mapping used by the audio renderer.
         /// A new version of the command estimator was added to address timing changes caused by the legacy effects changes.
+        /// A voice drop parameter was added in 15.0.0: This allows an application to amplify or attenuate the estimated time of DSP commands.
         /// </summary>
-        /// <remarks>This was added in system update 14.0.0</remarks>
+        /// <remarks>This was added in system update 14.0.0 but some changes were made in 15.0.0</remarks>
         public const int Revision11 = 11 << 24;
 
         /// <summary>

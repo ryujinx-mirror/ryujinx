@@ -17,5 +17,6 @@ namespace Ryujinx.Audio
         InvalidAddressInfo = (42 << ErrorCodeShift) | ModuleId,
         InvalidMixSorting = (43 << ErrorCodeShift) | ModuleId,
         UnsupportedOperation = (513 << ErrorCodeShift) | ModuleId,
+        InvalidExecutionContextOperation = (514 << ErrorCodeShift) | ModuleId,
     }
 }

@@ -172,6 +172,35 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return result;
         }
 
+        [CommandHipc(11)] // 3.0.0+
+        // ExecuteAudioRendererRendering()
+        public ResultCode ExecuteAudioRendererRendering(ServiceCtx context)
+        {
+            return _impl.ExecuteAudioRendererRendering();
+        }
+
+        [CommandHipc(12)] // 15.0.0+
+        // SetVoiceDropParameter(f32 voiceDropParameter)
+        public ResultCode SetVoiceDropParameter(ServiceCtx context)
+        {
+            float voiceDropParameter = context.RequestData.ReadSingle();
+
+            _impl.SetVoiceDropParameter(voiceDropParameter);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(13)] // 15.0.0+
+        // GetVoiceDropParameter() -> f32 voiceDropParameter
+        public ResultCode GetVoiceDropParameter(ServiceCtx context)
+        {
+            float voiceDropParameter = _impl.GetVoiceDropParameter();
+
+            context.ResponseData.Write(voiceDropParameter);
+
+            return ResultCode.Success;
+        }
+
         protected override void Dispose(bool isDisposing)
         {
             if (isDisposing)

@@ -16,5 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         void SetRenderingTimeLimit(uint percent);
         uint GetRenderingTimeLimit();
         ResultCode ExecuteAudioRendererRendering();
+        void SetVoiceDropParameter(float voiceDropParameter);
+        float GetVoiceDropParameter();
     }
 }

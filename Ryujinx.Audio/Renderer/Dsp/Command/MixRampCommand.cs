@@ -12,7 +12,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.MixRamp;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public ushort InputBufferIndex { get; }
         public ushort OutputBufferIndex { get; }

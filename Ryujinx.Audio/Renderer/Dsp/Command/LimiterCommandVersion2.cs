@@ -15,7 +15,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.LimiterVersion2;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public LimiterParameter Parameter => _parameter;
         public Memory<LimiterState> State { get; }

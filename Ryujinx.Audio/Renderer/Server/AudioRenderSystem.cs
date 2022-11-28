@@ -28,6 +28,7 @@ namespace Ryujinx.Audio.Renderer.Server
     {
         private object _lock = new object();
 
+        private AudioRendererRenderingDevice _renderingDevice;
         private AudioRendererExecutionMode _executionMode;
         private IWritableEvent _systemEvent;
         private ManualResetEvent _terminationEvent;
@@ -63,6 +64,7 @@ namespace Ryujinx.Audio.Renderer.Server
         private uint _renderingTimeLimitPercent;
         private bool _voiceDropEnabled;
         private uint _voiceDropCount;
+        private float _voiceDropParameter;
         private bool _isDspRunningBehind;
 
         private ICommandProcessingTimeEstimator _commandProcessingTimeEstimator;
@@ -95,6 +97,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             _totalElapsedTicksUpdating = 0;
             _sessionId = 0;
+            _voiceDropParameter = 1.0f;
         }
 
         public ResultCode Initialize(
@@ -130,6 +133,7 @@ namespace Ryujinx.Audio.Renderer.Server
             _upsamplerCount = parameter.SinkCount + parameter.SubMixBufferCount;
             _appletResourceId = appletResourceId;
             _memoryPoolCount = parameter.EffectCount + parameter.VoiceCount * Constants.VoiceWaveBufferCount;
+            _renderingDevice = parameter.RenderingDevice;
             _executionMode = parameter.ExecutionMode;
             _sessionId = sessionId;
             MemoryManager = memoryManager;
@@ -337,6 +341,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             _processHandle = processHandle;
             _elapsedFrameCount = 0;
+            _voiceDropParameter = 1.0f;
 
             switch (_behaviourContext.GetCommandProcessingTimeEstimatorVersion())
             {
@@ -515,7 +520,7 @@ namespace Ryujinx.Audio.Renderer.Server
             return (ulong)(_manager.TickSource.ElapsedSeconds * Constants.TargetTimerFrequency);
         }
 
-        private uint ComputeVoiceDrop(CommandBuffer commandBuffer, long voicesEstimatedTime, long deltaTimeDsp)
+        private uint ComputeVoiceDrop(CommandBuffer commandBuffer, uint voicesEstimatedTime, long deltaTimeDsp)
         {
             int i;
 
@@ -584,7 +589,7 @@ namespace Ryujinx.Audio.Renderer.Server
                     {
                         command.Enabled = false;
 
-                        voicesEstimatedTime -= (long)command.EstimatedProcessingTime;
+                        voicesEstimatedTime -= (uint)(_voiceDropParameter * command.EstimatedProcessingTime);
                     }
                 }
             }
@@ -618,13 +623,13 @@ namespace Ryujinx.Audio.Renderer.Server
             _voiceContext.Sort();
             commandGenerator.GenerateVoices();
 
-            long voicesEstimatedTime = (long)commandBuffer.EstimatedProcessingTime;
+            uint voicesEstimatedTime = (uint)(_voiceDropParameter * commandBuffer.EstimatedProcessingTime);
 
             commandGenerator.GenerateSubMixes();
             commandGenerator.GenerateFinalMixes();
             commandGenerator.GenerateSinks();
 
-            long totalEstimatedTime = (long)commandBuffer.EstimatedProcessingTime;
+            uint totalEstimatedTime = (uint)(_voiceDropParameter * commandBuffer.EstimatedProcessingTime);
 
             if (_voiceDropEnabled)
             {
@@ -855,6 +860,27 @@ namespace Ryujinx.Audio.Renderer.Server
                     MemoryManager = null;
                 }
             }
+        }
+
+        public void SetVoiceDropParameter(float voiceDropParameter)
+        {
+            _voiceDropParameter = Math.Clamp(voiceDropParameter, 0.0f, 2.0f);
+        }
+
+        public float GetVoiceDropParameter()
+        {
+            return _voiceDropParameter;
+        }
+
+        public ResultCode ExecuteAudioRendererRendering()
+        {
+            if (_executionMode == AudioRendererExecutionMode.Manual && _renderingDevice == AudioRendererRenderingDevice.Cpu)
+            {
+                // NOTE: Here Nintendo aborts with this error code, we don't want that.
+                return ResultCode.InvalidExecutionContextOperation;
+            }
+
+            return ResultCode.UnsupportedOperation;
         }
     }
 }

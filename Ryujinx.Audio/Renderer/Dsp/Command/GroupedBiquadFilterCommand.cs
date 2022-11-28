@@ -12,7 +12,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.GroupedBiquadFilter;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         private BiquadFilterParameter[] _parameters;
         private Memory<BiquadFilterState> _biquadFilterStates;
@@ -47,9 +47,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 }
             }
 
-            // NOTE: Nintendo also implements a hot path for double biquad filters, but no generic path when the command definition suggests it could be done.
-            // As such we currently only implement a generic path for simplicity.
-            // TODO: Implement double biquad filters fast path.
+            // NOTE: Nintendo only implement single and double biquad filters but no generic path when the command definition suggests it could be done.
+            // As such we currently only implement a generic path for simplicity for double biquad.
             if (_parameters.Length == 1)
             {
                 BiquadFilterHelper.ProcessBiquadFilter(ref _parameters[0], ref states[0], outputBuffer, inputBuffer, context.SampleCount);

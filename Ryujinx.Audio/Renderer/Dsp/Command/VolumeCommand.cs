@@ -15,7 +15,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public CommandType CommandType => CommandType.Volume;
 
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         public ushort InputBufferIndex { get; }
         public ushort OutputBufferIndex { get; }

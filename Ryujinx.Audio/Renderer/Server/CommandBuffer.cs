@@ -25,7 +25,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// The estimated total processing time.
         /// </summary>
-        public ulong EstimatedProcessingTime { get; set; }
+        public uint EstimatedProcessingTime { get; set; }
 
         /// <summary>
         /// The command list that is populated by the <see cref="CommandBuffer"/>.
