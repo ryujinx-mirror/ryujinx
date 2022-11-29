@@ -30,7 +30,7 @@
     <PackageReference Include="FluentAvaloniaUI" Version="1.4.5" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.4.2" />
 
-    <PackageReference Include="OpenTK.Core" Version="4.7.2" />
+    <PackageReference Include="OpenTK.Core" Version="4.7.5" />
     <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
     <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build10" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
     <PackageReference Include="Silk.NET.Vulkan" Version="2.10.1" />
