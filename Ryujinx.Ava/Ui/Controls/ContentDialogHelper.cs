@@ -127,9 +127,16 @@ namespace Ryujinx.Ava.Ui.Controls
                     contentDialog.PrimaryButtonClick += deferCloseAction;
                 }
 
-                await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
+                if (useOverlay)
+                {
+                    await contentDialog.ShowAsync(overlay, ContentDialogPlacement.Popup);
 
-                overlay?.Close();
+                    overlay!.Close();
+                }
+                else
+                {
+                    await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
+                }
             }
 
             if (useOverlay)
