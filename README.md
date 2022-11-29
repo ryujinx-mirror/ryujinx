@@ -36,7 +36,7 @@
 
 ## Compatibility
 
-As of October 2022, Ryujinx has been tested on approximately 3,700 titles; over 3,500 boot past menus and into gameplay, with roughly 3,000 of those being considered playable.
+As of November 2022, Ryujinx has been tested on approximately 3,800 titles; over 3,600 boot past menus and into gameplay, with roughly 3,200 of those being considered playable.
 You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues). Anyone is free to submit a new game test or update an existing game test entry; simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue. Use the search function to see if a game has been tested already!
 
 ## Usage
@@ -90,7 +90,7 @@ Ryujinx system files are stored in the `Ryujinx` folder. This folder is located 
 
 - **GPU**
 
-  The GPU emulator emulates the Switch's Maxwell GPU using either the OpenGL (version 4.5 minimum) or Vulkan APIs through a custom build of OpenTK or Silk.NET respectively. There are currently four graphics enhancements available to the end user in Ryujinx: Disk Shader Caching, Resolution Scaling, Aspect Ratio Adjustment, and Anisotropic Filtering. These enhancements can be adjusted or toggled as desired in the GUI.
+  The GPU emulator emulates the Switch's Maxwell GPU using either the OpenGL (version 4.5 minimum), Vulkan, or Metal (via MoltenVK) APIs through a custom build of OpenTK or Silk.NET respectively. There are currently four graphics enhancements available to the end user in Ryujinx: Disk Shader Caching, Resolution Scaling, Aspect Ratio Adjustment, and Anisotropic Filtering. These enhancements can be adjusted or toggled as desired in the GUI.
 
 - **Input**
 
