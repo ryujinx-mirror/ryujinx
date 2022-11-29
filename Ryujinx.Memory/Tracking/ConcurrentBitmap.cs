@@ -41,7 +41,7 @@ namespace Ryujinx.Memory.Tracking
         {
             for (int i = 0; i < Masks.Length; i++)
             {
-                if (Volatile.Read(ref Masks[i]) != 0)
+                if (Interlocked.Read(ref Masks[i]) != 0)
                 {
                     return true;
                 }
@@ -62,7 +62,7 @@ namespace Ryujinx.Memory.Tracking
 
             long wordMask = 1L << wordBit;
 
-            return (Volatile.Read(ref Masks[wordIndex]) & wordMask) != 0;
+            return (Interlocked.Read(ref Masks[wordIndex]) & wordMask) != 0;
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Ryujinx.Memory.Tracking
             int endBit = end & IntMask;
             long endMask = (long)(ulong.MaxValue >> (IntMask - endBit));
 
-            long startValue = Volatile.Read(ref Masks[startIndex]);
+            long startValue = Interlocked.Read(ref Masks[startIndex]);
 
             if (startIndex == endIndex)
             {
@@ -100,13 +100,13 @@ namespace Ryujinx.Memory.Tracking
 
             for (int i = startIndex + 1; i < endIndex; i++)
             {
-                if (Volatile.Read(ref Masks[i]) != 0)
+                if (Interlocked.Read(ref Masks[i]) != 0)
                 {
                     return true;
                 }
             }
 
-            long endValue = Volatile.Read(ref Masks[endIndex]);
+            long endValue = Interlocked.Read(ref Masks[endIndex]);
 
             if ((endValue & endMask) != 0)
             {
@@ -128,23 +128,14 @@ namespace Ryujinx.Memory.Tracking
 
             long wordMask = 1L << wordBit;
 
-            long existing;
-            long newValue;
-
-            do
+            if (value)
             {
-                existing = Volatile.Read(ref Masks[wordIndex]);
-
-                if (value)
-                {
-                    newValue = existing | wordMask;
-                }
-                else
-                {
-                    newValue = existing & ~wordMask;
-                }
+                Interlocked.Or(ref Masks[wordIndex], wordMask);
             }
-            while (Interlocked.CompareExchange(ref Masks[wordIndex], newValue, existing) != existing);
+            else
+            {
+                Interlocked.And(ref Masks[wordIndex], ~wordMask);
+            }
         }
 
         /// <summary>
@@ -154,7 +145,7 @@ namespace Ryujinx.Memory.Tracking
         {
             for (int i = 0; i < Masks.Length; i++)
             {
-                Volatile.Write(ref Masks[i], 0);
+                Interlocked.Exchange(ref Masks[i], 0);
             }
         }
     }
