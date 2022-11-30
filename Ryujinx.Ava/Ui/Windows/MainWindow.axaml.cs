@@ -90,7 +90,9 @@ namespace Ryujinx.Ava.Ui.Windows
 
             Title = $"Ryujinx {Program.Version}";
 
-            Height /= Program.WindowScaleFactor;
+            // NOTE: Height of MenuBar and StatusBar is not usable here, since it would still be 0 at this point.
+            double barHeight = MenuBar.MinHeight + StatusBar.MinHeight;
+            Height = ((Height - barHeight) / Program.WindowScaleFactor) + barHeight;
             Width /= Program.WindowScaleFactor;
 
             if (Program.PreviewerDetached)

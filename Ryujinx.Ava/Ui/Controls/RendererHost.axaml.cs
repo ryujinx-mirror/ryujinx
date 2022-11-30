@@ -41,7 +41,7 @@ namespace Ryujinx.Ava.Ui.Controls
         {
             _currentWindow.WindowCreated += CurrentWindow_WindowCreated;
             _currentWindow.SizeChanged += CurrentWindow_SizeChanged;
-            View.Content = _currentWindow;
+            Content = _currentWindow;
         }
 
         public void CreateVulkan()
