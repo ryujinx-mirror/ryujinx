@@ -37,7 +37,6 @@ namespace Ryujinx.Graphics.Vulkan
         public static string[] RequiredExtensions { get; } = new string[]
         {
             KhrSwapchain.ExtensionName,
-            "VK_EXT_shader_subgroup_vote",
             ExtTransformFeedback.ExtensionName
         };
 

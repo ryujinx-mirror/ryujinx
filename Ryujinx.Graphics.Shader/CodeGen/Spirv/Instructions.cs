@@ -234,7 +234,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var source = operation.GetSource(0);
 
             var uvec4Type = context.TypeVector(context.TypeU32(), 4);
-            var execution = context.Constant(context.TypeU32(), 3); // Subgroup
+            var execution = context.Constant(context.TypeU32(), Scope.Subgroup);
 
             var maskVector = context.GroupNonUniformBallot(uvec4Type, execution, context.Get(AggregateType.Bool, source));
             var mask = context.CompositeExtract(context.TypeU32(), maskVector, (SpvLiteralInteger)0);
@@ -1233,7 +1233,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var maxThreadId = context.BitwiseOr(context.TypeU32(), minThreadId, clampNotSegMask);
             var srcThreadId = context.BitwiseOr(context.TypeU32(), indexNotSegMask, minThreadId);
             var valid = context.ULessThanEqual(context.TypeBool(), srcThreadId, maxThreadId);
-            var value = context.SubgroupReadInvocationKHR(context.TypeFP32(), x, srcThreadId);
+            var value = context.GroupNonUniformShuffle(context.TypeFP32(), context.Constant(context.TypeU32(), (int)Scope.Subgroup), x, srcThreadId);
             var result = context.Select(context.TypeFP32(), valid, value, x);
 
             var validLocal = (AstOperand)operation.GetSource(3);
@@ -1263,7 +1263,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var maxThreadId = context.BitwiseOr(context.TypeU32(), minThreadId, clampNotSegMask);
             var srcThreadId = context.IAdd(context.TypeU32(), threadId, index);
             var valid = context.ULessThanEqual(context.TypeBool(), srcThreadId, maxThreadId);
-            var value = context.SubgroupReadInvocationKHR(context.TypeFP32(), x, srcThreadId);
+            var value = context.GroupNonUniformShuffle(context.TypeFP32(), context.Constant(context.TypeU32(), (int)Scope.Subgroup), x, srcThreadId);
             var result = context.Select(context.TypeFP32(), valid, value, x);
 
             var validLocal = (AstOperand)operation.GetSource(3);
@@ -1289,7 +1289,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var minThreadId = context.BitwiseAnd(context.TypeU32(), threadId, segMask);
             var srcThreadId = context.ISub(context.TypeU32(), threadId, index);
             var valid = context.SGreaterThanEqual(context.TypeBool(), srcThreadId, minThreadId);
-            var value = context.SubgroupReadInvocationKHR(context.TypeFP32(), x, srcThreadId);
+            var value = context.GroupNonUniformShuffle(context.TypeFP32(), context.Constant(context.TypeU32(), (int)Scope.Subgroup), x, srcThreadId);
             var result = context.Select(context.TypeFP32(), valid, value, x);
 
             var validLocal = (AstOperand)operation.GetSource(3);
@@ -1319,7 +1319,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var maxThreadId = context.BitwiseOr(context.TypeU32(), minThreadId, clampNotSegMask);
             var srcThreadId = context.BitwiseXor(context.TypeU32(), threadId, index);
             var valid = context.ULessThanEqual(context.TypeBool(), srcThreadId, maxThreadId);
-            var value = context.SubgroupReadInvocationKHR(context.TypeFP32(), x, srcThreadId);
+            var value = context.GroupNonUniformShuffle(context.TypeFP32(), context.Constant(context.TypeU32(), (int)Scope.Subgroup), x, srcThreadId);
             var result = context.Select(context.TypeFP32(), valid, value, x);
 
             var validLocal = (AstOperand)operation.GetSource(3);
@@ -1861,19 +1861,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static OperationResult GenerateVoteAll(CodeGenContext context, AstOperation operation)
         {
-            var result = context.SubgroupAllKHR(context.TypeBool(), context.Get(AggregateType.Bool, operation.GetSource(0)));
+            var execution = context.Constant(context.TypeU32(), Scope.Subgroup);
+            var result = context.GroupNonUniformAll(context.TypeBool(), execution, context.Get(AggregateType.Bool, operation.GetSource(0)));
             return new OperationResult(AggregateType.Bool, result);
         }
 
         private static OperationResult GenerateVoteAllEqual(CodeGenContext context, AstOperation operation)
         {
-            var result = context.SubgroupAllEqualKHR(context.TypeBool(), context.Get(AggregateType.Bool, operation.GetSource(0)));
+            var execution = context.Constant(context.TypeU32(), Scope.Subgroup);
+            var result = context.GroupNonUniformAllEqual(context.TypeBool(), execution, context.Get(AggregateType.Bool, operation.GetSource(0)));
             return new OperationResult(AggregateType.Bool, result);
         }
 
         private static OperationResult GenerateVoteAny(CodeGenContext context, AstOperation operation)
         {
-            var result = context.SubgroupAnyKHR(context.TypeBool(), context.Get(AggregateType.Bool, operation.GetSource(0)));
+            var execution = context.Constant(context.TypeU32(), Scope.Subgroup);
+            var result = context.GroupNonUniformAny(context.TypeBool(), execution, context.Get(AggregateType.Bool, operation.GetSource(0)));
             return new OperationResult(AggregateType.Bool, result);
         }
 
