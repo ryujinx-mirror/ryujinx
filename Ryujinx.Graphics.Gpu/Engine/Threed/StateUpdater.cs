@@ -37,6 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private bool _vsUsesDrawParameters;
         private bool _vtgWritesRtLayer;
         private byte _vsClipDistancesWritten;
+        private uint _vbEnableMask;
 
         private bool _prevDrawIndexed;
         private bool _prevDrawIndirect;
@@ -76,6 +77,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     nameof(ThreedClassState.VertexBufferState),
                     nameof(ThreedClassState.VertexBufferEndAddress)),
 
+                // Must be done after vertex buffer updates.
                 new StateUpdateCallbackEntry(UpdateVertexAttribState, nameof(ThreedClassState.VertexAttribState)),
 
                 new StateUpdateCallbackEntry(UpdateBlendState,
@@ -852,11 +854,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void UpdateVertexAttribState()
         {
+            uint vbEnableMask = _vbEnableMask;
+
             Span<VertexAttribDescriptor> vertexAttribs = stackalloc VertexAttribDescriptor[Constants.TotalVertexAttribs];
 
             for (int index = 0; index < Constants.TotalVertexAttribs; index++)
             {
                 var vertexAttrib = _state.State.VertexAttribState[index];
+
+                int bufferIndex = vertexAttrib.UnpackBufferIndex();
+
+                if ((vbEnableMask & (1u << bufferIndex)) == 0)
+                {
+                    // Using a vertex buffer that doesn't exist is invalid, so let's use a dummy attribute for those cases.
+                    vertexAttribs[index] = new VertexAttribDescriptor(0, 0, true, Format.R32G32B32A32Float);
+                    continue;
+                }
 
                 if (!FormatTable.TryGetAttribFormat(vertexAttrib.UnpackFormat(), out Format format))
                 {
@@ -866,7 +879,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
 
                 vertexAttribs[index] = new VertexAttribDescriptor(
-                    vertexAttrib.UnpackBufferIndex(),
+                    bufferIndex,
                     vertexAttrib.UnpackOffset(),
                     vertexAttrib.UnpackIsConstant(),
                     format);
@@ -954,6 +967,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             bool drawIndexed = _drawState.DrawIndexed;
             bool drawIndirect = _drawState.DrawIndirect;
+            uint vbEnableMask = 0;
 
             for (int index = 0; index < Constants.TotalVertexBuffers; index++)
             {
@@ -970,6 +984,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 GpuVa endAddress = _state.State.VertexBufferEndAddress[index];
 
                 ulong address = vertexBuffer.Address.Pack();
+
+                if (_channel.MemoryManager.IsMapped(address))
+                {
+                    vbEnableMask |= 1u << index;
+                }
 
                 int stride = vertexBuffer.UnpackStride();
 
@@ -1016,6 +1035,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 _pipeline.VertexBuffers[index] = new BufferPipelineDescriptor(_channel.MemoryManager.IsMapped(address), stride, divisor);
                 _channel.BufferManager.SetVertexBuffer(index, address, size, stride, divisor);
+            }
+
+            if (_vbEnableMask != vbEnableMask)
+            {
+                _vbEnableMask = vbEnableMask;
+                UpdateVertexAttribState();
             }
         }
 
