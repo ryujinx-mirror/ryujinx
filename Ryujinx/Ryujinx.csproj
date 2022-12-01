@@ -27,7 +27,7 @@
     <PackageReference Include="OpenTK.Graphics" Version="4.7.5" />
     <PackageReference Include="SPB" Version="0.0.4-build28" />
     <PackageReference Include="SharpZipLib" Version="1.4.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
   </ItemGroup>
 
   <ItemGroup>
