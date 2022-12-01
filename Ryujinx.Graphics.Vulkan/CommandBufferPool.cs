@@ -71,8 +71,8 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.CommandPoolCreateInfo,
                 QueueFamilyIndex = queueFamilyIndex,
-                Flags = CommandPoolCreateFlags.CommandPoolCreateTransientBit |
-                        CommandPoolCreateFlags.CommandPoolCreateResetCommandBufferBit
+                Flags = CommandPoolCreateFlags.TransientBit |
+                        CommandPoolCreateFlags.ResetCommandBufferBit
             };
 
             api.CreateCommandPool(device, commandPoolCreateInfo, null, out _pool).ThrowOnError();

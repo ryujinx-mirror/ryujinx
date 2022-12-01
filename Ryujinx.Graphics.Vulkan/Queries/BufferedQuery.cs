@@ -41,7 +41,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             if (_isSupported)
             {
                 QueryPipelineStatisticFlags flags = type == CounterType.PrimitivesGenerated ?
-                    QueryPipelineStatisticFlags.QueryPipelineStatisticGeometryShaderPrimitivesBit : 0;
+                    QueryPipelineStatisticFlags.GeometryShaderPrimitivesBit : 0;
 
                 var queryPoolCreateInfo = new QueryPoolCreateInfo()
                 {
@@ -175,11 +175,11 @@ namespace Ryujinx.Graphics.Vulkan.Queries
         {
             var buffer = _buffer.GetBuffer(cbs.CommandBuffer, true).Get(cbs, 0, sizeof(long)).Value;
 
-            QueryResultFlags flags = QueryResultFlags.QueryResultWaitBit;
+            QueryResultFlags flags = QueryResultFlags.ResultWaitBit;
 
             if (!_result32Bit)
             {
-                flags |= QueryResultFlags.QueryResult64Bit;
+                flags |= QueryResultFlags.Result64Bit;
             }
 
             _api.CmdCopyQueryPoolResults(

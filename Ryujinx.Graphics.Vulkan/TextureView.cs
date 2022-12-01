@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 subresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, levels, (uint)firstLayer, (uint)info.Depth);
 
-                _imageView2dArray = CreateImageView(identityComponentMapping, subresourceRange, ImageViewType.ImageViewType2DArray);
+                _imageView2dArray = CreateImageView(identityComponentMapping, subresourceRange, ImageViewType.Type2DArray);
             }
 
             Valid = true;
@@ -322,8 +322,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                     return;
                 }
-                else if (_gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.FormatFeatureBlitSrcBit, srcFormat) &&
-                         _gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.FormatFeatureBlitDstBit, dstFormat))
+                else if (_gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.BlitSrcBit, srcFormat) &&
+                         _gd.FormatCapabilities.OptimalFormatSupports(FormatFeatureFlags.BlitDstBit, dstFormat))
                 {
                     TextureCopy.Blit(
                         _gd.Api,
@@ -402,8 +402,8 @@ namespace Ryujinx.Graphics.Vulkan
                 layers,
                 levels,
                 linearFilter,
-                ImageAspectFlags.ImageAspectColorBit,
-                ImageAspectFlags.ImageAspectColorBit);
+                ImageAspectFlags.ColorBit,
+                ImageAspectFlags.ColorBit);
         }
 
         private static void BlitDepthStencilWithBuffer(
@@ -471,10 +471,10 @@ namespace Ryujinx.Graphics.Vulkan
                     gd,
                     cbs.CommandBuffer,
                     srcTempBuffer.GetBuffer().Get(cbs, 0, srcSize).Value,
-                    AccessFlags.AccessTransferWriteBit,
-                    AccessFlags.AccessTransferReadBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
+                    AccessFlags.TransferWriteBit,
+                    AccessFlags.TransferReadBit,
+                    PipelineStageFlags.TransferBit,
+                    PipelineStageFlags.TransferBit,
                     0,
                     srcSize);
 
@@ -498,10 +498,10 @@ namespace Ryujinx.Graphics.Vulkan
                     gd.Api,
                     cbs.CommandBuffer,
                     srcTemp.GetImage().Get(cbs).Value,
-                    AccessFlags.AccessTransferWriteBit,
-                    AccessFlags.AccessTransferReadBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
+                    AccessFlags.TransferWriteBit,
+                    AccessFlags.TransferReadBit,
+                    PipelineStageFlags.TransferBit,
+                    PipelineStageFlags.TransferBit,
                     aspectFlags,
                     0,
                     0,
@@ -531,10 +531,10 @@ namespace Ryujinx.Graphics.Vulkan
                     gd.Api,
                     cbs.CommandBuffer,
                     dstTemp.GetImage().Get(cbs).Value,
-                    AccessFlags.AccessTransferWriteBit,
-                    AccessFlags.AccessTransferReadBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
+                    AccessFlags.TransferWriteBit,
+                    AccessFlags.TransferReadBit,
+                    PipelineStageFlags.TransferBit,
+                    PipelineStageFlags.TransferBit,
                     aspectFlags,
                     0,
                     0,
@@ -561,10 +561,10 @@ namespace Ryujinx.Graphics.Vulkan
                     gd,
                     cbs.CommandBuffer,
                     dstTempBuffer.GetBuffer().Get(cbs, 0, dstSize).Value,
-                    AccessFlags.AccessTransferWriteBit,
-                    AccessFlags.AccessTransferReadBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
-                    PipelineStageFlags.PipelineStageTransferBit,
+                    AccessFlags.TransferWriteBit,
+                    AccessFlags.TransferReadBit,
+                    PipelineStageFlags.TransferBit,
+                    PipelineStageFlags.TransferBit,
                     0,
                     dstSize);
 
@@ -585,8 +585,8 @@ namespace Ryujinx.Graphics.Vulkan
                     false);
             }
 
-            SlowBlit(d32SrcStorage, d32DstStorage, ImageAspectFlags.ImageAspectDepthBit);
-            SlowBlit(s8SrcStorage, s8DstStorage, ImageAspectFlags.ImageAspectStencilBit);
+            SlowBlit(d32SrcStorage, d32DstStorage, ImageAspectFlags.DepthBit);
+            SlowBlit(s8SrcStorage, s8DstStorage, ImageAspectFlags.StencilBit);
         }
 
         public static unsafe void InsertImageBarrier(
@@ -631,7 +631,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private bool SupportsBlitFromD32FS8ToD32FAndS8()
         {
-            var formatFeatureFlags = FormatFeatureFlags.FormatFeatureBlitSrcBit | FormatFeatureFlags.FormatFeatureBlitDstBit;
+            var formatFeatureFlags = FormatFeatureFlags.BlitSrcBit | FormatFeatureFlags.BlitDstBit;
             return _gd.FormatCapabilities.OptimalFormatSupports(formatFeatureFlags, GAL.Format.D32Float)  &&
                    _gd.FormatCapabilities.OptimalFormatSupports(formatFeatureFlags, GAL.Format.S8Uint);
         }
@@ -903,9 +903,9 @@ namespace Ryujinx.Graphics.Vulkan
 
                 var aspectFlags = Info.Format.ConvertAspectFlags();
 
-                if (aspectFlags == (ImageAspectFlags.ImageAspectDepthBit | ImageAspectFlags.ImageAspectStencilBit))
+                if (aspectFlags == (ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit))
                 {
-                    aspectFlags = ImageAspectFlags.ImageAspectDepthBit;
+                    aspectFlags = ImageAspectFlags.DepthBit;
                 }
 
                 var sl = new ImageSubresourceLayers(
@@ -962,9 +962,9 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var aspectFlags = Info.Format.ConvertAspectFlags();
 
-            if (aspectFlags == (ImageAspectFlags.ImageAspectDepthBit | ImageAspectFlags.ImageAspectStencilBit))
+            if (aspectFlags == (ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit))
             {
-                aspectFlags = ImageAspectFlags.ImageAspectDepthBit;
+                aspectFlags = ImageAspectFlags.DepthBit;
             }
 
             var sl = new ImageSubresourceLayers(aspectFlags, (uint)(FirstLevel + dstLevel), (uint)(FirstLayer + dstLayer), 1);

@@ -82,14 +82,14 @@ namespace Ryujinx.Graphics.Vulkan
 
                 stages |= 1u << shader.StageFlags switch
                 {
-                    ShaderStageFlags.ShaderStageFragmentBit => 1,
-                    ShaderStageFlags.ShaderStageGeometryBit => 2,
-                    ShaderStageFlags.ShaderStageTessellationControlBit => 3,
-                    ShaderStageFlags.ShaderStageTessellationEvaluationBit => 4,
+                    ShaderStageFlags.FragmentBit => 1,
+                    ShaderStageFlags.GeometryBit => 2,
+                    ShaderStageFlags.TessellationControlBit => 3,
+                    ShaderStageFlags.TessellationEvaluationBit => 4,
                     _ => 0
                 };
 
-                if (shader.StageFlags == ShaderStageFlags.ShaderStageComputeBit)
+                if (shader.StageFlags == ShaderStageFlags.ComputeBit)
                 {
                     IsCompute = true;
                 }

@@ -341,11 +341,11 @@ namespace Ryujinx.Graphics.Vulkan
         public unsafe Capabilities GetCapabilities()
         {
             FormatFeatureFlags compressedFormatFeatureFlags =
-                FormatFeatureFlags.FormatFeatureSampledImageBit |
-                FormatFeatureFlags.FormatFeatureSampledImageFilterLinearBit |
-                FormatFeatureFlags.FormatFeatureBlitSrcBit |
-                FormatFeatureFlags.FormatFeatureTransferSrcBit |
-                FormatFeatureFlags.FormatFeatureTransferDstBit;
+                FormatFeatureFlags.SampledImageBit |
+                FormatFeatureFlags.SampledImageFilterLinearBit |
+                FormatFeatureFlags.BlitSrcBit |
+                FormatFeatureFlags.TransferSrcBit |
+                FormatFeatureFlags.TransferDstBit;
 
             bool supportsBc123CompressionFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
                 GAL.Format.Bc1RgbaSrgb,

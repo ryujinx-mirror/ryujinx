@@ -145,12 +145,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecordStencilMasks(Vk api, CommandBuffer commandBuffer)
         {
-            api.CmdSetStencilCompareMask(commandBuffer, StencilFaceFlags.StencilFaceBackBit, _backCompareMask);
-            api.CmdSetStencilWriteMask(commandBuffer, StencilFaceFlags.StencilFaceBackBit, _backWriteMask);
-            api.CmdSetStencilReference(commandBuffer, StencilFaceFlags.StencilFaceBackBit, _backReference);
-            api.CmdSetStencilCompareMask(commandBuffer, StencilFaceFlags.StencilFaceFrontBit, _frontCompareMask);
-            api.CmdSetStencilWriteMask(commandBuffer, StencilFaceFlags.StencilFaceFrontBit, _frontWriteMask);
-            api.CmdSetStencilReference(commandBuffer, StencilFaceFlags.StencilFaceFrontBit, _frontReference);
+            api.CmdSetStencilCompareMask(commandBuffer, StencilFaceFlags.FaceBackBit, _backCompareMask);
+            api.CmdSetStencilWriteMask(commandBuffer, StencilFaceFlags.FaceBackBit, _backWriteMask);
+            api.CmdSetStencilReference(commandBuffer, StencilFaceFlags.FaceBackBit, _backReference);
+            api.CmdSetStencilCompareMask(commandBuffer, StencilFaceFlags.FaceFrontBit, _frontCompareMask);
+            api.CmdSetStencilWriteMask(commandBuffer, StencilFaceFlags.FaceFrontBit, _frontWriteMask);
+            api.CmdSetStencilReference(commandBuffer, StencilFaceFlags.FaceFrontBit, _frontReference);
         }
 
         private void RecordViewport(Vk api, CommandBuffer commandBuffer)

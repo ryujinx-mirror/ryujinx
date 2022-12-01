@@ -10,28 +10,28 @@ namespace Ryujinx.Graphics.Vulkan
     class BufferManager : IDisposable
     {
         private const MemoryPropertyFlags DefaultBufferMemoryFlags =
-            MemoryPropertyFlags.MemoryPropertyHostVisibleBit |
-            MemoryPropertyFlags.MemoryPropertyHostCoherentBit |
-            MemoryPropertyFlags.MemoryPropertyHostCachedBit;
+            MemoryPropertyFlags.HostVisibleBit |
+            MemoryPropertyFlags.HostCoherentBit |
+            MemoryPropertyFlags.HostCachedBit;
 
         private const MemoryPropertyFlags DeviceLocalBufferMemoryFlags =
-            MemoryPropertyFlags.MemoryPropertyDeviceLocalBit;
+            MemoryPropertyFlags.DeviceLocalBit;
 
         private const MemoryPropertyFlags FlushableDeviceLocalBufferMemoryFlags =
-            MemoryPropertyFlags.MemoryPropertyHostVisibleBit |
-            MemoryPropertyFlags.MemoryPropertyHostCoherentBit |
-            MemoryPropertyFlags.MemoryPropertyDeviceLocalBit;
+            MemoryPropertyFlags.HostVisibleBit |
+            MemoryPropertyFlags.HostCoherentBit |
+            MemoryPropertyFlags.DeviceLocalBit;
 
         private const BufferUsageFlags DefaultBufferUsageFlags =
-            BufferUsageFlags.BufferUsageTransferSrcBit |
-            BufferUsageFlags.BufferUsageTransferDstBit |
-            BufferUsageFlags.BufferUsageUniformTexelBufferBit |
-            BufferUsageFlags.BufferUsageStorageTexelBufferBit |
-            BufferUsageFlags.BufferUsageUniformBufferBit |
-            BufferUsageFlags.BufferUsageStorageBufferBit |
-            BufferUsageFlags.BufferUsageIndexBufferBit |
-            BufferUsageFlags.BufferUsageVertexBufferBit |
-            BufferUsageFlags.BufferUsageTransformFeedbackBufferBitExt;
+            BufferUsageFlags.TransferSrcBit |
+            BufferUsageFlags.TransferDstBit |
+            BufferUsageFlags.UniformTexelBufferBit |
+            BufferUsageFlags.StorageTexelBufferBit |
+            BufferUsageFlags.UniformBufferBit |
+            BufferUsageFlags.StorageBufferBit |
+            BufferUsageFlags.IndexBufferBit |
+            BufferUsageFlags.VertexBufferBit |
+            BufferUsageFlags.TransformFeedbackBufferBitExt;
 
         private readonly PhysicalDevice _physicalDevice;
         private readonly Device _device;
@@ -76,11 +76,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (forConditionalRendering && gd.Capabilities.SupportsConditionalRendering)
             {
-                usage |= BufferUsageFlags.BufferUsageConditionalRenderingBitExt;
+                usage |= BufferUsageFlags.ConditionalRenderingBitExt;
             }
             else if (gd.Capabilities.SupportsIndirectParameters)
             {
-                usage |= BufferUsageFlags.BufferUsageIndirectBufferBit;
+                usage |= BufferUsageFlags.IndirectBufferBit;
             }
 
             var bufferCreateInfo = new BufferCreateInfo()

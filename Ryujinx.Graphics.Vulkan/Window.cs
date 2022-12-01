@@ -109,11 +109,11 @@ namespace Ryujinx.Graphics.Vulkan
                 ImageFormat = surfaceFormat.Format,
                 ImageColorSpace = surfaceFormat.ColorSpace,
                 ImageExtent = extent,
-                ImageUsage = ImageUsageFlags.ImageUsageColorAttachmentBit | ImageUsageFlags.ImageUsageTransferDstBit,
+                ImageUsage = ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.TransferDstBit,
                 ImageSharingMode = SharingMode.Exclusive,
                 ImageArrayLayers = 1,
                 PreTransform = capabilities.CurrentTransform,
-                CompositeAlpha = CompositeAlphaFlagsKHR.CompositeAlphaOpaqueBitKhr,
+                CompositeAlpha = CompositeAlphaFlagsKHR.OpaqueBitKhr,
                 PresentMode = ChooseSwapPresentMode(presentModes, _vsyncEnabled),
                 Clipped = true,
                 OldSwapchain = oldSwapchain
@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ComponentSwizzle.B,
                 ComponentSwizzle.A);
 
-            var aspectFlags = ImageAspectFlags.ImageAspectColorBit;
+            var aspectFlags = ImageAspectFlags.ColorBit;
 
             var subresourceRange = new ImageSubresourceRange(aspectFlags, 0, 1, 0, 1);
 
@@ -154,7 +154,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.ImageViewCreateInfo,
                 Image = swapchainImage,
-                ViewType = ImageViewType.ImageViewType2D,
+                ViewType = ImageViewType.Type2D,
                 Format = format,
                 Components = componentMapping,
                 SubresourceRange = subresourceRange
@@ -168,12 +168,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (availableFormats.Length == 1 && availableFormats[0].Format == VkFormat.Undefined)
             {
-                return new SurfaceFormatKHR(VkFormat.B8G8R8A8Unorm, ColorSpaceKHR.ColorspaceSrgbNonlinearKhr);
+                return new SurfaceFormatKHR(VkFormat.B8G8R8A8Unorm, ColorSpaceKHR.PaceSrgbNonlinearKhr);
             }
 
             foreach (var format in availableFormats)
             {
-                if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.ColorspaceSrgbNonlinearKhr)
+                if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.PaceSrgbNonlinearKhr)
                 {
                     return format;
                 }
@@ -184,21 +184,21 @@ namespace Ryujinx.Graphics.Vulkan
 
         private static PresentModeKHR ChooseSwapPresentMode(PresentModeKHR[] availablePresentModes, bool vsyncEnabled)
         {
-            if (!vsyncEnabled && availablePresentModes.Contains(PresentModeKHR.PresentModeImmediateKhr))
+            if (!vsyncEnabled && availablePresentModes.Contains(PresentModeKHR.ImmediateKhr))
             {
-                return PresentModeKHR.PresentModeImmediateKhr;
+                return PresentModeKHR.ImmediateKhr;
             }
-            else if (availablePresentModes.Contains(PresentModeKHR.PresentModeMailboxKhr))
+            else if (availablePresentModes.Contains(PresentModeKHR.MailboxKhr))
             {
-                return PresentModeKHR.PresentModeMailboxKhr;
+                return PresentModeKHR.MailboxKhr;
             }
-            else if (availablePresentModes.Contains(PresentModeKHR.PresentModeFifoKhr))
+            else if (availablePresentModes.Contains(PresentModeKHR.FifoKhr))
             {
-               return PresentModeKHR.PresentModeFifoKhr;
+               return PresentModeKHR.FifoKhr;
             }
             else
             {
-                return PresentModeKHR.PresentModeFifoKhr;
+                return PresentModeKHR.FifoKhr;
             }
         }
 
@@ -254,7 +254,7 @@ namespace Ryujinx.Graphics.Vulkan
                 cbs.CommandBuffer,
                 swapchainImage,
                 0,
-                AccessFlags.AccessTransferWriteBit,
+                AccessFlags.TransferWriteBit,
                 ImageLayout.Undefined,
                 ImageLayout.General);
 
@@ -339,7 +339,7 @@ namespace Ryujinx.Graphics.Vulkan
             _gd.CommandBufferPool.Return(
                 cbs,
                 stackalloc[] { _imageAvailableSemaphore },
-                stackalloc[] { PipelineStageFlags.PipelineStageColorAttachmentOutputBit },
+                stackalloc[] { PipelineStageFlags.ColorAttachmentOutputBit },
                 stackalloc[] { _renderFinishedSemaphore });
 
             // TODO: Present queue.
@@ -373,7 +373,7 @@ namespace Ryujinx.Graphics.Vulkan
             ImageLayout srcLayout,
             ImageLayout dstLayout)
         {
-            var subresourceRange = new ImageSubresourceRange(ImageAspectFlags.ImageAspectColorBit, 0, 1, 0, 1);
+            var subresourceRange = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
 
             var barrier = new ImageMemoryBarrier()
             {
@@ -390,8 +390,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             _gd.Api.CmdPipelineBarrier(
                 commandBuffer,
-                PipelineStageFlags.PipelineStageTopOfPipeBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.TopOfPipeBit,
+                PipelineStageFlags.AllCommandsBit,
                 0,
                 0,
                 null,

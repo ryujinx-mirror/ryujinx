@@ -8,9 +8,9 @@ namespace Ryujinx.Graphics.Vulkan
     static class PipelineLayoutFactory
     {
         private const ShaderStageFlags SupportBufferStages =
-            ShaderStageFlags.ShaderStageVertexBit |
-            ShaderStageFlags.ShaderStageFragmentBit |
-            ShaderStageFlags.ShaderStageComputeBit;
+            ShaderStageFlags.VertexBit |
+            ShaderStageFlags.FragmentBit |
+            ShaderStageFlags.ComputeBit;
 
         public static unsafe DescriptorSetLayout[] Create(VulkanRenderer gd, Device device, uint stages, bool usePd, out PipelineLayout layout)
         {
@@ -42,11 +42,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 var stageFlags = stage switch
                 {
-                    1 => ShaderStageFlags.ShaderStageFragmentBit,
-                    2 => ShaderStageFlags.ShaderStageGeometryBit,
-                    3 => ShaderStageFlags.ShaderStageTessellationControlBit,
-                    4 => ShaderStageFlags.ShaderStageTessellationEvaluationBit,
-                    _ => ShaderStageFlags.ShaderStageVertexBit | ShaderStageFlags.ShaderStageComputeBit
+                    1 => ShaderStageFlags.FragmentBit,
+                    2 => ShaderStageFlags.GeometryBit,
+                    3 => ShaderStageFlags.TessellationControlBit,
+                    4 => ShaderStageFlags.TessellationEvaluationBit,
+                    _ => ShaderStageFlags.VertexBit | ShaderStageFlags.ComputeBit
                 };
 
                 void Set(DescriptorSetLayoutBinding* bindings, int maxPerStage, DescriptorType type, int start, int skip)
@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.DescriptorSetLayoutCreateInfo,
                 PBindings = uLayoutBindings,
                 BindingCount = (uint)uCount,
-                Flags = usePd ? DescriptorSetLayoutCreateFlags.DescriptorSetLayoutCreatePushDescriptorBitKhr : 0
+                Flags = usePd ? DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr : 0
             };
 
             var sDescriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo()

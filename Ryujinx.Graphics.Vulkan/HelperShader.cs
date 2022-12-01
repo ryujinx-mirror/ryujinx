@@ -349,8 +349,8 @@ namespace Ryujinx.Graphics.Vulkan
             var srcBuffer = srcBufferAuto.Get(cbs, srcOffset, size).Value;
             var dstBuffer = dstBufferAuto.Get(cbs, 0, newSize).Value;
 
-            var access = supportsUint8 ? AccessFlags.AccessShaderWriteBit : AccessFlags.AccessTransferWriteBit;
-            var stage = supportsUint8 ? PipelineStageFlags.PipelineStageComputeShaderBit : PipelineStageFlags.PipelineStageTransferBit;
+            var access = supportsUint8 ? AccessFlags.ShaderWriteBit : AccessFlags.TransferWriteBit;
+            var stage = supportsUint8 ? PipelineStageFlags.ComputeShaderBit : PipelineStageFlags.TransferBit;
 
             BufferHolder.InsertBufferBarrier(
                 gd,
@@ -358,7 +358,7 @@ namespace Ryujinx.Graphics.Vulkan
                 dstBuffer,
                 BufferHolder.DefaultAccessFlags,
                 access,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.AllCommandsBit,
                 stage,
                 0,
                 newSize);
@@ -420,7 +420,7 @@ namespace Ryujinx.Graphics.Vulkan
                 access,
                 BufferHolder.DefaultAccessFlags,
                 stage,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.AllCommandsBit,
                 0,
                 newSize);
         }
@@ -484,9 +484,9 @@ namespace Ryujinx.Graphics.Vulkan
                 cbs.CommandBuffer,
                 dstBuffer,
                 BufferHolder.DefaultAccessFlags,
-                AccessFlags.AccessTransferWriteBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageTransferBit,
+                AccessFlags.TransferWriteBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.TransferBit,
                 0,
                 convertedCount * outputIndexSize);
 
@@ -499,10 +499,10 @@ namespace Ryujinx.Graphics.Vulkan
                 gd,
                 cbs.CommandBuffer,
                 dstBuffer,
-                AccessFlags.AccessTransferWriteBit,
+                AccessFlags.TransferWriteBit,
                 BufferHolder.DefaultAccessFlags,
-                PipelineStageFlags.PipelineStageTransferBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.TransferBit,
+                PipelineStageFlags.AllCommandsBit,
                 0,
                 convertedCount * outputIndexSize);
         }
@@ -548,10 +548,10 @@ namespace Ryujinx.Graphics.Vulkan
                 cbs.CommandBuffer,
                 src.GetImage().Get(cbs).Value,
                 TextureStorage.DefaultAccessMask,
-                AccessFlags.AccessShaderReadBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageComputeShaderBit,
-                ImageAspectFlags.ImageAspectColorBit,
+                AccessFlags.ShaderReadBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.ComputeShaderBit,
+                ImageAspectFlags.ColorBit,
                 src.FirstLayer + srcLayer,
                 src.FirstLevel,
                 depth,
@@ -610,11 +610,11 @@ namespace Ryujinx.Graphics.Vulkan
                 gd.Api,
                 cbs.CommandBuffer,
                 dst.GetImage().Get(cbs).Value,
-                AccessFlags.AccessShaderWriteBit,
+                AccessFlags.ShaderWriteBit,
                 TextureStorage.DefaultAccessMask,
-                PipelineStageFlags.PipelineStageComputeShaderBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                ImageAspectFlags.ImageAspectColorBit,
+                PipelineStageFlags.ComputeShaderBit,
+                PipelineStageFlags.AllCommandsBit,
+                ImageAspectFlags.ColorBit,
                 dst.FirstLayer + dstLayer,
                 dst.FirstLevel,
                 depth,
@@ -770,9 +770,9 @@ namespace Ryujinx.Graphics.Vulkan
                 cbs.CommandBuffer,
                 srcIndirectBuffer.GetBuffer().Get(cbs, srcIndirectBufferOffset, indirectDataSize).Value,
                 BufferHolder.DefaultAccessFlags,
-                AccessFlags.AccessShaderReadBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageComputeShaderBit,
+                AccessFlags.ShaderReadBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.ComputeShaderBit,
                 srcIndirectBufferOffset,
                 indirectDataSize);
 
@@ -786,10 +786,10 @@ namespace Ryujinx.Graphics.Vulkan
                 gd,
                 cbs.CommandBuffer,
                 patternBufferAuto.Get(cbs, ParamsIndirectDispatchOffset, ParamsIndirectDispatchSize).Value,
-                AccessFlags.AccessShaderWriteBit,
-                AccessFlags.AccessIndirectCommandReadBit,
-                PipelineStageFlags.PipelineStageComputeShaderBit,
-                PipelineStageFlags.PipelineStageDrawIndirectBit,
+                AccessFlags.ShaderWriteBit,
+                AccessFlags.IndirectCommandReadBit,
+                PipelineStageFlags.ComputeShaderBit,
+                PipelineStageFlags.DrawIndirectBit,
                 ParamsIndirectDispatchOffset,
                 ParamsIndirectDispatchSize);
 
@@ -798,9 +798,9 @@ namespace Ryujinx.Graphics.Vulkan
                 cbs.CommandBuffer,
                 dstBuffer,
                 BufferHolder.DefaultAccessFlags,
-                AccessFlags.AccessTransferWriteBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageTransferBit,
+                AccessFlags.TransferWriteBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.TransferBit,
                 0,
                 convertedCount * outputIndexSize);
 
@@ -814,10 +814,10 @@ namespace Ryujinx.Graphics.Vulkan
                 gd,
                 cbs.CommandBuffer,
                 dstBuffer,
-                AccessFlags.AccessTransferWriteBit,
+                AccessFlags.TransferWriteBit,
                 BufferHolder.DefaultAccessFlags,
-                PipelineStageFlags.PipelineStageTransferBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.TransferBit,
+                PipelineStageFlags.AllCommandsBit,
                 0,
                 convertedCount * outputIndexSize);
 

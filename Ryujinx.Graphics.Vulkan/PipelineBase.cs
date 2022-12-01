@@ -128,14 +128,14 @@ namespace Ryujinx.Graphics.Vulkan
             MemoryBarrier memoryBarrier = new MemoryBarrier()
             {
                 SType = StructureType.MemoryBarrier,
-                SrcAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit,
-                DstAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit
+                SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
             };
 
             Gd.Api.CmdPipelineBarrier(
                 CommandBuffer,
-                PipelineStageFlags.PipelineStageFragmentShaderBit,
-                PipelineStageFlags.PipelineStageFragmentShaderBit,
+                PipelineStageFlags.FragmentShaderBit,
+                PipelineStageFlags.FragmentShaderBit,
                 0,
                 1,
                 memoryBarrier,
@@ -161,9 +161,9 @@ namespace Ryujinx.Graphics.Vulkan
                 Cbs.CommandBuffer,
                 dst,
                 BufferHolder.DefaultAccessFlags,
-                AccessFlags.AccessTransferWriteBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageTransferBit,
+                AccessFlags.TransferWriteBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.TransferBit,
                 offset,
                 size);
 
@@ -173,10 +173,10 @@ namespace Ryujinx.Graphics.Vulkan
                 Gd,
                 Cbs.CommandBuffer,
                 dst,
-                AccessFlags.AccessTransferWriteBit,
+                AccessFlags.TransferWriteBit,
                 BufferHolder.DefaultAccessFlags,
-                PipelineStageFlags.PipelineStageTransferBit,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.TransferBit,
+                PipelineStageFlags.AllCommandsBit,
                 offset,
                 size);
         }
@@ -196,7 +196,7 @@ namespace Ryujinx.Graphics.Vulkan
             BeginRenderPass();
 
             var clearValue = new ClearValue(new ClearColorValue(color.Red, color.Green, color.Blue, color.Alpha));
-            var attachment = new ClearAttachment(ImageAspectFlags.ImageAspectColorBit, (uint)index, clearValue);
+            var attachment = new ClearAttachment(ImageAspectFlags.ColorBit, (uint)index, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
 
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
@@ -219,11 +219,11 @@ namespace Ryujinx.Graphics.Vulkan
             BeginRenderPass();
 
             var clearValue = new ClearValue(null, new ClearDepthStencilValue(depthValue, (uint)stencilValue));
-            var flags = depthMask ? ImageAspectFlags.ImageAspectDepthBit : 0;
+            var flags = depthMask ? ImageAspectFlags.DepthBit : 0;
 
             if (stencilMask != 0)
             {
-                flags |= ImageAspectFlags.ImageAspectStencilBit;
+                flags |= ImageAspectFlags.StencilBit;
             }
 
             var attachment = new ClearAttachment(flags, 0, clearValue);
@@ -238,13 +238,13 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.MemoryBarrier,
                 SrcAccessMask = BufferHolder.DefaultAccessFlags,
-                DstAccessMask = AccessFlags.AccessIndirectCommandReadBit
+                DstAccessMask = AccessFlags.IndirectCommandReadBit
             };
 
             Gd.Api.CmdPipelineBarrier(
                 CommandBuffer,
-                PipelineStageFlags.PipelineStageAllCommandsBit,
-                PipelineStageFlags.PipelineStageDrawIndirectBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.DrawIndirectBit,
                 0,
                 1,
                 memoryBarrier,
@@ -624,7 +624,7 @@ namespace Ryujinx.Graphics.Vulkan
                 var oldViewports = DynamicState.Viewports;
                 var oldViewportsCount = _newState.ViewportsCount;
 
-                _newState.CullMode = CullModeFlags.CullModeNone;
+                _newState.CullMode = CullModeFlags.None;
                 _newState.StencilTestEnable = false;
                 _newState.DepthTestEnable = false;
                 _newState.DepthWriteEnable = false;
@@ -737,7 +737,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetFaceCulling(bool enable, Face face)
         {
-            _newState.CullMode = enable ? face.Convert() : CullModeFlags.CullModeNone;
+            _newState.CullMode = enable ? face.Convert() : CullModeFlags.None;
             SignalStateChange();
         }
 
@@ -1200,14 +1200,14 @@ namespace Ryujinx.Graphics.Vulkan
             MemoryBarrier memoryBarrier = new MemoryBarrier()
             {
                 SType = StructureType.MemoryBarrier,
-                SrcAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit,
-                DstAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit
+                SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
             };
 
             Gd.Api.CmdPipelineBarrier(
                 CommandBuffer,
-                PipelineStageFlags.PipelineStageFragmentShaderBit,
-                PipelineStageFlags.PipelineStageFragmentShaderBit,
+                PipelineStageFlags.FragmentShaderBit,
+                PipelineStageFlags.FragmentShaderBit,
                 0,
                 1,
                 memoryBarrier,

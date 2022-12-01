@@ -12,12 +12,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return stage switch
             {
-                ShaderStage.Vertex => ShaderStageFlags.ShaderStageVertexBit,
-                ShaderStage.Geometry => ShaderStageFlags.ShaderStageGeometryBit,
-                ShaderStage.TessellationControl => ShaderStageFlags.ShaderStageTessellationControlBit,
-                ShaderStage.TessellationEvaluation => ShaderStageFlags.ShaderStageTessellationEvaluationBit,
-                ShaderStage.Fragment => ShaderStageFlags.ShaderStageFragmentBit,
-                ShaderStage.Compute => ShaderStageFlags.ShaderStageComputeBit,
+                ShaderStage.Vertex => ShaderStageFlags.VertexBit,
+                ShaderStage.Geometry => ShaderStageFlags.GeometryBit,
+                ShaderStage.TessellationControl => ShaderStageFlags.TessellationControlBit,
+                ShaderStage.TessellationEvaluation => ShaderStageFlags.TessellationEvaluationBit,
+                ShaderStage.Fragment => ShaderStageFlags.FragmentBit,
+                ShaderStage.Compute => ShaderStageFlags.ComputeBit,
                 _ => LogInvalidAndReturn(stage, nameof(ShaderStage), (ShaderStageFlags)0)
             };
         }
@@ -26,12 +26,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return stage switch
             {
-                ShaderStage.Vertex => PipelineStageFlags.PipelineStageVertexShaderBit,
-                ShaderStage.Geometry => PipelineStageFlags.PipelineStageGeometryShaderBit,
-                ShaderStage.TessellationControl => PipelineStageFlags.PipelineStageTessellationControlShaderBit,
-                ShaderStage.TessellationEvaluation => PipelineStageFlags.PipelineStageTessellationEvaluationShaderBit,
-                ShaderStage.Fragment => PipelineStageFlags.PipelineStageFragmentShaderBit,
-                ShaderStage.Compute => PipelineStageFlags.PipelineStageComputeShaderBit,
+                ShaderStage.Vertex => PipelineStageFlags.VertexShaderBit,
+                ShaderStage.Geometry => PipelineStageFlags.GeometryShaderBit,
+                ShaderStage.TessellationControl => PipelineStageFlags.TessellationControlShaderBit,
+                ShaderStage.TessellationEvaluation => PipelineStageFlags.TessellationEvaluationShaderBit,
+                ShaderStage.Fragment => PipelineStageFlags.FragmentShaderBit,
+                ShaderStage.Compute => PipelineStageFlags.ComputeShaderBit,
                 _ => LogInvalidAndReturn(stage, nameof(ShaderStage), (PipelineStageFlags)0)
             };
         }
@@ -112,10 +112,10 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return face switch
             {
-                Face.Back => CullModeFlags.CullModeBackBit,
-                Face.Front => CullModeFlags.CullModeFrontBit,
-                Face.FrontAndBack => CullModeFlags.CullModeFrontAndBack,
-                _ => LogInvalidAndReturn(face, nameof(Face), CullModeFlags.CullModeBackBit)
+                Face.Back => CullModeFlags.BackBit,
+                Face.Front => CullModeFlags.FrontBit,
+                Face.FrontAndBack => CullModeFlags.FrontAndBack,
+                _ => LogInvalidAndReturn(face, nameof(Face), CullModeFlags.BackBit)
             };
         }
 
@@ -223,14 +223,14 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 Target.Texture1D or
                 Target.Texture1DArray or
-                Target.TextureBuffer => ImageType.ImageType1D,
+                Target.TextureBuffer => ImageType.Type1D,
                 Target.Texture2D or
                 Target.Texture2DArray or
                 Target.Texture2DMultisample or
                 Target.Cubemap or
-                Target.CubemapArray => ImageType.ImageType2D,
-                Target.Texture3D => ImageType.ImageType3D,
-                _ => LogInvalidAndReturn(target, nameof(Target), ImageType.ImageType2D)
+                Target.CubemapArray => ImageType.Type2D,
+                Target.Texture3D => ImageType.Type3D,
+                _ => LogInvalidAndReturn(target, nameof(Target), ImageType.Type2D)
             };
         }
 
@@ -238,14 +238,14 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return target switch
             {
-                Target.Texture1D => ImageViewType.ImageViewType1D,
-                Target.Texture2D or Target.Texture2DMultisample => ImageViewType.ImageViewType2D,
-                Target.Texture3D => ImageViewType.ImageViewType3D,
-                Target.Texture1DArray => ImageViewType.ImageViewType1DArray,
-                Target.Texture2DArray => ImageViewType.ImageViewType2DArray,
-                Target.Cubemap => ImageViewType.Cube,
-                Target.CubemapArray => ImageViewType.CubeArray,
-                _ => LogInvalidAndReturn(target, nameof(Target), ImageViewType.ImageViewType2D)
+                Target.Texture1D => ImageViewType.Type1D,
+                Target.Texture2D or Target.Texture2DMultisample => ImageViewType.Type2D,
+                Target.Texture3D => ImageViewType.Type3D,
+                Target.Texture1DArray => ImageViewType.Type1DArray,
+                Target.Texture2DArray => ImageViewType.Type2DArray,
+                Target.Cubemap => ImageViewType.TypeCube,
+                Target.CubemapArray => ImageViewType.TypeCubeArray,
+                _ => LogInvalidAndReturn(target, nameof(Target), ImageViewType.Type2D)
             };
         }
 
@@ -253,12 +253,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return format switch
             {
-                GAL.Format.D16Unorm or GAL.Format.D32Float => ImageAspectFlags.ImageAspectDepthBit,
-                GAL.Format.S8Uint => ImageAspectFlags.ImageAspectStencilBit,
+                GAL.Format.D16Unorm or GAL.Format.D32Float => ImageAspectFlags.DepthBit,
+                GAL.Format.S8Uint => ImageAspectFlags.StencilBit,
                 GAL.Format.D24UnormS8Uint or
                 GAL.Format.D32FloatS8Uint or
-                GAL.Format.S8UintD24Unorm    => ImageAspectFlags.ImageAspectDepthBit | ImageAspectFlags.ImageAspectStencilBit,
-                _ => ImageAspectFlags.ImageAspectColorBit
+                GAL.Format.S8UintD24Unorm    => ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+                _ => ImageAspectFlags.ColorBit
             };
         }
 
@@ -266,12 +266,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return format switch
             {
-                GAL.Format.D16Unorm or GAL.Format.D32Float => ImageAspectFlags.ImageAspectDepthBit,
-                GAL.Format.S8Uint => ImageAspectFlags.ImageAspectStencilBit,
+                GAL.Format.D16Unorm or GAL.Format.D32Float => ImageAspectFlags.DepthBit,
+                GAL.Format.S8Uint => ImageAspectFlags.StencilBit,
                 GAL.Format.D24UnormS8Uint or
                 GAL.Format.D32FloatS8Uint or
-                GAL.Format.S8UintD24Unorm => depthStencilMode == DepthStencilMode.Stencil ? ImageAspectFlags.ImageAspectStencilBit : ImageAspectFlags.ImageAspectDepthBit,
-                _ => ImageAspectFlags.ImageAspectColorBit
+                GAL.Format.S8UintD24Unorm => depthStencilMode == DepthStencilMode.Stencil ? ImageAspectFlags.StencilBit : ImageAspectFlags.DepthBit,
+                _ => ImageAspectFlags.ColorBit
             };
         }
 

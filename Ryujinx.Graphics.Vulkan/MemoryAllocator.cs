@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Vulkan
                 return default;
             }
 
-            bool map = flags.HasFlag(MemoryPropertyFlags.MemoryPropertyHostVisibleBit);
+            bool map = flags.HasFlag(MemoryPropertyFlags.HostVisibleBit);
             return Allocate(memoryTypeIndex, requirements.Size, requirements.Alignment, map);
         }
 

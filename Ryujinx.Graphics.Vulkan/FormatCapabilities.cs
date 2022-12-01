@@ -83,22 +83,22 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var format = FormatTable.GetFormat(srcFormat);
 
-            var requiredFeatures = FormatFeatureFlags.FormatFeatureSampledImageBit |
-                                   FormatFeatureFlags.FormatFeatureTransferSrcBit |
-                                   FormatFeatureFlags.FormatFeatureTransferDstBit;
+            var requiredFeatures = FormatFeatureFlags.SampledImageBit |
+                                   FormatFeatureFlags.TransferSrcBit |
+                                   FormatFeatureFlags.TransferDstBit;
 
             if (srcFormat.IsDepthOrStencil())
             {
-                requiredFeatures |= FormatFeatureFlags.FormatFeatureDepthStencilAttachmentBit;
+                requiredFeatures |= FormatFeatureFlags.DepthStencilAttachmentBit;
             }
             else if (srcFormat.IsRtColorCompatible())
             {
-                requiredFeatures |= FormatFeatureFlags.FormatFeatureColorAttachmentBit;
+                requiredFeatures |= FormatFeatureFlags.ColorAttachmentBit;
             }
 
             if (srcFormat.IsImageCompatible())
             {
-                requiredFeatures |= FormatFeatureFlags.FormatFeatureStorageImageBit;
+                requiredFeatures |= FormatFeatureFlags.StorageImageBit;
             }
 
             if (!OptimalFormatSupports(requiredFeatures, srcFormat) || (IsD24S8(srcFormat) && VulkanConfiguration.ForceD24S8Unsupported))
@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var format = FormatTable.GetFormat(srcFormat);
 
-            if (!BufferFormatSupports(FormatFeatureFlags.FormatFeatureVertexBufferBit, srcFormat) ||
+            if (!BufferFormatSupports(FormatFeatureFlags.VertexBufferBit, srcFormat) ||
                 (IsRGB16IntFloat(srcFormat) && VulkanConfiguration.ForceRGB16IntFloatUnsupported))
             {
                 // The format is not supported. Can we convert it to an alternative format?

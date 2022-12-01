@@ -6,8 +6,8 @@ namespace Ryujinx.Graphics.Vulkan
 {
     static class PipelineConverter
     {
-        private const AccessFlags SubpassSrcAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessColorAttachmentWriteBit;
-        private const AccessFlags SubpassDstAccessMask = AccessFlags.AccessMemoryReadBit | AccessFlags.AccessMemoryWriteBit | AccessFlags.AccessShaderReadBit;
+        private const AccessFlags SubpassSrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit | AccessFlags.ColorAttachmentWriteBit;
+        private const AccessFlags SubpassDstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit | AccessFlags.ShaderReadBit;
 
         public static unsafe DisposableRenderPass ToRenderPass(this ProgramPipelineState state, VulkanRenderer gd, Device device)
         {
@@ -129,8 +129,8 @@ namespace Ryujinx.Graphics.Vulkan
             return new SubpassDependency(
                 0,
                 0,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                PipelineStageFlags.AllGraphicsBit,
+                PipelineStageFlags.AllGraphicsBit,
                 SubpassSrcAccessMask,
                 SubpassDstAccessMask,
                 0);
@@ -143,8 +143,8 @@ namespace Ryujinx.Graphics.Vulkan
                 null,
                 0,
                 0,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
-                PipelineStageFlags.PipelineStageAllGraphicsBit,
+                PipelineStageFlags.AllGraphicsBit,
+                PipelineStageFlags.AllGraphicsBit,
                 SubpassSrcAccessMask,
                 SubpassDstAccessMask,
                 0);
@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             // It is assumed that Dynamic State is enabled when this conversion is used.
 
-            pipeline.CullMode = state.CullEnable ? state.CullMode.Convert() : CullModeFlags.CullModeNone;
+            pipeline.CullMode = state.CullEnable ? state.CullMode.Convert() : CullModeFlags.None;
 
             pipeline.DepthBoundsTestEnable = false; // Not implemented.
 

@@ -190,14 +190,14 @@ namespace Ryujinx.Graphics.Vulkan
                 for (int index = 0; index < _colors.Length; index++)
                 {
                     _colors[index].Storage.SetModification(
-                        AccessFlags.AccessColorAttachmentWriteBit,
-                        PipelineStageFlags.PipelineStageColorAttachmentOutputBit);
+                        AccessFlags.ColorAttachmentWriteBit,
+                        PipelineStageFlags.ColorAttachmentOutputBit);
                 }
             }
 
             _depthStencil?.Storage.SetModification(
-                AccessFlags.AccessDepthStencilAttachmentWriteBit,
-                PipelineStageFlags.PipelineStageColorAttachmentOutputBit);
+                AccessFlags.DepthStencilAttachmentWriteBit,
+                PipelineStageFlags.ColorAttachmentOutputBit);
         }
     }
 }
