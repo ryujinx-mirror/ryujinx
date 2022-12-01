@@ -69,7 +69,7 @@ namespace Ryujinx.SDL2.Common
 
                 if (SDL_Init(SdlInitFlags) != 0)
                 {
-                    string errorMessage = $"SDL2 initlaization failed with error \"{SDL_GetError()}\"";
+                    string errorMessage = $"SDL2 initialization failed with error \"{SDL_GetError()}\"";
 
                     Logger.Error?.Print(LogClass.Application, errorMessage);
 
