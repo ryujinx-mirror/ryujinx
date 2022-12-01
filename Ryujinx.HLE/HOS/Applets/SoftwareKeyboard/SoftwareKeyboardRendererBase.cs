@@ -549,12 +549,12 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
                 // Convert the pixel format used in the image to the one used in the Switch surface.
 
-                if (!_surface.DangerousTryGetSinglePixelMemory(out Memory<Argb32> pixels))
+                if (!_surface.TryGetSinglePixelSpan(out Span<Argb32> pixels))
                 {
                     return;
                 }
 
-                _bufferData = MemoryMarshal.AsBytes(pixels.Span).ToArray();
+                _bufferData = MemoryMarshal.AsBytes(pixels).ToArray();
                 Span<uint> dataConvert = MemoryMarshal.Cast<byte, uint>(_bufferData);
 
                 Debug.Assert(_bufferData.Length == _surfaceInfo.Size);
