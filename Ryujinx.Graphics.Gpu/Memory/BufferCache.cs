@@ -273,7 +273,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         buffer.CopyTo(newBuffer, dstOffset);
                         newBuffer.InheritModifiedRanges(buffer);
 
-                        buffer.DisposeData();
+                        buffer.DecrementReferenceCount();
                     }
 
                     newBuffer.SynchronizeMemory(address, newSize);

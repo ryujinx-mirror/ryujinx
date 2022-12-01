@@ -65,6 +65,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private bool _useGranular;
         private bool _syncActionRegistered;
 
+        private int _referenceCount = 1;
+
         /// <summary>
         /// Creates a new instance of the buffer.
         /// </summary>
@@ -229,7 +231,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (_modifiedRanges == null)
             {
-                _modifiedRanges = new BufferModifiedRangeList(_context);
+                _modifiedRanges = new BufferModifiedRangeList(_context, this, Flush);
             }
         }
 
@@ -290,7 +292,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="from">The buffer to inherit from</param>
         public void InheritModifiedRanges(Buffer from)
         {
-            if (from._modifiedRanges != null)
+            if (from._modifiedRanges != null && from._modifiedRanges.HasRanges)
             {
                 if (from._syncActionRegistered && !_syncActionRegistered)
                 {
@@ -310,17 +312,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
                 };
 
-                if (_modifiedRanges == null)
-                {
-                    _modifiedRanges = from._modifiedRanges;
-                    _modifiedRanges.ReregisterRanges(registerRangeAction);
+                EnsureRangeList();
 
-                    from._modifiedRanges = null;
-                }
-                else
-                {
-                    _modifiedRanges.InheritRanges(from._modifiedRanges, registerRangeAction);
-                }
+                _modifiedRanges.InheritRanges(from._modifiedRanges, registerRangeAction);
             }
         }
 
@@ -456,7 +450,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 if (ranges != null)
                 {
                     (address, size) = PageAlign(address, size);
-                    ranges.WaitForAndGetRanges(address, size, Flush);
+                    ranges.WaitForAndFlushRanges(address, size);
                 }
             }, true);
         }
@@ -509,6 +503,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Increments the buffer reference count.
+        /// </summary>
+        public void IncrementReferenceCount()
+        {
+            _referenceCount++;
+        }
+
+        /// <summary>
+        /// Decrements the buffer reference count.
+        /// </summary>
+        public void DecrementReferenceCount()
+        {
+            if (--_referenceCount == 0)
+            {
+                DisposeData();
+            }
+        }
+
+        /// <summary>
         /// Disposes the host buffer's data, not its tracking handles.
         /// </summary>
         public void DisposeData()
@@ -528,7 +541,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _memoryTrackingGranular?.Dispose();
             _memoryTracking?.Dispose();
 
-            DisposeData();
+            DecrementReferenceCount();
         }
     }
 }

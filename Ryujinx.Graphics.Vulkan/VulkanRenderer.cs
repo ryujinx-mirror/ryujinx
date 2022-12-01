@@ -565,6 +565,11 @@ namespace Ryujinx.Graphics.Vulkan
             _syncManager.Wait(id);
         }
 
+        public ulong GetCurrentSync()
+        {
+            return _syncManager.GetCurrent();
+        }
+
         public void Screenshot()
         {
             _window.ScreenCaptureRequested = true;

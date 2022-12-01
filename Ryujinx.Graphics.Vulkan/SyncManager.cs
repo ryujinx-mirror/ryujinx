@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             public ulong ID;
             public MultiFenceHolder Waitable;
+            public bool Signalled;
         }
 
         private ulong _firstHandle = 0;
@@ -45,6 +46,37 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public ulong GetCurrent()
+        {
+            lock (_handles)
+            {
+                ulong lastHandle = _firstHandle;
+
+                foreach (SyncHandle handle in _handles)
+                {
+                    lock (handle)
+                    {
+                        if (handle.Waitable == null)
+                        {
+                            continue;
+                        }
+
+                        if (handle.ID > lastHandle)
+                        {
+                            bool signaled = handle.Signalled || handle.Waitable.WaitForFences(_gd.Api, _device, 0);
+                            if (signaled)
+                            {
+                                lastHandle = handle.ID;
+                                handle.Signalled = true;
+                            }
+                        }
+                    }
+                }
+
+                return lastHandle;
+            }
+        }
+
         public void Wait(ulong id)
         {
             SyncHandle result = null;
@@ -75,10 +107,14 @@ namespace Ryujinx.Graphics.Vulkan
                         return;
                     }
 
-                    bool signaled = result.Waitable.WaitForFences(_gd.Api, _device, 1000000000);
+                    bool signaled = result.Signalled || result.Waitable.WaitForFences(_gd.Api, _device, 1000000000);
                     if (!signaled)
                     {
                         Logger.Error?.PrintMsg(LogClass.Gpu, $"VK Sync Object {result.ID} failed to signal within 1000ms. Continuing...");
+                    }
+                    else
+                    {
+                        result.Signalled = true;
                     }
                 }
             }

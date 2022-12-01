@@ -40,6 +40,37 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public ulong GetCurrent()
+        {
+            lock (_handles)
+            {
+                ulong lastHandle = _firstHandle;
+
+                foreach (SyncHandle handle in _handles)
+                {
+                    lock (handle)
+                    {
+                        if (handle.Handle == IntPtr.Zero)
+                        {
+                            continue;
+                        }
+
+                        if (handle.ID > lastHandle)
+                        {
+                            WaitSyncStatus syncResult = GL.ClientWaitSync(handle.Handle, _syncFlags, 0);
+
+                            if (syncResult == WaitSyncStatus.AlreadySignaled)
+                            {
+                                lastHandle = handle.ID;
+                            }
+                        }
+                    }
+                }
+
+                return lastHandle;
+            }
+        }
+
         public void Wait(ulong id)
         {
             SyncHandle result = null;

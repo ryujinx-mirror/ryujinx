@@ -70,6 +70,12 @@ namespace Ryujinx.Graphics.Gpu
         internal List<Action> SyncpointActions { get; }
 
         /// <summary>
+        /// Buffer migrations that are currently in-flight. These are checked whenever sync is created to determine if buffer migration
+        /// copies have completed on the GPU, and their data can be freed.
+        /// </summary>
+        internal List<BufferMigration> BufferMigrations { get; }
+
+        /// <summary>
         /// Queue with deferred actions that must run on the render thread.
         /// </summary>
         internal Queue<Action> DeferredActions { get; }
@@ -90,6 +96,7 @@ namespace Ryujinx.Graphics.Gpu
         public event Action<ShaderCacheState, int, int> ShaderCacheStateChanged;
 
         private Thread _gpuThread;
+        private bool _pendingSync;
 
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
@@ -109,6 +116,7 @@ namespace Ryujinx.Graphics.Gpu
 
             SyncActions = new List<Action>();
             SyncpointActions = new List<Action>();
+            BufferMigrations = new List<BufferMigration>();
 
             DeferredActions = new Queue<Action>();
 
@@ -274,6 +282,17 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
+        /// Registers a buffer migration. These are checked to see if they can be disposed when the sync number increases,
+        /// and the migration copy has completed.
+        /// </summary>
+        /// <param name="migration">The buffer migration</param>
+        internal void RegisterBufferMigration(BufferMigration migration)
+        {
+            BufferMigrations.Add(migration);
+            _pendingSync = true;
+        }
+
+        /// <summary>
         /// Registers an action to be performed the next time a syncpoint is incremented.
         /// This will also ensure a host sync object is created, and <see cref="SyncNumber"/> is incremented.
         /// </summary>
@@ -288,6 +307,7 @@ namespace Ryujinx.Graphics.Gpu
             else
             {
                 SyncActions.Add(action);
+                _pendingSync = true;
             }
         }
 
@@ -298,7 +318,24 @@ namespace Ryujinx.Graphics.Gpu
         /// <param name="syncpoint">True if host sync is being created by a syncpoint</param>
         public void CreateHostSyncIfNeeded(bool syncpoint)
         {
-            if (SyncActions.Count > 0 || (syncpoint && SyncpointActions.Count > 0))
+            if (BufferMigrations.Count > 0)
+            {
+                ulong currentSyncNumber = Renderer.GetCurrentSync();
+
+                for (int i = 0; i < BufferMigrations.Count; i++)
+                {
+                    BufferMigration migration = BufferMigrations[i];
+                    long diff = (long)(currentSyncNumber - migration.SyncNumber);
+
+                    if (diff >= 0)
+                    {
+                        migration.Dispose();
+                        BufferMigrations.RemoveAt(i--);
+                    }
+                }
+            }
+
+            if (_pendingSync || (syncpoint && SyncpointActions.Count > 0))
             {
                 Renderer.CreateSync(SyncNumber);
 
@@ -317,6 +354,8 @@ namespace Ryujinx.Graphics.Gpu
                 SyncActions.Clear();
                 SyncpointActions.Clear();
             }
+
+            _pendingSync = false;
         }
 
         /// <summary>

@@ -238,6 +238,11 @@ namespace Ryujinx.Graphics.OpenGL
             _sync.Wait(id);
         }
 
+        public ulong GetCurrentSync()
+        {
+            return _sync.GetCurrent();
+        }
+
         public void Screenshot()
         {
             _window.ScreenCaptureRequested = true;
