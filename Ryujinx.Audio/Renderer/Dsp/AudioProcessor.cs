@@ -116,6 +116,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
             };
         }
 
+        public bool HasRemainingCommands(int sessionId)
+        {
+            return _sessionCommandList[sessionId] != null;
+        }
+
         public void Signal()
         {
             _mailbox.SendMessage(MailboxMessage.RenderStart);

@@ -670,14 +670,21 @@ namespace Ryujinx.Audio.Renderer.Server
                 {
                     _terminationEvent.Reset();
 
-                    GenerateCommandList(out CommandList commands);
+                    if (!_manager.Processor.HasRemainingCommands(_sessionId))
+                    {
+                        GenerateCommandList(out CommandList commands);
 
-                    _manager.Processor.Send(_sessionId,
-                                            commands,
-                                            GetMaxAllocatedTimeForDsp(),
-                                            _appletResourceId);
+                        _manager.Processor.Send(_sessionId,
+                                                commands,
+                                                GetMaxAllocatedTimeForDsp(),
+                                                _appletResourceId);
 
-                    _systemEvent.Signal();
+                        _systemEvent.Signal();
+                    }
+                    else
+                    {
+                        _isDspRunningBehind = true;
+                    }
                 }
                 else
                 {
