@@ -444,7 +444,10 @@ namespace Ryujinx.Ui.App.Common
                         continue;
                     }
 
-                    ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId);
+                    ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId, appMetadata =>
+                    {
+                        appMetadata.Title = titleName;
+                    });
 
                     if (appMetadata.LastPlayed != "Never" && !DateTime.TryParse(appMetadata.LastPlayed, out _))
                     {

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
+using LibHac;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Ui.ViewModels;
 using Ryujinx.HLE.FileSystem;
@@ -14,6 +15,8 @@ namespace Ryujinx.Ava.Ui.Controls
     {
         public AccountManager AccountManager { get; }
         public ContentManager ContentManager { get; }
+        public VirtualFileSystem VirtualFileSystem { get; }
+        public HorizonClient HorizonClient { get; }
         public UserProfileViewModel ViewModel { get; set; }
 
         public NavigationDialogHost()
@@ -22,10 +25,12 @@ namespace Ryujinx.Ava.Ui.Controls
         }
 
         public NavigationDialogHost(AccountManager accountManager, ContentManager contentManager,
-            VirtualFileSystem virtualFileSystem)
+            VirtualFileSystem virtualFileSystem, HorizonClient horizonClient)
         {
             AccountManager = accountManager;
             ContentManager = contentManager;
+            VirtualFileSystem = virtualFileSystem;
+            HorizonClient = horizonClient;
             ViewModel = new UserProfileViewModel(this);
 
 
@@ -54,9 +59,10 @@ namespace Ryujinx.Ava.Ui.Controls
             ContentFrame.Navigate(sourcePageType, parameter);
         }
 
-        public static async Task Show(AccountManager ownerAccountManager, ContentManager ownerContentManager, VirtualFileSystem ownerVirtualFileSystem)
+        public static async Task Show(AccountManager ownerAccountManager, ContentManager ownerContentManager,
+            VirtualFileSystem ownerVirtualFileSystem, HorizonClient ownerHorizonClient)
         {
-            var content = new NavigationDialogHost(ownerAccountManager, ownerContentManager, ownerVirtualFileSystem);
+            var content = new NavigationDialogHost(ownerAccountManager, ownerContentManager, ownerVirtualFileSystem, ownerHorizonClient);
             ContentDialog contentDialog = new ContentDialog
             {
                 Title = LocaleManager.Instance["UserProfileWindowTitle"],

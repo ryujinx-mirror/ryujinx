@@ -10,6 +10,7 @@
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.Ui.ViewModels"
     Margin="0"
+    MinWidth="500"
     Padding="0"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -63,7 +64,7 @@
                 HorizontalAlignment="Stretch"
                 MaxLength="{Binding MaxProfileNameLength}"
                 Text="{Binding Name}" />
-            <TextBlock Text="{Locale:Locale UserProfilesUserId}" />
+            <TextBlock Name="IdText" Text="{Locale:Locale UserProfilesUserId}" />
             <TextBlock Name="IdLabel" Text="{Binding UserId}" />
         </StackPanel>
         <StackPanel

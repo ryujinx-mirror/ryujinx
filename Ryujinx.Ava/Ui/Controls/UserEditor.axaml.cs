@@ -36,15 +36,8 @@ namespace Ryujinx.Ava.Ui.Controls
                     case NavigationMode.New:
                         var args = ((NavigationDialogHost parent, UserProfile profile, bool isNewUser))arg.Parameter;
                         _isNewUser = args.isNewUser;
-                        if (!_isNewUser)
-                        {
-                            _profile = args.profile;
-                            TempProfile = new TempProfile(_profile);
-                        }
-                        else
-                        {
-                            TempProfile = new TempProfile();
-                        }
+                        _profile = args.profile;
+                        TempProfile = new TempProfile(_profile);
 
                         _parent = args.parent;
                         break;
@@ -53,7 +46,8 @@ namespace Ryujinx.Ava.Ui.Controls
                 DataContext = TempProfile;
 
                 AddPictureButton.IsVisible = _isNewUser;
-                IdLabel.IsVisible = !_isNewUser;
+                IdLabel.IsVisible = _profile != null;
+                IdText.IsVisible = _profile != null;
                 ChangePictureButton.IsVisible = !_isNewUser;
             }
         }
@@ -87,7 +81,7 @@ namespace Ryujinx.Ava.Ui.Controls
                 return;
             }
 
-            if (_profile != null)
+            if (_profile != null && !_isNewUser)
             {
                 _profile.Name = TempProfile.Name;
                 _profile.Image = TempProfile.Image;
@@ -97,7 +91,7 @@ namespace Ryujinx.Ava.Ui.Controls
             }
             else if (_isNewUser)
             {
-                _parent.AccountManager.AddUser(TempProfile.Name, TempProfile.Image);
+                _parent.AccountManager.AddUser(TempProfile.Name, TempProfile.Image, TempProfile.UserId);
             }
             else
             {

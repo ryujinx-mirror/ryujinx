@@ -596,7 +596,18 @@
   "RyujinxUpdaterMessage": "Do you want to update Ryujinx to the latest version?",
   "SettingsTabHotkeysVolumeUpHotkey": "Increase Volume:",
   "SettingsTabHotkeysVolumeDownHotkey": "Decrease Volume:",
-  "VolumeShort": "Vol",
   "SettingsEnableMacroHLE": "Enable Macro HLE",
-  "SettingsEnableMacroHLETooltip": "High-level emulation of GPU Macro code.\n\nImproves performance, but may cause graphical glitches in some games.\n\nLeave ON if unsure."
+  "SettingsEnableMacroHLETooltip": "High-level emulation of GPU Macro code.\n\nImproves performance, but may cause graphical glitches in some games.\n\nLeave ON if unsure.",
+  "VolumeShort": "Vol",
+  "UserProfilesManageSaves": "Manage Saves",
+  "DeleteUserSave": "Do you want to delete user save for this game?",
+  "IrreversibleActionNote": "This action is not reversible.",
+  "SaveManagerHeading": "Manage Saves for {0}",
+  "SaveManagerTitle": "Save Manager",
+  "Name": "Name",
+  "Size": "Size",
+  "Search": "Search",
+  "UserProfilesRecoverLostAccounts": "Recover Lost Accounts",
+  "Recover": "Recover",
+  "UserProfilesRecoverHeading" : "Saves were found for the following accounts"
 }

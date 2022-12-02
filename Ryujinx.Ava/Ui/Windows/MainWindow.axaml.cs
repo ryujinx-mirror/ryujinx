@@ -36,6 +36,7 @@ namespace Ryujinx.Ava.Ui.Windows
 {
     public partial class MainWindow : StyleableWindow
     {
+        internal static MainWindowViewModel MainWindowViewModel { get; private set; }
         private bool _canUpdate;
         private bool _isClosing;
         private bool _isLoading;
@@ -80,6 +81,8 @@ namespace Ryujinx.Ava.Ui.Windows
         public MainWindow()
         {
             ViewModel = new MainWindowViewModel(this);
+
+            MainWindowViewModel = ViewModel;
 
             DataContext = ViewModel;
 

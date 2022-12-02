@@ -45,9 +45,12 @@ namespace Ryujinx.Ava.Ui.Models
         {
             _profile = profile;
 
-            Image = profile.Image;
-            Name = profile.Name;
-            UserId = profile.UserId;
+            if (_profile != null)
+            {
+                Image = profile.Image;
+                Name = profile.Name;
+                UserId = profile.UserId;
+            }
         }
 
         public TempProfile(){}
