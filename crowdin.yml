@@ -1,0 +1,3 @@
+files:
+  - source: Ryujinx.Ava/Assets/Locales/en_US.json
+    translation: Ryujinx.Ava/Assets/Locales/%locale_with_underscore%.json
