@@ -955,16 +955,25 @@
                     Icon="Document" />
             </ui:NavigationView.MenuItems>
         </ui:NavigationView>
-        <StackPanel
+        <ReversibleStackPanel
             Grid.Row="2"
             Margin="10"
             Spacing="10"
             Orientation="Horizontal"
-            HorizontalAlignment="Right">
-            <Button Content="{locale:Locale SettingsButtonSave}" Click="SaveButton_Clicked" />
-            <Button Content="{locale:Locale SettingsButtonClose}" Click="CloseButton_Clicked" />
-            <Button Content="{locale:Locale SettingsButtonApply}"
-                    Click="ApplyButton_Clicked" />
-        </StackPanel>
+            HorizontalAlignment="Right"
+            ReverseOrder="{ReflectionBinding IsMacOS}">
+            <Button 
+                HotKey="Enter" 
+                Classes="accent"
+                Content="{locale:Locale SettingsButtonOk}" 
+                Command="{ReflectionBinding OkButton}" />
+            <Button 
+                HotKey="Escape" 
+                Content="{locale:Locale SettingsButtonCancel}" 
+                Command="{ReflectionBinding CancelButton}" />
+            <Button 
+                Content="{locale:Locale SettingsButtonApply}" 
+                Command="{ReflectionBinding ApplyButton}" />
+        </ReversibleStackPanel>
     </Grid>
 </window:StyleableWindow>

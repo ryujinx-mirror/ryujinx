@@ -199,36 +199,6 @@ namespace Ryujinx.Ava.Ui.Windows
             }
         }
 
-        private void SaveButton_Clicked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-            Close();
-        }
-
-        private void CloseButton_Clicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel.RevertIfNotSaved();
-            Close();
-        }
-
-        private void ApplyButton_Clicked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-        }
-
-        private void SaveSettings()
-        {
-            ViewModel.SaveSettings();
-            ControllerSettings?.SaveCurrentProfile();
-
-            if (Owner is MainWindow window && ViewModel.DirectoryChanged)
-            {
-                window.ViewModel.LoadApplications();
-            }
-
-            ViewModel.DirectoryChanged = false;
-        }
-
         protected override void OnClosed(EventArgs e)
         {
             ControllerSettings.Dispose();

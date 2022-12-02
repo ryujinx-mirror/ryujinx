@@ -118,7 +118,12 @@ namespace Ryujinx.Ava.Ui.ViewModels
                 OnPropertyChanged();
             }
         }
-
+        
+        public bool IsMacOS
+        {
+            get => OperatingSystem.IsMacOS();
+        }
+        
         public bool EnableDiscordIntegration { get; set; }
         public bool CheckUpdatesOnStart { get; set; }
         public bool ShowConfirmExit { get; set; }
@@ -474,11 +479,40 @@ namespace Ryujinx.Ava.Ui.ViewModels
             MainWindow.UpdateGraphicsConfig();
 
             _previousVolumeLevel = Volume;
+
+            if (_owner is SettingsWindow owner)
+            {
+                owner.ControllerSettings?.SaveCurrentProfile();
+            }
+            
+            if (_owner.Owner is MainWindow window && _directoryChanged)
+            {
+                window.ViewModel.LoadApplications();
+            }
+
+            _directoryChanged = false;
         }
 
         public void RevertIfNotSaved()
         {
             Program.ReloadConfig();
+        }
+
+        public void ApplyButton()
+        {
+            SaveSettings();
+        }
+
+        public void OkButton()
+        {
+            SaveSettings();
+            _owner.Close();
+        }
+
+        public void CancelButton()
+        {
+            RevertIfNotSaved();
+            _owner.Close();
         }
     }
 }
