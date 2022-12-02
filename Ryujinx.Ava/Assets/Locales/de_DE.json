@@ -166,6 +166,8 @@
   "SettingsTabInput": "Eingabe",
   "SettingsTabInputEnableDockedMode": "Docked Modus",
   "SettingsTabInputDirectKeyboardAccess": "Direkter Tastaturzugriff",
+  "SettingsButtonSave": "Speichern",
+  "SettingsButtonClose": "Schließen",
   "SettingsButtonOk": "OK",
   "SettingsButtonCancel": "Abbrechen",
   "SettingsButtonApply": "Übernehmen",

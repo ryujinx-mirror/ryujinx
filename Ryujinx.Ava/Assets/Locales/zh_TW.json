@@ -166,6 +166,8 @@
   "SettingsTabInput": "輸入",
   "SettingsTabInputEnableDockedMode": "Docked 模式",
   "SettingsTabInputDirectKeyboardAccess": "直通鍵盤控制",
+  "SettingsButtonSave": "儲存",
+  "SettingsButtonClose": "關閉",
   "SettingsButtonOk": "嘛好",
   "SettingsButtonCancel": "取消",
   "SettingsButtonApply": "套用",

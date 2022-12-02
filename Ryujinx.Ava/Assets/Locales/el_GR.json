@@ -166,6 +166,8 @@
   "SettingsTabInput": "Χειρισμός",
   "SettingsTabInputEnableDockedMode": "Ενεργοποίηση Docked Mode",
   "SettingsTabInputDirectKeyboardAccess": "Άμεση Πρόσβαση στο Πληκτρολόγιο",
+  "SettingsButtonSave": "Αποθήκευση",
+  "SettingsButtonClose": "Κλείσιμο",
   "SettingsButtonOk": "OK",
   "SettingsButtonCancel": "Ακύρωση",
   "SettingsButtonApply": "Εφαρμογή",

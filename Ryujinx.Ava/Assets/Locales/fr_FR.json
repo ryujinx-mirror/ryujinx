@@ -159,6 +159,8 @@
   "SettingsTabInput": "Contrôles",
   "SettingsTabInputEnableDockedMode": "Active le mode station d'accueil",
   "SettingsTabInputDirectKeyboardAccess": "Accès direct au clavier",
+  "SettingsButtonSave": "Enregistrer",
+  "SettingsButtonClose": "Fermer",
   "SettingsButtonOk": "OK",
   "SettingsButtonCancel": "Annuler",
   "SettingsButtonApply": "Appliquer",

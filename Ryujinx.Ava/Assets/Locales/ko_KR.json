@@ -165,6 +165,8 @@
   "SettingsTabInput": "입력",
   "SettingsTabInputEnableDockedMode": "도킹 모드 활성화",
   "SettingsTabInputDirectKeyboardAccess": "직접 키보드 액세스",
+  "SettingsButtonSave": "구하다",
+  "SettingsButtonClose": "출구",
   "SettingsButtonOk": "좋아",
   "SettingsButtonCancel": "취소",
   "SettingsButtonApply": "적용하다",

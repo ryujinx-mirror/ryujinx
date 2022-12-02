@@ -165,6 +165,8 @@
   "SettingsTabInput": "Управление",
   "SettingsTabInputEnableDockedMode": "Включить режим закрепления",
   "SettingsTabInputDirectKeyboardAccess": "Прямой доступ с клавиатуры",
+  "SettingsButtonSave": "Сохранить",
+  "SettingsButtonClose": "Закрыть",
   "SettingsButtonOk": "OK",
   "SettingsButtonCancel": "Отмена",
   "SettingsButtonApply": "Применить",

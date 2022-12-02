@@ -166,6 +166,8 @@
   "SettingsTabInput": "Input",
   "SettingsTabInputEnableDockedMode": "Docked Mode",
   "SettingsTabInputDirectKeyboardAccess": "Direct Keyboard Access",
+  "SettingsButtonSave": "Save",
+  "SettingsButtonClose": "Close",
   "SettingsButtonOk": "OK",
   "SettingsButtonCancel": "Cancel",
   "SettingsButtonApply": "Apply",
