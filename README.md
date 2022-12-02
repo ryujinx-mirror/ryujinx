@@ -21,6 +21,10 @@
         <img src="https://github.com/Ryujinx/Ryujinx/actions/workflows/release.yml/badge.svg"
             alt="">
     </a>
+    <a href="https://crwd.in/ryujinx">
+        <img src="https://badges.crowdin.net/ryujinx/localized.svg"
+            alt="">
+    </a>
     <a href="https://discord.com/invite/VkQYXAZ">
         <img src="https://img.shields.io/discord/410208534861447168?color=5865F2&label=Ryujinx&logo=discord&logoColor=white"
             alt="Discord">
@@ -47,6 +51,8 @@ See our [Setup & Configuration Guide](https://github.com/Ryujinx/Ryujinx/wiki/Ry
 
 For our Local Wireless and LAN builds, see our [Multiplayer: Local Play/Local Wireless Guide
 ](https://github.com/Ryujinx/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide).
+
+Avalonia UI comes with translations for various languages. See [Crowdin](https://crwd.in/ryujinx) for more information.
 
 ## Latest build
 
