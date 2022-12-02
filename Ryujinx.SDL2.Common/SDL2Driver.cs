@@ -28,6 +28,8 @@ namespace Ryujinx.SDL2.Common
             }
         }
 
+        public static Action<Action> MainThreadDispatcher { get; set; }
+
         private const uint SdlInitFlags = SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO | SDL_INIT_VIDEO;
 
         private bool _isRunning;
@@ -154,10 +156,13 @@ namespace Ryujinx.SDL2.Common
 
             while (_isRunning)
             {
-                while (SDL_PollEvent(out SDL_Event evnt) != 0)
+                MainThreadDispatcher?.Invoke(() =>
                 {
-                    HandleSDLEvent(ref evnt);
-                }
+                    while (SDL_PollEvent(out SDL_Event evnt) != 0)
+                    {
+                        HandleSDLEvent(ref evnt);
+                    }
+                });
 
                 waitHandle.Wait(WaitTimeMs);
             }

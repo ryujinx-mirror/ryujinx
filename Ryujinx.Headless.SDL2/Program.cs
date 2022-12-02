@@ -638,16 +638,7 @@ namespace Ryujinx.Headless.SDL2
 
             Translator.IsReadyForTranslation.Reset();
 
-            Thread windowThread = new Thread(() =>
-            {
-                ExecutionEntrypoint();
-            })
-            {
-                Name = "GUI.WindowThread"
-            };
-
-            windowThread.Start();
-            windowThread.Join();
+            ExecutionEntrypoint();
 
             return true;
         }
