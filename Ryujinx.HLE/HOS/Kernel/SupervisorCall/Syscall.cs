@@ -2107,6 +2107,33 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                         break;
                     }
 
+                case InfoType.MesosphereCurrentProcess:
+                    {
+                        if (handle != 0)
+                        {
+                            return KernelResult.InvalidHandle;
+                        }
+
+                        if ((ulong)subId != 0)
+                        {
+                            return KernelResult.InvalidCombination;
+                        }
+
+                        KProcess currentProcess = KernelStatic.GetCurrentProcess();
+                        KHandleTable handleTable = currentProcess.HandleTable;
+
+                        KernelResult result = handleTable.GenerateHandle(currentProcess, out int outHandle);
+
+                        if (result != KernelResult.Success)
+                        {
+                            return result;
+                        }                        
+
+                        value = (ulong)outHandle;
+
+                        break;
+                    }
+
                 default: return KernelResult.InvalidEnumValue;
             }
 

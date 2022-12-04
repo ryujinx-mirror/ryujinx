@@ -28,6 +28,7 @@
         UsedNonSystemMemorySize,
         IsApplication,
         FreeThreadCount,
-        ThreadTickCount
+        ThreadTickCount,
+        MesosphereCurrentProcess = 65001
     }
 }
