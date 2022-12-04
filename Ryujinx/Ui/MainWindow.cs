@@ -862,6 +862,7 @@ namespace Ryujinx.Ui
 
                 _gameLoaded           = true;
                 _actionMenu.Sensitive = true;
+                UpdateMenuItem.Sensitive = false;
 
                 _lastScannedAmiiboId = "";
 
@@ -1333,6 +1334,7 @@ namespace Ryujinx.Ui
 
             _pauseEmulation.Sensitive = false;
             _resumeEmulation.Sensitive = false;
+            UpdateMenuItem.Sensitive = true;
             RendererWidget?.Exit();
         }
 

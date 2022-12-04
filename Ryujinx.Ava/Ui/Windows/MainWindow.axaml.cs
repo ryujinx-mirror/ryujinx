@@ -266,6 +266,7 @@ namespace Ryujinx.Ava.Ui.Windows
                     return;
                 }
 
+                CanUpdate = false;
                 ViewModel.LoadHeading = string.IsNullOrWhiteSpace(titleName) ? string.Format(LocaleManager.Instance["LoadingHeading"], AppHost.Device.Application.TitleName) : titleName;
                 ViewModel.TitleName   = string.IsNullOrWhiteSpace(titleName) ? AppHost.Device.Application.TitleName : titleName;
 
@@ -371,6 +372,7 @@ namespace Ryujinx.Ava.Ui.Windows
                 ViewModel.ShowContent = true;
                 ViewModel.ShowLoadProgress = false;
                 ViewModel.IsLoadingIndeterminate = false;
+                CanUpdate = true;
                 Cursor = Cursor.Default;
 
                 if (MainContent.Content != _mainViewContent)
