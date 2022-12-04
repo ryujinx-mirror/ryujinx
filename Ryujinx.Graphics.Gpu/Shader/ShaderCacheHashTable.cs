@@ -215,8 +215,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>True if a cached host program was found, false otherwise</returns>
         public bool TryFind(
             GpuChannel channel,
-            GpuChannelPoolState poolState,
-            GpuChannelGraphicsState graphicsState,
+            ref GpuChannelPoolState poolState,
+            ref GpuChannelGraphicsState graphicsState,
             ShaderAddresses addresses,
             out CachedShaderProgram program,
             out CachedGraphicsGuestCode guestCode)
@@ -236,7 +236,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             if (found && _shaderPrograms.TryGetValue(idTable, out ShaderSpecializationList specList))
             {
-                return specList.TryFindForGraphics(channel, poolState, graphicsState, out program);
+                return specList.TryFindForGraphics(channel, ref poolState, ref graphicsState, out program);
             }
 
             return false;

@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private readonly GpuChannel _channel;
         private readonly DeviceStateWithShadow<ThreedClassState> _state;
         private readonly DrawState _drawState;
+        private readonly SpecializationStateUpdater _currentSpecState;
         private bool _topologySet;
 
         private bool _instancedDrawPending;
@@ -44,12 +45,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="channel">GPU channel</param>
         /// <param name="state">Channel state</param>
         /// <param name="drawState">Draw state</param>
-        public DrawManager(GpuContext context, GpuChannel channel, DeviceStateWithShadow<ThreedClassState> state, DrawState drawState)
+        /// <param name="spec">Specialization state updater</param>
+        public DrawManager(GpuContext context, GpuChannel channel, DeviceStateWithShadow<ThreedClassState> state, DrawState drawState, SpecializationStateUpdater spec)
         {
             _context = context;
             _channel = channel;
             _state = state;
             _drawState = drawState;
+            _currentSpecState = spec;
         }
 
         /// <summary>
@@ -132,6 +135,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.FirstIndex = firstIndex;
             _drawState.IndexCount = indexCount;
+            _currentSpecState.SetHasConstantBufferDrawParameters(false);
 
             engine.UpdateState();
 
@@ -256,6 +260,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             if (_drawState.Topology != topology || !_topologySet)
             {
                 _context.Renderer.Pipeline.SetPrimitiveTopology(topology);
+                _currentSpecState.SetTopology(topology);
                 _drawState.Topology = topology;
                 _topologySet = true;
             }
@@ -452,7 +457,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _state.State.FirstInstance = (uint)firstInstance;
 
             _drawState.DrawIndexed = indexed;
-            _drawState.HasConstantBufferDrawParameters = true;
+            _currentSpecState.SetHasConstantBufferDrawParameters(true);
 
             engine.UpdateState();
 
@@ -469,7 +474,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _state.State.FirstInstance = 0;
 
             _drawState.DrawIndexed = false;
-            _drawState.HasConstantBufferDrawParameters = false;
 
             if (renderEnable == ConditionalRenderEnabled.Host)
             {
@@ -527,7 +531,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.DrawIndexed = indexed;
             _drawState.DrawIndirect = true;
-            _drawState.HasConstantBufferDrawParameters = true;
+            _currentSpecState.SetHasConstantBufferDrawParameters(true);
 
             engine.UpdateState();
 
@@ -561,7 +565,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.DrawIndexed = false;
             _drawState.DrawIndirect = false;
-            _drawState.HasConstantBufferDrawParameters = false;
 
             if (renderEnable == ConditionalRenderEnabled.Host)
             {

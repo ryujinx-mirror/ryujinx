@@ -1,9 +1,11 @@
+using System;
+
 namespace Ryujinx.Graphics.Gpu.Shader
 {
     /// <summary>
     /// State used by the <see cref="GpuAccessor"/>.
     /// </summary>
-    struct GpuChannelPoolState
+    struct GpuChannelPoolState : IEquatable<GpuChannelPoolState>
     {
         /// <summary>
         /// GPU virtual address of the texture pool.
@@ -31,6 +33,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
             TexturePoolGpuVa = texturePoolGpuVa;
             TexturePoolMaximumId = texturePoolMaximumId;
             TextureBufferIndex = textureBufferIndex;
+        }
+
+        /// <summary>
+        /// Check if the pool states are equal.
+        /// </summary>
+        /// <param name="other">Pool state to compare with</param>
+        /// <returns>True if they are equal, false otherwise</returns>
+        public bool Equals(GpuChannelPoolState other)
+        {
+            return TexturePoolGpuVa == other.TexturePoolGpuVa &&
+                TexturePoolMaximumId == other.TexturePoolMaximumId &&
+                TextureBufferIndex == other.TextureBufferIndex;
         }
     }
 }

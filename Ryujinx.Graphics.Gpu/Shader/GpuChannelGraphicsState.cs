@@ -15,62 +15,62 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Early Z force enable.
         /// </summary>
-        public readonly bool EarlyZForce;
+        public bool EarlyZForce;
 
         /// <summary>
         /// Primitive topology of current draw.
         /// </summary>
-        public readonly PrimitiveTopology Topology;
+        public PrimitiveTopology Topology;
 
         /// <summary>
         /// Tessellation mode.
         /// </summary>
-        public readonly TessMode TessellationMode;
+        public TessMode TessellationMode;
 
         /// <summary>
         /// Indicates whether alpha-to-coverage is enabled.
         /// </summary>
-        public readonly bool AlphaToCoverageEnable;
+        public bool AlphaToCoverageEnable;
 
         /// <summary>
         /// Indicates whether alpha-to-coverage dithering is enabled.
         /// </summary>
-        public readonly bool AlphaToCoverageDitherEnable;
+        public bool AlphaToCoverageDitherEnable;
 
         /// <summary>
         /// Indicates whether the viewport transform is disabled.
         /// </summary>
-        public readonly bool ViewportTransformDisable;
+        public bool ViewportTransformDisable;
 
         /// <summary>
         /// Depth mode zero to one or minus one to one.
         /// </summary>
-        public readonly bool DepthMode;
+        public bool DepthMode;
 
         /// <summary>
         /// Indicates if the point size is set on the shader or is fixed.
         /// </summary>
-        public readonly bool ProgramPointSizeEnable;
+        public bool ProgramPointSizeEnable;
 
         /// <summary>
         /// Point size used if <see cref="ProgramPointSizeEnable" /> is false.
         /// </summary>
-        public readonly float PointSize;
+        public float PointSize;
 
         /// <summary>
         /// Indicates whether alpha test is enabled.
         /// </summary>
-        public readonly bool AlphaTestEnable;
+        public bool AlphaTestEnable;
 
         /// <summary>
         /// When alpha test is enabled, indicates the comparison that decides if the fragment should be discarded.
         /// </summary>
-        public readonly CompareOp AlphaTestCompare;
+        public CompareOp AlphaTestCompare;
 
         /// <summary>
         /// When alpha test is enabled, indicates the value to compare with the fragment output alpha.
         /// </summary>
-        public readonly float AlphaTestReference;
+        public float AlphaTestReference;
 
         /// <summary>
         /// Type of the vertex attributes consumed by the shader.
@@ -80,12 +80,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0.
         /// </summary>
-        public readonly bool HasConstantBufferDrawParameters;
+        public bool HasConstantBufferDrawParameters;
 
         /// <summary>
         /// Indicates that any storage buffer use is unaligned.
         /// </summary>
-        public readonly bool HasUnalignedStorageBuffer;
+        public bool HasUnalignedStorageBuffer;
 
         /// <summary>
         /// Creates a new GPU graphics state.

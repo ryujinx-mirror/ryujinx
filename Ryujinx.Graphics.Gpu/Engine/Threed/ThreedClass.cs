@@ -67,12 +67,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _i2mClass = new InlineToMemoryClass(context, channel, initializeState: false);
 
+            var spec = new SpecializationStateUpdater();
             var drawState = new DrawState();
 
-            _drawManager = new DrawManager(context, channel, _state, drawState);
+            _drawManager = new DrawManager(context, channel, _state, drawState, spec);
             _semaphoreUpdater = new SemaphoreUpdater(context, channel, _state);
             _cbUpdater = new ConstantBufferUpdater(channel, _state);
-            _stateUpdater = new StateUpdater(context, channel, _state, drawState);
+            _stateUpdater = new StateUpdater(context, channel, _state, drawState, spec);
 
             // This defaults to "always", even without any register write.
             // Reads just return 0, regardless of what was set there.
