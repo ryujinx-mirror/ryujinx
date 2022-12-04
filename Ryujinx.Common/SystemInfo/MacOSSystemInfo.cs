@@ -28,9 +28,39 @@ namespace Ryujinx.Common.SystemInfo
 
             CpuName = $"{cpuName} ; {LogicalCoreCount} logical";
             RamTotal = totalRAM;
+            RamAvailable = GetVMInfoAvailableMemory();
         }
 
-        [DllImport("libSystem.dylib", CharSet = CharSet.Ansi, SetLastError = true)]
+        static ulong GetVMInfoAvailableMemory()
+        {
+            var port = mach_host_self();
+
+            uint pageSize = 0;
+            var result = host_page_size(port, ref pageSize);
+
+            if (result != 0)
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to query Available RAM. host_page_size() error = {result}");
+                return 0;
+            }
+
+            const int flavor = 4; // HOST_VM_INFO64
+            uint count = (uint)(Marshal.SizeOf<VMStatistics64>() / sizeof(int)); // HOST_VM_INFO64_COUNT
+            VMStatistics64 stats = new();
+            result = host_statistics64(port, flavor, ref stats, ref count);
+
+            if (result != 0)
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to query Available RAM. host_statistics64() error = {result}");
+                return 0;
+            }
+
+            return (ulong)(stats.FreeCount + stats.InactiveCount) * pageSize;
+        }
+
+        private const string SystemLibraryName = "libSystem.dylib";
+
+        [DllImport(SystemLibraryName, CharSet = CharSet.Ansi, SetLastError = true)]
         private static extern int sysctlbyname(string name, IntPtr oldValue, ref ulong oldSize, IntPtr newValue, ulong newValueSize);
 
         private static int sysctlbyname(string name, IntPtr oldValue, ref ulong oldSize)
@@ -85,5 +115,43 @@ namespace Ryujinx.Common.SystemInfo
 
             return res;
         }
+
+        [DllImport(SystemLibraryName, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern uint mach_host_self();
+
+        [DllImport(SystemLibraryName, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int host_page_size(uint host, ref uint out_page_size);
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        struct VMStatistics64
+        {
+            public uint FreeCount;
+            public uint ActiveCount;
+            public uint InactiveCount;
+            public uint WireCount;
+            public ulong ZeroFillCount;
+            public ulong Reactivations;
+            public ulong Pageins;
+            public ulong Pageouts;
+            public ulong Faults;
+            public ulong CowFaults;
+            public ulong Lookups;
+            public ulong Hits;
+            public ulong Purges;
+            public uint PurgeableCount;
+            public uint SpeculativeCount;
+            public ulong Decompressions;
+            public ulong Compressions;
+            public ulong Swapins;
+            public ulong Swapouts;
+            public uint CompressorPageCount;
+            public uint ThrottledCount;
+            public uint ExternalPageCount;
+            public uint InternalPageCount;
+            public ulong TotalUncompressedPagesInCompressor;
+        }
+
+        [DllImport(SystemLibraryName, CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int host_statistics64(uint host_priv, int host_flavor, ref VMStatistics64 host_info64_out, ref uint host_info64_outCnt);
     }
 }
