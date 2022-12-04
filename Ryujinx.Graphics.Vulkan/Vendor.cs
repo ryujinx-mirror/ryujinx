@@ -11,9 +11,10 @@ namespace Ryujinx.Graphics.Vulkan
         Unknown
     }
 
-    static class VendorUtils
+    static partial class VendorUtils
     {
-        public static Regex AmdGcnRegex = new Regex(@"Radeon (((HD|R(5|7|9|X)) )?((M?[2-6]\d{2}(\D|$))|([7-8]\d{3}(\D|$))|Fury|Nano))|(Pro Duo)");
+        [GeneratedRegex("Radeon (((HD|R(5|7|9|X)) )?((M?[2-6]\\d{2}(\\D|$))|([7-8]\\d{3}(\\D|$))|Fury|Nano))|(Pro Duo)")]
+        public static partial Regex AmdGcnRegex();
 
         public static Vendor FromId(uint id)
         {

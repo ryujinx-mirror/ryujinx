@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Ryujinx.HLE.Loaders.Executables
 {
-    class NsoExecutable : IExecutable
+    partial class NsoExecutable : IExecutable
     {
         public byte[] Program { get; }
         public Span<byte> Text => Program.AsSpan((int)TextOffset, (int)TextSize);
@@ -28,6 +28,13 @@ namespace Ryujinx.HLE.Loaders.Executables
 
         public string        Name;
         public Array32<byte> BuildId;
+
+        [GeneratedRegex(@"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+        private static partial Regex ModuleRegex();
+        [GeneratedRegex(@"sdk_version: ([0-9.]*)")]
+        private static partial Regex FsSdkRegex();
+        [GeneratedRegex(@"SDK MW[ -~]*")]
+        private static partial Regex SdkMwRegex();
 
         public NsoExecutable(IStorage inStorage, string name = null)
         {
@@ -83,7 +90,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             if (string.IsNullOrEmpty(modulePath))
             {
-                Match moduleMatch = Regex.Match(rawTextBuffer, @"[a-z]:[\\/][ -~]{5,}\.nss", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+                Match moduleMatch = ModuleRegex().Match(rawTextBuffer);
                 if (moduleMatch.Success)
                 {
                     modulePath = moduleMatch.Value;
@@ -92,13 +99,13 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             stringBuilder.AppendLine($"    Module: {modulePath}");
 
-            Match fsSdkMatch = Regex.Match(rawTextBuffer, @"sdk_version: ([0-9.]*)", RegexOptions.Compiled);
+            Match fsSdkMatch = FsSdkRegex().Match(rawTextBuffer);
             if (fsSdkMatch.Success)
             {
                 stringBuilder.AppendLine($"    FS SDK Version: {fsSdkMatch.Value.Replace("sdk_version: ", "")}");
             }
 
-            MatchCollection sdkMwMatches = Regex.Matches(rawTextBuffer, @"SDK MW[ -~]*", RegexOptions.Compiled);
+            MatchCollection sdkMwMatches = SdkMwRegex().Matches(rawTextBuffer);
             if (sdkMwMatches.Count != 0)
             {
                 string libHeader  = "    SDK Libraries: ";

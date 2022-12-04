@@ -18,7 +18,7 @@ using System.Text.RegularExpressions;
 
 namespace Ryujinx.HLE.HOS.Applets.Error
 {
-    internal class ErrorApplet : IApplet
+    internal partial class ErrorApplet : IApplet
     {
         private const long ErrorMessageBinaryTitleId = 0x0100000000000801;
 
@@ -29,6 +29,9 @@ namespace Ryujinx.HLE.HOS.Applets.Error
         private byte[]            _errorStorage;
 
         public event EventHandler AppletStateChanged;
+
+        [GeneratedRegex(@"[^\u0000\u0009\u000A\u000D\u0020-\uFFFF]..")]
+        private static partial Regex CleanTextRegex();
 
         public ErrorApplet(Horizon horizon)
         {
@@ -101,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
         private static string CleanText(string value)
         {
-            return Regex.Replace(value, @"[^\u0000\u0009\u000A\u000D\u0020-\uFFFF]..", "").Replace("\0", "");
+            return CleanTextRegex().Replace(value, "").Replace("\0", "");
         }
 
         private string GetMessageText(uint module, uint description, string key)
