@@ -1088,10 +1088,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             FormatInfo formatInfo = TextureCompatibility.ToHostCompatibleFormat(info, caps);
 
-            if (info.Target == Target.TextureBuffer)
+            if (info.Target == Target.TextureBuffer && !caps.SupportsSnormBufferTextureFormat)
             {
-                // We assume that the host does not support signed normalized format
-                // (as is the case with OpenGL), so we just use a unsigned format.
+                // If the host does not support signed normalized formats, we use a signed integer format instead.
                 // The shader will need the appropriate conversion code to compensate.
                 switch (formatInfo.Format)
                 {

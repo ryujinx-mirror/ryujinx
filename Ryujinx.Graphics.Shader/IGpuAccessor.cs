@@ -286,6 +286,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU support for signed normalized buffer texture formats.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports the formats, false otherwise</returns>
+        bool QueryHostSupportsSnormBufferTextureFormat()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU texture shadow LOD support.
         /// </summary>
         /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>

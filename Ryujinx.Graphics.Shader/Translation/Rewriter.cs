@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             bool isVertexShader = config.Stage == ShaderStage.Vertex;
             bool hasConstantBufferDrawParameters = config.GpuAccessor.QueryHasConstantBufferDrawParameters();
+            bool supportsSnormBufferTextureFormat = config.GpuAccessor.QueryHostSupportsSnormBufferTextureFormat();
 
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
@@ -52,7 +53,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         {
                             node = RewriteTextureSample(node, config);
 
-                            if (texOp.Type == SamplerType.TextureBuffer)
+                            if (texOp.Type == SamplerType.TextureBuffer && !supportsSnormBufferTextureFormat)
                             {
                                 node = InsertSnormNormalization(node, config);
                             }
