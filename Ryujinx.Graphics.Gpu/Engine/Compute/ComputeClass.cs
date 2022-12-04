@@ -202,57 +202,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 _channel.BufferManager.SetComputeUniformBuffer(cb.Slot, cbDescriptor.PackAddress(), (uint)cbDescriptor.Size);
             }
 
-            _channel.BufferManager.SetComputeStorageBufferBindings(info.SBuffers);
-            _channel.BufferManager.SetComputeUniformBufferBindings(info.CBuffers);
+            _channel.BufferManager.SetComputeBufferBindings(cs.Bindings);
 
-            int maxTextureBinding = -1;
-            int maxImageBinding = -1;
-
-            TextureBindingInfo[] textureBindings = _channel.TextureManager.RentComputeTextureBindings(info.Textures.Count);
-
-            for (int index = 0; index < info.Textures.Count; index++)
-            {
-                var descriptor = info.Textures[index];
-
-                Target target = ShaderTexture.GetTarget(descriptor.Type);
-
-                textureBindings[index] = new TextureBindingInfo(
-                    target,
-                    descriptor.Binding,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Flags);
-
-                if (descriptor.Binding > maxTextureBinding)
-                {
-                    maxTextureBinding = descriptor.Binding;
-                }
-            }
-
-            TextureBindingInfo[] imageBindings = _channel.TextureManager.RentComputeImageBindings(info.Images.Count);
-
-            for (int index = 0; index < info.Images.Count; index++)
-            {
-                var descriptor = info.Images[index];
-
-                Target target = ShaderTexture.GetTarget(descriptor.Type);
-                Format format = ShaderTexture.GetFormat(descriptor.Format);
-
-                imageBindings[index] = new TextureBindingInfo(
-                    target,
-                    format,
-                    descriptor.Binding,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Flags);
-
-                if (descriptor.Binding > maxImageBinding)
-                {
-                    maxImageBinding = descriptor.Binding;
-                }
-            }
-
-            _channel.TextureManager.SetComputeMaxBindings(maxTextureBinding, maxImageBinding);
+            _channel.TextureManager.SetComputeBindings(cs.Bindings);
 
             // Should never return false for mismatching spec state, since the shader was fetched above.
             _channel.TextureManager.CommitComputeBindings(cs.SpecializationState);

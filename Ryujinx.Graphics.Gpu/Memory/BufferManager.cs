@@ -1,10 +1,10 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
+using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             /// <summary>
             /// Shader buffer binding information.
             /// </summary>
-            public BufferDescriptor[] Bindings { get; }
+            public BufferDescriptor[] Bindings { get; private set; }
 
             /// <summary>
             /// Buffer regions.
@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             /// Sets shader buffer binding information.
             /// </summary>
             /// <param name="descriptors">Buffer binding information</param>
-            public void SetBindings(ReadOnlyCollection<BufferDescriptor> descriptors)
+            public void SetBindings(BufferDescriptor[] descriptors)
             {
                 if (descriptors == null)
                 {
@@ -86,8 +86,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     return;
                 }
 
-                descriptors.CopyTo(Bindings, 0);
-                Count = descriptors.Count;
+                if ((Count = descriptors.Length) != 0)
+                {
+                    Bindings = descriptors;
+                }
             }
         }
 
@@ -320,41 +322,26 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Sets the binding points for the storage buffers bound on the compute pipeline.
         /// </summary>
-        /// <param name="descriptors">Buffer descriptors with the binding point values</param>
-        public void SetComputeStorageBufferBindings(ReadOnlyCollection<BufferDescriptor> descriptors)
+        /// <param name="bindings">Bindings for the active shader</param>
+        public void SetComputeBufferBindings(CachedShaderBindings bindings)
         {
-            _cpStorageBuffers.SetBindings(descriptors);
+            _cpStorageBuffers.SetBindings(bindings.StorageBufferBindings[0]);
+            _cpUniformBuffers.SetBindings(bindings.ConstantBufferBindings[0]);
         }
 
         /// <summary>
         /// Sets the binding points for the storage buffers bound on the graphics pipeline.
         /// </summary>
-        /// <param name="stage">Index of the shader stage</param>
-        /// <param name="descriptors">Buffer descriptors with the binding point values</param>
-        public void SetGraphicsStorageBufferBindings(int stage, ReadOnlyCollection<BufferDescriptor> descriptors)
+        /// <param name="bindings">Bindings for the active shader</param>
+        public void SetGraphicsBufferBindings(CachedShaderBindings bindings)
         {
-            _gpStorageBuffers[stage].SetBindings(descriptors);
+            for (int i = 0; i < Constants.ShaderStages; i++)
+            {
+                _gpStorageBuffers[i].SetBindings(bindings.StorageBufferBindings[i]);
+                _gpUniformBuffers[i].SetBindings(bindings.ConstantBufferBindings[i]);
+            }
+
             _gpStorageBuffersDirty = true;
-        }
-
-        /// <summary>
-        /// Sets the binding points for the uniform buffers bound on the compute pipeline.
-        /// </summary>
-        /// <param name="descriptors">Buffer descriptors with the binding point values</param>
-        public void SetComputeUniformBufferBindings(ReadOnlyCollection<BufferDescriptor> descriptors)
-        {
-            _cpUniformBuffers.SetBindings(descriptors);
-        }
-
-        /// <summary>
-        /// Sets the enabled uniform buffers mask on the graphics pipeline.
-        /// Each bit set on the mask indicates that the respective buffer index is enabled.
-        /// </summary>
-        /// <param name="stage">Index of the shader stage</param>
-        /// <param name="descriptors">Buffer descriptors with the binding point values</param>
-        public void SetGraphicsUniformBufferBindings(int stage, ReadOnlyCollection<BufferDescriptor> descriptors)
-        {
-            _gpUniformBuffers[stage].SetBindings(descriptors);
             _gpUniformBuffersDirty = true;
         }
 

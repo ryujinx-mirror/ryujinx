@@ -1257,88 +1257,24 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 UpdateUserClipState();
             }
 
+            UpdateShaderBindings(gs.Bindings);
+
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
-                UpdateStageBindings(stageIndex, gs.Shaders[stageIndex + 1]?.Info);
+                _currentProgramInfo[stageIndex] = gs.Shaders[stageIndex + 1]?.Info;
             }
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
         }
 
         /// <summary>
-        /// Updates bindings consumed by the shader stage on the texture and buffer managers.
+        /// Updates bindings consumed by the shader on the texture and buffer managers.
         /// </summary>
-        /// <param name="stage">Shader stage to have the bindings updated</param>
-        /// <param name="info">Shader stage bindings info</param>
-        private void UpdateStageBindings(int stage, ShaderProgramInfo info)
+        /// <param name="bindings">Bindings for the active shader</param>
+        private void UpdateShaderBindings(CachedShaderBindings bindings)
         {
-            _currentProgramInfo[stage] = info;
-
-            if (info == null)
-            {
-                _channel.TextureManager.RentGraphicsTextureBindings(stage, 0);
-                _channel.TextureManager.RentGraphicsImageBindings(stage, 0);
-                _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, null);
-                _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, null);
-                return;
-            }
-
-            int maxTextureBinding = -1;
-            int maxImageBinding = -1;
-
-            Span<TextureBindingInfo> textureBindings = _channel.TextureManager.RentGraphicsTextureBindings(stage, info.Textures.Count);
-
-            if (info.UsesRtLayer)
-            {
-                _vtgWritesRtLayer = true;
-            }
-
-            for (int index = 0; index < info.Textures.Count; index++)
-            {
-                var descriptor = info.Textures[index];
-
-                Target target = ShaderTexture.GetTarget(descriptor.Type);
-
-                textureBindings[index] = new TextureBindingInfo(
-                    target,
-                    descriptor.Binding,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Flags);
-
-                if (descriptor.Binding > maxTextureBinding)
-                {
-                    maxTextureBinding = descriptor.Binding;
-                }
-            }
-
-            TextureBindingInfo[] imageBindings = _channel.TextureManager.RentGraphicsImageBindings(stage, info.Images.Count);
-
-            for (int index = 0; index < info.Images.Count; index++)
-            {
-                var descriptor = info.Images[index];
-
-                Target target = ShaderTexture.GetTarget(descriptor.Type);
-                Format format = ShaderTexture.GetFormat(descriptor.Format);
-
-                imageBindings[index] = new TextureBindingInfo(
-                    target,
-                    format,
-                    descriptor.Binding,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Flags);
-
-                if (descriptor.Binding > maxImageBinding)
-                {
-                    maxImageBinding = descriptor.Binding;
-                }
-            }
-
-            _channel.TextureManager.SetGraphicsMaxBindings(maxTextureBinding, maxImageBinding);
-
-            _channel.BufferManager.SetGraphicsStorageBufferBindings(stage, info.SBuffers);
-            _channel.BufferManager.SetGraphicsUniformBufferBindings(stage, info.CBuffers);
+            _channel.TextureManager.SetGraphicsBindings(bindings);
+            _channel.BufferManager.SetGraphicsBufferBindings(bindings);
         }
 
         /// <summary>
