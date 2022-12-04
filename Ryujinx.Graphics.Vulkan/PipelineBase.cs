@@ -1263,7 +1263,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             FramebufferParams = new FramebufferParams(Device, colors, depthStencil);
             UpdatePipelineAttachmentFormats();
-            _newState.SamplesCount = FramebufferParams.AttachmentSamples.Length != 0 ? FramebufferParams.AttachmentSamples[0] : 1;
         }
 
         protected void UpdatePipelineAttachmentFormats()
@@ -1279,6 +1278,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _newState.ColorBlendAttachmentStateCount = (uint)(FramebufferParams.MaxColorAttachmentIndex + 1);
             _newState.HasDepthStencil = FramebufferParams.HasDepthStencil;
+            _newState.SamplesCount = FramebufferParams.AttachmentSamples.Length != 0 ? FramebufferParams.AttachmentSamples[0] : 1;
         }
 
         protected unsafe void CreateRenderPass()
@@ -1307,7 +1307,7 @@ namespace Ryujinx.Graphics.Vulkan
                     attachmentDescs[i] = new AttachmentDescription(
                         0,
                         FramebufferParams.AttachmentFormats[i],
-                        TextureStorage.ConvertToSampleCountFlags(FramebufferParams.AttachmentSamples[i]),
+                        TextureStorage.ConvertToSampleCountFlags(Gd.Capabilities.SupportedSampleCounts, FramebufferParams.AttachmentSamples[i]),
                         AttachmentLoadOp.Load,
                         AttachmentStoreOp.Store,
                         AttachmentLoadOp.Load,

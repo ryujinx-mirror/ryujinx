@@ -20,9 +20,10 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programColorBlitClearAlpha;
         private readonly IProgram _programColorClear;
         private readonly IProgram _programStrideChange;
-        private readonly IProgram _programColorCopyBetweenMsNonMs;
         private readonly IProgram _programConvertIndexBuffer;
         private readonly IProgram _programConvertIndirectData;
+        private readonly IProgram _programColorCopyToNonMs;
+        private readonly IProgram _programColorDrawToMs;
 
         public HelperShader(VulkanRenderer gd, Device device)
         {
@@ -32,13 +33,13 @@ namespace Ryujinx.Graphics.Vulkan
             _samplerLinear = gd.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
             _samplerNearest = gd.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Nearest, MagFilter.Nearest));
 
-            var vertexBindings = new ShaderBindings(
+            var colorBlitVertexBindings = new ShaderBindings(
                 new[] { 1 },
                 Array.Empty<int>(),
                 Array.Empty<int>(),
                 Array.Empty<int>());
 
-            var fragmentBindings = new ShaderBindings(
+            var colorBlitFragmentBindings = new ShaderBindings(
                 Array.Empty<int>(),
                 Array.Empty<int>(),
                 new[] { 0 },
@@ -46,17 +47,17 @@ namespace Ryujinx.Graphics.Vulkan
 
             _programColorBlit = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, vertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorBlitFragmentShaderSource, fragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitFragmentShaderSource, colorBlitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             _programColorBlitClearAlpha = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, vertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorBlitClearAlphaFragmentShaderSource, fragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitClearAlphaFragmentShaderSource, colorBlitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
-            var fragmentBindings2 = new ShaderBindings(
+            var colorClearFragmentBindings = new ShaderBindings(
                 Array.Empty<int>(),
                 Array.Empty<int>(),
                 Array.Empty<int>(),
@@ -64,8 +65,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             _programColorClear = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, vertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorClearFragmentShaderSource, fragmentBindings2, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             var strideChangeBindings = new ShaderBindings(
@@ -79,18 +80,33 @@ namespace Ryujinx.Graphics.Vulkan
                 new ShaderSource(ShaderBinaries.ChangeBufferStrideShaderSource, strideChangeBindings, ShaderStage.Compute, TargetLanguage.Spirv),
             });
 
-            var colorCopyMSBindings = new ShaderBindings(
+            var colorCopyToNonMsBindings = new ShaderBindings(
                 new[] { 0 },
                 Array.Empty<int>(),
                 new[] { 0 },
                 new[] { 0 });
 
-            _programColorCopyBetweenMsNonMs = gd.CreateProgramWithMinimalLayout(new[]
+            _programColorCopyToNonMs = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorCopyBetweenMsNonMs, colorCopyMSBindings, ShaderStage.Compute, TargetLanguage.Spirv),
-            }, new[]
+                new ShaderSource(ShaderBinaries.ColorCopyToNonMsComputeShaderSource, colorCopyToNonMsBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+            });
+
+            var colorDrawToMsVertexBindings = new ShaderBindings(
+                Array.Empty<int>(),
+                Array.Empty<int>(),
+                Array.Empty<int>(),
+                Array.Empty<int>());
+
+            var colorDrawToMsFragmentBindings = new ShaderBindings(
+                new[] { 0 },
+                Array.Empty<int>(),
+                new[] { 0 },
+                Array.Empty<int>());
+
+            _programColorDrawToMs = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new SpecDescription((0, SpecConstType.Int32))
+                new ShaderSource(ShaderBinaries.ColorDrawToMsVertexShaderSource, colorDrawToMsVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorDrawToMsFragmentShaderSource, colorDrawToMsFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             var convertIndexBufferBindings = new ShaderBindings(
@@ -509,35 +525,17 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void CopyMSToNonMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
         {
-            CopyMS(gd, cbs, src, dst, srcLayer, dstLayer, depth, src.Info.Samples, dst.Info.Width, dst.Info.Height);
-        }
-
-        public void CopyNonMSToMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
-        {
-            CopyMS(gd, cbs, src, dst, srcLayer, dstLayer, depth, dst.Info.Samples, src.Info.Width, src.Info.Height);
-        }
-
-        private void CopyMS(
-            VulkanRenderer gd,
-            CommandBufferScoped cbs,
-            TextureView src,
-            TextureView dst,
-            int srcLayer,
-            int dstLayer,
-            int depth,
-            int samples,
-            int nonMSWidth,
-            int nonMSHeight)
-        {
             const int ParamsBufferSize = 16;
 
             Span<int> shaderParams = stackalloc int[ParamsBufferSize / sizeof(int)];
+
+            int samples = src.Info.Samples;
 
             // X and Y are the expected texture samples.
             // Z and W are the actual texture samples used.
             // They may differ if the GPU does not support the samples count requested and we had to use a lower amount.
             (shaderParams[0], shaderParams[1]) = GetSampleCountXYLog2(samples);
-            (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags((uint)samples));
+            (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, (uint)samples));
 
             var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
 
@@ -559,17 +557,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             _pipeline.SetCommandBuffer(cbs);
 
-            _pipeline.SetProgram(_programColorCopyBetweenMsNonMs);
+            _pipeline.SetProgram(_programColorCopyToNonMs);
 
             var format = GetFormat(src.Info.BytesPerPixel);
 
-            int dispatchX = (nonMSWidth + 31) / 32;
-            int dispatchY = (nonMSHeight + 31) / 32;
-
-            // Specialize shader.
-            bool srcIsMs = src.Info.Target.IsMultisample();
-            int conversionType = srcIsMs ? src.Info.BytesPerPixel : -src.Info.BytesPerPixel;
-            _pipeline.Specialize(conversionType);
+            int dispatchX = (dst.Info.Width + 31) / 32;
+            int dispatchY = (dst.Info.Height + 31) / 32;
 
             _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
 
@@ -615,6 +608,129 @@ namespace Ryujinx.Graphics.Vulkan
                 PipelineStageFlags.ComputeShaderBit,
                 PipelineStageFlags.AllCommandsBit,
                 ImageAspectFlags.ColorBit,
+                dst.FirstLayer + dstLayer,
+                dst.FirstLevel,
+                depth,
+                1);
+        }
+
+        public void CopyNonMSToMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
+        {
+            const int ParamsBufferSize = 16;
+
+            Span<int> shaderParams = stackalloc int[ParamsBufferSize / sizeof(int)];
+
+            int samples = dst.Info.Samples;
+
+            // X and Y are the expected texture samples.
+            // Z and W are the actual texture samples used.
+            // They may differ if the GPU does not support the samples count requested and we had to use a lower amount.
+            (shaderParams[0], shaderParams[1]) = GetSampleCountXYLog2(samples);
+            (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, (uint)samples));
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+
+            gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                src.GetImage().Get(cbs).Value,
+                TextureStorage.DefaultAccessMask,
+                AccessFlags.AccessShaderReadBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                PipelineStageFlags.PipelineStageFragmentShaderBit,
+                ImageAspectFlags.ImageAspectColorBit,
+                src.FirstLayer + srcLayer,
+                src.FirstLevel,
+                depth,
+                1);
+
+            _pipeline.SetCommandBuffer(cbs);
+
+            _pipeline.SetProgram(_programColorDrawToMs);
+
+            Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
+
+            var rect = new Rectangle<float>(0, 0, dst.Width, dst.Height);
+
+            viewports[0] = new GAL.Viewport(
+                rect,
+                ViewportSwizzle.PositiveX,
+                ViewportSwizzle.PositiveY,
+                ViewportSwizzle.PositiveZ,
+                ViewportSwizzle.PositiveW,
+                0f,
+                1f);
+
+            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
+
+            scissors[0] = new Rectangle<int>(0, 0, dst.Width, dst.Height);
+
+            _pipeline.SetRenderTargetColorMasks(new uint[] { 0xf });
+            _pipeline.SetScissors(scissors);
+            _pipeline.SetViewports(viewports, false);
+            _pipeline.SetPrimitiveTopology(GAL.PrimitiveTopology.TriangleStrip);
+
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
+
+            var format = GetFormat(src.Info.BytesPerPixel);
+            var vkFormat = FormatTable.GetFormat(format);
+
+            if (src.Info.Target == Target.Texture2DMultisampleArray ||
+                dst.Info.Target == Target.Texture2DMultisampleArray)
+            {
+                for (int z = 0; z < depth; z++)
+                {
+                    var srcView = Create2DLayerView(src, srcLayer + z, format);
+                    var dstView = Create2DLayerView(dst, dstLayer + z);
+
+                    _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, srcView, null);
+                    _pipeline.SetRenderTarget(
+                        ((TextureView)dstView).GetView(format).GetImageViewForAttachment(),
+                        (uint)dst.Width,
+                        (uint)dst.Height,
+                        (uint)samples,
+                        false,
+                        vkFormat);
+
+                    _pipeline.Draw(4, 1, 0, 0);
+
+                    srcView.Release();
+                    dstView.Release();
+                }
+            }
+            else
+            {
+                var srcView = Create2DLayerView(src, srcLayer, format);
+
+                _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, srcView, null);
+                _pipeline.SetRenderTarget(
+                    dst.GetView(format).GetImageViewForAttachment(),
+                    (uint)dst.Width,
+                    (uint)dst.Height,
+                    (uint)samples,
+                    false,
+                    vkFormat);
+
+                _pipeline.Draw(4, 1, 0, 0);
+
+                srcView.Release();
+            }
+
+            gd.BufferManager.Delete(bufferHandle);
+
+            _pipeline.Finish(gd, cbs);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                dst.GetImage().Get(cbs).Value,
+                AccessFlags.AccessColorAttachmentWriteBit,
+                TextureStorage.DefaultAccessMask,
+                PipelineStageFlags.PipelineStageFragmentShaderBit,
+                PipelineStageFlags.PipelineStageAllCommandsBit,
+                ImageAspectFlags.ImageAspectColorBit,
                 dst.FirstLayer + dstLayer,
                 dst.FirstLevel,
                 depth,
@@ -834,9 +950,10 @@ namespace Ryujinx.Graphics.Vulkan
                 _programColorBlit.Dispose();
                 _programColorClear.Dispose();
                 _programStrideChange.Dispose();
-                _programColorCopyBetweenMsNonMs.Dispose();
                 _programConvertIndexBuffer.Dispose();
                 _programConvertIndirectData.Dispose();
+                _programColorCopyToNonMs.Dispose();
+                _programColorDrawToMs.Dispose();
                 _samplerNearest.Dispose();
                 _samplerLinear.Dispose();
                 _pipeline.Dispose();

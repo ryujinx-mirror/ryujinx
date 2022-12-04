@@ -439,7 +439,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     SType = StructureType.PipelineMultisampleStateCreateInfo,
                     SampleShadingEnable = false,
-                    RasterizationSamples = TextureStorage.ConvertToSampleCountFlags(SamplesCount),
+                    RasterizationSamples = TextureStorage.ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, SamplesCount),
                     MinSampleShading = 1,
                     AlphaToCoverageEnable = AlphaToCoverageEnable,
                     AlphaToOneEnable = AlphaToOneEnable

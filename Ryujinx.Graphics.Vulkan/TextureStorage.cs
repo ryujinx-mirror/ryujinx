@@ -77,7 +77,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             var extent = new Extent3D((uint)info.Width, (uint)info.Height, depth);
 
-            var sampleCountFlags = ConvertToSampleCountFlags((uint)info.Samples);
+            var sampleCountFlags = ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, (uint)info.Samples);
 
             var usage = DefaultUsageFlags;
 
@@ -306,7 +306,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public static SampleCountFlags ConvertToSampleCountFlags(uint samples)
+        public static SampleCountFlags ConvertToSampleCountFlags(SampleCountFlags supportedSampleCounts, uint samples)
         {
             if (samples == 0 || samples > (uint)SampleCountFlags.Count64Bit)
             {
@@ -314,7 +314,15 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             // Round up to the nearest power of two.
-            return (SampleCountFlags)(1u << (31 - BitOperations.LeadingZeroCount(samples)));
+            SampleCountFlags converted = (SampleCountFlags)(1u << (31 - BitOperations.LeadingZeroCount(samples)));
+
+            // Pick nearest sample count that the host actually supports.
+            while (converted != SampleCountFlags.SampleCount1Bit && (converted & supportedSampleCounts) == 0)
+            {
+                converted = (SampleCountFlags)((uint)converted >> 1);
+            }
+
+            return converted;
         }
 
         public TextureView CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)

@@ -32,6 +32,7 @@ namespace Ryujinx.Graphics.Vulkan
             Auto<DisposableImageView> view,
             uint width,
             uint height,
+            uint samples,
             bool isDepthStencil,
             VkFormat format)
         {
@@ -43,7 +44,7 @@ namespace Ryujinx.Graphics.Vulkan
             Height = height;
             Layers = 1;
 
-            AttachmentSamples = new[] { 1u };
+            AttachmentSamples = new[] { samples };
             AttachmentFormats = new[] { format };
             AttachmentIndices = new[] { 0 };
 
