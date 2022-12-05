@@ -11,13 +11,17 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             RunOptimizationPasses(blocks);
 
+            int sbUseMask = 0;
+
             // Those passes are looking for specific patterns and only needs to run once.
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
-                GlobalToStorage.RunPass(blocks[blkIndex], config);
+                GlobalToStorage.RunPass(blocks[blkIndex], config, ref sbUseMask);
                 BindlessToIndexed.RunPass(blocks[blkIndex], config);
                 BindlessElimination.RunPass(blocks[blkIndex], config);
             }
+
+            config.SetAccessibleStorageBuffersMask(sbUseMask);
 
             // Run optimizations one last time to remove any code that is now optimizable after above passes.
             RunOptimizationPasses(blocks);

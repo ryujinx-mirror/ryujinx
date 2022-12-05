@@ -8,14 +8,25 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class GlobalToStorage
     {
-        public static void RunPass(BasicBlock block, ShaderConfig config)
+        public static void RunPass(BasicBlock block, ShaderConfig config, ref int sbUseMask)
         {
             int sbStart = GetStorageBaseCbOffset(config.Stage);
-
             int sbEnd = sbStart + StorageDescsSize;
 
             for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
             {
+                for (int index = 0; index < node.Value.SourcesCount; index++)
+                {
+                    Operand src = node.Value.GetSource(index);
+
+                    int storageIndex = GetStorageIndex(src, sbStart, sbEnd);
+
+                    if (storageIndex >= 0)
+                    {
+                        sbUseMask |= 1 << storageIndex;
+                    }
+                }
+
                 if (!(node.Value is Operation operation))
                 {
                     continue;
@@ -52,6 +63,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     }
                 }
             }
+
+            config.SetAccessibleStorageBuffersMask(sbUseMask);
         }
 
         private static LinkedListNode<INode> ReplaceGlobalWithStorage(BasicBlock block, LinkedListNode<INode> node, ShaderConfig config, int storageIndex)

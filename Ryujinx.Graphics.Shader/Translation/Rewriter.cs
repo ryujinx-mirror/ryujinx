@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 using static Ryujinx.Graphics.Shader.Translation.GlobalMemory;
@@ -88,8 +89,14 @@ namespace Ryujinx.Graphics.Shader.Translation
             Operand sbBaseAddrLow = Const(0);
             Operand sbSlot        = Const(0);
 
-            for (int slot = 0; slot < StorageMaxCount; slot++)
+            int sbUseMask = config.AccessibleStorageBuffersMask;
+
+            while (sbUseMask != 0)
             {
+                int slot = BitOperations.TrailingZeroCount(sbUseMask);
+
+                sbUseMask &= ~(1 << slot);
+
                 config.SetUsedStorageBuffer(slot, isWrite);
 
                 int cbOffset = GetStorageCbOffset(config.Stage, slot);
