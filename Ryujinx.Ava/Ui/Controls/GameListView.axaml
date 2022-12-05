@@ -10,7 +10,8 @@
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Focusable="True">
     <UserControl.Resources>
         <controls:BitmapArrayValueConverter x:Key="ByteImage" />
         <MenuFlyout x:Key="GameContextMenu" Opened="MenuBase_OnMenuOpened">
@@ -115,8 +116,8 @@
                     <Setter Property="Padding" Value="0" />
                     <Setter Property="Margin" Value="0" />
                     <Setter Property="CornerRadius" Value="5" />
-                    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark3}" />
-                    <Setter Property="BorderThickness" Value="2" />
+                    <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
+                    <Setter Property="BorderThickness" Value="2"/>
                     <Style.Animations>
                         <Animation Duration="0:0:0.7">
                             <KeyFrame Cue="0%">
@@ -133,6 +134,12 @@
                             </KeyFrame>
                         </Animation>
                     </Style.Animations>
+                </Style>
+                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
+                </Style>
+                <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource AppListHoverBackgroundColor}" />
                 </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
@@ -152,9 +159,6 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition />
-                                </Grid.RowDefinitions>
                                 <Image
                                     Grid.RowSpan="3"
                                     Grid.Column="0"
@@ -169,7 +173,7 @@
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     Orientation="Vertical"
-                                    Spacing="5">
+                                    Spacing="5" >
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding TitleName}"
@@ -214,20 +218,10 @@
                                     Margin="-5,-5,0,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    FontSize="20"
-                                    Foreground="Yellow"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemAccentColor}"
                                     IsVisible="{Binding Favorite}"
                                     Symbol="StarFilled" />
-                                <ui:SymbolIcon
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Margin="-5,-5,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top"
-                                    FontSize="20"
-                                    Foreground="Black"
-                                    IsVisible="{Binding Favorite}"
-                                    Symbol="Star" />
                             </Grid>
                         </Border>
                     </Grid>

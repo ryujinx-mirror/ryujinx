@@ -4,7 +4,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         xmlns:Locale="clr-namespace:Ryujinx.Ava.Common.Locale"
-        x:Class="Ryujinx.Ava.Ui.Controls.ProfileImageSelectionDialog">
+        x:Class="Ryujinx.Ava.Ui.Controls.ProfileImageSelectionDialog"
+        Focusable="True">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,10,5, 5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

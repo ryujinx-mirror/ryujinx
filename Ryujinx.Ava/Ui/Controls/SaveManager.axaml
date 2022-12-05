@@ -9,7 +9,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Height="400"
              Width="550"
-             x:Class="Ryujinx.Ava.Ui.Controls.SaveManager">
+             x:Class="Ryujinx.Ava.Ui.Controls.SaveManager"
+             Focusable="True">
     <UserControl.Resources>
         <controls:BitmapArrayValueConverter x:Key="ByteImage" />
     </UserControl.Resources>

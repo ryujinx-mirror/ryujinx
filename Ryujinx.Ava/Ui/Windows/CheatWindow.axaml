@@ -12,7 +12,8 @@
     MinWidth="500"
     MinHeight="500"
     WindowStartupLocation="CenterOwner"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Focusable="True">
     <Window.Styles>
         <Style Selector="TreeViewItem">
             <Setter Property="IsExpanded" Value="True" />

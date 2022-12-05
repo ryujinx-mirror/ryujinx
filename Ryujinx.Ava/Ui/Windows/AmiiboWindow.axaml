@@ -11,7 +11,8 @@
                         WindowStartupLocation="CenterOwner"
                         Width="800" MinHeight="650" Height="650"
                         SizeToContent="Manual"
-                        MinWidth="600">
+                        MinWidth="600"
+                        Focusable="True">
     <Design.DataContext>
         <viewModels:AmiiboWindowViewModel />
     </Design.DataContext>

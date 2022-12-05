@@ -10,7 +10,8 @@
              xmlns:Locale="clr-namespace:Ryujinx.Ava.Common.Locale"
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:viewModels="clr-namespace:Ryujinx.Ava.Ui.ViewModels"
-             x:Class="Ryujinx.Ava.Ui.Controls.UserRecoverer">
+             x:Class="Ryujinx.Ava.Ui.Controls.UserRecoverer"
+             Focusable="True">
     <Design.DataContext>
         <viewModels:UserProfileViewModel />
     </Design.DataContext>

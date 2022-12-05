@@ -18,7 +18,8 @@
     WindowStartupLocation="CenterOwner"
     x:CompileBindings="True"
     x:DataType="viewModels:SettingsViewModel"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Focusable="True">
     <Design.DataContext>
         <viewModels:SettingsViewModel />
     </Design.DataContext>

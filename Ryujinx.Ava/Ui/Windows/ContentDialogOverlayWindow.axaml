@@ -8,7 +8,8 @@
                         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                         x:Class="Ryujinx.Ava.Ui.Windows.ContentDialogOverlayWindow"
                         xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
-                        Title="ContentDialogOverlayWindow">
+                        Title="ContentDialogOverlayWindow"
+                        Focusable="True">
     <window:StyleableWindow.Styles>
         <Style Selector="ui|ContentDialog /template/ Panel#LayoutRoot">
             <Setter Property="Background"

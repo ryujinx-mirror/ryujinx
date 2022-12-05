@@ -50,5 +50,7 @@
         <Color x:Key="SystemChromeWhiteColor">#FFFFFFFF</Color>
         <Color x:Key="ThemeForegroundColor">#FF000000</Color>
         <Color x:Key="MenuFlyoutPresenterBorderColor">#C1C1C1</Color>
+        <Color x:Key="AppListBackgroundColor">#b3ffffff</Color>
+        <Color x:Key="AppListHoverBackgroundColor">#80cccccc</Color>
     </Styles.Resources>
 </Styles>
