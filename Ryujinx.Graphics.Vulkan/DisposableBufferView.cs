@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    struct DisposableBufferView : System.IDisposable
+    readonly struct DisposableBufferView : System.IDisposable
     {
         private readonly Vk _api;
         private readonly Device _device;

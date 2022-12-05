@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// <summary>
     /// Memory range used for buffers.
     /// </summary>
-    struct BufferBounds
+    readonly struct BufferBounds
     {
         /// <summary>
         /// Region virtual address.

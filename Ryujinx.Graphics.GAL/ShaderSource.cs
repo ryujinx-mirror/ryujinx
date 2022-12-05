@@ -3,7 +3,7 @@ using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct ShaderSource
+    public readonly struct ShaderSource
     {
         public string Code { get; }
         public byte[] BinaryCode { get; }

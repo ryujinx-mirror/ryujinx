@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.Vulkan
 {
-    struct BitMap
+    readonly struct BitMap
     {
         public const int IntSize = 64;
 

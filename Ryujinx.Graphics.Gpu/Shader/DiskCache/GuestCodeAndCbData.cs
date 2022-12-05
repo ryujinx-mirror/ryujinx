@@ -3,7 +3,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
     /// <summary>
     /// Guest shader code and constant buffer data accessed by the shader.
     /// </summary>
-    struct GuestCodeAndCbData
+    readonly struct GuestCodeAndCbData
     {
         /// <summary>
         /// Maxwell binary shader code.

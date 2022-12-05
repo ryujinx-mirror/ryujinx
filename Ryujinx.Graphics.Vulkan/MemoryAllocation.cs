@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    struct MemoryAllocation : IDisposable
+    readonly struct MemoryAllocation : IDisposable
     {
         private readonly MemoryAllocatorBlockList _owner;
         private readonly MemoryAllocatorBlockList.Block _block;

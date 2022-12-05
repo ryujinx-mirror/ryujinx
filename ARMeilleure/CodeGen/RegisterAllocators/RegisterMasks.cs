@@ -3,7 +3,7 @@ using System;
 
 namespace ARMeilleure.CodeGen.RegisterAllocators
 {
-    struct RegisterMasks
+    readonly struct RegisterMasks
     {
         public int IntAvailableRegisters   { get; }
         public int VecAvailableRegisters   { get; }

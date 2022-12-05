@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// <summary>
     /// State used by the <see cref="GpuAccessor"/>.
     /// </summary>
-    struct GpuChannelPoolState : IEquatable<GpuChannelPoolState>
+    readonly struct GpuChannelPoolState : IEquatable<GpuChannelPoolState>
     {
         /// <summary>
         /// GPU virtual address of the texture pool.

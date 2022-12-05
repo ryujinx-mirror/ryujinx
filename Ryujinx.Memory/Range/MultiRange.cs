@@ -6,7 +6,7 @@ namespace Ryujinx.Memory.Range
     /// <summary>
     /// Sequence of physical memory regions that a single non-contiguous virtual memory region maps to.
     /// </summary>
-    public struct MultiRange : IEquatable<MultiRange>
+    public readonly struct MultiRange : IEquatable<MultiRange>
     {
         private readonly MemoryRange _singleRange;
         private readonly MemoryRange[] _ranges;

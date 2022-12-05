@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct TextureCreateInfo : IEquatable<TextureCreateInfo>
+    public readonly struct TextureCreateInfo : IEquatable<TextureCreateInfo>
     {
         public int Width         { get; }
         public int Height        { get; }
@@ -62,42 +62,42 @@ namespace Ryujinx.Graphics.GAL
             SwizzleA         = swizzleA;
         }
 
-        public readonly int GetMipSize(int level)
+        public int GetMipSize(int level)
         {
             return GetMipStride(level) * GetLevelHeight(level) * GetLevelDepth(level);
         }
 
-        public readonly int GetMipSize2D(int level)
+        public int GetMipSize2D(int level)
         {
             return GetMipStride(level) * GetLevelHeight(level);
         }
 
-        public readonly int GetMipStride(int level)
+        public int GetMipStride(int level)
         {
             return BitUtils.AlignUp(GetLevelWidth(level) * BytesPerPixel, 4);
         }
 
-        private readonly int GetLevelWidth(int level)
+        private int GetLevelWidth(int level)
         {
             return BitUtils.DivRoundUp(GetLevelSize(Width, level), BlockWidth);
         }
 
-        private readonly int GetLevelHeight(int level)
+        private int GetLevelHeight(int level)
         {
             return BitUtils.DivRoundUp(GetLevelSize(Height, level), BlockHeight);
         }
 
-        private readonly int GetLevelDepth(int level)
+        private int GetLevelDepth(int level)
         {
             return Target == Target.Texture3D ? GetLevelSize(Depth, level) : GetLayers();
         }
 
-        public readonly int GetDepthOrLayers()
+        public int GetDepthOrLayers()
         {
             return Target == Target.Texture3D ? Depth : GetLayers();
         }
 
-        public readonly int GetLayers()
+        public int GetLayers()
         {
             if (Target == Target.Texture2DArray ||
                 Target == Target.Texture2DMultisampleArray ||
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.GAL
             return 1;
         }
 
-        public readonly int GetLevelsClamped()
+        public int GetLevelsClamped()
         {
             int maxSize = Width;
 

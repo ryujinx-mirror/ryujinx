@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct Rectangle<T> where T : unmanaged
+    public readonly struct Rectangle<T> where T : unmanaged
     {
         public T X { get; }
         public T Y { get; }

@@ -106,7 +106,7 @@ namespace Ryujinx.Graphics.Vulkan
         }
     }
 
-    struct TopologyConversionIndirectCacheKey : ICacheKey
+    readonly struct TopologyConversionIndirectCacheKey : ICacheKey
     {
         private readonly TopologyConversionCacheKey _baseKey;
         private readonly BufferHolder _indirectDataBuffer;
@@ -178,7 +178,7 @@ namespace Ryujinx.Graphics.Vulkan
         }
     }
 
-    struct Dependency
+    readonly struct Dependency
     {
         private readonly BufferHolder _buffer;
         private readonly int _offset;

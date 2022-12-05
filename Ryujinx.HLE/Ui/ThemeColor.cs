@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.Ui
 {
-    public struct ThemeColor
+    public readonly struct ThemeColor
     {
         public float A { get; }
         public float R { get; }

@@ -2,7 +2,7 @@ using System;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    struct Register : IEquatable<Register>
+    readonly struct Register : IEquatable<Register>
     {
         public int Index { get; }
 

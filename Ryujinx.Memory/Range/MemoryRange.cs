@@ -1,11 +1,9 @@
-﻿using System;
-
-namespace Ryujinx.Memory.Range
+﻿namespace Ryujinx.Memory.Range
 {
     /// <summary>
     /// Range of memory composed of an address and size.
     /// </summary>
-    public struct MemoryRange : IEquatable<MemoryRange>
+    public readonly record struct MemoryRange
     {
         /// <summary>
         /// An empty memory range, with a null address and zero size.
@@ -58,21 +56,6 @@ namespace Ryujinx.Memory.Range
             }
 
             return thisAddress < otherEndAddress && otherAddress < thisEndAddress;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is MemoryRange other && Equals(other);
-        }
-
-        public bool Equals(MemoryRange other)
-        {
-            return Address == other.Address && Size == other.Size;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Address, Size);
         }
     }
 }

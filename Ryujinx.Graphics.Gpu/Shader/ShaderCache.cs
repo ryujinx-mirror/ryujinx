@@ -26,7 +26,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         public const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
 
-        private struct TranslatedShader
+        private readonly struct TranslatedShader
         {
             public readonly CachedShaderStage Shader;
             public readonly ShaderProgram Program;
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
-        private struct TranslatedShaderVertexPair
+        private readonly struct TranslatedShaderVertexPair
         {
             public readonly CachedShaderStage VertexA;
             public readonly CachedShaderStage VertexB;
@@ -59,7 +59,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private readonly Dictionary<ulong, CachedShaderProgram> _cpPrograms;
         private readonly Dictionary<ShaderAddresses, CachedShaderProgram> _gpPrograms;
 
-        private struct ProgramToSave
+        private readonly struct ProgramToSave
         {
             public readonly CachedShaderProgram CachedProgram;
             public readonly IProgram HostProgram;

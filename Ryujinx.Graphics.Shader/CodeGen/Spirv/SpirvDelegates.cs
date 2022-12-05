@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
     /// <summary>
     /// Delegate cache for SPIR-V instruction generators. Avoids delegate allocation when passing generators as arguments.
     /// </summary>
-    internal struct SpirvDelegates
+    internal readonly struct SpirvDelegates
     {
         // Unary
         public readonly FuncUnaryInstruction GlslFAbs;

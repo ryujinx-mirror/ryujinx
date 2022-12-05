@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// <summary>
     /// Paths where shader code was dumped on disk.
     /// </summary>
-    struct ShaderDumpPaths
+    readonly struct ShaderDumpPaths
     {
         /// <summary>
         /// Path where the full shader code with header was dumped, or null if not dumped.

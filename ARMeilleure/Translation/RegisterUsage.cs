@@ -14,7 +14,7 @@ namespace ARMeilleure.Translation
         private const int RegsCount = 32;
         private const int RegsMask  = RegsCount - 1;
 
-        private struct RegisterMask : IEquatable<RegisterMask>
+        private readonly struct RegisterMask : IEquatable<RegisterMask>
         {
             public long IntMask => Mask.GetElement(0);
             public long VecMask => Mask.GetElement(1);

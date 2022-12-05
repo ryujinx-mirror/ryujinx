@@ -11,7 +11,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
     {
         private class ParallelCopy
         {
-            private struct Copy
+            private readonly struct Copy
             {
                 public Register Dest   { get; }
                 public Register Source { get; }

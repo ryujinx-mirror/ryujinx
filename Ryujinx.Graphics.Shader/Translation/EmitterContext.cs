@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int OperationsCount => _operations.Count;
 
-        private struct BrxTarget
+        private readonly struct BrxTarget
         {
             public readonly Operand Selector;
             public readonly int ExpectedValue;

@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Texture information.
     /// </summary>
-    struct TextureInfo
+    readonly struct TextureInfo
     {
         /// <summary>
         /// Address of the texture in GPU mapped memory.

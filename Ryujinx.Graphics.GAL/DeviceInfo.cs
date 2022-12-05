@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct DeviceInfo
+    public readonly struct DeviceInfo
     {
         public readonly string Id;
         public readonly string Vendor;

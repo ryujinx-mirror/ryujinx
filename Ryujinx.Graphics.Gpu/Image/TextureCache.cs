@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class TextureCache : IDisposable
     {
-        private struct OverlapInfo
+        private readonly struct OverlapInfo
         {
             public TextureViewCompatibility Compatibility { get; }
             public int FirstLayer { get; }

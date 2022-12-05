@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Graphics.Device
 {
-    public struct RwCallback
+    public readonly struct RwCallback
     {
         public Action<int> Write { get; }
         public Func<int> Read { get; }

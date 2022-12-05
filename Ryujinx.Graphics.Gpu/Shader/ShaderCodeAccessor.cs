@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// <summary>
     /// Shader code accessor.
     /// </summary>
-    struct ShaderCodeAccessor : IDataAccessor
+    readonly struct ShaderCodeAccessor : IDataAccessor
     {
         private readonly MemoryManager _memoryManager;
         private readonly ulong _baseAddress;

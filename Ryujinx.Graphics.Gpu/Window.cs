@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Texture presented on the window.
         /// </summary>
-        private struct PresentationTexture
+        private readonly struct PresentationTexture
         {
             /// <summary>
             /// Texture cache where the texture might be located.

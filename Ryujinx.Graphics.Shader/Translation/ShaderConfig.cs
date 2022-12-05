@@ -69,36 +69,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         private int _usedStorageBuffers;
         private int _usedStorageBuffersWrite;
 
-        private struct TextureInfo : IEquatable<TextureInfo>
-        {
-            public int CbufSlot { get; }
-            public int Handle { get; }
-            public bool Indexed { get; }
-            public TextureFormat Format { get; }
-
-            public TextureInfo(int cbufSlot, int handle, bool indexed, TextureFormat format)
-            {
-                CbufSlot = cbufSlot;
-                Handle = handle;
-                Indexed = indexed;
-                Format = format;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is TextureInfo other && Equals(other);
-            }
-
-            public bool Equals(TextureInfo other)
-            {
-                return CbufSlot == other.CbufSlot && Handle == other.Handle && Indexed == other.Indexed && Format == other.Format;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(CbufSlot, Handle, Indexed, Format);
-            }
-        }
+        private readonly record struct TextureInfo(int CbufSlot, int Handle, bool Indexed, TextureFormat Format);
 
         private struct TextureMeta
         {

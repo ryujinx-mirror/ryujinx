@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
-    struct AttributeInfo
+    readonly struct AttributeInfo
     {
         private static readonly Dictionary<int, AttributeInfo> _builtInAttributes = new Dictionary<int, AttributeInfo>()
         {

@@ -1,6 +1,6 @@
 ﻿namespace SoundIOSharp
 {
-    public struct SoundIOSampleRateRange
+    public readonly struct SoundIOSampleRateRange
     {
         internal SoundIOSampleRateRange(int min, int max)
         {

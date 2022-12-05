@@ -3,7 +3,7 @@ using Spv.Generator;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
-    struct OperationResult
+    readonly struct OperationResult
     {
         public static OperationResult Invalid => new OperationResult(AggregateType.Invalid, null);
 

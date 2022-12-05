@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Vulkan
             public ulong Size { get; }
             public bool Mapped => HostPointer != IntPtr.Zero;
 
-            private struct Range : IComparable<Range>
+            private readonly struct Range : IComparable<Range>
             {
                 public ulong Offset { get; }
                 public ulong Size { get; }

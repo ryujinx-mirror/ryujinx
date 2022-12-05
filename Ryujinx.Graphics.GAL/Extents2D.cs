@@ -2,7 +2,7 @@ using Ryujinx.Common;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct Extents2D
+    public readonly struct Extents2D
     {
         public int X1 { get; }
         public int Y1 { get; }

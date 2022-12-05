@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
-    struct TransformFeedbackOutput
+    readonly struct TransformFeedbackOutput
     {
         public readonly bool Valid;
         public readonly int Buffer;

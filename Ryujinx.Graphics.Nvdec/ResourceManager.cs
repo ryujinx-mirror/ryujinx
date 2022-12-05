@@ -3,7 +3,7 @@ using Ryujinx.Graphics.Nvdec.Image;
 
 namespace Ryujinx.Graphics.Nvdec
 {
-    struct ResourceManager
+    readonly struct ResourceManager
     {
         public MemoryManager Gmm { get; }
         public SurfaceCache Cache { get; }

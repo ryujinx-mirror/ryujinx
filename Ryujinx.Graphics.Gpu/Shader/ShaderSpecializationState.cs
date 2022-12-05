@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Texture binding information, used to identify each texture accessed by the shader.
         /// </summary>
-        private struct TextureKey : IEquatable<TextureKey>
+        private readonly record struct TextureKey
         {
             // New fields should be added to the end of the struct to keep disk shader cache compatibility.
 
@@ -151,21 +151,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 StageIndex = stageIndex;
                 Handle = handle;
                 CbufSlot = cbufSlot;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is TextureKey textureKey && Equals(textureKey);
-            }
-
-            public bool Equals(TextureKey other)
-            {
-                return StageIndex == other.StageIndex && Handle == other.Handle && CbufSlot == other.CbufSlot;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(StageIndex, Handle, CbufSlot);
             }
         }
 

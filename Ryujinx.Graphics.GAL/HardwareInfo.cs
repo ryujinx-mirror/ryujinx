@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL
 {
-    public struct HardwareInfo
+    public readonly struct HardwareInfo
     {
         public string GpuVendor { get; }
         public string GpuModel { get; }

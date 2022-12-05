@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         }
     }
 
-    struct SyncTarget
+    readonly struct SyncTarget
     {
         public PushOpInfo PushOpInfo { get; }
         public int PushOpId { get; }

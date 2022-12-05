@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.Texture
 {
-    public struct Region
+    public readonly struct Region
     {
         public int Offset { get; }
         public int Size { get; }

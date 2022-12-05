@@ -3,7 +3,7 @@ using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.IntermediateRepresentation
 {
-    struct PhiOperation
+    readonly struct PhiOperation
     {
         private readonly Operation _operation;
 

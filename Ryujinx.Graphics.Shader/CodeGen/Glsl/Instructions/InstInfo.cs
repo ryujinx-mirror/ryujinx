@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 {
-    struct InstInfo
+    readonly struct InstInfo
     {
         public InstType Type { get; }
 

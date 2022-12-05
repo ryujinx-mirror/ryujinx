@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// An overlapping texture group with a given view compatibility.
     /// </summary>
-    struct TextureIncompatibleOverlap
+    readonly struct TextureIncompatibleOverlap
     {
         public readonly TextureGroup Group;
         public readonly TextureViewCompatibility Compatibility;

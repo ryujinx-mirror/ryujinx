@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        private struct TreeNodeUse
+        private readonly struct TreeNodeUse
         {
             public TreeNode Node { get; }
             public int Index { get; }
@@ -345,7 +345,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool Matches(in InstOp opInfo);
         }
 
-        private struct PatternTreeNodeUse
+        private readonly struct PatternTreeNodeUse
         {
             public IPatternTreeNode Node { get; }
             public int Index { get; }

@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// <summary>
     /// State update callback entry, with the callback function and associated field names.
     /// </summary>
-    struct StateUpdateCallbackEntry
+    readonly struct StateUpdateCallbackEntry
     {
         /// <summary>
         /// Callback function, to be called if the register was written as the state needs to be updated.

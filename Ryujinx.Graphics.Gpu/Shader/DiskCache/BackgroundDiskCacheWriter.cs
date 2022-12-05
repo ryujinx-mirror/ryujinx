@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Represents an operation to perform on the <see cref="_fileWriterWorkerQueue"/>.
         /// </summary>
-        private struct CacheFileOperationTask
+        private readonly struct CacheFileOperationTask
         {
             /// <summary>
             /// The type of operation to perform.
@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Background shader cache write information.
         /// </summary>
-        private struct AddShaderData
+        private readonly struct AddShaderData
         {
             /// <summary>
             /// Cached shader program.

@@ -293,7 +293,7 @@ namespace ARMeilleure.Translation
             }
         }
 
-        private struct Range
+        private readonly struct Range
         {
             public ulong Start { get; }
             public ulong End { get; }

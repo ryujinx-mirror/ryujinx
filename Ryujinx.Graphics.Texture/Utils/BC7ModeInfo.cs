@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Texture.Utils
 {
-    struct BC7ModeInfo
+    readonly struct BC7ModeInfo
     {
         public readonly int SubsetCount;
         public readonly int PartitionBitCount;

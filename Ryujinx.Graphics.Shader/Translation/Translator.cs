@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         private const int HeaderSize = 0x50;
 
-        internal struct FunctionCode
+        internal readonly struct FunctionCode
         {
             public Operation[] Code { get; }
 

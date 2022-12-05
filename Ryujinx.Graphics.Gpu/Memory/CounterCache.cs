@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// </summary>
     class CounterCache
     {
-        private struct CounterEntry
+        private readonly struct CounterEntry
         {
             public ulong Address { get; }
             public ICounterEvent Event { get; }

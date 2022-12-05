@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Macroo High-level implementation table entry.
         /// </summary>
-        struct TableEntry
+        readonly struct TableEntry
         {
             /// <summary>
             /// Name of the Macro function.

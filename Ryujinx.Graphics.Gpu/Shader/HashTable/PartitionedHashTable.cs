@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <summary>
         /// Entry for a given data size.
         /// </summary>
-        private struct SizeEntry
+        private readonly struct SizeEntry
         {
             /// <summary>
             /// Size for the data that will be stored on the hash table on this entry.

@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct Extents2DF
+    public readonly struct Extents2DF
     {
         public float X1 { get; }
         public float Y1 { get; }

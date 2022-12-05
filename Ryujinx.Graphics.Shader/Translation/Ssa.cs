@@ -108,7 +108,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        private struct Definition
+        private readonly struct Definition
         {
             public BasicBlock Block { get; }
             public Operand    Local { get; }

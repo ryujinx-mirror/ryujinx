@@ -17,7 +17,7 @@ namespace Ryujinx.Cpu
     /// <summary>
     /// Stores handlers for the various CPU exceptions.
     /// </summary>
-    public struct ExceptionCallbacks
+    public readonly struct ExceptionCallbacks
     {
         /// <summary>
         /// Handler for CPU interrupts triggered using <see cref="IExecutionContext.RequestInterrupt"/>.

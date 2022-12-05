@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
     /// <summary>
     /// FIFO word.
     /// </summary>
-    struct FifoWord
+    readonly struct FifoWord
     {
         /// <summary>
         /// GPU virtual address where the word is located in memory.

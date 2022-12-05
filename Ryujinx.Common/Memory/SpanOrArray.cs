@@ -7,7 +7,7 @@ namespace Ryujinx.Common.Memory
     /// This is useful to keep the Array representation when possible to avoid copies.
     /// </summary>
     /// <typeparam name="T">Element Type</typeparam>
-    public ref struct SpanOrArray<T> where T : unmanaged
+    public readonly ref struct SpanOrArray<T> where T : unmanaged
     {
         public readonly T[] Array;
         public readonly ReadOnlySpan<T> Span;

@@ -473,7 +473,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             op = Unsafe.As<ulong, T>(ref rawOp);
         }
 
-        private struct BlockLocation
+        private readonly struct BlockLocation
         {
             public Block Block { get; }
             public int Index { get; }

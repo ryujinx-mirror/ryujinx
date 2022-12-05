@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    struct HardwareCapabilities
+    readonly struct HardwareCapabilities
     {
         public readonly bool SupportsIndexTypeUint8;
         public readonly bool SupportsCustomBorderColor;

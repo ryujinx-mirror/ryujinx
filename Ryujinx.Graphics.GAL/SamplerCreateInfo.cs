@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct SamplerCreateInfo
+    public readonly struct SamplerCreateInfo
     {
         public MinFilter MinFilter { get; }
         public MagFilter MagFilter { get; }

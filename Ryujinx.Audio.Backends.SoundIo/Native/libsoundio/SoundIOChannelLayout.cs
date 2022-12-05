@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace SoundIOSharp
 {
-    public struct SoundIOChannelLayout
+    public readonly struct SoundIOChannelLayout
     {
         public static int BuiltInCount
         {

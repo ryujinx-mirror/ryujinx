@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct UserId : IEquatable<UserId>
+    public readonly record struct UserId
     {
         public readonly long High;
         public readonly long Low;
@@ -50,37 +50,12 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return High.ToString("x16") + Low.ToString("x16");
         }
 
-        public static bool operator ==(UserId x, UserId y)
-        {
-            return x.Equals(y);
-        }
-
-        public static bool operator !=(UserId x, UserId y)
-        {
-            return !x.Equals(y);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is UserId userId && Equals(userId);
-        }
-
-        public bool Equals(UserId cmpObj)
-        {
-            return Low == cmpObj.Low && High == cmpObj.High;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Low, High);
-        }
-
-        public readonly Uid ToLibHacUid()
+        public Uid ToLibHacUid()
         {
             return new Uid((ulong)High, (ulong)Low);
         }
 
-        public readonly UInt128 ToUInt128()
+        public UInt128 ToUInt128()
         {
             return new UInt128((ulong)High, (ulong)Low);
         }

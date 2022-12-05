@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct Viewport
+    public readonly struct Viewport
     {
         public Rectangle<float> Region { get; }
 

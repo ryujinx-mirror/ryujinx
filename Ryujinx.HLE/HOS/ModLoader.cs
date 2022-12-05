@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS
         private const string AmsNroPatchDir = "nro_patches";
         private const string AmsKipPatchDir = "kip_patches";
 
-        public struct Mod<T> where T : FileSystemInfo
+        public readonly struct Mod<T> where T : FileSystemInfo
         {
             public readonly string Name;
             public readonly T Path;

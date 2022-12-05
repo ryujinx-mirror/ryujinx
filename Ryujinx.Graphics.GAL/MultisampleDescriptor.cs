@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct MultisampleDescriptor
+    public readonly struct MultisampleDescriptor
     {
         public bool AlphaToCoverageEnable { get; }
         public bool AlphaToCoverageDitherEnable { get; }

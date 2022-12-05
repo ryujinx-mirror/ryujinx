@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Host1x
 {
     public sealed class Host1xDevice : IDisposable
     {
-        private struct Command
+        private readonly struct Command
         {
             public int[] Buffer { get; }
             public long ContextId { get; }

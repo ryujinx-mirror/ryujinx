@@ -1,6 +1,6 @@
 namespace ARMeilleure.CodeGen.RegisterAllocators
 {
-    struct AllocationResult
+    readonly struct AllocationResult
     {
         public int IntUsedRegisters { get; }
         public int VecUsedRegisters { get; }

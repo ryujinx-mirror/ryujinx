@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    struct DecodedProgram : IEnumerable<DecodedFunction>
+    readonly struct DecodedProgram : IEnumerable<DecodedFunction>
     {
         public DecodedFunction MainFunction { get; }
         private readonly IReadOnlyDictionary<ulong, DecodedFunction> _functions;

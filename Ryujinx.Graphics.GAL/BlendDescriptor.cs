@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct BlendDescriptor
+    public readonly struct BlendDescriptor
     {
         public bool Enable { get; }
 

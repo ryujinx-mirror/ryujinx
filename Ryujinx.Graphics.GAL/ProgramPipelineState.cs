@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL
     /// <summary>
     /// Descriptor for a pipeline buffer binding.
     /// </summary>
-    public struct BufferPipelineDescriptor
+    public readonly struct BufferPipelineDescriptor
     {
         public bool Enable { get; }
         public int Stride { get; }

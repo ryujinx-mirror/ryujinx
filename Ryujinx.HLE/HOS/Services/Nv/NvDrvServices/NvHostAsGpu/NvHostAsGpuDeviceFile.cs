@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
         private const ulong SmallRegionLimit = 0x400000000UL; // 16 GiB
         private const ulong DefaultUserSize = 1UL << 37;
 
-        private struct VmRegion
+        private readonly struct VmRegion
         {
             public ulong Start { get; }
             public ulong Limit { get; }

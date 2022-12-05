@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct ShaderBindings
+    public readonly struct ShaderBindings
     {
         public IReadOnlyCollection<int> UniformBufferBindings { get; }
         public IReadOnlyCollection<int> StorageBufferBindings { get; }

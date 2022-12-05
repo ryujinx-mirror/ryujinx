@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 {
     static class KernelInit
     {
-        private struct MemoryRegion
+        private readonly struct MemoryRegion
         {
             public ulong Address { get; }
             public ulong Size    { get; }

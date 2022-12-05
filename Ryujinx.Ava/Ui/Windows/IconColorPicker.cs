@@ -20,7 +20,7 @@ namespace Ryujinx.Ava.Ui.Windows
 
         private const int CutOffLuminosity = 64;
 
-        private struct PaletteColor
+        private readonly struct PaletteColor
         {
             public int Qck { get; }
             public byte R { get; }

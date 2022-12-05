@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public struct Capabilities
+    public readonly struct Capabilities
     {
         public readonly TargetApi Api;
         public readonly string VendorName;

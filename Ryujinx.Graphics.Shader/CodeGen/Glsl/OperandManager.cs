@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         private static readonly string[] StagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
-        private struct BuiltInAttribute
+        private readonly struct BuiltInAttribute
         {
             public string Name { get; }
 

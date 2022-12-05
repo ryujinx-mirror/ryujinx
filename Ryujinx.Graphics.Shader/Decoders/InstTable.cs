@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private const int EncodingBits = 14;
 
-        private struct TableEntry
+        private readonly struct TableEntry
         {
             public InstName Name { get; }
             public InstEmitter Emitter { get; }

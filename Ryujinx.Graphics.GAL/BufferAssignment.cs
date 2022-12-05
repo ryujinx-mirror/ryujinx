@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL
 {
-    public struct BufferAssignment
+    public readonly struct BufferAssignment
     {
         public readonly int Binding;
         public readonly BufferRange Range;

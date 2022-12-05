@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.Nvdec
 {
-    public struct FrameDecodedEventArgs
+    public readonly struct FrameDecodedEventArgs
     {
         public CodecId CodecId { get; }
         public uint LumaOffset { get; }

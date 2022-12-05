@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct ScreenCaptureImageInfo
+    public readonly struct ScreenCaptureImageInfo
     {
         public ScreenCaptureImageInfo(int width, int height, bool isBgra, byte[] data, bool flipX, bool flipY)
         {

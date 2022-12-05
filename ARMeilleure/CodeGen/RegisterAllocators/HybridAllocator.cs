@@ -11,7 +11,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 {
     class HybridAllocator : IRegisterAllocator
     {
-        private struct BlockInfo
+        private readonly struct BlockInfo
         {
             public bool HasCall { get; }
 

@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             (MemoryState)0xfffce5d4 //This is invalid, shouldn't be accessed.
         };
 
-        private struct Message
+        private readonly struct Message
         {
             public ulong Address  { get; }
             public ulong Size     { get; }
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 request.CustomCmdBuffSize) { }
         }
 
-        private struct MessageHeader
+        private readonly struct MessageHeader
         {
             public uint Word0 { get; }
             public uint Word1 { get; }

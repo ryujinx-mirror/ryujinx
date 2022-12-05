@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     static class InstructionInfo
     {
-        private struct InstInfo
+        private readonly struct InstInfo
         {
             public VariableType DestType { get; }
 

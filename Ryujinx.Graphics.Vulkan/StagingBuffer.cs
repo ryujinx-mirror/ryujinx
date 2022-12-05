@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly VulkanRenderer _gd;
         private readonly BufferHolder _buffer;
 
-        private struct PendingCopy
+        private readonly struct PendingCopy
         {
             public FenceHolder Fence { get; }
             public int Size { get; }

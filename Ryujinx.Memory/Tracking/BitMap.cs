@@ -5,7 +5,7 @@ namespace Ryujinx.Memory.Tracking
     /// <summary>
     /// A bitmap that can check or set large ranges of true/false values at once.
     /// </summary>
-    struct BitMap
+    readonly struct BitMap
     {
         public const int IntSize = 64;
 

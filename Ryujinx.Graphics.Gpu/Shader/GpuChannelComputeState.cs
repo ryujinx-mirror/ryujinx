@@ -3,7 +3,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// <summary>
     /// State used by the <see cref="GpuAccessor"/>.
     /// </summary>
-    struct GpuChannelComputeState
+    readonly struct GpuChannelComputeState
     {
         // New fields should be added to the end of the struct to keep disk shader cache compatibility.
 

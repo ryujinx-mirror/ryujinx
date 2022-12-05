@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct VertexBufferDescriptor
+    public readonly struct VertexBufferDescriptor
     {
         public BufferRange Buffer { get; }
 

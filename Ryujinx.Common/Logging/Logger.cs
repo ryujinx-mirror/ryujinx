@@ -16,7 +16,7 @@ namespace Ryujinx.Common.Logging
 
         public static event EventHandler<LogEventArgs> Updated;
 
-        public struct Log
+        public readonly struct Log
         {
             internal readonly LogLevel Level;
 

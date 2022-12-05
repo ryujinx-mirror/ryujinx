@@ -3,7 +3,7 @@ using Ryujinx.Graphics.Vic.Image;
 
 namespace Ryujinx.Graphics.Vic
 {
-    struct ResourceManager
+    readonly struct ResourceManager
     {
         public MemoryManager Gmm { get; }
         public BufferPool<Pixel> SurfacePool { get; }

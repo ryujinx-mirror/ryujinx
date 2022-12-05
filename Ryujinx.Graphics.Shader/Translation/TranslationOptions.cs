@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader.Translation
 {
-    public struct TranslationOptions
+    public readonly struct TranslationOptions
     {
         public TargetLanguage TargetLanguage { get; }
         public TargetApi TargetApi { get; }

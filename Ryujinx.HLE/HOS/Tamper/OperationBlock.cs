@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Tamper
 {
-    struct OperationBlock
+    readonly struct OperationBlock
     {
         public byte[] BaseInstruction { get; }
         public List<IOperation> Operations { get; }

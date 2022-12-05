@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Vic
 {
-    struct Rectangle
+    readonly struct Rectangle
     {
         public readonly int X;
         public readonly int Y;

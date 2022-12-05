@@ -40,7 +40,7 @@ namespace Ryujinx.Horizon.Generators.Kernel
             $"{TypeKernelResultName}.InvalidState"
         };
 
-        private struct OutParameter
+        private readonly struct OutParameter
         {
             public readonly string Identifier;
             public readonly bool NeedsSplit;
@@ -104,7 +104,7 @@ namespace Ryujinx.Horizon.Generators.Kernel
             }
         }
 
-        private struct SyscallIdAndName : IComparable<SyscallIdAndName>
+        private readonly struct SyscallIdAndName : IComparable<SyscallIdAndName>
         {
             public readonly int Id;
             public readonly string Name;

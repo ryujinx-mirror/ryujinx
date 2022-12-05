@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Program validation entry.
         /// </summary>
-        private struct ProgramEntry
+        private readonly struct ProgramEntry
         {
             /// <summary>
             /// Cached shader program.
@@ -90,7 +90,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Translated shader compilation entry.
         /// </summary>
-        private struct ProgramCompilation
+        private readonly struct ProgramCompilation
         {
             /// <summary>
             /// Translated shader stages.
@@ -143,7 +143,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <summary>
         /// Program translation entry.
         /// </summary>
-        private struct AsyncProgramTranslation
+        private readonly struct AsyncProgramTranslation
         {
             /// <summary>
             /// Guest code for each active stage.
