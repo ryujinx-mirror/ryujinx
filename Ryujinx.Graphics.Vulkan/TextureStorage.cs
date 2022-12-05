@@ -317,7 +317,7 @@ namespace Ryujinx.Graphics.Vulkan
             SampleCountFlags converted = (SampleCountFlags)(1u << (31 - BitOperations.LeadingZeroCount(samples)));
 
             // Pick nearest sample count that the host actually supports.
-            while (converted != SampleCountFlags.SampleCount1Bit && (converted & supportedSampleCounts) == 0)
+            while (converted != SampleCountFlags.Count1Bit && (converted & supportedSampleCounts) == 0)
             {
                 converted = (SampleCountFlags)((uint)converted >> 1);
             }
