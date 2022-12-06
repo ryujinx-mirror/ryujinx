@@ -48,5 +48,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                 _ => 0
             };
         }
+
+        public static int GetConstantUbeOffset(int slot)
+        {
+            return UbeBaseOffset + slot * StorageDescSize;
+        }
     }
 }

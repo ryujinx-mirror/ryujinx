@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -89,11 +90,41 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return local;
             }
 
+            Operand PrependExistingOperation(Operation operation)
+            {
+                Operand local = Local();
+
+                operation.Dest = local;
+                node.List.AddBefore(node, operation);
+
+                return local;
+            }
+
             Operand addrLow  = operation.GetSource(0);
             Operand addrHigh = operation.GetSource(1);
 
             Operand sbBaseAddrLow = Const(0);
             Operand sbSlot        = Const(0);
+
+            Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
+
+            Operand BindingRangeCheck(int cbOffset, out Operand baseAddrLow)
+            {
+                baseAddrLow = Cbuf(0, cbOffset);
+                Operand baseAddrHigh = Cbuf(0, cbOffset + 1);
+                Operand size = Cbuf(0, cbOffset + 2);
+
+                Operand offset = PrependOperation(Instruction.Subtract, addrLow, baseAddrLow);
+                Operand borrow = PrependOperation(Instruction.CompareLessU32, addrLow, baseAddrLow);
+
+                Operand inRangeLow = PrependOperation(Instruction.CompareLessU32, offset, size);
+
+                Operand addrHighBorrowed = PrependOperation(Instruction.Add, addrHigh, borrow);
+
+                Operand inRangeHigh = PrependOperation(Instruction.CompareEqual, addrHighBorrowed, baseAddrHigh);
+
+                return PrependOperation(Instruction.BitwiseAnd, inRangeLow, inRangeHigh);
+            }
 
             int sbUseMask = config.AccessibleStorageBuffersMask;
 
@@ -107,20 +138,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 int cbOffset = GetStorageCbOffset(config.Stage, slot);
 
-                Operand baseAddrLow  = Cbuf(0, cbOffset);
-                Operand baseAddrHigh = Cbuf(0, cbOffset + 1);
-                Operand size         = Cbuf(0, cbOffset + 2);
-
-                Operand offset = PrependOperation(Instruction.Subtract,       addrLow, baseAddrLow);
-                Operand borrow = PrependOperation(Instruction.CompareLessU32, addrLow, baseAddrLow);
-
-                Operand inRangeLow = PrependOperation(Instruction.CompareLessU32, offset, size);
-
-                Operand addrHighBorrowed = PrependOperation(Instruction.Add, addrHigh, borrow);
-
-                Operand inRangeHigh = PrependOperation(Instruction.CompareEqual, addrHighBorrowed, baseAddrHigh);
-
-                Operand inRange = PrependOperation(Instruction.BitwiseAnd, inRangeLow, inRangeHigh);
+                Operand inRange = BindingRangeCheck(cbOffset, out Operand baseAddrLow);
 
                 sbBaseAddrLow = PrependOperation(Instruction.ConditionalSelect, inRange, baseAddrLow, sbBaseAddrLow);
                 sbSlot        = PrependOperation(Instruction.ConditionalSelect, inRange, Const(slot), sbSlot);
@@ -128,8 +146,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (config.AccessibleStorageBuffersMask != 0)
             {
-                Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
-
                 Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd, sbBaseAddrLow, alignMask);
                 Operand byteOffset    = PrependOperation(Instruction.Subtract, addrLow, baseAddrTrunc);
 
@@ -176,6 +192,46 @@ namespace Ryujinx.Graphics.Shader.Translation
             else if (operation.Dest != null)
             {
                 storageOp = new Operation(Instruction.Copy, operation.Dest, Const(0));
+            }
+
+            if (operation.Inst == Instruction.LoadGlobal)
+            {
+                int cbeUseMask = config.AccessibleConstantBuffersMask;
+
+                while (cbeUseMask != 0)
+                {
+                    int slot = BitOperations.TrailingZeroCount(cbeUseMask);
+                    int cbSlot = UbeFirstCbuf + slot;
+
+                    cbeUseMask &= ~(1 << slot);
+
+                    config.SetUsedConstantBuffer(cbSlot);
+
+                    Operand previousResult = PrependExistingOperation(storageOp);
+
+                    int cbOffset = GetConstantUbeOffset(slot);
+
+                    Operand inRange = BindingRangeCheck(cbOffset, out Operand baseAddrLow);
+
+                    Operand baseAddrTruncConst = PrependOperation(Instruction.BitwiseAnd, baseAddrLow, alignMask);
+                    Operand byteOffsetConst = PrependOperation(Instruction.Subtract, addrLow, baseAddrTruncConst);
+
+                    Operand cbIndex = PrependOperation(Instruction.ShiftRightU32, byteOffsetConst, Const(2));
+
+                    Operand[] sourcesCb = new Operand[operation.SourcesCount];
+
+                    sourcesCb[0] = Const(cbSlot);
+                    sourcesCb[1] = cbIndex;
+
+                    for (int index = 2; index < operation.SourcesCount; index++)
+                    {
+                        sourcesCb[index] = operation.GetSource(index);
+                    }
+
+                    Operand ldcResult = PrependOperation(Instruction.LoadConstant, sourcesCb);
+
+                    storageOp = new Operation(Instruction.ConditionalSelect, operation.Dest, inRange, ldcResult, previousResult);
+                }
             }
 
             for (int index = 0; index < operation.SourcesCount; index++)

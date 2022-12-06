@@ -66,6 +66,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public UInt128 ThisInputAttributesComponents { get; private set; }
 
         public int AccessibleStorageBuffersMask { get; private set; }
+        public int AccessibleConstantBuffersMask { get; private set; }
 
         private int _usedConstantBuffers;
         private int _usedStorageBuffers;
@@ -100,7 +101,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             GpuAccessor = gpuAccessor;
             Options     = options;
 
-            AccessibleStorageBuffersMask = (1 << GlobalMemory.StorageMaxCount) - 1;
+            AccessibleStorageBuffersMask  = (1 << GlobalMemory.StorageMaxCount) - 1;
+            AccessibleConstantBuffersMask = (1 << GlobalMemory.UbeMaxCount) - 1;
 
             UsedInputAttributesPerPatch  = new HashSet<int>();
             UsedOutputAttributesPerPatch = new HashSet<int>();
@@ -121,6 +123,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             OutputTopology           = outputTopology;
             MaxOutputVertices        = maxOutputVertices;
             TransformFeedbackEnabled = gpuAccessor.QueryTransformFeedbackEnabled();
+
+            if (Stage != ShaderStage.Compute)
+            {
+                AccessibleConstantBuffersMask = 0;
+            }
         }
 
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(gpuAccessor, options)
@@ -404,9 +411,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             UsedFeatures |= flags;
         }
 
-        public void SetAccessibleStorageBuffersMask(int mask)
+        public void SetAccessibleBufferMasks(int sbMask, int ubeMask)
         {
-            AccessibleStorageBuffersMask = mask;
+            AccessibleStorageBuffersMask = sbMask;
+            AccessibleConstantBuffersMask = ubeMask;
         }
 
         public void SetUsedConstantBuffer(int slot)
