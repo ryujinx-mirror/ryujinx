@@ -680,7 +680,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Hid.EnableMouse.Value                     = false;
             Hid.Hotkeys.Value = new KeyboardHotkeys
             {
-                ToggleVsync = Key.Tab,
+                ToggleVsync = Key.F1,
                 ToggleMute = Key.F2,
                 Screenshot = Key.F8,
                 ShowUi = Key.F4,
@@ -818,7 +818,7 @@ namespace Ryujinx.Ui.Common.Configuration
 
                 configurationFileFormat.Hotkeys = new KeyboardHotkeys
                 {
-                    ToggleVsync = Key.Tab
+                    ToggleVsync = Key.F1
                 };
 
                 configurationFileUpdated = true;
@@ -999,7 +999,7 @@ namespace Ryujinx.Ui.Common.Configuration
 
                 configurationFileFormat.Hotkeys = new KeyboardHotkeys
                 {
-                    ToggleVsync = Key.Tab,
+                    ToggleVsync = Key.F1,
                     Screenshot = Key.F8
                 };
 
@@ -1012,7 +1012,7 @@ namespace Ryujinx.Ui.Common.Configuration
 
                 configurationFileFormat.Hotkeys = new KeyboardHotkeys
                 {
-                    ToggleVsync = Key.Tab,
+                    ToggleVsync = Key.F1,
                     Screenshot = Key.F8,
                     ShowUi = Key.F4
                 };
