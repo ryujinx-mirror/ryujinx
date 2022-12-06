@@ -5,7 +5,7 @@ using AvaKey = Avalonia.Input.Key;
 
 namespace Ryujinx.Ava.Input
 {
-    internal static class AvaloniaMappingHelper
+    internal static class AvaloniaKeyboardMappingHelper
     {
         private static readonly AvaKey[] _keyMapping = new AvaKey[(int)Key.Count]
         {
@@ -149,11 +149,11 @@ namespace Ryujinx.Ava.Input
 
         private static readonly Dictionary<AvaKey, Key> _avaKeyMapping;
 
-        static AvaloniaMappingHelper()
+        static AvaloniaKeyboardMappingHelper()
         {
             var inputKeys = Enum.GetValues(typeof(Key));
 
-            // Avalonia.Input.Key is not contiguous and quite large, so use a dictionary instead of an array.
+            // NOTE: Avalonia.Input.Key is not contiguous and quite large, so use a dictionary instead of an array.
             _avaKeyMapping = new Dictionary<AvaKey, Key>();
 
             foreach (var key in inputKeys)
@@ -167,14 +167,12 @@ namespace Ryujinx.Ava.Input
 
         public static bool TryGetAvaKey(Key key, out AvaKey avaKey)
         {
-            var keyExist = (int)key < _keyMapping.Length;
+            avaKey = AvaKey.None;
+
+            bool keyExist = (int)key < _keyMapping.Length;
             if (keyExist)
             {
                 avaKey = _keyMapping[(int)key];
-            }
-            else
-            {
-                avaKey = AvaKey.None;
             }
 
             return keyExist;

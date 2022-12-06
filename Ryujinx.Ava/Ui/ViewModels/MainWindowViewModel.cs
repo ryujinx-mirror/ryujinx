@@ -883,17 +883,17 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
         public void LoadConfigurableHotKeys()
         {
-            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi, out var showUiKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi, out var showUiKey))
             {
                 ShowUiKey = new KeyGesture(showUiKey, KeyModifiers.None);
             }
 
-            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
             {
                 ScreenshotKey = new KeyGesture(screenshotKey, KeyModifiers.None);
             }
 
-            if (AvaloniaMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
             {
                 PauseKey = new KeyGesture(pauseKey, KeyModifiers.None);
             }

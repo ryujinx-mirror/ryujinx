@@ -68,7 +68,7 @@ namespace Ryujinx.Ava.Ui.Applet
 
         private void AvaloniaDynamicTextInputHandler_KeyRelease(object sender, Avalonia.Input.KeyEventArgs e)
         {
-            var key = (HidKey)AvaloniaMappingHelper.ToInputKey(e.Key);
+            var key = (HidKey)AvaloniaKeyboardMappingHelper.ToInputKey(e.Key);
 
             if (!(KeyReleasedEvent?.Invoke(key)).GetValueOrDefault(true))
             {
@@ -88,7 +88,7 @@ namespace Ryujinx.Ava.Ui.Applet
 
         private void AvaloniaDynamicTextInputHandler_KeyPressed(object sender, KeyEventArgs e)
         {
-            var key = (HidKey)AvaloniaMappingHelper.ToInputKey(e.Key);
+            var key = (HidKey)AvaloniaKeyboardMappingHelper.ToInputKey(e.Key);
 
             if (!(KeyPressedEvent?.Invoke(key)).GetValueOrDefault(true))
             {
