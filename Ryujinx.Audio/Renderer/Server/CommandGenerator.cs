@@ -606,6 +606,17 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
+        private void GenerateCompressorEffect(uint bufferOffset, CompressorEffect effect, int nodeId)
+        {
+            Debug.Assert(effect.Type == EffectType.Compressor);
+
+            _commandBuffer.GenerateCompressorEffect(bufferOffset,
+                                                    effect.Parameter,
+                                                    effect.State,
+                                                    effect.IsEnabled,
+                                                    nodeId);
+        }
+
         private void GenerateEffect(ref MixState mix, int effectId, BaseEffect effect)
         {
             int nodeId = mix.NodeId;
@@ -649,6 +660,9 @@ namespace Ryujinx.Audio.Renderer.Server
                     break;
                 case EffectType.CaptureBuffer:
                     GenerateCaptureEffect(mix.BufferOffset, (CaptureBufferEffect)effect, nodeId);
+                    break;
+                case EffectType.Compressor:
+                    GenerateCompressorEffect(mix.BufferOffset, (CompressorEffect)effect, nodeId);
                     break;
                 default:
                     throw new NotImplementedException($"Unsupported effect type {effect.Type}");

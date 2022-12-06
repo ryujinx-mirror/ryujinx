@@ -35,5 +35,6 @@ namespace Ryujinx.Audio.Renderer.Server
         uint Estimate(LimiterCommandVersion2 command);
         uint Estimate(GroupedBiquadFilterCommand command);
         uint Estimate(CaptureBufferCommand command);
+        uint Estimate(CompressorCommand command);
     }
 }

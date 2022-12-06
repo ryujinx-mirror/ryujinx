@@ -17,6 +17,12 @@ namespace Ryujinx.Audio.Renderer.Dsp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ConvertFloat(float value, int qBits)
+        {
+            return value / (1 << qBits);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToFixed(float value, int qBits)
         {
             return (int)(value * (1 << qBits));

@@ -90,32 +90,31 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                         float inputCoefficient = Parameter.ReleaseCoefficient;
 
-                        if (sampleInputMax > state.DectectorAverage[channelIndex])
+                        if (sampleInputMax > state.DetectorAverage[channelIndex].Read())
                         {
                             inputCoefficient = Parameter.AttackCoefficient;
                         }
 
-                        state.DectectorAverage[channelIndex] += inputCoefficient * (sampleInputMax - state.DectectorAverage[channelIndex]);
-
+                        float detectorValue = state.DetectorAverage[channelIndex].Update(sampleInputMax, inputCoefficient);
                         float attenuation = 1.0f;
 
-                        if (state.DectectorAverage[channelIndex] > Parameter.Threshold)
+                        if (detectorValue > Parameter.Threshold)
                         {
-                            attenuation = Parameter.Threshold / state.DectectorAverage[channelIndex];
+                            attenuation = Parameter.Threshold / detectorValue;
                         }
 
                         float outputCoefficient = Parameter.ReleaseCoefficient;
 
-                        if (state.CompressionGain[channelIndex] > attenuation)
+                        if (state.CompressionGainAverage[channelIndex].Read() > attenuation)
                         {
                             outputCoefficient = Parameter.AttackCoefficient;
                         }
 
-                        state.CompressionGain[channelIndex] += outputCoefficient * (attenuation - state.CompressionGain[channelIndex]);
+                        float compressionGain = state.CompressionGainAverage[channelIndex].Update(attenuation, outputCoefficient);
 
                         ref float delayedSample = ref state.DelayedSampleBuffer[channelIndex * Parameter.DelayBufferSampleCountMax + state.DelayedSampleBufferPosition[channelIndex]];
 
-                        float outputSample = delayedSample * state.CompressionGain[channelIndex] * Parameter.OutputGain;
+                        float outputSample = delayedSample * compressionGain * Parameter.OutputGain;
 
                         *((float*)outputBuffers[channelIndex] + sampleIndex) = outputSample * short.MaxValue;
 

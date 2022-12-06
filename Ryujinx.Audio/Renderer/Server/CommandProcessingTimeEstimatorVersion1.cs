@@ -179,5 +179,10 @@ namespace Ryujinx.Audio.Renderer.Server
         {
             return 0;
         }
+
+        public uint Estimate(CompressorCommand command)
+        {
+            return 0;
+        }
     }
 }

@@ -240,6 +240,10 @@ namespace Ryujinx.Audio.Renderer.Server
                 case EffectType.CaptureBuffer:
                     effect = new CaptureBufferEffect();
                     break;
+                case EffectType.Compressor:
+                    effect = new CompressorEffect();
+                    break;
+
                 default:
                     throw new NotImplementedException($"EffectType {parameter.Type} not implemented!");
             }

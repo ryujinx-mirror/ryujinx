@@ -14,6 +14,7 @@ namespace Ryujinx.Audio.Renderer.Common
         Reverb3d,
         PcmFloat,
         Limiter,
-        CaptureBuffer
+        CaptureBuffer,
+        Compressor
     }
 }

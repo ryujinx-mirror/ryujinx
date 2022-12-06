@@ -232,5 +232,79 @@ namespace Ryujinx.Audio.Renderer.Server
                 }
             }
         }
+
+        public override uint Estimate(CompressorCommand command)
+        {
+            Debug.Assert(_sampleCount == 160 || _sampleCount == 240);
+
+            if (_sampleCount == 160)
+            {
+                if (command.Enabled)
+                {
+                    switch (command.Parameter.ChannelCount)
+                    {
+                        case 1:
+                            return 34431;
+                        case 2:
+                            return 44253;
+                        case 4:
+                            return 63827;
+                        case 6:
+                            return 83361;
+                        default:
+                            throw new NotImplementedException($"{command.Parameter.ChannelCount}");
+                    }
+                }
+                else
+                {
+                    switch (command.Parameter.ChannelCount)
+                    {
+                        case 1:
+                            return (uint)630.12f;
+                        case 2:
+                            return (uint)638.27f;
+                        case 4:
+                            return (uint)705.86f;
+                        case 6:
+                            return (uint)782.02f;
+                        default:
+                            throw new NotImplementedException($"{command.Parameter.ChannelCount}");
+                    }
+                }
+            }
+
+            if (command.Enabled)
+            {
+                switch (command.Parameter.ChannelCount)
+                {
+                    case 1:
+                        return 51095;
+                    case 2:
+                        return 65693;
+                    case 4:
+                        return 95383;
+                    case 6:
+                        return 124510;
+                    default:
+                        throw new NotImplementedException($"{command.Parameter.ChannelCount}");
+                }
+            }
+            else
+            {
+                switch (command.Parameter.ChannelCount)
+                {
+                    case 1:
+                        return (uint)840.14f;
+                    case 2:
+                        return (uint)826.1f;
+                    case 4:
+                        return (uint)901.88f;
+                    case 6:
+                        return (uint)965.29f;
+                    default:
+                        throw new NotImplementedException($"{command.Parameter.ChannelCount}");
+                }
+            }
+        }
     }
 }

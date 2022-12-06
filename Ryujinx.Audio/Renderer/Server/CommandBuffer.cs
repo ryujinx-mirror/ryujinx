@@ -469,6 +469,18 @@ namespace Ryujinx.Audio.Renderer.Server
             }
         }
 
+        public void GenerateCompressorEffect(uint bufferOffset, CompressorParameter parameter, Memory<CompressorState> state, bool isEnabled, int nodeId)
+        {
+            if (parameter.IsChannelCountValid())
+            {
+                CompressorCommand command = new CompressorCommand(bufferOffset, parameter, state, isEnabled, nodeId);
+
+                command.EstimatedProcessingTime = _commandProcessingTimeEstimator.Estimate(command);
+
+                AddCommand(command);
+            }
+        }
+
         /// <summary>
         /// Generate a new <see cref="VolumeCommand"/>.
         /// </summary>

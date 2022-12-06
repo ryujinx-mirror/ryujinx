@@ -48,6 +48,11 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// Effect to capture mixes (via auxiliary buffers).
         /// </summary>
-        CaptureBuffer
+        CaptureBuffer,
+
+        /// <summary>
+        /// Effect applying a compressor filter (DRC).
+        /// </summary>
+        Compressor,
     }
 }
