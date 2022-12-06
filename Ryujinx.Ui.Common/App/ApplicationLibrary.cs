@@ -465,9 +465,11 @@ namespace Ryujinx.Ui.App.Common
                         Developer = developer,
                         Version = version,
                         TimePlayed = ConvertSecondsToReadableString(appMetadata.TimePlayed),
+                        TimePlayedNum = appMetadata.TimePlayed,
                         LastPlayed = appMetadata.LastPlayed,
                         FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0, 1),
                         FileSize = (fileSize < 1) ? (fileSize * 1024).ToString("0.##") + " MiB" : fileSize.ToString("0.##") + " GiB",
+                        FileSizeBytes = fileSize,
                         Path = applicationPath,
                         ControlHolder = controlHolder
                     };

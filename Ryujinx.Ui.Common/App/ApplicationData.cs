@@ -12,9 +12,11 @@ namespace Ryujinx.Ui.App.Common
         public string Developer     { get; set; }
         public string Version       { get; set; }
         public string TimePlayed    { get; set; }
+        public double TimePlayedNum { get; set; }
         public string LastPlayed    { get; set; }
         public string FileExtension { get; set; }
         public string FileSize      { get; set; }
+        public double FileSizeBytes { get; set; }
         public string Path          { get; set; }
         public BlitStruct<ApplicationControlProperty> ControlHolder { get; set; }
     }
