@@ -1,0 +1,134 @@
+using Gdk;
+using System;
+using System.Runtime.Versioning;
+using System.Runtime.InteropServices;
+
+namespace Ryujinx.Ui.Helper
+{
+    public delegate void UpdateBoundsCallbackDelegate(Window window);
+
+    [SupportedOSPlatform("macos")]
+    static class MetalHelper
+    {
+        private const string LibObjCImport = "/usr/lib/libobjc.A.dylib";
+
+        private struct Selector
+        {
+            public readonly IntPtr NativePtr;
+
+            public unsafe Selector(string value)
+            {
+                int size = System.Text.Encoding.UTF8.GetMaxByteCount(value.Length);
+                byte* data = stackalloc byte[size];
+
+                fixed (char* pValue = value)
+                {
+                    System.Text.Encoding.UTF8.GetBytes(pValue, value.Length, data, size);
+                }
+
+                NativePtr = sel_registerName(data);
+            }
+
+            public static implicit operator Selector(string value) => new Selector(value);
+        }
+
+        private static unsafe IntPtr GetClass(string value)
+        {
+            int size = System.Text.Encoding.UTF8.GetMaxByteCount(value.Length);
+            byte* data = stackalloc byte[size];
+
+            fixed (char* pValue = value)
+            {
+                System.Text.Encoding.UTF8.GetBytes(pValue, value.Length, data, size);
+            }
+
+            return objc_getClass(data);
+        }
+
+        private struct NSPoint
+        {
+            public double X;
+            public double Y;
+
+            public NSPoint(double x, double y)
+            {
+                X = x;
+                Y = y;
+            }
+        }
+
+        private struct NSRect
+        {
+            public NSPoint Pos;
+            public NSPoint Size;
+
+            public NSRect(double x, double y, double width, double height)
+            {
+                Pos = new NSPoint(x, y);
+                Size = new NSPoint(width, height);
+            }
+        }
+
+        public static IntPtr GetMetalLayer(Display display, Window window, out IntPtr nsView, out UpdateBoundsCallbackDelegate updateBounds)
+        {
+            nsView = gdk_quartz_window_get_nsview(window.Handle);
+
+            // Create a new CAMetalLayer.
+            IntPtr layerClass = GetClass("CAMetalLayer");
+            IntPtr metalLayer = IntPtr_objc_msgSend(layerClass, "alloc");
+            objc_msgSend(metalLayer, "init");
+
+            // Create a child NSView to render into.
+            IntPtr nsViewClass = GetClass("NSView");
+            IntPtr child = IntPtr_objc_msgSend(nsViewClass, "alloc");
+            objc_msgSend(child, "init", new NSRect());
+
+            // Add it as a child.
+            objc_msgSend(nsView, "addSubview:", child);
+
+            // Make its renderer our metal layer.
+            objc_msgSend(child, "setWantsLayer:", (byte)1);
+            objc_msgSend(child, "setLayer:", metalLayer);
+            objc_msgSend(metalLayer, "setContentsScale:", (double)display.GetMonitorAtWindow(window).ScaleFactor);
+
+            // Set the frame position/location.
+            updateBounds = (Window window) => {
+                window.GetPosition(out int x, out int y);
+                int width = window.Width;
+                int height = window.Height;
+                objc_msgSend(child, "setFrame:", new NSRect(x, y, width, height));
+            };
+
+            updateBounds(window);
+
+            return metalLayer;
+        }
+
+        [DllImport(LibObjCImport)]
+        private static unsafe extern IntPtr sel_registerName(byte* data);
+
+        [DllImport(LibObjCImport)]
+        private static unsafe extern IntPtr objc_getClass(byte* data);
+
+        [DllImport(LibObjCImport)]
+        private static extern void objc_msgSend(IntPtr receiver, Selector selector);
+
+        [DllImport(LibObjCImport)]
+        private static extern void objc_msgSend(IntPtr receiver, Selector selector, byte value);
+
+        [DllImport(LibObjCImport)]
+        private static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
+
+        [DllImport(LibObjCImport)]
+        private static extern void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
+
+        [DllImport(LibObjCImport)]
+        private static extern void objc_msgSend(IntPtr receiver, Selector selector, double value);
+
+        [DllImport(LibObjCImport, EntryPoint = "objc_msgSend")]
+        private static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);
+
+        [DllImport("libgdk-3.0.dylib")]
+        private static extern IntPtr gdk_quartz_window_get_nsview(IntPtr gdkWindow);
+    }
+}

@@ -18,7 +18,7 @@ namespace Ryujinx.Ui.Widgets
 
         public ProfileDialog() : this(new Builder("Ryujinx.Ui.Widgets.ProfileDialog.glade")) { }
 
-        private ProfileDialog(Builder builder) : base(builder.GetObject("_profileDialog").Handle)
+        private ProfileDialog(Builder builder) : base(builder.GetRawOwnedObject("_profileDialog"))
         {
             builder.Autoconnect(this);
             Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");

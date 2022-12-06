@@ -11,6 +11,7 @@ using Ryujinx.Input;
 using Ryujinx.Input.HLE;
 using Ryujinx.SDL2.Common;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -25,6 +26,13 @@ namespace Ryujinx.Headless.SDL2
         protected const int DefaultHeight = 720;
         private const SDL_WindowFlags DefaultFlags = SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI | SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS | SDL_WindowFlags.SDL_WINDOW_SHOWN;
         private const int TargetFps = 60;
+
+        private static ConcurrentQueue<Action> MainThreadActions = new ConcurrentQueue<Action>();
+
+        public static void QueueMainThreadAction(Action action)
+        {
+            MainThreadActions.Enqueue(action);
+        }
 
         public NpadManager NpadManager { get; }
         public TouchScreenManager TouchScreenManager { get; }
@@ -168,6 +176,14 @@ namespace Ryujinx.Headless.SDL2
 
         public void Render()
         {
+            InitializeWindowRenderer();
+
+            Device.Gpu.Renderer.Initialize(_glLogLevel);
+
+            InitializeRenderer();
+
+            _gpuVendorName = GetGpuVendorName();
+
             Device.Gpu.Renderer.RunLoop(() =>
             {
                 Device.Gpu.SetGpuThread();
@@ -241,6 +257,14 @@ namespace Ryujinx.Headless.SDL2
             _exitEvent.Dispose();
         }
 
+        public void ProcessMainThreadQueue()
+        {
+            while (MainThreadActions.TryDequeue(out Action action))
+            {
+                action();
+            }
+        }
+
         public void MainLoop()
         {
             while (_isActive)
@@ -248,6 +272,8 @@ namespace Ryujinx.Headless.SDL2
                 UpdateFrame();
 
                 SDL_PumpEvents();
+
+                ProcessMainThreadQueue();
 
                 // Polling becomes expensive if it's not slept
                 Thread.Sleep(1);
@@ -314,14 +340,6 @@ namespace Ryujinx.Headless.SDL2
             _isActive = true;
 
             InitializeWindow();
-
-            InitializeWindowRenderer();
-
-            Device.Gpu.Renderer.Initialize(_glLogLevel);
-
-            InitializeRenderer();
-
-            _gpuVendorName = GetGpuVendorName();
 
             Thread renderLoopThread = new Thread(Render)
             {

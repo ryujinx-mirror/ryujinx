@@ -1,9 +1,11 @@
 ﻿using Gdk;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Input.HLE;
+using Ryujinx.Ui.Helper;
 using SPB.Graphics.Vulkan;
 using SPB.Platform.Win32;
 using SPB.Platform.X11;
+using SPB.Platform.Metal;
 using SPB.Windowing;
 using System;
 using System.Runtime.InteropServices;
@@ -13,6 +15,7 @@ namespace Ryujinx.Ui
     public class VKRenderer : RendererWidgetBase
     {
         public NativeWindowBase NativeWindow { get; private set; }
+        private UpdateBoundsCallbackDelegate _updateBoundsCallback;
 
         public VKRenderer(InputManager inputManager, GraphicsDebugLevel glLogLevel) : base(inputManager, glLogLevel) { }
 
@@ -30,6 +33,12 @@ namespace Ryujinx.Ui
                 IntPtr windowHandle = gdk_x11_window_get_xid(Window.Handle);
 
                 return new SimpleX11Window(new NativeHandle(displayHandle), new NativeHandle(windowHandle));
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                IntPtr metalLayer = MetalHelper.GetMetalLayer(Display, Window, out IntPtr nsView, out _updateBoundsCallback);
+
+                return new SimpleMetalWindow(new NativeHandle(nsView), new NativeHandle(metalLayer));
             }
 
             throw new NotImplementedException();
@@ -53,7 +62,11 @@ namespace Ryujinx.Ui
                 WaitEvent.Set();
             }
 
-            return base.OnConfigureEvent(evnt);
+            bool result = base.OnConfigureEvent(evnt);
+
+            _updateBoundsCallback?.Invoke(Window);
+
+            return result;
         }
 
         public unsafe IntPtr CreateWindowSurface(IntPtr instance)

@@ -153,7 +153,8 @@ namespace Ryujinx.Memory
 
             if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
             {
-                result |= MAP_JIT_DARWIN;
+                // Only to be used with the Hardened Runtime.
+                // result |= MAP_JIT_DARWIN;
             }
 
             return result;

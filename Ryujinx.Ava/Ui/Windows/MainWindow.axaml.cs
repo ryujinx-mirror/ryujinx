@@ -154,6 +154,12 @@ namespace Ryujinx.Ava.Ui.Windows
             }
         }
 
+        protected override void HandleScalingChanged(double scale)
+        {
+            Program.DesktopScaleFactor = scale;
+            base.HandleScalingChanged(scale);
+        }
+
         public void Application_Opened(object sender, ApplicationOpenedEventArgs args)
         {
             if (args.Application != null)

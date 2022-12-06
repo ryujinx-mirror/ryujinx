@@ -113,7 +113,7 @@ namespace Ryujinx.Ui.Windows
 
         public SettingsWindow(MainWindow parent, VirtualFileSystem virtualFileSystem, ContentManager contentManager) : this(parent, new Builder("Ryujinx.Ui.Windows.SettingsWindow.glade"), virtualFileSystem, contentManager) { }
 
-        private SettingsWindow(MainWindow parent, Builder builder, VirtualFileSystem virtualFileSystem, ContentManager contentManager) : base(builder.GetObject("_settingsWin").Handle)
+        private SettingsWindow(MainWindow parent, Builder builder, VirtualFileSystem virtualFileSystem, ContentManager contentManager) : base(builder.GetRawOwnedObject("_settingsWin"))
         {
             Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
 
@@ -422,7 +422,7 @@ namespace Ryujinx.Ui.Windows
             Task.Run(() =>
             {
                 openAlIsSupported  = OpenALHardwareDeviceDriver.IsSupported;
-                soundIoIsSupported = SoundIoHardwareDeviceDriver.IsSupported;
+                soundIoIsSupported = !OperatingSystem.IsMacOS() && SoundIoHardwareDeviceDriver.IsSupported;
                 sdl2IsSupported    = SDL2HardwareDeviceDriver.IsSupported;
             });
 
@@ -438,6 +438,15 @@ namespace Ryujinx.Ui.Windows
                     _ => throw new ArgumentOutOfRangeException()
                 };
             });
+
+            if (OperatingSystem.IsMacOS())
+            {
+                var store = (_graphicsBackend.Model as ListStore);
+                store.GetIter(out TreeIter openglIter, new TreePath(new int[] {1}));
+                store.Remove(ref openglIter);
+
+                _graphicsBackend.Model = store;
+            }
         }
 
         private void UpdatePreferredGpuComboBox()

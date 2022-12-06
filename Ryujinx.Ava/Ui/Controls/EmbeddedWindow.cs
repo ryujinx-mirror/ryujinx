@@ -2,11 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
+using Ryujinx.Ava.Ui.Helper;
 using SPB.Graphics;
 using SPB.Platform;
 using SPB.Platform.GLX;
-using SPB.Platform.X11;
-using SPB.Windowing;
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -23,6 +22,10 @@ namespace Ryujinx.Ava.Ui.Controls
         protected GLXWindow X11Window { get; set; }
         protected IntPtr WindowHandle { get; set; }
         protected IntPtr X11Display { get; set; }
+        protected IntPtr NsView { get; set; }
+        protected IntPtr MetalLayer { get; set; }
+
+        private UpdateBoundsCallbackDelegate _updateBoundsCallback;
 
         public event EventHandler<IntPtr> WindowCreated;
         public event EventHandler<Size> SizeChanged;
@@ -58,6 +61,7 @@ namespace Ryujinx.Ava.Ui.Controls
         private void StateChanged(Rect rect)
         {
             SizeChanged?.Invoke(this, rect.Size);
+            _updateBoundsCallback?.Invoke(rect);
         }
 
         protected override IPlatformHandle CreateNativeControlCore(IPlatformHandle parent)
@@ -70,6 +74,11 @@ namespace Ryujinx.Ava.Ui.Controls
             {
                 return CreateWin32(parent);
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                return CreateMacOs(parent);
+            }
+
             return base.CreateNativeControlCore(parent);
         }
 
@@ -84,6 +93,10 @@ namespace Ryujinx.Ava.Ui.Controls
             else if (OperatingSystem.IsWindows())
             {
                 DestroyWin32(control);
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                DestroyMacOS();
             }
             else
             {
@@ -187,6 +200,16 @@ namespace Ryujinx.Ava.Ui.Controls
             return DefWindowProc(hWnd, msg, (IntPtr)wParam, (IntPtr)lParam);
         }
 
+        [SupportedOSPlatform("macos")]
+        IPlatformHandle CreateMacOs(IPlatformHandle parent)
+        {
+            MetalLayer = MetalHelper.GetMetalLayer(out IntPtr nsView, out _updateBoundsCallback);
+
+            NsView = nsView;
+
+            return new PlatformHandle(nsView, "NSView");
+        }
+
         void DestroyLinux()
         {
             X11Window?.Dispose();
@@ -197,6 +220,12 @@ namespace Ryujinx.Ava.Ui.Controls
         {
             DestroyWindow(handle.Handle);
             UnregisterClass(_className, GetModuleHandle(null));
+        }
+
+        [SupportedOSPlatform("macos")]
+        void DestroyMacOS()
+        {
+            MetalHelper.DestroyMetalLayer(NsView, MetalLayer);
         }
     }
 }

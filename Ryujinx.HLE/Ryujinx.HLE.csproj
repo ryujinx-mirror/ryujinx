@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <None Remove="Homebrew.npdm" />
+    <None Remove="HOS\Applets\SoftwareKeyboard\Resources\Logo_Ryujinx.png" />
     <None Remove="HOS\Applets\SoftwareKeyboard\Resources\Icon_BtnA.png" />
     <None Remove="HOS\Applets\SoftwareKeyboard\Resources\Icon_BtnB.png" />
     <None Remove="HOS\Applets\SoftwareKeyboard\Resources\Icon_KeyF6.png" />
@@ -44,6 +45,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Homebrew.npdm" />
+    <EmbeddedResource Include="HOS\Applets\SoftwareKeyboard\Resources\Logo_Ryujinx.png" />
     <EmbeddedResource Include="HOS\Applets\SoftwareKeyboard\Resources\Icon_BtnA.png" />
     <EmbeddedResource Include="HOS\Applets\SoftwareKeyboard\Resources\Icon_BtnB.png" />
     <EmbeddedResource Include="HOS\Applets\SoftwareKeyboard\Resources\Icon_KeyF6.png" />

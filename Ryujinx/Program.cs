@@ -16,6 +16,7 @@ using Ryujinx.Ui.Widgets;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -39,6 +40,12 @@ namespace Ryujinx
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int MessageBoxA(IntPtr hWnd, string text, string caption, uint type);
+
+        [DllImport("libc", SetLastError = true)]
+        static extern int setenv(string name, string value, int overwrite);
+
+        [DllImport("libc")]
+        static extern IntPtr getenv(string name);
 
         private const uint MB_ICONWARNING = 0x30;
 
@@ -95,6 +102,35 @@ namespace Ryujinx
             if (OperatingSystem.IsLinux())
             {
                 XInitThreads();
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                string baseDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+                string resourcesDataDir;
+
+                if (Path.GetFileName(baseDirectory) == "MacOS")
+                {
+                    resourcesDataDir = Path.Combine(Directory.GetParent(baseDirectory).FullName, "Resources");
+                }
+                else
+                {
+                    resourcesDataDir = baseDirectory;
+                }
+
+                void SetEnvironmentVariableNoCaching(string key, string value)
+                {
+                    int res = setenv(key, value, 1);
+                    Debug.Assert(res != -1);
+                }
+
+                // On macOS, GTK3 needs XDG_DATA_DIRS to be set, otherwise it will try searching for "gschemas.compiled" in system directories.
+                SetEnvironmentVariableNoCaching("XDG_DATA_DIRS", Path.Combine(resourcesDataDir, "share"));
+
+                // On macOS, GTK3 needs GDK_PIXBUF_MODULE_FILE to be set, otherwise it will try searching for "loaders.cache" in system directories.
+                SetEnvironmentVariableNoCaching("GDK_PIXBUF_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders.cache"));
+
+                SetEnvironmentVariableNoCaching("GTK_IM_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gtk-3.0", "3.0.0", "immodules.cache"));
             }
 
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);

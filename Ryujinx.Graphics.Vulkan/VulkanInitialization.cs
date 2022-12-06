@@ -1,4 +1,4 @@
-using Ryujinx.Common.Configuration;
+﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             ExtConditionalRendering.ExtensionName,
             ExtExtendedDynamicState.ExtensionName,
+            ExtTransformFeedback.ExtensionName,
             KhrDrawIndirectCount.ExtensionName,
             KhrPushDescriptor.ExtensionName,
             "VK_EXT_custom_border_color",
@@ -36,8 +37,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public static string[] RequiredExtensions { get; } = new string[]
         {
-            KhrSwapchain.ExtensionName,
-            ExtTransformFeedback.ExtensionName
+            KhrSwapchain.ExtensionName
         };
 
         private static string[] _excludedMessages = new string[]
@@ -382,12 +382,12 @@ namespace Ryujinx.Graphics.Vulkan
                 DepthClamp = true,
                 DualSrcBlend = true,
                 FragmentStoresAndAtomics = true,
-                GeometryShader = true,
+                GeometryShader = supportedFeatures.GeometryShader,
                 ImageCubeArray = true,
                 IndependentBlend = true,
-                LogicOp = true,
+                LogicOp = supportedFeatures.LogicOp,
                 MultiViewport = true,
-                PipelineStatisticsQuery = true,
+                PipelineStatisticsQuery = supportedFeatures.PipelineStatisticsQuery,
                 SamplerAnisotropy = true,
                 ShaderClipDistance = true,
                 ShaderFloat64 = supportedFeatures.ShaderFloat64,

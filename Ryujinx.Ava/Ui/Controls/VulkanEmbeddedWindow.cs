@@ -3,6 +3,7 @@ using Ryujinx.Ava.Ui.Controls;
 using Silk.NET.Vulkan;
 using SPB.Graphics.Vulkan;
 using SPB.Platform.GLX;
+using SPB.Platform.Metal;
 using SPB.Platform.Win32;
 using SPB.Platform.X11;
 using SPB.Windowing;
@@ -36,6 +37,10 @@ namespace Ryujinx.Ava.Ui
             else if (OperatingSystem.IsLinux())
             {
                 _window = new SimpleX11Window(new NativeHandle(X11Display), new NativeHandle(WindowHandle));
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                _window = new SimpleMetalWindow(new NativeHandle(NsView), new NativeHandle(MetalLayer));
             }
             else
             {

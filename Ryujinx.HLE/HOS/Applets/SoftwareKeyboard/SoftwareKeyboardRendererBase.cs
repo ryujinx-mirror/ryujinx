@@ -11,7 +11,6 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
-using Ryujinx.Common;
 
 namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
@@ -68,8 +67,8 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         {
             int ryujinxLogoSize = 32;
 
-            Stream logoStream = EmbeddedResources.GetStream("Ryujinx.Ui.Common/Resources/Logo_Ryujinx.png");
-            _ryujinxLogo = LoadResource(logoStream, ryujinxLogoSize, ryujinxLogoSize);
+            string ryujinxIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Logo_Ryujinx.png";
+            _ryujinxLogo = LoadResource(Assembly.GetExecutingAssembly(), ryujinxIconPath, ryujinxLogoSize, ryujinxLogoSize);
 
             string padAcceptIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnA.png";
             string padCancelIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnB.png";
@@ -117,7 +116,8 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
                 uiThemeFontFamily,
                 "Liberation Sans",
                 "FreeSans",
-                "DejaVu Sans"
+                "DejaVu Sans",
+                "Lucida Grande"
             };
 
             foreach (string fontFamily in availableFonts)

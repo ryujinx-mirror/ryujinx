@@ -23,7 +23,7 @@ namespace Ryujinx.Ui.Windows
 
         public CheatWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName) : this(new Builder("Ryujinx.Ui.Windows.CheatWindow.glade"), virtualFileSystem, titleId, titleName) { }
 
-        private CheatWindow(Builder builder, VirtualFileSystem virtualFileSystem, ulong titleId, string titleName) : base(builder.GetObject("_cheatWindow").Handle)
+        private CheatWindow(Builder builder, VirtualFileSystem virtualFileSystem, ulong titleId, string titleName) : base(builder.GetRawOwnedObject("_cheatWindow"))
         {
             builder.Autoconnect(this);
             _baseTitleInfoLabel.Text = $"Cheats Available for {titleName} [{titleId:X16}]";

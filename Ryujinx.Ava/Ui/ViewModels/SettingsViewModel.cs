@@ -108,6 +108,8 @@ namespace Ryujinx.Ava.Ui.ViewModels
             }
         }
 
+        public bool IsOpenGLAvailable => !OperatingSystem.IsMacOS();
+
         public bool DirectoryChanged
         {
             get => _directoryChanged;

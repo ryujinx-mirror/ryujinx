@@ -142,7 +142,7 @@ namespace Ryujinx.Ui
 
         public MainWindow() : this(new Builder("Ryujinx.Ui.MainWindow.glade")) { }
 
-        private MainWindow(Builder builder) : base(builder.GetObject("_mainWin").Handle)
+        private MainWindow(Builder builder) : base(builder.GetRawOwnedObject("_mainWin"))
         {
             builder.Autoconnect(this);
 
@@ -846,9 +846,7 @@ namespace Ryujinx.Ui
                 _deviceExitStatus.Reset();
 
                 Translator.IsReadyForTranslation.Reset();
-#if MACOS_BUILD
-                CreateGameWindow();
-#else
+
                 Thread windowThread = new Thread(() =>
                 {
                     CreateGameWindow();
@@ -858,7 +856,6 @@ namespace Ryujinx.Ui
                 };
 
                 windowThread.Start();
-#endif
 
                 _gameLoaded           = true;
                 _actionMenu.Sensitive = true;

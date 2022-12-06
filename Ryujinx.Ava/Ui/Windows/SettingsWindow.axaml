@@ -540,7 +540,7 @@
                                     <ComboBoxItem IsVisible="{Binding IsVulkanAvailable}">
                                         <TextBlock Text="Vulkan" />
                                     </ComboBoxItem>
-                                    <ComboBoxItem>
+                                    <ComboBoxItem IsEnabled="{Binding IsOpenGLAvailable}">
                                         <TextBlock Text="OpenGL" />
                                     </ComboBoxItem>
                                 </ComboBox>

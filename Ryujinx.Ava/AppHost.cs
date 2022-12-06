@@ -125,7 +125,7 @@ namespace Ryujinx.Ava
             _inputManager = inputManager;
             _accountManager = accountManager;
             _userChannelPersistence = userChannelPersistence;
-            _renderingThread = new Thread(RenderLoop) { Name = "GUI.RenderThread" };
+            _renderingThread = new Thread(RenderLoop, 1 * 1024 * 1024) { Name = "GUI.RenderThread" };
             _hideCursorOnIdle = ConfigurationState.Instance.HideCursorOnIdle;
             _lastCursorMoveTime = Stopwatch.GetTimestamp();
             _glLogLevel = ConfigurationState.Instance.Logger.GraphicsDebugLevel;
