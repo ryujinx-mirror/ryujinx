@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 sbSlot        = PrependOperation(Instruction.ConditionalSelect, inRange, Const(slot), sbSlot);
             }
 
-            if (sbUseMask != 0)
+            if (config.AccessibleStorageBuffersMask != 0)
             {
                 Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
 
