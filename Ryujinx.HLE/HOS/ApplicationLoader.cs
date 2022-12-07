@@ -426,9 +426,9 @@ namespace Ryujinx.HLE.HOS
                 {
                     foreach (DownloadableContentNca downloadableContentNca in downloadableContentContainer.DownloadableContentNcaList)
                     {
-                        if (File.Exists(downloadableContentContainer.ContainerPath))
+                        if (File.Exists(downloadableContentContainer.ContainerPath) && downloadableContentNca.Enabled)
                         {
-                            _device.Configuration.ContentManager.AddAocItem(downloadableContentNca.TitleId, downloadableContentContainer.ContainerPath, downloadableContentNca.FullPath, downloadableContentNca.Enabled);
+                            _device.Configuration.ContentManager.AddAocItem(downloadableContentNca.TitleId, downloadableContentContainer.ContainerPath, downloadableContentNca.FullPath);
                         }
                         else
                         {

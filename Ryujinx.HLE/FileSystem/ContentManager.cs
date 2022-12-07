@@ -39,13 +39,11 @@ namespace Ryujinx.HLE.FileSystem
         {
             public readonly string ContainerPath;
             public readonly string NcaPath;
-            public bool Enabled;
 
-            public AocItem(string containerPath, string ncaPath, bool enabled)
+            public AocItem(string containerPath, string ncaPath)
             {
                 ContainerPath = containerPath;
                 NcaPath = ncaPath;
-                Enabled = enabled;
             }
         }
 
@@ -53,7 +51,7 @@ namespace Ryujinx.HLE.FileSystem
 
         private VirtualFileSystem _virtualFileSystem;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         public ContentManager(VirtualFileSystem virtualFileSystem)
         {
@@ -226,27 +224,21 @@ namespace Ryujinx.HLE.FileSystem
                 pfs0.OpenFile(ref cnmtFile.Ref(), pfs0.EnumerateEntries().Single().FullPath.ToU8Span(), OpenMode.Read);
 
                 var cnmt = new Cnmt(cnmtFile.Get.AsStream());
-
                 if (cnmt.Type != ContentMetaType.AddOnContent || (cnmt.TitleId & 0xFFFFFFFFFFFFE000) != aocBaseId)
                 {
                     continue;
                 }
 
                 string ncaId = BitConverter.ToString(cnmt.ContentEntries[0].NcaId).Replace("-", "").ToLower();
-                if (!_aocData.TryAdd(cnmt.TitleId, new AocItem(containerPath, $"{ncaId}.nca", true)))
-                {
-                    Logger.Warning?.Print(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {cnmt.TitleId:X16}");
-                }
-                else
-                {
-                    Logger.Info?.Print(LogClass.Application, $"Found AddOnContent with TitleId {cnmt.TitleId:X16}");
-                }
+
+                AddAocItem(cnmt.TitleId, containerPath, $"{ncaId}.nca", true);
             }
         }
 
-        public void AddAocItem(ulong titleId, string containerPath, string ncaPath, bool enabled)
+        public void AddAocItem(ulong titleId, string containerPath, string ncaPath, bool mergedToContainer = false)
         {
-            if (!_aocData.TryAdd(titleId, new AocItem(containerPath, ncaPath, enabled)))
+            // TODO: Check Aoc version.
+            if (!_aocData.TryAdd(titleId, new AocItem(containerPath, ncaPath)))
             {
                 Logger.Warning?.Print(LogClass.Application, $"Duplicate AddOnContent detected. TitleId {titleId:X16}");
             }
@@ -254,25 +246,27 @@ namespace Ryujinx.HLE.FileSystem
             {
                 Logger.Info?.Print(LogClass.Application, $"Found AddOnContent with TitleId {titleId:X16}");
 
-                using (FileStream fileStream = File.OpenRead(containerPath))
-                using (PartitionFileSystem pfs = new PartitionFileSystem(fileStream.AsStorage()))
+                if (!mergedToContainer)
                 {
-                    _virtualFileSystem.ImportTickets(pfs);
+                    using FileStream          fileStream          = File.OpenRead(containerPath);
+                    using PartitionFileSystem partitionFileSystem = new(fileStream.AsStorage());
+
+                    _virtualFileSystem.ImportTickets(partitionFileSystem);
                 }
             }
         }
 
         public void ClearAocData() => _aocData.Clear();
 
-        public int GetAocCount() => _aocData.Where(e => e.Value.Enabled).Count();
+        public int GetAocCount() => _aocData.Count;
 
-        public IList<ulong> GetAocTitleIds() => _aocData.Where(e => e.Value.Enabled).Select(e => e.Key).ToList();
+        public IList<ulong> GetAocTitleIds() => _aocData.Select(e => e.Key).ToList();
 
         public bool GetAocDataStorage(ulong aocTitleId, out IStorage aocStorage, IntegrityCheckLevel integrityCheckLevel)
         {
             aocStorage = null;
 
-            if (_aocData.TryGetValue(aocTitleId, out AocItem aoc) && aoc.Enabled)
+            if (_aocData.TryGetValue(aocTitleId, out AocItem aoc))
             {
                 var file = new FileStream(aoc.ContainerPath, FileMode.Open, FileAccess.Read);
                 using var ncaFile = new UniqueRef<IFile>();
