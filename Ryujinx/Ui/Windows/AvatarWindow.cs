@@ -46,7 +46,7 @@ namespace Ryujinx.Ui.Windows
             SetDefaultSize(740, 400);
             SetPosition(WindowPosition.Center);
 
-            VBox vbox = new VBox(false, 0);
+            Box vbox = new(Orientation.Vertical, 0);
             Add(vbox);
 
             ScrolledWindow scrolledWindow = new ScrolledWindow
@@ -55,7 +55,7 @@ namespace Ryujinx.Ui.Windows
             };
             scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
 
-            HBox hbox = new HBox(false, 0);
+            Box hbox = new(Orientation.Horizontal, 0);
 
             Button chooseButton = new Button()
             {

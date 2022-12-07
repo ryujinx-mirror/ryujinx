@@ -52,7 +52,8 @@ namespace Ryujinx.Ui.Windows
             _selectedLabel = new Label("Selected User Profile:")
             {
                 Margin     = 15,
-                Attributes = new AttrList()
+                Attributes = new AttrList(),
+                Halign     = Align.Start
             };
             _selectedLabel.Attributes.Insert(new Pango.AttrWeight(Weight.Bold));
 
@@ -136,7 +137,8 @@ namespace Ryujinx.Ui.Windows
             _availableUsersLabel = new Label("Available User Profiles:")
             {
                 Margin     = 15,
-                Attributes = new AttrList()
+                Attributes = new AttrList(),
+                Halign     = Align.Start
             };
             _availableUsersLabel.Attributes.Insert(new Pango.AttrWeight(Weight.Bold));
 
@@ -226,10 +228,9 @@ namespace Ryujinx.Ui.Windows
             _usersTreeViewWindow.Add(_usersTreeView);
 
             _usersTreeViewBox.Add(_usersTreeViewWindow);
-
-            _bottomBox.PackStart(new Gtk.Alignment(-1, 0, 0, 0) { _addButton }, false, false, 0);
-            _bottomBox.PackStart(new Gtk.Alignment(-1, 0, 0, 0) { _deleteButton }, false, false, 0);
-            _bottomBox.PackEnd(new Gtk.Alignment(1, 0, 0, 0) { _closeButton }, false, false, 0);
+            _bottomBox.PackStart(_addButton, false, false, 0);
+            _bottomBox.PackStart(_deleteButton, false, false, 0);
+            _bottomBox.PackEnd(_closeButton, false, false, 0);
 
             _selectedUserInfoBox.Add(_selectedUserNameEntry);
             _selectedUserInfoBox.Add(_selectedUserIdLabel);
@@ -238,12 +239,12 @@ namespace Ryujinx.Ui.Windows
             _selectedUserButtonsBox.Add(_changeProfileImageButton);
 
             _selectedUserBox.Add(_selectedUserImage);
-            _selectedUserBox.PackStart(new Gtk.Alignment(-1, 0, 0, 0) { _selectedUserInfoBox }, true, true, 0);
-            _selectedUserBox.Add(_selectedUserButtonsBox);
+            _selectedUserBox.PackStart(_selectedUserInfoBox, false, false, 0);
+            _selectedUserBox.PackEnd(_selectedUserButtonsBox, false, false, 0);
 
-            _mainBox.PackStart(new Gtk.Alignment(-1, 0, 0, 0) { _selectedLabel }, false, false, 0);
+            _mainBox.PackStart(_selectedLabel, false, false, 0);
             _mainBox.PackStart(_selectedUserBox, false, true, 0);
-            _mainBox.PackStart(new Gtk.Alignment(-1, 0, 0, 0) { _availableUsersLabel }, false, false, 0);
+            _mainBox.PackStart(_availableUsersLabel, false, false, 0);
             _mainBox.Add(_usersTreeViewBox);
             _mainBox.Add(_bottomBox);
 
