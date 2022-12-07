@@ -49,14 +49,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ContentWithTargetPath Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+    <Content Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>alsoft.ini</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
+    </Content>
+    <Content Include="..\distribution\legal\THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>THIRDPARTY.md</TargetPath>
-    </ContentWithTargetPath>
+    </Content>
+    <Content Include="..\LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>LICENSE.txt</TargetPath>
+    </Content>
   </ItemGroup>
 
   <!-- Due to .net core 3.1 embedded resource loading -->

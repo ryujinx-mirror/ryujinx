@@ -33,10 +33,14 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<ContentWithTargetPath Include="..\distribution\legal\THIRDPARTY.md">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>THIRDPARTY.md</TargetPath>
-		</ContentWithTargetPath>
+      <Content Include="..\distribution\legal\THIRDPARTY.md">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <TargetPath>THIRDPARTY.md</TargetPath>
+      </Content>
+      <Content Include="..\LICENSE.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <TargetPath>LICENSE.txt</TargetPath>
+      </Content>
 	</ItemGroup>
 
   <!-- Due to .net core 3.1 embedded resource loading -->
