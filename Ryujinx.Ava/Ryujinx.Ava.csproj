@@ -26,7 +26,7 @@
     <PackageReference Include="Avalonia.Svg" Version="0.10.18" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.18" />
     <PackageReference Include="jp2masa.Avalonia.Flexbox" Version="0.2.0" />
-    <PackageReference Include="DynamicData" Version="7.12.8" />
+    <PackageReference Include="DynamicData" Version="7.12.11" />
     <PackageReference Include="FluentAvaloniaUI" Version="1.4.5" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
 
