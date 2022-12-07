@@ -8,7 +8,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
     /// <summary>
     /// A simple implementation of a ReaderWriterLock which can be used from native code.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct NativeReaderWriterLock
     {
         public int WriteLock;
