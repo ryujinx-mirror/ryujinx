@@ -124,6 +124,20 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
+        [CommandHipc(103)] // 4.0.0+
+        // CheckNetworkServiceAvailabilityAsync() -> object<nn::account::detail::IAsyncContext>
+        public ResultCode CheckNetworkServiceAvailabilityAsync(ServiceCtx context)
+        {
+            ResultCode resultCode = _applicationServiceServer.CheckNetworkServiceAvailabilityAsync(context, out IAsyncContext asyncContext);
+
+            if (resultCode == ResultCode.Success)
+            {
+                MakeObject(context, asyncContext);
+            }
+
+            return resultCode;
+        }
+        
         [CommandHipc(110)]
         // StoreSaveDataThumbnail(nn::account::Uid, buffer<bytes, 5>)
         public ResultCode StoreSaveDataThumbnail(ServiceCtx context)
