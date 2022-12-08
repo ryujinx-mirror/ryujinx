@@ -1449,10 +1449,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var xLut = context.ConstantComposite(v4float, one, minusOne, one, zero);
             var yLut = context.ConstantComposite(v4float, one, one, minusOne, one);
 
+            var three = context.Constant(context.TypeU32(), 3);
+
             var threadId = context.GetAttribute(AggregateType.U32, AttributeConsts.LaneId, false);
-            var shift = context.BitwiseAnd(context.TypeU32(), threadId, context.Constant(context.TypeU32(), 3));
+            var shift = context.BitwiseAnd(context.TypeU32(), threadId, three);
             shift = context.ShiftLeftLogical(context.TypeU32(), shift, context.Constant(context.TypeU32(), 1));
             var lutIdx = context.ShiftRightLogical(context.TypeU32(), mask, shift);
+            lutIdx = context.BitwiseAnd(context.TypeU32(), lutIdx, three);
 
             var xLutValue = context.VectorExtractDynamic(context.TypeFP32(), xLut, lutIdx);
             var yLutValue = context.VectorExtractDynamic(context.TypeFP32(), yLut, lutIdx);
