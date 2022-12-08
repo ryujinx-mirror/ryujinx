@@ -8,6 +8,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int TessLevelOuter3     = 0x00c;
         public const int TessLevelInner0     = 0x010;
         public const int TessLevelInner1     = 0x014;
+        public const int PrimitiveId         = 0x060;
         public const int Layer               = 0x064;
         public const int ViewportIndex       = 0x068;
         public const int PointSize           = 0x06c;
@@ -85,8 +86,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int LaneId = 0x2000020;
 
         public const int InvocationId = 0x2000024;
-        public const int PrimitiveId = 0x2000028;
-        public const int PatchVerticesIn = 0x200002c;
+        public const int PatchVerticesIn = 0x2000028;
 
         public const int EqMask = 0x2000030;
         public const int GeMask = 0x2000034;
