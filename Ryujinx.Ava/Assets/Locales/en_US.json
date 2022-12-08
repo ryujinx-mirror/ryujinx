@@ -315,7 +315,7 @@
   "DialogUpdaterConvertFailedMessage": "Failed to convert the current Ryujinx version.",
   "DialogUpdaterCancelUpdateMessage": "Cancelling Update!",
   "DialogUpdaterAlreadyOnLatestVersionMessage": "You are already using the most updated version of Ryujinx!",
-  "DialogUpdaterFailedToGetVersionMessage": "An error has occurred when trying to get release information from Github Release. This can be caused if a new release is being compiled by GitHub Actions. Try again in a few minutes.",
+  "DialogUpdaterFailedToGetVersionMessage": "An error has occurred when trying to get release information from GitHub Release. This can be caused if a new release is being compiled by GitHub Actions. Try again in a few minutes.",
   "DialogUpdaterConvertFailedGithubMessage": "Failed to convert the received Ryujinx version from Github Release.",
   "DialogUpdaterDownloadingMessage": "Downloading Update...",
   "DialogUpdaterExtractionMessage": "Extracting Update...",
