@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
 using System;
-using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
@@ -51,7 +50,7 @@ namespace Ryujinx.Common.System
             {
                 if (OperatingSystem.IsWindows())
                 {
-                    userDpiScale = Graphics.FromHwnd(IntPtr.Zero).DpiX;
+                    userDpiScale = GdiPlusHelper.GetDpiX(IntPtr.Zero);
                 }
                 else if (OperatingSystem.IsLinux())
                 {
