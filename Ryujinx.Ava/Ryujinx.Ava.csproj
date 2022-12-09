@@ -40,6 +40,9 @@
     <PackageReference Include="SPB" Version="0.0.4-build28" />
     <PackageReference Include="SharpZipLib" Version="1.4.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+
+    <!--NOTE: DO NOT REMOVE, THIS IS REQUIRED AS A RESULT OF A TRIMMING ISSUE IN AVALONIA -->
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
