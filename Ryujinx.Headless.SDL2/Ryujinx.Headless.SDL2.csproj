@@ -12,8 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="OpenTK.Core" Version="4.7.5" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build10" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies.osx" Version="5.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win10-x64'" />
+    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build12" />
   </ItemGroup>
 
   <ItemGroup>

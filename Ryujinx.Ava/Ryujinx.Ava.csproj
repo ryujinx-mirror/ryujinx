@@ -32,8 +32,7 @@
 
     <PackageReference Include="OpenTK.Core" Version="4.7.5" />
     <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build10" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies.osx" Version="5.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win10-x64'" />
+    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build12" />
     <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Version="1.2.0" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win10-x64'" />
     <PackageReference Include="Silk.NET.Vulkan" Version="2.16.0" />
     <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.16.0" />
