@@ -161,6 +161,7 @@
     <Style Selector="MenuItem">
         <Setter Property="Height" Value="{DynamicResource MenuItemHeight}" />
         <Setter Property="Padding" Value="{DynamicResource MenuItemPadding}" />
+        <Setter Property="FontSize" Value="12" />
     </Style>
     <Style Selector="MenuItem:selected /template/ Border#root">
         <Setter Property="Background" Value="{DynamicResource ThemeControlBorderColor}" />

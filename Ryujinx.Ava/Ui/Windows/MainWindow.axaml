@@ -12,9 +12,9 @@
     xmlns:window="clr-namespace:Ryujinx.Ava.Ui.Windows"
     Title="Ryujinx"
     Width="1280"
-    Height="785"
+    Height="777"
     MinWidth="1092"
-    MinHeight="680"
+    MinHeight="672"
     d:DesignHeight="720"
     d:DesignWidth="1280"
     x:CompileBindings="True"
@@ -552,9 +552,8 @@
             <Grid
                 Name="StatusBar"
                 Grid.Row="2"
-                MinHeight="30"
-                Height="30"
-                Margin="0,0"
+                Margin="0"
+                MinHeight="22"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Bottom"
                 Background="{DynamicResource ThemeContentBackgroundColor}"
@@ -568,7 +567,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel
                     Grid.Column="0"
-                    Margin="10,0"
+                    Margin="5"
                     VerticalAlignment="Center"
                     IsVisible="{Binding EnableNonGameRunningControls}">
                     <Grid Margin="0">
@@ -610,14 +609,14 @@
                 </StackPanel>
                 <StackPanel
                     Grid.Column="1"
-                    Margin="10,0"
+                    Margin="0,2"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     IsVisible="{Binding IsGameRunning}"
                     Orientation="Horizontal">
                     <TextBlock
                         Name="VsyncStatus"
-                        Margin="0,0,5,0"
+                        Margin="5,0,5,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Foreground="{Binding VsyncColor}"
@@ -628,7 +627,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -644,7 +643,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -660,13 +659,13 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
                     <ui:ToggleSplitButton
                         Name="VolumeStatus"
-                        Padding="5"
+                        Padding="5,0,5,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         VerticalContentAlignment="Center"
@@ -679,6 +678,7 @@
                             <Flyout Placement="Bottom" ShowMode="TransientWithDismissOnPointerMoveAway">
                                 <Grid Margin="0">
                                     <Slider
+                                        MaxHeight="40"
                                         Width="150"
                                         Margin="0"
                                         Padding="0"
@@ -697,7 +697,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -711,7 +711,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -725,7 +725,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -739,7 +739,7 @@
                     <Border
                         Width="2"
                         Height="12"
-                        Margin="2,0"
+                        Margin="0"
                         BorderBrush="Gray"
                         BorderThickness="1"
                         IsVisible="{Binding !ShowLoadProgress}" />
@@ -753,7 +753,7 @@
                 </StackPanel>
                 <StackPanel
                     Grid.Column="3"
-                    Margin="10,0"
+                    Margin="0,0,5,0"
                     VerticalAlignment="Center"
                     IsVisible="{Binding ShowFirmwareStatus}"
                     Orientation="Horizontal">

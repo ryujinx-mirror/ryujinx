@@ -138,6 +138,9 @@
                 <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
                 </Style>
+                <Style Selector="ListBoxItem:selected /template/ Border#SelectionIndicator">
+                    <Setter Property="MinHeight" Value="100" />
+                </Style>
                 <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource AppListHoverBackgroundColor}" />
                 </Style>
