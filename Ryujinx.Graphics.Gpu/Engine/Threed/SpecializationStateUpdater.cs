@@ -253,14 +253,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// Indicates that any storage buffer use is unaligned.
         /// </summary>
         /// <param name="value">The new value</param>
-        public void SetHasUnalignedStorageBuffer(bool value)
+        /// <returns>True if the unaligned state changed, false otherwise</returns>
+        public bool SetHasUnalignedStorageBuffer(bool value)
         {
             if (value != _graphics.HasUnalignedStorageBuffer)
             {
                 _graphics.HasUnalignedStorageBuffer = value;
 
                 Signal();
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

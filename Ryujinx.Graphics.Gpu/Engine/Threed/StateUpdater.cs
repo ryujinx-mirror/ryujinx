@@ -304,14 +304,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void CommitBindings()
         {
-            var buffers = _channel.BufferManager;
-            var hasUnaligned = buffers.HasUnalignedStorageBuffers;
-
             UpdateStorageBuffers();
 
-            if (!_channel.TextureManager.CommitGraphicsBindings(_shaderSpecState) || (buffers.HasUnalignedStorageBuffers != hasUnaligned))
+            bool unalignedChanged = _currentSpecState.SetHasUnalignedStorageBuffer(_channel.BufferManager.HasUnalignedStorageBuffers);
+
+            if (!_channel.TextureManager.CommitGraphicsBindings(_shaderSpecState) || unalignedChanged)
             {
-                _currentSpecState.SetHasUnalignedStorageBuffer(buffers.HasUnalignedStorageBuffers);
                 // Shader must be reloaded. _vtgWritesRtLayer should not change.
                 UpdateShaderState();
             }
