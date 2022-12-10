@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         {
             _baseRenderer = renderer;
 
-            renderer.ScreenCaptured += (object sender, ScreenCaptureImageInfo info) => ScreenCaptured?.Invoke(this, info);
+            renderer.ScreenCaptured += (sender, info) => ScreenCaptured?.Invoke(this, info);
 
             Pipeline = new ThreadedPipeline(this, renderer.Pipeline);
             Window = new ThreadedWindow(this, renderer);
