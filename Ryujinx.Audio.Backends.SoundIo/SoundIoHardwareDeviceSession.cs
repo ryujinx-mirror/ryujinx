@@ -1,11 +1,12 @@
 ﻿using Ryujinx.Audio.Backends.Common;
+using Ryujinx.Audio.Backends.SoundIo.Native;
 using Ryujinx.Audio.Common;
 using Ryujinx.Memory;
-using SoundIOSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using static Ryujinx.Audio.Backends.SoundIo.Native.SoundIo;
 
 namespace Ryujinx.Audio.Backends.SoundIo
 {
@@ -13,7 +14,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
     {
         private SoundIoHardwareDeviceDriver _driver;
         private ConcurrentQueue<SoundIoAudioBuffer> _queuedBuffers;
-        private SoundIOOutStream _outputStream;
+        private SoundIoOutStreamContext _outputStream;
         private DynamicRingBuffer _ringBuffer;
         private ulong _playedSampleCount;
         private ManualResetEvent _updateRequiredEvent;
@@ -106,9 +107,9 @@ namespace Ryujinx.Audio.Backends.SoundIo
                 return;
             }
 
-            SoundIOChannelAreas areas = _outputStream.BeginWrite(ref frameCount);
+            Span<SoundIoChannelArea> areas = _outputStream.BeginWrite(ref frameCount);
 
-            int channelCount = areas.ChannelCount;
+            int channelCount = areas.Length;
 
             byte[] samples = new byte[frameCount * bytesPerFrame];
 
@@ -117,12 +118,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
             // This is a huge ugly block of code, but we save
             // a significant amount of time over the generic
             // loop that handles other channel counts.
-            // TODO: Is this still right in 2021?
+            // TODO: Is this still right in 2022?
 
             // Mono
             if (channelCount == 1)
             {
-                SoundIOChannelArea area = areas.GetArea(0);
+                ref SoundIoChannelArea area = ref areas[0];
 
                 fixed (byte* srcptr = samples)
                 {
@@ -167,8 +168,8 @@ namespace Ryujinx.Audio.Backends.SoundIo
             // Stereo
             else if (channelCount == 2)
             {
-                SoundIOChannelArea area1 = areas.GetArea(0);
-                SoundIOChannelArea area2 = areas.GetArea(1);
+                ref SoundIoChannelArea area1 = ref areas[0];
+                ref SoundIoChannelArea area2 = ref areas[1];
 
                 fixed (byte* srcptr = samples)
                 {
@@ -233,12 +234,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
             // Surround
             else if (channelCount == 6)
             {
-                SoundIOChannelArea area1 = areas.GetArea(0);
-                SoundIOChannelArea area2 = areas.GetArea(1);
-                SoundIOChannelArea area3 = areas.GetArea(2);
-                SoundIOChannelArea area4 = areas.GetArea(3);
-                SoundIOChannelArea area5 = areas.GetArea(4);
-                SoundIOChannelArea area6 = areas.GetArea(5);
+                ref SoundIoChannelArea area1 = ref areas[0];
+                ref SoundIoChannelArea area2 = ref areas[1];
+                ref SoundIoChannelArea area3 = ref areas[2];
+                ref SoundIoChannelArea area4 = ref areas[3];
+                ref SoundIoChannelArea area5 = ref areas[4];
+                ref SoundIoChannelArea area6 = ref areas[5];
 
                 fixed (byte* srcptr = samples)
                 {
@@ -367,24 +368,18 @@ namespace Ryujinx.Audio.Backends.SoundIo
             // Every other channel count
             else
             {
-                SoundIOChannelArea[] channels = new SoundIOChannelArea[channelCount];
-
-                // Obtain the channel area for each channel
-                for (int i = 0; i < channelCount; i++)
-                {
-                    channels[i] = areas.GetArea(i);
-                }
-
                 fixed (byte* srcptr = samples)
                 {
                     for (int frame = 0; frame < frameCount; frame++)
-                        for (int channel = 0; channel < areas.ChannelCount; channel++)
+                    {
+                        for (int channel = 0; channel < areas.Length; channel++)
                         {
                             // Copy channel by channel, frame by frame. This is slow!
-                            Unsafe.CopyBlockUnaligned((byte*)channels[channel].Pointer, srcptr + (frame * bytesPerFrame) + (channel * bytesPerSample), bytesPerSample);
+                            Unsafe.CopyBlockUnaligned((byte*)areas[channel].Pointer, srcptr + (frame * bytesPerFrame) + (channel * bytesPerSample), bytesPerSample);
 
-                            channels[channel].Pointer += channels[channel].Step;
+                            areas[channel].Pointer += areas[channel].Step;
                         }
+                    }
                 }
             }
 
