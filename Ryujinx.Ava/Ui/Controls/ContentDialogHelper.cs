@@ -222,7 +222,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
             content.MinHeight = 80;
 
-            SymbolIcon icon = new SymbolIcon { Symbol = (Symbol)symbol, Margin = new Avalonia.Thickness(10) };
+            SymbolIcon icon = new SymbolIcon { Symbol = (Symbol)symbol, Margin = new Thickness(10) };
             icon.FontSize = 40;
             icon.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
             Grid.SetColumn(icon, 0);
@@ -232,15 +232,15 @@ namespace Ryujinx.Ava.Ui.Controls
             TextBlock primaryLabel = new TextBlock()
             {
                 Text = primaryText,
-                Margin = new Avalonia.Thickness(5),
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                Margin = new Thickness(5),
+                TextWrapping = TextWrapping.Wrap,
                 MaxWidth = 450
             };
             TextBlock secondaryLabel = new TextBlock()
             {
                 Text = secondaryText,
-                Margin = new Avalonia.Thickness(5),
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                Margin = new Thickness(5),
+                TextWrapping = TextWrapping.Wrap,
                 MaxWidth = 450
             };
 

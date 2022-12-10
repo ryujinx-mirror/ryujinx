@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Vulkan
                 iter++;
             }
 
-            DescriptorSetLayout[] layouts = new DescriptorSetLayout[PipelineFull.DescriptorSetLayouts];
+            DescriptorSetLayout[] layouts = new DescriptorSetLayout[PipelineBase.DescriptorSetLayouts];
 
             var uDescriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo()
             {
@@ -117,10 +117,10 @@ namespace Ryujinx.Graphics.Vulkan
                 BindingCount = (uint)iCount
             };
 
-            gd.Api.CreateDescriptorSetLayout(device, uDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.UniformSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, sDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.StorageSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, tDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.TextureSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, iDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.ImageSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, uDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.UniformSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, sDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.StorageSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, tDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.TextureSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, iDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.ImageSetIndex]).ThrowOnError();
 
             fixed (DescriptorSetLayout* pLayouts = layouts)
             {
@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     SType = StructureType.PipelineLayoutCreateInfo,
                     PSetLayouts = pLayouts,
-                    SetLayoutCount = PipelineFull.DescriptorSetLayouts
+                    SetLayoutCount = PipelineBase.DescriptorSetLayouts
                 };
 
                 gd.Api.CreatePipelineLayout(device, &pipelineLayoutCreateInfo, null, out layout).ThrowOnError();
@@ -191,7 +191,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Set(iLayoutBindings, DescriptorType.StorageImage, ref iIndex, shader.Bindings.ImageBindings);
             }
 
-            DescriptorSetLayout[] layouts = new DescriptorSetLayout[PipelineFull.DescriptorSetLayouts];
+            DescriptorSetLayout[] layouts = new DescriptorSetLayout[PipelineBase.DescriptorSetLayouts];
 
             var uDescriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo()
             {
@@ -221,10 +221,10 @@ namespace Ryujinx.Graphics.Vulkan
                 BindingCount = (uint)iCount
             };
 
-            gd.Api.CreateDescriptorSetLayout(device, uDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.UniformSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, sDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.StorageSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, tDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.TextureSetIndex]).ThrowOnError();
-            gd.Api.CreateDescriptorSetLayout(device, iDescriptorSetLayoutCreateInfo, null, out layouts[PipelineFull.ImageSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, uDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.UniformSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, sDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.StorageSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, tDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.TextureSetIndex]).ThrowOnError();
+            gd.Api.CreateDescriptorSetLayout(device, iDescriptorSetLayoutCreateInfo, null, out layouts[PipelineBase.ImageSetIndex]).ThrowOnError();
 
             fixed (DescriptorSetLayout* pLayouts = layouts)
             {
@@ -232,7 +232,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     SType = StructureType.PipelineLayoutCreateInfo,
                     PSetLayouts = pLayouts,
-                    SetLayoutCount = PipelineFull.DescriptorSetLayouts
+                    SetLayoutCount = PipelineBase.DescriptorSetLayouts
                 };
 
                 gd.Api.CreatePipelineLayout(device, &pipelineLayoutCreateInfo, null, out layout).ThrowOnError();

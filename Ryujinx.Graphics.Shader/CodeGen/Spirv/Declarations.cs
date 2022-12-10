@@ -10,8 +10,6 @@ using static Spv.Specification;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
-    using SpvInstruction = Spv.Generator.Instruction;
-
     static class Declarations
     {
         // At least 16 attributes are guaranteed by the spec.
@@ -60,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             for (int funcIndex = 0; funcIndex < functions.Count; funcIndex++)
             {
                 StructuredFunction function = functions[funcIndex];
-                SpvInstruction[] locals = new SpvInstruction[function.InArguments.Length];
+                Instruction[] locals = new Instruction[function.InArguments.Length];
 
                 for (int i = 0; i < function.InArguments.Length; i++)
                 {
@@ -122,7 +120,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             context.SharedMemory = DeclareMemory(context, StorageClass.Workgroup, size);
         }
 
-        private static SpvInstruction DeclareMemory(CodeGenContext context, StorageClass storage, int size)
+        private static Instruction DeclareMemory(CodeGenContext context, StorageClass storage, int size)
         {
             var arrayType = context.TypeArray(context.TypeU32(), context.Constant(context.TypeU32(), size));
             var pointerType = context.TypePointer(storage, arrayType);

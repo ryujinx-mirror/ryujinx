@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             int  supportedLanguages  = (int)context.Device.Application.ControlData.Value.SupportedLanguageFlag;
             int  firstSupported      = BitOperations.TrailingZeroCount(supportedLanguages);
 
-            if (firstSupported > (int)SystemState.TitleLanguage.BrazilianPortuguese)
+            if (firstSupported > (int)TitleLanguage.BrazilianPortuguese)
             {
                 Logger.Warning?.Print(LogClass.ServiceAm, "Application has zero supported languages");
 
@@ -170,7 +170,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // TODO: In the future, a GUI could enable user-specified search priority
             if (((1 << (int)context.Device.System.State.DesiredTitleLanguage) & supportedLanguages) == 0)
             {
-                SystemLanguage newLanguage = Enum.Parse<SystemLanguage>(Enum.GetName(typeof(SystemState.TitleLanguage), firstSupported));
+                SystemLanguage newLanguage = Enum.Parse<SystemLanguage>(Enum.GetName(typeof(TitleLanguage), firstSupported));
                 desiredLanguageCode = SystemStateMgr.GetLanguageCode((int)newLanguage);
 
                 Logger.Info?.Print(LogClass.ServiceAm, $"Application doesn't support configured language. Using {newLanguage}");

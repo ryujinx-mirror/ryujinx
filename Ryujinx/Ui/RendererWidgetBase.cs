@@ -132,7 +132,7 @@ namespace Ryujinx.Ui
 
         private void HideCursorStateChanged(object sender, ReactiveEventArgs<bool> state)
         {
-            Gtk.Application.Invoke(delegate
+            Application.Invoke(delegate
             {
                 _hideCursorOnIdle = state.NewValue;
 
@@ -248,7 +248,7 @@ namespace Ryujinx.Ui
                                 && keyboard.IsPressed(Key.Enter))
                                 || keyboard.IsPressed(Key.Escape);
 
-            bool fullScreenToggled = ParentWindow.State.HasFlag(Gdk.WindowState.Fullscreen);
+            bool fullScreenToggled = ParentWindow.State.HasFlag(WindowState.Fullscreen);
 
             if (toggleFullscreen != _toggleFullscreen)
             {
@@ -340,7 +340,7 @@ namespace Ryujinx.Ui
                         string directory   = AppDataManager.Mode switch
                         {
                             AppDataManager.LaunchMode.Portable => System.IO.Path.Combine(AppDataManager.BaseDirPath, "screenshots"),
-                            _ => System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyPictures), "Ryujinx")
+                            _ => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Ryujinx")
                         };
 
                         string path = System.IO.Path.Combine(directory, filename);
@@ -434,7 +434,7 @@ namespace Ryujinx.Ui
                     if (_ticks >= _ticksPerFrame)
                     {
                         string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? "Docked" : "Handheld";
-                        float scale = Graphics.Gpu.GraphicsConfig.ResScale;
+                        float scale = GraphicsConfig.ResScale;
                         if (scale != 1)
                         {
                             dockedMode += $" ({scale}x)";

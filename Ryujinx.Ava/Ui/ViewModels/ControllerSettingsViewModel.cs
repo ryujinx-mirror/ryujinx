@@ -545,7 +545,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
                 config = new StandardKeyboardInputConfig
                 {
-                    Version = Ryujinx.Common.Configuration.Hid.InputConfig.CurrentVersion,
+                    Version = InputConfig.CurrentVersion,
                     Backend = InputBackendType.WindowKeyboard,
                     Id = id,
                     ControllerType = ControllerType.ProController,
@@ -600,7 +600,7 @@ namespace Ryujinx.Ava.Ui.ViewModels
 
                 config = new StandardControllerInputConfig
                 {
-                    Version = Ryujinx.Common.Configuration.Hid.InputConfig.CurrentVersion,
+                    Version = InputConfig.CurrentVersion,
                     Backend = InputBackendType.GamepadSDL2,
                     Id = id,
                     ControllerType = ControllerType.ProController,

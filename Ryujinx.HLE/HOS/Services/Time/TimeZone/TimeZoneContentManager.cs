@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             }
 
             List<(int Offset, string Location, string Abbr)> outList = new List<(int Offset, string Location, string Abbr)>();
-            var now = System.DateTimeOffset.Now.ToUnixTimeSeconds();
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
             using (IStorage ncaStorage = new LocalStorage(_virtualFileSystem.SwitchPathToSystemPath(tzBinaryContentPath), FileAccess.Read, FileMode.Open))
             using (IFileSystem romfs = new Nca(_virtualFileSystem.KeySet, ncaStorage).OpenFileSystem(NcaSectionType.Data, _fsIntegrityCheckLevel))
             {

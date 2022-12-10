@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             /// <summary>
             /// Texture target.
             /// </summary>
-            public Image.TextureTarget TextureTarget;
+            public TextureTarget TextureTarget;
 
             /// <summary>
             /// Indicates if the coordinates used to sample the texture are normalized or not (0.0..1.0 or 0..Width/Height).
@@ -331,7 +331,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             int cbufSlot,
             uint format,
             bool formatSrgb,
-            Image.TextureTarget target,
+            TextureTarget target,
             bool coordNormalized)
         {
             Box<TextureSpecializationState> state = GetOrCreateTextureSpecState(stageIndex, handle, cbufSlot);
@@ -415,7 +415,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="stageIndex">Shader stage where the texture is used</param>
         /// <param name="handle">Offset in words of the texture handle on the texture buffer</param>
         /// <param name="cbufSlot">Slot of the texture buffer constant buffer</param>
-        public Image.TextureTarget GetTextureTarget(int stageIndex, int handle, int cbufSlot)
+        public TextureTarget GetTextureTarget(int stageIndex, int handle, int cbufSlot)
         {
             return GetTextureSpecState(stageIndex, handle, cbufSlot).Value.TextureTarget;
         }

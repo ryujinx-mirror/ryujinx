@@ -104,11 +104,11 @@ namespace Ryujinx.Ava.Ui.Windows
 
             var device = ViewModel.Devices[ViewModel.Device];
 
-            if (device.Type == Models.DeviceType.Keyboard)
+            if (device.Type == DeviceType.Keyboard)
             {
                 assigner = new KeyboardKeyAssigner((IKeyboard)ViewModel.SelectedGamepad);
             }
-            else if (device.Type == Models.DeviceType.Controller)
+            else if (device.Type == DeviceType.Controller)
             {
                 assigner = new GamepadButtonAssigner(ViewModel.SelectedGamepad, (ViewModel.Config as StandardControllerInputConfig).TriggerThreshold, forStick);
             }

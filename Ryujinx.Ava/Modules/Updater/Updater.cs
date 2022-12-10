@@ -355,7 +355,7 @@ namespace Ryujinx.Modules
                         list[index] = args.Result;
                         Interlocked.Increment(ref completedRequests);
 
-                        if (Interlocked.Equals(completedRequests, ConnectionCount))
+                        if (Equals(completedRequests, ConnectionCount))
                         {
                             byte[] mergedFileBytes = new byte[_buildSize];
                             for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < ConnectionCount; connectionIndex++)

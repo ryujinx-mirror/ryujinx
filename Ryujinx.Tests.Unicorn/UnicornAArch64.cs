@@ -111,14 +111,14 @@ namespace Ryujinx.Tests.Unicorn
         {
             if (!_isDisposed)
             {
-                Interface.Checked(Native.Interface.uc_close(uc));
+                Interface.Checked(Interface.uc_close(uc));
                 _isDisposed = true;
             }
         }
 
         public void RunForCount(ulong count)
         {
-            Interface.Checked(Native.Interface.uc_emu_start(uc, this.PC, 0xFFFFFFFFFFFFFFFFu, 0, count));
+            Interface.Checked(Interface.uc_emu_start(uc, this.PC, 0xFFFFFFFFFFFFFFFFu, 0, count));
         }
 
         public void Step()
@@ -241,7 +241,7 @@ namespace Ryujinx.Tests.Unicorn
         {
             byte[] data = new byte[8];
 
-            Interface.Checked(Native.Interface.uc_reg_read(uc, (int)register, data));
+            Interface.Checked(Interface.uc_reg_read(uc, (int)register, data));
 
             return (ulong)BitConverter.ToInt64(data, 0);
         }

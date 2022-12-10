@@ -901,7 +901,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [CommandHipc(606)]
         public ResultCode GetRightsId(ServiceCtx context)
         {
-            LibHac.Ncm.StorageId storageId = (LibHac.Ncm.StorageId)context.RequestData.ReadInt64();
+            StorageId storageId = (StorageId)context.RequestData.ReadInt64();
             ProgramId programId = context.RequestData.ReadStruct<ProgramId>();
 
             Result result = _baseFileSystemProxy.Get.GetRightsId(out RightsId rightsId, programId, storageId);

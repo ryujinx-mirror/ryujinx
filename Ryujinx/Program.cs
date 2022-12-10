@@ -151,7 +151,7 @@ namespace Ryujinx
             // Initialize SDL2 driver
             SDL2Driver.MainThreadDispatcher = action =>
             {
-                Gtk.Application.Invoke(delegate
+                Application.Invoke(delegate
                 {
                     action();
                 });
@@ -282,7 +282,7 @@ namespace Ryujinx
                     ? GraphicsBackend.Vulkan
                     : GraphicsBackend.OpenGl;
 
-                ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+                ConfigurationState.Instance.ToFileFormat().SaveConfig(ConfigurationPath);
             }
 
             Application.Run();

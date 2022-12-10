@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.GAL
                 AddressMode.ClampToEdge,
                 AddressMode.ClampToEdge,
                 CompareMode.None,
-                GAL.CompareOp.Always,
+                CompareOp.Always,
                 new ColorF(0f, 0f, 0f, 0f),
                 0f,
                 0f,
