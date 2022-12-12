@@ -1,5 +1,6 @@
 using Ryujinx.Tests.Unicorn.Native.Const;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -43,9 +44,9 @@ namespace Ryujinx.Tests.Unicorn.Native
             }
         }
 
-        public static void MarshalArrayOf<T>(IntPtr input, int length, out T[] output)
+        public static void MarshalArrayOf<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(IntPtr input, int length, out T[] output)
         {
-            int size = Marshal.SizeOf(typeof(T));
+            int size = Marshal.SizeOf<T>();
 
             output = new T[length];
 

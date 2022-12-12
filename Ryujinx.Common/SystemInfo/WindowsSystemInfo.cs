@@ -60,7 +60,7 @@ namespace Ryujinx.Common.SystemInfo
 
             public MemoryStatusEx()
             {
-                Length = (uint)Marshal.SizeOf(typeof(MemoryStatusEx));
+                Length = (uint)Marshal.SizeOf<MemoryStatusEx>();
             }
         }
 

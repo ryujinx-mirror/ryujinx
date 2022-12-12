@@ -589,9 +589,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(TagInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<TagInfo>());
 
-            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(TagInfo)));
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf<TagInfo>());
 
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
 
@@ -665,9 +665,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(RegisterInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<RegisterInfo>());
 
-            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(RegisterInfo)));
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf<RegisterInfo>());
 
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
 
@@ -728,9 +728,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(CommonInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<CommonInfo>());
 
-            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(CommonInfo)));
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf<CommonInfo>());
 
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
 
@@ -788,9 +788,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
 
-            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf(typeof(ModelInfo)));
+            context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Marshal.SizeOf<ModelInfo>());
 
-            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf(typeof(ModelInfo)));
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, Marshal.SizeOf<ModelInfo>());
 
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
 

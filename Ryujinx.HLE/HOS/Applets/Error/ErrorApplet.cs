@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
             _errorStorage      = _normalSession.Pop();
             _errorCommonHeader = IApplet.ReadStruct<ErrorCommonHeader>(_errorStorage);
-            _errorStorage      = _errorStorage.Skip(Marshal.SizeOf(typeof(ErrorCommonHeader))).ToArray();
+            _errorStorage      = _errorStorage.Skip(Marshal.SizeOf<ErrorCommonHeader>()).ToArray();
 
             switch (_errorCommonHeader.Type)
             {

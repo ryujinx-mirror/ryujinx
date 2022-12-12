@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -39,7 +40,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// GPU state update tracker.
     /// </summary>
     /// <typeparam name="TState">State type</typeparam>
-    class StateUpdateTracker<TState>
+    class StateUpdateTracker<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] TState>
     {
         private const int BlockSize = 0xe00;
         private const int RegisterSize = sizeof(uint);

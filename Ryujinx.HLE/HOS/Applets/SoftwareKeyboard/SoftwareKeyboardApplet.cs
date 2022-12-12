@@ -9,6 +9,7 @@ using Ryujinx.HLE.Ui.Input;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -797,7 +798,7 @@ namespace Ryujinx.HLE.HOS.Applets
             return sb.ToString();
         }
 
-        private static T ReadStruct<T>(byte[] data)
+        private static T ReadStruct<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T>(byte[] data)
             where T : struct
         {
             GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
