@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {
     class BsdMMsgHdr
     {

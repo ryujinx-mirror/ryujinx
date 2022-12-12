@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
+using System;
 using System.Net;
 using System.Net.Sockets;
 

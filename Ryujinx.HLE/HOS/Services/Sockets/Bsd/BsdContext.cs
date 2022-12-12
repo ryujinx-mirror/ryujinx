@@ -1,5 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
@@ -41,6 +44,27 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             return null;
         }
 
+        public List<IFileDescriptor> RetrieveFileDescriptorsFromMask(ReadOnlySpan<byte> mask)
+        {
+            List<IFileDescriptor> fds = new();
+
+            for (int i = 0; i < mask.Length; i++)
+            {
+                byte current = mask[i];
+
+                while (current != 0)
+                {
+                    int bit = BitOperations.TrailingZeroCount(current);
+                    current &= (byte)~(1 << bit);
+                    int fd = i * 8 + bit;
+
+                    fds.Add(RetrieveFileDescriptor(fd));
+                }
+            }
+
+            return fds;
+        }
+
         public int RegisterFileDescriptor(IFileDescriptor file)
         {
             lock (_lock)
@@ -58,6 +82,16 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 _fds.Add(file);
 
                 return _fds.Count - 1;
+            }
+        }
+
+        public void BuildMask(List<IFileDescriptor> fds, Span<byte> mask)
+        {
+            foreach (IFileDescriptor descriptor in fds)
+            {
+                int fd = _fds.IndexOf(descriptor);
+
+                mask[fd >> 3] |= (byte)(1 << (fd & 7));
             }
         }
 

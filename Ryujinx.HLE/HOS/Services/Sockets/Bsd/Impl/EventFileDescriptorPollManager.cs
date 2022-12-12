@@ -1,8 +1,9 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 {
     class EventFileDescriptorPollManager : IPollManager
     {
@@ -108,6 +109,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             }
 
             return LinuxError.SUCCESS;
+        }
+
+        public LinuxError Select(List<PollEvent> events, int timeout, out int updatedCount)
+        {
+            // TODO: Implement Select for event file descriptors
+            updatedCount = 0;
+
+            return LinuxError.EOPNOTSUPP;
         }
     }
 }

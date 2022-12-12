@@ -3,7 +3,7 @@ using System;
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x10)]
     struct BsdSockAddr

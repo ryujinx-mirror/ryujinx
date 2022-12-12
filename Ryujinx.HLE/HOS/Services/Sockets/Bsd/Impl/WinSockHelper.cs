@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
-namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 {
     static class WinSockHelper
     {

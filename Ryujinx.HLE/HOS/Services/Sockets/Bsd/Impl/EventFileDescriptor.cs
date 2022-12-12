@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
+using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 {
     class EventFileDescriptor : IFileDescriptor
     {

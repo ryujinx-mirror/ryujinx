@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
+﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {
     struct PollEventData
     {
