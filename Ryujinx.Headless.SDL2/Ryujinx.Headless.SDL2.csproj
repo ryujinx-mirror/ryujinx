@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.Core" Version="4.7.5" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build12" />
+    <PackageReference Include="OpenTK.Core" />
+    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CommandLineParser" />
   </ItemGroup>
 
 	<ItemGroup>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <RuntimeIdentifiers>win10-x64;osx-x64;linux-x64</RuntimeIdentifiers>
@@ -18,31 +18,31 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Svg" Version="0.10.18" />
-    <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.18" />
-    <PackageReference Include="jp2masa.Avalonia.Flexbox" Version="0.2.0" />
-    <PackageReference Include="DynamicData" Version="7.12.11" />
-    <PackageReference Include="FluentAvaloniaUI" Version="1.4.5" />
-    <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Diagnostics" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" />
+    <PackageReference Include="Avalonia.Svg" />
+    <PackageReference Include="Avalonia.Svg.Skia" />
+    <PackageReference Include="jp2masa.Avalonia.Flexbox" />
+    <PackageReference Include="DynamicData" />
+    <PackageReference Include="FluentAvaloniaUI" />
+    <PackageReference Include="XamlNameReferenceGenerator" />
 
-    <PackageReference Include="OpenTK.Core" Version="4.7.5" />
-    <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
-    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build12" />
-    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Version="1.2.0" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win10-x64'" />
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.16.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.16.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.16.0" />
-    <PackageReference Include="SPB" Version="0.0.4-build28" />
-    <PackageReference Include="SharpZipLib" Version="1.4.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+    <PackageReference Include="OpenTK.Core" />
+    <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
+    <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" />
+    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win10-x64'" />
+    <PackageReference Include="Silk.NET.Vulkan" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" />
+    <PackageReference Include="SPB" />
+    <PackageReference Include="SharpZipLib" />
+    <PackageReference Include="SixLabors.ImageSharp" />
 
     <!--NOTE: DO NOT REMOVE, THIS IS REQUIRED AS A RESULT OF A TRIMMING ISSUE IN AVALONIA -->
-    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <ItemGroup>

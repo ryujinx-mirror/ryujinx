@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -13,14 +13,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.7.5" />
-    <PackageReference Include="shaderc.net" Version="0.1.0" />
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.16.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.16.0" />
-    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.16.0" />
-    <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
-    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+    <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" />
+    <PackageReference Include="shaderc.net" />
+    <PackageReference Include="Silk.NET.Vulkan" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" />
+    <PackageReference Include="System.Net.NameResolution" />
+    <PackageReference Include="System.Threading.ThreadPool" />
   </ItemGroup>
 
   <ItemGroup>

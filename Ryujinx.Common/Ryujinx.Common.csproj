@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MsgPack.Cli" Version="1.0.1" />
-    <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="MsgPack.Cli" />
+    <PackageReference Include="System.Management" />
   </ItemGroup>
 
 </Project>

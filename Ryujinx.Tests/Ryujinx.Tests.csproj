@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -18,9 +18,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,14 +35,14 @@
 
   <Target Name="CopyUnicorn" AfterTargets="Build">
     <ItemGroup>
-      <UnicornLib Include="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\*unicorn.*"/>
+      <UnicornLib Include="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\*unicorn.*" />
     </ItemGroup>
     <Copy SourceFiles="@(UnicornLib)" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
   </Target>
 
   <Target Name="CleanUnicorn" BeforeTargets="Clean">
     <ItemGroup>
-      <UnicornLib Include="$(OutputPath)/unicorn.*"/>
+      <UnicornLib Include="$(OutputPath)/unicorn.*" />
     </ItemGroup>
     <Delete Files="@(UnicornLib)" />
   </Target>
