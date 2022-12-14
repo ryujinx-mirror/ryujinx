@@ -374,7 +374,24 @@ namespace Ryujinx.Graphics.Vulkan
             api.GetPhysicalDeviceProperties(physicalDevice, out var properties);
             bool useRobustBufferAccess = VendorUtils.FromId(properties.VendorID) == Vendor.Nvidia;
 
-            var supportedFeatures = api.GetPhysicalDeviceFeature(physicalDevice);
+            PhysicalDeviceFeatures2 features2 = new PhysicalDeviceFeatures2()
+            {
+                SType = StructureType.PhysicalDeviceFeatures2
+            };
+
+            PhysicalDeviceCustomBorderColorFeaturesEXT featuresCustomBorderColorSupported = new PhysicalDeviceCustomBorderColorFeaturesEXT()
+            {
+                SType = StructureType.PhysicalDeviceCustomBorderColorFeaturesExt
+            };
+
+            if (supportedExtensions.Contains("VK_EXT_custom_border_color"))
+            {
+                features2.PNext = &featuresCustomBorderColorSupported;
+            }
+
+            api.GetPhysicalDeviceFeatures2(physicalDevice, &features2);
+
+            var supportedFeatures = features2.Features;
 
             var features = new PhysicalDeviceFeatures()
             {
@@ -489,6 +506,23 @@ namespace Ryujinx.Graphics.Vulkan
                 };
 
                 pExtendedFeatures = &featuresSubgroupSizeControl;
+            }
+
+            PhysicalDeviceCustomBorderColorFeaturesEXT featuresCustomBorderColor;
+
+            if (supportedExtensions.Contains("VK_EXT_custom_border_color") &&
+                featuresCustomBorderColorSupported.CustomBorderColors &&
+                featuresCustomBorderColorSupported.CustomBorderColorWithoutFormat)
+            {
+                featuresCustomBorderColor = new PhysicalDeviceCustomBorderColorFeaturesEXT()
+                {
+                    SType = StructureType.PhysicalDeviceCustomBorderColorFeaturesExt,
+                    PNext = pExtendedFeatures,
+                    CustomBorderColors = true,
+                    CustomBorderColorWithoutFormat = true,
+                };
+
+                pExtendedFeatures = &featuresCustomBorderColor;
             }
 
             var enabledExtensions = RequiredExtensions.Union(DesirableExtensions.Intersect(supportedExtensions)).ToArray();
