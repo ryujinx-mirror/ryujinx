@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             {
                 CachedShaderStage currentStage = stages[i];
 
-                if (currentStage != null && currentStage.Info.Stage == stage && currentStage.Info != null)
+                if (currentStage?.Info != null && currentStage.Info.Stage == stage)
                 {
                     return ShaderCache.GetBindings(currentStage.Info);
                 }
