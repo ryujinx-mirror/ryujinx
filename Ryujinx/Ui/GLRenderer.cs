@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Ui
 {
-    public class GlRenderer : RendererWidgetBase
+    public partial class GlRenderer : RendererWidgetBase
     {
         private GraphicsDebugLevel _glLogLevel;
 
@@ -74,14 +74,14 @@ namespace Ryujinx.Ui
             throw new NotImplementedException();
         }
 
-        [DllImport("libgdk-3-0.dll")]
-        private static extern IntPtr gdk_win32_window_get_handle(IntPtr d);
+        [LibraryImport("libgdk-3-0.dll")]
+        private static partial IntPtr gdk_win32_window_get_handle(IntPtr d);
 
-        [DllImport("libgdk-3.so.0")]
-        private static extern IntPtr gdk_x11_display_get_xdisplay(IntPtr gdkDisplay);
+        [LibraryImport("libgdk-3.so.0")]
+        private static partial IntPtr gdk_x11_display_get_xdisplay(IntPtr gdkDisplay);
 
-        [DllImport("libgdk-3.so.0")]
-        private static extern IntPtr gdk_x11_window_get_xid(IntPtr gdkWindow);
+        [LibraryImport("libgdk-3.so.0")]
+        private static partial IntPtr gdk_x11_window_get_xid(IntPtr gdkWindow);
 
         private static FramebufferFormat GetGraphicsMode()
         {

@@ -6,7 +6,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.System;
+using Ryujinx.Common.SystemInterop;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava
 {
-    internal class Program
+    internal partial class Program
     {
         public static double WindowScaleFactor  { get; set; }
         public static double DesktopScaleFactor { get; set; } = 1.0;
@@ -28,8 +28,8 @@ namespace Ryujinx.Ava
         public static string ConfigurationPath  { get; private set; }
         public static bool   PreviewerDetached {  get; private set; }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int MessageBoxA(IntPtr hWnd, string text, string caption, uint type);
+        [LibraryImport("user32.dll", SetLastError = true)]
+        public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
 
         private const uint MB_ICONWARNING = 0x30;
 

@@ -3,19 +3,19 @@ using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Signal
 {
-    unsafe class WindowsSignalHandlerRegistration
+    unsafe partial class WindowsSignalHandlerRegistration
     {
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr AddVectoredExceptionHandler(uint first, IntPtr handler);
+        [LibraryImport("kernel32.dll")]
+        private static partial IntPtr AddVectoredExceptionHandler(uint first, IntPtr handler);
 
-        [DllImport("kernel32.dll")]
-        private static extern ulong RemoveVectoredExceptionHandler(IntPtr handle);
+        [LibraryImport("kernel32.dll")]
+        private static partial ulong RemoveVectoredExceptionHandler(IntPtr handle);
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-        static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
+        [LibraryImport("kernel32.dll", SetLastError = true, EntryPoint = "LoadLibraryA")]
+        private static partial IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        private static partial IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string procName);
 
         private static IntPtr _getCurrentThreadIdPtr;
 

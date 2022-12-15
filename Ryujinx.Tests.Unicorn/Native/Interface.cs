@@ -3,11 +3,12 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Tests.Unicorn.Native
 {
-    public static class Interface
+    public static partial class Interface
     {
         public static bool IsUnicornAvailable { get; private set; } = true;
 
@@ -58,43 +59,43 @@ namespace Ryujinx.Tests.Unicorn.Native
             }
         }
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern uint uc_version(out uint major, out uint minor);
+        [LibraryImport("unicorn")]
+        public static partial uint uc_version(out uint major, out uint minor);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_open(Arch arch, Mode mode, out IntPtr uc);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_open(Arch arch, Mode mode, out IntPtr uc);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_close(IntPtr uc);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_close(IntPtr uc);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr uc_strerror(Error err);
+        [LibraryImport("unicorn")]
+        public static partial IntPtr uc_strerror(Error err);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_reg_write(IntPtr uc, int regid, byte[] value);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_reg_write(IntPtr uc, int regid, byte[] value);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_reg_read(IntPtr uc, int regid, byte[] value);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_reg_read(IntPtr uc, int regid, byte[] value);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_write(IntPtr uc, ulong address, byte[] bytes, ulong size);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_write(IntPtr uc, ulong address, byte[] bytes, ulong size);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_read(IntPtr uc, ulong address, byte[] bytes, ulong size);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_read(IntPtr uc, ulong address, byte[] bytes, ulong size);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_emu_start(IntPtr uc, ulong begin, ulong until, ulong timeout, ulong count);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_emu_start(IntPtr uc, ulong begin, ulong until, ulong timeout, ulong count);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_map(IntPtr uc, ulong address, ulong size, uint perms);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_map(IntPtr uc, ulong address, ulong size, uint perms);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_unmap(IntPtr uc, ulong address, ulong size);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_unmap(IntPtr uc, ulong address, ulong size);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_protect(IntPtr uc, ulong address, ulong size, uint perms);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_protect(IntPtr uc, ulong address, ulong size, uint perms);
 
-        [DllImport("unicorn", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Error uc_mem_regions(IntPtr uc, out IntPtr regions, out uint count);
+        [LibraryImport("unicorn")]
+        public static partial Error uc_mem_regions(IntPtr uc, out IntPtr regions, out uint count);
     }
 }

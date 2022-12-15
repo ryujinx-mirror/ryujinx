@@ -125,9 +125,9 @@ namespace Ryujinx.Ava.Ui.Controls
             {
                 cbSize = Marshal.SizeOf<WNDCLASSEX>(),
                 hInstance = GetModuleHandle(null),
-                lpfnWndProc = _wndProcDelegate,
+                lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
                 style = ClassStyles.CS_OWNDC,
-                lpszClassName = _className,
+                lpszClassName = Marshal.StringToHGlobalUni(_className),
                 hCursor = LoadCursor(IntPtr.Zero, (IntPtr)Cursors.IDC_ARROW)
             };
 
@@ -148,7 +148,9 @@ namespace Ryujinx.Ava.Ui.Controls
                 IntPtr.Zero);
 
             WindowHandle = handle;
-
+            
+            Marshal.FreeHGlobal(wndClassEx.lpszClassName);
+            
             return new PlatformHandle(WindowHandle, "HWND");
         }
 

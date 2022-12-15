@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
 using System.Threading;
 
@@ -12,7 +13,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
     /// State for partial unmaps. Intended to be used on Windows.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct PartialUnmapState
+    public partial struct PartialUnmapState
     {
         public NativeReaderWriterLock PartialUnmapLock;
         public int PartialUnmapsCount;
@@ -25,20 +26,22 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         public readonly static IntPtr GlobalState;
 
         [SupportedOSPlatform("windows")]
-        [DllImport("kernel32.dll")]
-        public static extern int GetCurrentThreadId();
+        [LibraryImport("kernel32.dll")]
+        public static partial int GetCurrentThreadId();
 
         [SupportedOSPlatform("windows")]
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr OpenThread(int dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        private static partial IntPtr OpenThread(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
 
         [SupportedOSPlatform("windows")]
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool CloseHandle(IntPtr hObject);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs (UnmanagedType.Bool)]
+        public static partial bool CloseHandle(IntPtr hObject);
 
         [SupportedOSPlatform("windows")]
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool GetExitCodeThread(IntPtr hThread, out uint lpExitCode);
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetExitCodeThread(IntPtr hThread, out uint lpExitCode);
 
         /// <summary>
         /// Creates a global static PartialUnmapState and populates the field offsets.

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation.Cache
 {
-    static class JitUnwindWindows
+    static partial class JitUnwindWindows
     {
         private const int MaxUnwindCodesArraySize = 32; // Must be an even value.
 
@@ -42,14 +42,15 @@ namespace ARMeilleure.Translation.Cache
 
         private unsafe delegate RuntimeFunction* GetRuntimeFunctionCallback(ulong controlPc, IntPtr context);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        private static unsafe extern bool RtlInstallFunctionTableCallback(
+        [LibraryImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static unsafe partial bool RtlInstallFunctionTableCallback(
             ulong tableIdentifier,
             ulong baseAddress,
             uint length,
             GetRuntimeFunctionCallback callback,
             IntPtr context,
-            string outOfProcessCallbackDll);
+            [MarshalAs(UnmanagedType.LPWStr)] string outOfProcessCallbackDll);
 
         private static GetRuntimeFunctionCallback _getRuntimeFunctionCallback;
 

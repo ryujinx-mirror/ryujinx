@@ -8,7 +8,7 @@ namespace Ryujinx.Ava.Ui.Helper
     public delegate void UpdateBoundsCallbackDelegate(Rect rect);
 
     [SupportedOSPlatform("macos")]
-    static class MetalHelper
+    static partial class MetalHelper
     {
         private const string LibObjCImport = "/usr/lib/libobjc.A.dylib";
 
@@ -100,28 +100,28 @@ namespace Ryujinx.Ava.Ui.Helper
             // TODO
         }
 
-        [DllImport(LibObjCImport)]
-        private static unsafe extern IntPtr sel_registerName(byte* data);
+        [LibraryImport(LibObjCImport)]
+        private static unsafe partial IntPtr sel_registerName(byte* data);
 
-        [DllImport(LibObjCImport)]
-        private static unsafe extern IntPtr objc_getClass(byte* data);
+        [LibraryImport(LibObjCImport)]
+        private static unsafe partial IntPtr objc_getClass(byte* data);
 
-        [DllImport(LibObjCImport)]
-        private static extern void objc_msgSend(IntPtr receiver, Selector selector);
+        [LibraryImport(LibObjCImport)]
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector);
 
-        [DllImport(LibObjCImport)]
-        private static extern void objc_msgSend(IntPtr receiver, Selector selector, byte value);
+        [LibraryImport(LibObjCImport)]
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, byte value);
 
-        [DllImport(LibObjCImport)]
-        private static extern void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
+        [LibraryImport(LibObjCImport)]
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
 
-        [DllImport(LibObjCImport)]
-        private static extern void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
+        [LibraryImport(LibObjCImport)]
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
 
-        [DllImport(LibObjCImport)]
-        private static extern void objc_msgSend(IntPtr receiver, Selector selector, double value);
+        [LibraryImport(LibObjCImport)]
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, double value);
 
-        [DllImport(LibObjCImport, EntryPoint = "objc_msgSend")]
-        private static extern IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);
+        [LibraryImport(LibObjCImport, EntryPoint = "objc_msgSend")]
+        private static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);
     }
 }

@@ -3,29 +3,30 @@ using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Common.System
+namespace Ryujinx.Common.SystemInterop
 {
-    public static class ForceDpiAware
+    public static partial class ForceDpiAware
     {
-        [DllImport("user32.dll")]
-        private static extern bool SetProcessDPIAware();
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetProcessDPIAware();
 
         private const string X11LibraryName = "libX11.so.6";
 
-        [DllImport(X11LibraryName)]
-        private static extern IntPtr XOpenDisplay(string display);
+        [LibraryImport(X11LibraryName)]
+        private static partial IntPtr XOpenDisplay([MarshalAs(UnmanagedType.LPStr)] string display);
 
-        [DllImport(X11LibraryName)]
-        private static extern IntPtr XGetDefault(IntPtr display, string program, string option);
+        [LibraryImport(X11LibraryName)]
+        private static partial IntPtr XGetDefault(IntPtr display, [MarshalAs(UnmanagedType.LPStr)] string program, [MarshalAs(UnmanagedType.LPStr)] string option);
 
-        [DllImport(X11LibraryName)]
-        private static extern int XDisplayWidth(IntPtr display, int screenNumber);
+        [LibraryImport(X11LibraryName)]
+        private static partial int XDisplayWidth(IntPtr display, int screenNumber);
 
-        [DllImport(X11LibraryName)]
-        private static extern int XDisplayWidthMM(IntPtr display, int screenNumber);
+        [LibraryImport(X11LibraryName)]
+        private static partial int XDisplayWidthMM(IntPtr display, int screenNumber);
 
-        [DllImport(X11LibraryName)]
-        private static extern int XCloseDisplay(IntPtr display);
+        [LibraryImport(X11LibraryName)]
+        private static partial int XCloseDisplay(IntPtr display);
 
         private static readonly double _standardDpiScale = 96.0;
         private static readonly double _maxScaleFactor   = 1.25;

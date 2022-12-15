@@ -2,10 +2,10 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Ryujinx.Common.System
+namespace Ryujinx.Common.SystemInterop
 {
     [SupportedOSPlatform("windows")]
-    public static class GdiPlusHelper
+    public static partial class GdiPlusHelper
     {
         private const string LibraryName = "gdiplus.dll";
 
@@ -52,17 +52,17 @@ namespace Ryujinx.Common.System
             public IntPtr NotificationUnhook;
         }
 
-        [DllImport(LibraryName)]
-        private static extern int GdiplusStartup(out IntPtr token, in StartupInputEx input, out StartupOutput output);
+        [LibraryImport(LibraryName)]
+        private static partial int GdiplusStartup(out IntPtr token, in StartupInputEx input, out StartupOutput output);
 
-        [DllImport(LibraryName)]
-        private static extern int GdipCreateFromHWND(IntPtr hwnd, out IntPtr graphics);
+        [LibraryImport(LibraryName)]
+        private static partial int GdipCreateFromHWND(IntPtr hwnd, out IntPtr graphics);
 
-        [DllImport(LibraryName)]
-        private static extern int GdipDeleteGraphics(IntPtr graphics);
+        [LibraryImport(LibraryName)]
+        private static partial int GdipDeleteGraphics(IntPtr graphics);
 
-        [DllImport(LibraryName)]
-        private static extern int GdipGetDpiX(IntPtr graphics, out float dpi);
+        [LibraryImport(LibraryName)]
+        private static partial int GdipGetDpiX(IntPtr graphics, out float dpi);
 
         public static float GetDpiX(IntPtr hwnd)
         {

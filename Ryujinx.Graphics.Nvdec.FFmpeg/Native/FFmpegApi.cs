@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 {
-    static class FFmpegApi
+    static partial class FFmpegApi
     {
         public const string AvCodecLibraryName = "avcodec";
         public const string AvUtilLibraryName = "avutil";
@@ -78,52 +78,52 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 
         public unsafe delegate void av_log_set_callback_callback(void* a0, AVLog level, [MarshalAs(UnmanagedType.LPUTF8Str)] string a2, byte* a3);
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern AVFrame* av_frame_alloc();
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial AVFrame* av_frame_alloc();
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_frame_unref(AVFrame* frame);
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial void av_frame_unref(AVFrame* frame);
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_free(AVFrame* frame);
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial void av_free(AVFrame* frame);
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_log_set_level(AVLog level);
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial void av_log_set_level(AVLog level);
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_log_set_callback(av_log_set_callback_callback callback);
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial void av_log_set_callback(av_log_set_callback_callback callback);
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern AVLog av_log_get_level();
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial AVLog av_log_get_level();
 
-        [DllImport(AvUtilLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_log_format_line(void* ptr, AVLog level, [MarshalAs(UnmanagedType.LPUTF8Str)] string fmt, byte* vl, byte* line, int lineSize, int* printPrefix);
+        [LibraryImport(AvUtilLibraryName)]
+        internal static unsafe partial void av_log_format_line(void* ptr, AVLog level, [MarshalAs(UnmanagedType.LPUTF8Str)] string fmt, byte* vl, byte* line, int lineSize, int* printPrefix);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern AVCodec* avcodec_find_decoder(AVCodecID id);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial AVCodec* avcodec_find_decoder(AVCodecID id);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern AVCodecContext* avcodec_alloc_context3(AVCodec* codec);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial AVCodecContext* avcodec_alloc_context3(AVCodec* codec);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern int avcodec_open2(AVCodecContext* avctx, AVCodec* codec, void **options);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial int avcodec_open2(AVCodecContext* avctx, AVCodec* codec, void **options);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern int avcodec_close(AVCodecContext* avctx);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial int avcodec_close(AVCodecContext* avctx);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void avcodec_free_context(AVCodecContext** avctx);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial void avcodec_free_context(AVCodecContext** avctx);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern AVPacket* av_packet_alloc();
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial AVPacket* av_packet_alloc();
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_packet_unref(AVPacket* pkt);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial void av_packet_unref(AVPacket* pkt);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern void av_packet_free(AVPacket** pkt);
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial void av_packet_free(AVPacket** pkt);
 
-        [DllImport(AvCodecLibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static unsafe extern int avcodec_version();
+        [LibraryImport(AvCodecLibraryName)]
+        internal static unsafe partial int avcodec_version();
     }
 }

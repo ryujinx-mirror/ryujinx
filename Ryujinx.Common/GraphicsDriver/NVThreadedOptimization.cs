@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Common.GraphicsDriver
 {
-    static class NVThreadedOptimization
+    static partial class NVThreadedOptimization
     {
         private const string ProfileName = "Ryujinx Nvidia Profile";
 
@@ -19,8 +19,8 @@ namespace Ryujinx.Common.GraphicsDriver
         private const uint NvAPI_DRS_SaveSettings_ID = 0xFCBC7E14;
         private const uint NvAPI_DRS_DestroySession_ID = 0x0DAD9CFF8;
 
-        [DllImport("nvapi64")]
-        private static extern IntPtr nvapi_QueryInterface(uint id);
+        [LibraryImport("nvapi64")]
+        private static partial IntPtr nvapi_QueryInterface(uint id);
 
         private delegate int NvAPI_InitializeDelegate();
         private static NvAPI_InitializeDelegate NvAPI_Initialize;

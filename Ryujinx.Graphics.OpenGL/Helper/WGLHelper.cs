@@ -5,11 +5,11 @@ using System.Runtime.Versioning;
 namespace Ryujinx.Graphics.OpenGL.Helper
 {
     [SupportedOSPlatform("windows")]
-    internal static class WGLHelper
+    internal static partial class WGLHelper
     {
         private const string LibraryName = "OPENGL32.DLL";
 
-        [DllImport(LibraryName, EntryPoint = "wglGetCurrentContext")]
-        public extern static IntPtr GetCurrentContext();
+        [LibraryImport(LibraryName, EntryPoint = "wglGetCurrentContext")]
+        public static partial IntPtr GetCurrentContext();
     }
 }

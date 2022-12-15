@@ -7,7 +7,7 @@ using Ryujinx.Common.Logging;
 namespace Ryujinx.Common.SystemInfo
 {
     [SupportedOSPlatform("windows")]
-    class WindowsSystemInfo : SystemInfo
+    partial class WindowsSystemInfo : SystemInfo
     {
         internal WindowsSystemInfo()
         {
@@ -18,7 +18,7 @@ namespace Ryujinx.Common.SystemInfo
         private static (ulong Total, ulong Available) GetMemoryStats()
         {
             MemoryStatusEx memStatus = new MemoryStatusEx();
-            if (GlobalMemoryStatusEx(memStatus))
+            if (GlobalMemoryStatusEx(ref memStatus))
             {
                 return (memStatus.TotalPhys, memStatus.AvailPhys); // Bytes
             }
@@ -45,8 +45,8 @@ namespace Ryujinx.Common.SystemInfo
             return Environment.GetEnvironmentVariable("PROCESSOR_IDENTIFIER").Trim();
         }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private class MemoryStatusEx
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MemoryStatusEx
         {
             public uint Length;
             public uint MemoryLoad;
@@ -64,9 +64,9 @@ namespace Ryujinx.Common.SystemInfo
             }
         }
 
+        [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool GlobalMemoryStatusEx([In, Out] MemoryStatusEx lpBuffer);
+        private static partial bool GlobalMemoryStatusEx(ref MemoryStatusEx lpBuffer);
 
         private static ManagementObjectCollection GetWMIObjects(string scope, string query)
         {

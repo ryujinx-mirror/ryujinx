@@ -4,7 +4,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.System;
+using Ryujinx.Common.SystemInterop;
 using Ryujinx.Common.SystemInfo;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx
 {
-    class Program
+    partial class Program
     {
         public static double WindowScaleFactor { get; private set; }
 
@@ -35,17 +35,17 @@ namespace Ryujinx
 
         private const string X11LibraryName = "libX11";
 
-        [DllImport(X11LibraryName)]
-        private extern static int XInitThreads();
+        [LibraryImport(X11LibraryName)]
+        private static partial int XInitThreads();
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int MessageBoxA(IntPtr hWnd, string text, string caption, uint type);
+        [LibraryImport("user32.dll", SetLastError = true)]
+        public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
 
-        [DllImport("libc", SetLastError = true)]
-        static extern int setenv(string name, string value, int overwrite);
+        [LibraryImport("libc", SetLastError = true)]
+        private static partial int setenv([MarshalAs(UnmanagedType.LPStr)] string name, [MarshalAs(UnmanagedType.LPStr)] string value, int overwrite);
 
-        [DllImport("libc")]
-        static extern IntPtr getenv(string name);
+        [LibraryImport("libc")]
+        private static partial IntPtr getenv([MarshalAs(UnmanagedType.LPStr)] string name);
 
         private const uint MB_ICONWARNING = 0x30;
 
