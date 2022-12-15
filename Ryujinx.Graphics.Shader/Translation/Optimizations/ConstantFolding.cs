@@ -262,7 +262,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             value = (value >> operation.Index * 16) & 0xffff;
 
-            operation.TurnIntoCopy(ConstF(HalfConversion.HalfToSingle(value)));
+            operation.TurnIntoCopy(ConstF((float)BitConverter.UInt16BitsToHalf((ushort)value)));
         }
 
         private static void FPNegate(Operation operation)
