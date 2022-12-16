@@ -98,7 +98,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="argument">Method call argument</param>
         public void DrawEnd(ThreedClass engine, int argument)
         {
-            DrawEnd(engine, _state.State.IndexBufferState.First, (int)_state.State.IndexBufferCount);
+            DrawEnd(
+                engine,
+                _state.State.IndexBufferState.First,
+                (int)_state.State.IndexBufferCount,
+                _state.State.VertexBufferDrawState.First,
+                _state.State.VertexBufferDrawState.Count);
         }
 
         /// <summary>
@@ -108,7 +113,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="firstIndex">Index of the first index buffer element used on the draw</param>
         /// <param name="indexCount">Number of index buffer elements used on the draw</param>
-        private void DrawEnd(ThreedClass engine, int firstIndex, int indexCount)
+        /// <param name="drawFirstVertex">Index of the first vertex used on the draw</param>
+        /// <param name="drawVertexCount">Number of vertices used on the draw</param>
+        private void DrawEnd(ThreedClass engine, int firstIndex, int indexCount, int drawFirstVertex, int drawVertexCount)
         {
             ConditionalRenderEnabled renderEnable = ConditionalRendering.GetRenderEnable(
                 _context,
@@ -195,7 +202,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 var drawState = _state.State.VertexBufferDrawState;
 
-                _context.Renderer.Pipeline.Draw(drawState.Count, 1, drawState.First, firstInstance);
+                _context.Renderer.Pipeline.Draw(drawVertexCount, 1, drawFirstVertex, firstInstance);
             }
 
             _drawState.DrawIndexed = false;
@@ -216,16 +223,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool incrementInstance = (argument & (1 << 26)) != 0;
             bool resetInstance = (argument & (1 << 27)) == 0;
 
-            if (_state.State.PrimitiveTypeOverrideEnable)
-            {
-                PrimitiveTypeOverride typeOverride = _state.State.PrimitiveTypeOverride;
-                DrawBegin(incrementInstance, resetInstance, typeOverride.Convert());
-            }
-            else
-            {
-                PrimitiveType type = (PrimitiveType)(argument & 0xffff);
-                DrawBegin(incrementInstance, resetInstance, type.Convert());
-            }
+            PrimitiveType type = (PrimitiveType)(argument & 0xffff);
+            DrawBegin(incrementInstance, resetInstance, type);
         }
 
         /// <summary>
@@ -234,8 +233,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         /// <param name="incrementInstance">Indicates if the current instance should be incremented</param>
         /// <param name="resetInstance">Indicates if the current instance should be set to zero</param>
-        /// <param name="topology">Primitive topology</param>
-        private void DrawBegin(bool incrementInstance, bool resetInstance, PrimitiveTopology topology)
+        /// <param name="primitiveType">Primitive type</param>
+        private void DrawBegin(bool incrementInstance, bool resetInstance, PrimitiveType primitiveType)
         {
             if (incrementInstance)
             {
@@ -246,6 +245,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 PerformDeferredDraws();
 
                 _instanceIndex = 0;
+            }
+
+            PrimitiveTopology topology;
+
+            if (_state.State.PrimitiveTypeOverrideEnable)
+            {
+                PrimitiveTypeOverride typeOverride = _state.State.PrimitiveTypeOverride;
+                topology = typeOverride.Convert();
+            }
+            else
+            {
+                topology = primitiveType.Convert();
             }
 
             UpdateTopology(topology);
@@ -276,46 +287,70 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _drawState.DrawIndexed = true;
         }
 
+        // TODO: Verify if the index type is implied from the method that is called,
+        // or if it uses the state index type on hardware.
+
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements.
+        /// Performs a indexed draw with 8-bit index buffer elements.
         /// </summary>
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
-        public void DrawIndexedSmall(ThreedClass engine, int argument)
+        public void DrawIndexBuffer8BeginEndInstanceFirst(ThreedClass engine, int argument)
         {
-            DrawIndexedSmall(engine, argument, false);
+            DrawIndexBufferBeginEndInstance(engine, argument, false);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements.
+        /// Performs a indexed draw with 16-bit index buffer elements.
         /// </summary>
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
-        public void DrawIndexedSmall2(ThreedClass engine, int argument)
+        public void DrawIndexBuffer16BeginEndInstanceFirst(ThreedClass engine, int argument)
         {
-            DrawIndexedSmall(engine, argument);
+            DrawIndexBufferBeginEndInstance(engine, argument, false);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements,
+        /// Performs a indexed draw with 32-bit index buffer elements.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        public void DrawIndexBuffer32BeginEndInstanceFirst(ThreedClass engine, int argument)
+        {
+            DrawIndexBufferBeginEndInstance(engine, argument, false);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with 8-bit index buffer elements,
         /// while also pre-incrementing the current instance value.
         /// </summary>
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
-        public void DrawIndexedSmallIncInstance(ThreedClass engine, int argument)
+        public void DrawIndexBuffer8BeginEndInstanceSubsequent(ThreedClass engine, int argument)
         {
-            DrawIndexedSmall(engine, argument, true);
+            DrawIndexBufferBeginEndInstance(engine, argument, true);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements,
+        /// Performs a indexed draw with 16-bit index buffer elements,
         /// while also pre-incrementing the current instance value.
         /// </summary>
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
-        public void DrawIndexedSmallIncInstance2(ThreedClass engine, int argument)
+        public void DrawIndexBuffer16BeginEndInstanceSubsequent(ThreedClass engine, int argument)
         {
-            DrawIndexedSmallIncInstance(engine, argument);
+            DrawIndexBufferBeginEndInstance(engine, argument, true);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with 32-bit index buffer elements,
+        /// while also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        public void DrawIndexBuffer32BeginEndInstanceSubsequent(ThreedClass engine, int argument)
+        {
+            DrawIndexBufferBeginEndInstance(engine, argument, true);
         }
 
         /// <summary>
@@ -325,11 +360,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="engine">3D engine where this method is being called</param>
         /// <param name="argument">Method call argument</param>
         /// <param name="instanced">True to increment the current instance value, false otherwise</param>
-        private void DrawIndexedSmall(ThreedClass engine, int argument, bool instanced)
+        private void DrawIndexBufferBeginEndInstance(ThreedClass engine, int argument, bool instanced)
         {
-            PrimitiveTypeOverride typeOverride = _state.State.PrimitiveTypeOverride;
-
-            DrawBegin(instanced, !instanced, typeOverride.Convert());
+            DrawBegin(instanced, !instanced, (PrimitiveType)((argument >> 28) & 0xf));
 
             int firstIndex = argument & 0xffff;
             int indexCount = (argument >> 16) & 0xfff;
@@ -339,7 +372,51 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _drawState.DrawIndexed = true;
             engine.ForceStateDirty(IndexBufferCountMethodOffset * 4);
 
-            DrawEnd(engine, firstIndex, indexCount);
+            DrawEnd(engine, firstIndex, indexCount, 0, 0);
+
+            _drawState.DrawIndexed = oldDrawIndexed;
+        }
+
+        /// <summary>
+        /// Performs a non-indexed draw with the specified topology, index and count.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        public void DrawVertexArrayBeginEndInstanceFirst(ThreedClass engine, int argument)
+        {
+            DrawVertexArrayBeginEndInstance(engine, argument, false);
+        }
+
+        /// <summary>
+        /// Performs a non-indexed draw with the specified topology, index and count,
+        /// while incrementing the current instance.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        public void DrawVertexArrayBeginEndInstanceSubsequent(ThreedClass engine, int argument)
+        {
+            DrawVertexArrayBeginEndInstance(engine, argument, true);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with a low number of index buffer elements,
+        /// while optionally also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="engine">3D engine where this method is being called</param>
+        /// <param name="argument">Method call argument</param>
+        /// <param name="instanced">True to increment the current instance value, false otherwise</param>
+        private void DrawVertexArrayBeginEndInstance(ThreedClass engine, int argument, bool instanced)
+        {
+            DrawBegin(instanced, !instanced, (PrimitiveType)((argument >> 28) & 0xf));
+
+            int firstVertex = argument & 0xffff;
+            int vertexCount = (argument >> 16) & 0xfff;
+
+            bool oldDrawIndexed = _drawState.DrawIndexed;
+
+            _drawState.DrawIndexed = false;
+
+            DrawEnd(engine, 0, 0, firstVertex, vertexCount);
 
             _drawState.DrawIndexed = oldDrawIndexed;
         }

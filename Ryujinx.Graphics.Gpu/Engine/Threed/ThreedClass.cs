@@ -42,6 +42,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 { nameof(ThreedClassState.TextureBarrier), new RwCallback(TextureBarrier, null) },
                 { nameof(ThreedClassState.TextureBarrierTiled), new RwCallback(TextureBarrierTiled, null) },
                 { nameof(ThreedClassState.DrawTextureSrcY), new RwCallback(DrawTexture, null) },
+                { nameof(ThreedClassState.DrawVertexArrayBeginEndInstanceFirst), new RwCallback(DrawVertexArrayBeginEndInstanceFirst, null) },
+                { nameof(ThreedClassState.DrawVertexArrayBeginEndInstanceSubsequent), new RwCallback(DrawVertexArrayBeginEndInstanceSubsequent, null) },
                 { nameof(ThreedClassState.VbElementU8), new RwCallback(VbElementU8, null) },
                 { nameof(ThreedClassState.VbElementU16), new RwCallback(VbElementU16, null) },
                 { nameof(ThreedClassState.VbElementU32), new RwCallback(VbElementU32, null) },
@@ -49,10 +51,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 { nameof(ThreedClassState.RenderEnableCondition), new RwCallback(null, Zero) },
                 { nameof(ThreedClassState.DrawEnd), new RwCallback(DrawEnd, null) },
                 { nameof(ThreedClassState.DrawBegin), new RwCallback(DrawBegin, null) },
-                { nameof(ThreedClassState.DrawIndexedSmall), new RwCallback(DrawIndexedSmall, null) },
-                { nameof(ThreedClassState.DrawIndexedSmall2), new RwCallback(DrawIndexedSmall2, null) },
-                { nameof(ThreedClassState.DrawIndexedSmallIncInstance), new RwCallback(DrawIndexedSmallIncInstance, null) },
-                { nameof(ThreedClassState.DrawIndexedSmallIncInstance2), new RwCallback(DrawIndexedSmallIncInstance2, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer32BeginEndInstanceFirst), new RwCallback(DrawIndexBuffer32BeginEndInstanceFirst, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer16BeginEndInstanceFirst), new RwCallback(DrawIndexBuffer16BeginEndInstanceFirst, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer8BeginEndInstanceFirst), new RwCallback(DrawIndexBuffer8BeginEndInstanceFirst, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer32BeginEndInstanceSubsequent), new RwCallback(DrawIndexBuffer32BeginEndInstanceSubsequent, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer16BeginEndInstanceSubsequent), new RwCallback(DrawIndexBuffer16BeginEndInstanceSubsequent, null) },
+                { nameof(ThreedClassState.DrawIndexBuffer8BeginEndInstanceSubsequent), new RwCallback(DrawIndexBuffer8BeginEndInstanceSubsequent, null) },
                 { nameof(ThreedClassState.IndexBufferCount), new RwCallback(SetIndexBufferCount, null) },
                 { nameof(ThreedClassState.Clear), new RwCallback(Clear, null) },
                 { nameof(ThreedClassState.SemaphoreControl), new RwCallback(Report, null) },
@@ -304,6 +308,25 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Performs a non-indexed draw with the specified topology, index and count.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        private void DrawVertexArrayBeginEndInstanceFirst(int argument)
+        {
+            _drawManager.DrawVertexArrayBeginEndInstanceFirst(this, argument);
+        }
+
+        /// <summary>
+        /// Performs a non-indexed draw with the specified topology, index and count,
+        /// while incrementing the current instance.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        private void DrawVertexArrayBeginEndInstanceSubsequent(int argument)
+        {
+            _drawManager.DrawVertexArrayBeginEndInstanceSubsequent(this, argument);
+        }
+
+        /// <summary>
         /// Pushes four 8-bit index buffer elements.
         /// </summary>
         /// <param name="argument">Method call argument</param>
@@ -370,41 +393,60 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements.
+        /// Performs a indexed draw with 8-bit index buffer elements.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        private void DrawIndexedSmall(int argument)
+        private void DrawIndexBuffer8BeginEndInstanceFirst(int argument)
         {
-            _drawManager.DrawIndexedSmall(this, argument);
+            _drawManager.DrawIndexBuffer8BeginEndInstanceFirst(this, argument);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements.
+        /// Performs a indexed draw with 16-bit index buffer elements.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        private void DrawIndexedSmall2(int argument)
+        private void DrawIndexBuffer16BeginEndInstanceFirst(int argument)
         {
-            _drawManager.DrawIndexedSmall2(this, argument);
+            _drawManager.DrawIndexBuffer16BeginEndInstanceFirst(this, argument);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements,
+        /// Performs a indexed draw with 32-bit index buffer elements.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexBuffer32BeginEndInstanceFirst(int argument)
+        {
+            _drawManager.DrawIndexBuffer32BeginEndInstanceFirst(this, argument);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with 8-bit index buffer elements,
         /// while also pre-incrementing the current instance value.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        private void DrawIndexedSmallIncInstance(int argument)
+        private void DrawIndexBuffer8BeginEndInstanceSubsequent(int argument)
         {
-            _drawManager.DrawIndexedSmallIncInstance(this, argument);
+            _drawManager.DrawIndexBuffer8BeginEndInstanceSubsequent(this, argument);
         }
 
         /// <summary>
-        /// Performs a indexed draw with a low number of index buffer elements,
+        /// Performs a indexed draw with 16-bit index buffer elements,
         /// while also pre-incrementing the current instance value.
         /// </summary>
         /// <param name="argument">Method call argument</param>
-        private void DrawIndexedSmallIncInstance2(int argument)
+        private void DrawIndexBuffer16BeginEndInstanceSubsequent(int argument)
         {
-            _drawManager.DrawIndexedSmallIncInstance2(this, argument);
+            _drawManager.DrawIndexBuffer16BeginEndInstanceSubsequent(this, argument);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw with 32-bit index buffer elements,
+        /// while also pre-incrementing the current instance value.
+        /// </summary>
+        /// <param name="argument">Method call argument</param>
+        private void DrawIndexBuffer32BeginEndInstanceSubsequent(int argument)
+        {
+            _drawManager.DrawIndexBuffer32BeginEndInstanceSubsequent(this, argument);
         }
 
         /// <summary>
