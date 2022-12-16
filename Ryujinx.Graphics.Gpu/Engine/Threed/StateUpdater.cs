@@ -1295,7 +1295,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
-                _currentProgramInfo[stageIndex] = gs.Shaders[stageIndex + 1]?.Info;
+                ShaderProgramInfo info = gs.Shaders[stageIndex + 1]?.Info;
+
+                if (info?.UsesRtLayer == true)
+                {
+                    _vtgWritesRtLayer = true;
+                }
+
+                _currentProgramInfo[stageIndex] = info;
             }
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
