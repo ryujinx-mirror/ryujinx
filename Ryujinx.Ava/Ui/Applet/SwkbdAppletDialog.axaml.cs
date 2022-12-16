@@ -111,7 +111,7 @@ namespace Ryujinx.Ava.Ui.Controls
 
                 overlay.Position = window.PointToScreen(new Point());
 
-                await contentDialog.ShowAsync();
+                await contentDialog.ShowAsync(overlay);
                 contentDialog.Closed -= handler;
                 overlay.Close();
             };
