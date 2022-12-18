@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+    <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
   </ItemGroup>
 
 </Project>

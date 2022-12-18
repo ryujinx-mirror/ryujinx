@@ -171,6 +171,7 @@ namespace ARMeilleure.IntermediateRepresentation
         X86Vfnmadd231ss,
         X86Vfnmsub231sd,
         X86Vfnmsub231ss,
+        X86Vpternlogd,
         X86Xorpd,
         X86Xorps
     }

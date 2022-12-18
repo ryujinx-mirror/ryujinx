@@ -224,7 +224,22 @@ namespace ARMeilleure.Instructions
 
         public static void Not_V(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAvx512Ortho)
+            {
+                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+                Operand n = GetVec(op.Rn);
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Vpternlogd, n, n, Const(0b01010101));
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+            else if (Optimizations.UseSse2)
             {
                 OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
