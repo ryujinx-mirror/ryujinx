@@ -2,7 +2,6 @@
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
 {
@@ -29,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
 
         public override string ToString()
         {
-            return $"UserPresence {{ UserId: {UserId}, LastTimeOnlineTimestamp: {LastTimeOnlineTimestamp}, Status: {Status}, AppKeyValueStorage: {Encoding.ASCII.GetString(AppKeyValueStorage)} }}";
+            return $"UserPresence {{ UserId: {UserId}, LastTimeOnlineTimestamp: {LastTimeOnlineTimestamp}, Status: {Status} }}";
         }
     }
 }
