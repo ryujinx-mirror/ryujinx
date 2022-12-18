@@ -27,7 +27,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 3714; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 3713; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -952,8 +952,7 @@ namespace ARMeilleure.Translation.PTC
                 (uint)HardwareCapabilities.FeatureInfo1Ecx,
                 (uint)HardwareCapabilities.FeatureInfo1Edx,
                 (uint)HardwareCapabilities.FeatureInfo7Ebx,
-                (uint)HardwareCapabilities.FeatureInfo7Ecx,
-                (uint)HardwareCapabilities.Xcr0InfoEax);
+                (uint)HardwareCapabilities.FeatureInfo7Ecx);
         }
 
         private static byte GetMemoryManagerMode()
@@ -973,7 +972,7 @@ namespace ARMeilleure.Translation.PTC
             return osPlatform;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 62*/)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 58*/)]
         private struct OuterHeader
         {
             public ulong Magic;
@@ -1004,8 +1003,8 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 20*/)]
-        private record struct FeatureInfo(uint FeatureInfo0, uint FeatureInfo1, uint FeatureInfo2, uint FeatureInfo3, uint FeatureInfo4);
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 16*/)]
+        private record struct FeatureInfo(uint FeatureInfo0, uint FeatureInfo1, uint FeatureInfo2, uint FeatureInfo3);
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 128*/)]
         private struct InnerHeader

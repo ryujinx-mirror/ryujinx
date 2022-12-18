@@ -219,7 +219,6 @@ namespace ARMeilleure.CodeGen.X86
         Vfnmsub231sd,
         Vfnmsub231ss,
         Vpblendvb,
-        Vpternlogd,
         Xor,
         Xorpd,
         Xorps,

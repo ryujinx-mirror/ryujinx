@@ -20,7 +20,6 @@ namespace ARMeilleure.CodeGen.X86
             Reg8Dest = 1 << 2,
             RexW     = 1 << 3,
             Vex      = 1 << 4,
-            Evex     = 1 << 5,
 
             PrefixBit  = 16,
             PrefixMask = 7 << PrefixBit,
@@ -279,7 +278,6 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Vfnmsub231sd,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bf, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfnmsub231ss,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bf, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vpblendvb,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a4c, InstructionFlags.Vex | InstructionFlags.Prefix66));
-            Add(X86Instruction.Vpternlogd,    new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a25, InstructionFlags.Evex | InstructionFlags.Prefix66));
             Add(X86Instruction.Xor,           new InstructionInfo(0x00000031, 0x06000083, 0x06000081, BadOp,      0x00000033, InstructionFlags.None));
             Add(X86Instruction.Xorpd,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f57, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Xorps,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f57, InstructionFlags.Vex));
