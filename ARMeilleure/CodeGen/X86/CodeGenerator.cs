@@ -1587,6 +1587,12 @@ namespace ARMeilleure.CodeGen.X86
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
 
+            // We can eliminate the move if source is already 32-bit and the registers are the same.
+            if (dest.Value == source.Value && source.Type == OperandType.I32)
+            {
+                return;
+            }
+
             context.Assembler.Mov(dest, source, OperandType.I32);
         }
 
