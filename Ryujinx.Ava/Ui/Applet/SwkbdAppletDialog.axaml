@@ -45,7 +45,7 @@
             TextWrapping="Wrap" />
         <TextBox
             Name="Input"
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="1"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
