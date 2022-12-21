@@ -8,6 +8,8 @@ using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostDbgGpu;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostProfGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
 using Ryujinx.Memory;
@@ -23,7 +25,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     [Service("nvdrv:t")]
     class INvDrvServices : IpcService
     {
-        private static Dictionary<string, Type> _deviceFileRegistry = new Dictionary<string, Type>()
+        private static readonly List<string> _deviceFileDebugRegistry = new List<string>()
+        {
+            "/dev/nvhost-dbg-gpu",
+            "/dev/nvhost-prof-gpu"
+        };
+
+        private static readonly Dictionary<string, Type> _deviceFileRegistry = new Dictionary<string, Type>()
         {
             { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
             { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
@@ -35,6 +43,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             //{ "/dev/nvhost-nvjpg",    typeof(NvHostChannelDeviceFile) },
             { "/dev/nvhost-vic",      typeof(NvHostChannelDeviceFile) },
             //{ "/dev/nvhost-display",  typeof(NvHostChannelDeviceFile) },
+            { "/dev/nvhost-dbg-gpu",  typeof(NvHostDbgGpuDeviceFile)  },
+            { "/dev/nvhost-prof-gpu", typeof(NvHostProfGpuDeviceFile) },
         };
 
         public static IdDictionary DeviceFileIdRegistry = new IdDictionary();
@@ -44,13 +54,23 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private bool _transferMemInitialized = false;
 
+        // TODO: This should call set:sys::GetDebugModeFlag
+        private bool _debugModeEnabled = false;
+
         public INvDrvServices(ServiceCtx context) : base(context.Device.System.NvDrvServer)
         {
             _owner = 0;
         }
 
-        private int Open(ServiceCtx context, string path)
+        private NvResult Open(ServiceCtx context, string path, out int fd)
         {
+            fd = -1;
+
+            if (!_debugModeEnabled && _deviceFileDebugRegistry.Contains(path))
+            {
+                return NvResult.NotSupported;
+            }
+
             if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
             {
                 ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(ulong) });
@@ -59,14 +79,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 deviceFile.Path = path;
 
-                return DeviceFileIdRegistry.Add(deviceFile);
-            }
-            else
-            {
-                Logger.Warning?.Print(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
+                fd = DeviceFileIdRegistry.Add(deviceFile);
+
+                return NvResult.Success;
             }
 
-            return -1;
+            Logger.Warning?.Print(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
+
+            return NvResult.FileOperationFailed;
         }
 
         private NvResult GetIoctlArgument(ServiceCtx context, NvIoctl ioctlCommand, out Span<byte> arguments)
@@ -229,12 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 string path = MemoryHelper.ReadAsciiString(context.Memory, pathPtr, (long)pathSize);
 
-                fd = Open(context, path);
-
-                if (fd == -1)
-                {
-                    errorCode = NvResult.FileOperationFailed;
-                }
+                errorCode = Open(context, path, out fd);
             }
 
             context.ResponseData.Write(fd);
