@@ -381,15 +381,13 @@ namespace ARMeilleure.Instructions
 
                 for (int index = 0; index < elems; index++)
                 {
-                    Operand ne = context.VectorExtract(type, GetVec(op.Rn), 0);
+                    Operand ne = context.VectorExtract(type, GetVec(op.Rn), index);
 
                     if (sizeF == 0)
                     {
                         context.StoreToContext();
                         Operand e = context.Call(typeof(SoftFloat32_16).GetMethod(nameof(SoftFloat32_16.FPConvert)), ne);
                         context.LoadFromContext();
-
-                        e = context.ZeroExtend16(OperandType.I64, e);
 
                         res = EmitVectorInsert(context, res, e, part + index, 1);
                     }
