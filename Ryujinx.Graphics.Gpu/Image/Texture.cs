@@ -857,9 +857,23 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 result = decoded;
             }
-            else if (!_context.Capabilities.SupportsR4G4Format && Format == Format.R4G4Unorm)
+            else if (!_context.Capabilities.SupportsEtc2Compression && Format.IsEtc2())
             {
-                result = PixelConverter.ConvertR4G4ToR4G4B4A4(result);
+                switch (Format)
+                {
+                    case Format.Etc2RgbaSrgb:
+                    case Format.Etc2RgbaUnorm:
+                        result = ETC2Decoder.DecodeRgba(result, width, height, depth, levels, layers);
+                        break;
+                    case Format.Etc2RgbPtaSrgb:
+                    case Format.Etc2RgbPtaUnorm:
+                        result = ETC2Decoder.DecodePta(result, width, height, depth, levels, layers);
+                        break;
+                    case Format.Etc2RgbSrgb:
+                    case Format.Etc2RgbUnorm:
+                        result = ETC2Decoder.DecodeRgb(result, width, height, depth, levels, layers);
+                        break;
+                }
             }
             else if (!TextureCompatibility.HostSupportsBcFormat(Format, Target, _context.Capabilities))
             {
@@ -894,6 +908,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                         result = BCnDecoder.DecodeBC7(result, width, height, depth, levels, layers);
                         break;
                 }
+            }
+            else if (!_context.Capabilities.SupportsR4G4Format && Format == Format.R4G4Unorm)
+            {
+                result = PixelConverter.ConvertR4G4ToR4G4B4A4(result);
             }
 
             return result;

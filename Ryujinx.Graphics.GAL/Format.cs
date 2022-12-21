@@ -517,6 +517,27 @@ namespace Ryujinx.Graphics.GAL
         }
 
         /// <summary>
+        /// Checks if the texture format is an ETC2 format.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is an ETC2 format, false otherwise</returns>
+        public static bool IsEtc2(this Format format)
+        {
+            switch (format)
+            {
+                case Format.Etc2RgbaSrgb:
+                case Format.Etc2RgbaUnorm:
+                case Format.Etc2RgbPtaSrgb:
+                case Format.Etc2RgbPtaUnorm:
+                case Format.Etc2RgbSrgb:
+                case Format.Etc2RgbUnorm:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Checks if the texture format is a BGR format.
         /// </summary>
         /// <param name="format">Texture format</param>

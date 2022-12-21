@@ -208,8 +208,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             Bc6HSf16Float                    = Bc6HSf16          | RFloat | GFloat | BFloat | AFloat,        // 0x7ff90
             Bc6HUf16Float                    = Bc6HUf16          | RFloat | GFloat | BFloat | AFloat,        // 0x7ff91
             Etc2RgbUnorm                     = Etc2Rgb           | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x24906
+            Etc2RgbPtaUnorm                  = Etc2RgbPta        | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x2490a
             Etc2RgbaUnorm                    = Etc2Rgba          | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x2490b
             Etc2RgbUnormSrgb                 = Etc2Rgb           | RUnorm | GUnorm | BUnorm | AUnorm | Srgb, // 0xa4906
+            Etc2RgbPtaUnormSrgb              = Etc2RgbPta        | RUnorm | GUnorm | BUnorm | AUnorm | Srgb, // 0xa490a
             Etc2RgbaUnormSrgb                = Etc2Rgba          | RUnorm | GUnorm | BUnorm | AUnorm | Srgb, // 0xa490b
             Astc2D4x4Unorm                   = Astc2D4x4         | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x24940
             Astc2D5x4Unorm                   = Astc2D5x4         | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x24950
@@ -429,8 +431,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             { TextureFormat.Bc6HSf16Float,                    new FormatInfo(Format.Bc6HSfloat,        4,  4,  16, 4) },
             { TextureFormat.Bc6HUf16Float,                    new FormatInfo(Format.Bc6HUfloat,        4,  4,  16, 4) },
             { TextureFormat.Etc2RgbUnorm,                     new FormatInfo(Format.Etc2RgbUnorm,      4,  4,  8,  3) },
+            { TextureFormat.Etc2RgbPtaUnorm,                  new FormatInfo(Format.Etc2RgbPtaUnorm,   4,  4,  8,  4) },
             { TextureFormat.Etc2RgbaUnorm,                    new FormatInfo(Format.Etc2RgbaUnorm,     4,  4,  16, 4) },
             { TextureFormat.Etc2RgbUnormSrgb,                 new FormatInfo(Format.Etc2RgbSrgb,       4,  4,  8,  3) },
+            { TextureFormat.Etc2RgbPtaUnormSrgb,              new FormatInfo(Format.Etc2RgbPtaSrgb,    4,  4,  8,  4) },
             { TextureFormat.Etc2RgbaUnormSrgb,                new FormatInfo(Format.Etc2RgbaSrgb,      4,  4,  16, 4) },
             { TextureFormat.Astc2D4x4Unorm,                   new FormatInfo(Format.Astc4x4Unorm,      4,  4,  16, 4) },
             { TextureFormat.Astc2D5x4Unorm,                   new FormatInfo(Format.Astc5x4Unorm,      5,  4,  16, 4) },

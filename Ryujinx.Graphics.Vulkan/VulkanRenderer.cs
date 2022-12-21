@@ -388,6 +388,13 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.Format.Bc7Srgb,
                 GAL.Format.Bc7Unorm);
 
+            bool supportsEtc2CompressionFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
+                GAL.Format.Etc2RgbaSrgb,
+                GAL.Format.Etc2RgbaUnorm,
+                GAL.Format.Etc2RgbPtaSrgb,
+                GAL.Format.Etc2RgbPtaUnorm,
+                GAL.Format.Etc2RgbSrgb,
+                GAL.Format.Etc2RgbUnorm);
 
             PhysicalDeviceVulkan12Features featuresVk12 = new PhysicalDeviceVulkan12Features()
             {
@@ -414,6 +421,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsBc123Compression: supportsBc123CompressionFormat,
                 supportsBc45Compression: supportsBc45CompressionFormat,
                 supportsBc67Compression: supportsBc67CompressionFormat,
+                supportsEtc2Compression: supportsEtc2CompressionFormat,
                 supports3DTextureCompression: true,
                 supportsBgraFormat: true,
                 supportsR4G4Format: false,

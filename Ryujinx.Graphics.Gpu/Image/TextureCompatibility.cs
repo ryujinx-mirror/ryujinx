@@ -67,6 +67,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A host compatible format</returns>
         public static FormatInfo ToHostCompatibleFormat(TextureInfo info, Capabilities caps)
         {
+            // The host API does not support those compressed formats.
+            // We assume software decompression will be done for those textures,
+            // and so we adjust the format here to match the decompressor output.
+
             if (!caps.SupportsAstcCompression)
             {
                 if (info.FormatInfo.Format.IsAstcUnorm())
@@ -83,16 +87,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if (!caps.SupportsR4G4Format && info.FormatInfo.Format == Format.R4G4Unorm)
-            {
-                return new FormatInfo(Format.R4G4B4A4Unorm, 1, 1, 2, 4);
-            }
-
             if (!HostSupportsBcFormat(info.FormatInfo.Format, info.Target, caps))
             {
-                // The host API does not this compressed format.
-                // We assume software decompression will be done for those textures,
-                // and so we adjust the format here to match the decompressor output.
                 switch (info.FormatInfo.Format)
                 {
                     case Format.Bc1RgbaSrgb:
@@ -117,6 +113,26 @@ namespace Ryujinx.Graphics.Gpu.Image
                     case Format.Bc6HUfloat:
                         return new FormatInfo(Format.R16G16B16A16Float, 1, 1, 8, 4);
                 }
+            }
+
+            if (!caps.SupportsEtc2Compression)
+            {
+                switch (info.FormatInfo.Format)
+                {
+                    case Format.Etc2RgbaSrgb:
+                    case Format.Etc2RgbPtaSrgb:
+                    case Format.Etc2RgbSrgb:
+                        return new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4, 4);
+                    case Format.Etc2RgbaUnorm:
+                    case Format.Etc2RgbPtaUnorm:
+                    case Format.Etc2RgbUnorm:
+                        return new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4, 4);
+                }
+            }
+
+            if (!caps.SupportsR4G4Format && info.FormatInfo.Format == Format.R4G4Unorm)
+            {
+                return new FormatInfo(Format.R4G4B4A4Unorm, 1, 1, 2, 4);
             }
 
             return info.FormatInfo;
