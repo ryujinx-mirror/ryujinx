@@ -142,6 +142,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.FirstIndex = firstIndex;
             _drawState.IndexCount = indexCount;
+            _drawState.DrawFirstVertex = drawFirstVertex;
+            _drawState.DrawVertexCount = drawVertexCount;
             _currentSpecState.SetHasConstantBufferDrawParameters(false);
 
             engine.UpdateState();
@@ -163,10 +165,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 _instancedIndexCount = ibCount != 0 ? ibCount : indexCount;
 
-                var drawState = _state.State.VertexBufferDrawState;
-
-                _instancedDrawStateFirst = drawState.First;
-                _instancedDrawStateCount = drawState.Count;
+                _instancedDrawStateFirst = drawFirstVertex;
+                _instancedDrawStateCount = drawVertexCount;
 
                 _drawState.DrawIndexed = false;
 
@@ -415,6 +415,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool oldDrawIndexed = _drawState.DrawIndexed;
 
             _drawState.DrawIndexed = false;
+            engine.ForceStateDirty(VertexBufferFirstMethodOffset * 4);
 
             DrawEnd(engine, 0, 0, firstVertex, vertexCount);
 
@@ -526,8 +527,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
             else
             {
-                _state.State.VertexBufferDrawState.First = firstVertex;
-                _state.State.VertexBufferDrawState.Count = count;
+                _drawState.DrawFirstVertex = firstVertex;
+                _drawState.DrawVertexCount = count;
                 engine.ForceStateDirty(VertexBufferFirstMethodOffset * 4);
             }
 

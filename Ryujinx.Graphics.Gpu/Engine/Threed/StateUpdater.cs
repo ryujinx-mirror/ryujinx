@@ -989,6 +989,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             bool drawIndexed = _drawState.DrawIndexed;
             bool drawIndirect = _drawState.DrawIndirect;
+            int drawFirstVertex = _drawState.DrawFirstVertex;
+            int drawVertexCount = _drawState.DrawVertexCount;
             uint vbEnableMask = 0;
 
             for (int index = 0; index < Constants.TotalVertexBuffers; index++)
@@ -1050,9 +1052,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                     int firstInstance = (int)_state.State.FirstInstance;
 
-                    var drawState = _state.State.VertexBufferDrawState;
-
-                    size = Math.Min(vbSize, (ulong)((firstInstance + drawState.First + drawState.Count) * stride));
+                    size = Math.Min(vbSize, (ulong)((firstInstance + drawFirstVertex + drawVertexCount) * stride));
                 }
 
                 _pipeline.VertexBuffers[index] = new BufferPipelineDescriptor(_channel.MemoryManager.IsMapped(address), stride, divisor);
