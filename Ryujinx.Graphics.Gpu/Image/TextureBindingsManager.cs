@@ -320,10 +320,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             // Check if the texture pool has been modified since bindings were last committed.
             // If it wasn't, then it's possible to avoid looking up textures again when the handle remains the same.
-            bool poolModified = _cachedTexturePool != texturePool || _cachedSamplerPool != samplerPool;
+            if (_cachedTexturePool != texturePool || _cachedSamplerPool != samplerPool)
+            {
+                Rebind();
 
-            _cachedTexturePool = texturePool;
-            _cachedSamplerPool = samplerPool;
+                _cachedTexturePool = texturePool;
+                _cachedSamplerPool = samplerPool;
+            }
+
+            bool poolModified = false;
 
             if (texturePool != null)
             {
