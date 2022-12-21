@@ -378,14 +378,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public override int GetHashCode()
         {
-            if (Kind == OperandKind.LocalVariable)
-            {
-                return base.GetHashCode();
-            }
-            else
-            {
-                return (int)Value ^ ((int)Kind << 16) ^ ((int)Type << 20);
-            }
+            return ((ulong)_data).GetHashCode();
         }
 
         public bool Equals(Operand operand)
