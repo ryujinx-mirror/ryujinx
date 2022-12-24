@@ -24,9 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Pcv.Bpc
         public static ResultCode GetExternalRtcValue(out ulong rtcValue)
         {
             // TODO: emulate MAX77620/MAX77812 RTC
-            DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            rtcValue = (ulong)(DateTime.Now.ToUniversalTime() - unixEpoch).TotalSeconds;
+            rtcValue = (ulong)(DateTime.Now.ToUniversalTime() - DateTime.UnixEpoch).TotalSeconds;
 
             return ResultCode.Success;
         }

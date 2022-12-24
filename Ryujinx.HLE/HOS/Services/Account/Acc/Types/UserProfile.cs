@@ -4,8 +4,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
     public class UserProfile
     {
-        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
         public UserId UserId { get; }
 
         public long LastModifiedTimestamp { get; set; }
@@ -83,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         private void UpdateLastModifiedTimestamp()
         {
-            LastModifiedTimestamp = (long)(DateTime.Now - Epoch).TotalSeconds;
+            LastModifiedTimestamp = (long)(DateTime.Now - DateTime.UnixEpoch).TotalSeconds;
         }
     }
 }

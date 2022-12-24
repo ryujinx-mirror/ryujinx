@@ -142,14 +142,9 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             _owner.CpuMemory.Read(nroAddress, nroData);
 
-            byte[] nroHash = null;
-
             MemoryStream stream = new MemoryStream(nroData);
 
-            using (SHA256 hasher = SHA256.Create())
-            {
-                nroHash = hasher.ComputeHash(stream);
-            }
+            byte[] nroHash = SHA256.HashData(stream);
 
             if (!IsNroHashPresent(nroHash))
             {

@@ -10,8 +10,6 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
         public static readonly TimeSpanType Zero = new TimeSpanType(0);
 
-        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
         public long NanoSeconds;
 
         public TimeSpanType(long nanoSeconds)
@@ -31,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
         public bool IsDaylightSavingTime()
         {
-            return UnixEpoch.AddSeconds(ToSeconds()).ToLocalTime().IsDaylightSavingTime();
+            return DateTime.UnixEpoch.AddSeconds(ToSeconds()).ToLocalTime().IsDaylightSavingTime();
         }
 
         public static TimeSpanType FromSeconds(long seconds)
