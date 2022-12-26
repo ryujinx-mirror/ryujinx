@@ -203,8 +203,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     heapRegion.Size = 0x180000000;
                     stackRegion.Size = 0x80000000;
                     tlsIoRegion.Size = 0x1000000000;
-                    CodeRegionStart = BitUtils.AlignDown(address, 0x200000);
-                    codeRegionSize = BitUtils.AlignUp(endAddr, 0x200000) - CodeRegionStart;
+                    CodeRegionStart = BitUtils.AlignDown<ulong>(address, 0x200000);
+                    codeRegionSize = BitUtils.AlignUp<ulong>(endAddr, 0x200000) - CodeRegionStart;
                     stackAndTlsIoStart = 0;
                     stackAndTlsIoEnd = 0;
                     baseAddress = 0x8000000;
@@ -1584,8 +1584,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return KernelResult.OutOfResource;
                     }
 
-                    ulong srcMapAddress = BitUtils.AlignUp(src, PageSize);
-                    ulong srcMapEndAddr = BitUtils.AlignDown(src + size, PageSize);
+                    ulong srcMapAddress = BitUtils.AlignUp<ulong>(src, PageSize);
+                    ulong srcMapEndAddr = BitUtils.AlignDown<ulong>(src + size, PageSize);
                     ulong srcMapSize = srcMapEndAddr - srcMapAddress;
 
                     result = MapPagesFromClientProcess(size, src, permission, state, srcPageTable, send, out ulong va);
@@ -1659,10 +1659,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 attributeMask |= MemoryAttribute.DeviceMapped;
             }
 
-            ulong addressRounded = BitUtils.AlignUp(address, PageSize);
-            ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
-            ulong endAddrRounded = BitUtils.AlignUp(endAddr, PageSize);
-            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
+            ulong addressRounded = BitUtils.AlignUp<ulong>(address, PageSize);
+            ulong addressTruncated = BitUtils.AlignDown<ulong>(address, PageSize);
+            ulong endAddrRounded = BitUtils.AlignUp<ulong>(endAddr, PageSize);
+            ulong endAddrTruncated = BitUtils.AlignDown<ulong>(endAddr, PageSize);
 
             if (!_slabManager.CanAllocate(MaxBlocksNeededForInsertion))
             {
@@ -1769,10 +1769,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             ulong endAddr = address + size;
 
-            ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
-            ulong addressRounded = BitUtils.AlignUp(address, PageSize);
-            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
-            ulong endAddrRounded = BitUtils.AlignUp(endAddr, PageSize);
+            ulong addressTruncated = BitUtils.AlignDown<ulong>(address, PageSize);
+            ulong addressRounded = BitUtils.AlignUp<ulong>(address, PageSize);
+            ulong endAddrTruncated = BitUtils.AlignDown<ulong>(endAddr, PageSize);
+            ulong endAddrRounded = BitUtils.AlignUp<ulong>(endAddr, PageSize);
 
             ulong neededSize = endAddrRounded - addressTruncated;
 
@@ -1983,10 +1983,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return KernelResult.OutOfResource;
                     }
 
-                    ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
-                    ulong addressRounded = BitUtils.AlignUp(address, PageSize);
-                    ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
-                    ulong endAddrRounded = BitUtils.AlignUp(endAddr, PageSize);
+                    ulong addressTruncated = BitUtils.AlignDown<ulong>(address, PageSize);
+                    ulong addressRounded = BitUtils.AlignUp<ulong>(address, PageSize);
+                    ulong endAddrTruncated = BitUtils.AlignDown<ulong>(endAddr, PageSize);
+                    ulong endAddrRounded = BitUtils.AlignUp<ulong>(endAddr, PageSize);
 
                     ulong pagesCount = (endAddrRounded - addressTruncated) / PageSize;
 
@@ -2010,10 +2010,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             ulong endAddr = address + size;
 
-            ulong addressRounded = BitUtils.AlignUp(address, PageSize);
-            ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
-            ulong endAddrRounded = BitUtils.AlignUp(endAddr, PageSize);
-            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
+            ulong addressRounded = BitUtils.AlignUp<ulong>(address, PageSize);
+            ulong addressTruncated = BitUtils.AlignDown<ulong>(address, PageSize);
+            ulong endAddrRounded = BitUtils.AlignUp<ulong>(endAddr, PageSize);
+            ulong endAddrTruncated = BitUtils.AlignDown<ulong>(endAddr, PageSize);
 
             ulong pagesCount = addressRounded < endAddrTruncated ? (endAddrTruncated - addressRounded) / PageSize : 0;
 
@@ -2540,7 +2540,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 for (int attempt = 0; attempt < 8; attempt++)
                 {
-                    ulong aslrAddress = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, alignment);
+                    ulong aslrAddress = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, (ulong)alignment);
                     ulong aslrEndAddr = aslrAddress + totalNeededSize;
 
                     KMemoryInfo info = _blockManager.FindBlock(aslrAddress).GetInfo();
@@ -2618,7 +2618,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     currBaseAddr += reservedSize;
 
-                    ulong address = BitUtils.AlignDown(currBaseAddr, alignment) + reservedStart;
+                    ulong address = BitUtils.AlignDown<ulong>(currBaseAddr, (ulong)alignment) + reservedStart;
 
                     if (currBaseAddr > address)
                     {
@@ -2834,7 +2834,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             lock (_blockManager)
             {
-                return BitUtils.DivRoundUp(GetMmUsedSize(), PageSize);
+                return BitUtils.DivRoundUp<ulong>(GetMmUsedSize(), PageSize);
             }
         }
 

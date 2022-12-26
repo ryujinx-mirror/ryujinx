@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS
                 endOffset = kip.BssOffset + kip.BssSize;
             }
 
-            uint codeSize = BitUtils.AlignUp(kip.TextOffset + endOffset, KPageTableBase.PageSize);
+            uint codeSize = BitUtils.AlignUp<uint>(kip.TextOffset + endOffset, KPageTableBase.PageSize);
 
             int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
 
@@ -195,7 +195,7 @@ namespace Ryujinx.HLE.HOS
                     nsoSize = dataEnd;
                 }
 
-                nsoSize = BitUtils.AlignUp(nsoSize, KPageTableBase.PageSize);
+                nsoSize = BitUtils.AlignUp<uint>(nsoSize, KPageTableBase.PageSize);
 
                 nsoBase[index] = codeStart + (ulong)codeSize;
 
@@ -349,7 +349,7 @@ namespace Ryujinx.HLE.HOS
                     return KernelResult.Success;
                 }
 
-                size = BitUtils.AlignUp(size, KPageTableBase.PageSize);
+                size = BitUtils.AlignUp<ulong>(size, KPageTableBase.PageSize);
 
                 return process.MemoryManager.SetProcessMemoryPermission(address, size, permission);
             }

@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 {
                     int diff = 1 << (NextShift - Shift);
 
-                    offset = BitUtils.AlignDown(offset, diff);
+                    offset = BitUtils.AlignDown(offset, (ulong)diff);
 
                     if (_bitmap.ClearRange(offset, diff))
                     {

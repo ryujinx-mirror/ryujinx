@@ -252,7 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             RecordStorageAlignment(_cpStorageBuffers, index, gpuVa);
 
-            gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
+            gpuVa = BitUtils.AlignDown<ulong>(gpuVa, (ulong)_context.Capabilities.StorageBufferOffsetAlignment);
 
             ulong address = _channel.MemoryManager.Physical.BufferCache.TranslateAndCreateBuffer(_channel.MemoryManager, gpuVa, size);
 
@@ -276,7 +276,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             RecordStorageAlignment(buffers, index, gpuVa);
 
-            gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
+            gpuVa = BitUtils.AlignDown<ulong>(gpuVa, (ulong)_context.Capabilities.StorageBufferOffsetAlignment);
 
             ulong address = _channel.MemoryManager.Physical.BufferCache.TranslateAndCreateBuffer(_channel.MemoryManager, gpuVa, size);
 

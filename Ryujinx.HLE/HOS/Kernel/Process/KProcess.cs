@@ -472,7 +472,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KernelResult FreeThreadLocalStorage(ulong tlsSlotAddr)
         {
-            ulong tlsPageAddr = BitUtils.AlignDown(tlsSlotAddr, KPageTableBase.PageSize);
+            ulong tlsPageAddr = BitUtils.AlignDown<ulong>(tlsSlotAddr, KPageTableBase.PageSize);
 
             KernelContext.CriticalSection.Enter();
 
@@ -554,7 +554,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     throw new InvalidOperationException("Trying to start a process with a invalid state!");
                 }
 
-                ulong stackSizeRounded = BitUtils.AlignUp(stackSize, KPageTableBase.PageSize);
+                ulong stackSizeRounded = BitUtils.AlignUp<ulong>(stackSize, KPageTableBase.PageSize);
 
                 ulong neededSize = stackSizeRounded + _imageSize;
 

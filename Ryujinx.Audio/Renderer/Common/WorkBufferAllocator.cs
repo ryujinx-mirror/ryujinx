@@ -23,7 +23,7 @@ namespace Ryujinx.Audio.Renderer.Common
 
             if (size != 0)
             {
-                ulong alignedOffset = BitUtils.AlignUp(Offset, align);
+                ulong alignedOffset = BitUtils.AlignUp<ulong>(Offset, (ulong)align);
 
                 if (alignedOffset + size <= (ulong)BackingMemory.Length)
                 {
@@ -55,7 +55,7 @@ namespace Ryujinx.Audio.Renderer.Common
 
         public static ulong GetTargetSize<T>(ulong currentSize, ulong count, int align) where T : unmanaged
         {
-            return BitUtils.AlignUp(currentSize, align) + (ulong)Unsafe.SizeOf<T>() * count;
+            return BitUtils.AlignUp<ulong>(currentSize, (ulong)align) + (ulong)Unsafe.SizeOf<T>() * count;
         }
     }
 }

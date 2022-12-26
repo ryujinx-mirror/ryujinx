@@ -1005,7 +1005,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     recvListEndAddr = recvListBaseAddr + size;
                 }
 
-                recvListBufferAddress = BitUtils.AlignUp(recvListBaseAddr + dstOffset, 0x10);
+                recvListBufferAddress = BitUtils.AlignUp<ulong>(recvListBaseAddr + dstOffset, 0x10);
 
                 ulong endAddress = recvListBufferAddress + descriptor.BufferSize;
 

@@ -81,8 +81,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     attributeMask |= MemoryAttribute.DeviceMapped;
                 }
 
-                ulong clientAddrTruncated = BitUtils.AlignDown(desc.ClientAddress, KPageTableBase.PageSize);
-                ulong clientAddrRounded   = BitUtils.AlignUp  (desc.ClientAddress, KPageTableBase.PageSize);
+                ulong clientAddrTruncated = BitUtils.AlignDown<ulong>(desc.ClientAddress, KPageTableBase.PageSize);
+                ulong clientAddrRounded   = BitUtils.AlignUp<ulong>(desc.ClientAddress, KPageTableBase.PageSize);
 
                 // Check if address is not aligned, in this case we need to perform 2 copies.
                 if (clientAddrTruncated != clientAddrRounded)
@@ -113,9 +113,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 ulong clientEndAddr = desc.ClientAddress + desc.Size;
                 ulong serverEndAddr = desc.ServerAddress + desc.Size;
 
-                ulong clientEndAddrTruncated = BitUtils.AlignDown(clientEndAddr, KPageTableBase.PageSize);
-                ulong clientEndAddrRounded   = BitUtils.AlignUp  (clientEndAddr, KPageTableBase.PageSize);
-                ulong serverEndAddrTruncated = BitUtils.AlignDown(serverEndAddr, KPageTableBase.PageSize);
+                ulong clientEndAddrTruncated = BitUtils.AlignDown<ulong>(clientEndAddr, (ulong)KPageTableBase.PageSize);
+                ulong clientEndAddrRounded   = BitUtils.AlignUp<ulong>(clientEndAddr, KPageTableBase.PageSize);
+                ulong serverEndAddrTruncated = BitUtils.AlignDown<ulong>(serverEndAddr, (ulong)KPageTableBase.PageSize);
 
                 if (clientEndAddrTruncated < clientEndAddrRounded &&
                     (clientAddrTruncated == clientAddrRounded || clientAddrTruncated < clientEndAddrTruncated))

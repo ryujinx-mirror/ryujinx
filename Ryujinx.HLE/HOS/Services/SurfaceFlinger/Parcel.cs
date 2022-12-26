@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             uint headerSize = (uint)Unsafe.SizeOf<ParcelHeader>();
 
-            _rawData = new byte[BitUtils.AlignUp(headerSize + payloadSize + objectsSize, 4)];
+            _rawData = new byte[BitUtils.AlignUp<uint>(headerSize + payloadSize + objectsSize, 4)];
 
             Header.PayloadSize   = payloadSize;
             Header.ObjectsSize   = objectsSize;

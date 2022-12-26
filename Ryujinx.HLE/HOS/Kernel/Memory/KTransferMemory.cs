@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             KProcess process,
             KMemoryPermission permission)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong size,
             KProcess process)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, (ulong)KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }

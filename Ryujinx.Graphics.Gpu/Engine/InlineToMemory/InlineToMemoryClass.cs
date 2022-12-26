@@ -100,7 +100,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
             _isLinear = (argument & 1) != 0;
 
             _offset = 0;
-            _size = (int)(BitUtils.AlignUp(state.LineLengthIn, 4) * state.LineCount);
+            _size = (int)(BitUtils.AlignUp<uint>(state.LineLengthIn, 4) * state.LineCount);
 
             int count = _size / 4;
 

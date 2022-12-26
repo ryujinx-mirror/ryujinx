@@ -1,82 +1,26 @@
+using System;
 using System.Numerics;
 
 namespace Ryujinx.Common
 {
     public static class BitUtils
     {
-        public static uint AlignUp(uint value, int size)
+        public static T AlignUp<T>(T value, T size)
+            where T : IBinaryInteger<T>
         {
-            return (uint)AlignUp((int)value, size);
+            return (value + (size - T.One)) & -size;
         }
 
-        public static int AlignUp(int value, int size)
-        {
-            return (value + (size - 1)) & -size;
-        }
-
-        public static ulong AlignUp(ulong value, int size)
-        {
-            return (ulong)AlignUp((long)value, size);
-        }
-
-        public static long AlignUp(long value, int size)
-        {
-            return AlignUp(value, (long)size);
-        }
-
-        public static ulong AlignUp(ulong value, ulong size)
-        {
-            return (ulong)AlignUp((long)value, (long)size);
-        }
-
-        public static long AlignUp(long value, long size)
-        {
-            return (value + (size - 1)) & -size;
-        }
-
-        public static uint AlignDown(uint value, int size)
-        {
-            return (uint)AlignDown((int)value, size);
-        }
-
-        public static int AlignDown(int value, int size)
+        public static T AlignDown<T>(T value, T size)
+            where T : IBinaryInteger<T>
         {
             return value & -size;
         }
 
-        public static ulong AlignDown(ulong value, int size)
+        public static T DivRoundUp<T>(T value, T dividend)
+            where T : IBinaryInteger<T>
         {
-            return (ulong)AlignDown((long)value, size);
-        }
-
-        public static long AlignDown(long value, int size)
-        {
-            return AlignDown(value, (long)size);
-        }
-
-        public static ulong AlignDown(ulong value, ulong size)
-        {
-            return (ulong)AlignDown((long)value, (long)size);
-        }
-
-        public static long AlignDown(long value, long size)
-        {
-            return value & -size;
-        }
-
-        public static int DivRoundUp(int value, int dividend)
-        {
-            return (value + dividend - 1) / dividend;
-        }
-
-        public static ulong DivRoundUp(ulong value, uint dividend)
-        {
-            return (value + dividend - 1) / dividend;
-        }
-
-        public static long DivRoundUp(long value, int dividend)
-        {
-            return (value + dividend - 1) / dividend;
+            return (value + (dividend - T.One)) / dividend;
         }
 
         public static int Pow2RoundUp(int value)

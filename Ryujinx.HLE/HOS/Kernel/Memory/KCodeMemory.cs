@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult Map(ulong address, ulong size, KMemoryPermission perm)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, (ulong)KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult MapToOwner(ulong address, ulong size, KMemoryPermission permission)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, (ulong)KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult Unmap(ulong address, ulong size)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, (ulong)KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult UnmapFromOwner(ulong address, ulong size)
         {
-            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp(size, KPageTableBase.PageSize))
+            if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, KPageTableBase.PageSize))
             {
                 return KernelResult.InvalidSize;
             }
