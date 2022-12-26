@@ -911,7 +911,40 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else if (!_context.Capabilities.SupportsR4G4Format && Format == Format.R4G4Unorm)
             {
-                result = PixelConverter.ConvertR4G4ToR4G4B4A4(result);
+                result = PixelConverter.ConvertR4G4ToR4G4B4A4(result, width);
+
+                if (!_context.Capabilities.SupportsR4G4B4A4Format)
+                {
+                    result = PixelConverter.ConvertR4G4B4A4ToR8G8B8A8(result, width);
+                }
+            }
+            else if (Format == Format.R4G4B4A4Unorm)
+            {
+                if (!_context.Capabilities.SupportsR4G4B4A4Format)
+                {
+                    result = PixelConverter.ConvertR4G4B4A4ToR8G8B8A8(result, width);
+                }
+            }
+            else if (!_context.Capabilities.Supports5BitComponentFormat && Format.Is16BitPacked())
+            {
+                switch (Format)
+                {
+                    case Format.B5G6R5Unorm:
+                    case Format.R5G6B5Unorm:
+                        result = PixelConverter.ConvertR5G6B5ToR8G8B8A8(result, width);
+                        break;
+                    case Format.B5G5R5A1Unorm:
+                    case Format.R5G5B5X1Unorm:
+                    case Format.R5G5B5A1Unorm:
+                        result = PixelConverter.ConvertR5G5B5ToR8G8B8A8(result, width, Format == Format.R5G5B5X1Unorm);
+                        break;
+                    case Format.A1B5G5R5Unorm:
+                        result = PixelConverter.ConvertA1B5G5R5ToR8G8B8A8(result, width);
+                        break;
+                    case Format.R4G4B4A4Unorm:
+                        result = PixelConverter.ConvertR4G4B4A4ToR8G8B8A8(result, width);
+                        break;
+                }
             }
 
             return result;

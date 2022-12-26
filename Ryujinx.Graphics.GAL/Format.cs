@@ -449,6 +449,27 @@ namespace Ryujinx.Graphics.GAL
         }
 
         /// <summary>
+        /// Checks if the texture format is 16 bit packed.
+        /// </summary>
+        /// <param name="format">Texture format</param>
+        /// <returns>True if the texture format is 16 bit packed, false otherwise</returns>
+        public static bool Is16BitPacked(this Format format)
+        {
+            switch (format)
+            {
+                case Format.B5G6R5Unorm:
+                case Format.B5G5R5A1Unorm:
+                case Format.R5G5B5X1Unorm:
+                case Format.R5G5B5A1Unorm:
+                case Format.R5G6B5Unorm:
+                case Format.R4G4B4A4Unorm:
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Checks if the texture format is an ASTC format.
         /// </summary>
         /// <param name="format">Texture format</param>

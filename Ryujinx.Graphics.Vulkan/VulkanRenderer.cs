@@ -396,6 +396,17 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.Format.Etc2RgbSrgb,
                 GAL.Format.Etc2RgbUnorm);
 
+            bool supports5BitComponentFormat = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
+                GAL.Format.R5G6B5Unorm,
+                GAL.Format.R5G5B5A1Unorm,
+                GAL.Format.R5G5B5X1Unorm,
+                GAL.Format.B5G6R5Unorm,
+                GAL.Format.B5G5R5A1Unorm,
+                GAL.Format.A1B5G5R5Unorm);
+
+            bool supportsR4G4B4A4Format = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
+                GAL.Format.R4G4B4A4Unorm);
+
             PhysicalDeviceVulkan12Features featuresVk12 = new PhysicalDeviceVulkan12Features()
             {
                 SType = StructureType.PhysicalDeviceVulkan12Features
@@ -425,7 +436,9 @@ namespace Ryujinx.Graphics.Vulkan
                 supports3DTextureCompression: true,
                 supportsBgraFormat: true,
                 supportsR4G4Format: false,
+                supportsR4G4B4A4Format: supportsR4G4B4A4Format,
                 supportsSnormBufferTextureFormat: true,
+                supports5BitComponentFormat: supports5BitComponentFormat,
                 supportsFragmentShaderInterlock: Capabilities.SupportsFragmentShaderInterlock,
                 supportsFragmentShaderOrderingIntel: false,
                 supportsGeometryShaderPassthrough: Capabilities.SupportsGeometryShaderPassthrough,
