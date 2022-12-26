@@ -530,7 +530,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 
                     receiveRegion.Dispose();
 
-                    context.Memory.Write(sockAddrOutPosition, BsdSockAddr.FromIPEndPoint(endPoint));
+                    if (sockAddrOutSize != 0 && sockAddrOutSize >= (ulong) Unsafe.SizeOf<BsdSockAddr>())
+                    {
+                        context.Memory.Write(sockAddrOutPosition, BsdSockAddr.FromIPEndPoint(endPoint));
+                    }
+                    else
+                    {
+                        errno = LinuxError.ENOMEM;
+                    }
                 }
             }
 
