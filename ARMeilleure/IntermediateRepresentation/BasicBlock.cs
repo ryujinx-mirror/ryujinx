@@ -48,10 +48,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public void AddSuccessor(BasicBlock block)
         {
-            if (block == null)
-            {
-                ThrowNull(nameof(block));
-            }
+            ArgumentNullException.ThrowIfNull(block);
 
             if ((uint)_succCount + 1 > MaxSuccessors)
             {
@@ -100,10 +97,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public void SetSuccessor(int index, BasicBlock block)
         {
-            if (block == null)
-            {
-                ThrowNull(nameof(block));
-            }
+            ArgumentNullException.ThrowIfNull(block);
 
             if ((uint)index >= (uint)_succCount)
             {
@@ -144,7 +138,6 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        private static void ThrowNull(string name) => throw new ArgumentNullException(name);
         private static void ThrowOutOfRange(string name) => throw new ArgumentOutOfRangeException(name);
         private static void ThrowSuccessorOverflow() => throw new OverflowException($"BasicBlock can only have {MaxSuccessors} successors.");
 

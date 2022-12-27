@@ -411,10 +411,7 @@ namespace Ryujinx.Memory.Tracking
         /// </summary>
         public void Dispose()
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
             _disposed = true;
 

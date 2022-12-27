@@ -17,10 +17,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="node"/> is null</exception>
         public void Add(T node)
         {
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
+            ArgumentNullException.ThrowIfNull(node);
 
             Insert(node);
         }
@@ -32,10 +29,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="node"/> is null</exception>
         public void Remove(T node)
         {
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
+            ArgumentNullException.ThrowIfNull(node);
+
             if (Delete(node) != null)
             {
                 Count--;
@@ -50,10 +45,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="searchNode"/> is null</exception>
         public T GetNode(T searchNode)
         {
-            if (searchNode == null)
-            {
-                throw new ArgumentNullException(nameof(searchNode));
-            }
+            ArgumentNullException.ThrowIfNull(searchNode);
 
             T node = Root;
             while (node != null)

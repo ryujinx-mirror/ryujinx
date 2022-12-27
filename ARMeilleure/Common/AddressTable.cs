@@ -80,10 +80,7 @@ namespace ARMeilleure.Common
         {
             get
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(null);
-                }
+                ObjectDisposedException.ThrowIf(_disposed, this);
 
                 lock (_pages)
                 {
@@ -100,10 +97,7 @@ namespace ARMeilleure.Common
         /// <exception cref="ArgumentException">Length of <paramref name="levels"/> is less than 2</exception>
         public AddressTable(Level[] levels)
         {
-            if (levels == null)
-            {
-                throw new ArgumentNullException(nameof(levels));
-            }
+            ArgumentNullException.ThrowIfNull(levels);
 
             if (levels.Length < 2)
             {
@@ -141,10 +135,7 @@ namespace ARMeilleure.Common
         /// <exception cref="ArgumentException"><paramref name="address"/> is not mapped</exception>
         public ref TEntry GetValue(ulong address)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(null);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
             if (!IsValid(address))
             {

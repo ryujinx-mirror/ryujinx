@@ -32,20 +32,9 @@ namespace Ryujinx.HLE
 
         public Switch(HLEConfiguration configuration)
         {
-            if (configuration.GpuRenderer == null)
-            {
-                throw new ArgumentNullException(nameof(configuration.GpuRenderer));
-            }
-
-            if (configuration.AudioDeviceDriver == null)
-            {
-                throw new ArgumentNullException(nameof(configuration.AudioDeviceDriver));
-            }
-
-            if (configuration.UserChannelPersistence == null)
-            {
-                throw new ArgumentNullException(nameof(configuration.UserChannelPersistence));
-            }
+            ArgumentNullException.ThrowIfNull(configuration.GpuRenderer);
+            ArgumentNullException.ThrowIfNull(configuration.AudioDeviceDriver);
+            ArgumentNullException.ThrowIfNull(configuration.UserChannelPersistence);
 
             Configuration = configuration;
             FileSystem    = Configuration.VirtualFileSystem;

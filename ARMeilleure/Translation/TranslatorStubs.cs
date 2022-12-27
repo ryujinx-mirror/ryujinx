@@ -30,10 +30,7 @@ namespace ARMeilleure.Translation
         {
             get
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(null);
-                }
+                ObjectDisposedException.ThrowIf(_disposed, this);
 
                 return _dispatchStub.Value;
             }
@@ -47,10 +44,7 @@ namespace ARMeilleure.Translation
         {
             get
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(null);
-                }
+                ObjectDisposedException.ThrowIf(_disposed, this);
 
                 return _slowDispatchStub.Value;
             }
@@ -64,10 +58,7 @@ namespace ARMeilleure.Translation
         {
             get
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(null);
-                }
+                ObjectDisposedException.ThrowIf(_disposed, this);
 
                 return _dispatchLoop.Value;
             }
@@ -81,7 +72,9 @@ namespace ARMeilleure.Translation
         /// <exception cref="ArgumentNullException"><paramref name="translator"/> is null</exception>
         public TranslatorStubs(Translator translator)
         {
-            _translator = translator ?? throw new ArgumentNullException(nameof(translator));
+            ArgumentNullException.ThrowIfNull(translator);
+
+            _translator = translator;
             _dispatchStub = new(GenerateDispatchStub, isThreadSafe: true);
             _dispatchLoop = new(GenerateDispatchLoop, isThreadSafe: true);
         }

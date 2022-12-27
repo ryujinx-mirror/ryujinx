@@ -279,10 +279,7 @@ namespace Ryujinx.Memory
         {
             IntPtr ptr = _pointer;
 
-            if (ptr == IntPtr.Zero)
-            {
-                ThrowObjectDisposed();
-            }
+            ObjectDisposedException.ThrowIf(ptr == IntPtr.Zero, this);
 
             int size = Unsafe.SizeOf<T>();
 
@@ -312,10 +309,7 @@ namespace Ryujinx.Memory
         {
             IntPtr ptr = _pointer;
 
-            if (ptr == IntPtr.Zero)
-            {
-                ThrowObjectDisposed();
-            }
+            ObjectDisposedException.ThrowIf(ptr == IntPtr.Zero, this);
 
             ulong endOffset = offset + size;
 
@@ -454,7 +448,6 @@ namespace Ryujinx.Memory
             return true;
         }
 
-        private static void ThrowObjectDisposed() => throw new ObjectDisposedException(nameof(MemoryBlock));
         private static void ThrowInvalidMemoryRegionException() => throw new InvalidMemoryRegionException();
     }
 }

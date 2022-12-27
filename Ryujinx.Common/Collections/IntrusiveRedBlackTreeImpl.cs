@@ -92,10 +92,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="node"/> is null</exception>
         protected static T Minimum(T node)
         {
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
+            ArgumentNullException.ThrowIfNull(node);
+
             T tmp = node;
             while (tmp.Left != null)
             {

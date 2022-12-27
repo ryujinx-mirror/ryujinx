@@ -24,10 +24,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         public int Get(K key, ref V[] overlaps)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             IntervalTreeNode<K, V> node = GetNode(key);
 
@@ -61,15 +58,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="start"/> or <paramref name="end"/> is null</exception>
         public int Get(K start, K end, ref V[] overlaps, int overlapCount = 0)
         {
-            if (start == null)
-            {
-                throw new ArgumentNullException(nameof(start));
-            }
-
-            if (end == null)
-            {
-                throw new ArgumentNullException(nameof(end));
-            }
+            ArgumentNullException.ThrowIfNull(start);
+            ArgumentNullException.ThrowIfNull(end);
 
             GetValues(Root, start, end, ref overlaps, ref overlapCount);
 
@@ -85,20 +75,9 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="start"/>, <paramref name="end"/> or <paramref name="value"/> are null</exception>
         public void Add(K start, K end, V value)
         {
-            if (start == null)
-            {
-                throw new ArgumentNullException(nameof(start));
-            }
-
-            if (end == null)
-            {
-                throw new ArgumentNullException(nameof(end));
-            }
-
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(start);
+            ArgumentNullException.ThrowIfNull(end);
+            ArgumentNullException.ThrowIfNull(value);
 
             Insert(start, end, value);
         }
@@ -112,10 +91,7 @@ namespace Ryujinx.Common.Collections
         /// <returns>Number of deleted values</returns>
         public int Remove(K key, V value)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             int removed = Delete(key, value);
 
@@ -168,10 +144,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         private IntervalTreeNode<K, V> GetNode(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             IntervalTreeNode<K, V> node = Root;
             while (node != null)
@@ -462,10 +435,8 @@ namespace Ryujinx.Common.Collections
 
         public bool ContainsKey(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             return GetNode(key) != null;
         }
     }

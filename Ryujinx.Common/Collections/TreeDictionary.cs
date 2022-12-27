@@ -22,10 +22,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         public V Get(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             Node<K, V> node = GetNode(key);
 
@@ -47,14 +44,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="value"/> are null</exception>
         public void Add(K key, V value)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+            ArgumentNullException.ThrowIfNull(value);
 
             Insert(key, value);
         }
@@ -66,10 +57,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         public void Remove(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             if (Delete(key) != null)
             {
                 Count--;
@@ -217,10 +206,7 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         private Node<K, V> GetNode(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             Node<K, V> node = Root;
             while (node != null)
@@ -370,10 +356,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         private Node<K, V> FloorNode(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             Node<K, V> tmp = Root;
 
             while (tmp != null)
@@ -424,10 +408,8 @@ namespace Ryujinx.Common.Collections
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         private Node<K, V> CeilingNode(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             Node<K, V> tmp = Root;
 
             while (tmp != null)
@@ -477,10 +459,8 @@ namespace Ryujinx.Common.Collections
         // Method descriptions are not provided as they are already included as part of the interface.
         public bool ContainsKey(K key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             return GetNode(key) != null;
         }
 
@@ -493,10 +473,8 @@ namespace Ryujinx.Common.Collections
 
         public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
         {
-            if (null == key)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(key);
+
             Node<K, V> node = GetNode(key);
             value = node != null ? node.Value : default;
             return node != null;
@@ -504,10 +482,7 @@ namespace Ryujinx.Common.Collections
 
         public void Add(KeyValuePair<K, V> item)
         {
-            if (item.Key == null)
-            {
-                throw new ArgumentNullException(nameof(item.Key));
-            }
+            ArgumentNullException.ThrowIfNull(item.Key);
 
             Add(item.Key, item.Value);
         }

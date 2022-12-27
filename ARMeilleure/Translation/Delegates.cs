@@ -35,10 +35,7 @@ namespace ARMeilleure.Translation
 
         public static IntPtr GetDelegateFuncPtr(MethodInfo info)
         {
-            if (info == null)
-            {
-                throw new ArgumentNullException(nameof(info));
-            }
+            ArgumentNullException.ThrowIfNull(info);
 
             string key = GetKey(info);
 
@@ -52,10 +49,7 @@ namespace ARMeilleure.Translation
 
         public static int GetDelegateIndex(MethodInfo info)
         {
-            if (info == null)
-            {
-                throw new ArgumentNullException(nameof(info));
-            }
+            ArgumentNullException.ThrowIfNull(info);
 
             string key = GetKey(info);
 

@@ -53,10 +53,7 @@ namespace ARMeilleure.Common
         /// <exception cref="ObjectDisposedException"><see cref="EntryTable{TEntry}"/> instance was disposed</exception>
         public int Allocate()
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(null);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
             lock (_allocated)
             {
@@ -83,10 +80,7 @@ namespace ARMeilleure.Common
         /// <exception cref="ObjectDisposedException"><see cref="EntryTable{TEntry}"/> instance was disposed</exception>
         public void Free(int index)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(null);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
             lock (_allocated)
             {
@@ -108,10 +102,7 @@ namespace ARMeilleure.Common
         /// <exception cref="ArgumentException">Entry at <paramref name="index"/> is not allocated</exception>
         public ref TEntry GetValue(int index)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(null);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
             lock (_allocated)
             {

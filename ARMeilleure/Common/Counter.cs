@@ -49,10 +49,7 @@ namespace ARMeilleure.Common
         {
             get
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(null);
-                }
+                ObjectDisposedException.ThrowIf(_disposed, this);
 
                 return ref _countTable.GetValue(_index);
             }
