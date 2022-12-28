@@ -51,6 +51,40 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             };
         }
 
+        private SampleFormat SelectHardwareSampleFormat(SampleFormat targetSampleFormat)
+        {
+            if (_realDriver.SupportsSampleFormat(targetSampleFormat))
+            {
+                return targetSampleFormat;
+            }
+
+            // Attempt conversion from PCM16.
+            if (targetSampleFormat == SampleFormat.PcmInt16)
+            {
+                // Prefer PCM32 if we need to convert.
+                if (_realDriver.SupportsSampleFormat(SampleFormat.PcmInt32))
+                {
+                    return SampleFormat.PcmInt32;
+                }
+
+                // If not supported, PCM float provides the best quality with a cost lower than PCM24.
+                if (_realDriver.SupportsSampleFormat(SampleFormat.PcmFloat))
+                {
+                    return SampleFormat.PcmFloat;
+                }
+
+                // TODO: Implement PCM24 conversion.
+
+                // If nothing is truly supported, attempt PCM8 at the cost of loosing quality.
+                if (_realDriver.SupportsSampleFormat(SampleFormat.PcmInt8))
+                {
+                    return SampleFormat.PcmInt8;
+                }
+            }
+
+            throw new ArgumentException("No valid sample format configuration found!");
+        }
+
         public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
         {
             if (channelCount == 0)
@@ -77,13 +111,24 @@ namespace Ryujinx.Audio.Backends.CompatLayer
                 throw new NotImplementedException();
             }
 
+            SampleFormat hardwareSampleFormat = SelectHardwareSampleFormat(sampleFormat);
             uint hardwareChannelCount = SelectHardwareChannelCount(channelCount);
 
-            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, memoryManager, sampleFormat, sampleRate, hardwareChannelCount, volume);
+            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, memoryManager, hardwareSampleFormat, sampleRate, hardwareChannelCount, volume);
 
-            if (hardwareChannelCount == channelCount)
+            if (hardwareChannelCount == channelCount && hardwareSampleFormat == sampleFormat)
             {
                 return realSession;
+            }
+
+            if (hardwareSampleFormat != sampleFormat)
+            {
+                Logger.Warning?.Print(LogClass.Audio, $"{sampleFormat} isn't supported by the audio device, conversion to {hardwareSampleFormat} will happen.");
+
+                if (hardwareSampleFormat < sampleFormat)
+                {
+                    Logger.Warning?.Print(LogClass.Audio, $"{hardwareSampleFormat} has lower quality than {sampleFormat}, expect some loss in audio fidelity.");
+                }
             }
 
             if (direction == Direction.Input)
@@ -103,7 +148,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             }
 
             // If we need to do post processing before sending to the hardware device, wrap around it.
-            return new CompatLayerHardwareDeviceSession(realSessionOutputBase, channelCount);
+            return new CompatLayerHardwareDeviceSession(realSessionOutputBase, sampleFormat, channelCount);
         }
 
         public bool SupportsChannelCount(uint channelCount)
