@@ -227,6 +227,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             CommandBuffer = (Cbs = Gd.CommandBufferPool.ReturnAndRent(Cbs)).CommandBuffer;
+            Gd.RegisterFlush();
 
             // Restore per-command buffer state.
 

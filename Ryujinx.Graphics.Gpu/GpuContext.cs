@@ -316,7 +316,8 @@ namespace Ryujinx.Graphics.Gpu
         /// If no actions are present, a host sync object is not created.
         /// </summary>
         /// <param name="syncpoint">True if host sync is being created by a syncpoint</param>
-        public void CreateHostSyncIfNeeded(bool syncpoint)
+        /// <param name="strict">True if the sync should signal as soon as possible</param>
+        public void CreateHostSyncIfNeeded(bool syncpoint, bool strict)
         {
             if (BufferMigrations.Count > 0)
             {
@@ -337,7 +338,7 @@ namespace Ryujinx.Graphics.Gpu
 
             if (_pendingSync || (syncpoint && SyncpointActions.Count > 0))
             {
-                Renderer.CreateSync(SyncNumber);
+                Renderer.CreateSync(SyncNumber, strict);
 
                 SyncNumber++;
 

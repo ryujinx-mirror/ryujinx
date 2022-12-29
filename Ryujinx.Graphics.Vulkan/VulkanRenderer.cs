@@ -48,6 +48,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal DescriptorSetManager DescriptorSetManager { get; private set; }
         internal PipelineLayoutCache PipelineLayoutCache { get; private set; }
         internal BackgroundResources BackgroundResources { get; private set; }
+        internal Action<Action> InterruptAction { get; private set; }
 
         internal BufferManager BufferManager { get; private set; }
 
@@ -354,6 +355,11 @@ namespace Ryujinx.Graphics.Vulkan
             _pipeline?.FlushCommandsImpl();
         }
 
+        internal void RegisterFlush()
+        {
+            _syncManager.RegisterFlush();
+        }
+
         public ReadOnlySpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
         {
             return BufferManager.GetData(buffer, offset, size);
@@ -593,9 +599,9 @@ namespace Ryujinx.Graphics.Vulkan
             action();
         }
 
-        public void CreateSync(ulong id)
+        public void CreateSync(ulong id, bool strict)
         {
-            _syncManager.Create(id);
+            _syncManager.Create(id, strict);
         }
 
         public IProgram LoadProgramBinary(byte[] programBinary, bool isFragment, ShaderInfo info)
@@ -611,6 +617,11 @@ namespace Ryujinx.Graphics.Vulkan
         public ulong GetCurrentSync()
         {
             return _syncManager.GetCurrent();
+        }
+
+        public void SetInterruptAction(Action<Action> interruptAction)
+        {
+            InterruptAction = interruptAction;
         }
 
         public void Screenshot()

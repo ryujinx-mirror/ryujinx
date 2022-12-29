@@ -116,6 +116,22 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void AddInUseWaitable(MultiFenceHolder waitable)
+        {
+            lock (_commandBuffers)
+            {
+                for (int i = 0; i < _totalCommandBuffers; i++)
+                {
+                    ref var entry = ref _commandBuffers[i];
+
+                    if (entry.InUse)
+                    {
+                        AddWaitable(i, waitable);
+                    }
+                }
+            }
+        }
+
         public void AddDependency(int cbIndex, CommandBufferScoped dependencyCbs)
         {
             Debug.Assert(_commandBuffers[cbIndex].InUse);
