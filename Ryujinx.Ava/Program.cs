@@ -1,7 +1,7 @@
 using ARMeilleure.Translation.PTC;
 using Avalonia;
 using Avalonia.Threading;
-using Ryujinx.Ava.Ui.Windows;
+using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Ava.Ui.ViewModels;
+﻿using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Common;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Configuration;
