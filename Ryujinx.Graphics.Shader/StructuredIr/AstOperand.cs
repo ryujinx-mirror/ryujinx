@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
@@ -10,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public OperandType Type { get; }
 
-        public VariableType VarType { get; set; }
+        public AggregateType VarType { get; set; }
 
         public int Value { get; }
 
@@ -22,7 +23,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Defs = new HashSet<IAstNode>();
             Uses = new HashSet<IAstNode>();
 
-            VarType = VariableType.S32;
+            VarType = AggregateType.S32;
         }
 
         public AstOperand(Operand operand) : this()

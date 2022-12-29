@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
@@ -9,7 +10,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
     {
         public static string Ballot(CodeGenContext context, AstOperation operation)
         {
-            VariableType dstType = GetSrcVarType(operation.Inst, 0);
+            AggregateType dstType = GetSrcVarType(operation.Inst, 0);
 
             string arg = GetSoureExpr(context, operation.GetSource(0), dstType);
 

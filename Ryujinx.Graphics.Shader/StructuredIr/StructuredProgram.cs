@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
@@ -17,19 +18,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 BasicBlock[] blocks = function.Blocks;
 
-                VariableType returnType = function.ReturnsValue ? VariableType.S32 : VariableType.None;
+                AggregateType returnType = function.ReturnsValue ? AggregateType.S32 : AggregateType.Void;
 
-                VariableType[] inArguments  = new VariableType[function.InArgumentsCount];
-                VariableType[] outArguments = new VariableType[function.OutArgumentsCount];
+                AggregateType[] inArguments  = new AggregateType[function.InArgumentsCount];
+                AggregateType[] outArguments = new AggregateType[function.OutArgumentsCount];
 
                 for (int i = 0; i < inArguments.Length; i++)
                 {
-                    inArguments[i] = VariableType.S32;
+                    inArguments[i] = AggregateType.S32;
                 }
 
                 for (int i = 0; i < outArguments.Length; i++)
                 {
-                    outArguments[i] = VariableType.S32;
+                    outArguments[i] = AggregateType.S32;
                 }
 
                 context.EnterFunction(blocks.Length, function.Name, returnType, inArguments, outArguments);
@@ -109,8 +110,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
             }
 
+            bool vectorDest = IsVectorDestInst(inst);
+
             int sourcesCount = operation.SourcesCount;
-            int outDestsCount = operation.DestsCount != 0 ? operation.DestsCount - 1 : 0;
+            int outDestsCount = operation.DestsCount != 0 && !vectorDest ? operation.DestsCount - 1 : 0;
 
             IAstNode[] sources = new IAstNode[sourcesCount + outDestsCount];
 
@@ -141,7 +144,52 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     sources);
             }
 
-            if (operation.Dest != null)
+            int componentsCount = BitOperations.PopCount((uint)operation.Index);
+
+            if (vectorDest && componentsCount > 1)
+            {
+                AggregateType destType = InstructionInfo.GetDestVarType(inst);
+
+                IAstNode source;
+
+                if (operation is TextureOperation texOp)
+                {
+                    if (texOp.Inst == Instruction.ImageLoad)
+                    {
+                        destType = texOp.Format.GetComponentType();
+                    }
+
+                    source = GetAstTextureOperation(texOp);
+                }
+                else
+                {
+                    source = new AstOperation(inst, operation.Index, sources, operation.SourcesCount);
+                }
+
+                AggregateType destElemType = destType;
+
+                switch (componentsCount)
+                {
+                    case 2: destType |= AggregateType.Vector2; break;
+                    case 3: destType |= AggregateType.Vector3; break;
+                    case 4: destType |= AggregateType.Vector4; break;
+                }
+
+                AstOperand destVec = context.NewTemp(destType);
+
+                context.AddNode(new AstAssignment(destVec, source));
+
+                for (int i = 0; i < operation.DestsCount; i++)
+                {
+                    AstOperand dest = context.GetOperandDef(operation.GetDest(i));
+                    AstOperand index = new AstOperand(OperandType.Constant, i);
+
+                    dest.VarType = destElemType;
+
+                    context.AddNode(new AstAssignment(dest, new AstOperation(Instruction.VectorExtract, new[] { destVec, index }, 2)));
+                }
+            }
+            else if (operation.Dest != null)
             {
                 AstOperand dest = context.GetOperandDef(operation.Dest);
 
@@ -149,7 +197,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 // logical operations, rather than forcing a cast to int and doing
                 // a bitwise operation with the value, as it is likely to be used as
                 // a bool in the end.
-                if (IsBitwiseInst(inst) && AreAllSourceTypesEqual(sources, VariableType.Bool))
+                if (IsBitwiseInst(inst) && AreAllSourceTypesEqual(sources, AggregateType.Bool))
                 {
                     inst = GetLogicalFromBitwiseInst(inst);
                 }
@@ -159,9 +207,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 if (isCondSel || isCopy)
                 {
-                    VariableType type = GetVarTypeFromUses(operation.Dest);
+                    AggregateType type = GetVarTypeFromUses(operation.Dest);
 
-                    if (isCondSel && type == VariableType.F32)
+                    if (isCondSel && type == AggregateType.FP32)
                     {
                         inst |= Instruction.FP32;
                     }
@@ -259,7 +307,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
         }
 
-        private static VariableType GetVarTypeFromUses(Operand dest)
+        private static AggregateType GetVarTypeFromUses(Operand dest)
         {
             HashSet<Operand> visited = new HashSet<Operand>();
 
@@ -315,10 +363,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
             }
 
-            return VariableType.S32;
+            return AggregateType.S32;
         }
 
-        private static bool AreAllSourceTypesEqual(IAstNode[] sources, VariableType type)
+        private static bool AreAllSourceTypesEqual(IAstNode[] sources, AggregateType type)
         {
             foreach (IAstNode node in sources)
             {
@@ -334,6 +382,16 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
 
             return true;
+        }
+
+        private static bool IsVectorDestInst(Instruction inst)
+        {
+            return inst switch
+            {
+                Instruction.ImageLoad or
+                Instruction.TextureSample => true,
+                _ => false
+            };
         }
 
         private static bool IsBranchInst(Instruction inst)

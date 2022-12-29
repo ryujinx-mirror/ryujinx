@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
@@ -8,19 +9,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public string Name { get; }
 
-        public VariableType ReturnType { get; }
+        public AggregateType ReturnType { get; }
 
-        public VariableType[] InArguments { get; }
-        public VariableType[] OutArguments { get; }
+        public AggregateType[] InArguments { get; }
+        public AggregateType[] OutArguments { get; }
 
         public HashSet<AstOperand> Locals { get; }
 
         public StructuredFunction(
             AstBlock mainBlock,
             string name,
-            VariableType returnType,
-            VariableType[] inArguments,
-            VariableType[] outArguments)
+            AggregateType returnType,
+            AggregateType[] inArguments,
+            AggregateType[] outArguments)
         {
             MainBlock = mainBlock;
             Name = name;
@@ -31,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Locals = new HashSet<AstOperand>();
         }
 
-        public VariableType GetArgumentType(int index)
+        public AggregateType GetArgumentType(int index)
         {
             return index >= InArguments.Length
                 ? OutArguments[index - InArguments.Length]

@@ -241,6 +241,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             throw new NotImplementedException(node.GetType().Name);
         }
 
+        public Instruction GetWithType(IAstNode node, out AggregateType type)
+        {
+            if (node is AstOperation operation)
+            {
+                var opResult = Instructions.Generate(this, operation);
+                type = opResult.Type;
+                return opResult.Value;
+            }
+            else if (node is AstOperand operand)
+            {
+                switch (operand.Type)
+                {
+                    case IrOperandType.LocalVariable:
+                        type = operand.VarType;
+                        return GetLocal(type, operand);
+                    default:
+                        throw new ArgumentException($"Invalid operand type \"{operand.Type}\".");
+                }
+            }
+
+            throw new NotImplementedException(node.GetType().Name);
+        }
+
         private Instruction GetUndefined(AggregateType type)
         {
             return type switch
@@ -325,7 +348,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     if (components > 1)
                     {
                         attrOffset &= ~0xf;
-                        type = AggregateType.Vector | AggregateType.FP32;
+                        type = components switch
+                        {
+                            2 => AggregateType.Vector2 | AggregateType.FP32,
+                            3 => AggregateType.Vector3 | AggregateType.FP32,
+                            4 => AggregateType.Vector4 | AggregateType.FP32,
+                            _ => AggregateType.FP32
+                        };
+
                         attrInfo = new AttributeInfo(attrOffset, (attr - attrOffset) / 4, components, type, false);
                     }
                 }
@@ -335,7 +365,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             bool isIndexed = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr) && (!attrInfo.IsBuiltin || AttributeInfo.IsArrayBuiltIn(attr));
 
-            if ((type & (AggregateType.Array | AggregateType.Vector)) == 0)
+            if ((type & (AggregateType.Array | AggregateType.ElementCountMask)) == 0)
             {
                 if (invocationId != null)
                 {
@@ -452,7 +482,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             elemType = attrInfo.Type & AggregateType.ElementTypeMask;
 
-            if ((attrInfo.Type & (AggregateType.Array | AggregateType.Vector)) == 0)
+            if ((attrInfo.Type & (AggregateType.Array | AggregateType.ElementCountMask)) == 0)
             {
                 return ioVariable;
             }
@@ -533,13 +563,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public Instruction GetLocal(AggregateType dstType, AstOperand local)
         {
-            var srcType = local.VarType.Convert();
+            var srcType = local.VarType;
             return BitcastIfNeeded(dstType, srcType, Load(GetType(srcType), GetLocalPointer(local)));
         }
 
         public Instruction GetArgument(AggregateType dstType, AstOperand funcArg)
         {
-            var srcType = funcArg.VarType.Convert();
+            var srcType = funcArg.VarType;
             return BitcastIfNeeded(dstType, srcType, Load(GetType(srcType), GetArgumentPointer(funcArg)));
         }
 
@@ -550,13 +580,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public Instruction GetType(AggregateType type, int length = 1)
         {
-            if (type.HasFlag(AggregateType.Array))
+            if ((type & AggregateType.Array) != 0)
             {
                 return TypeArray(GetType(type & ~AggregateType.Array), Constant(TypeU32(), length));
             }
-            else if (type.HasFlag(AggregateType.Vector))
+            else if ((type & AggregateType.ElementCountMask) != 0)
             {
-                return TypeVector(GetType(type & ~AggregateType.Vector), length);
+                int vectorLength = (type & AggregateType.ElementCountMask) switch
+                {
+                    AggregateType.Vector2 => 2,
+                    AggregateType.Vector3 => 3,
+                    AggregateType.Vector4 => 4,
+                    _ => 1
+                };
+
+                return TypeVector(GetType(type & ~AggregateType.ElementCountMask), vectorLength);
             }
 
             return type switch

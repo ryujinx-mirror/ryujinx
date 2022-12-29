@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 namespace Ryujinx.Graphics.Shader
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Shader
             return typeName;
         }
 
-        public static string ToGlslImageType(this SamplerType type, VariableType componentType)
+        public static string ToGlslImageType(this SamplerType type, AggregateType componentType)
         {
             string typeName = (type & SamplerType.Mask) switch
             {
@@ -90,8 +90,8 @@ namespace Ryujinx.Graphics.Shader
 
             switch (componentType)
             {
-                case VariableType.U32: typeName = 'u' + typeName; break;
-                case VariableType.S32: typeName = 'i' + typeName; break;
+                case AggregateType.U32: typeName = 'u' + typeName; break;
+                case AggregateType.S32: typeName = 'i' + typeName; break;
             }
 
             return typeName;

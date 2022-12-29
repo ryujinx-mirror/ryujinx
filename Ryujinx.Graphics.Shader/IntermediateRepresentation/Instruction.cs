@@ -134,6 +134,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         Truncate,
         UnpackDouble2x32,
         UnpackHalf2x16,
+        VectorExtract,
         VoteAll,
         VoteAllEqual,
         VoteAny,

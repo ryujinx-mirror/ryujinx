@@ -104,13 +104,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             for (int funcIndex = 0; funcIndex < info.Functions.Count; funcIndex++)
             {
                 var function = info.Functions[funcIndex];
-                var retType = context.GetType(function.ReturnType.Convert());
+                var retType = context.GetType(function.ReturnType);
 
                 var funcArgs = new SpvInstruction[function.InArguments.Length + function.OutArguments.Length];
 
                 for (int argIndex = 0; argIndex < funcArgs.Length; argIndex++)
                 {
-                    var argType = context.GetType(function.GetArgumentType(argIndex).Convert());
+                    var argType = context.GetType(function.GetArgumentType(argIndex));
                     var argPointerType = context.TypePointer(StorageClass.Function, argType);
                     funcArgs[argIndex] = argPointerType;
                 }
@@ -387,7 +387,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                     if (dest.Type == OperandType.LocalVariable)
                     {
-                        var source = context.Get(dest.VarType.Convert(), assignment.Source);
+                        var source = context.Get(dest.VarType, assignment.Source);
                         context.Store(context.GetLocalPointer(dest), source);
                     }
                     else if (dest.Type == OperandType.Attribute || dest.Type == OperandType.AttributePerPatch)
@@ -407,7 +407,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     }
                     else if (dest.Type == OperandType.Argument)
                     {
-                        var source = context.Get(dest.VarType.Convert(), assignment.Source);
+                        var source = context.Get(dest.VarType, assignment.Source);
                         context.Store(context.GetArgumentPointer(dest), source);
                     }
                     else

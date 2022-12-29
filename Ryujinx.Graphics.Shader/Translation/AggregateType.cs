@@ -12,7 +12,14 @@
 
         ElementTypeMask = 0xff,
 
-        Vector = 1 << 8,
-        Array  = 1 << 9
+        ElementCountShift = 8,
+        ElementCountMask = 3 << ElementCountShift,
+
+        Scalar = 0 << ElementCountShift,
+        Vector2 = 1 << ElementCountShift,
+        Vector3 = 2 << ElementCountShift,
+        Vector4 = 3 << ElementCountShift,
+
+        Array  = 1 << 10
     }
 }

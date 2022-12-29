@@ -350,19 +350,33 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        public static string GetVarTypeName(VariableType type)
+        public static string GetVarTypeName(AggregateType type, bool precise = true)
         {
-            switch (type)
+            return type switch
             {
-                case VariableType.Bool: return "bool";
-                case VariableType.F32: return "precise float";
-                case VariableType.F64: return "double";
-                case VariableType.None: return "void";
-                case VariableType.S32: return "int";
-                case VariableType.U32: return "uint";
-            }
-
-            throw new ArgumentException($"Invalid variable type \"{type}\".");
+                AggregateType.Void => "void",
+                AggregateType.Bool => "bool",
+                AggregateType.FP32 => precise ? "precise float" : "float",
+                AggregateType.FP64 => "double",
+                AggregateType.S32 => "int",
+                AggregateType.U32 => "uint",
+                AggregateType.Vector2 | AggregateType.Bool => "bvec2",
+                AggregateType.Vector2 | AggregateType.FP32 => precise ? "precise vec2" : "vec2",
+                AggregateType.Vector2 | AggregateType.FP64 => "dvec2",
+                AggregateType.Vector2 | AggregateType.S32 => "ivec2",
+                AggregateType.Vector2 | AggregateType.U32 => "uvec2",
+                AggregateType.Vector3 | AggregateType.Bool => "bvec3",
+                AggregateType.Vector3 | AggregateType.FP32 => precise ? "precise vec3" : "vec3",
+                AggregateType.Vector3 | AggregateType.FP64 => "dvec3",
+                AggregateType.Vector3 | AggregateType.S32 => "ivec3",
+                AggregateType.Vector3 | AggregateType.U32 => "uvec3",
+                AggregateType.Vector4 | AggregateType.Bool => "bvec4",
+                AggregateType.Vector4 | AggregateType.FP32 => precise ? "precise vec4" : "vec4",
+                AggregateType.Vector4 | AggregateType.FP64 => "dvec4",
+                AggregateType.Vector4 | AggregateType.S32 => "ivec4",
+                AggregateType.Vector4 | AggregateType.U32 => "uvec4",
+                _ => throw new ArgumentException($"Invalid variable type \"{type}\".")
+            };
         }
 
         private static void DeclareUniforms(CodeGenContext context, BufferDescriptor[] descriptors)

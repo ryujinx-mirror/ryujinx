@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
@@ -17,9 +18,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             public string Name { get; }
 
-            public VariableType Type { get; }
+            public AggregateType Type { get; }
 
-            public BuiltInAttribute(string name, VariableType type)
+            public BuiltInAttribute(string name, AggregateType type)
             {
                 Name = name;
                 Type = type;
@@ -28,64 +29,64 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static Dictionary<int, BuiltInAttribute> _builtInAttributes = new Dictionary<int, BuiltInAttribute>()
         {
-            { AttributeConsts.Layer,         new BuiltInAttribute("gl_Layer",           VariableType.S32)  },
-            { AttributeConsts.PointSize,     new BuiltInAttribute("gl_PointSize",       VariableType.F32)  },
-            { AttributeConsts.PositionX,     new BuiltInAttribute("gl_Position.x",      VariableType.F32)  },
-            { AttributeConsts.PositionY,     new BuiltInAttribute("gl_Position.y",      VariableType.F32)  },
-            { AttributeConsts.PositionZ,     new BuiltInAttribute("gl_Position.z",      VariableType.F32)  },
-            { AttributeConsts.PositionW,     new BuiltInAttribute("gl_Position.w",      VariableType.F32)  },
-            { AttributeConsts.ClipDistance0, new BuiltInAttribute("gl_ClipDistance[0]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance1, new BuiltInAttribute("gl_ClipDistance[1]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance2, new BuiltInAttribute("gl_ClipDistance[2]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance3, new BuiltInAttribute("gl_ClipDistance[3]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance4, new BuiltInAttribute("gl_ClipDistance[4]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance5, new BuiltInAttribute("gl_ClipDistance[5]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance6, new BuiltInAttribute("gl_ClipDistance[6]", VariableType.F32)  },
-            { AttributeConsts.ClipDistance7, new BuiltInAttribute("gl_ClipDistance[7]", VariableType.F32)  },
-            { AttributeConsts.PointCoordX,   new BuiltInAttribute("gl_PointCoord.x",    VariableType.F32)  },
-            { AttributeConsts.PointCoordY,   new BuiltInAttribute("gl_PointCoord.y",    VariableType.F32)  },
-            { AttributeConsts.TessCoordX,    new BuiltInAttribute("gl_TessCoord.x",     VariableType.F32)  },
-            { AttributeConsts.TessCoordY,    new BuiltInAttribute("gl_TessCoord.y",     VariableType.F32)  },
-            { AttributeConsts.InstanceId,    new BuiltInAttribute("gl_InstanceID",      VariableType.S32)  },
-            { AttributeConsts.VertexId,      new BuiltInAttribute("gl_VertexID",        VariableType.S32)  },
-            { AttributeConsts.BaseInstance,  new BuiltInAttribute("gl_BaseInstanceARB", VariableType.S32)  },
-            { AttributeConsts.BaseVertex,    new BuiltInAttribute("gl_BaseVertexARB",   VariableType.S32)  },
-            { AttributeConsts.InstanceIndex, new BuiltInAttribute("gl_InstanceIndex",   VariableType.S32)  },
-            { AttributeConsts.VertexIndex,   new BuiltInAttribute("gl_VertexIndex",     VariableType.S32)  },
-            { AttributeConsts.DrawIndex,     new BuiltInAttribute("gl_DrawIDARB",       VariableType.S32)  },
-            { AttributeConsts.FrontFacing,   new BuiltInAttribute("gl_FrontFacing",     VariableType.Bool) },
+            { AttributeConsts.Layer,         new BuiltInAttribute("gl_Layer",           AggregateType.S32)  },
+            { AttributeConsts.PointSize,     new BuiltInAttribute("gl_PointSize",       AggregateType.FP32)  },
+            { AttributeConsts.PositionX,     new BuiltInAttribute("gl_Position.x",      AggregateType.FP32)  },
+            { AttributeConsts.PositionY,     new BuiltInAttribute("gl_Position.y",      AggregateType.FP32)  },
+            { AttributeConsts.PositionZ,     new BuiltInAttribute("gl_Position.z",      AggregateType.FP32)  },
+            { AttributeConsts.PositionW,     new BuiltInAttribute("gl_Position.w",      AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance0, new BuiltInAttribute("gl_ClipDistance[0]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance1, new BuiltInAttribute("gl_ClipDistance[1]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance2, new BuiltInAttribute("gl_ClipDistance[2]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance3, new BuiltInAttribute("gl_ClipDistance[3]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance4, new BuiltInAttribute("gl_ClipDistance[4]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance5, new BuiltInAttribute("gl_ClipDistance[5]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance6, new BuiltInAttribute("gl_ClipDistance[6]", AggregateType.FP32)  },
+            { AttributeConsts.ClipDistance7, new BuiltInAttribute("gl_ClipDistance[7]", AggregateType.FP32)  },
+            { AttributeConsts.PointCoordX,   new BuiltInAttribute("gl_PointCoord.x",    AggregateType.FP32)  },
+            { AttributeConsts.PointCoordY,   new BuiltInAttribute("gl_PointCoord.y",    AggregateType.FP32)  },
+            { AttributeConsts.TessCoordX,    new BuiltInAttribute("gl_TessCoord.x",     AggregateType.FP32)  },
+            { AttributeConsts.TessCoordY,    new BuiltInAttribute("gl_TessCoord.y",     AggregateType.FP32)  },
+            { AttributeConsts.InstanceId,    new BuiltInAttribute("gl_InstanceID",      AggregateType.S32)  },
+            { AttributeConsts.VertexId,      new BuiltInAttribute("gl_VertexID",        AggregateType.S32)  },
+            { AttributeConsts.BaseInstance,  new BuiltInAttribute("gl_BaseInstanceARB", AggregateType.S32)  },
+            { AttributeConsts.BaseVertex,    new BuiltInAttribute("gl_BaseVertexARB",   AggregateType.S32)  },
+            { AttributeConsts.InstanceIndex, new BuiltInAttribute("gl_InstanceIndex",   AggregateType.S32)  },
+            { AttributeConsts.VertexIndex,   new BuiltInAttribute("gl_VertexIndex",     AggregateType.S32)  },
+            { AttributeConsts.DrawIndex,     new BuiltInAttribute("gl_DrawIDARB",       AggregateType.S32)  },
+            { AttributeConsts.FrontFacing,   new BuiltInAttribute("gl_FrontFacing",     AggregateType.Bool) },
 
             // Special.
-            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",           VariableType.F32)  },
-            { AttributeConsts.ThreadKill,          new BuiltInAttribute("gl_HelperInvocation",    VariableType.Bool) },
-            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x", VariableType.U32)  },
-            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y", VariableType.U32)  },
-            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z", VariableType.U32)  },
-            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",       VariableType.U32)  },
-            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",       VariableType.U32)  },
-            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",       VariableType.U32)  },
-            { AttributeConsts.LaneId,              new BuiltInAttribute(null,                     VariableType.U32)  },
-            { AttributeConsts.InvocationId,        new BuiltInAttribute("gl_InvocationID",        VariableType.S32)  },
-            { AttributeConsts.PrimitiveId,         new BuiltInAttribute("gl_PrimitiveID",         VariableType.S32)  },
-            { AttributeConsts.PatchVerticesIn,     new BuiltInAttribute("gl_PatchVerticesIn",     VariableType.S32)  },
-            { AttributeConsts.EqMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
-            { AttributeConsts.GeMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
-            { AttributeConsts.GtMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
-            { AttributeConsts.LeMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
-            { AttributeConsts.LtMask,              new BuiltInAttribute(null,                     VariableType.U32)  },
+            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",           AggregateType.FP32)  },
+            { AttributeConsts.ThreadKill,          new BuiltInAttribute("gl_HelperInvocation",    AggregateType.Bool) },
+            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x", AggregateType.U32)  },
+            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y", AggregateType.U32)  },
+            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z", AggregateType.U32)  },
+            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",       AggregateType.U32)  },
+            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",       AggregateType.U32)  },
+            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",       AggregateType.U32)  },
+            { AttributeConsts.LaneId,              new BuiltInAttribute(null,                     AggregateType.U32)  },
+            { AttributeConsts.InvocationId,        new BuiltInAttribute("gl_InvocationID",        AggregateType.S32)  },
+            { AttributeConsts.PrimitiveId,         new BuiltInAttribute("gl_PrimitiveID",         AggregateType.S32)  },
+            { AttributeConsts.PatchVerticesIn,     new BuiltInAttribute("gl_PatchVerticesIn",     AggregateType.S32)  },
+            { AttributeConsts.EqMask,              new BuiltInAttribute(null,                     AggregateType.U32)  },
+            { AttributeConsts.GeMask,              new BuiltInAttribute(null,                     AggregateType.U32)  },
+            { AttributeConsts.GtMask,              new BuiltInAttribute(null,                     AggregateType.U32)  },
+            { AttributeConsts.LeMask,              new BuiltInAttribute(null,                     AggregateType.U32)  },
+            { AttributeConsts.LtMask,              new BuiltInAttribute(null,                     AggregateType.U32)  },
 
             // Support uniforms.
-            { AttributeConsts.FragmentOutputIsBgraBase + 0,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[0]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 4,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[1]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 8,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[2]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 12, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[3]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 16, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[4]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 20, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[5]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 24, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[6]",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputIsBgraBase + 28, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[7]",  VariableType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 0,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[0]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 4,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[1]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 8,  new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[2]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 12, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[3]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 16, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[4]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 20, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[5]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 24, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[6]",  AggregateType.Bool) },
+            { AttributeConsts.FragmentOutputIsBgraBase + 28, new BuiltInAttribute($"{DefaultNames.SupportBlockIsBgraName}[7]",  AggregateType.Bool) },
 
-            { AttributeConsts.SupportBlockViewInverseX,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.x",  VariableType.F32) },
-            { AttributeConsts.SupportBlockViewInverseY,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.y",  VariableType.F32) }
+            { AttributeConsts.SupportBlockViewInverseX,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.x",  AggregateType.FP32) },
+            { AttributeConsts.SupportBlockViewInverseY,  new BuiltInAttribute($"{DefaultNames.SupportBlockViewportInverse}.y",  AggregateType.FP32) }
         };
 
         private Dictionary<AstOperand, string> _locals;
@@ -329,7 +330,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             if (cbIndexable)
             {
-                return GetUbName(stage, NumberFormatter.FormatInt(slot, VariableType.S32));
+                return GetUbName(stage, NumberFormatter.FormatInt(slot, AggregateType.S32));
             }
 
             return $"{GetShaderStagePrefix(stage)}_{DefaultNames.UniformNamePrefix}{slot}_{DefaultNames.UniformNameSuffix}";
@@ -404,7 +405,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"{DefaultNames.ArgumentNamePrefix}{argIndex}";
         }
 
-        public static VariableType GetNodeDestType(CodeGenContext context, IAstNode node, bool isAsgDest = false)
+        public static AggregateType GetNodeDestType(CodeGenContext context, IAstNode node, bool isAsgDest = false)
         {
             if (node is AstOperation operation)
             {
@@ -431,12 +432,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     return context.GetFunction(funcId.Value).ReturnType;
                 }
-                else if (operation is AstTextureOperation texOp &&
-                         (texOp.Inst == Instruction.ImageLoad ||
-                          texOp.Inst == Instruction.ImageStore ||
-                          texOp.Inst == Instruction.ImageAtomic))
+                else if (operation.Inst == Instruction.VectorExtract)
                 {
-                    return texOp.Format.GetComponentType();
+                    return GetNodeDestType(context, operation.GetSource(0)) & ~AggregateType.ElementCountMask;
+                }
+                else if (operation is AstTextureOperation texOp)
+                {
+                    if (texOp.Inst == Instruction.ImageLoad ||
+                        texOp.Inst == Instruction.ImageStore ||
+                        texOp.Inst == Instruction.ImageAtomic)
+                    {
+                        return texOp.GetVectorType(texOp.Format.GetComponentType());
+                    }
+                    else if (texOp.Inst == Instruction.TextureSample)
+                    {
+                        return texOp.GetVectorType(GetDestVarType(operation.Inst));
+                    }
                 }
 
                 return GetDestVarType(operation.Inst);
@@ -458,7 +469,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static VariableType GetOperandVarType(CodeGenContext context, AstOperand operand, bool isAsgDest = false)
+        private static AggregateType GetOperandVarType(CodeGenContext context, AstOperand operand, bool isAsgDest = false)
         {
             if (operand.Type == OperandType.Attribute)
             {
@@ -474,7 +485,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     AttributeType type = context.Config.GpuAccessor.QueryAttributeType(location);
 
-                    return type.ToVariableType();
+                    return type.ToAggregateType();
                 }
             }
 

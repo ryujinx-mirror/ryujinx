@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Shader.StructuredIr;
+﻿using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.Shader
 {
@@ -95,7 +95,7 @@ namespace Ryujinx.Graphics.Shader
             };
         }
 
-        public static VariableType GetComponentType(this TextureFormat format)
+        public static AggregateType GetComponentType(this TextureFormat format)
         {
             switch (format)
             {
@@ -109,7 +109,7 @@ namespace Ryujinx.Graphics.Shader
                 case TextureFormat.R16G16B16A16Uint:
                 case TextureFormat.R32G32B32A32Uint:
                 case TextureFormat.R10G10B10A2Uint:
-                    return VariableType.U32;
+                    return AggregateType.U32;
                 case TextureFormat.R8Sint:
                 case TextureFormat.R16Sint:
                 case TextureFormat.R32Sint:
@@ -119,10 +119,10 @@ namespace Ryujinx.Graphics.Shader
                 case TextureFormat.R8G8B8A8Sint:
                 case TextureFormat.R16G16B16A16Sint:
                 case TextureFormat.R32G32B32A32Sint:
-                    return VariableType.S32;
+                    return AggregateType.S32;
             }
 
-            return VariableType.F32;
+            return AggregateType.FP32;
         }
     }
 }

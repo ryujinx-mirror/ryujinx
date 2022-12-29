@@ -19,8 +19,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             int cbufSlot,
             int handle,
             int compIndex,
-            Operand dest,
-            Operand[] sources) : base(inst, compIndex, dest, sources)
+            Operand[] dests,
+            Operand[] sources) : base(inst, compIndex, dests, sources)
         {
             Type = type;
             Format = format;
@@ -36,8 +36,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             TextureFlags flags,
             int handle,
             int compIndex,
-            Operand dest,
-            Operand[] sources) : this(inst, type, format, flags, DefaultCbufSlot, handle, compIndex, dest, sources)
+            Operand[] dests,
+            Operand[] sources) : this(inst, type, format, flags, DefaultCbufSlot, handle, compIndex, dests, sources)
         {
         }
 

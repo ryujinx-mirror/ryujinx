@@ -23,11 +23,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             DeclareParameters(context, function.OutArguments, function.InArguments.Length);
         }
 
-        private static void DeclareParameters(CodeGenContext context, IEnumerable<VariableType> argTypes, int argIndex)
+        private static void DeclareParameters(CodeGenContext context, IEnumerable<AggregateType> argTypes, int argIndex)
         {
             foreach (var argType in argTypes)
             {
-                var argPointerType = context.TypePointer(StorageClass.Function, context.GetType(argType.Convert()));
+                var argPointerType = context.TypePointer(StorageClass.Function, context.GetType(argType));
                 var spvArg = context.FunctionParameter(argPointerType);
 
                 context.DeclareArgument(argIndex++, spvArg);
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         {
             foreach (AstOperand local in function.Locals)
             {
-                var localPointerType = context.TypePointer(StorageClass.Function, context.GetType(local.VarType.Convert()));
+                var localPointerType = context.TypePointer(StorageClass.Function, context.GetType(local.VarType));
                 var spvLocal = context.Variable(localPointerType, StorageClass.Function);
 
                 context.AddLocalVariable(spvLocal);
@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 for (int i = 0; i < function.InArguments.Length; i++)
                 {
-                    var type = function.GetArgumentType(i).Convert();
+                    var type = function.GetArgumentType(i);
                     var localPointerType = context.TypePointer(StorageClass.Function, context.GetType(type));
                     var spvLocal = context.Variable(localPointerType, StorageClass.Function);
 
@@ -303,7 +303,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 var dim = GetDim(descriptor.Type);
 
                 var imageType = context.TypeImage(
-                    context.GetType(meta.Format.GetComponentType().Convert()),
+                    context.GetType(meta.Format.GetComponentType()),
                     dim,
                     descriptor.Type.HasFlag(SamplerType.Shadow),
                     descriptor.Type.HasFlag(SamplerType.Array),
@@ -652,7 +652,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 if (components > 1)
                 {
                     attr &= ~0xf;
-                    type = AggregateType.Vector | AggregateType.FP32;
+                    type = components switch
+                    {
+                        2 => AggregateType.Vector2 | AggregateType.FP32,
+                        3 => AggregateType.Vector3 | AggregateType.FP32,
+                        4 => AggregateType.Vector4 | AggregateType.FP32,
+                        _ => AggregateType.FP32
+                    };
+
                     hasComponent = false;
                 }
             }

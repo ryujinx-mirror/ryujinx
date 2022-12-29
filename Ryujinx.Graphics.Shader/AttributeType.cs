@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 
@@ -21,17 +20,6 @@ namespace Ryujinx.Graphics.Shader
                 AttributeType.Float => "vec4",
                 AttributeType.Sint => "ivec4",
                 AttributeType.Uint => "uvec4",
-                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
-            };
-        }
-
-        public static VariableType ToVariableType(this AttributeType type)
-        {
-            return type switch
-            {
-                AttributeType.Float => VariableType.F32,
-                AttributeType.Sint => VariableType.S32,
-                AttributeType.Uint => VariableType.U32,
                 _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
             };
         }

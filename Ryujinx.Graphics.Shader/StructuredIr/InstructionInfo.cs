@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
@@ -7,11 +8,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     {
         private readonly struct InstInfo
         {
-            public VariableType DestType { get; }
+            public AggregateType DestType { get; }
 
-            public VariableType[] SrcTypes { get; }
+            public AggregateType[] SrcTypes { get; }
 
-            public InstInfo(VariableType destType, params VariableType[] srcTypes)
+            public InstInfo(AggregateType destType, params AggregateType[] srcTypes)
             {
                 DestType = destType;
                 SrcTypes = srcTypes;
@@ -24,176 +25,173 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             _infoTbl = new InstInfo[(int)Instruction.Count];
 
-            //  Inst                                  Destination type     Source 1 type        Source 2 type        Source 3 type        Source 4 type
-            Add(Instruction.AtomicAdd,                VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicAnd,                VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicCompareAndSwap,     VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.AtomicMaxS32,             VariableType.S32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.AtomicMaxU32,             VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicMinS32,             VariableType.S32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.AtomicMinU32,             VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicOr,                 VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicSwap,               VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.AtomicXor,                VariableType.U32,    VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.Absolute,                 VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.Add,                      VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.Ballot,                   VariableType.U32,    VariableType.Bool);
-            Add(Instruction.BitCount,                 VariableType.Int,    VariableType.Int);
-            Add(Instruction.BitfieldExtractS32,       VariableType.S32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.BitfieldExtractU32,       VariableType.U32,    VariableType.U32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.BitfieldInsert,           VariableType.Int,    VariableType.Int,    VariableType.Int,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.BitfieldReverse,          VariableType.Int,    VariableType.Int);
-            Add(Instruction.BitwiseAnd,               VariableType.Int,    VariableType.Int,    VariableType.Int);
-            Add(Instruction.BitwiseExclusiveOr,       VariableType.Int,    VariableType.Int,    VariableType.Int);
-            Add(Instruction.BitwiseNot,               VariableType.Int,    VariableType.Int);
-            Add(Instruction.BitwiseOr,                VariableType.Int,    VariableType.Int,    VariableType.Int);
-            Add(Instruction.BranchIfTrue,             VariableType.None,   VariableType.Bool);
-            Add(Instruction.BranchIfFalse,            VariableType.None,   VariableType.Bool);
-            Add(Instruction.Call,                     VariableType.Scalar);
-            Add(Instruction.Ceiling,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.Clamp,                    VariableType.Scalar, VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ClampU32,                 VariableType.U32,    VariableType.U32,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.CompareEqual,             VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.CompareGreater,           VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.CompareGreaterOrEqual,    VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.CompareGreaterOrEqualU32, VariableType.Bool,   VariableType.U32,    VariableType.U32);
-            Add(Instruction.CompareGreaterU32,        VariableType.Bool,   VariableType.U32,    VariableType.U32);
-            Add(Instruction.CompareLess,              VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.CompareLessOrEqual,       VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.CompareLessOrEqualU32,    VariableType.Bool,   VariableType.U32,    VariableType.U32);
-            Add(Instruction.CompareLessU32,           VariableType.Bool,   VariableType.U32,    VariableType.U32);
-            Add(Instruction.CompareNotEqual,          VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ConditionalSelect,        VariableType.Scalar, VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ConvertFP32ToFP64,        VariableType.F64,    VariableType.F32);
-            Add(Instruction.ConvertFP64ToFP32,        VariableType.F32,    VariableType.F64);
-            Add(Instruction.ConvertFP32ToS32,         VariableType.S32,    VariableType.F32);
-            Add(Instruction.ConvertFP32ToU32,         VariableType.U32,    VariableType.F32);
-            Add(Instruction.ConvertFP64ToS32,         VariableType.S32,    VariableType.F64);
-            Add(Instruction.ConvertFP64ToU32,         VariableType.U32,    VariableType.F64);
-            Add(Instruction.ConvertS32ToFP32,         VariableType.F32,    VariableType.S32);
-            Add(Instruction.ConvertS32ToFP64,         VariableType.F64,    VariableType.S32);
-            Add(Instruction.ConvertU32ToFP32,         VariableType.F32,    VariableType.U32);
-            Add(Instruction.ConvertU32ToFP64,         VariableType.F64,    VariableType.U32);
-            Add(Instruction.Cosine,                   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.Ddx,                      VariableType.F32,    VariableType.F32);
-            Add(Instruction.Ddy,                      VariableType.F32,    VariableType.F32);
-            Add(Instruction.Divide,                   VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ExponentB2,               VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.FindLSB,                  VariableType.Int,    VariableType.Int);
-            Add(Instruction.FindMSBS32,               VariableType.S32,    VariableType.S32);
-            Add(Instruction.FindMSBU32,               VariableType.S32,    VariableType.U32);
-            Add(Instruction.Floor,                    VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.FusedMultiplyAdd,         VariableType.Scalar, VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ImageLoad,                VariableType.F32);
-            Add(Instruction.ImageStore,               VariableType.None);
-            Add(Instruction.ImageAtomic,              VariableType.S32);
-            Add(Instruction.IsNan,                    VariableType.Bool,   VariableType.Scalar);
-            Add(Instruction.LoadAttribute,            VariableType.F32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.LoadConstant,             VariableType.F32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.LoadGlobal,               VariableType.U32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.LoadLocal,                VariableType.U32,    VariableType.S32);
-            Add(Instruction.LoadShared,               VariableType.U32,    VariableType.S32);
-            Add(Instruction.LoadStorage,              VariableType.U32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.Lod,                      VariableType.F32);
-            Add(Instruction.LogarithmB2,              VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.LogicalAnd,               VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.LogicalExclusiveOr,       VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.LogicalNot,               VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.LogicalOr,                VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.Maximum,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.MaximumU32,               VariableType.U32,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.Minimum,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.MinimumU32,               VariableType.U32,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.Multiply,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.MultiplyHighS32,          VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.MultiplyHighU32,          VariableType.U32,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.Negate,                   VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.PackDouble2x32,           VariableType.F64,    VariableType.U32,    VariableType.U32);
-            Add(Instruction.PackHalf2x16,             VariableType.U32,    VariableType.F32,    VariableType.F32);
-            Add(Instruction.ReciprocalSquareRoot,     VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.Round,                    VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.ShiftLeft,                VariableType.Int,    VariableType.Int,    VariableType.Int);
-            Add(Instruction.ShiftRightS32,            VariableType.S32,    VariableType.S32,    VariableType.Int);
-            Add(Instruction.ShiftRightU32,            VariableType.U32,    VariableType.U32,    VariableType.Int);
-            Add(Instruction.Shuffle,                  VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32,    VariableType.Bool);
-            Add(Instruction.ShuffleDown,              VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32,    VariableType.Bool);
-            Add(Instruction.ShuffleUp,                VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32,    VariableType.Bool);
-            Add(Instruction.ShuffleXor,               VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32,    VariableType.Bool);
-            Add(Instruction.Sine,                     VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.SquareRoot,               VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.StoreAttribute,           VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.F32);
-            Add(Instruction.StoreGlobal,              VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreShared,              VariableType.None,   VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreShared16,            VariableType.None,   VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreShared8,             VariableType.None,   VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreStorage16,           VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreStorage8,            VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.Subtract,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.SwizzleAdd,               VariableType.F32,    VariableType.F32,    VariableType.F32,    VariableType.S32);
-            Add(Instruction.TextureSample,            VariableType.F32);
-            Add(Instruction.TextureSize,              VariableType.S32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.Truncate,                 VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.UnpackDouble2x32,         VariableType.U32,    VariableType.F64);
-            Add(Instruction.UnpackHalf2x16,           VariableType.F32,    VariableType.U32);
-            Add(Instruction.VoteAll,                  VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.VoteAllEqual,             VariableType.Bool,   VariableType.Bool);
-            Add(Instruction.VoteAny,                  VariableType.Bool,   VariableType.Bool);
+            //  Inst                                  Destination type      Source 1 type          Source 2 type          Source 3 type          Source 4 type
+            Add(Instruction.AtomicAdd,                AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicAnd,                AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicCompareAndSwap,     AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.AtomicMaxS32,             AggregateType.S32,    AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.AtomicMaxU32,             AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicMinS32,             AggregateType.S32,    AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.AtomicMinU32,             AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicOr,                 AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicSwap,               AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.AtomicXor,                AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.Absolute,                 AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.Add,                      AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.Ballot,                   AggregateType.U32,    AggregateType.Bool);
+            Add(Instruction.BitCount,                 AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.BitfieldExtractS32,       AggregateType.S32,    AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BitfieldExtractU32,       AggregateType.U32,    AggregateType.U32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BitfieldInsert,           AggregateType.S32,    AggregateType.S32,     AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BitfieldReverse,          AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.BitwiseAnd,               AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BitwiseExclusiveOr,       AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BitwiseNot,               AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.BitwiseOr,                AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.BranchIfTrue,             AggregateType.Void,   AggregateType.Bool);
+            Add(Instruction.BranchIfFalse,            AggregateType.Void,   AggregateType.Bool);
+            Add(Instruction.Call,                     AggregateType.Scalar);
+            Add(Instruction.Ceiling,                  AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.Clamp,                    AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.ClampU32,                 AggregateType.U32,    AggregateType.U32,     AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.CompareEqual,             AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.CompareGreater,           AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.CompareGreaterOrEqual,    AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.CompareGreaterOrEqualU32, AggregateType.Bool,   AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.CompareGreaterU32,        AggregateType.Bool,   AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.CompareLess,              AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.CompareLessOrEqual,       AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.CompareLessOrEqualU32,    AggregateType.Bool,   AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.CompareLessU32,           AggregateType.Bool,   AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.CompareNotEqual,          AggregateType.Bool,   AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.ConditionalSelect,        AggregateType.Scalar, AggregateType.Bool,    AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.ConvertFP32ToFP64,        AggregateType.FP64,   AggregateType.FP32);
+            Add(Instruction.ConvertFP64ToFP32,        AggregateType.FP32,   AggregateType.FP64);
+            Add(Instruction.ConvertFP32ToS32,         AggregateType.S32,    AggregateType.FP32);
+            Add(Instruction.ConvertFP32ToU32,         AggregateType.U32,    AggregateType.FP32);
+            Add(Instruction.ConvertFP64ToS32,         AggregateType.S32,    AggregateType.FP64);
+            Add(Instruction.ConvertFP64ToU32,         AggregateType.U32,    AggregateType.FP64);
+            Add(Instruction.ConvertS32ToFP32,         AggregateType.FP32,   AggregateType.S32);
+            Add(Instruction.ConvertS32ToFP64,         AggregateType.FP64,   AggregateType.S32);
+            Add(Instruction.ConvertU32ToFP32,         AggregateType.FP32,   AggregateType.U32);
+            Add(Instruction.ConvertU32ToFP64,         AggregateType.FP64,   AggregateType.U32);
+            Add(Instruction.Cosine,                   AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.Ddx,                      AggregateType.FP32,   AggregateType.FP32);
+            Add(Instruction.Ddy,                      AggregateType.FP32,   AggregateType.FP32);
+            Add(Instruction.Divide,                   AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.ExponentB2,               AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.FindLSB,                  AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.FindMSBS32,               AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.FindMSBU32,               AggregateType.S32,    AggregateType.U32);
+            Add(Instruction.Floor,                    AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.FusedMultiplyAdd,         AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.ImageLoad,                AggregateType.FP32);
+            Add(Instruction.ImageStore,               AggregateType.Void);
+            Add(Instruction.ImageAtomic,              AggregateType.S32);
+            Add(Instruction.IsNan,                    AggregateType.Bool,   AggregateType.Scalar);
+            Add(Instruction.LoadAttribute,            AggregateType.FP32,   AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.LoadConstant,             AggregateType.FP32,   AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.LoadGlobal,               AggregateType.U32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.LoadLocal,                AggregateType.U32,    AggregateType.S32);
+            Add(Instruction.LoadShared,               AggregateType.U32,    AggregateType.S32);
+            Add(Instruction.LoadStorage,              AggregateType.U32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.Lod,                      AggregateType.FP32);
+            Add(Instruction.LogarithmB2,              AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.LogicalAnd,               AggregateType.Bool,   AggregateType.Bool,    AggregateType.Bool);
+            Add(Instruction.LogicalExclusiveOr,       AggregateType.Bool,   AggregateType.Bool,    AggregateType.Bool);
+            Add(Instruction.LogicalNot,               AggregateType.Bool,   AggregateType.Bool);
+            Add(Instruction.LogicalOr,                AggregateType.Bool,   AggregateType.Bool,    AggregateType.Bool);
+            Add(Instruction.Maximum,                  AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.MaximumU32,               AggregateType.U32,    AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.Minimum,                  AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.MinimumU32,               AggregateType.U32,    AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.Multiply,                 AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.MultiplyHighS32,          AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.MultiplyHighU32,          AggregateType.U32,    AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.Negate,                   AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.PackDouble2x32,           AggregateType.FP64,   AggregateType.U32,     AggregateType.U32);
+            Add(Instruction.PackHalf2x16,             AggregateType.U32,    AggregateType.FP32,    AggregateType.FP32);
+            Add(Instruction.ReciprocalSquareRoot,     AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.Round,                    AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.ShiftLeft,                AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.ShiftRightS32,            AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.ShiftRightU32,            AggregateType.U32,    AggregateType.U32,     AggregateType.S32);
+            Add(Instruction.Shuffle,                  AggregateType.FP32,   AggregateType.FP32,    AggregateType.U32,     AggregateType.U32,     AggregateType.Bool);
+            Add(Instruction.ShuffleDown,              AggregateType.FP32,   AggregateType.FP32,    AggregateType.U32,     AggregateType.U32,     AggregateType.Bool);
+            Add(Instruction.ShuffleUp,                AggregateType.FP32,   AggregateType.FP32,    AggregateType.U32,     AggregateType.U32,     AggregateType.Bool);
+            Add(Instruction.ShuffleXor,               AggregateType.FP32,   AggregateType.FP32,    AggregateType.U32,     AggregateType.U32,     AggregateType.Bool);
+            Add(Instruction.Sine,                     AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.SquareRoot,               AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.StoreAttribute,           AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.FP32);
+            Add(Instruction.StoreGlobal,              AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreLocal,               AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreShared,              AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreShared16,            AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreShared8,             AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreStorage,             AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreStorage16,           AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.StoreStorage8,            AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
+            Add(Instruction.Subtract,                 AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
+            Add(Instruction.SwizzleAdd,               AggregateType.FP32,   AggregateType.FP32,    AggregateType.FP32,    AggregateType.S32);
+            Add(Instruction.TextureSample,            AggregateType.FP32);
+            Add(Instruction.TextureSize,              AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.Truncate,                 AggregateType.Scalar, AggregateType.Scalar);
+            Add(Instruction.UnpackDouble2x32,         AggregateType.U32,    AggregateType.FP64);
+            Add(Instruction.UnpackHalf2x16,           AggregateType.FP32,   AggregateType.U32);
+            Add(Instruction.VectorExtract,            AggregateType.Scalar, AggregateType.Vector4, AggregateType.S32);
+            Add(Instruction.VoteAll,                  AggregateType.Bool,   AggregateType.Bool);
+            Add(Instruction.VoteAllEqual,             AggregateType.Bool,   AggregateType.Bool);
+            Add(Instruction.VoteAny,                  AggregateType.Bool,   AggregateType.Bool);
         }
 
-        private static void Add(Instruction inst, VariableType destType, params VariableType[] srcTypes)
+        private static void Add(Instruction inst, AggregateType destType, params AggregateType[] srcTypes)
         {
             _infoTbl[(int)inst] = new InstInfo(destType, srcTypes);
         }
 
-        public static VariableType GetDestVarType(Instruction inst)
+        public static AggregateType GetDestVarType(Instruction inst)
         {
             return GetFinalVarType(_infoTbl[(int)(inst & Instruction.Mask)].DestType, inst);
         }
 
-        public static VariableType GetSrcVarType(Instruction inst, int index)
+        public static AggregateType GetSrcVarType(Instruction inst, int index)
         {
             // TODO: Return correct type depending on source index,
             // that can improve the decompiler output.
-            if (inst == Instruction.ImageLoad   ||
-                inst == Instruction.ImageStore  ||
+            if (inst == Instruction.ImageLoad ||
+                inst == Instruction.ImageStore ||
                 inst == Instruction.ImageAtomic ||
-                inst == Instruction.Lod         ||
+                inst == Instruction.Lod ||
                 inst == Instruction.TextureSample)
             {
-                return VariableType.F32;
+                return AggregateType.FP32;
             }
             else if (inst == Instruction.Call)
             {
-                return VariableType.S32;
+                return AggregateType.S32;
             }
 
             return GetFinalVarType(_infoTbl[(int)(inst & Instruction.Mask)].SrcTypes[index], inst);
         }
 
-        private static VariableType GetFinalVarType(VariableType type, Instruction inst)
+        private static AggregateType GetFinalVarType(AggregateType type, Instruction inst)
         {
-            if (type == VariableType.Scalar)
+            if (type == AggregateType.Scalar)
             {
                 if ((inst & Instruction.FP32) != 0)
                 {
-                    return VariableType.F32;
+                    return AggregateType.FP32;
                 }
                 else if ((inst & Instruction.FP64) != 0)
                 {
-                    return VariableType.F64;
+                    return AggregateType.FP64;
                 }
                 else
                 {
-                    return VariableType.S32;
+                    return AggregateType.S32;
                 }
             }
-            else if (type == VariableType.Int)
-            {
-                return VariableType.S32;
-            }
-            else if (type == VariableType.None)
+            else if (type == AggregateType.Void)
             {
                 throw new ArgumentException($"Invalid operand for instruction \"{inst}\".");
             }

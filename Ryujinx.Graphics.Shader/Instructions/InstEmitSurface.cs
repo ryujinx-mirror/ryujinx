@@ -1,7 +1,9 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -217,15 +219,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(srcB++, RegisterType.Gpr));
             }
 
-            Operand GetDest()
-            {
-                if (dest >= RegisterConsts.RegisterZeroIndex)
-                {
-                    return null;
-                }
-
-                return Register(dest++, RegisterType.Gpr);
-            }
+            Operand destOperand = dest != RegisterConsts.RegisterZeroIndex ? Register(dest, RegisterType.Gpr) : null;
 
             List<Operand> sourcesList = new List<Operand>();
 
@@ -291,7 +285,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 flags,
                 imm,
                 0,
-                GetDest(),
+                new[] { destOperand },
                 sources);
 
             context.Add(operation);
@@ -371,36 +365,40 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (useComponents)
             {
-                for (int compMask = (int)componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
-                {
-                    if ((compMask & 1) == 0)
-                    {
-                        continue;
-                    }
+                Operand[] dests = new Operand[BitOperations.PopCount((uint)componentMask)];
 
-                    if (srcB == RegisterConsts.RegisterZeroIndex)
+                int outputIndex = 0;
+
+                for (int i = 0; i < dests.Length; i++)
+                {
+                    if (srcB + i >= RegisterConsts.RegisterZeroIndex)
                     {
                         break;
                     }
 
-                    Operand rd = Register(srcB++, RegisterType.Gpr);
-
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.ImageLoad,
-                        type,
-                        flags,
-                        handle,
-                        compIndex,
-                        rd,
-                        sources);
-
-                    if (!isBindless)
-                    {
-                        operation.Format = context.Config.GetTextureFormat(handle);
-                    }
-
-                    context.Add(operation);
+                    dests[outputIndex++] = Register(srcB + i, RegisterType.Gpr);
                 }
+
+                if (outputIndex != dests.Length)
+                {
+                    Array.Resize(ref dests, outputIndex);
+                }
+
+                TextureOperation operation = context.CreateTextureOperation(
+                    Instruction.ImageLoad,
+                    type,
+                    flags,
+                    handle,
+                    (int)componentMask,
+                    dests,
+                    sources);
+
+                if (!isBindless)
+                {
+                    operation.Format = context.Config.GetTextureFormat(handle);
+                }
+
+                context.Add(operation);
             }
             else
             {
@@ -412,35 +410,45 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
 
                 int components = GetComponents(size);
+                int compMask = (1 << components) - 1;
 
-                for (int compIndex = 0; compIndex < components; compIndex++)
+                Operand[] dests = new Operand[components];
+
+                int outputIndex = 0;
+
+                for (int i = 0; i < dests.Length; i++)
                 {
-                    if (srcB == RegisterConsts.RegisterZeroIndex)
+                    if (srcB + i >= RegisterConsts.RegisterZeroIndex)
                     {
                         break;
                     }
 
-                    Operand rd = Register(srcB++, RegisterType.Gpr);
+                    dests[outputIndex++] = Register(srcB + i, RegisterType.Gpr);
+                }
 
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.ImageLoad,
-                        type,
-                        GetTextureFormat(size),
-                        flags,
-                        handle,
-                        compIndex,
-                        rd,
-                        sources);
+                if (outputIndex != dests.Length)
+                {
+                    Array.Resize(ref dests, outputIndex);
+                }
 
-                    context.Add(operation);
+                TextureOperation operation = context.CreateTextureOperation(
+                    Instruction.ImageLoad,
+                    type,
+                    GetTextureFormat(size),
+                    flags,
+                    handle,
+                    compMask,
+                    dests,
+                    sources);
 
-                    switch (size)
-                    {
-                        case SuSize.U8: context.Copy(rd, ZeroExtendTo32(context, rd, 8)); break;
-                        case SuSize.U16: context.Copy(rd, ZeroExtendTo32(context, rd, 16)); break;
-                        case SuSize.S8: context.Copy(rd, SignExtendTo32(context, rd, 8)); break;
-                        case SuSize.S16: context.Copy(rd, SignExtendTo32(context, rd, 16)); break;
-                    }
+                context.Add(operation);
+
+                switch (size)
+                {
+                    case SuSize.U8: context.Copy(dests[0], ZeroExtendTo32(context, dests[0], 8)); break;
+                    case SuSize.U16: context.Copy(dests[0], ZeroExtendTo32(context, dests[0], 16)); break;
+                    case SuSize.S8: context.Copy(dests[0], SignExtendTo32(context, dests[0], 8)); break;
+                    case SuSize.S16: context.Copy(dests[0], SignExtendTo32(context, dests[0], 16)); break;
                 }
             }
         }

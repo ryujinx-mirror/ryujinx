@@ -62,17 +62,24 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Inst  = inst;
             Index = index;
 
-            // The array may be modified externally, so we store a copy.
-            _dests = (Operand[])dests.Clone();
-
-            for (int dstIndex = 0; dstIndex < dests.Length; dstIndex++)
+            if (dests != null)
             {
-                Operand dest = dests[dstIndex];
+                // The array may be modified externally, so we store a copy.
+                _dests = (Operand[])dests.Clone();
 
-                if (dest != null && dest.Type == OperandType.LocalVariable)
+                for (int dstIndex = 0; dstIndex < dests.Length; dstIndex++)
                 {
-                    dest.AsgOp = this;
+                    Operand dest = dests[dstIndex];
+
+                    if (dest != null && dest.Type == OperandType.LocalVariable)
+                    {
+                        dest.AsgOp = this;
+                    }
                 }
+            }
+            else
+            {
+                _dests = Array.Empty<Operand>();
             }
         }
 

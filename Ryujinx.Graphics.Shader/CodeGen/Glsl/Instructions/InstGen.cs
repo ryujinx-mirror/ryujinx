@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenBallot;
@@ -8,6 +9,7 @@ using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenFSI;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenPacking;
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenVector;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
@@ -32,12 +34,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             IAstNode src = operation.GetSource(0);
 
-            VariableType type = GetSrcVarType(operation.Inst, 0);
+            AggregateType type = GetSrcVarType(operation.Inst, 0);
 
             string srcExpr = GetSoureExpr(context, src, type);
             string zero;
 
-            if (type == VariableType.F64)
+            if (type == AggregateType.FP64)
             {
                 zero = "0.0";
             }
@@ -95,7 +97,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     }
                     else
                     {
-                        VariableType dstType = GetSrcVarType(inst, argIndex);
+                        AggregateType dstType = GetSrcVarType(inst, argIndex);
 
                         args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
                     }
@@ -226,6 +228,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.UnpackHalf2x16:
                         return UnpackHalf2x16(context, operation);
+
+                    case Instruction.VectorExtract:
+                        return VectorExtract(context, operation);
                 }
             }
 

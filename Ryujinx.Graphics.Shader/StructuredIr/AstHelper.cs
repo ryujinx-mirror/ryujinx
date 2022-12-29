@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
@@ -46,7 +47,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             return new AstOperand(OperandType.Constant, value);
         }
 
-        public static AstOperand Local(VariableType type)
+        public static AstOperand Local(AggregateType type)
         {
             AstOperand local = new AstOperand(OperandType.LocalVariable);
 

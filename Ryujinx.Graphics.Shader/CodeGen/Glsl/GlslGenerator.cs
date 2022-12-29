@@ -126,8 +126,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (node is AstAssignment assignment)
                 {
-                    VariableType srcType = OperandManager.GetNodeDestType(context, assignment.Source);
-                    VariableType dstType = OperandManager.GetNodeDestType(context, assignment.Destination, isAsgDest: true);
+                    AggregateType srcType = OperandManager.GetNodeDestType(context, assignment.Source);
+                    AggregateType dstType = OperandManager.GetNodeDestType(context, assignment.Destination, isAsgDest: true);
 
                     string dest;
 
@@ -158,9 +158,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static string GetCondExpr(CodeGenContext context, IAstNode cond)
         {
-            VariableType srcType = OperandManager.GetNodeDestType(context, cond);
+            AggregateType srcType = OperandManager.GetNodeDestType(context, cond);
 
-            return ReinterpretCast(context, cond, srcType, VariableType.Bool);
+            return ReinterpretCast(context, cond, srcType, AggregateType.Bool);
         }
     }
 }

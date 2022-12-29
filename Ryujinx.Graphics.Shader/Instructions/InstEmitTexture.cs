@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
@@ -303,42 +304,37 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             Operand[] sources = sourcesList.ToArray();
+            Operand[] dests = new Operand[BitOperations.PopCount((uint)componentMask)];
 
-            Operand GetDest()
+            int outputIndex = 0;
+
+            for (int i = 0; i < dests.Length; i++)
             {
-                if (rdIndex >= RegisterConsts.RegisterZeroIndex)
+                if (rdIndex + i >= RegisterConsts.RegisterZeroIndex)
                 {
-                    return null;
+                    break;
                 }
 
-                return Register(rdIndex++, RegisterType.Gpr);
+                dests[outputIndex++] = Register(rdIndex + i, RegisterType.Gpr);
+            }
+
+            if (outputIndex != dests.Length)
+            {
+                Array.Resize(ref dests, outputIndex);
             }
 
             int handle = !isBindless ? imm : 0;
 
-            for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
-            {
-                if ((compMask & 1) != 0)
-                {
-                    Operand dest = GetDest();
+            TextureOperation operation = context.CreateTextureOperation(
+                Instruction.TextureSample,
+                type,
+                flags,
+                handle,
+                componentMask,
+                dests,
+                sources);
 
-                    if (dest == null)
-                    {
-                        break;
-                    }
-
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.TextureSample,
-                        type,
-                        flags,
-                        handle,
-                        compIndex,
-                        dest,
-                        sources);
-
-                    context.Add(operation);
-                }
-            }
+            context.Add(operation);
         }
 
         private static void EmitTexs(
@@ -624,18 +620,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand[] rd0 = new Operand[2] { ConstF(0), ConstF(0) };
             Operand[] rd1 = new Operand[2] { ConstF(0), ConstF(0) };
 
-            int destIncrement = 0;
+            int handle = imm;
+            int componentMask = _maskLut[dest2 == RegisterConsts.RegisterZeroIndex ? 0 : 1, writeMask];
 
-            Operand GetDest()
+            int componentsCount = BitOperations.PopCount((uint)componentMask);
+
+            Operand[] dests = new Operand[componentsCount];
+
+            int outputIndex = 0;
+
+            for (int i = 0; i < componentsCount; i++)
             {
-                int high = destIncrement >> 1;
-                int low = destIncrement & 1;
-
-                destIncrement++;
+                int high = i >> 1;
+                int low = i & 1;
 
                 if (isF16)
                 {
-                    return high != 0
+                    dests[outputIndex++] = high != 0
                         ? (rd1[low] = Local())
                         : (rd0[low] = Local());
                 }
@@ -648,29 +649,25 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         rdIndex += low;
                     }
 
-                    return Register(rdIndex, RegisterType.Gpr);
+                    dests[outputIndex++] = Register(rdIndex, RegisterType.Gpr);
                 }
             }
 
-            int handle = imm;
-            int componentMask = _maskLut[dest2 == RegisterConsts.RegisterZeroIndex ? 0 : 1, writeMask];
-
-            for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
+            if (outputIndex != dests.Length)
             {
-                if ((compMask & 1) != 0)
-                {
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.TextureSample,
-                        type,
-                        flags,
-                        handle,
-                        compIndex,
-                        GetDest(),
-                        sources);
-
-                    context.Add(operation);
-                }
+                Array.Resize(ref dests, outputIndex);
             }
+
+            TextureOperation operation = context.CreateTextureOperation(
+                Instruction.TextureSample,
+                type,
+                flags,
+                handle,
+                componentMask,
+                dests,
+                sources);
+
+            context.Add(operation);
 
             if (isF16)
             {
@@ -797,42 +794,37 @@ namespace Ryujinx.Graphics.Shader.Instructions
             sourcesList.Add(Const((int)component));
 
             Operand[] sources = sourcesList.ToArray();
+            Operand[] dests = new Operand[BitOperations.PopCount((uint)componentMask)];
 
-            Operand GetDest()
+            int outputIndex = 0;
+
+            for (int i = 0; i < dests.Length; i++)
             {
-                if (dest >= RegisterConsts.RegisterZeroIndex)
+                if (dest + i >= RegisterConsts.RegisterZeroIndex)
                 {
-                    return null;
+                    break;
                 }
 
-                return Register(dest++, RegisterType.Gpr);
+                dests[outputIndex++] = Register(dest + i, RegisterType.Gpr);
+            }
+
+            if (outputIndex != dests.Length)
+            {
+                Array.Resize(ref dests, outputIndex);
             }
 
             int handle = imm;
 
-            for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
-            {
-                if ((compMask & 1) != 0)
-                {
-                    Operand destOperand = GetDest();
+            TextureOperation operation = context.CreateTextureOperation(
+                Instruction.TextureSample,
+                type,
+                flags,
+                handle,
+                componentMask,
+                dests,
+                sources);
 
-                    if (destOperand == null)
-                    {
-                        break;
-                    }
-
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.TextureSample,
-                        type,
-                        flags,
-                        handle,
-                        compIndex,
-                        destOperand,
-                        sources);
-
-                    context.Add(operation);
-                }
-            }
+            context.Add(operation);
         }
 
         private static void EmitTmml(
@@ -951,7 +943,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                             flags,
                             handle,
                             compIndex ^ 1, // The instruction component order is the inverse of GLSL's.
-                            tempDest,
+                            new[] { tempDest },
                             sources);
 
                         context.Add(operation);
@@ -1071,42 +1063,37 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             Operand[] sources = sourcesList.ToArray();
+            Operand[] dests = new Operand[BitOperations.PopCount((uint)componentMask)];
 
-            Operand GetDest()
+            int outputIndex = 0;
+
+            for (int i = 0; i < dests.Length; i++)
             {
-                if (dest >= RegisterConsts.RegisterZeroIndex)
+                if (dest + i >= RegisterConsts.RegisterZeroIndex)
                 {
-                    return null;
+                    break;
                 }
 
-                return Register(dest++, RegisterType.Gpr);
+                dests[outputIndex++] = Register(dest + i, RegisterType.Gpr);
+            }
+
+            if (outputIndex != dests.Length)
+            {
+                Array.Resize(ref dests, outputIndex);
             }
 
             int handle = imm;
 
-            for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
-            {
-                if ((compMask & 1) != 0)
-                {
-                    Operand destOperand = GetDest();
+            TextureOperation operation = context.CreateTextureOperation(
+                Instruction.TextureSample,
+                type,
+                flags,
+                handle,
+                componentMask,
+                dests,
+                sources);
 
-                    if (destOperand == null)
-                    {
-                        break;
-                    }
-
-                    TextureOperation operation = context.CreateTextureOperation(
-                        Instruction.TextureSample,
-                        type,
-                        flags,
-                        handle,
-                        compIndex,
-                        destOperand,
-                        sources);
-
-                    context.Add(operation);
-                }
-            }
+            context.Add(operation);
         }
 
         private static void EmitTxq(
@@ -1188,7 +1175,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         flags,
                         imm,
                         compIndex,
-                        destOperand,
+                        new[] { destOperand },
                         sources);
 
                     context.Add(operation);

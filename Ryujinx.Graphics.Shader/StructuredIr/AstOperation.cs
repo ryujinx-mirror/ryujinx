@@ -1,4 +1,6 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.StructuredIr.AstHelper;
 
@@ -55,6 +57,22 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             AddUse(source, this);
 
             _sources[index] = source;
+        }
+
+        public AggregateType GetVectorType(AggregateType scalarType)
+        {
+            int componentsCount = BitOperations.PopCount((uint)Index);
+
+            AggregateType type = scalarType;
+
+            switch (componentsCount)
+            {
+                case 2: type |= AggregateType.Vector2; break;
+                case 3: type |= AggregateType.Vector3; break;
+                case 4: type |= AggregateType.Vector4; break;
+            }
+
+            return type;
         }
     }
 }
