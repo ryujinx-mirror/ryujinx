@@ -68,53 +68,6 @@ namespace Ryujinx.Ui.App.Common
             _cancellationToken?.Cancel();
         }
 
-        public IEnumerable<string> GetFilesInDirectory(string directory)
-        {
-            Stack<string> stack = new Stack<string>();
-
-            stack.Push(directory);
-
-            while (stack.Count > 0)
-            {
-                string   dir     = stack.Pop();
-                string[] content = Array.Empty<string>();
-
-                try
-                {
-                    content = Directory.GetFiles(dir, "*");
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    Logger.Warning?.Print(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
-                }
-
-                if (content.Length > 0)
-                {
-                    foreach (string file in content)
-                    {
-                        yield return file;
-                    }
-                }
-
-                try
-                {
-                    content = Directory.GetDirectories(dir);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    Logger.Warning?.Print(LogClass.Application, $"Failed to get access to directory: \"{dir}\"");
-                }
-
-                if (content.Length > 0)
-                {
-                    foreach (string subdir in content)
-                    {
-                        stack.Push(subdir);
-                    }
-                }
-            }
-        }
-
         public void ReadControlData(IFileSystem controlFs, Span<byte> outProperty)
         {
             using var controlFile = new UniqueRef<IFile>();
@@ -151,25 +104,27 @@ namespace Ryujinx.Ui.App.Common
                         continue;
                     }
 
-                    foreach (string app in GetFilesInDirectory(appDir))
+                    try
                     {
-                        if (_cancellationToken.Token.IsCancellationRequested)
+                        foreach (string app in Directory.EnumerateFiles(appDir, "*", SearchOption.AllDirectories))
                         {
-                            return;
+                            if (_cancellationToken.Token.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                        
+                            string extension = Path.GetExtension(app).ToLower();
+                        
+                            if (!File.GetAttributes(app).HasFlag(FileAttributes.Hidden) && extension is ".nsp" or ".pfs0" or ".xci" or ".nca" or ".nro" or ".nso")
+                            {
+                                applications.Add(app);
+                                numApplicationsFound++;
+                            }
                         }
-
-                        string extension = Path.GetExtension(app).ToLower();
-
-                        if ((extension == ".nsp")  ||
-                            (extension == ".pfs0") ||
-                            (extension == ".xci")  ||
-                            (extension == ".nca")  ||
-                            (extension == ".nro")  ||
-                            (extension == ".nso"))
-                        {
-                            applications.Add(app);
-                            numApplicationsFound++;
-                        }
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        Logger.Warning?.Print(LogClass.Application, $"Failed to get access to directory: \"{appDir}\"");
                     }
                 }
 
