@@ -298,6 +298,18 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandHipc(67)] //3.0.0+
+        // IsIlluminanceAvailable() -> bool
+        public ResultCode IsIlluminanceAvailable(ServiceCtx context)
+        {
+            // NOTE: This should call IsAmbientLightSensorAvailable through to Lbl, but there's no situation where we'd want false.
+            context.ResponseData.Write(true);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
         [CommandHipc(68)]
         // SetAutoSleepDisabled(u8)
         public ResultCode SetAutoSleepDisabled(ServiceCtx context)
@@ -314,6 +326,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode IsAutoSleepDisabled(ServiceCtx context)
         {
             context.ResponseData.Write(_autoSleepDisabled);
+
+            return ResultCode.Success;
+        }
+
+        [CommandHipc(71)] //5.0.0+
+        // GetCurrentIlluminanceEx() -> (bool, f32)
+        public ResultCode GetCurrentIlluminanceEx(ServiceCtx context)
+        {
+            // TODO: The light value should be configurable - presumably users using software that takes advantage will want control.
+            context.ResponseData.Write(1); // OverLimit
+            context.ResponseData.Write(10000f); // Lux - 10K lux is ambient light.
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }
