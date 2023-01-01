@@ -9,6 +9,7 @@ using Ryujinx.Memory.Tests;
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -57,14 +58,10 @@ namespace Ryujinx.Tests.Memory
         }
 
         [Test]
+        // Memory aliasing tests fail on CI at the moment.
+        [Platform(Exclude = "MacOsX")]
         public void PartialUnmap([Values] bool readOnly)
         {
-            if (OperatingSystem.IsMacOS())
-            {
-                // Memory aliasing tests fail on CI at the moment.
-                return;
-            }
-
             // Set up an address space to test partial unmapping.
             // Should register the signal handler to deal with this on Windows.
             ulong vaSize = 0x100000;
@@ -78,11 +75,13 @@ namespace Ryujinx.Tests.Memory
 
             ref var state = ref PartialUnmapState.GetRef();
 
+            Thread testThread = null;
+            bool shouldAccess = true;
+
             try
             {
                 // Globally reset the struct for handling partial unmap races.
                 PartialUnmapState.Reset();
-                bool shouldAccess = true;
                 bool error = false;
 
                 // Create a large mapping.
@@ -92,8 +91,6 @@ namespace Ryujinx.Tests.Memory
                 {
                     memory.Reprotect(0, vaSize, MemoryPermission.Read);
                 }
-
-                Thread testThread;
 
                 if (readOnly)
                 {
@@ -193,6 +190,10 @@ namespace Ryujinx.Tests.Memory
             }
             finally
             {
+                // In case something failed, we want to ensure the test thread is dead before disposing of the memory.
+                shouldAccess = false;
+                testThread?.Join();
+
                 exceptionHandler.Dispose();
                 unusedMainMemory.Dispose();
                 memory.Dispose();
@@ -201,13 +202,10 @@ namespace Ryujinx.Tests.Memory
         }
 
         [Test]
+        // Memory aliasing tests fail on CI at the moment.
+        [Platform(Exclude = "MacOsX")]
         public unsafe void PartialUnmapNative()
         {
-            if (OperatingSystem.IsMacOS())
-            {
-                // Memory aliasing tests fail on CI at the moment.
-                return;
-            }
 
             // Set up an address space to test partial unmapping.
             // Should register the signal handler to deal with this on Windows.
@@ -284,26 +282,17 @@ namespace Ryujinx.Tests.Memory
         }
 
         [Test]
+        // Only test in Windows, as this is only used on Windows and uses Windows APIs for trimming.
+        [Platform("Win")]
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
         public void ThreadLocalMap()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                // Only test in Windows, as this is only used on Windows and uses Windows APIs for trimming.
-                return;
-            }
-
             PartialUnmapState.Reset();
             ref var state = ref PartialUnmapState.GetRef();
 
             bool running = true;
             var testThread = new Thread(() =>
             {
-                if (!OperatingSystem.IsWindows())
-                {
-                    // Need this here to avoid a warning.
-                    return;
-                }
-
                 PartialUnmapState.GetRef().RetryFromAccessViolation();
                 while (running)
                 {
@@ -330,14 +319,10 @@ namespace Ryujinx.Tests.Memory
         }
 
         [Test]
+        // Only test in Windows, as this is only used on Windows and uses Windows APIs for trimming.
+        [Platform("Win")]
         public unsafe void ThreadLocalMapNative()
         {
-            if (!OperatingSystem.IsWindows())
-            {
-                // Only test in Windows, as this is only used on Windows and uses Windows APIs for trimming.
-                return;
-            }
-
             EnsureTranslator();
 
             PartialUnmapState.Reset();

@@ -27,7 +27,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
 
         [SupportedOSPlatform("windows")]
         [LibraryImport("kernel32.dll")]
-        public static partial int GetCurrentThreadId();
+        private static partial int GetCurrentThreadId();
 
         [SupportedOSPlatform("windows")]
         [LibraryImport("kernel32.dll", SetLastError = true)]
@@ -36,7 +36,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         [SupportedOSPlatform("windows")]
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs (UnmanagedType.Bool)]
-        public static partial bool CloseHandle(IntPtr hObject);
+        private static partial bool CloseHandle(IntPtr hObject);
 
         [SupportedOSPlatform("windows")]
         [LibraryImport("kernel32.dll", SetLastError = true)]

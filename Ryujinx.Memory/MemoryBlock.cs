@@ -379,7 +379,12 @@ namespace Ryujinx.Memory
         /// <remarks>
         /// It's an error to use the memory block after disposal.
         /// </remarks>
-        public void Dispose() => FreeMemory();
+        public void Dispose()
+        {
+            FreeMemory();
+
+            GC.SuppressFinalize(this);
+        }
 
         ~MemoryBlock() => FreeMemory();
 
