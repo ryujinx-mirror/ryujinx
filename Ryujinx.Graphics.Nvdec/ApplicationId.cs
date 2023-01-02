@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.Nvdec
 {
-    public enum CodecId
+    public enum ApplicationId
     {
         Mpeg = 1,
         Vc1 = 2,
@@ -8,6 +8,7 @@
         Mpeg4 = 4,
         Vp8 = 5,
         Hevc = 7,
-        Vp9 = 9
+        Vp9 = 9,
+        HevcParser = 12,
     }
 }

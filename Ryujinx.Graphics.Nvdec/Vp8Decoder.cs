@@ -10,8 +10,8 @@ namespace Ryujinx.Graphics.Nvdec
     {
         public static void Decode(NvdecDecoderContext context, ResourceManager rm, ref NvdecRegisters state)
         {
-            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetPictureInfoOffset);
-            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetBitstreamOffset, (int)pictureInfo.VLDBufferSize);
+            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetDrvPicSetupOffset);
+            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetInBufBaseOffset, (int)pictureInfo.VLDBufferSize);
 
             Decoder decoder = context.GetVp8Decoder();
 
@@ -19,8 +19,8 @@ namespace Ryujinx.Graphics.Nvdec
 
             Vp8PictureInfo info = pictureInfo.Convert();
 
-            uint lumaOffset = state.SetSurfaceLumaOffset[3];
-            uint chromaOffset = state.SetSurfaceChromaOffset[3];
+            uint lumaOffset = state.SetPictureLumaOffset[3];
+            uint chromaOffset = state.SetPictureChromaOffset[3];
 
             if (decoder.Decode(ref info, outputSurface, bitstream))
             {

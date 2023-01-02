@@ -106,7 +106,7 @@ namespace Ryujinx.Graphics.Host1x
 
         private void Method1(int data)
         {
-            _commandQueue.Add(new MethodCallAction(_currentContextId, (int)_state.State.Method0 * 4, data));
+            _commandQueue.Add(new MethodCallAction(_currentContextId, (int)_state.State.Method0 * sizeof(uint), data));
         }
 
         private void Process(CommandAction cmdAction)

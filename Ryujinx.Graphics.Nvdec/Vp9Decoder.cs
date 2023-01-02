@@ -17,18 +17,18 @@ namespace Ryujinx.Graphics.Nvdec
 
         public unsafe static void Decode(ResourceManager rm, ref NvdecRegisters state)
         {
-            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetPictureInfoOffset);
-            EntropyProbs entropy = rm.Gmm.DeviceRead<EntropyProbs>(state.SetVp9EntropyProbsOffset);
+            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetDrvPicSetupOffset);
+            EntropyProbs entropy = rm.Gmm.DeviceRead<EntropyProbs>(state.Vp9SetProbTabBufOffset);
 
             ISurface Rent(uint lumaOffset, uint chromaOffset, FrameSize size)
             {
                 return rm.Cache.Get(_decoder, lumaOffset, chromaOffset, size.Width, size.Height);
             }
 
-            ISurface lastSurface    = Rent(state.SetSurfaceLumaOffset[0], state.SetSurfaceChromaOffset[0], pictureInfo.LastFrameSize);
-            ISurface goldenSurface  = Rent(state.SetSurfaceLumaOffset[1], state.SetSurfaceChromaOffset[1], pictureInfo.GoldenFrameSize);
-            ISurface altSurface     = Rent(state.SetSurfaceLumaOffset[2], state.SetSurfaceChromaOffset[2], pictureInfo.AltFrameSize);
-            ISurface currentSurface = Rent(state.SetSurfaceLumaOffset[3], state.SetSurfaceChromaOffset[3], pictureInfo.CurrentFrameSize);
+            ISurface lastSurface    = Rent(state.SetPictureLumaOffset[0], state.SetPictureChromaOffset[0], pictureInfo.LastFrameSize);
+            ISurface goldenSurface  = Rent(state.SetPictureLumaOffset[1], state.SetPictureChromaOffset[1], pictureInfo.GoldenFrameSize);
+            ISurface altSurface     = Rent(state.SetPictureLumaOffset[2], state.SetPictureChromaOffset[2], pictureInfo.AltFrameSize);
+            ISurface currentSurface = Rent(state.SetPictureLumaOffset[3], state.SetPictureChromaOffset[3], pictureInfo.CurrentFrameSize);
 
             Vp9PictureInfo info = pictureInfo.Convert();
 
@@ -38,31 +38,31 @@ namespace Ryujinx.Graphics.Nvdec
 
             entropy.Convert(ref info.Entropy);
 
-            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetBitstreamOffset, (int)pictureInfo.BitstreamSize);
+            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetInBufBaseOffset, (int)pictureInfo.BitstreamSize);
 
             ReadOnlySpan<Vp9MvRef> mvsIn = ReadOnlySpan<Vp9MvRef>.Empty;
 
             if (info.UsePrevInFindMvRefs)
             {
-                mvsIn = GetMvsInput(rm.Gmm, pictureInfo.CurrentFrameSize, state.SetVp9LastFrameMvsOffset);
+                mvsIn = GetMvsInput(rm.Gmm, pictureInfo.CurrentFrameSize, state.Vp9SetColMvReadBufOffset);
             }
 
             int miCols = BitUtils.DivRoundUp(pictureInfo.CurrentFrameSize.Width, 8);
             int miRows = BitUtils.DivRoundUp(pictureInfo.CurrentFrameSize.Height, 8);
 
-            using var mvsRegion = rm.Gmm.GetWritableRegion(ExtendOffset(state.SetVp9CurrFrameMvsOffset), miRows * miCols * 16);
+            using var mvsRegion = rm.Gmm.GetWritableRegion(ExtendOffset(state.Vp9SetColMvWriteBufOffset), miRows * miCols * 16);
 
             Span<Vp9MvRef> mvsOut = MemoryMarshal.Cast<byte, Vp9MvRef>(mvsRegion.Memory.Span);
 
-            uint lumaOffset   = state.SetSurfaceLumaOffset[3];
-            uint chromaOffset = state.SetSurfaceChromaOffset[3];
+            uint lumaOffset   = state.SetPictureLumaOffset[3];
+            uint chromaOffset = state.SetPictureChromaOffset[3];
 
             if (_decoder.Decode(ref info, currentSurface, bitstream, mvsIn, mvsOut))
             {
                 SurfaceWriter.Write(rm.Gmm, currentSurface, lumaOffset, chromaOffset);
             }
 
-            WriteBackwardUpdates(rm.Gmm, state.SetVp9BackwardUpdatesOffset, ref info.BackwardUpdateCounts);
+            WriteBackwardUpdates(rm.Gmm, state.Vp9SetCtxCounterBufOffset, ref info.BackwardUpdateCounts);
 
             rm.Cache.Put(lastSurface);
             rm.Cache.Put(goldenSurface);

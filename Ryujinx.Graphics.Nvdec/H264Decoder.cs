@@ -12,18 +12,18 @@ namespace Ryujinx.Graphics.Nvdec
 
         public static void Decode(NvdecDecoderContext context, ResourceManager rm, ref NvdecRegisters state)
         {
-            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetPictureInfoOffset);
+            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetDrvPicSetupOffset);
             H264PictureInfo info = pictureInfo.Convert();
 
-            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetBitstreamOffset, (int)pictureInfo.BitstreamSize);
+            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetInBufBaseOffset, (int)pictureInfo.BitstreamSize);
 
             int width  = (int)pictureInfo.PicWidthInMbs * MbSizeInPixels;
             int height = (int)pictureInfo.PicHeightInMbs * MbSizeInPixels;
 
             int surfaceIndex = (int)pictureInfo.OutputSurfaceIndex;
 
-            uint lumaOffset   = state.SetSurfaceLumaOffset[surfaceIndex];
-            uint chromaOffset = state.SetSurfaceChromaOffset[surfaceIndex];
+            uint lumaOffset   = state.SetPictureLumaOffset[surfaceIndex];
+            uint chromaOffset = state.SetPictureChromaOffset[surfaceIndex];
 
             Decoder decoder = context.GetH264Decoder();
 
