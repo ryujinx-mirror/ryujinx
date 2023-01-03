@@ -148,11 +148,11 @@ namespace Ryujinx.Ava.UI.Windows
                 _dialogOpen = true;
 
                 var result = await ContentDialogHelper.CreateConfirmationDialog(
-                    LocaleManager.Instance["DialogControllerSettingsModifiedConfirmMessage"],
-                    LocaleManager.Instance["DialogControllerSettingsModifiedConfirmSubMessage"],
-                    LocaleManager.Instance["InputDialogYes"],
-                    LocaleManager.Instance["InputDialogNo"],
-                    LocaleManager.Instance["RyujinxConfirm"]);
+                    LocaleManager.Instance[LocaleKeys.DialogControllerSettingsModifiedConfirmMessage],
+                    LocaleManager.Instance[LocaleKeys.DialogControllerSettingsModifiedConfirmSubMessage],
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                    LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                    LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
                 if (result == UserResult.Yes)
                 {

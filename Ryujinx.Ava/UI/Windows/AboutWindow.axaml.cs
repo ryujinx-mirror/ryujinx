@@ -17,7 +17,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             if (Program.PreviewerDetached)
             {
-                Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["MenuBarHelpAbout"];
+                Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance[LocaleKeys.MenuBarHelpAbout];
             }
 
             Version = Program.Version;
@@ -32,7 +32,7 @@ namespace Ryujinx.Ava.UI.Windows
         public string Supporters { get; set; }
         public string Version { get; set; }
 
-        public string Developers => string.Format(LocaleManager.Instance["AboutPageDeveloperListMore"], "gdkchan, Ac_K, Thog, rip in peri peri, LDj3SNuD, emmaus, Thealexbarney, Xpl0itR, GoffyDude, »jD«");
+        public string Developers => string.Format(LocaleManager.Instance[LocaleKeys.AboutPageDeveloperListMore], "gdkchan, Ac_K, Thog, rip in peri peri, LDj3SNuD, emmaus, Thealexbarney, Xpl0itR, GoffyDude, »jD«");
 
         private void Button_OnClick(object sender, RoutedEventArgs e)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
-                Supporters = LocaleManager.Instance["ConnectionError"];
+                Supporters = LocaleManager.Instance[LocaleKeys.ConnectionError];
 
                 return;
             }
@@ -61,7 +61,7 @@ namespace Ryujinx.Ava.UI.Windows
             }
             catch
             {
-                Supporters = LocaleManager.Instance["ApiError"];
+                Supporters = LocaleManager.Instance[LocaleKeys.ApiError];
             }
 
             await Dispatcher.UIThread.InvokeAsync(() => SupportersTextBlock.Text = Supporters);

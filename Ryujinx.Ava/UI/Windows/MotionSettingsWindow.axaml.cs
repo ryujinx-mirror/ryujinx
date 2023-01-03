@@ -45,10 +45,10 @@ namespace Ryujinx.Ava.UI.Windows
 
             ContentDialog contentDialog = new ContentDialog
             {
-                Title = LocaleManager.Instance["ControllerMotionTitle"],
-                PrimaryButtonText = LocaleManager.Instance["ControllerSettingsSave"],
+                Title = LocaleManager.Instance[LocaleKeys.ControllerMotionTitle],
+                PrimaryButtonText = LocaleManager.Instance[LocaleKeys.ControllerSettingsSave],
                 SecondaryButtonText = "",
-                CloseButtonText = LocaleManager.Instance["ControllerSettingsClose"],
+                CloseButtonText = LocaleManager.Instance[LocaleKeys.ControllerSettingsClose],
                 Content = content
             };
             contentDialog.PrimaryButtonClick += (sender, args) =>

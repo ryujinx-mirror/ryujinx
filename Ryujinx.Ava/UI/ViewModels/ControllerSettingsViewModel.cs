@@ -267,15 +267,15 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             ControllerImage = ProControllerResource;
 
-            PlayerIndexes.Add(new(PlayerIndex.Player1, LocaleManager.Instance["ControllerSettingsPlayer1"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player2, LocaleManager.Instance["ControllerSettingsPlayer2"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player3, LocaleManager.Instance["ControllerSettingsPlayer3"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player4, LocaleManager.Instance["ControllerSettingsPlayer4"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player5, LocaleManager.Instance["ControllerSettingsPlayer5"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player6, LocaleManager.Instance["ControllerSettingsPlayer6"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player7, LocaleManager.Instance["ControllerSettingsPlayer7"]));
-            PlayerIndexes.Add(new(PlayerIndex.Player8, LocaleManager.Instance["ControllerSettingsPlayer8"]));
-            PlayerIndexes.Add(new(PlayerIndex.Handheld, LocaleManager.Instance["ControllerSettingsHandheld"]));
+            PlayerIndexes.Add(new(PlayerIndex.Player1, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer1]));
+            PlayerIndexes.Add(new(PlayerIndex.Player2, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer2]));
+            PlayerIndexes.Add(new(PlayerIndex.Player3, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer3]));
+            PlayerIndexes.Add(new(PlayerIndex.Player4, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer4]));
+            PlayerIndexes.Add(new(PlayerIndex.Player5, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer5]));
+            PlayerIndexes.Add(new(PlayerIndex.Player6, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer6]));
+            PlayerIndexes.Add(new(PlayerIndex.Player7, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer7]));
+            PlayerIndexes.Add(new(PlayerIndex.Player8, LocaleManager.Instance[LocaleKeys.ControllerSettingsPlayer8]));
+            PlayerIndexes.Add(new(PlayerIndex.Handheld, LocaleManager.Instance[LocaleKeys.ControllerSettingsHandheld]));
         }
 
         private void LoadConfiguration(InputConfig inputConfig = null)
@@ -406,16 +406,16 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (_playerId == PlayerIndex.Handheld)
             {
-                Controllers.Add(new(ControllerType.Handheld, LocaleManager.Instance["ControllerSettingsControllerTypeHandheld"]));
+                Controllers.Add(new(ControllerType.Handheld, LocaleManager.Instance[LocaleKeys.ControllerSettingsControllerTypeHandheld]));
 
                 Controller = 0;
             }
             else
             {
-                Controllers.Add(new(ControllerType.ProController, LocaleManager.Instance["ControllerSettingsControllerTypeProController"]));
-                Controllers.Add(new(ControllerType.JoyconPair, LocaleManager.Instance["ControllerSettingsControllerTypeJoyConPair"]));
-                Controllers.Add(new(ControllerType.JoyconLeft, LocaleManager.Instance["ControllerSettingsControllerTypeJoyConLeft"]));
-                Controllers.Add(new(ControllerType.JoyconRight, LocaleManager.Instance["ControllerSettingsControllerTypeJoyConRight"]));
+                Controllers.Add(new(ControllerType.ProController, LocaleManager.Instance[LocaleKeys.ControllerSettingsControllerTypeProController]));
+                Controllers.Add(new(ControllerType.JoyconPair, LocaleManager.Instance[LocaleKeys.ControllerSettingsControllerTypeJoyConPair]));
+                Controllers.Add(new(ControllerType.JoyconLeft, LocaleManager.Instance[LocaleKeys.ControllerSettingsControllerTypeJoyConLeft]));
+                Controllers.Add(new(ControllerType.JoyconRight, LocaleManager.Instance[LocaleKeys.ControllerSettingsControllerTypeJoyConRight]));
 
                 if (Config != null && Controllers.ToList().FindIndex(x => x.Type == Config.ControllerType) != -1)
                 {
@@ -455,7 +455,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Devices.Clear();
                 DeviceList.Clear();
-                Devices.Add((DeviceType.None, Disabled, LocaleManager.Instance["ControllerSettingsDeviceDisabled"]));
+                Devices.Add((DeviceType.None, Disabled, LocaleManager.Instance[LocaleKeys.ControllerSettingsDeviceDisabled]));
 
                 foreach (string id in _mainWindow.InputManager.KeyboardDriver.GamepadsIds)
                 {
@@ -517,7 +517,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 Directory.CreateDirectory(basePath);
             }
 
-            ProfilesList.Add((LocaleManager.Instance["ControllerSettingsProfileDefault"]));
+            ProfilesList.Add((LocaleManager.Instance[LocaleKeys.ControllerSettingsProfileDefault]));
 
             foreach (string profile in Directory.GetFiles(basePath, "*.json", SearchOption.AllDirectories))
             {
@@ -526,7 +526,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (string.IsNullOrWhiteSpace(ProfileName))
             {
-                ProfileName = LocaleManager.Instance["ControllerSettingsProfileDefault"];
+                ProfileName = LocaleManager.Instance[LocaleKeys.ControllerSettingsProfileDefault];
             }
         }
 
@@ -687,7 +687,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            if (ProfileName == LocaleManager.Instance["ControllerSettingsProfileDefault"])
+            if (ProfileName == LocaleManager.Instance[LocaleKeys.ControllerSettingsProfileDefault])
             {
                 config = LoadDefaultConfiguration();
             }
@@ -717,7 +717,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     Logger.Error?.Print(LogClass.Configuration, $"Profile {ProfileName} is incompatible with the current input configuration system.");
 
-                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogProfileInvalidProfileErrorMessage"], ProfileName));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileErrorMessage], ProfileName));
 
                     return;
                 }
@@ -749,9 +749,9 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            if (ProfileName == LocaleManager.Instance["ControllerSettingsProfileDefault"])
+            if (ProfileName == LocaleManager.Instance[LocaleKeys.ControllerSettingsProfileDefault])
             {
-                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogProfileDefaultProfileOverwriteErrorMessage"]);
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileDefaultProfileOverwriteErrorMessage]);
 
                 return;
             }
@@ -784,24 +784,24 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
                 else
                 {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogProfileInvalidProfileNameErrorMessage"]);
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileNameErrorMessage]);
                 }
             }
         }
 
         public async void RemoveProfile()
         {
-            if (Device == 0 || ProfileName == LocaleManager.Instance["ControllerSettingsProfileDefault"] || ProfilesList.IndexOf(ProfileName) == -1)
+            if (Device == 0 || ProfileName == LocaleManager.Instance[LocaleKeys.ControllerSettingsProfileDefault] || ProfilesList.IndexOf(ProfileName) == -1)
             {
                 return;
             }
 
             UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
-                LocaleManager.Instance["DialogProfileDeleteProfileTitle"],
-                LocaleManager.Instance["DialogProfileDeleteProfileMessage"],
-                LocaleManager.Instance["InputDialogYes"],
-                LocaleManager.Instance["InputDialogNo"],
-                LocaleManager.Instance["RyujinxConfirm"]);
+                LocaleManager.Instance[LocaleKeys.DialogProfileDeleteProfileTitle],
+                LocaleManager.Instance[LocaleKeys.DialogProfileDeleteProfileMessage],
+                LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
             if (result == UserResult.Yes)
             {

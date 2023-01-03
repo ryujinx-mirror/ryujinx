@@ -56,7 +56,7 @@ namespace Ryujinx.Ava.Input
                 return null;
             }
 
-            return new AvaloniaKeyboard(this, _keyboardIdentifers[0], LocaleManager.Instance["AllKeyboards"]);
+            return new AvaloniaKeyboard(this, _keyboardIdentifers[0], LocaleManager.Instance[LocaleKeys.AllKeyboards]);
         }
 
         protected virtual void Dispose(bool disposing)

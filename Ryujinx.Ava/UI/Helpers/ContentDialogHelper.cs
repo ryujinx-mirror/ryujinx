@@ -170,7 +170,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 secondaryButton,
                 closeButton,
                 iconSymbol,
-                primaryButton == LocaleManager.Instance["InputDialogYes"] ? UserResult.Yes : UserResult.Ok,
+                primaryButton == LocaleManager.Instance[LocaleKeys.InputDialogYes] ? UserResult.Yes : UserResult.Ok,
                 deferResetEvent,
                 doWhileDeferred,
                 DeferClose);
@@ -188,7 +188,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
                 var deferral = args.GetDeferral();
 
-                result = primaryButton == LocaleManager.Instance["InputDialogYes"] ? UserResult.Yes : UserResult.Ok;
+                result = primaryButton == LocaleManager.Instance[LocaleKeys.InputDialogYes] ? UserResult.Yes : UserResult.Ok;
 
                 sender.PrimaryButtonClick -= DeferClose;
 
@@ -281,7 +281,7 @@ namespace Ryujinx.Ava.UI.Helpers
             UserResult primaryButtonResult = UserResult.Yes)
         {
             return await ShowContentDialog(
-                string.IsNullOrWhiteSpace(title) ? LocaleManager.Instance["DialogConfirmationTitle"] : title,
+                string.IsNullOrWhiteSpace(title) ? LocaleManager.Instance[LocaleKeys.DialogConfirmationTitle] : title,
                 primaryText,
                 secondaryText,
                 acceptButtonText,
@@ -299,24 +299,24 @@ namespace Ryujinx.Ava.UI.Helpers
         internal static async Task CreateUpdaterInfoDialog(string primary, string secondaryText)
         {
             await ShowContentDialog(
-                LocaleManager.Instance["DialogUpdaterTitle"],
+                LocaleManager.Instance[LocaleKeys.DialogUpdaterTitle],
                 primary,
                 secondaryText,
                 "",
                 "",
-                LocaleManager.Instance["InputDialogOk"],
+                LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 (int)Symbol.Important);
         }
 
         internal static async Task CreateWarningDialog(string primary, string secondaryText)
         {
             await ShowContentDialog(
-                LocaleManager.Instance["DialogWarningTitle"],
+                LocaleManager.Instance[LocaleKeys.DialogWarningTitle],
                 primary,
                 secondaryText,
                 "",
                 "",
-                LocaleManager.Instance["InputDialogOk"],
+                LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 (int)Symbol.Important);
         }
 
@@ -325,12 +325,12 @@ namespace Ryujinx.Ava.UI.Helpers
             Logger.Error?.Print(LogClass.Application, errorMessage);
 
             await ShowContentDialog(
-                LocaleManager.Instance["DialogErrorTitle"],
-                LocaleManager.Instance["DialogErrorMessage"],
+                LocaleManager.Instance[LocaleKeys.DialogErrorTitle],
+                LocaleManager.Instance[LocaleKeys.DialogErrorMessage],
                 errorMessage,
                 secondaryErrorMessage,
                 "",
-                LocaleManager.Instance["InputDialogOk"],
+                LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 (int)Symbol.Dismiss);
         }
 
@@ -348,9 +348,9 @@ namespace Ryujinx.Ava.UI.Helpers
                     title,
                     primary,
                     secondaryText,
-                    LocaleManager.Instance["InputDialogYes"],
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes],
                     "",
-                    LocaleManager.Instance["InputDialogNo"],
+                    LocaleManager.Instance[LocaleKeys.InputDialogNo],
                     (int)Symbol.Help,
                     UserResult.Yes);
 
@@ -362,17 +362,17 @@ namespace Ryujinx.Ava.UI.Helpers
         internal static async Task<bool> CreateExitDialog()
         {
             return await CreateChoiceDialog(
-                LocaleManager.Instance["DialogExitTitle"],
-                LocaleManager.Instance["DialogExitMessage"],
-                LocaleManager.Instance["DialogExitSubMessage"]);
+                LocaleManager.Instance[LocaleKeys.DialogExitTitle],
+                LocaleManager.Instance[LocaleKeys.DialogExitMessage],
+                LocaleManager.Instance[LocaleKeys.DialogExitSubMessage]);
         }
 
         internal static async Task<bool> CreateStopEmulationDialog()
         {
             return await CreateChoiceDialog(
-                LocaleManager.Instance["DialogStopEmulationTitle"],
-                LocaleManager.Instance["DialogStopEmulationMessage"],
-                LocaleManager.Instance["DialogExitSubMessage"]);
+                LocaleManager.Instance[LocaleKeys.DialogStopEmulationTitle],
+                LocaleManager.Instance[LocaleKeys.DialogStopEmulationMessage],
+                LocaleManager.Instance[LocaleKeys.DialogExitSubMessage]);
         }
 
         internal static async Task<string> CreateInputDialog(

@@ -39,9 +39,9 @@ namespace Ryujinx.Ava.UI.Controls
             ContentDialog contentDialog = new ContentDialog
             {
                 Title = title,
-                PrimaryButtonText = LocaleManager.Instance["InputDialogOk"],
+                PrimaryButtonText = LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 SecondaryButtonText = "",
-                CloseButtonText = LocaleManager.Instance["InputDialogCancel"],
+                CloseButtonText = LocaleManager.Instance[LocaleKeys.InputDialogCancel],
                 Content = content,
                 PrimaryButtonCommand = MiniCommand.Create(() =>
                 {

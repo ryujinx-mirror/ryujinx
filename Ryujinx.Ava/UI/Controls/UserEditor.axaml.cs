@@ -65,14 +65,14 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (string.IsNullOrWhiteSpace(TempProfile.Name))
             {
-                DataValidationErrors.SetError(NameBox, new DataValidationException(LocaleManager.Instance["UserProfileEmptyNameError"]));
+                DataValidationErrors.SetError(NameBox, new DataValidationException(LocaleManager.Instance[LocaleKeys.UserProfileEmptyNameError]));
 
                 isInvalid = true;
             }
 
             if (TempProfile.Image == null)
             {
-                await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["UserProfileNoImageError"], "");
+                await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.UserProfileNoImageError], "");
 
                 isInvalid = true;
             }

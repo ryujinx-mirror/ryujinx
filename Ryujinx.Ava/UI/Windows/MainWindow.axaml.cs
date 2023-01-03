@@ -179,12 +179,12 @@ namespace Ryujinx.Ava.UI.Windows
         {
             if (ConfigurationState.Instance.Logger.EnableTrace.Value)
             {
-                string mainMessage = LocaleManager.Instance["DialogPerformanceCheckLoggingEnabledMessage"];
-                string secondaryMessage = LocaleManager.Instance["DialogPerformanceCheckLoggingEnabledConfirmMessage"];
+                string mainMessage = LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckLoggingEnabledMessage];
+                string secondaryMessage = LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckLoggingEnabledConfirmMessage];
 
                 UserResult result = await ContentDialogHelper.CreateConfirmationDialog(mainMessage, secondaryMessage,
-                    LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"],
-                    LocaleManager.Instance["RyujinxConfirm"]);
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes], LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                    LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
                 if (result != UserResult.Yes)
                 {
@@ -196,13 +196,13 @@ namespace Ryujinx.Ava.UI.Windows
 
             if (!string.IsNullOrWhiteSpace(ConfigurationState.Instance.Graphics.ShadersDumpPath.Value))
             {
-                string mainMessage = LocaleManager.Instance["DialogPerformanceCheckShaderDumpEnabledMessage"];
+                string mainMessage = LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckShaderDumpEnabledMessage];
                 string secondaryMessage =
-                    LocaleManager.Instance["DialogPerformanceCheckShaderDumpEnabledConfirmMessage"];
+                    LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckShaderDumpEnabledConfirmMessage];
 
                 UserResult result = await ContentDialogHelper.CreateConfirmationDialog(mainMessage, secondaryMessage,
-                    LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"],
-                    LocaleManager.Instance["RyujinxConfirm"]);
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes], LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                    LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
                 if (result != UserResult.Yes)
                 {
@@ -227,11 +227,11 @@ namespace Ryujinx.Ava.UI.Windows
             if (AppHost != null)
             {
                 await ContentDialogHelper.CreateInfoDialog(
-                    LocaleManager.Instance["DialogLoadAppGameAlreadyLoadedMessage"],
-                    LocaleManager.Instance["DialogLoadAppGameAlreadyLoadedSubMessage"],
-                    LocaleManager.Instance["InputDialogOk"],
+                    LocaleManager.Instance[LocaleKeys.DialogLoadAppGameAlreadyLoadedMessage],
+                    LocaleManager.Instance[LocaleKeys.DialogLoadAppGameAlreadyLoadedSubMessage],
+                    LocaleManager.Instance[LocaleKeys.InputDialogOk],
                     "",
-                    LocaleManager.Instance["RyujinxInfo"]);
+                    LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
 
                 return;
             }
@@ -274,7 +274,7 @@ namespace Ryujinx.Ava.UI.Windows
                 }
 
                 CanUpdate = false;
-                ViewModel.LoadHeading = string.IsNullOrWhiteSpace(titleName) ? string.Format(LocaleManager.Instance["LoadingHeading"], AppHost.Device.Application.TitleName) : titleName;
+                ViewModel.LoadHeading = string.IsNullOrWhiteSpace(titleName) ? string.Format(LocaleManager.Instance[LocaleKeys.LoadingHeading], AppHost.Device.Application.TitleName) : titleName;
                 ViewModel.TitleName   = string.IsNullOrWhiteSpace(titleName) ? AppHost.Device.Application.TitleName : titleName;
 
                 SwitchToGameControl(startFullscreen);
@@ -500,14 +500,14 @@ namespace Ryujinx.Ava.UI.Windows
 
             if (version != null)
             {
-                LocaleManager.Instance.UpdateDynamicValue("StatusBarSystemVersion",
+                LocaleManager.Instance.UpdateDynamicValue(LocaleKeys.StatusBarSystemVersion,
                     version.VersionString);
 
                 hasApplet = version.Major > 3;
             }
             else
             {
-                LocaleManager.Instance.UpdateDynamicValue("StatusBarSystemVersion", "0.0");
+                LocaleManager.Instance.UpdateDynamicValue(LocaleKeys.StatusBarSystemVersion, "0.0");
             }
 
             ViewModel.IsAppletMenuActive = hasApplet;

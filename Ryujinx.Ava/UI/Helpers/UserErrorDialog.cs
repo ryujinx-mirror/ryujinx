@@ -19,12 +19,12 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             return error switch
             {
-                UserError.NoKeys => LocaleManager.Instance["UserErrorNoKeys"],
-                UserError.NoFirmware => LocaleManager.Instance["UserErrorNoFirmware"],
-                UserError.FirmwareParsingFailed => LocaleManager.Instance["UserErrorFirmwareParsingFailed"],
-                UserError.ApplicationNotFound => LocaleManager.Instance["UserErrorApplicationNotFound"],
-                UserError.Unknown => LocaleManager.Instance["UserErrorUnknown"],
-                _ => LocaleManager.Instance["UserErrorUndefined"]
+                UserError.NoKeys => LocaleManager.Instance[LocaleKeys.UserErrorNoKeys],
+                UserError.NoFirmware => LocaleManager.Instance[LocaleKeys.UserErrorNoFirmware],
+                UserError.FirmwareParsingFailed => LocaleManager.Instance[LocaleKeys.UserErrorFirmwareParsingFailed],
+                UserError.ApplicationNotFound => LocaleManager.Instance[LocaleKeys.UserErrorApplicationNotFound],
+                UserError.Unknown => LocaleManager.Instance[LocaleKeys.UserErrorUnknown],
+                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefined]
             };
         }
 
@@ -32,12 +32,12 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             return error switch
             {
-                UserError.NoKeys => LocaleManager.Instance["UserErrorNoKeysDescription"],
-                UserError.NoFirmware => LocaleManager.Instance["UserErrorNoFirmwareDescription"],
-                UserError.FirmwareParsingFailed => LocaleManager.Instance["UserErrorFirmwareParsingFailedDescription"],
-                UserError.ApplicationNotFound => LocaleManager.Instance["UserErrorApplicationNotFoundDescription"],
-                UserError.Unknown => LocaleManager.Instance["UserErrorUnknownDescription"],
-                _ => LocaleManager.Instance["UserErrorUndefinedDescription"]
+                UserError.NoKeys => LocaleManager.Instance[LocaleKeys.UserErrorNoKeysDescription],
+                UserError.NoFirmware => LocaleManager.Instance[LocaleKeys.UserErrorNoFirmwareDescription],
+                UserError.FirmwareParsingFailed => LocaleManager.Instance[LocaleKeys.UserErrorFirmwareParsingFailedDescription],
+                UserError.ApplicationNotFound => LocaleManager.Instance[LocaleKeys.UserErrorApplicationNotFoundDescription],
+                UserError.Unknown => LocaleManager.Instance[LocaleKeys.UserErrorUnknownDescription],
+                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefinedDescription]
             };
         }
 
@@ -73,14 +73,14 @@ namespace Ryujinx.Ava.UI.Helpers
 
             bool isInSetupGuide = IsCoveredBySetupGuide(error);
 
-            string setupButtonLabel = isInSetupGuide ? LocaleManager.Instance["OpenSetupGuideMessage"] : "";
+            string setupButtonLabel = isInSetupGuide ? LocaleManager.Instance[LocaleKeys.OpenSetupGuideMessage] : "";
 
             var result = await ContentDialogHelper.CreateInfoDialog(
-                string.Format(LocaleManager.Instance["DialogUserErrorDialogMessage"], errorCode, GetErrorTitle(error)),
+                string.Format(LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogMessage], errorCode, GetErrorTitle(error)),
                 GetErrorDescription(error) + (isInSetupGuide
-                    ? LocaleManager.Instance["DialogUserErrorDialogInfoMessage"]
-                    : ""), setupButtonLabel, LocaleManager.Instance["InputDialogOk"],
-                string.Format(LocaleManager.Instance["DialogUserErrorDialogTitle"], errorCode));
+                    ? LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogInfoMessage]
+                    : ""), setupButtonLabel, LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                string.Format(LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogTitle], errorCode));
 
             if (result == UserResult.Ok)
             {

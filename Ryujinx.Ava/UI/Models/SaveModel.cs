@@ -107,10 +107,10 @@ namespace Ryujinx.Ava.UI.Models
 
         public async void Delete()
         {
-            var result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance["DeleteUserSave"],
-                LocaleManager.Instance["IrreversibleActionNote"],
-                LocaleManager.Instance["InputDialogYes"],
-                LocaleManager.Instance["InputDialogNo"], "");
+            var result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DeleteUserSave],
+                LocaleManager.Instance[LocaleKeys.IrreversibleActionNote],
+                LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                LocaleManager.Instance[LocaleKeys.InputDialogNo], "");
 
             if (result == UserResult.Yes)
             {

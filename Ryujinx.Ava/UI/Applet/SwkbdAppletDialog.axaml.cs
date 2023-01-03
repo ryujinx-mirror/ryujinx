@@ -86,7 +86,7 @@ namespace Ryujinx.Ava.UI.Controls
             contentDialog.PrimaryButtonText = args.SubmitText;
             contentDialog.IsPrimaryButtonEnabled = content._checkLength(content.Message.Length);
             contentDialog.SecondaryButtonText = "";
-            contentDialog.CloseButtonText = LocaleManager.Instance["InputDialogCancel"];
+            contentDialog.CloseButtonText = LocaleManager.Instance[LocaleKeys.InputDialogCancel];
             contentDialog.Content = content;
 
             TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs> handler = (sender, eventArgs) =>
@@ -139,14 +139,14 @@ namespace Ryujinx.Ava.UI.Controls
             else if (_inputMin > 0 && _inputMax == int.MaxValue)
             {
                 Error.IsVisible = true;
-                Error.Text = string.Format(LocaleManager.Instance["SwkbdMinCharacters"], _inputMin);
+                Error.Text = string.Format(LocaleManager.Instance[LocaleKeys.SwkbdMinCharacters], _inputMin);
 
                 _checkLength = length => _inputMin <= length;
             }
             else
             {
                 Error.IsVisible = true;
-                Error.Text = string.Format(LocaleManager.Instance["SwkbdMinRangeCharacters"], _inputMin, _inputMax);
+                Error.Text = string.Format(LocaleManager.Instance[LocaleKeys.SwkbdMinRangeCharacters], _inputMin, _inputMax);
 
                 _checkLength = length => _inputMin <= length && length <= _inputMax;
             }

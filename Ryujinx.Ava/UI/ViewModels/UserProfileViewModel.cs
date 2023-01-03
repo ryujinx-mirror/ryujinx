@@ -149,10 +149,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             
             ContentDialog contentDialog = new ContentDialog
             {
-                Title = string.Format(LocaleManager.Instance["SaveManagerHeading"], userProfile.Name),
+                Title = string.Format(LocaleManager.Instance[LocaleKeys.SaveManagerHeading], userProfile.Name),
                 PrimaryButtonText = "",
                 SecondaryButtonText = "",
-                CloseButtonText = LocaleManager.Instance["UserProfilesClose"],
+                CloseButtonText = LocaleManager.Instance[LocaleKeys.UserProfilesClose],
                 Content = manager,
                 Padding = new Thickness(0)
             };
@@ -180,7 +180,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     {
                         Dispatcher.UIThread.Post(async () =>
                         {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogUserProfileDeletionWarningMessage"]);
+                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUserProfileDeletionWarningMessage]);
                         });
 
                         return;
@@ -190,8 +190,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
 
                 var result =
-                    await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance["DialogUserProfileDeletionConfirmMessage"], "",
-                        LocaleManager.Instance["InputDialogYes"], LocaleManager.Instance["InputDialogNo"], "");
+                    await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DialogUserProfileDeletionConfirmMessage], "",
+                        LocaleManager.Instance[LocaleKeys.InputDialogYes], LocaleManager.Instance[LocaleKeys.InputDialogNo], "");
 
                 if (result == UserResult.Yes)
                 {

@@ -55,7 +55,7 @@ namespace Ryujinx.Ava.UI.Controls
             OpenFileDialog dialog = new();
             dialog.Filters.Add(new FileDialogFilter
             {
-                Name = LocaleManager.Instance["AllSupportedFormats"],
+                Name = LocaleManager.Instance[LocaleKeys.AllSupportedFormats],
                 Extensions = { "jpg", "jpeg", "png", "bmp" }
             });
             dialog.Filters.Add(new FileDialogFilter { Name = "JPEG", Extensions = { "jpg", "jpeg" } });

@@ -24,14 +24,14 @@ namespace Ryujinx.Ava.UI.Windows
 
             InitializeComponent();
 
-            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["CheatWindowTitle"];
+            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance[LocaleKeys.CheatWindowTitle];
         }
 
         public CheatWindow(VirtualFileSystem virtualFileSystem, string titleId, string titleName)
         {
             LoadedCheats = new AvaloniaList<CheatsList>();
 
-            Heading = string.Format(LocaleManager.Instance["CheatWindowHeading"], titleName, titleId.ToUpper());
+            Heading = string.Format(LocaleManager.Instance[LocaleKeys.CheatWindowHeading], titleName, titleId.ToUpper());
 
             InitializeComponent();
 
@@ -86,7 +86,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             DataContext = this;
             
-            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance["CheatWindowTitle"];
+            Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance[LocaleKeys.CheatWindowTitle];
         }
 
         public void Save()

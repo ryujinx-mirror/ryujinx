@@ -11,8 +11,8 @@ namespace Ryujinx.Ava.UI.Models
         public string Path { get; }
 
         public string Label => IsNoUpdate
-            ? LocaleManager.Instance["NoUpdate"]
-            : string.Format(LocaleManager.Instance["TitleUpdateVersionLabel"], Control.DisplayVersionString.ToString(),
+            ? LocaleManager.Instance[LocaleKeys.NoUpdate]
+            : string.Format(LocaleManager.Instance[LocaleKeys.TitleUpdateVersionLabel], Control.DisplayVersionString.ToString(),
                 Path);
 
         public TitleUpdateModel(ApplicationControlProperty control, string path, bool isNoUpdate = false)

@@ -84,7 +84,7 @@ namespace Ryujinx.Modules
                 Logger.Error?.Print(LogClass.Application, "Failed to convert the current Ryujinx version!");
                 Dispatcher.UIThread.Post(async () =>
                 {
-                    await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["DialogUpdaterConvertFailedMessage"], LocaleManager.Instance["DialogUpdaterCancelUpdateMessage"]);
+                    await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterConvertFailedMessage], LocaleManager.Instance[LocaleKeys.DialogUpdaterCancelUpdateMessage]);
                 });
 
                 return;
@@ -119,7 +119,7 @@ namespace Ryujinx.Modules
                                 {
                                     Dispatcher.UIThread.Post(async () =>
                                     {
-                                        await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance["DialogUpdaterAlreadyOnLatestVersionMessage"], "");
+                                        await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterAlreadyOnLatestVersionMessage], "");
                                     });
                                 }
 
@@ -137,7 +137,7 @@ namespace Ryujinx.Modules
                         {
                             Dispatcher.UIThread.Post(async () =>
                             {
-                                await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance["DialogUpdaterAlreadyOnLatestVersionMessage"], "");
+                                await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterAlreadyOnLatestVersionMessage], "");
                             });
                         }
 
@@ -150,7 +150,7 @@ namespace Ryujinx.Modules
                 Logger.Error?.Print(LogClass.Application, exception.Message);
                 Dispatcher.UIThread.Post(async () =>
                 {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogUpdaterFailedToGetVersionMessage"]);
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterFailedToGetVersionMessage]);
                 });
 
                 return;
@@ -165,7 +165,7 @@ namespace Ryujinx.Modules
                 Logger.Error?.Print(LogClass.Application, "Failed to convert the received Ryujinx version from Github!");
                 Dispatcher.UIThread.Post(async () =>
                 {
-                    await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["DialogUpdaterConvertFailedGithubMessage"], LocaleManager.Instance["DialogUpdaterCancelUpdateMessage"]);
+                    await ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterConvertFailedGithubMessage], LocaleManager.Instance[LocaleKeys.DialogUpdaterCancelUpdateMessage]);
                 });
 
                 return;
@@ -177,7 +177,7 @@ namespace Ryujinx.Modules
                 {
                     Dispatcher.UIThread.Post(async () =>
                     {
-                        await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance["DialogUpdaterAlreadyOnLatestVersionMessage"], "");
+                        await ContentDialogHelper.CreateUpdaterInfoDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterAlreadyOnLatestVersionMessage], "");
                     });
                 }
 
@@ -210,8 +210,8 @@ namespace Ryujinx.Modules
             Dispatcher.UIThread.Post(async () =>
             {
                 // Show a message asking the user if they want to update
-                var shouldUpdate = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance["RyujinxUpdater"],
-                    LocaleManager.Instance["RyujinxUpdaterMessage"],
+                var shouldUpdate = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance[LocaleKeys.RyujinxUpdater],
+                    LocaleManager.Instance[LocaleKeys.RyujinxUpdaterMessage],
                     $"{Program.Version} -> {newVersion}");
 
                 if (shouldUpdate)
@@ -247,8 +247,8 @@ namespace Ryujinx.Modules
 
             var taskDialog = new TaskDialog()
             {
-                Header = LocaleManager.Instance["RyujinxUpdater"],
-                SubHeader = LocaleManager.Instance["UpdaterDownloading"],
+                Header = LocaleManager.Instance[LocaleKeys.RyujinxUpdater],
+                SubHeader = LocaleManager.Instance[LocaleKeys.UpdaterDownloading],
                 IconSource = new SymbolIconSource { Symbol = Symbol.Download },
                 Buttons = { },
                 ShowProgressBar = true
@@ -272,9 +272,9 @@ namespace Ryujinx.Modules
 
             if (UpdateSuccessful)
             {
-                var shouldRestart = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance["RyujinxUpdater"],
-                    LocaleManager.Instance["DialogUpdaterCompleteMessage"],
-                    LocaleManager.Instance["DialogUpdaterRestartMessage"]);
+                var shouldRestart = await ContentDialogHelper.CreateChoiceDialog(LocaleManager.Instance[LocaleKeys.RyujinxUpdater],
+                    LocaleManager.Instance[LocaleKeys.DialogUpdaterCompleteMessage],
+                    LocaleManager.Instance[LocaleKeys.DialogUpdaterRestartMessage]);
 
                 if (shouldRestart)
                 {
@@ -478,7 +478,7 @@ namespace Ryujinx.Modules
         private static async void InstallUpdate(TaskDialog taskDialog, string updateFile)
         {
             // Extract Update
-            taskDialog.SubHeader = LocaleManager.Instance["UpdaterExtracting"];
+            taskDialog.SubHeader = LocaleManager.Instance[LocaleKeys.UpdaterExtracting];
             taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
 
             if (OperatingSystem.IsLinux())
@@ -556,7 +556,7 @@ namespace Ryujinx.Modules
 
             List<string> allFiles = EnumerateFilesToDelete().ToList();
 
-            taskDialog.SubHeader = LocaleManager.Instance["UpdaterRenaming"];
+            taskDialog.SubHeader = LocaleManager.Instance[LocaleKeys.UpdaterRenaming];
             taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
 
             // Replace old files
@@ -577,13 +577,13 @@ namespace Ryujinx.Modules
                     }
                     catch
                     {
-                        Logger.Warning?.Print(LogClass.Application, string.Format(LocaleManager.Instance["UpdaterRenameFailed"], file));
+                        Logger.Warning?.Print(LogClass.Application, string.Format(LocaleManager.Instance[LocaleKeys.UpdaterRenameFailed], file));
                     }
                 }
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    taskDialog.SubHeader = LocaleManager.Instance["UpdaterAddingFiles"];
+                    taskDialog.SubHeader = LocaleManager.Instance[LocaleKeys.UpdaterAddingFiles];
                     taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
                 });
 
@@ -607,8 +607,8 @@ namespace Ryujinx.Modules
             {
                 if (showWarnings)
                 {
-                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["DialogUpdaterArchNotSupportedMessage"],
-                        LocaleManager.Instance["DialogUpdaterArchNotSupportedSubMessage"]);
+                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterArchNotSupportedMessage],
+                        LocaleManager.Instance[LocaleKeys.DialogUpdaterArchNotSupportedSubMessage]);
                 }
 
                 return false;
@@ -618,8 +618,8 @@ namespace Ryujinx.Modules
             {
                 if (showWarnings)
                 {
-                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["DialogUpdaterNoInternetMessage"],
-                        LocaleManager.Instance["DialogUpdaterNoInternetSubMessage"]);
+                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterNoInternetMessage],
+                        LocaleManager.Instance[LocaleKeys.DialogUpdaterNoInternetSubMessage]);
                 }
 
                 return false;
@@ -629,8 +629,8 @@ namespace Ryujinx.Modules
             {
                 if (showWarnings)
                 {
-                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["DialogUpdaterDirtyBuildMessage"],
-                        LocaleManager.Instance["DialogUpdaterDirtyBuildSubMessage"]);
+                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.DialogUpdaterDirtyBuildMessage],
+                        LocaleManager.Instance[LocaleKeys.DialogUpdaterDirtyBuildSubMessage]);
                 }
 
                 return false;
@@ -642,11 +642,11 @@ namespace Ryujinx.Modules
             {
                 if (ReleaseInformations.IsFlatHubBuild())
                 {
-                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["UpdaterDisabledWarningTitle"], LocaleManager.Instance["DialogUpdaterFlatpakNotSupportedMessage"]);
+                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.UpdaterDisabledWarningTitle], LocaleManager.Instance[LocaleKeys.DialogUpdaterFlatpakNotSupportedMessage]);
                 }
                 else
                 {
-                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance["UpdaterDisabledWarningTitle"], LocaleManager.Instance["DialogUpdaterDirtyBuildSubMessage"]);
+                    ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.UpdaterDisabledWarningTitle], LocaleManager.Instance[LocaleKeys.DialogUpdaterDirtyBuildSubMessage]);
                 }
             }
 

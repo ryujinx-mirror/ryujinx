@@ -344,10 +344,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                     if (usageString.Length == 0)
                     {
-                        usageString = LocaleManager.Instance["Unknown"] + ".";
+                        usageString = LocaleManager.Instance[LocaleKeys.Unknown] + ".";
                     }
 
-                    Usage = $"{LocaleManager.Instance["Usage"]} {(writable ? $" ({LocaleManager.Instance["Writable"]})" : "")} : {usageString}";
+                    Usage = $"{LocaleManager.Instance[LocaleKeys.Usage]} {(writable ? $" ({LocaleManager.Instance[LocaleKeys.Writable]})" : "")} : {usageString}";
                 }
             }
 
@@ -392,11 +392,11 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return amiiboJsonString;
             }
 
-            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance["DialogAmiiboApiTitle"],
-                LocaleManager.Instance["DialogAmiiboApiFailFetchMessage"],
-                LocaleManager.Instance["InputDialogOk"],
+            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogAmiiboApiTitle],
+                LocaleManager.Instance[LocaleKeys.DialogAmiiboApiFailFetchMessage],
+                LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 "",
-                LocaleManager.Instance["RyujinxInfo"]);
+                LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
 
             Close();
 
@@ -442,11 +442,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private async void ShowInfoDialog()
         {
-            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance["DialogAmiiboApiTitle"],
-                LocaleManager.Instance["DialogAmiiboApiConnectErrorMessage"],
-                LocaleManager.Instance["InputDialogOk"],
+            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogAmiiboApiTitle],
+                LocaleManager.Instance[LocaleKeys.DialogAmiiboApiConnectErrorMessage],
+                LocaleManager.Instance[LocaleKeys.InputDialogOk],
                 "",
-                LocaleManager.Instance["RyujinxInfo"]);
+                LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Ryujinx.Ava.UI.Applet
             }
             else
             {
-                AddButton(LocaleManager.Instance["InputDialogOk"], 0);
+                AddButton(LocaleManager.Instance[LocaleKeys.InputDialogOk], 0);
             }
         }
 

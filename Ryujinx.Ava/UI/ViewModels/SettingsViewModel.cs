@@ -73,11 +73,11 @@ namespace Ryujinx.Ava.UI.ViewModels
                     {
                         Dispatcher.UIThread.Post(async () =>
                         {
-                            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance["DialogSettingsBackendThreadingWarningMessage"],
+                            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningMessage],
                                                                        "",
                                                                        "",
-                                                                       LocaleManager.Instance["InputDialogOk"],
-                                                                       LocaleManager.Instance["DialogSettingsBackendThreadingWarningTitle"]);
+                                                                       LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                                                                       LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningTitle]);
                         });
                     }
                 }
@@ -306,11 +306,11 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             var dialog = new OpenFileDialog()
             {
-                Title = LocaleManager.Instance["SettingsSelectThemeFileDialogTitle"],
+                Title = LocaleManager.Instance[LocaleKeys.SettingsSelectThemeFileDialogTitle],
                 AllowMultiple = false
             };
 
-            dialog.Filters.Add(new FileDialogFilter() { Extensions = { "xaml" }, Name = LocaleManager.Instance["SettingsXamlThemeFile"] });
+            dialog.Filters.Add(new FileDialogFilter() { Extensions = { "xaml" }, Name = LocaleManager.Instance[LocaleKeys.SettingsXamlThemeFile] });
 
             var file = await dialog.ShowAsync(_owner);
 

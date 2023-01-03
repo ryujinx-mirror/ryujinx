@@ -62,7 +62,7 @@
                         <Label 
                             VerticalAlignment="Center" 
                             HorizontalContentAlignment="Left"
-                            Content="{locale:Locale Descending}" />
+                            Content="{locale:Locale OrderDescending}" />
                     </ComboBoxItem>
                 </ComboBox>
             </StackPanel>

@@ -43,7 +43,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             InitializeComponent();
 
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {_titleName} ({_titleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.DlcWindowTitle]} - {_titleName} ({_titleId:X16})";
         }
 
         public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
@@ -73,7 +73,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             DlcDataGrid.SelectionChanged += DlcDataGrid_SelectionChanged;
 
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["DlcWindowTitle"]} - {_titleName} ({_titleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.DlcWindowTitle]} - {_titleName} ({_titleId:X16})";
 
             LoadDownloadableContents();
             PrintHeading();
@@ -86,7 +86,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void PrintHeading()
         {
-            Heading.Text = string.Format(LocaleManager.Instance["DlcWindowHeading"], _downloadableContents.Count, _titleName, _titleId.ToString("X16"));
+            Heading.Text = string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowHeading], _downloadableContents.Count, _titleName, _titleId.ToString("X16"));
         }
 
         private void LoadDownloadableContents()
@@ -133,7 +133,7 @@ namespace Ryujinx.Ava.UI.Windows
             {
                 Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, containerPath));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[LocaleKeys.DialogDlcLoadNcaErrorMessage], ex.Message, containerPath));
                 });
             }
 
@@ -181,7 +181,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             if (!containsDownloadableContent)
             {
-                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogDlcNoDlcErrorMessage"]);
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogDlcNoDlcErrorMessage]);
             }
         }
 
@@ -241,7 +241,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             OpenFileDialog dialog = new OpenFileDialog()
             { 
-                Title         = LocaleManager.Instance["SelectDlcDialogTitle"],
+                Title         = LocaleManager.Instance[LocaleKeys.SelectDlcDialogTitle],
                 AllowMultiple = true
             };
 

@@ -43,7 +43,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             InitializeComponent();
             
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["UpdateWindowTitle"]} - {_titleName} ({_titleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.UpdateWindowTitle]} - {_titleName} ({_titleId:X16})";
         }
 
         public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
@@ -73,7 +73,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             InitializeComponent();
 
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance["UpdateWindowTitle"]} - {_titleName} ({_titleId:X16})";
+            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.UpdateWindowTitle]} - {_titleName} ({_titleId:X16})";
 
             LoadUpdates();
             PrintHeading();
@@ -81,7 +81,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void PrintHeading()
         {
-            Heading.Text = string.Format(LocaleManager.Instance["GameUpdateWindowHeading"], _titleUpdates.Count, _titleName, _titleId.ToString("X16"));
+            Heading.Text = string.Format(LocaleManager.Instance[LocaleKeys.GameUpdateWindowHeading], _titleUpdates.Count, _titleName, _titleId.ToString("X16"));
         }
 
         private void LoadUpdates()
@@ -148,7 +148,7 @@ namespace Ryujinx.Ava.UI.Windows
                     {
                         Dispatcher.UIThread.Post(async () =>
                         {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance["DialogUpdateAddUpdateErrorMessage"]);
+                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUpdateAddUpdateErrorMessage]);
                         });
                     }
                 }
@@ -156,7 +156,7 @@ namespace Ryujinx.Ava.UI.Windows
                 {
                     Dispatcher.UIThread.Post(async () =>
                     {
-                        await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance["DialogDlcLoadNcaErrorMessage"], ex.Message, path));
+                        await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[LocaleKeys.DialogDlcLoadNcaErrorMessage], ex.Message, path));
                     });
                 }
             }
@@ -193,7 +193,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             OpenFileDialog dialog = new()
             {
-                Title         = LocaleManager.Instance["SelectUpdateDialogTitle"],
+                Title         = LocaleManager.Instance[LocaleKeys.SelectUpdateDialogTitle],
                 AllowMultiple = true
             };
 
