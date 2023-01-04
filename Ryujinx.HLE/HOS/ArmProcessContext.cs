@@ -6,7 +6,17 @@ using Ryujinx.Memory;
 
 namespace Ryujinx.HLE.HOS
 {
-    class ArmProcessContext<T> : IProcessContext where T : class, IVirtualMemoryManagerTracked, IMemoryManager
+    interface IArmProcessContext : IProcessContext
+    {
+        IDiskCacheLoadState Initialize(
+            string titleIdText,
+            string displayVersion,
+            bool diskCacheEnabled,
+            ulong codeAddress,
+            ulong codeSize);
+    }
+
+    class ArmProcessContext<T> : IArmProcessContext where T : class, IVirtualMemoryManagerTracked, IMemoryManager
     {
         private readonly ulong _pid;
         private readonly GpuContext _gpuContext;
@@ -38,6 +48,17 @@ namespace Ryujinx.HLE.HOS
         public void Execute(IExecutionContext context, ulong codeAddress)
         {
             _cpuContext.Execute(context, codeAddress);
+        }
+
+        public IDiskCacheLoadState Initialize(
+            string titleIdText,
+            string displayVersion,
+            bool diskCacheEnabled,
+            ulong codeAddress,
+            ulong codeSize)
+        {
+            _cpuContext.PrepareCodeRange(codeAddress, codeSize);
+            return _cpuContext.LoadDiskCache(titleIdText, displayVersion, diskCacheEnabled);
         }
 
         public void InvalidateCacheRegion(ulong address, ulong size)

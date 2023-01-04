@@ -1,9 +1,9 @@
-using ARMeilleure.Translation.PTC;
 using LibHac.Loader;
 using LibHac.Ncm;
 using LibHac.Util;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -21,13 +21,37 @@ namespace Ryujinx.HLE.HOS
     {
         public string Name;
         public ulong ProgramId;
-        public bool AllowCodeMemoryForJit;
+        public readonly string TitleIdText;
+        public readonly string DisplayVersion;
+        public readonly bool DiskCacheEnabled;
+        public readonly bool AllowCodeMemoryForJit;
 
-        public ProgramInfo(in Npdm npdm, bool allowCodeMemoryForJit)
+        public ProgramInfo(in Npdm npdm, string displayVersion, bool diskCacheEnabled, bool allowCodeMemoryForJit)
         {
+            ulong programId = npdm.Aci.Value.ProgramId.Value;
+
             Name = StringUtils.Utf8ZToString(npdm.Meta.Value.ProgramName);
-            ProgramId = npdm.Aci.Value.ProgramId.Value;
+            ProgramId = programId;
+            TitleIdText = programId.ToString("x16");
+            DisplayVersion = displayVersion;
+            DiskCacheEnabled = diskCacheEnabled;
             AllowCodeMemoryForJit = allowCodeMemoryForJit;
+        }
+    }
+
+    struct ProgramLoadResult
+    {
+        public static ProgramLoadResult Failed => new ProgramLoadResult(false, null, null);
+
+        public readonly bool Success;
+        public readonly ProcessTamperInfo TamperInfo;
+        public readonly IDiskCacheLoadState DiskCacheLoadState;
+
+        public ProgramLoadResult(bool success, ProcessTamperInfo tamperInfo, IDiskCacheLoadState diskCacheLoadState)
+        {
+            Success = success;
+            TamperInfo = tamperInfo;
+            DiskCacheLoadState = diskCacheLoadState;
         }
     }
 
@@ -102,7 +126,14 @@ namespace Ryujinx.HLE.HOS
 
             KProcess process = new KProcess(context);
 
-            var processContextFactory = new ArmProcessContextFactory(context.Device.System.CpuEngine, context.Device.Gpu);
+            var processContextFactory = new ArmProcessContextFactory(
+                context.Device.System.CpuEngine,
+                context.Device.Gpu,
+                string.Empty,
+                string.Empty,
+                false,
+                codeAddress,
+                codeSize);
 
             result = process.InitializeKip(
                 creationInfo,
@@ -144,9 +175,8 @@ namespace Ryujinx.HLE.HOS
             return true;
         }
 
-        public static bool LoadNsos(
+        public static ProgramLoadResult LoadNsos(
             KernelContext context,
-            out ProcessTamperInfo tamperInfo,
             MetaLoader metaData,
             ProgramInfo programInfo,
             byte[] arguments = null,
@@ -156,8 +186,7 @@ namespace Ryujinx.HLE.HOS
 
             if (rc.IsFailure())
             {
-                tamperInfo = null;
-                return false;
+                return ProgramLoadResult.Failed;
             }
 
             ref readonly var meta = ref npdm.Meta.Value;
@@ -212,9 +241,6 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            PtcProfiler.StaticCodeStart = codeStart;
-            PtcProfiler.StaticCodeSize  = (ulong)codeSize;
-
             int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
 
             int personalMmHeapPagesCount = (int)(meta.SystemResourceSize / KPageTableBase.PageSize);
@@ -263,9 +289,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed setting resource limit values.");
 
-                tamperInfo = null;
-
-                return false;
+                return ProgramLoadResult.Failed;
             }
 
             KProcess process = new KProcess(context, programInfo.AllowCodeMemoryForJit);
@@ -276,12 +300,17 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
 
-                tamperInfo = null;
-
-                return false;
+                return ProgramLoadResult.Failed;
             }
 
-            var processContextFactory = new ArmProcessContextFactory(context.Device.System.CpuEngine, context.Device.Gpu);
+            var processContextFactory = new ArmProcessContextFactory(
+                context.Device.System.CpuEngine,
+                context.Device.Gpu,
+                programInfo.TitleIdText,
+                programInfo.DisplayVersion,
+                programInfo.DiskCacheEnabled,
+                codeStart,
+                codeSize);
 
             result = process.Initialize(
                 creationInfo,
@@ -294,9 +323,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
-                tamperInfo = null;
-
-                return false;
+                return ProgramLoadResult.Failed;
             }
 
             for (int index = 0; index < executables.Length; index++)
@@ -309,9 +336,7 @@ namespace Ryujinx.HLE.HOS
                 {
                     Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
-                    tamperInfo = null;
-
-                    return false;
+                    return ProgramLoadResult.Failed;
                 }
             }
 
@@ -323,9 +348,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
 
-                tamperInfo = null;
-
-                return false;
+                return ProgramLoadResult.Failed;
             }
 
             context.Processes.TryAdd(process.Pid, process);
@@ -333,10 +356,15 @@ namespace Ryujinx.HLE.HOS
             // Keep the build ids because the tamper machine uses them to know which process to associate a
             // tamper to and also keep the starting address of each executable inside a process because some
             // memory modifications are relative to this address.
-            tamperInfo = new ProcessTamperInfo(process, buildIds, nsoBase, process.MemoryManager.HeapRegionStart,
-                process.MemoryManager.AliasRegionStart, process.MemoryManager.CodeRegionStart);
+            ProcessTamperInfo tamperInfo = new ProcessTamperInfo(
+                process,
+                buildIds,
+                nsoBase,
+                process.MemoryManager.HeapRegionStart,
+                process.MemoryManager.AliasRegionStart,
+                process.MemoryManager.CodeRegionStart);
 
-            return true;
+            return new ProgramLoadResult(true, tamperInfo, processContextFactory.DiskCacheLoadState);
         }
 
         private static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)

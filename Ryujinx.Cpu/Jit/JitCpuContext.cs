@@ -37,5 +37,17 @@ namespace Ryujinx.Cpu.Jit
         {
             _translator.InvalidateJitCacheRegion(address, size);
         }
+
+        /// <inheritdoc/>
+        public IDiskCacheLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled)
+        {
+            return new JitDiskCacheLoadState(_translator.LoadDiskCache(titleIdText, displayVersion, enabled));
+        }
+
+        /// <inheritdoc/>
+        public void PrepareCodeRange(ulong address, ulong size)
+        {
+            _translator.PrepareCodeRange(address, size);
+        }
     }
 }

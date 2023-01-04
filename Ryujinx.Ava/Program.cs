@@ -1,4 +1,3 @@
-using ARMeilleure.Translation.PTC;
 using Avalonia;
 using Avalonia.Threading;
 using Ryujinx.Ava.UI.Windows;
@@ -197,9 +196,6 @@ namespace Ryujinx.Ava
 
         private static void ProcessUnhandledException(Exception ex, bool isTerminating)
         {
-            Ptc.Close();
-            PtcProfiler.Stop();
-
             string message = $"Unhandled exception caught: {ex}";
 
             Logger.Error?.PrintMsg(LogClass.Application, message);
@@ -218,9 +214,6 @@ namespace Ryujinx.Ava
         public static void Exit()
         {
             DiscordIntegrationModule.Exit();
-
-            Ptc.Dispose();
-            PtcProfiler.Dispose();
 
             Logger.Shutdown();
         }

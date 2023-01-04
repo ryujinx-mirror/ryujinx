@@ -1,5 +1,4 @@
 ﻿using ARMeilleure.Translation;
-using ARMeilleure.Translation.PTC;
 using Gtk;
 using LibHac.Common;
 using LibHac.Common.Keys;
@@ -16,6 +15,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.Cpu;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.OpenGL;
@@ -46,7 +46,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using GUI = Gtk.Builder.ObjectAttribute;
-using PtcLoadingState = ARMeilleure.Translation.PTC.PtcLoadingState;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 
 namespace Ryujinx.Ui
@@ -588,8 +587,11 @@ namespace Ryujinx.Ui
 
         private void SetupProgressUiHandlers()
         {
-            Ptc.PtcStateChanged -= ProgressHandler;
-            Ptc.PtcStateChanged += ProgressHandler;
+            if (_emulationContext.Application.DiskCacheLoadState != null)
+            {
+                _emulationContext.Application.DiskCacheLoadState.StateChanged -= ProgressHandler;
+                _emulationContext.Application.DiskCacheLoadState.StateChanged += ProgressHandler;
+            }
 
             _emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
             _emulationContext.Gpu.ShaderCacheStateChanged += ProgressHandler;
@@ -602,8 +604,8 @@ namespace Ryujinx.Ui
 
             switch (state)
             {
-                case PtcLoadingState ptcState:
-                    visible = ptcState != PtcLoadingState.Loaded;
+                case LoadState ptcState:
+                    visible = ptcState != LoadState.Loaded;
                     label = $"PTC : {current}/{total}";
                     break;
                 case ShaderCacheLoadingState shaderCacheState:
@@ -704,8 +706,6 @@ namespace Ryujinx.Ui
                 InitializeSwitchInstance();
 
                 UpdateGraphicsConfig();
-
-                SetupProgressUiHandlers();
 
                 SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
 
@@ -841,6 +841,8 @@ namespace Ryujinx.Ui
                     return;
                 }
 
+                SetupProgressUiHandlers();
+
                 _currentEmulatedGamePath = path;
 
                 _deviceExitStatus.Reset();
@@ -966,9 +968,6 @@ namespace Ryujinx.Ui
             RendererWidget.WaitEvent.WaitOne();
 
             RendererWidget.Start();
-
-            Ptc.Close();
-            PtcProfiler.Stop();
 
             _emulationContext.Dispose();
             _deviceExitStatus.Set();

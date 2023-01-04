@@ -35,5 +35,27 @@ namespace Ryujinx.Cpu
         /// <param name="address">Address of the region to be invalidated</param>
         /// <param name="size">Size of the region to be invalidated</param>
         void InvalidateCacheRegion(ulong address, ulong size);
+
+        /// <summary>
+        /// Loads cached code from disk for a given application.
+        /// </summary>
+        /// <remarks>
+        /// If the execution engine is recompiling guest code, this can be used to load cached code from disk.
+        /// </remarks>
+        /// <param name="titleIdText">Title ID of the application in padded hex form</param>
+        /// <param name="displayVersion">Version of the application</param>
+        /// <param name="enabled">True if the cache should be loaded from disk if it exists, false otherwise</param>
+        /// <returns>Disk cache load progress reporter and manager</returns>
+        IDiskCacheLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled);
+
+        /// <summary>
+        /// Indicates that code has been loaded into guest memory, and that it might be executed in the future.
+        /// </summary>
+        /// <remarks>
+        /// Some execution engines might use this information to cache recompiled code on disk or to ensure it can be executed.
+        /// </remarks>
+        /// <param name="address">CPU virtual address where the code starts</param>
+        /// <param name="size">Size of the code range in bytes</param>
+        void PrepareCodeRange(ulong address, ulong size);
     }
 }

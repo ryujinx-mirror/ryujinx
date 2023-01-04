@@ -1,5 +1,4 @@
 ﻿using ARMeilleure.Translation;
-using ARMeilleure.Translation.PTC;
 using Gdk;
 using Gtk;
 using Ryujinx.Common;
@@ -519,7 +518,7 @@ namespace Ryujinx.Ui
             _gpuCancellationTokenSource.Cancel();
 
             _isStopped = true;
-            
+
             if (_isActive)
             {
                 _isActive = false;
@@ -585,7 +584,7 @@ namespace Ryujinx.Ui
                     {
                         if (!ParentWindow.State.HasFlag(WindowState.Fullscreen))
                         {
-                            Ptc.Continue();
+                            Device.Application.DiskCacheLoadState?.Cancel();
                         }
                     }
                 });

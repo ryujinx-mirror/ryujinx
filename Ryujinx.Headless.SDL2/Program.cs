@@ -1,5 +1,4 @@
 ﻿using ARMeilleure.Translation;
-using ARMeilleure.Translation.PTC;
 using CommandLine;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.SDL2;
@@ -12,6 +11,7 @@ using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
 using Ryujinx.Common.Utilities;
+using Ryujinx.Cpu;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.Gpu;
@@ -447,8 +447,11 @@ namespace Ryujinx.Headless.SDL2
 
         private static void SetupProgressHandler()
         {
-            Ptc.PtcStateChanged -= ProgressHandler;
-            Ptc.PtcStateChanged += ProgressHandler;
+            if (_emulationContext.Application.DiskCacheLoadState != null)
+            {
+                _emulationContext.Application.DiskCacheLoadState.StateChanged -= ProgressHandler;
+                _emulationContext.Application.DiskCacheLoadState.StateChanged += ProgressHandler;
+            }
 
             _emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
             _emulationContext.Gpu.ShaderCacheStateChanged += ProgressHandler;
@@ -460,7 +463,7 @@ namespace Ryujinx.Headless.SDL2
 
             switch (state)
             {
-                case PtcLoadingState ptcState:
+                case LoadState ptcState:
                     label = $"PTC : {current}/{total}";
                     break;
                 case ShaderCacheState shaderCacheState:
@@ -562,9 +565,6 @@ namespace Ryujinx.Headless.SDL2
             _window.Initialize(_emulationContext, _inputConfiguration, _enableKeyboard, _enableMouse);
 
             _window.Execute();
-
-            Ptc.Close();
-            PtcProfiler.Stop();
 
             _emulationContext.Dispose();
             _window.Dispose();

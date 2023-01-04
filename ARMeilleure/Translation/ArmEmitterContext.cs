@@ -6,7 +6,6 @@ using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Memory;
 using ARMeilleure.State;
-using ARMeilleure.Translation.PTC;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -44,14 +43,13 @@ namespace ARMeilleure.Translation
 
         public IMemoryManager Memory { get; }
 
-        public bool HasPtc { get; }
-
         public EntryTable<uint> CountTable { get; }
         public AddressTable<ulong> FunctionTable { get; }
         public TranslatorStubs Stubs { get; }
 
         public ulong EntryAddress { get; }
         public bool HighCq { get; }
+        public bool HasPtc { get; }
         public Aarch32Mode Mode { get; }
 
         private int _ifThenBlockStateIndex = 0;
@@ -66,15 +64,16 @@ namespace ARMeilleure.Translation
             TranslatorStubs stubs,
             ulong entryAddress,
             bool highCq,
+            bool hasPtc,
             Aarch32Mode mode)
         {
-            HasPtc = Ptc.State != PtcState.Disabled;
             Memory = memory;
             CountTable = countTable;
             FunctionTable = funcTable;
             Stubs = stubs;
             EntryAddress = entryAddress;
             HighCq = highCq;
+            HasPtc = hasPtc;
             Mode = mode;
 
             _labels = new Dictionary<ulong, Operand>();

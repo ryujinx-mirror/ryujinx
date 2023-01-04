@@ -16,7 +16,7 @@ using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
 {
-    public static class PtcProfiler
+    class PtcProfiler
     {
         private const string OuterHeaderMagicString = "Pohd\0\0\0\0";
 
@@ -26,27 +26,31 @@ namespace ARMeilleure.Translation.PTC
 
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
 
-        private static readonly System.Timers.Timer _timer;
+        private readonly Ptc _ptc;
 
-        private static readonly ulong _outerHeaderMagic;
+        private readonly System.Timers.Timer _timer;
 
-        private static readonly ManualResetEvent _waitEvent;
+        private readonly ulong _outerHeaderMagic;
 
-        private static readonly object _lock;
+        private readonly ManualResetEvent _waitEvent;
 
-        private static bool _disposed;
+        private readonly object _lock;
 
-        private static Hash128 _lastHash;
+        private bool _disposed;
 
-        internal static Dictionary<ulong, FuncProfile> ProfiledFuncs { get; private set; }
+        private Hash128 _lastHash;
 
-        internal static bool Enabled { get; private set; }
+        public Dictionary<ulong, FuncProfile> ProfiledFuncs { get; private set; }
 
-        public static ulong StaticCodeStart { internal get; set; }
-        public static ulong StaticCodeSize  { internal get; set; }
+        public bool Enabled { get; private set; }
 
-        static PtcProfiler()
+        public ulong StaticCodeStart { get; set; }
+        public ulong StaticCodeSize  { get; set; }
+
+        public PtcProfiler(Ptc ptc)
         {
+            _ptc = ptc;
+
             _timer = new System.Timers.Timer((double)SaveInterval * 1000d);
             _timer.Elapsed += PreSave;
 
@@ -63,7 +67,7 @@ namespace ARMeilleure.Translation.PTC
             Enabled = false;
         }
 
-        internal static void AddEntry(ulong address, ExecutionMode mode, bool highCq)
+        public void AddEntry(ulong address, ExecutionMode mode, bool highCq)
         {
             if (IsAddressInStaticCodeRange(address))
             {
@@ -76,7 +80,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void UpdateEntry(ulong address, ExecutionMode mode, bool highCq)
+        public void UpdateEntry(ulong address, ExecutionMode mode, bool highCq)
         {
             if (IsAddressInStaticCodeRange(address))
             {
@@ -91,12 +95,12 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static bool IsAddressInStaticCodeRange(ulong address)
+        public bool IsAddressInStaticCodeRange(ulong address)
         {
             return address >= StaticCodeStart && address < StaticCodeStart + StaticCodeSize;
         }
 
-        internal static ConcurrentQueue<(ulong address, FuncProfile funcProfile)> GetProfiledFuncsToTranslate(TranslatorCache<TranslatedFunction> funcs)
+        public ConcurrentQueue<(ulong address, FuncProfile funcProfile)> GetProfiledFuncsToTranslate(TranslatorCache<TranslatedFunction> funcs)
         {
             var profiledFuncsToTranslate = new ConcurrentQueue<(ulong address, FuncProfile funcProfile)>();
 
@@ -111,18 +115,18 @@ namespace ARMeilleure.Translation.PTC
             return profiledFuncsToTranslate;
         }
 
-        internal static void ClearEntries()
+        public void ClearEntries()
         {
             ProfiledFuncs.Clear();
             ProfiledFuncs.TrimExcess();
         }
 
-        internal static void PreLoad()
+        public void PreLoad()
         {
             _lastHash = default;
 
-            string fileNameActual = string.Concat(Ptc.CachePathActual, ".info");
-            string fileNameBackup = string.Concat(Ptc.CachePathBackup, ".info");
+            string fileNameActual = string.Concat(_ptc.CachePathActual, ".info");
+            string fileNameBackup = string.Concat(_ptc.CachePathBackup, ".info");
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
             FileInfo fileInfoBackup = new FileInfo(fileNameBackup);
@@ -143,7 +147,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static bool Load(string fileName, bool isBackup)
+        private bool Load(string fileName, bool isBackup)
         {
             using (FileStream compressedStream = new(fileName, FileMode.Open))
             using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
@@ -228,22 +232,22 @@ namespace ARMeilleure.Translation.PTC
             return DeserializeDictionary<ulong, FuncProfile>(stream, (stream) => DeserializeStructure<FuncProfile>(stream));
         }
 
-        private static ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
+        private ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
         {
             return new(memoryStream.GetBuffer(), (int)memoryStream.Position, (int)memoryStream.Length - (int)memoryStream.Position);
         }
 
-        private static void InvalidateCompressedStream(FileStream compressedStream)
+        private void InvalidateCompressedStream(FileStream compressedStream)
         {
             compressedStream.SetLength(0L);
         }
 
-        private static void PreSave(object source, System.Timers.ElapsedEventArgs e)
+        private void PreSave(object source, System.Timers.ElapsedEventArgs e)
         {
             _waitEvent.Reset();
 
-            string fileNameActual = string.Concat(Ptc.CachePathActual, ".info");
-            string fileNameBackup = string.Concat(Ptc.CachePathBackup, ".info");
+            string fileNameActual = string.Concat(_ptc.CachePathActual, ".info");
+            string fileNameBackup = string.Concat(_ptc.CachePathBackup, ".info");
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
 
@@ -257,7 +261,7 @@ namespace ARMeilleure.Translation.PTC
             _waitEvent.Set();
         }
 
-        private static void Save(string fileName)
+        private void Save(string fileName)
         {
             int profiledFuncsCount;
 
@@ -329,7 +333,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
+        private void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
         {
             SerializeDictionary(stream, profiledFuncs, (stream, structure) => SerializeStructure(stream, structure));
         }
@@ -361,7 +365,7 @@ namespace ARMeilleure.Translation.PTC
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 5*/)]
-        internal struct FuncProfile
+        public struct FuncProfile
         {
             public ExecutionMode Mode;
             public bool HighCq;
@@ -373,10 +377,10 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void Start()
+        public void Start()
         {
-            if (Ptc.State == PtcState.Enabled ||
-                Ptc.State == PtcState.Continuing)
+            if (_ptc.State == PtcState.Enabled ||
+                _ptc.State == PtcState.Continuing)
             {
                 Enabled = true;
 
@@ -384,7 +388,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        public static void Stop()
+        public void Stop()
         {
             Enabled = false;
 
@@ -394,12 +398,12 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void Wait()
+        public void Wait()
         {
             _waitEvent.WaitOne();
         }
 
-        public static void Dispose()
+        public void Dispose()
         {
             if (!_disposed)
             {

@@ -1,4 +1,3 @@
-using ARMeilleure.Translation.PTC;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -18,6 +17,7 @@ using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Cpu;
 using Ryujinx.HLE;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -107,9 +107,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             ApplicationLibrary.ApplicationCountUpdated += ApplicationLibrary_ApplicationCountUpdated;
             ApplicationLibrary.ApplicationAdded += ApplicationLibrary_ApplicationAdded;
-
-            Ptc.PtcStateChanged -= ProgressHandler;
-            Ptc.PtcStateChanged += ProgressHandler;
         }
 
         public string SearchText
@@ -436,7 +433,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged();
             }
         }
-        
+
         public bool ShowMenuAndStatusBar
         {
             get => _showMenuAndStatusBar;
@@ -745,8 +742,14 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public void HandleShaderProgress(Switch emulationContext)
+        public void SetUiProgressHandlers(Switch emulationContext)
         {
+            if (emulationContext.Application.DiskCacheLoadState != null)
+            {
+                emulationContext.Application.DiskCacheLoadState.StateChanged -= ProgressHandler;
+                emulationContext.Application.DiskCacheLoadState.StateChanged += ProgressHandler;
+            }
+
             emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
             emulationContext.Gpu.ShaderCacheStateChanged += ProgressHandler;
         }
@@ -1033,16 +1036,16 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 switch (state)
                 {
-                    case PtcLoadingState ptcState:
+                    case LoadState ptcState:
                         CacheLoadStatus = $"{current} / {total}";
                         switch (ptcState)
                         {
-                            case PtcLoadingState.Start:
-                            case PtcLoadingState.Loading:
+                            case LoadState.Unloaded:
+                            case LoadState.Loading:
                                 LoadHeading            = LocaleManager.Instance[LocaleKeys.CompilingPPTC];
                                 IsLoadingIndeterminate = false;
                                 break;
-                            case PtcLoadingState.Loaded:
+                            case LoadState.Loaded:
                                 LoadHeading            = string.Format(LocaleManager.Instance[LocaleKeys.LoadingHeading], TitleName);
                                 IsLoadingIndeterminate = true;
                                 CacheLoadStatus        = "";
@@ -1166,7 +1169,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 DirectoryInfo backupDir = new(Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "cpu", "1"));
 
                 // FIXME: Found a way to reproduce the bold effect on the title name (fork?).
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DialogWarning], 
+                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DialogWarning],
                                                                                        string.Format(LocaleManager.Instance[LocaleKeys.DialogPPTCDeletionMessage], selection.TitleName),
                                                                                        LocaleManager.Instance[LocaleKeys.InputDialogYes],
                                                                                        LocaleManager.Instance[LocaleKeys.InputDialogNo],

@@ -1,4 +1,3 @@
-using ARMeilleure.Translation.PTC;
 using Gtk;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
@@ -308,9 +307,6 @@ namespace Ryujinx
 
         private static void ProcessUnhandledException(Exception ex, bool isTerminating)
         {
-            Ptc.Close();
-            PtcProfiler.Stop();
-
             string message = $"Unhandled exception caught: {ex}";
 
             Logger.Error?.PrintMsg(LogClass.Application, message);
@@ -329,9 +325,6 @@ namespace Ryujinx
         public static void Exit()
         {
             DiscordIntegrationModule.Exit();
-
-            Ptc.Dispose();
-            PtcProfiler.Dispose();
 
             Logger.Shutdown();
         }

@@ -22,7 +22,7 @@ using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
 {
-    public static class Ptc
+    class Ptc : IPtcLoadState
     {
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
@@ -35,45 +35,49 @@ namespace ARMeilleure.Translation.PTC
         private const string TitleIdTextDefault = "0000000000000000";
         private const string DisplayVersionDefault = "0";
 
-        internal static readonly Symbol PageTableSymbol = new(SymbolType.Special, 1);
-        internal static readonly Symbol CountTableSymbol = new(SymbolType.Special, 2);
-        internal static readonly Symbol DispatchStubSymbol = new(SymbolType.Special, 3);
+        public static readonly Symbol PageTableSymbol = new(SymbolType.Special, 1);
+        public static readonly Symbol CountTableSymbol = new(SymbolType.Special, 2);
+        public static readonly Symbol DispatchStubSymbol = new(SymbolType.Special, 3);
 
         private const byte FillingByte = 0x00;
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
 
+        public PtcProfiler Profiler { get; }
+
         // Carriers.
-        private static MemoryStream _infosStream;
-        private static List<byte[]> _codesList;
-        private static MemoryStream _relocsStream;
-        private static MemoryStream _unwindInfosStream;
+        private MemoryStream _infosStream;
+        private List<byte[]> _codesList;
+        private MemoryStream _relocsStream;
+        private MemoryStream _unwindInfosStream;
 
-        private static readonly ulong _outerHeaderMagic;
-        private static readonly ulong _innerHeaderMagic;
+        private readonly ulong _outerHeaderMagic;
+        private readonly ulong _innerHeaderMagic;
 
-        private static readonly ManualResetEvent _waitEvent;
+        private readonly ManualResetEvent _waitEvent;
 
-        private static readonly object _lock;
+        private readonly object _lock;
 
-        private static bool _disposed;
+        private bool _disposed;
 
-        internal static string TitleIdText { get; private set; }
-        internal static string DisplayVersion { get; private set; }
+        public string TitleIdText { get; private set; }
+        public string DisplayVersion { get; private set; }
 
-        private static MemoryManagerMode _memoryMode;
+        private MemoryManagerType _memoryMode;
 
-        internal static string CachePathActual { get; private set; }
-        internal static string CachePathBackup { get; private set; }
+        public string CachePathActual { get; private set; }
+        public string CachePathBackup { get; private set; }
 
-        internal static PtcState State { get; private set; }
+        public PtcState State { get; private set; }
 
         // Progress reporting helpers.
-        private static volatile int _translateCount;
-        private static volatile int _translateTotalCount;
-        public static event Action<PtcLoadingState, int, int> PtcStateChanged;
+        private volatile int _translateCount;
+        private volatile int _translateTotalCount;
+        public event Action<PtcLoadingState, int, int> PtcStateChanged;
 
-        static Ptc()
+        public Ptc()
         {
+            Profiler = new PtcProfiler(this);
+
             InitializeCarriers();
 
             _outerHeaderMagic = BinaryPrimitives.ReadUInt64LittleEndian(EncodingCache.UTF8NoBOM.GetBytes(OuterHeaderMagicString).AsSpan());
@@ -94,12 +98,12 @@ namespace ARMeilleure.Translation.PTC
             Disable();
         }
 
-        public static void Initialize(string titleIdText, string displayVersion, bool enabled, MemoryManagerMode memoryMode)
+        public void Initialize(string titleIdText, string displayVersion, bool enabled, MemoryManagerType memoryMode)
         {
             Wait();
 
-            PtcProfiler.Wait();
-            PtcProfiler.ClearEntries();
+            Profiler.Wait();
+            Profiler.ClearEntries();
 
             Logger.Info?.Print(LogClass.Ptc, $"Initializing Profiled Persistent Translation Cache (enabled: {enabled}).");
 
@@ -137,12 +141,12 @@ namespace ARMeilleure.Translation.PTC
             CachePathBackup = Path.Combine(workPathBackup, DisplayVersion);
 
             PreLoad();
-            PtcProfiler.PreLoad();
+            Profiler.PreLoad();
 
             Enable();
         }
 
-        private static void InitializeCarriers()
+        private void InitializeCarriers()
         {
             _infosStream = new MemoryStream();
             _codesList = new List<byte[]>();
@@ -150,7 +154,7 @@ namespace ARMeilleure.Translation.PTC
             _unwindInfosStream = new MemoryStream();
         }
 
-        private static void DisposeCarriers()
+        private void DisposeCarriers()
         {
             _infosStream.Dispose();
             _codesList.Clear();
@@ -158,12 +162,12 @@ namespace ARMeilleure.Translation.PTC
             _unwindInfosStream.Dispose();
         }
 
-        private static bool AreCarriersEmpty()
+        private bool AreCarriersEmpty()
         {
             return _infosStream.Length == 0L && _codesList.Count == 0 && _relocsStream.Length == 0L && _unwindInfosStream.Length == 0L;
         }
 
-        private static void ResetCarriersIfNeeded()
+        private void ResetCarriersIfNeeded()
         {
             if (AreCarriersEmpty())
             {
@@ -175,7 +179,7 @@ namespace ARMeilleure.Translation.PTC
             InitializeCarriers();
         }
 
-        private static void PreLoad()
+        private void PreLoad()
         {
             string fileNameActual = string.Concat(CachePathActual, ".cache");
             string fileNameBackup = string.Concat(CachePathBackup, ".cache");
@@ -199,7 +203,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static unsafe bool Load(string fileName, bool isBackup)
+        private unsafe bool Load(string fileName, bool isBackup)
         {
             using (FileStream compressedStream = new(fileName, FileMode.Open))
             using (DeflateStream deflateStream = new(compressedStream, CompressionMode.Decompress, true))
@@ -376,12 +380,12 @@ namespace ARMeilleure.Translation.PTC
             return true;
         }
 
-        private static void InvalidateCompressedStream(FileStream compressedStream)
+        private void InvalidateCompressedStream(FileStream compressedStream)
         {
             compressedStream.SetLength(0L);
         }
 
-        private static void PreSave()
+        private void PreSave()
         {
             _waitEvent.Reset();
 
@@ -409,7 +413,7 @@ namespace ARMeilleure.Translation.PTC
             _waitEvent.Set();
         }
 
-        private static unsafe void Save(string fileName)
+        private unsafe void Save(string fileName)
         {
             int translatedFuncsCount;
 
@@ -517,7 +521,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void LoadTranslations(Translator translator)
+        public void LoadTranslations(Translator translator)
         {
             if (AreCarriersEmpty())
             {
@@ -550,7 +554,7 @@ namespace ARMeilleure.Translation.PTC
 
                     bool isEntryChanged = infoEntry.Hash != ComputeHash(translator.Memory, infoEntry.Address, infoEntry.GuestSize);
 
-                    if (isEntryChanged || (!infoEntry.HighCq && PtcProfiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) && value.HighCq))
+                    if (isEntryChanged || (!infoEntry.HighCq && Profiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) && value.HighCq))
                     {
                         infoEntry.Stubbed = true;
                         infoEntry.CodeLength = 0;
@@ -601,38 +605,38 @@ namespace ARMeilleure.Translation.PTC
             Logger.Info?.Print(LogClass.Ptc, $"{translator.Functions.Count} translated functions loaded");
         }
 
-        private static int GetEntriesCount()
+        private int GetEntriesCount()
         {
             return _codesList.Count;
         }
 
         [Conditional("DEBUG")]
-        private static void SkipCode(int index, int codeLength)
+        private void SkipCode(int index, int codeLength)
         {
             Debug.Assert(_codesList[index].Length == 0);
             Debug.Assert(codeLength == 0);
         }
 
-        private static void SkipReloc(int relocEntriesCount)
+        private void SkipReloc(int relocEntriesCount)
         {
             _relocsStream.Seek(relocEntriesCount * RelocEntry.Stride, SeekOrigin.Current);
         }
 
-        private static void SkipUnwindInfo(BinaryReader unwindInfosReader)
+        private void SkipUnwindInfo(BinaryReader unwindInfosReader)
         {
             int pushEntriesLength = unwindInfosReader.ReadInt32();
 
             _unwindInfosStream.Seek(pushEntriesLength * UnwindPushEntry.Stride + UnwindInfo.Stride, SeekOrigin.Current);
         }
 
-        private static byte[] ReadCode(int index, int codeLength)
+        private byte[] ReadCode(int index, int codeLength)
         {
             Debug.Assert(_codesList[index].Length == codeLength);
 
             return _codesList[index];
         }
 
-        private static RelocEntry[] GetRelocEntries(BinaryReader relocsReader, int relocEntriesCount)
+        private RelocEntry[] GetRelocEntries(BinaryReader relocsReader, int relocEntriesCount)
         {
             RelocEntry[] relocEntries = new RelocEntry[relocEntriesCount];
 
@@ -648,7 +652,7 @@ namespace ARMeilleure.Translation.PTC
             return relocEntries;
         }
 
-        private static void PatchCode(Translator translator, Span<byte> code, RelocEntry[] relocEntries, out Counter<uint> callCounter)
+        private void PatchCode(Translator translator, Span<byte> code, RelocEntry[] relocEntries, out Counter<uint> callCounter)
         {
             callCounter = null;
 
@@ -702,7 +706,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static UnwindInfo ReadUnwindInfo(BinaryReader unwindInfosReader)
+        private UnwindInfo ReadUnwindInfo(BinaryReader unwindInfosReader)
         {
             int pushEntriesLength = unwindInfosReader.ReadInt32();
 
@@ -723,7 +727,7 @@ namespace ARMeilleure.Translation.PTC
             return new UnwindInfo(pushEntries, prologueSize);
         }
 
-        private static TranslatedFunction FastTranslate(
+        private TranslatedFunction FastTranslate(
             byte[] code,
             Counter<uint> callCounter,
             ulong guestSize,
@@ -736,19 +740,19 @@ namespace ARMeilleure.Translation.PTC
             return new TranslatedFunction(gFunc, callCounter, guestSize, highCq);
         }
 
-        private static void UpdateInfo(InfoEntry infoEntry)
+        private void UpdateInfo(InfoEntry infoEntry)
         {
             _infosStream.Seek(-Unsafe.SizeOf<InfoEntry>(), SeekOrigin.Current);
 
             SerializeStructure(_infosStream, infoEntry);
         }
 
-        private static void StubCode(int index)
+        private void StubCode(int index)
         {
             _codesList[index] = Array.Empty<byte>();
         }
 
-        private static void StubReloc(int relocEntriesCount)
+        private void StubReloc(int relocEntriesCount)
         {
             for (int i = 0; i < relocEntriesCount * RelocEntry.Stride; i++)
             {
@@ -756,7 +760,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static void StubUnwindInfo(BinaryReader unwindInfosReader)
+        private void StubUnwindInfo(BinaryReader unwindInfosReader)
         {
             int pushEntriesLength = unwindInfosReader.ReadInt32();
 
@@ -766,9 +770,9 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void MakeAndSaveTranslations(Translator translator)
+        public void MakeAndSaveTranslations(Translator translator)
         {
-            var profiledFuncsToTranslate = PtcProfiler.GetProfiledFuncsToTranslate(translator.Functions);
+            var profiledFuncsToTranslate = Profiler.GetProfiledFuncsToTranslate(translator.Functions);
 
             _translateCount = 0;
             _translateTotalCount = profiledFuncsToTranslate.Count;
@@ -811,7 +815,7 @@ namespace ARMeilleure.Translation.PTC
                 {
                     ulong address = item.address;
 
-                    Debug.Assert(PtcProfiler.IsAddressInStaticCodeRange(address));
+                    Debug.Assert(Profiler.IsAddressInStaticCodeRange(address));
 
                     TranslatedFunction func = translator.Translate(address, item.funcProfile.Mode, item.funcProfile.HighCq);
 
@@ -861,7 +865,7 @@ namespace ARMeilleure.Translation.PTC
             preSaveThread.Start();
         }
 
-        private static void ReportProgress(object state)
+        private void ReportProgress(object state)
         {
             const int refreshRate = 50; // ms.
 
@@ -882,12 +886,12 @@ namespace ARMeilleure.Translation.PTC
             while (!endEvent.WaitOne(refreshRate));
         }
 
-        internal static Hash128 ComputeHash(IMemoryManager memory, ulong address, ulong guestSize)
+        public static Hash128 ComputeHash(IMemoryManager memory, ulong address, ulong guestSize)
         {
             return XXHash128.ComputeHash(memory.GetSpan(address, checked((int)(guestSize))));
         }
 
-        internal static void WriteCompiledFunction(ulong address, ulong guestSize, Hash128 hash, bool highCq, CompiledFunction compiledFunc)
+        public void WriteCompiledFunction(ulong address, ulong guestSize, Hash128 hash, bool highCq, CompiledFunction compiledFunc)
         {
             lock (_lock)
             {
@@ -936,12 +940,12 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private static void WriteCode(ReadOnlySpan<byte> code)
+        private void WriteCode(ReadOnlySpan<byte> code)
         {
             _codesList.Add(code.ToArray());
         }
 
-        internal static bool GetEndianness()
+        public static bool GetEndianness()
         {
             return BitConverter.IsLittleEndian;
         }
@@ -955,7 +959,7 @@ namespace ARMeilleure.Translation.PTC
                 (uint)HardwareCapabilities.FeatureInfo7Ecx);
         }
 
-        private static byte GetMemoryManagerMode()
+        private byte GetMemoryManagerMode()
         {
             return (byte)_memoryMode;
         }
@@ -1050,12 +1054,12 @@ namespace ARMeilleure.Translation.PTC
             public int RelocEntriesCount;
         }
 
-        private static void Enable()
+        private void Enable()
         {
             State = PtcState.Enabled;
         }
 
-        public static void Continue()
+        public void Continue()
         {
             if (State == PtcState.Enabled)
             {
@@ -1063,7 +1067,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        public static void Close()
+        public void Close()
         {
             if (State == PtcState.Enabled ||
                 State == PtcState.Continuing)
@@ -1072,17 +1076,17 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        internal static void Disable()
+        public void Disable()
         {
             State = PtcState.Disabled;
         }
 
-        private static void Wait()
+        private void Wait()
         {
             _waitEvent.WaitOne();
         }
 
-        public static void Dispose()
+        public void Dispose()
         {
             if (!_disposed)
             {
