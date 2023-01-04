@@ -24,10 +24,10 @@ namespace Ryujinx.Horizon.Generators
             IncreaseIndentation();
         }
 
-        public void LeaveScope()
+        public void LeaveScope(string suffix = "")
         {
             DecreaseIndentation();
-            AppendLine("}");
+            AppendLine($"}}{suffix}");
         }
 
         public void IncreaseIndentation()

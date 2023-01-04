@@ -1,6 +1,6 @@
 ﻿﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetSystemEvent() -> handle<copy>
         public ResultCode GetSystemEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(AsyncExecution.SystemEvent.ReadableEvent, out int _systemEventHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(AsyncExecution.SystemEvent.ReadableEvent, out int _systemEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

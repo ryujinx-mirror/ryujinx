@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
@@ -7,26 +8,26 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         public KServerPort ServerPort { get; }
         public KClientPort ClientPort { get; }
 
-        private long _nameAddress;
+        private string _name;
 
         private ChannelState _state;
 
         public bool IsLight { get; private set; }
 
-        public KPort(KernelContext context, int maxSessions, bool isLight, long nameAddress) : base(context)
+        public KPort(KernelContext context, int maxSessions, bool isLight, string name) : base(context)
         {
             ServerPort = new KServerPort(context, this);
             ClientPort = new KClientPort(context, this, maxSessions);
 
-            IsLight      = isLight;
-            _nameAddress = nameAddress;
+            IsLight = isLight;
+            _name = name;
 
             _state = ChannelState.Open;
         }
 
-        public KernelResult EnqueueIncomingSession(KServerSession session)
+        public Result EnqueueIncomingSession(KServerSession session)
         {
-            KernelResult result;
+            Result result;
 
             KernelContext.CriticalSection.Enter();
 
@@ -34,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 ServerPort.EnqueueIncomingSession(session);
 
-                result = KernelResult.Success;
+                result = Result.Success;
             }
             else
             {
@@ -46,9 +47,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return result;
         }
 
-        public KernelResult EnqueueIncomingLightSession(KLightServerSession session)
+        public Result EnqueueIncomingLightSession(KLightServerSession session)
         {
-            KernelResult result;
+            Result result;
 
             KernelContext.CriticalSection.Enter();
 
@@ -56,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             {
                 ServerPort.EnqueueIncomingLightSession(session);
 
-                result = KernelResult.Success;
+                result = Result.Success;
             }
             else
             {

@@ -1,11 +1,11 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             // TODO: signal event at right place
             _xpadIdEvent.ReadableEvent.Signal();
-            
+
             _vibrationPermitted = true;
         }
 
@@ -170,7 +170,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long xpadId = context.RequestData.ReadInt64();
 
-            if (context.Process.HandleTable.GenerateHandle(_xpadIdEvent.ReadableEvent, out _xpadIdEventHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_xpadIdEvent.ReadableEvent, out _xpadIdEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -761,7 +761,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long        npadStyleSet         = context.RequestData.ReadInt64();
 
             KEvent evnt = context.Device.Hid.Npads.GetStyleSetUpdateEvent(npadId);
-            if (context.Process.HandleTable.GenerateHandle(evnt.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(evnt.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -1597,7 +1597,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int palmaConnectionHandle = context.RequestData.ReadInt32();
 
-            if (context.Process.HandleTable.GenerateHandle(_palmaOperationCompleteEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_palmaOperationCompleteEvent.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

@@ -2,11 +2,11 @@
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Buffers.Binary;
 using System.Globalization;
@@ -851,7 +851,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 {
                     context.Device.System.NfpDevices[i].ActivateEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].ActivateEvent.ReadableEvent, out int activateEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].ActivateEvent.ReadableEvent, out int activateEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -877,7 +877,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 {
                     context.Device.System.NfpDevices[i].DeactivateEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].DeactivateEvent.ReadableEvent, out int deactivateEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(context.Device.System.NfpDevices[i].DeactivateEvent.ReadableEvent, out int deactivateEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -960,7 +960,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             _availabilityChangeEvent = new KEvent(context.Device.System.KernelContext);
 
-            if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out int availabilityChangeEventHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out int availabilityChangeEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
 {
@@ -22,11 +22,11 @@ namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
         {
             if (_stateChangeEventHandle == -1)
             {
-                KernelResult resultCode = context.Process.HandleTable.GenerateHandle(_stateChangeEvent.ReadableEvent, out _stateChangeEventHandle);
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_stateChangeEvent.ReadableEvent, out _stateChangeEventHandle);
 
-                if (resultCode != KernelResult.Success)
+                if (resultCode != Result.Success)
                 {
-                    return (ResultCode)resultCode;
+                    return (ResultCode)resultCode.ErrorCode;
                 }
             }
 

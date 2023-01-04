@@ -19,7 +19,7 @@ namespace Ryujinx.HLE
         public MemoryBlock           Memory            { get; }
         public GpuContext            Gpu               { get; }
         public VirtualFileSystem     FileSystem        { get; }
-        public Horizon               System            { get; }
+        public HOS.Horizon           System            { get; }
         public ApplicationLoader     Application       { get; }
         public PerformanceStatistics Statistics        { get; }
         public Hid                   Hid               { get; }
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE
             AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(Configuration.AudioDeviceDriver);
             Memory            = new MemoryBlock(Configuration.MemoryConfiguration.ToDramSize(), memoryAllocationFlags);
             Gpu               = new GpuContext(Configuration.GpuRenderer);
-            System            = new Horizon(this);
+            System            = new HOS.Horizon(this);
             Statistics        = new PerformanceStatistics();
             Hid               = new Hid(this, System.HidStorage);
             Application       = new ApplicationLoader(this);

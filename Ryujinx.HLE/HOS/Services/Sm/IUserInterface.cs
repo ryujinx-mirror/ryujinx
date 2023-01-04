@@ -1,8 +1,8 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -72,14 +72,14 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             if (_registry.TryGetService(name, out KPort port))
             {
-                KernelResult result = port.EnqueueIncomingSession(session.ServerSession);
+                Result result = port.EnqueueIncomingSession(session.ServerSession);
 
-                if (result != KernelResult.Success)
+                if (result != Result.Success)
                 {
                     throw new InvalidOperationException($"Session enqueue on port returned error \"{result}\".");
                 }
 
-                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                     }
                 }
 
-                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -182,14 +182,14 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             Logger.Info?.Print(LogClass.ServiceSm, $"Register \"{name}\".");
 
-            KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, 0);
+            KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, null);
 
             if (!_registry.TryRegister(name, port))
             {
                 return ResultCode.AlreadyRegistered;
             }
 
-            if (context.Process.HandleTable.GenerateHandle(port.ServerPort, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(port.ServerPort, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

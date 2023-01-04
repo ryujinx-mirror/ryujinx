@@ -4,12 +4,11 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService;
+using Ryujinx.Horizon.Common;
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
@@ -33,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 _completionEvent = new KEvent(context.Device.System.KernelContext);
             }
 
-            if (context.Process.HandleTable.GenerateHandle(_completionEvent.ReadableEvent, out int completionEventHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_completionEvent.ReadableEvent, out int completionEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

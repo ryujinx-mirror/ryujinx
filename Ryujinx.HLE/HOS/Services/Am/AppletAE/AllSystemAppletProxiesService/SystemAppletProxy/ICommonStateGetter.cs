@@ -1,10 +1,10 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Settings.Types;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService;
 using Ryujinx.HLE.HOS.SystemState;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             if (_messageEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(messageEvent.ReadableEvent, out _messageEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(messageEvent.ReadableEvent, out _messageEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -211,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             // NOTE: Original service calls IOperationModeManager::GetDefaultDisplayResolutionChangeEvent of omm service.
             if (_displayResolutionChangedEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.DisplayResolutionChangeEvent.ReadableEvent, out _displayResolutionChangedEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.DisplayResolutionChangeEvent.ReadableEvent, out _displayResolutionChangedEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

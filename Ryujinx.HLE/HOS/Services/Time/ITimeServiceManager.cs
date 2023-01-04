@@ -2,9 +2,9 @@
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.Utilities;
+using Ryujinx.Horizon.Common;
 using System;
 using System.IO;
 
@@ -180,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             if (_automaticCorrectionEvent == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_timeManager.StandardUserSystemClock.GetAutomaticCorrectionReadableEvent(), out _automaticCorrectionEvent) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_timeManager.StandardUserSystemClock.GetAutomaticCorrectionReadableEvent(), out _automaticCorrectionEvent) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

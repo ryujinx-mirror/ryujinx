@@ -1,7 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy
@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 return ResultCode.BufferAlreadyAcquired;
             }
 
-            if (context.Process.HandleTable.GenerateHandle(_transferMem, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_transferMem, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 return ResultCode.BufferAlreadyAcquired;
             }
 
-            if (context.Process.HandleTable.GenerateHandle(_transferMem, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_transferMem, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

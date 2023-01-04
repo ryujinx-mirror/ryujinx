@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 {
@@ -471,7 +472,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
             if (_vsyncEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.VsyncEvent.ReadableEvent, out _vsyncEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.VsyncEvent.ReadableEvent, out _vsyncEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

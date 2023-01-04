@@ -1,5 +1,6 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Process
@@ -27,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _context = context;
         }
 
-        public KernelResult Initialize(int size)
+        public Result Initialize(int size)
         {
             if ((uint)size > 1024)
             {
@@ -62,10 +63,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             _nextFreeEntry = _tableHead;
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult GenerateHandle(KAutoObject obj, out int handle)
+        public Result GenerateHandle(KAutoObject obj, out int handle)
         {
             handle = 0;
 
@@ -99,10 +100,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult ReserveHandle(out int handle)
+        public Result ReserveHandle(out int handle)
         {
             handle = 0;
 
@@ -131,7 +132,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         public void CancelHandleReservation(int handle)

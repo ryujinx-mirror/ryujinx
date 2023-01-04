@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Common.Collections;
-using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 using System.Diagnostics;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _blockTree = new IntrusiveRedBlackTree<KMemoryBlock>();
         }
 
-        public KernelResult Initialize(ulong addrSpaceStart, ulong addrSpaceEnd, KMemoryBlockSlabManager slabManager)
+        public Result Initialize(ulong addrSpaceStart, ulong addrSpaceEnd, KMemoryBlockSlabManager slabManager)
         {
             _slabManager = slabManager;
             _addrSpaceStart = addrSpaceStart;
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 KMemoryPermission.None,
                 MemoryAttribute.None));
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         public void InsertBlock(

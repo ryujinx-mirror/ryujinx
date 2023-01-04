@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
@@ -26,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _userPermission = userPermission;
         }
 
-        public KernelResult MapIntoProcess(
+        public Result MapIntoProcess(
             KPageTableBase memoryManager,
             ulong address,
             ulong size,
@@ -50,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return memoryManager.MapPages(address, _pageList, MemoryState.SharedMemory, permission);
         }
 
-        public KernelResult UnmapFromProcess(KPageTableBase memoryManager, ulong address, ulong size, KProcess process)
+        public Result UnmapFromProcess(KPageTableBase memoryManager, ulong address, ulong size, KProcess process)
         {
             if (_pageList.GetPagesCount() != BitUtils.DivRoundUp<ulong>(size, KPageTableBase.PageSize))
             {

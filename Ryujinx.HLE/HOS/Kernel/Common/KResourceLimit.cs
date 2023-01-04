@@ -1,5 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
@@ -159,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             }
         }
 
-        public KernelResult SetLimitValue(LimitableResource resource, long limit)
+        public Result SetLimitValue(LimitableResource resource, long limit)
         {
             int index = GetIndex(resource);
 
@@ -170,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                     _limit[index] = limit;
                     _peak[index] = _current[index];
 
-                    return KernelResult.Success;
+                    return Result.Success;
                 }
                 else
                 {

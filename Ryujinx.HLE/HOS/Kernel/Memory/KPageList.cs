@@ -1,4 +1,4 @@
-using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             Nodes = new LinkedList<KPageNode>();
         }
 
-        public KernelResult AddRange(ulong address, ulong pagesCount)
+        public Result AddRange(ulong address, ulong pagesCount)
         {
             if (pagesCount != 0)
             {
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 Nodes.AddLast(new KPageNode(address, pagesCount));
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         public ulong GetPagesCount()

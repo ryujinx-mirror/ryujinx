@@ -1,7 +1,7 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Pcv.Clkrst.ClkrstManager;
 using Ryujinx.HLE.HOS.Services.Pcv.Types;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Pcv.Clkrst
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Pcv.Clkrst
         {
             if (_moduleStateTableEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.IirsSharedMem, out _moduleStateTableEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.IirsSharedMem, out _moduleStateTableEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

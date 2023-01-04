@@ -1,8 +1,8 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Text;
 
@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         {
             KEvent deviceSystemEvent = _impl.QueryAudioDeviceSystemEvent();
 
-            if (context.Process.HandleTable.GenerateHandle(deviceSystemEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(deviceSystemEvent.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -230,7 +230,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         {
             KEvent deviceInputEvent = _impl.QueryAudioDeviceInputEvent();
 
-            if (context.Process.HandleTable.GenerateHandle(deviceInputEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(deviceInputEvent.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -248,7 +248,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
         {
             KEvent deviceOutputEvent = _impl.QueryAudioDeviceOutputEvent();
 
-            if (context.Process.HandleTable.GenerateHandle(deviceOutputEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(deviceOutputEvent.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

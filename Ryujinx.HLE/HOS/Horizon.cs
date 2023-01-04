@@ -36,6 +36,7 @@ using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.Horizon;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -319,6 +320,42 @@ namespace Ryujinx.HLE.HOS
             ViServer = new ServerBase(KernelContext, "ViServerU");
             ViServerM = new ServerBase(KernelContext, "ViServerM");
             ViServerS = new ServerBase(KernelContext, "ViServerS");
+
+            StartNewServices();
+        }
+
+        private void StartNewServices()
+        {
+            var services = ServiceTable.GetServices(new HorizonOptions(Device.Configuration.IgnoreMissingServices));
+
+            foreach (var service in services)
+            {
+                const ProcessCreationFlags flags =
+                    ProcessCreationFlags.EnableAslr |
+                    ProcessCreationFlags.AddressSpace64Bit |
+                    ProcessCreationFlags.Is64Bit |
+                    ProcessCreationFlags.PoolPartitionSystem;
+
+                ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, flags, 0, 0);
+
+                int[] defaultCapabilities = new int[]
+                {
+                    0x030363F7,
+                    0x1FFFFFCF,
+                    0x207FFFEF,
+                    0x47E0060F,
+                    0x0048BFFF,
+                    0x01007FFF
+                };
+
+                // TODO:
+                // - Pass enough information (capabilities, process creation info, etc) on ServiceEntry for proper initialization.
+                // - Have the ThreadStart function take the syscall, address space and thread context parameters instead of passing them here.
+                KernelStatic.StartInitialProcess(KernelContext, creationInfo, defaultCapabilities, 44, () =>
+                {
+                    service.Start(KernelContext.Syscall, KernelStatic.GetCurrentProcess().CpuMemory, KernelStatic.GetCurrentThread().ThreadContext);
+                });
+            }
         }
 
         public void LoadKip(string kipPath)

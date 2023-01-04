@@ -1,6 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
         {
             if (_hidSharedMemHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out _hidSharedMemHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out _hidSharedMemHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

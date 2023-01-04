@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
@@ -27,16 +28,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             KernelContext.CriticalSection.Leave();
         }
 
-        public KernelResult Clear()
+        public Result Clear()
         {
             _signaled = false;
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult ClearIfSignaled()
+        public Result ClearIfSignaled()
         {
-            KernelResult result;
+            Result result;
 
             KernelContext.CriticalSection.Enter();
 
@@ -44,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 _signaled = false;
 
-                result = KernelResult.Success;
+                result = Result.Success;
             }
             else
             {

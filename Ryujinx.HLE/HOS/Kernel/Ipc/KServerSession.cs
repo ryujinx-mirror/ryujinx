@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
@@ -178,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             _requests = new LinkedList<KSessionRequest>();
         }
 
-        public KernelResult EnqueueRequest(KSessionRequest request)
+        public Result EnqueueRequest(KSessionRequest request)
         {
             if (_parent.ClientSession.State != ChannelState.Open)
             {
@@ -203,10 +204,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 Signal();
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult Receive(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
+        public Result Receive(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
             KThread  serverThread  = KernelStatic.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
@@ -249,12 +250,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             MessageHeader clientHeader = GetClientMessageHeader(clientProcess, clientMsg);
             MessageHeader serverHeader = GetServerMessageHeader(serverMsg);
 
-            KernelResult serverResult = KernelResult.NotFound;
-            KernelResult clientResult = KernelResult.Success;
+            Result serverResult = KernelResult.NotFound;
+            Result clientResult = Result.Success;
 
             void CleanUpForError()
             {
-                if (request.BufferDescriptorTable.UnmapServerBuffers(serverProcess.MemoryManager) == KernelResult.Success)
+                if (request.BufferDescriptorTable.UnmapServerBuffers(serverProcess.MemoryManager) == Result.Success)
                 {
                     request.BufferDescriptorTable.RestoreClientBuffers(clientProcess.MemoryManager);
                 }
@@ -348,7 +349,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     int newHandle = 0;
                     int handle = clientProcess.CpuMemory.Read<int>(clientMsg.Address + offset * 4);
 
-                    if (clientResult == KernelResult.Success && handle != 0)
+                    if (clientResult == Result.Success && handle != 0)
                     {
                         clientResult = GetCopyObjectHandle(clientThread, serverProcess, handle, out newHandle);
                     }
@@ -365,7 +366,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                     if (handle != 0)
                     {
-                        if (clientResult == KernelResult.Success)
+                        if (clientResult == Result.Success)
                         {
                             clientResult = GetMoveObjectHandle(clientProcess, serverProcess, handle, out newHandle);
                         }
@@ -380,7 +381,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     offset++;
                 }
 
-                if (clientResult != KernelResult.Success)
+                if (clientResult != Result.Success)
                 {
                     CleanUpForError();
 
@@ -412,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         ref       recvListDstOffset,
                         out ulong recvListBufferAddress);
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -429,7 +430,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         MemoryAttribute.Uncached,
                         MemoryAttribute.None);
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -498,7 +499,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         notReceiveDesc,
                         out dstAddress);
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -518,7 +519,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         clientResult = request.BufferDescriptorTable.AddExchangeBuffer(bufferAddress, dstAddress, bufferSize, state);
                     }
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -573,7 +574,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     serverProcess.CpuMemory.Write(copyDst, clientProcess.CpuMemory.GetSpan(copySrc, (int)copySize));
                 }
 
-                if (clientResult != KernelResult.Success)
+                if (clientResult != Result.Success)
                 {
                     CleanUpForError();
 
@@ -581,10 +582,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult Reply(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
+        public Result Reply(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
             KThread  serverThread  = KernelStatic.GetCurrentThread();
             KProcess serverProcess = serverThread.Owner;
@@ -618,8 +619,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             MessageHeader clientHeader = GetClientMessageHeader(clientProcess, clientMsg);
             MessageHeader serverHeader = GetServerMessageHeader(serverMsg);
 
-            KernelResult clientResult = KernelResult.Success;
-            KernelResult serverResult = KernelResult.Success;
+            Result clientResult = Result.Success;
+            Result serverResult = Result.Success;
 
             void CleanUpForError()
             {
@@ -683,7 +684,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             // Copy receive and exchange buffers.
             clientResult = request.BufferDescriptorTable.CopyBuffersToClient(clientProcess.MemoryManager);
 
-            if (clientResult != KernelResult.Success)
+            if (clientResult != Result.Success)
             {
                 CleanUpForError();
 
@@ -734,7 +735,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
                     if (handle != 0)
                     {
-                        if (clientResult == KernelResult.Success)
+                        if (clientResult == Result.Success)
                         {
                             clientResult = GetMoveObjectHandle(serverProcess, clientProcess, handle, out newHandle);
                         }
@@ -776,7 +777,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         ref recvListDstOffset,
                         out recvListBufferAddress);
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -793,7 +794,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                         MemoryAttribute.None,
                         descriptor.BufferAddress);
 
-                    if (clientResult != KernelResult.Success)
+                    if (clientResult != Result.Success)
                     {
                         CleanUpForError();
 
@@ -888,7 +889,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return new MessageHeader(word0, word1, word2);
         }
 
-        private KernelResult GetCopyObjectHandle(KThread srcThread, KProcess dstProcess, int srcHandle, out int dstHandle)
+        private Result GetCopyObjectHandle(KThread srcThread, KProcess dstProcess, int srcHandle, out int dstHandle)
         {
             dstHandle = 0;
 
@@ -919,7 +920,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
         }
 
-        private KernelResult GetMoveObjectHandle(KProcess srcProcess, KProcess dstProcess, int srcHandle, out int dstHandle)
+        private Result GetMoveObjectHandle(KProcess srcProcess, KProcess dstProcess, int srcHandle, out int dstHandle)
         {
             dstHandle = 0;
 
@@ -927,7 +928,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             if (obj != null)
             {
-                KernelResult result = dstProcess.HandleTable.GenerateHandle(obj, out dstHandle);
+                Result result = dstProcess.HandleTable.GenerateHandle(obj, out dstHandle);
 
                 srcProcess.HandleTable.CloseHandle(srcHandle);
 
@@ -964,7 +965,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return receiveList;
         }
 
-        private KernelResult GetReceiveListAddress(
+        private Result GetReceiveListAddress(
             PointerBufferDesc descriptor,
             Message           message,
             uint              recvListType,
@@ -1038,7 +1039,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             address = recvListBufferAddress;
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         private void CloseAllHandles(Message message, MessageHeader header, KProcess process)
@@ -1166,19 +1167,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return hasRequest;
         }
 
-        private void FinishRequest(KSessionRequest request, KernelResult result)
+        private void FinishRequest(KSessionRequest request, Result result)
         {
             KProcess clientProcess = request.ClientThread.Owner;
             KProcess serverProcess = request.ServerProcess;
 
-            KernelResult unmapResult = KernelResult.Success;
+            Result unmapResult = Result.Success;
 
             if (serverProcess != null)
             {
                 unmapResult = request.BufferDescriptorTable.UnmapServerBuffers(serverProcess.MemoryManager);
             }
 
-            if (unmapResult == KernelResult.Success)
+            if (unmapResult == Result.Success)
             {
                 request.BufferDescriptorTable.RestoreClientBuffers(clientProcess.MemoryManager);
             }
@@ -1186,7 +1187,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             WakeClientThread(request, result);
         }
 
-        private void WakeClientThread(KSessionRequest request, KernelResult result)
+        private void WakeClientThread(KSessionRequest request, Result result)
         {
             // Wait client thread waiting for a response for the given request.
             if (request.AsyncEvent != null)
@@ -1203,16 +1204,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             }
         }
 
-        private void SendResultToAsyncRequestClient(KSessionRequest request, KernelResult result)
+        private void SendResultToAsyncRequestClient(KSessionRequest request, Result result)
         {
             KProcess clientProcess = request.ClientThread.Owner;
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
                 ulong address = request.CustomCmdBuffAddr;
 
                 clientProcess.CpuMemory.Write<ulong>(address, 0);
-                clientProcess.CpuMemory.Write(address + 8, (int)result);
+                clientProcess.CpuMemory.Write(address + 8, result.ErrorCode);
             }
 
             clientProcess.MemoryManager.UnborrowIpcBuffer(request.CustomCmdBuffAddr, request.CustomCmdBuffSize);
@@ -1220,24 +1221,24 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             request.AsyncEvent.Signal();
         }
 
-        private void WakeServerThreads(KernelResult result)
+        private void WakeServerThreads(Result result)
         {
             // Wake all server threads waiting for requests.
             KernelContext.CriticalSection.Enter();
 
             foreach (KThread thread in WaitingThreads)
             {
-                WakeAndSetResult(thread, result);
+                WakeAndSetResult(thread, result, this);
             }
 
             KernelContext.CriticalSection.Leave();
         }
 
-        private void WakeAndSetResult(KThread thread, KernelResult result)
+        private void WakeAndSetResult(KThread thread, Result result, KSynchronizationObject signaledObj = null)
         {
             if ((thread.SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.Paused)
             {
-                thread.SignaledObj   = null;
+                thread.SignaledObj   = signaledObj;
                 thread.ObjSyncResult = result;
 
                 thread.Reschedule(ThreadSchedState.Running);

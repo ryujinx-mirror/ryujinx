@@ -1,7 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
 
             // TODO: Found where stored value is used.
             ResultCode resultCode = GetAddOnContentBaseIdFromTitleId(context, context.Device.Application.TitleId);
-            
+
             if (resultCode != ResultCode.Success)
             {
                 return resultCode;
@@ -327,7 +327,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
         {
             if (_addOnContentListChangedEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out _addOnContentListChangedEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_addOnContentListChangedEvent.ReadableEvent, out _addOnContentListChangedEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

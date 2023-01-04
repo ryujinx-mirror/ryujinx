@@ -1,7 +1,7 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Pm
 {
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Pm
 
             KProcess process = KernelStatic.GetProcessByPid(pid);
 
-            if (context.Process.HandleTable.GenerateHandle(process, out int processHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(process, out int processHandle) != Result.Success)
             {
                 throw new System.Exception("Out of handles!");
             }

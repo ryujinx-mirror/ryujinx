@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.Graphics.Vic.Types
+﻿using Ryujinx.Common.Utilities;
+
+namespace Ryujinx.Graphics.Vic.Types
 {
     struct SlotConfig
     {
@@ -28,36 +30,36 @@
         public bool PpMotionFieldEnable => _word0.Extract(14);
         public bool CombMotionFieldEnable => _word0.Extract(15);
         public FrameFormat FrameFormat => (FrameFormat)_word0.Extract(16, 4);
-        public int FilterLengthY => _word0.Extract(20, 2);
-        public int FilterLengthX => _word0.Extract(22, 2);
-        public int Panoramic => _word0.Extract(24, 12);
-        public int DetailFltClamp => _word0.Extract(58, 6);
-        public int FilterNoise => _word1.Extract(64, 10);
-        public int FilterDetail => _word1.Extract(74, 10);
-        public int ChromaNoise => _word1.Extract(84, 10);
-        public int ChromaDetail => _word1.Extract(94, 10);
+        public int FilterLengthY => (int)_word0.Extract(20, 2);
+        public int FilterLengthX => (int)_word0.Extract(22, 2);
+        public int Panoramic => (int)_word0.Extract(24, 12);
+        public int DetailFltClamp => (int)_word0.Extract(58, 6);
+        public int FilterNoise => (int)_word1.Extract(64, 10);
+        public int FilterDetail => (int)_word1.Extract(74, 10);
+        public int ChromaNoise => (int)_word1.Extract(84, 10);
+        public int ChromaDetail => (int)_word1.Extract(94, 10);
         public DeinterlaceMode DeinterlaceMode => (DeinterlaceMode)_word1.Extract(104, 4);
-        public int MotionAccumWeight => _word1.Extract(108, 3);
-        public int NoiseIir => _word1.Extract(111, 11);
-        public int LightLevel => _word1.Extract(122, 4);
-        public int SoftClampLow => _word2.Extract(128, 10);
-        public int SoftClampHigh => _word2.Extract(138, 10);
-        public int PlanarAlpha => _word2.Extract(160, 10);
+        public int MotionAccumWeight => (int)_word1.Extract(108, 3);
+        public int NoiseIir => (int)_word1.Extract(111, 11);
+        public int LightLevel => (int)_word1.Extract(122, 4);
+        public int SoftClampLow => (int)_word2.Extract(128, 10);
+        public int SoftClampHigh => (int)_word2.Extract(138, 10);
+        public int PlanarAlpha => (int)_word2.Extract(160, 10);
         public bool ConstantAlpha => _word2.Extract(170);
-        public int StereoInterleave => _word2.Extract(171, 3);
+        public int StereoInterleave => (int)_word2.Extract(171, 3);
         public bool ClipEnabled => _word2.Extract(174);
-        public int ClearRectMask => _word2.Extract(175, 8);
-        public int DegammaMode => _word2.Extract(183, 2);
+        public int ClearRectMask => (int)_word2.Extract(175, 8);
+        public int DegammaMode => (int)_word2.Extract(183, 2);
         public bool DecompressEnable => _word2.Extract(186);
-        public int DecompressCtbCount => _word3.Extract(192, 8);
-        public int DecompressZbcColor => _word3.Extract(200, 32);
-        public int SourceRectLeft => _word4.Extract(256, 30);
-        public int SourceRectRight => _word4.Extract(288, 30);
-        public int SourceRectTop => _word5.Extract(320, 30);
-        public int SourceRectBottom => _word5.Extract(352, 30);
-        public int DstRectLeft => _word6.Extract(384, 14);
-        public int DstRectRight => _word6.Extract(400, 14);
-        public int DstRectTop => _word6.Extract(416, 14);
-        public int DstRectBottom => _word6.Extract(432, 14);
+        public int DecompressCtbCount => (int)_word3.Extract(192, 8);
+        public int DecompressZbcColor => (int)_word3.Extract(200, 32);
+        public int SourceRectLeft => (int)_word4.Extract(256, 30);
+        public int SourceRectRight => (int)_word4.Extract(288, 30);
+        public int SourceRectTop => (int)_word5.Extract(320, 30);
+        public int SourceRectBottom => (int)_word5.Extract(352, 30);
+        public int DstRectLeft => (int)_word6.Extract(384, 14);
+        public int DstRectRight => (int)_word6.Extract(400, 14);
+        public int DstRectTop => (int)_word6.Extract(416, 14);
+        public int DstRectBottom => (int)_word6.Extract(432, 14);
     }
 }

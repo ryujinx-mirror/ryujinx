@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu.Types;
+using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
 
             if (targetEvent != null)
             {
-                if (Context.Process.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != KernelResult.Success)
+                if (Context.Process.HandleTable.GenerateHandle(targetEvent.ReadableEvent, out eventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

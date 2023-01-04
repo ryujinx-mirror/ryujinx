@@ -1,8 +1,8 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Bluetooth.BluetoothDriver;
 using Ryujinx.HLE.HOS.Services.Settings;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Bluetooth
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.InitializeBleDebugEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.InitializeBleDebugEvent.ReadableEvent, out BluetoothEventManager.InitializeBleDebugEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.InitializeBleDebugEvent.ReadableEvent, out BluetoothEventManager.InitializeBleDebugEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.UnknownBleDebugEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.UnknownBleDebugEvent.ReadableEvent, out BluetoothEventManager.UnknownBleDebugEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.UnknownBleDebugEvent.ReadableEvent, out BluetoothEventManager.UnknownBleDebugEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.RegisterBleDebugEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.RegisterBleDebugEvent.ReadableEvent, out BluetoothEventManager.RegisterBleDebugEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.RegisterBleDebugEvent.ReadableEvent, out BluetoothEventManager.RegisterBleDebugEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.InitializeBleEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.InitializeBleEvent.ReadableEvent, out BluetoothEventManager.InitializeBleEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.InitializeBleEvent.ReadableEvent, out BluetoothEventManager.InitializeBleEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -76,7 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.UnknownBleEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.UnknownBleEvent.ReadableEvent, out BluetoothEventManager.UnknownBleEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.UnknownBleEvent.ReadableEvent, out BluetoothEventManager.UnknownBleEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
                 {
                     BluetoothEventManager.RegisterBleEvent = new KEvent(context.Device.System.KernelContext);
 
-                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.RegisterBleEvent.ReadableEvent, out BluetoothEventManager.RegisterBleEventHandle) != KernelResult.Success)
+                    if (context.Process.HandleTable.GenerateHandle(BluetoothEventManager.RegisterBleEvent.ReadableEvent, out BluetoothEventManager.RegisterBleEventHandle) != Result.Success)
                     {
                         throw new InvalidOperationException("Out of handles!");
                     }

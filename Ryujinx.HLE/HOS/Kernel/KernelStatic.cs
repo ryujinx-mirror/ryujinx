@@ -2,6 +2,7 @@
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Threading;
 
@@ -15,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         [ThreadStatic]
         private static KThread CurrentThread;
 
-        public static KernelResult StartInitialProcess(
+        public static Result StartInitialProcess(
             KernelContext context,
             ProcessCreationInfo creationInfo,
             ReadOnlySpan<int> capabilities,
@@ -24,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             KProcess process = new KProcess(context);
 
-            KernelResult result = process.Initialize(
+            Result result = process.Initialize(
                 creationInfo,
                 capabilities,
                 context.ResourceLimit,
@@ -32,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 null,
                 customThreadStart);
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
                 return result;
             }

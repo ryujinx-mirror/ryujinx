@@ -1,6 +1,6 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Common;
-using Ryujinx.HLE.HOS.Kernel.Threading;
+﻿using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel.Types;
+using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using System;
 
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
         {
             KEvent evnt = new KEvent(context.Device.System.KernelContext);
 
-            if (context.Process.HandleTable.GenerateHandle(evnt.ReadableEvent, out handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(evnt.ReadableEvent, out handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

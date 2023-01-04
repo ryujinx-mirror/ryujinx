@@ -1,7 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             if (_event0Handle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_event0.ReadableEvent, out _event0Handle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_event0.ReadableEvent, out _event0Handle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             if (_event1Handle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_event1.ReadableEvent, out _event1Handle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_event1.ReadableEvent, out _event1Handle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

@@ -1,8 +1,8 @@
 ﻿using Ryujinx.Audio.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using System;
 using System.Runtime.InteropServices;
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
         {
             KEvent bufferEvent = _impl.RegisterBufferEvent();
 
-            if (context.Process.HandleTable.GenerateHandle(bufferEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(bufferEvent.ReadableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

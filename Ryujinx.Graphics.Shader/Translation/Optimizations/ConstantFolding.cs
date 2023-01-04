@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.Shader.Decoders;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System;
 

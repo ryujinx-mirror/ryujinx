@@ -1,12 +1,12 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
 {
-    class IEnsureNetworkClockAvailabilityService : IpcService 
+    class IEnsureNetworkClockAvailabilityService : IpcService
     {
         private KEvent     _finishNotificationEvent;
         private ResultCode _taskResultCode;
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
         // GetFinishNotificationEvent() -> handle<copy>
         public ResultCode GetFinishNotificationEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_finishNotificationEvent.ReadableEvent, out int finishNotificationEventHandle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_finishNotificationEvent.ReadableEvent, out int finishNotificationEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

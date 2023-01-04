@@ -1,6 +1,6 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Ldn.Types;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Net;
 
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
         {
             if (_stateChangeEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_networkInterface.StateChangeEvent.ReadableEvent, out _stateChangeEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_networkInterface.StateChangeEvent.ReadableEvent, out _stateChangeEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

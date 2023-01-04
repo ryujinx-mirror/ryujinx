@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Common;
+﻿using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
@@ -31,31 +31,31 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         }
 
         /// <inheritdoc/>
-        protected override KernelResult MapMemory(ulong src, ulong dst, ulong pagesCount, KMemoryPermission oldSrcPermission, KMemoryPermission newDstPermission)
+        protected override Result MapMemory(ulong src, ulong dst, ulong pagesCount, KMemoryPermission oldSrcPermission, KMemoryPermission newDstPermission)
         {
             KPageList pageList = new KPageList();
             GetPhysicalRegions(src, pagesCount * PageSize, pageList);
 
-            KernelResult result = Reprotect(src, pagesCount, KMemoryPermission.None);
+            Result result = Reprotect(src, pagesCount, KMemoryPermission.None);
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
                 return result;
             }
 
             result = MapPages(dst, pageList, newDstPermission, false, 0);
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
-                KernelResult reprotectResult = Reprotect(src, pagesCount, oldSrcPermission);
-                Debug.Assert(reprotectResult == KernelResult.Success);
+                Result reprotectResult = Reprotect(src, pagesCount, oldSrcPermission);
+                Debug.Assert(reprotectResult == Result.Success);
             }
 
             return result;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult UnmapMemory(ulong dst, ulong src, ulong pagesCount, KMemoryPermission oldDstPermission, KMemoryPermission newSrcPermission)
+        protected override Result UnmapMemory(ulong dst, ulong src, ulong pagesCount, KMemoryPermission oldDstPermission, KMemoryPermission newSrcPermission)
         {
             ulong size = pagesCount * PageSize;
 
@@ -70,26 +70,26 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.InvalidMemRange;
             }
 
-            KernelResult result = Unmap(dst, pagesCount);
+            Result result = Unmap(dst, pagesCount);
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
                 return result;
             }
 
             result = Reprotect(src, pagesCount, newSrcPermission);
 
-            if (result != KernelResult.Success)
+            if (result != Result.Success)
             {
-                KernelResult mapResult = MapPages(dst, dstPageList, oldDstPermission, false, 0);
-                Debug.Assert(mapResult == KernelResult.Success);
+                Result mapResult = MapPages(dst, dstPageList, oldDstPermission, false, 0);
+                Debug.Assert(mapResult == Result.Success);
             }
 
             return result;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult MapPages(ulong dstVa, ulong pagesCount, ulong srcPa, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
+        protected override Result MapPages(ulong dstVa, ulong pagesCount, ulong srcPa, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
         {
             ulong size = pagesCount * PageSize;
 
@@ -107,11 +107,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 _cpuMemory.Fill(dstVa, size, fillValue);
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult MapPages(ulong address, KPageList pageList, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
+        protected override Result MapPages(ulong address, KPageList pageList, KMemoryPermission permission, bool shouldFillPages, byte fillValue)
         {
             using var scopedPageList = new KScopedPageList(Context.MemoryManager, pageList);
 
@@ -136,11 +136,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             scopedPageList.SignalSuccess();
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult Unmap(ulong address, ulong pagesCount)
+        protected override Result Unmap(ulong address, ulong pagesCount)
         {
             KPageList pagesToClose = new KPageList();
 
@@ -159,21 +159,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             pagesToClose.DecrementPagesReferenceCount(Context.MemoryManager);
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult Reprotect(ulong address, ulong pagesCount, KMemoryPermission permission)
+        protected override Result Reprotect(ulong address, ulong pagesCount, KMemoryPermission permission)
         {
             // TODO.
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         /// <inheritdoc/>
-        protected override KernelResult ReprotectWithAttributes(ulong address, ulong pagesCount, KMemoryPermission permission)
+        protected override Result ReprotectWithAttributes(ulong address, ulong pagesCount, KMemoryPermission permission)
         {
             // TODO.
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         /// <inheritdoc/>

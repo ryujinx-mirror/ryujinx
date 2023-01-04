@@ -1,6 +1,6 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             GetNativeHandle(binderId, typeId, out KReadableEvent readableEvent);
 
-            if (context.Process.HandleTable.GenerateHandle(readableEvent, out int handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(readableEvent, out int handle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

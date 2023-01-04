@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
@@ -27,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             CreatorProcess.IncrementReferenceCount();
         }
 
-        public KernelResult SendSyncRequest(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
+        public Result SendSyncRequest(ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
@@ -36,13 +37,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             KernelContext.CriticalSection.Enter();
 
             currentThread.SignaledObj   = null;
-            currentThread.ObjSyncResult = KernelResult.Success;
+            currentThread.ObjSyncResult = Result.Success;
 
-            KernelResult result = _parent.ServerSession.EnqueueRequest(request);
+            Result result = _parent.ServerSession.EnqueueRequest(request);
 
             KernelContext.CriticalSection.Leave();
 
-            if (result == KernelResult.Success)
+            if (result == Result.Success)
             {
                 result = currentThread.ObjSyncResult;
             }
@@ -50,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
             return result;
         }
 
-        public KernelResult SendAsyncRequest(KWritableEvent asyncEvent, ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
+        public Result SendAsyncRequest(KWritableEvent asyncEvent, ulong customCmdBuffAddr = 0, ulong customCmdBuffSize = 0)
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
@@ -58,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             KernelContext.CriticalSection.Enter();
 
-            KernelResult result = _parent.ServerSession.EnqueueRequest(request);
+            Result result = _parent.ServerSession.EnqueueRequest(request);
 
             KernelContext.CriticalSection.Leave();
 

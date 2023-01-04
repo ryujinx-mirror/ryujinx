@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 
@@ -13,11 +14,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             _context = context;
         }
 
-        public KernelResult WaitFor(Span<KSynchronizationObject> syncObjs, long timeout, out int handleIndex)
+        public Result WaitFor(Span<KSynchronizationObject> syncObjs, long timeout, out int handleIndex)
         {
             handleIndex = 0;
 
-            KernelResult result = KernelResult.TimedOut;
+            Result result = KernelResult.TimedOut;
 
             _context.CriticalSection.Enter();
 
@@ -33,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 _context.CriticalSection.Leave();
 
-                return KernelResult.Success;
+                return Result.Success;
             }
 
             if (timeout == 0)
@@ -122,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     if ((thread.SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.Paused)
                     {
                         thread.SignaledObj   = syncObj;
-                        thread.ObjSyncResult = KernelResult.Success;
+                        thread.ObjSyncResult = Result.Success;
 
                         thread.Reschedule(ThreadSchedState.Running);
                     }

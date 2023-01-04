@@ -1,6 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Sdb.Pl.Types;
+using Ryujinx.Horizon.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
 
             if (_fontSharedMemHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out _fontSharedMemHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out _fontSharedMemHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         // GetSharedFontInOrderOfPriorityForSystem(bytes<8, 1>) -> (u8, u32, buffer<unknown, 6>, buffer<unknown, 6>, buffer<unknown, 6>)
         public ResultCode GetSharedFontInOrderOfPriorityForSystem(ServiceCtx context)
         {
-            // TODO: Check the differencies with GetSharedFontInOrderOfPriority. 
+            // TODO: Check the differencies with GetSharedFontInOrderOfPriority.
 
             return GetSharedFontInOrderOfPriority(context);
         }

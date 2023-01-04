@@ -2,9 +2,9 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.Types;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Threading;
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
             Event = new KEvent(system.KernelContext);
 
-            if (KernelStatic.GetCurrentProcess().HandleTable.GenerateHandle(Event.ReadableEvent, out EventHandle) != KernelResult.Success)
+            if (KernelStatic.GetCurrentProcess().HandleTable.GenerateHandle(Event.ReadableEvent, out EventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }

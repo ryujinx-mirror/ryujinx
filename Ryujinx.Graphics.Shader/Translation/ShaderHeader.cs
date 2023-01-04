@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.Shader.Decoders;
+using Ryujinx.Common.Utilities;
 using System;
 using System.Runtime.InteropServices;
 

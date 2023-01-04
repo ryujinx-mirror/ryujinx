@@ -1,9 +1,9 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         {
             if (_notificationEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_notificationEvent.ReadableEvent, out _notificationEventHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_notificationEvent.ReadableEvent, out _notificationEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

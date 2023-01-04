@@ -3,6 +3,7 @@ using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.SupervisorCall;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -79,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         private ThreadSchedState _forcePauseFlags;
         private ThreadSchedState _forcePausePermissionFlags;
 
-        public KernelResult ObjSyncResult { get; set; }
+        public Result ObjSyncResult { get; set; }
 
         public int BasePriority { get; set; }
         public int PreferredCore { get; set; }
@@ -130,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             _activityOperationLock = new object();
         }
 
-        public KernelResult Initialize(
+        public Result Initialize(
             ulong entrypoint,
             ulong argsPtr,
             ulong stackTop,
@@ -144,8 +145,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 throw new ArgumentException($"Invalid thread type \"{type}\".");
             }
-
-            ThreadContext = new KThreadContext();
 
             PreferredCore = cpuCore;
             AffinityMask |= 1UL << cpuCore;
@@ -166,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (type == ThreadType.User)
             {
-                if (owner.AllocateThreadLocalStorage(out _tlsAddress) != KernelResult.Success)
+                if (owner.AllocateThreadLocalStorage(out _tlsAddress) != Result.Success)
                 {
                     return KernelResult.OutOfMemory;
                 }
@@ -193,6 +192,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             HostThread = new Thread(ThreadStart);
 
             Context = owner?.CreateExecutionContext() ?? new ProcessExecutionContext();
+
+            ThreadContext = new KThreadContext(Context);
 
             Context.IsAarch32 = !is64Bits;
 
@@ -230,7 +231,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     {
                         KernelContext.CriticalSection.Leave();
 
-                        return KernelResult.Success;
+                        return Result.Success;
                     }
 
                     _forcePauseFlags |= ThreadSchedState.ProcessPauseFlag;
@@ -241,10 +242,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public KernelResult Start()
+        public Result Start()
         {
             if (!KernelContext.KernelInitialized)
             {
@@ -260,7 +261,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 KernelContext.CriticalSection.Leave();
             }
 
-            KernelResult result = KernelResult.ThreadTerminating;
+            Result result = KernelResult.ThreadTerminating;
 
             KernelContext.CriticalSection.Enter();
 
@@ -287,7 +288,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                         StartHostThread();
 
-                        result = KernelResult.Success;
+                        result = Result.Success;
                         break;
                     }
                     else
@@ -465,7 +466,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             return -1;
         }
 
-        public KernelResult Sleep(long timeout)
+        public Result Sleep(long timeout)
         {
             KernelContext.CriticalSection.Enter();
 
@@ -490,7 +491,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 KernelContext.TimeManager.UnscheduleFutureInvocation(this);
             }
 
-            return 0;
+            return Result.Success;
         }
 
         public void SetPriority(int priority)
@@ -534,11 +535,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
         }
 
-        public KernelResult SetActivity(bool pause)
+        public Result SetActivity(bool pause)
         {
             lock (_activityOperationLock)
             {
-                KernelResult result = KernelResult.Success;
+                Result result = Result.Success;
 
                 KernelContext.CriticalSection.Enter();
 
@@ -581,7 +582,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 KernelContext.CriticalSection.Leave();
 
-                if (result == KernelResult.Success && pause)
+                if (result == Result.Success && pause)
                 {
                     bool isThreadRunning = true;
 
@@ -628,7 +629,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
         }
 
-        public KernelResult GetThreadContext3(out ThreadContext context)
+        public Result GetThreadContext3(out ThreadContext context)
         {
             context = default;
 
@@ -651,7 +652,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 KernelContext.CriticalSection.Leave();
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         private static uint GetPsr(IExecutionContext context)
@@ -739,7 +740,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             KernelContext.CriticalSection.Leave();
         }
 
-        public KernelResult SetCoreAndAffinityMask(int newCore, ulong newAffinityMask)
+        public Result SetCoreAndAffinityMask(int newCore, ulong newAffinityMask)
         {
             lock (_activityOperationLock)
             {
@@ -838,7 +839,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     KernelContext.CriticalSection.Leave();
                 }
 
-                return KernelResult.Success;
+                return Result.Success;
             }
         }
 
@@ -1259,6 +1260,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             if (_customThreadStart != null)
             {
                 _customThreadStart();
+
+                // Ensure that anything trying to join the HLE thread is unblocked.
+                Exit();
+                HandlePostSyscall();
             }
             else
             {
@@ -1304,7 +1309,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             Owner?.RemoveThread(this);
 
-            if (_tlsAddress != 0 && Owner.FreeThreadLocalStorage(_tlsAddress) != KernelResult.Success)
+            if (_tlsAddress != 0 && Owner.FreeThreadLocalStorage(_tlsAddress) != Result.Success)
             {
                 throw new InvalidOperationException("Unexpected failure freeing thread local storage.");
             }

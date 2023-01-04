@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Buffers;
 
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             if (result == ResultCode.Success)
             {
-                if (context.Process.HandleTable.GenerateHandle(systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(systemEvent.ReadableEvent, out int handle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

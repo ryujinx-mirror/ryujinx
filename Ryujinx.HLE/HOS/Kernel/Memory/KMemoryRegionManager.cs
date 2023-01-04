@@ -1,4 +1,4 @@
-using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 using System.Diagnostics;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
@@ -25,20 +25,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _pageHeap.UpdateUsedSize();
         }
 
-        public KernelResult AllocatePages(out KPageList pageList, ulong pagesCount)
+        public Result AllocatePages(out KPageList pageList, ulong pagesCount)
         {
             if (pagesCount == 0)
             {
                 pageList = new KPageList();
 
-                return KernelResult.Success;
+                return Result.Success;
             }
 
             lock (_pageHeap)
             {
-                KernelResult result = AllocatePagesImpl(out pageList, pagesCount, false);
+                Result result = AllocatePagesImpl(out pageList, pagesCount, false);
 
-                if (result == KernelResult.Success)
+                if (result == Result.Success)
                 {
                     foreach (var node in pageList)
                     {
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
-        private KernelResult AllocatePagesImpl(out KPageList pageList, ulong pagesCount, bool random)
+        private Result AllocatePagesImpl(out KPageList pageList, ulong pagesCount, bool random)
         {
             pageList = new KPageList();
 
@@ -95,9 +95,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         break;
                     }
 
-                    KernelResult result = pageList.AddRange(allocatedBlock, pagesPerAlloc);
+                    Result result = pageList.AddRange(allocatedBlock, pagesPerAlloc);
 
-                    if (result != KernelResult.Success)
+                    if (result != Result.Success)
                     {
                         FreePages(pageList);
                         _pageHeap.Free(allocatedBlock, pagesPerAlloc);
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.OutOfMemory;
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         private ulong AllocatePagesContiguousImpl(ulong pagesCount, ulong alignPages, bool random)

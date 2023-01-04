@@ -1,3 +1,4 @@
+using Ryujinx.Horizon.Common;
 using System.Diagnostics;
 using System.Threading;
 
@@ -16,24 +17,24 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             _referenceCount = 1;
         }
 
-        public virtual KernelResult SetName(string name)
+        public virtual Result SetName(string name)
         {
             if (!KernelContext.AutoObjectNames.TryAdd(name, this))
             {
                 return KernelResult.InvalidState;
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
-        public static KernelResult RemoveName(KernelContext context, string name)
+        public static Result RemoveName(KernelContext context, string name)
         {
             if (!context.AutoObjectNames.TryRemove(name, out _))
             {
                 return KernelResult.NotFound;
             }
 
-            return KernelResult.Success;
+            return Result.Success;
         }
 
         public static KAutoObject FindNamedObject(KernelContext context, string name)

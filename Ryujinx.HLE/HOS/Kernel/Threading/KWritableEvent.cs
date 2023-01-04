@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
@@ -16,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             _parent.ReadableEvent.Signal();
         }
 
-        public KernelResult Clear()
+        public Result Clear()
         {
             return _parent.ReadableEvent.Clear();
         }
