@@ -44,7 +44,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public void ScheduleFutureInvocation(IKFutureSchedulerObject schedulerObj, long timeout)
         {
-            long timePoint = PerformanceCounter.ElapsedTicks + ConvertNanosecondsToHostTicks(timeout);
+            long startTime = PerformanceCounter.ElapsedTicks;
+            long timePoint = startTime + ConvertNanosecondsToHostTicks(timeout);
+
+            if (timePoint < startTime)
+            {
+                timePoint = long.MaxValue;
+            }
 
             lock (_context.CriticalSection.Lock)
             {
