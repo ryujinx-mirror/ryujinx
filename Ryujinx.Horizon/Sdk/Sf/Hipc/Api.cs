@@ -51,7 +51,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             Result result = ReplyImpl(sessionHandle, messageBuffer);
 
-            result.AbortUnless(KernelResult.TimedOut, KernelResult.PortRemoteClosed);
+            result.AbortOnFailureUnless(KernelResult.TimedOut, KernelResult.PortRemoteClosed);
 
             return Result.Success;
         }
