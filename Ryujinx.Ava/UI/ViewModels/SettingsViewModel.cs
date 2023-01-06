@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -8,8 +7,6 @@ using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.Input;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Configuration;
@@ -19,7 +16,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Vulkan;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
-using Ryujinx.Input;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Configuration.System;
 using System;
@@ -30,11 +26,10 @@ using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
-    internal class SettingsViewModel : BaseModel
+    public class SettingsViewModel : BaseModel
     {
         private readonly VirtualFileSystem _virtualFileSystem;
         private readonly ContentManager _contentManager;
-        private readonly StyleableWindow _owner;
         private TimeZoneContentManager _timeZoneContentManager;
 
         private readonly List<string> _validTzRegions;
@@ -44,10 +39,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         private int _graphicsBackendMultithreadingIndex;
         private float _volume;
         private bool _isVulkanAvailable = true;
-        private bool _directoryChanged = false;
-        private List<string> _gpuIds = new List<string>();
+        private bool _directoryChanged;
+        private List<string> _gpuIds = new();
         private KeyboardHotkeys _keyboardHotkeys;
         private int _graphicsBackendIndex;
+        private string _customThemePath;
+
+        public event Action CloseWindow;
+        public event Action SaveSettingsEvent;
 
         public int ResolutionScale
         {
@@ -67,19 +66,16 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _graphicsBackendMultithreadingIndex = value;
 
-                if (_owner != null)
+                if (_graphicsBackendMultithreadingIndex != (int)ConfigurationState.Instance.Graphics.BackendThreading.Value)
                 {
-                    if (_graphicsBackendMultithreadingIndex != (int)ConfigurationState.Instance.Graphics.BackendThreading.Value)
+                    Dispatcher.UIThread.Post(async () =>
                     {
-                        Dispatcher.UIThread.Post(async () =>
-                        {
-                            await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningMessage],
-                                                                       "",
-                                                                       "",
-                                                                       LocaleManager.Instance[LocaleKeys.InputDialogOk],
-                                                                       LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningTitle]);
-                        });
-                    }
+                        await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningMessage],
+                            "",
+                            "",
+                            LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                            LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningTitle]);
+                    });
                 }
 
                 OnPropertyChanged();
@@ -120,12 +116,12 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged();
             }
         }
-        
+
         public bool IsMacOS
         {
             get => OperatingSystem.IsMacOS();
         }
-        
+
         public bool EnableDiscordIntegration { get; set; }
         public bool CheckUpdatesOnStart { get; set; }
         public bool ShowConfirmExit { get; set; }
@@ -160,7 +156,20 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public string TimeZone { get; set; }
         public string ShaderDumpPath { get; set; }
-        public string CustomThemePath { get; set; }
+
+        public string CustomThemePath
+        {
+            get
+            {
+                return _customThemePath;
+            }
+            set
+            {
+                _customThemePath = value;
+
+                OnPropertyChanged();
+            }
+        }
 
         public int Language { get; set; }
         public int Region { get; set; }
@@ -191,7 +200,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _volume = value;
 
-                ConfigurationState.Instance.System.AudioVolume.Value = (float)(_volume / 100);
+                ConfigurationState.Instance.System.AudioVolume.Value = _volume / 100;
 
                 OnPropertyChanged();
             }
@@ -199,7 +208,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public DateTimeOffset DateOffset { get; set; }
         public TimeSpan TimeOffset { get; set; }
-        public AvaloniaList<TimeZone> TimeZones { get; set; }
+        private AvaloniaList<TimeZone> TimeZones { get; set; }
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
 
@@ -214,17 +223,13 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public IGamepadDriver AvaloniaKeyboardDriver { get; }
-
-        public SettingsViewModel(VirtualFileSystem virtualFileSystem, ContentManager contentManager, StyleableWindow owner) : this()
+        public SettingsViewModel(VirtualFileSystem virtualFileSystem, ContentManager contentManager) : this()
         {
             _virtualFileSystem = virtualFileSystem;
             _contentManager = contentManager;
-            _owner = owner;
             if (Program.PreviewerDetached)
             {
                 LoadTimeZones();
-                AvaloniaKeyboardDriver = new AvaloniaKeyboardDriver(owner);
             }
         }
 
@@ -251,10 +256,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             IsSDL2Enabled = SDL2HardwareDeviceDriver.IsSupported;
         }
 
-        private unsafe void LoadAvailableGpus()
+        private void LoadAvailableGpus()
         {
             _gpuIds = new List<string>();
-            List<string> names = new List<string>();
+            List<string> names = new();
             var devices = VulkanRenderer.GetPhysicalDevices();
 
             if (devices.Length == 0)
@@ -272,7 +277,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
 
             AvailableGpus.Clear();
-            AvailableGpus.AddRange(names.Select(x => new ComboBoxItem() { Content = x }));
+            AvailableGpus.AddRange(names.Select(x => new ComboBoxItem { Content = x }));
         }
 
         public void LoadTimeZones()
@@ -299,25 +304,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             if (_validTzRegions.Contains(location))
             {
                 TimeZone = location;
-            }
-        }
-
-        public async void BrowseTheme()
-        {
-            var dialog = new OpenFileDialog()
-            {
-                Title = LocaleManager.Instance[LocaleKeys.SettingsSelectThemeFileDialogTitle],
-                AllowMultiple = false
-            };
-
-            dialog.Filters.Add(new FileDialogFilter() { Extensions = { "xaml" }, Name = LocaleManager.Instance[LocaleKeys.SettingsXamlThemeFile] });
-
-            var file = await dialog.ShowAsync(_owner);
-
-            if (file != null && file.Length > 0)
-            {
-                CustomThemePath = file[0];
-                OnPropertyChanged(nameof(CustomThemePath));
             }
         }
 
@@ -477,16 +463,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
 
             MainWindow.UpdateGraphicsConfig();
-            
-            if (_owner is SettingsWindow owner)
-            {
-                owner.ControllerSettings?.SaveCurrentProfile();
-            }
-            
-            if (_owner.Owner is MainWindow window && _directoryChanged)
-            {
-                window.ViewModel.LoadApplications();
-            }
+
+            SaveSettingsEvent?.Invoke();
 
             _directoryChanged = false;
         }
@@ -504,13 +482,13 @@ namespace Ryujinx.Ava.UI.ViewModels
         public void OkButton()
         {
             SaveSettings();
-            _owner.Close();
+            CloseWindow?.Invoke();
         }
 
         public void CancelButton()
         {
             RevertIfNotSaved();
-            _owner.Close();
+            CloseWindow?.Invoke();
         }
     }
 }

@@ -1,0 +1,35 @@
+﻿<UserControl 
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsNetworkView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:CompileBindings="True"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="NetworkPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabNetworkConnection}" />
+                <CheckBox Margin="10,0,0,0" IsChecked="{Binding EnableInternetAccess}">
+                    <TextBlock Text="{locale:Locale SettingsTabSystemEnableInternetAccess}"
+                               ToolTip.Tip="{locale:Locale EnableInternetAccessTooltip}" />
+                </CheckBox>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

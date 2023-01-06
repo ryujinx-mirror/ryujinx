@@ -1,0 +1,46 @@
+﻿<UserControl 
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsInputView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:CompileBindings="True"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer 
+        Name="InputPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel Margin="4" Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Margin="5,0"
+                              ToolTip.Tip="{locale:Locale DockModeToggleTooltip}"
+                              IsChecked="{Binding EnableDockedMode}">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabInputEnableDockedMode}" />
+                    </CheckBox>
+                    <CheckBox Margin="5,0"
+                              ToolTip.Tip="{locale:Locale DirectKeyboardTooltip}"
+                              IsChecked="{Binding EnableKeyboard}">
+                        <TextBlock Text="{locale:Locale SettingsTabInputDirectKeyboardAccess}" />
+                    </CheckBox>
+                    <CheckBox Margin="5,0"
+                              ToolTip.Tip="{locale:Locale DirectMouseTooltip}"
+                              IsChecked="{Binding EnableMouse}">
+                        <TextBlock Text="{locale:Locale SettingsTabInputDirectMouseAccess}" />
+                    </CheckBox>
+                </StackPanel>
+                <window:ControllerSettingsWindow Name="ControllerSettings" Margin="0" MinHeight="600" />
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

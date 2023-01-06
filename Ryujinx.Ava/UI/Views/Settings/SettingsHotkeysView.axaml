@@ -1,0 +1,104 @@
+﻿<UserControl 
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsHotkeysView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    xmlns:helpers="clr-namespace:Ryujinx.Ava.UI.Helpers"
+    mc:Ignorable="d"
+    x:CompileBindings="True"
+    x:DataType="viewModels:SettingsViewModel"
+    Focusable="True">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <UserControl.Resources>
+        <helpers:KeyValueConverter x:Key="Key" />
+    </UserControl.Resources>
+    <ScrollViewer 
+        Name="HotkeysPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel Margin="10" Orientation="Vertical" Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabHotkeysHotkeys}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysToggleVsyncHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.ToggleVsync, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysScreenshotHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.Screenshot, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysShowUiHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.ShowUi, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysPauseHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.Pause, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysToggleMuteHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.ToggleMute, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysResScaleUpHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.ResScaleUp, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysResScaleDownHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.ResScaleDown, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysVolumeUpHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.VolumeUp, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysVolumeDownHotkey}" Width="230" />
+                    <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
+                        <TextBlock
+                            Text="{Binding KeyboardHotkeys.VolumeDown, Mode=TwoWay, Converter={StaticResource Key}}"
+                            TextAlignment="Center" />
+                    </ToggleButton>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+   </ScrollViewer>
+</UserControl>
