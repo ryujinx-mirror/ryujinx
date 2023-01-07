@@ -1,282 +1,253 @@
-<window:StyleableWindow
-    x:Class="Ryujinx.Ava.UI.Windows.AboutWindow"
+<UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:flex="clr-namespace:Avalonia.Flexbox;assembly=Avalonia.Flexbox"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:viewModel="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
-    Width="850"
-    Height="550"
-    MinWidth="500"
-    MinHeight="550"
-    d:DesignHeight="350"
-    d:DesignWidth="400"
-    CanResize="False"
-    SizeToContent="Width"
-    WindowStartupLocation="CenterOwner"
     mc:Ignorable="d"
+    d:DesignHeight="260"
+    d:DesignWidth="550"
+    Height="260"
+    Width="550"
+    x:Class="Ryujinx.Ava.UI.Windows.AboutWindow"
+    x:DataType="viewModel:AboutWindowViewModel"
+    x:CompileBindings="True"
+    Margin="0 -12 0 0"
     Focusable="True">
+	<Design.DataContext>
+		<viewModel:AboutWindowViewModel />
+	</Design.DataContext>
 	<Grid
-        Margin="15"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
-			<RowDefinition Height="*" />
-		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="Auto" />
 			<ColumnDefinition Width="Auto" />
 			<ColumnDefinition Width="*" />
 		</Grid.ColumnDefinitions>
 		<Grid
-            Grid.Row="1"
             Grid.Column="0"
-            Margin="20"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch">
 			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
 				<RowDefinition Height="*" />
-				<RowDefinition Height="*" />
-				<RowDefinition />
-				<RowDefinition />
 				<RowDefinition Height="Auto" />
 			</Grid.RowDefinitions>
-			<Grid Grid.Row="0">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition />
-					<ColumnDefinition />
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto" />
-					<RowDefinition Height="Auto" />
-					<RowDefinition Height="Auto" />
-				</Grid.RowDefinitions>
-				<Image
-                    Grid.Row="0"
-                    Grid.RowSpan="3"
-                    Grid.Column="0"
-                    Height="110"
-                    MinWidth="50"
-                    Margin="5,10,20,10"
-                    Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
-				<TextBlock
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Margin="0,20,0,0"
-                    FontSize="35"
-                    Text="Ryujinx"
-                    TextAlignment="Center" />
-				<TextBlock
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Margin="0,0,0,0"
-                    FontSize="16"
-                    Text="(REE-YOU-JINX)"
-                    TextAlignment="Center" />
-				<Button
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    Margin="0"
-                    HorizontalAlignment="Center"
-                    Background="Transparent"
-                    Click="Button_OnClick"
-                    Tag="https://www.ryujinx.org/">
-					<TextBlock
-                        Text="www.ryujinx.org"
-                        TextAlignment="Center"
-                        TextDecorations="Underline"
-                        ToolTip.Tip="{locale:Locale AboutUrlTooltipMessage}" />
-				</Button>
-			</Grid>
-			<TextBlock
-                Grid.Row="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Text="{Binding Version}"
-                TextAlignment="Center" />
-			<TextBlock
-                Grid.Row="2"
-                Margin="20"
-                HorizontalAlignment="Center"
-                MaxLines="2"
-                Text="{locale:Locale AboutDisclaimerMessage}"
-                TextAlignment="Center" />
-			<TextBlock
-                Name="AmiiboLabel"
-                Grid.Row="3"
-                Margin="20"
-                HorizontalAlignment="Center"
-                MaxLines="2"
-                PointerPressed="AmiiboLabel_OnPointerPressed"
-                Text="{locale:Locale AboutAmiiboDisclaimerMessage}"
-                TextAlignment="Center" />
 			<StackPanel
-                Grid.Row="4"
-                HorizontalAlignment="Center"
-                Orientation="Horizontal"
-                Spacing="10">
-				<StackPanel Orientation="Vertical" ToolTip.Tip="{locale:Locale AboutPatreonUrlTooltipMessage}">
+				Grid.Row="0"
+				Spacing="10"
+				HorizontalAlignment="Stretch"
+				VerticalAlignment="Stretch">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<Image
+						Grid.Column="0"
+						Height="80"
+						Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
+					<flex:FlexPanel
+						Grid.Column="2"
+						HorizontalAlignment="Stretch"
+						VerticalAlignment="Stretch"
+						Direction="Column"
+						JustifyContent="SpaceAround"
+						RowSpacing="2">
+						<TextBlock
+							FontSize="28"
+							FontWeight="Bold"
+							Text="Ryujinx"
+							TextAlignment="Left" />
+						<TextBlock
+							Text="(REE-YOU-JINX)"
+							TextAlignment="Left" />
+					</flex:FlexPanel>
+				</Grid>
+				<TextBlock
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					Text="{Binding Version}"
+					TextAlignment="Center"
+					FontSize="10"
+					LineHeight="12" />
+			</StackPanel>
+			<StackPanel
+				Grid.Row="2"
+				Spacing="10"
+				HorizontalAlignment="Stretch"
+				VerticalAlignment="Stretch">
+				<TextBlock
+	                HorizontalAlignment="Center"
+	                Width="200"
+	                Text="{locale:Locale AboutDisclaimerMessage}"
+	                TextAlignment="Center"
+	                TextWrapping="Wrap"
+	                FontSize="10"
+	                LineHeight="12" />
+				<TextBlock
+	                Name="AmiiboLabel"
+	                HorizontalAlignment="Center"
+	                Width="200"
+	                PointerPressed="AmiiboLabel_OnPointerPressed"
+	                Text="{locale:Locale AboutAmiiboDisclaimerMessage}"
+	                TextAlignment="Center"
+	                TextWrapping="Wrap"
+	                FontSize="10"
+	                LineHeight="12" />
+				<StackPanel
+	                HorizontalAlignment="Center"
+	                Orientation="Horizontal"
+	                Spacing="10">
 					<Button
-                        Height="65"
-                        Background="Transparent"
-                        Click="Button_OnClick"
-                        Tag="https://www.patreon.com/ryujinx">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<Image Source="resm:Ryujinx.Ui.Common.Resources.Logo_Patreon.png?assembly=Ryujinx.Ui.Common" />
-							<TextBlock
-                                Grid.Row="1"
-                                Margin="0,5,0,0"
-                                HorizontalAlignment="Center"
-                                Text="Patreon" />
-						</Grid>
+						MaxHeight="30"
+						MaxWidth="30"
+						MinHeight="30"
+						MinWidth="30"
+						Padding="8"
+						CornerRadius="15"
+						Background="Transparent"
+						Click="Button_OnClick"
+						Tag="https://www.patreon.com/ryujinx"
+						ToolTip.Tip="{locale:Locale AboutPatreonUrlTooltipMessage}">
+						<Image Source="{Binding PatreonLogo}" />
 					</Button>
-				</StackPanel>
-				<StackPanel Orientation="Vertical" ToolTip.Tip="{locale:Locale AboutGithubUrlTooltipMessage}">
 					<Button
-                        Height="65"
-                        Background="Transparent"
-                        Click="Button_OnClick"
-                        Tag="https://github.com/Ryujinx/Ryujinx">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<Image Source="resm:Ryujinx.Ui.Common.Resources.Logo_GitHub.png?assembly=Ryujinx.Ui.Common" />
-							<TextBlock
-                                Grid.Row="1"
-                                Margin="0,5,0,0"
-                                HorizontalAlignment="Center"
-                                Text="GitHub" />
-						</Grid>
+						MaxHeight="30"
+						MaxWidth="30"
+						MinHeight="30"
+						MinWidth="30"
+						Padding="8"
+						CornerRadius="15"
+						Background="Transparent"
+						Click="Button_OnClick"
+						Tag="https://github.com/Ryujinx/Ryujinx"
+						ToolTip.Tip="{locale:Locale AboutGithubUrlTooltipMessage}">
+						<Image Source="{Binding GithubLogo}" />
 					</Button>
-				</StackPanel>
-				<StackPanel Orientation="Vertical" ToolTip.Tip="{locale:Locale AboutDiscordUrlTooltipMessage}">
 					<Button
-                        Height="65"
-                        Background="Transparent"
-                        Click="Button_OnClick"
-                        Tag="https://discordapp.com/invite/N2FmfVc">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<Image Source="resm:Ryujinx.Ui.Common.Resources.Logo_Discord.png?assembly=Ryujinx.Ui.Common" />
-							<TextBlock
-                                Grid.Row="1"
-                                Margin="0,5,0,0"
-                                HorizontalAlignment="Center"
-                                Text="Discord" />
-						</Grid>
+						MaxHeight="30"
+						MaxWidth="30"
+						MinHeight="30"
+						MinWidth="30"
+						Padding="8"
+						CornerRadius="15"
+						Background="Transparent"
+						Click="Button_OnClick"
+						Tag="https://discordapp.com/invite/N2FmfVc"
+						ToolTip.Tip="{locale:Locale AboutDiscordUrlTooltipMessage}">
+						<Image Source="{Binding DiscordLogo}" />
 					</Button>
-				</StackPanel>
-				<StackPanel Orientation="Vertical" ToolTip.Tip="{locale:Locale AboutTwitterUrlTooltipMessage}">
 					<Button
-                        Height="65"
-                        Background="Transparent"
-                        Click="Button_OnClick"
-                        Tag="https://twitter.com/RyujinxEmu">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<Image Source="resm:Ryujinx.Ui.Common.Resources.Logo_Twitter.png?assembly=Ryujinx.Ui.Common" />
-							<TextBlock
-                                Grid.Row="1"
-                                Margin="0,5,0,0"
-                                HorizontalAlignment="Center"
-                                Text="Twitter" />
-						</Grid>
+						MaxHeight="30"
+						MaxWidth="30"
+						MinHeight="30"
+						MinWidth="30"
+						Padding="8"
+						CornerRadius="15"
+						Background="Transparent"
+						Click="Button_OnClick"
+						Tag="https://twitter.com/RyujinxEmu"
+						ToolTip.Tip="{locale:Locale AboutTwitterUrlTooltipMessage}">
+						<Image Source="{Binding TwitterLogo}" />
+					</Button>
+					<Button
+						MaxHeight="30"
+						MaxWidth="30"
+						MinHeight="30"
+						MinWidth="30"
+						Padding="8"
+						CornerRadius="15"
+						Background="Transparent"
+						Click="Button_OnClick"
+						Tag="https://www.ryujinx.org"
+						ToolTip.Tip="{locale:Locale AboutUrlTooltipMessage}">
+						<ui:SymbolIcon
+							Symbol="Link"
+							Foreground="{DynamicResource ThemeForegroundColor}" />
 					</Button>
 				</StackPanel>
 			</StackPanel>
 		</Grid>
 		<Border
-            Grid.Row="1"
             Grid.Column="1"
-            Width="2"
-            Margin="5"
+            Width="1"
             VerticalAlignment="Stretch"
-            BorderBrush="White"
-            BorderThickness="1,0,0,0">
-			<Separator Width="0" />
-		</Border>
+            BorderBrush="{DynamicResource ThemeControlBorderColor}"
+            BorderThickness="1,0,0,0"
+            Margin="20 0"/>
 		<Grid
-            Grid.Row="1"
             Grid.Column="2"
-            Margin="20"
-            HorizontalAlignment="Stretch"
+			HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto" />
 				<RowDefinition Height="Auto" />
 				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
 			</Grid.RowDefinitions>
-			<TextBlock
-                FontWeight="Bold"
-                Text="{locale:Locale AboutRyujinxAboutTitle}"
-                TextDecorations="Underline" />
-			<TextBlock
-                Grid.Row="1"
-                Margin="20,5,5,5"
-                LineHeight="20"
-                Text="{locale:Locale AboutRyujinxAboutContent}" />
-			<TextBlock
-                Grid.Row="2"
-                Margin="0,10,0,0"
-                FontWeight="Bold"
-                Text="{locale:Locale AboutRyujinxMaintainersTitle}"
-                TextDecorations="Underline" />
-			<TextBlock
-                Grid.Row="3"
-                Margin="20,5,5,5"
-                LineHeight="20"
-                Text="{Binding Developers}" />
-			<Button
-                Grid.Row="4"
-                HorizontalAlignment="Right"
-                Background="Transparent"
-                Click="Button_OnClick"
-                Tag="https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a">
+			<StackPanel
+				Grid.Row="0"
+				Margin="0 10 0 0"
+				Spacing="2">
 				<TextBlock
-                    Text="{locale:Locale AboutRyujinxContributorsButtonHeader}"
-                    TextAlignment="Right"
-                    TextDecorations="Underline"
-                    ToolTip.Tip="{locale:Locale AboutRyujinxMaintainersContentTooltipMessage}" />
-			</Button>
-			<TextBlock
-                Grid.Row="5"
-                Margin="0,0,0,0"
-                FontWeight="Bold"
-                Text="{locale:Locale AboutRyujinxSupprtersTitle}"
-                TextDecorations="Underline" />
-			<Border
-                Grid.Row="6"
-                Width="460"
-                Height="200"
-                Margin="20,5"
-                Padding="5"
-                VerticalAlignment="Stretch"
-                BorderBrush="White"
-                BorderThickness="1">
+					FontWeight="Bold"
+					FontSize="15"
+					Text="{locale:Locale AboutRyujinxAboutTitle}" />
 				<TextBlock
-                    Name="SupportersTextBlock"
-                    VerticalAlignment="Top"
-                    Text="{Binding Supporters}"
-                    TextWrapping="Wrap" />
-			</Border>
+					FontSize="10"
+					TextWrapping="Wrap"
+					Text="{locale:Locale AboutRyujinxAboutContent}" />
+			</StackPanel>
+			<StackPanel
+				Grid.Row="1"
+				Margin="0 10 0 0"
+				Spacing="2">
+				<TextBlock
+					FontWeight="Bold"
+					FontSize="15"
+					Text="{locale:Locale AboutRyujinxMaintainersTitle}" />
+				<TextBlock
+					FontSize="10"
+					TextWrapping="Wrap"
+					Text="{Binding Developers}" />
+				<Button
+					HorizontalAlignment="Left"
+					Background="Transparent"
+					Click="Button_OnClick"
+					Padding="5"
+					Tag="https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a">
+					<TextBlock
+						FontSize="10"
+						Text="{locale:Locale AboutRyujinxContributorsButtonHeader}"
+						TextAlignment="Right"
+						ToolTip.Tip="{locale:Locale AboutRyujinxMaintainersContentTooltipMessage}" />
+				</Button>
+			</StackPanel>
+			<StackPanel
+				Grid.Row="2"
+				Margin="0 10 0 0"
+				Spacing="2">
+				<TextBlock
+					FontWeight="Bold"
+					FontSize="15"
+					Text="{locale:Locale AboutRyujinxSupprtersTitle}" />
+				<ScrollViewer
+					VerticalScrollBarVisibility="Visible"
+					HorizontalScrollBarVisibility="Disabled"
+					Height="70">
+					<TextBlock
+						Name="SupportersTextBlock"
+						VerticalAlignment="Top"
+						FontSize="10"
+						TextWrapping="Wrap"
+						Text="{Binding Supporters}" />
+				</ScrollViewer>
+			</StackPanel>
 		</Grid>
 	</Grid>
-</window:StyleableWindow>
+</UserControl>

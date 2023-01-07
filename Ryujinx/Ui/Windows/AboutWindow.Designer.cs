@@ -206,7 +206,7 @@ namespace Ryujinx.Ui.Windows
             //
             // _patreonLogo
             //
-            _patreonLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Patreon.png", 30, 30))
+            _patreonLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Patreon_Light.png", 30, 30))
             {
                 Margin = 10
             };
@@ -236,7 +236,7 @@ namespace Ryujinx.Ui.Windows
             //
             // _githubLogo
             //
-            _githubLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_GitHub.png", 30, 30))
+            _githubLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_GitHub_Light.png", 30, 30))
             {
                 Margin = 10
             };
@@ -266,7 +266,7 @@ namespace Ryujinx.Ui.Windows
             //
             // _discordLogo
             //
-            _discordLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Discord.png", 30, 30))
+            _discordLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Discord_Light.png", 30, 30))
             {
                 Margin = 10
             };
@@ -296,7 +296,7 @@ namespace Ryujinx.Ui.Windows
             //
             // _twitterLogo
             //
-            _twitterLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Twitter.png", 30, 30))
+            _twitterLogo = new Image(new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Twitter_Light.png", 30, 30))
             {
                 Margin = 10
             };

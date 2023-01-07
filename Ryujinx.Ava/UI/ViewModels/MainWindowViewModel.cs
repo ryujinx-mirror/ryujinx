@@ -1018,7 +1018,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void OpenAboutWindow()
         {
-            await new AboutWindow().ShowDialog(_owner);
+            await AboutWindow.Show();
         }
 
         public void ChangeLanguage(object obj)
