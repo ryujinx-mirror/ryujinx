@@ -62,6 +62,16 @@
     </Content>
   </ItemGroup>
 
+   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+     <Content Include="..\distribution\linux\Ryujinx.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+     </Content>
+     <Content Include="..\distribution\linux\mime\Ryujinx.xml">
+       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+       <TargetPath>mime\Ryujinx.xml</TargetPath>
+     </Content>
+   </ItemGroup>
+
   <!-- Due to .net core 3.1 embedded resource loading -->
   <PropertyGroup>
     <EmbeddedResourceUseDependentUponConvention>false</EmbeddedResourceUseDependentUponConvention>

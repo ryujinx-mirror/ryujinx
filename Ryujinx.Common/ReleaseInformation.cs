@@ -5,7 +5,7 @@ using System.Reflection;
 namespace Ryujinx.Common
 {
     // DO NOT EDIT, filled by CI
-    public static class ReleaseInformations
+    public static class ReleaseInformation
     {
         private const string FlatHubChannelOwner = "flathub";
 

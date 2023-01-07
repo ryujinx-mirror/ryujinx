@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
 Name=Ryujinx
-Comment=A Nintendo Switch Emulator
 Type=Application
+Icon=Ryujinx
+Exec=env DOTNET_EnableAlternateStackCheck=1 Ryujinx %f
+Comment=A Nintendo Switch Emulator
 GenericName=Nintendo Switch Emulator
-Icon=ryujinx
 Terminal=false
-Exec=Ryujinx %f
-Categories=Game;Emulator;GTK;
+Categories=Game;Emulator;
 MimeType=application/x-nx-nca;application/x-nx-nro;application/x-nx-nso;application/x-nx-nsp;application/x-nx-xci;
 Keywords=Switch;Nintendo;Emulator;
 StartupWMClass=Ryujinx

@@ -95,7 +95,7 @@ namespace Ryujinx.Modules
             {
                 using (HttpClient jsonClient = ConstructHttpClient())
                 {
-                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformations.ReleaseChannelOwner}/{ReleaseInformations.ReleaseChannelRepo}/releases/latest";
+                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformation.ReleaseChannelOwner}/{ReleaseInformation.ReleaseChannelRepo}/releases/latest";
 
                     string fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
                     JObject jsonRoot = JObject.Parse(fetchedJson);
@@ -625,7 +625,7 @@ namespace Ryujinx.Modules
                 return false;
             }
 
-            if (Program.Version.Contains("dirty") || !ReleaseInformations.IsValid())
+            if (Program.Version.Contains("dirty") || !ReleaseInformation.IsValid())
             {
                 if (showWarnings)
                 {
@@ -640,7 +640,7 @@ namespace Ryujinx.Modules
 #else
             if (showWarnings)
             {
-                if (ReleaseInformations.IsFlatHubBuild())
+                if (ReleaseInformation.IsFlatHubBuild())
                 {
                     ContentDialogHelper.CreateWarningDialog(LocaleManager.Instance[LocaleKeys.UpdaterDisabledWarningTitle], LocaleManager.Instance[LocaleKeys.DialogUpdaterFlatpakNotSupportedMessage]);
                 }

@@ -103,7 +103,7 @@ namespace Ryujinx.Modules
             {
                 using (HttpClient jsonClient = ConstructHttpClient())
                 {
-                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformations.ReleaseChannelOwner}/{ReleaseInformations.ReleaseChannelRepo}/releases/latest";
+                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformation.ReleaseChannelOwner}/{ReleaseInformation.ReleaseChannelRepo}/releases/latest";
 
                     // Fetch latest build information
                     string  fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
@@ -556,7 +556,7 @@ namespace Ryujinx.Modules
                 return false;
             }
 
-            if (Program.Version.Contains("dirty") || !ReleaseInformations.IsValid())
+            if (Program.Version.Contains("dirty") || !ReleaseInformation.IsValid())
             {
                 if (showWarnings)
                 {
@@ -570,7 +570,7 @@ namespace Ryujinx.Modules
 #else
             if (showWarnings)
             {
-                if (ReleaseInformations.IsFlatHubBuild())
+                if (ReleaseInformation.IsFlatHubBuild())
                 {
                     GtkDialog.CreateWarningDialog("Updater Disabled!", "Please update Ryujinx via FlatHub.");
                 }

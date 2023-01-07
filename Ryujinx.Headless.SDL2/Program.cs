@@ -59,7 +59,7 @@ namespace Ryujinx.Headless.SDL2
 
         static void Main(string[] args)
         {
-            Version = ReleaseInformations.GetVersion();
+            Version = ReleaseInformation.GetVersion();
 
             Console.Title = $"Ryujinx Console {Version} (Headless SDL2)";
 
@@ -419,7 +419,7 @@ namespace Ryujinx.Headless.SDL2
             if ((bool)option.EnableFileLog)
             {
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(ReleaseInformations.GetBaseApplicationDirectory(), "file"),
+                    new FileLogTarget(ReleaseInformation.GetBaseApplicationDirectory(), "file"),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));
