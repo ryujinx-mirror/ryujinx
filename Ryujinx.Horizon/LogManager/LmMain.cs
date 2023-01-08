@@ -2,11 +2,14 @@
 {
     class LmMain : IService
     {
-        public static void Main()
+        public static void Main(ServiceTable serviceTable)
         {
-            LmIpcServer ipcServer = new LmIpcServer();
+            LmIpcServer ipcServer = new();
 
             ipcServer.Initialize();
+
+            serviceTable.SignalServiceReady();
+
             ipcServer.ServiceRequests();
             ipcServer.Shutdown();
         }

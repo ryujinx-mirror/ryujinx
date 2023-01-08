@@ -9,23 +9,23 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Ryujinx.Horizon.LogManager
+namespace Ryujinx.Horizon.LogManager.Ipc
 {
-    partial class LmLogger : IServiceObject
+    partial class LmLogger : ILmLogger
     {
-        private readonly LmLog _log;
-        private readonly ulong _clientProcessId;
+        private readonly LogService _log;
+        private readonly ulong      _pid;
 
-        public LmLogger(LmLog log, ulong clientProcessId)
+        public LmLogger(LogService log, ulong pid)
         {
             _log = log;
-            _clientProcessId = clientProcessId;
+            _pid = pid;
         }
 
         [CmifCommand(0)]
         public Result Log([Buffer(HipcBufferFlags.In | HipcBufferFlags.AutoSelect)] Span<byte> message)
         {
-            if (!SetProcessId(message, _clientProcessId))
+            if (!SetProcessId(message, _pid))
             {
                 return Result.Success;
             }
@@ -35,7 +35,7 @@ namespace Ryujinx.Horizon.LogManager
             return Result.Success;
         }
 
-        [CmifCommand(1)]
+        [CmifCommand(1)] // 3.0.0+
         public Result SetDestination(LogDestination destination)
         {
             _log.LogDestination = destination;
@@ -48,7 +48,6 @@ namespace Ryujinx.Horizon.LogManager
             ref LogPacketHeader header = ref MemoryMarshal.Cast<byte, LogPacketHeader>(message)[0];
 
             uint expectedMessageSize = (uint)Unsafe.SizeOf<LogPacketHeader>() + header.PayloadSize;
-
             if (expectedMessageSize != (uint)message.Length)
             {
                 Logger.Warning?.Print(LogClass.ServiceLm, $"Invalid message size (expected 0x{expectedMessageSize:X} but got 0x{message.Length:X}).");
@@ -63,13 +62,11 @@ namespace Ryujinx.Horizon.LogManager
 
         private static string LogImpl(ReadOnlySpan<byte> message)
         {
-            SpanReader reader = new SpanReader(message);
+            SpanReader      reader  = new(message);
+            LogPacketHeader header  = reader.Read<LogPacketHeader>();
+            StringBuilder   builder = new();
 
-            LogPacketHeader header = reader.Read<LogPacketHeader>();
-
-            StringBuilder sb = new StringBuilder();
-
-            sb.AppendLine($"Guest Log:\n  Log level: {header.Severity}");
+            builder.AppendLine($"Guest Log:\n  Log level: {header.Severity}");
 
             while (reader.Length > 0)
             {
@@ -78,7 +75,7 @@ namespace Ryujinx.Horizon.LogManager
 
                 LogDataChunkKey field = (LogDataChunkKey)type;
 
-                string fieldStr = string.Empty;
+                string fieldStr;
 
                 if (field == LogDataChunkKey.Start)
                 {
@@ -111,16 +108,16 @@ namespace Ryujinx.Horizon.LogManager
                     fieldStr = $"Field{field}: '{Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd()}'";
                 }
 
-                sb.AppendLine($"    {fieldStr}");
+                builder.AppendLine($"    {fieldStr}");
             }
 
-            return sb.ToString();
+            return builder.ToString();
         }
 
         private static int ReadUleb128(ref SpanReader reader)
         {
             int result = 0;
-            int count = 0;
+            int count  = 0;
 
             byte encoded;
 

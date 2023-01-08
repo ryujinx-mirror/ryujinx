@@ -21,7 +21,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
             var inHeader = MemoryMarshal.Cast<byte, CmifDomainInHeader>(inRawData)[0];
 
-            ReadOnlySpan<byte> inDomainRawData = inRawData.Slice(Unsafe.SizeOf<CmifDomainInHeader>());
+            ReadOnlySpan<byte> inDomainRawData = inRawData[Unsafe.SizeOf<CmifDomainInHeader>()..];
 
             int targetObjectId = inHeader.ObjectId;
 
@@ -39,7 +39,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
                         return SfResult.InvalidHeaderSize;
                     }
 
-                    ReadOnlySpan<byte> inMessageRawData = inDomainRawData.Slice(0, inHeader.DataSize);
+                    ReadOnlySpan<byte> inMessageRawData = inDomainRawData[..inHeader.DataSize];
 
                     if (inHeader.ObjectsCount > DomainServiceObjectProcessor.MaximumObjects)
                     {

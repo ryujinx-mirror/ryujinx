@@ -61,7 +61,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             clientHandle = 0;
 
-            if (!(_session.ServiceObjectHolder.ServiceObject is DomainServiceObject domain))
+            if (_session.ServiceObjectHolder.ServiceObject is not DomainServiceObject domain)
             {
                 return HipcResult.TargetNotDomain;
             }

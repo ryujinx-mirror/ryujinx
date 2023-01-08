@@ -136,9 +136,9 @@ namespace Ryujinx.Horizon.Sdk.Sf
             ulong pointerBufferTail = context.PointerBuffer.Address;
             ulong pointerBufferHead = pointerBufferTail + context.PointerBuffer.Size;
 
-            int sendMapAliasIndex = 0;
-            int recvMapAliasIndex = 0;
-            int sendPointerIndex = 0;
+            int sendMapAliasIndex       = 0;
+            int recvMapAliasIndex       = 0;
+            int sendPointerIndex        = 0;
             int unfixedRecvPointerIndex = 0;
 
             for (int i = 0; i < _args.Length; i++)
@@ -188,8 +188,9 @@ namespace Ryujinx.Horizon.Sdk.Sf
                     if (flags.HasFlag(HipcBufferFlags.In))
                     {
                         var descriptor = context.Request.Data.SendStatics[sendPointerIndex++];
-                        ulong address = descriptor.Address;
-                        ulong size = descriptor.Size;
+                        ulong address  = descriptor.Address;
+                        ulong size     = descriptor.Size;
+
                         _bufferRanges[i] = new PointerAndSize(address, size);
 
                         if (size != 0)
@@ -207,13 +208,14 @@ namespace Ryujinx.Horizon.Sdk.Sf
                         }
                         else
                         {
-                            var data = MemoryMarshal.Cast<uint, byte>(context.Request.Data.DataWords);
-                            var recvPointerSizes = MemoryMarshal.Cast<byte, ushort>(data.Slice(runtimeMetadata.UnfixedOutPointerSizeOffset));
+                            var data             = MemoryMarshal.Cast<uint, byte>(context.Request.Data.DataWords);
+                            var recvPointerSizes = MemoryMarshal.Cast<byte, ushort>(data[runtimeMetadata.UnfixedOutPointerSizeOffset..]);
+
                             size = recvPointerSizes[unfixedRecvPointerIndex++];
                         }
 
                         pointerBufferHead = BitUtils.AlignDown(pointerBufferHead - size, 0x10UL);
-                        _bufferRanges[i] = new PointerAndSize(pointerBufferHead, size);
+                        _bufferRanges[i]  = new PointerAndSize(pointerBufferHead, size);
                     }
                 }
             }
@@ -304,16 +306,17 @@ namespace Ryujinx.Horizon.Sdk.Sf
         {
             ref var meta = ref context.Request.Meta;
             bool requestValid = true;
-            requestValid &= meta.SendPid == _hasInProcessIdHolder;
-            requestValid &= meta.SendStaticsCount == _inPointerBuffersCount;
-            requestValid &= meta.SendBuffersCount == _inMapAliasBuffersCount;
-            requestValid &= meta.ReceiveBuffersCount == _outMapAliasBuffersCount;
+            requestValid &= meta.SendPid              == _hasInProcessIdHolder;
+            requestValid &= meta.SendStaticsCount     == _inPointerBuffersCount;
+            requestValid &= meta.SendBuffersCount     == _inMapAliasBuffersCount;
+            requestValid &= meta.ReceiveBuffersCount  == _outMapAliasBuffersCount;
             requestValid &= meta.ExchangeBuffersCount == 0;
-            requestValid &= meta.CopyHandlesCount == _inCopyHandlesCount;
-            requestValid &= meta.MoveHandlesCount == _inMoveHandlesCount;
+            requestValid &= meta.CopyHandlesCount     == _inCopyHandlesCount;
+            requestValid &= meta.MoveHandlesCount     == _inMoveHandlesCount;
 
             int rawSizeInBytes = meta.DataWordsCount * sizeof(uint);
             int commandRawSize = BitUtils.AlignUp(runtimeMetadata.UnfixedOutPointerSizeOffset + (OutUnfixedSizePointerBuffersCount * sizeof(ushort)), sizeof(uint));
+
             requestValid &= rawSizeInBytes >= commandRawSize;
 
             return requestValid ? Result.Success : HipcResult.InvalidCmifRequest;
@@ -340,7 +343,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
             {
                 if (_args[i].Type == CommandArgType.InObject)
                 {
-                    int index = inObjectIndex++;
+                    int index    = inObjectIndex++;
                     var inObject = inObjects[index];
 
                     objects[index] = inObject?.ServiceObject;
@@ -365,6 +368,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
                 _outCopyHandlesCount,
                 _outMoveHandlesCount + runtimeMetadata.OutObjectsCount);
             outRawData = MemoryMarshal.Cast<uint, byte>(response.DataWords);
+
             return response;
         }
 
@@ -377,6 +381,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
                 (BitUtils.AlignUp(rawDataSize, 4) + 0x10) / sizeof(uint),
                 0,
                 0);
+
             outRawData = MemoryMarshal.Cast<uint, byte>(response.DataWords);
         }
 
@@ -410,6 +415,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
             if (obj == null)
             {
                 response.MoveHandles[index] = 0;
+
                 return;
             }
 

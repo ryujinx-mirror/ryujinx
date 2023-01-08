@@ -2,6 +2,6 @@
 {
     interface IService
     {
-        abstract static void Main();
+        abstract static void Main(ServiceTable serviceTable);
     }
 }

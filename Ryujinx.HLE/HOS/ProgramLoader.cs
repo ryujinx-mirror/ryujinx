@@ -182,6 +182,8 @@ namespace Ryujinx.HLE.HOS
             byte[] arguments = null,
             params IExecutable[] executables)
         {
+            context.Device.System.ServiceTable.WaitServicesReady();
+
             LibHac.Result rc = metaData.GetNpdm(out var npdm);
 
             if (rc.IsFailure())

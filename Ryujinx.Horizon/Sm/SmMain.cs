@@ -1,29 +1,33 @@
-﻿using Ryujinx.Horizon.Sdk.Sf.Hipc;
+﻿using Ryujinx.Horizon.Prepo.Types;
+using Ryujinx.Horizon.Prepo;
+using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
 using Ryujinx.Horizon.Sm.Impl;
+using Ryujinx.Horizon.Sm.Types;
 
 namespace Ryujinx.Horizon.Sm
 {
     public class SmMain
     {
-        private enum PortIndex
-        {
-            User,
-            Manager
-        }
+        private const int SmMaxSessionsCount      = 64;
+        private const int SmmMaxSessionsCount     = 1;
+        private const int SmTotalMaxSessionsCount = SmMaxSessionsCount + SmmMaxSessionsCount;
 
         private const int MaxPortsCount = 2;
 
-        private readonly ServerManager _serverManager = new ServerManager(null, null, MaxPortsCount, ManagerOptions.Default, 0);
-        private readonly ServiceManager _serviceManager = new ServiceManager();
+        private SmServerManager _serverManager;
+
+        private readonly ServiceManager _serviceManager = new();
 
         public void Main()
         {
-            HorizonStatic.Syscall.ManageNamedPort(out int smHandle, "sm:", 64).AbortOnFailure();
+            HorizonStatic.Syscall.ManageNamedPort(out int smHandle, "sm:", SmMaxSessionsCount).AbortOnFailure();
 
-            _serverManager.RegisterServer((int)PortIndex.User, smHandle);
-            _serviceManager.RegisterServiceForSelf(out int smmHandle, ServiceName.Encode("sm:m"), 1).AbortOnFailure();
-            _serverManager.RegisterServer((int)PortIndex.Manager, smmHandle);
+            _serverManager = new SmServerManager(_serviceManager, null, null, MaxPortsCount, ManagerOptions.Default, SmTotalMaxSessionsCount);
+
+            _serverManager.RegisterServer((int)SmPortIndex.User, smHandle);
+            _serviceManager.RegisterServiceForSelf(out int smmHandle, ServiceName.Encode("sm:m"), SmmMaxSessionsCount).AbortOnFailure();
+            _serverManager.RegisterServer((int)SmPortIndex.Manager, smmHandle);
             _serverManager.ServiceRequests();
         }
     }

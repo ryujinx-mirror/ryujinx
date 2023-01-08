@@ -123,6 +123,8 @@ namespace Ryujinx.HLE.HOS
 
         internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
+        internal ServiceTable ServiceTable { get; private set; }
+
         public bool IsPaused { get; private set; }
 
         public Horizon(Switch device)
@@ -326,6 +328,7 @@ namespace Ryujinx.HLE.HOS
 
         private void StartNewServices()
         {
+            ServiceTable = new ServiceTable();
             var services = ServiceTable.GetServices(new HorizonOptions(Device.Configuration.IgnoreMissingServices));
 
             foreach (var service in services)

@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Ryujinx.Memory\Ryujinx.Memory.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="LibHac" />
+  </ItemGroup>
+
 </Project>

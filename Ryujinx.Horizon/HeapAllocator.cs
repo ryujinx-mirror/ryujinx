@@ -12,12 +12,12 @@ namespace Ryujinx.Horizon
         private struct Range : IComparable<Range>
         {
             public ulong Offset { get; }
-            public ulong Size { get; }
+            public ulong Size   { get; }
 
             public Range(ulong offset, ulong size)
             {
                 Offset = offset;
-                Size = size;
+                Size   = size;
             }
 
             public int CompareTo(Range other)
@@ -31,7 +31,7 @@ namespace Ryujinx.Horizon
 
         public HeapAllocator()
         {
-            _freeRanges = new List<Range>();
+            _freeRanges      = new List<Range>();
             _currentHeapSize = 0;
         }
 
@@ -70,8 +70,8 @@ namespace Ryujinx.Horizon
                 var range = _freeRanges[i];
 
                 ulong alignedOffset = BitUtils.AlignUp(range.Offset, alignment);
-                ulong sizeDelta = alignedOffset - range.Offset;
-                ulong usableSize = range.Size - sizeDelta;
+                ulong sizeDelta     = alignedOffset - range.Offset;
+                ulong usableSize    = range.Size - sizeDelta;
 
                 if (sizeDelta < range.Size && usableSize >= size)
                 {
@@ -82,7 +82,7 @@ namespace Ryujinx.Horizon
                         InsertFreeRange(range.Offset, sizeDelta);
                     }
 
-                    ulong endOffset = range.Offset + range.Size;
+                    ulong endOffset     = range.Offset + range.Size;
                     ulong remainingSize = endOffset - (alignedOffset + size);
                     if (remainingSize != 0)
                     {

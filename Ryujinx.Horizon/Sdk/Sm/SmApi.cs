@@ -7,16 +7,18 @@ namespace Ryujinx.Horizon.Sdk.Sm
 {
     class SmApi
     {
+        private const string SmName = "sm:";
+
         private int _portHandle;
 
         public Result Initialize()
         {
-            Result result = HorizonStatic.Syscall.ConnectToNamedPort(out int portHandle, "sm:");
+            Result result = HorizonStatic.Syscall.ConnectToNamedPort(out int portHandle, SmName);
 
             while (result == KernelResult.NotFound)
             {
                 HorizonStatic.Syscall.SleepThread(50000000L);
-                result = HorizonStatic.Syscall.ConnectToNamedPort(out portHandle, "sm:");
+                result = HorizonStatic.Syscall.ConnectToNamedPort(out portHandle, SmName);
             }
 
             if (result.IsFailure)
@@ -33,7 +35,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
         {
             Span<byte> data = stackalloc byte[8];
 
-            SpanWriter writer = new SpanWriter(data);
+            SpanWriter writer = new(data);
 
             writer.Write(0UL);
 
@@ -44,7 +46,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
         {
             Span<byte> data = stackalloc byte[8];
 
-            SpanWriter writer = new SpanWriter(data);
+            SpanWriter writer = new(data);
 
             writer.Write(name);
 
@@ -53,10 +55,12 @@ namespace Ryujinx.Horizon.Sdk.Sm
             if (result.IsFailure)
             {
                 handle = 0;
+
                 return result;
             }
 
             handle = response.MoveHandles[0];
+
             return Result.Success;
         }
 
@@ -64,7 +68,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
         {
             Span<byte> data = stackalloc byte[16];
 
-            SpanWriter writer = new SpanWriter(data);
+            SpanWriter writer = new(data);
 
             writer.Write(name);
             writer.Write(isLight ? 1 : 0);
@@ -75,10 +79,12 @@ namespace Ryujinx.Horizon.Sdk.Sm
             if (result.IsFailure)
             {
                 handle = 0;
+
                 return result;
             }
 
             handle = response.MoveHandles[0];
+
             return Result.Success;
         }
 
@@ -86,7 +92,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
         {
             Span<byte> data = stackalloc byte[8];
 
-            SpanWriter writer = new SpanWriter(data);
+            SpanWriter writer = new(data);
 
             writer.Write(name);
 
@@ -97,7 +103,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
         {
             Span<byte> data = stackalloc byte[8];
 
-            SpanWriter writer = new SpanWriter(data);
+            SpanWriter writer = new(data);
 
             writer.Write(0UL);
 

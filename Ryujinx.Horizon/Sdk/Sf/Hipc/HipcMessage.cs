@@ -10,9 +10,9 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
     {
         public const int AutoReceiveStatic = byte.MaxValue;
 
-        public HipcMetadata Meta;
+        public HipcMetadata    Meta;
         public HipcMessageData Data;
-        public ulong Pid;
+        public ulong           Pid;
 
         public HipcMessage(Span<byte> data)
         {
@@ -20,10 +20,10 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
             Header header = MemoryMarshal.Cast<byte, Header>(data)[0];
 
-            data = data.Slice(Unsafe.SizeOf<Header>());
+            data = data[Unsafe.SizeOf<Header>()..];
 
-            int receiveStaticsCount = 0;
-            ulong pid = 0;
+            int   receiveStaticsCount = 0;
+            ulong pid                 = 0;
 
             if (header.ReceiveStaticMode != 0)
             {
@@ -42,46 +42,44 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             if (header.HasSpecialHeader)
             {
                 specialHeader = MemoryMarshal.Cast<byte, SpecialHeader>(data)[0];
-
-                data = data.Slice(Unsafe.SizeOf<SpecialHeader>());
+                data          = data[Unsafe.SizeOf<SpecialHeader>()..];
 
                 if (specialHeader.SendPid)
                 {
-                    pid = MemoryMarshal.Cast<byte, ulong>(data)[0];
-
-                    data = data.Slice(sizeof(ulong));
+                    pid  = MemoryMarshal.Cast<byte, ulong>(data)[0];
+                    data = data[sizeof(ulong)..];
                 }
             }
 
             Meta = new HipcMetadata()
             {
-                Type = (int)header.Type,
-                SendStaticsCount = header.SendStaticsCount,
-                SendBuffersCount = header.SendBuffersCount,
-                ReceiveBuffersCount = header.ReceiveBuffersCount,
+                Type                 = (int)header.Type,
+                SendStaticsCount     = header.SendStaticsCount,
+                SendBuffersCount     = header.SendBuffersCount,
+                ReceiveBuffersCount  = header.ReceiveBuffersCount,
                 ExchangeBuffersCount = header.ExchangeBuffersCount,
-                DataWordsCount = header.DataWordsCount,
-                ReceiveStaticsCount = receiveStaticsCount,
-                SendPid = specialHeader.SendPid,
-                CopyHandlesCount = specialHeader.CopyHandlesCount,
-                MoveHandlesCount = specialHeader.MoveHandlesCount
+                DataWordsCount       = header.DataWordsCount,
+                ReceiveStaticsCount  = receiveStaticsCount,
+                SendPid              = specialHeader.SendPid,
+                CopyHandlesCount     = specialHeader.CopyHandlesCount,
+                MoveHandlesCount     = specialHeader.MoveHandlesCount
             };
 
             Data = CreateMessageData(Meta, data, initialLength);
-            Pid = pid;
+            Pid  = pid;
         }
 
         public static HipcMessageData WriteResponse(
             Span<byte> destination,
-            int sendStaticCount,
-            int dataWordsCount,
-            int copyHandlesCount,
-            int moveHandlesCount)
+            int        sendStaticCount,
+            int        dataWordsCount,
+            int        copyHandlesCount,
+            int        moveHandlesCount)
         {
             return WriteMessage(destination, new HipcMetadata()
             {
                 SendStaticsCount = sendStaticCount,
-                DataWordsCount = dataWordsCount,
+                DataWordsCount   = dataWordsCount,
                 CopyHandlesCount = copyHandlesCount,
                 MoveHandlesCount = moveHandlesCount
             });
@@ -89,38 +87,37 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
         public static HipcMessageData WriteMessage(Span<byte> destination, HipcMetadata meta)
         {
-            int initialLength = destination.Length;
-
+            int  initialLength    = destination.Length;
             bool hasSpecialHeader = meta.SendPid || meta.CopyHandlesCount != 0 || meta.MoveHandlesCount != 0;
 
             MemoryMarshal.Cast<byte, Header>(destination)[0] = new Header()
             {
-                Type = (CommandType)meta.Type,
-                SendStaticsCount = meta.SendStaticsCount,
-                SendBuffersCount = meta.SendBuffersCount,
-                ReceiveBuffersCount = meta.ReceiveBuffersCount,
+                Type                 = (CommandType)meta.Type,
+                SendStaticsCount     = meta.SendStaticsCount,
+                SendBuffersCount     = meta.SendBuffersCount,
+                ReceiveBuffersCount  = meta.ReceiveBuffersCount,
                 ExchangeBuffersCount = meta.ExchangeBuffersCount,
-                DataWordsCount = meta.DataWordsCount,
-                ReceiveStaticMode = meta.ReceiveStaticsCount != 0 ? (meta.ReceiveStaticsCount != AutoReceiveStatic ? meta.ReceiveStaticsCount + 2 : 2) : 0,
-                HasSpecialHeader = hasSpecialHeader
+                DataWordsCount       = meta.DataWordsCount,
+                ReceiveStaticMode    = meta.ReceiveStaticsCount != 0 ? (meta.ReceiveStaticsCount != AutoReceiveStatic ? meta.ReceiveStaticsCount + 2 : 2) : 0,
+                HasSpecialHeader     = hasSpecialHeader
             };
 
-            destination = destination.Slice(Unsafe.SizeOf<Header>());
+            destination = destination[Unsafe.SizeOf<Header>()..];
 
             if (hasSpecialHeader)
             {
                 MemoryMarshal.Cast<byte, SpecialHeader>(destination)[0] = new SpecialHeader()
                 {
-                    SendPid = meta.SendPid,
+                    SendPid          = meta.SendPid,
                     CopyHandlesCount = meta.CopyHandlesCount,
                     MoveHandlesCount = meta.MoveHandlesCount
                 };
 
-                destination = destination.Slice(Unsafe.SizeOf<SpecialHeader>());
+                destination = destination[Unsafe.SizeOf<SpecialHeader>()..];
 
                 if (meta.SendPid)
                 {
-                    destination = destination.Slice(sizeof(ulong));
+                    destination = destination[sizeof(ulong)..];
                 }
             }
 
@@ -133,68 +130,67 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
             if (meta.CopyHandlesCount != 0)
             {
-                copyHandles = MemoryMarshal.Cast<byte, int>(data).Slice(0, meta.CopyHandlesCount);
+                copyHandles = MemoryMarshal.Cast<byte, int>(data)[..meta.CopyHandlesCount];
 
-                data = data.Slice(meta.CopyHandlesCount * sizeof(int));
+                data = data[(meta.CopyHandlesCount * sizeof(int))..];
             }
 
             Span<int> moveHandles = Span<int>.Empty;
 
             if (meta.MoveHandlesCount != 0)
             {
-                moveHandles = MemoryMarshal.Cast<byte, int>(data).Slice(0, meta.MoveHandlesCount);
+                moveHandles = MemoryMarshal.Cast<byte, int>(data)[..meta.MoveHandlesCount];
 
-                data = data.Slice(meta.MoveHandlesCount * sizeof(int));
+                data = data[(meta.MoveHandlesCount * sizeof(int))..];
             }
 
             Span<HipcStaticDescriptor> sendStatics = Span<HipcStaticDescriptor>.Empty;
 
             if (meta.SendStaticsCount != 0)
             {
-                sendStatics = MemoryMarshal.Cast<byte, HipcStaticDescriptor>(data).Slice(0, meta.SendStaticsCount);
+                sendStatics = MemoryMarshal.Cast<byte, HipcStaticDescriptor>(data)[..meta.SendStaticsCount];
 
-                data = data.Slice(meta.SendStaticsCount * Unsafe.SizeOf<HipcStaticDescriptor>());
+                data = data[(meta.SendStaticsCount * Unsafe.SizeOf<HipcStaticDescriptor>())..];
             }
 
             Span<HipcBufferDescriptor> sendBuffers = Span<HipcBufferDescriptor>.Empty;
 
             if (meta.SendBuffersCount != 0)
             {
-                sendBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data).Slice(0, meta.SendBuffersCount);
+                sendBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data)[..meta.SendBuffersCount];
 
-                data = data.Slice(meta.SendBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>());
+                data = data[(meta.SendBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>())..];
             }
 
             Span<HipcBufferDescriptor> receiveBuffers = Span<HipcBufferDescriptor>.Empty;
 
             if (meta.ReceiveBuffersCount != 0)
             {
-                receiveBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data).Slice(0, meta.ReceiveBuffersCount);
+                receiveBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data)[..meta.ReceiveBuffersCount];
 
-                data = data.Slice(meta.ReceiveBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>());
+                data = data[(meta.ReceiveBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>())..];
             }
 
             Span<HipcBufferDescriptor> exchangeBuffers = Span<HipcBufferDescriptor>.Empty;
 
             if (meta.ExchangeBuffersCount != 0)
             {
-                exchangeBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data).Slice(0, meta.ExchangeBuffersCount);
+                exchangeBuffers = MemoryMarshal.Cast<byte, HipcBufferDescriptor>(data)[..meta.ExchangeBuffersCount];
 
-                data = data.Slice(meta.ExchangeBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>());
+                data = data[(meta.ExchangeBuffersCount * Unsafe.SizeOf<HipcBufferDescriptor>())..];
             }
 
             Span<uint> dataWords = Span<uint>.Empty;
 
             if (meta.DataWordsCount != 0)
             {
-                int dataOffset = initialLength - data.Length;
+                int dataOffset        = initialLength - data.Length;
                 int dataOffsetAligned = BitUtils.AlignUp(dataOffset, 0x10);
+                int padding           = (dataOffsetAligned - dataOffset) / sizeof(uint);
 
-                int padding = (dataOffsetAligned - dataOffset) / sizeof(uint);
+                dataWords = MemoryMarshal.Cast<byte, uint>(data)[padding..meta.DataWordsCount];
 
-                dataWords = MemoryMarshal.Cast<byte, uint>(data).Slice(padding, meta.DataWordsCount - padding);
-
-                data = data.Slice(meta.DataWordsCount * sizeof(uint));
+                data = data[(meta.DataWordsCount * sizeof(uint))..];
             }
 
             Span<HipcReceiveListEntry> receiveList = Span<HipcReceiveListEntry>.Empty;
@@ -203,19 +199,19 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             {
                 int receiveListSize = meta.ReceiveStaticsCount == AutoReceiveStatic ? 1 : meta.ReceiveStaticsCount;
 
-                receiveList = MemoryMarshal.Cast<byte, HipcReceiveListEntry>(data).Slice(0, receiveListSize);
+                receiveList = MemoryMarshal.Cast<byte, HipcReceiveListEntry>(data)[..receiveListSize];
             }
 
             return new HipcMessageData()
             {
-                SendStatics = sendStatics,
-                SendBuffers = sendBuffers,
-                ReceiveBuffers = receiveBuffers,
+                SendStatics     = sendStatics,
+                SendBuffers     = sendBuffers,
+                ReceiveBuffers  = receiveBuffers,
                 ExchangeBuffers = exchangeBuffers,
-                DataWords = dataWords,
-                ReceiveList = receiveList,
-                CopyHandles = copyHandles,
-                MoveHandles = moveHandles
+                DataWords       = dataWords,
+                ReceiveList     = receiveList,
+                CopyHandles     = copyHandles,
+                MoveHandles     = moveHandles
             };
         }
     }

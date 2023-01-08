@@ -10,15 +10,15 @@ namespace Ryujinx.Horizon.Sdk
         public static Result SendRequest(out CmifResponse response, int sessionHandle, uint requestId, bool sendPid, scoped ReadOnlySpan<byte> data)
         {
             ulong tlsAddress = HorizonStatic.ThreadContext.TlsAddress;
-            int tlsSize = Api.TlsMessageBufferSize;
+            int   tlsSize    = Api.TlsMessageBufferSize;
 
             using (var tlsRegion = HorizonStatic.AddressSpace.GetWritableRegion(tlsAddress, tlsSize))
             {
                 CmifRequest request = CmifMessage.CreateRequest(tlsRegion.Memory.Span, new CmifRequestFormat()
                 {
-                    DataSize = data.Length,
+                    DataSize  = data.Length,
                     RequestId = requestId,
-                    SendPid = sendPid
+                    SendPid   = sendPid
                 });
 
                 data.CopyTo(request.Data);
@@ -29,6 +29,7 @@ namespace Ryujinx.Horizon.Sdk
             if (result.IsFailure)
             {
                 response = default;
+
                 return result;
             }
 

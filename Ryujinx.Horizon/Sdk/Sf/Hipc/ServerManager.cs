@@ -80,7 +80,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
                     return null;
                 }
 
-                ServerSession session = new ServerSession(sessionIndex, sessionHandle, obj);
+                ServerSession session = new(sessionIndex, sessionHandle, obj);
 
                 _sessions.Add(session);
 
@@ -111,7 +111,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             lock (_resourceLock)
             {
-                Server server = new Server(portIndex, portHandle, name, managed, staticHoder);
+                Server server = new(portIndex, portHandle, name, managed, staticHoder);
 
                 _servers.Add(server);
 

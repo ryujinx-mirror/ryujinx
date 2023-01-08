@@ -26,7 +26,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
         private enum UserDataTag
         {
-            Server = 1,
+            Server  = 1,
             Session = 2
         }
 
@@ -36,16 +36,17 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             _canDeferInvokeRequest = options.CanDeferInvokeRequest;
 
             _multiWait = new MultiWait();
-            _waitList = new MultiWait();
+            _waitList  = new MultiWait();
 
             _multiWaitSelectionLock = new object();
-            _waitListLock = new object();
+            _waitListLock           = new object();
 
             _requestStopEvent = new Event(EventClearMode.ManualClear);
-            _notifyEvent = new Event(EventClearMode.ManualClear);
+            _notifyEvent      = new Event(EventClearMode.ManualClear);
 
             _requestStopEventHolder = new MultiWaitHolderOfEvent(_requestStopEvent);
             _multiWait.LinkMultiWaitHolder(_requestStopEventHolder);
+
             _notifyEventHolder = new MultiWaitHolderOfEvent(_notifyEvent);
             _multiWait.LinkMultiWaitHolder(_notifyEventHolder);
         }
@@ -73,6 +74,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         private void RegisterServerImpl(int portIndex, ServiceObjectHolder staticHolder, int portHandle)
         {
             Server server = AllocateServer(portIndex, portHandle, ServiceName.Invalid, managed: false, staticHolder);
+
             RegisterServerImpl(server);
         }
 
@@ -86,6 +88,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             }
 
             Server server = AllocateServer(portIndex, portHandle, name, managed: true, staticHolder);
+
             RegisterServerImpl(server);
 
             return Result.Success;
@@ -101,6 +104,11 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         protected virtual Result OnNeedsToAccept(int portIndex, Server server)
         {
             throw new NotSupportedException();
+        }
+
+        protected Result AcceptImpl(Server server, IServiceObject obj)
+        {
+            return AcceptSession(server.PortHandle, new ServiceObjectHolder(obj));
         }
 
         public void ServiceRequests()
@@ -175,7 +183,8 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         protected override void RegisterSessionToWaitList(ServerSession session)
         {
             session.HasReceived = false;
-            session.UserData = UserDataTag.Session;
+            session.UserData    = UserDataTag.Session;
+
             RegisterToWaitList(session);
         }
 
@@ -198,15 +207,12 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
         private Result Process(MultiWaitHolder holder)
         {
-            switch ((UserDataTag)holder.UserData)
+            return (UserDataTag)holder.UserData switch
             {
-                case UserDataTag.Server:
-                    return ProcessForServer(holder);
-                case UserDataTag.Session:
-                    return ProcessForSession(holder);
-                default:
-                    throw new NotImplementedException(((UserDataTag)holder.UserData).ToString());
-            }
+                UserDataTag.Server  => ProcessForServer(holder),
+                UserDataTag.Session => ProcessForSession(holder),
+                _                   => throw new NotImplementedException(((UserDataTag)holder.UserData).ToString())
+            };
         }
 
         private Result ProcessForServer(MultiWaitHolder holder)
@@ -259,6 +265,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
                     }
 
                     session.HasReceived = true;
+
                     tlsMessage.Memory.Span.CopyTo(savedMessage.Memory.Span);
                 }
                 else

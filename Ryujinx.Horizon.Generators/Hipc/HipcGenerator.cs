@@ -123,44 +123,51 @@ namespace Ryujinx.Horizon.Generators.Hipc
                 {
                     string[] args = new string[method.ParameterList.Parameters.Count];
 
-                    int index = 0;
-
-                    foreach (var parameter in method.ParameterList.Parameters)
+                    if (args.Length == 0)
                     {
-                        string canonicalTypeName = GetCanonicalTypeNameWithGenericArguments(compilation, parameter.Type);
-                        CommandArgType argType = GetCommandArgType(compilation, parameter);
+                        generator.AppendLine($"{{ {commandId}, new CommandHandler({method.Identifier.Text}, Array.Empty<CommandArg>()) }},");
+                    }
+                    else
+                    {
+                        int index = 0;
 
-                        string arg;
-
-                        if (argType == CommandArgType.Buffer)
+                        foreach (var parameter in method.ParameterList.Parameters)
                         {
-                            string bufferFlags = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 0);
-                            string bufferFixedSize = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 1);
+                            string canonicalTypeName = GetCanonicalTypeNameWithGenericArguments(compilation, parameter.Type);
+                            CommandArgType argType = GetCommandArgType(compilation, parameter);
 
-                            if (bufferFixedSize != null)
+                            string arg;
+
+                            if (argType == CommandArgType.Buffer)
                             {
-                                arg = $"new CommandArg({bufferFlags}, {bufferFixedSize})";
+                                string bufferFlags = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 0);
+                                string bufferFixedSize = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 1);
+
+                                if (bufferFixedSize != null)
+                                {
+                                    arg = $"new CommandArg({bufferFlags}, {bufferFixedSize})";
+                                }
+                                else
+                                {
+                                    arg = $"new CommandArg({bufferFlags})";
+                                }
+                            }
+                            else if (argType == CommandArgType.InArgument || argType == CommandArgType.OutArgument)
+                            {
+                                string alignment = GetTypeAlignmentExpression(compilation, parameter.Type);
+
+                                arg = $"new CommandArg(CommandArgType.{argType}, Unsafe.SizeOf<{canonicalTypeName}>(), {alignment})";
                             }
                             else
                             {
-                                arg = $"new CommandArg({bufferFlags})";
+                                arg = $"new CommandArg(CommandArgType.{argType})";
                             }
-                        }
-                        else if (argType == CommandArgType.InArgument || argType == CommandArgType.OutArgument)
-                        {
-                            string alignment = GetTypeAlignmentExpression(compilation, parameter.Type);
 
-                            arg = $"new CommandArg(CommandArgType.{argType}, Unsafe.SizeOf<{canonicalTypeName}>(), {alignment})";
-                        }
-                        else
-                        {
-                            arg = $"new CommandArg(CommandArgType.{argType})";
+                            args[index++] = arg;
                         }
 
-                        args[index++] = arg;
+                        generator.AppendLine($"{{ {commandId}, new CommandHandler({method.Identifier.Text}, {string.Join(", ", args)}) }},");
                     }
-
-                    generator.AppendLine($"{{ {commandId}, new CommandHandler({method.Identifier.Text}, {string.Join(", ", args)}) }},");
                 }
             }
 

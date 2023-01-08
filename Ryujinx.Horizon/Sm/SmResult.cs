@@ -6,14 +6,14 @@ namespace Ryujinx.Horizon.Sm
     {
         private const int ModuleId = 21;
 
-        public static Result OutOfProcess => new Result(ModuleId, 1);
-        public static Result InvalidClient => new Result(ModuleId, 2);
-        public static Result OutOfSessions => new Result(ModuleId, 3);
-        public static Result AlreadyRegistered => new Result(ModuleId, 4);
-        public static Result OutOfServices => new Result(ModuleId, 5);
-        public static Result InvalidServiceName => new Result(ModuleId, 6);
-        public static Result NotRegistered => new Result(ModuleId, 7);
-        public static Result NotAllowed => new Result(ModuleId, 8);
-        public static Result TooLargeAccessControl => new Result(ModuleId, 9);
+        public static Result OutOfProcess          => new(ModuleId, 1);
+        public static Result InvalidClient         => new(ModuleId, 2);
+        public static Result OutOfSessions         => new(ModuleId, 3);
+        public static Result AlreadyRegistered     => new(ModuleId, 4);
+        public static Result OutOfServices         => new(ModuleId, 5);
+        public static Result InvalidServiceName    => new(ModuleId, 6);
+        public static Result NotRegistered         => new(ModuleId, 7);
+        public static Result NotAllowed            => new(ModuleId, 8);
+        public static Result TooLargeAccessControl => new(ModuleId, 9);
     }
 }

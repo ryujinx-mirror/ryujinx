@@ -180,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 return ResultCode.InvalidName;
             }
 
-            Logger.Info?.Print(LogClass.ServiceSm, $"Register \"{name}\".");
+            Logger.Debug?.Print(LogClass.ServiceSm, $"Register \"{name}\".");
 
             KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, null);
 

@@ -107,8 +107,8 @@ namespace Ryujinx.Horizon.Sm.Impl
                 return result;
             }
 
-            freeService.PortHandle = clientPort;
-            freeService.Name = name;
+            freeService.PortHandle     = clientPort;
+            freeService.Name           = name;
             freeService.OwnerProcessId = processId;
 
             return Result.Success;
@@ -126,20 +126,19 @@ namespace Ryujinx.Horizon.Sm.Impl
             // TODO: Validation with GetProcessInfo etc.
 
             int serviceIndex = GetServiceInfo(name);
-
             if (serviceIndex < 0)
             {
                 return SmResult.NotRegistered;
             }
 
             ref var serviceInfo = ref _services[serviceIndex];
-
             if (serviceInfo.OwnerProcessId != processId)
             {
                 return SmResult.NotAllowed;
             }
 
             serviceInfo.Free();
+
             return Result.Success;
         }
 

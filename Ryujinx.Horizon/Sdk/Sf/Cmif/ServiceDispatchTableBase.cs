@@ -39,16 +39,20 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
             if (!entries.TryGetValue((int)commandId, out var commandHandler))
             {
-                Logger.Warning?.Print(LogClass.KernelIpc, $"{objectName} command ID 0x{commandId:X} is not implemented");
-
                 if (HorizonStatic.Options.IgnoreMissingServices)
                 {
                     // If ignore missing services is enabled, just pretend that everything is fine.
-                    var response = PrepareForStubReply(ref context, out Span<byte> outRawData);
+                    PrepareForStubReply(ref context, out Span<byte> outRawData);
                     CommandHandler.GetCmifOutHeaderPointer(ref outHeader, ref outRawData);
                     outHeader[0] = new CmifOutHeader() { Magic = CmifMessage.CmifOutHeaderMagic, Result = Result.Success };
 
+                    Logger.Warning?.Print(LogClass.Service, $"Missing service {objectName} (command ID: {commandId}) ignored");
+
                     return Result.Success;
+                }
+                else if (HorizonStatic.Options.ThrowOnInvalidCommandIds)
+                {
+                    throw new NotImplementedException($"{objectName} command ID: {commandId} is not implemented");
                 }
 
                 return SfResult.UnknownCommandId;
@@ -72,6 +76,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
             if (outHeader.IsEmpty)
             {
                 commandResult.AbortOnSuccess();
+
                 return commandResult;
             }
 
@@ -80,11 +85,10 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
             return Result.Success;
         }
 
-        private static HipcMessageData PrepareForStubReply(scoped ref ServiceDispatchContext context, out Span<byte> outRawData)
+        private static void PrepareForStubReply(scoped ref ServiceDispatchContext context, out Span<byte> outRawData)
         {
             var response = HipcMessage.WriteResponse(context.OutMessageBuffer, 0, 0x20 / sizeof(uint), 0, 0);
             outRawData = MemoryMarshal.Cast<uint, byte>(response.DataWords);
-            return response;
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
                 return SfResult.InvalidInObjectsCount;
             }
 
-            Result result = _domain.ReserveIds(new Span<int>(_reservedObjectIds).Slice(0, OutObjectsCount));
+            Result result = _domain.ReserveIds(new Span<int>(_reservedObjectIds)[..OutObjectsCount]);
 
             if (result.IsFailure)
             {
@@ -92,7 +92,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
             DebugUtil.Assert(outHeaderSize + implOutDataTotalSize + OutObjectsCount * sizeof(int) <= outRawData.Length);
 
-            outRawData = outRawData.Slice(outHeaderSize);
+            outRawData = outRawData[outHeaderSize..];
             _outObjectIdsOffset = (response.DataWords.Length * sizeof(uint) - outRawData.Length) + implOutDataTotalSize;
 
             return response;
@@ -107,9 +107,9 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
             DebugUtil.Assert(outHeaderSize + implOutDataTotalSize <= outRawData.Length);
 
-            outRawData = outRawData.Slice(outHeaderSize);
+            outRawData = outRawData[outHeaderSize..];
 
-            _domain.UnreserveIds(new Span<int>(_reservedObjectIds).Slice(0, OutObjectsCount));
+            _domain.UnreserveIds(new Span<int>(_reservedObjectIds)[..OutObjectsCount]);
         }
 
         public override void SetOutObjects(scoped ref ServiceDispatchContext context, HipcMessageData response, Span<ServiceObjectHolder> outObjects)
@@ -129,7 +129,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
                 _domain.RegisterObject(objectIds[i], outObjects[i]);
             }
 
-            Span<int> outObjectIds = MemoryMarshal.Cast<byte, int>(MemoryMarshal.Cast<uint, byte>(response.DataWords).Slice(_outObjectIdsOffset));
+            Span<int> outObjectIds = MemoryMarshal.Cast<byte, int>(MemoryMarshal.Cast<uint, byte>(response.DataWords)[_outObjectIdsOffset..]);
 
             for (int i = 0; i < outObjectsCount; i++)
             {
