@@ -51,22 +51,18 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             Result result = ReplyImpl(sessionHandle, messageBuffer);
 
-            result.AbortOnFailureUnless(KernelResult.TimedOut, KernelResult.PortRemoteClosed);
+            result.AbortUnless(KernelResult.TimedOut, KernelResult.PortRemoteClosed);
 
             return Result.Success;
         }
 
         private static Result ReplyImpl(int sessionHandle, ReadOnlySpan<byte> messageBuffer)
         {
-            Span<int> handles = stackalloc int[1];
-
-            handles[0] = sessionHandle;
-
             var tlsSpan = HorizonStatic.AddressSpace.GetSpan(HorizonStatic.ThreadContext.TlsAddress, TlsMessageBufferSize);
 
             if (messageBuffer == tlsSpan)
             {
-                return HorizonStatic.Syscall.ReplyAndReceive(out _, handles, sessionHandle, 0);
+                return HorizonStatic.Syscall.ReplyAndReceive(out _, ReadOnlySpan<int>.Empty, sessionHandle, 0);
             }
             else
             {
