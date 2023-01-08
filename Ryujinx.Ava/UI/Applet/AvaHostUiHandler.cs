@@ -144,9 +144,9 @@ namespace Ryujinx.Ava.UI.Applet
         public void ExecuteProgram(Switch device, ProgramSpecifyKind kind, ulong value)
         {
             device.Configuration.UserChannelPersistence.ExecuteProgram(kind, value);
-            if (_parent.AppHost != null)
+            if (_parent.ViewModel.AppHost != null)
             {
-                _parent.AppHost.Stop();
+                _parent.ViewModel.AppHost.Stop();
             }
         }
 

@@ -269,6 +269,8 @@
         <Color x:Key="DataGridSelectionColor">#FF00FABB</Color>
         <Color x:Key="ThemeContentBackgroundColor">#FF2D2D2D</Color>
         <Color x:Key="ThemeControlBorderColor">#FF505050</Color>
+        <Color x:Key="VsyncEnabled">#FF2EEAC9</Color>
+        <Color x:Key="VsyncDisabled">#FFFF4554</Color>
         <x:Double x:Key="ScrollBarThickness">15</x:Double>
         <x:Double x:Key="FontSizeSmall">8</x:Double>
         <x:Double x:Key="FontSizeNormal">10</x:Double>

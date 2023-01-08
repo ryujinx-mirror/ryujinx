@@ -13,8 +13,8 @@ namespace Ryujinx.Ava.UI.Applet
             DefaultBackgroundColor = BrushToThemeColor(parent.Background);
             DefaultForegroundColor = BrushToThemeColor(parent.Foreground);
             DefaultBorderColor = BrushToThemeColor(parent.BorderBrush);
-            SelectionBackgroundColor = BrushToThemeColor(parent.SearchBox.SelectionBrush);
-            SelectionForegroundColor = BrushToThemeColor(parent.SearchBox.SelectionForegroundBrush);
+            SelectionBackgroundColor = BrushToThemeColor(parent.ViewControls.SearchBox.SelectionBrush);
+            SelectionForegroundColor = BrushToThemeColor(parent.ViewControls.SearchBox.SelectionForegroundBrush);
         }
 
         public string FontFamily { get; }

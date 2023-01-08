@@ -11,10 +11,10 @@ namespace Ryujinx.Ava.Input
 {
     internal class AvaloniaMouseDriver : IGamepadDriver
     {
-        private Control         _widget;
-        private bool            _isDisposed;
-        private Size            _size;
-        private readonly Window _window;
+        private Control           _widget;
+        private bool              _isDisposed;
+        private Size              _size;
+        private readonly TopLevel _window;
 
         public bool[]  PressedButtons  { get; }
         public Vector2 CurrentPosition { get; private set; }
@@ -23,7 +23,7 @@ namespace Ryujinx.Ava.Input
         public string               DriverName  => "AvaloniaMouseDriver";
         public ReadOnlySpan<string> GamepadsIds => new[] { "0" };
 
-        public AvaloniaMouseDriver(Window window, Control parent)
+        public AvaloniaMouseDriver(TopLevel window, Control parent)
         {
             _widget = parent;
             _window = window;
