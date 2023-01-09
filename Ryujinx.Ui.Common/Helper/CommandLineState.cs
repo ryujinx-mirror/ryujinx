@@ -7,6 +7,7 @@ namespace Ryujinx.Ui.Common.Helper
     {
         public static string[] Arguments { get; private set; }
 
+        public static bool?  OverrideDockedMode      { get; private set; }
         public static string OverrideGraphicsBackend { get; private set; }
         public static string BaseDirPathArg          { get; private set; }
         public static string Profile                 { get; private set; }
@@ -68,6 +69,12 @@ namespace Ryujinx.Ui.Common.Helper
                         }
 
                         OverrideGraphicsBackend = args[++i];
+                        break;
+                    case "--docked-mode":
+                        OverrideDockedMode = true;
+                        break;
+                    case "--handheld-mode":
+                        OverrideDockedMode = false;
                         break;
                     default:
                         LaunchPathArg = arg;

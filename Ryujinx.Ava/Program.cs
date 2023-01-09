@@ -6,8 +6,8 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.SystemInterop;
 using Ryujinx.Common.SystemInfo;
+using Ryujinx.Common.SystemInterop;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.Ui.Common;
@@ -226,6 +226,12 @@ namespace Ryujinx.Ava
                 {
                     ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.Vulkan;
                 }
+            }
+
+            // Check if docked mode was overriden.
+            if (CommandLineState.OverrideDockedMode.HasValue)
+            {
+                ConfigurationState.Instance.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
             }
         }
 
