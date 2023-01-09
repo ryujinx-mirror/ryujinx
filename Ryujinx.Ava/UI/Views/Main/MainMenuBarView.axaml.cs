@@ -36,10 +36,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
         private async void StopEmulation_Click(object sender, RoutedEventArgs e)
         {
-            await Task.Run(() =>
-            {
-                Window.ViewModel.AppHost?.ShowExitPrompt();
-            });
+            await Window.ViewModel.AppHost?.ShowExitPrompt();
         }
 
         private async void PauseEmulation_Click(object sender, RoutedEventArgs e)

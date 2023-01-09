@@ -19,7 +19,56 @@ namespace Ryujinx.Ava.UI.Helpers
     {
         private static bool _isChoiceDialogOpen;
 
-        private async static Task<UserResult> ShowContentDialog(
+        public async static Task<UserResult> ShowContentDialog(
+             string title,
+             object content,
+             string primaryButton,
+             string secondaryButton,
+             string closeButton,
+             UserResult primaryButtonResult = UserResult.Ok,
+             ManualResetEvent deferResetEvent = null,
+             Func<Window, Task> doWhileDeferred = null,
+             TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null)
+        {
+            UserResult result = UserResult.None;
+
+            ContentDialog contentDialog = new()
+            {
+                Title               = title,
+                PrimaryButtonText   = primaryButton,
+                SecondaryButtonText = secondaryButton,
+                CloseButtonText     = closeButton,
+                Content             = content
+            };
+
+            contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
+            {
+                result = primaryButtonResult;
+            });
+
+            contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
+            {
+                result = UserResult.No;
+                contentDialog.PrimaryButtonClick -= deferCloseAction;
+            });
+
+            contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
+            {
+                result = UserResult.Cancel;
+                contentDialog.PrimaryButtonClick -= deferCloseAction;
+            });
+
+            if (deferResetEvent != null)
+            {
+                contentDialog.PrimaryButtonClick += deferCloseAction;
+            }
+
+            await ShowAsync(contentDialog);
+
+            return result;
+        }
+
+        private async static Task<UserResult> ShowTextDialog(
             string title,
             string primaryText,
             string secondaryText,
@@ -32,119 +81,9 @@ namespace Ryujinx.Ava.UI.Helpers
             Func<Window, Task> doWhileDeferred = null,
             TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null)
         {
-            UserResult result = UserResult.None;
+            Grid content = CreateTextDialogContent(primaryText, secondaryText, iconSymbol);
 
-            bool useOverlay = false;
-            Window mainWindow = null;
-
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime al)
-            {
-                foreach (var item in al.Windows)
-                {
-                    if (item.IsActive && item is MainWindow window && window.ViewModel.IsGameRunning)
-                    {
-                        mainWindow = window;
-                        useOverlay = true;
-                        break;
-                    }
-                }
-            }
-
-            ContentDialog contentDialog = null;
-            ContentDialogOverlayWindow overlay = null;
-
-            if (useOverlay)
-            {
-                overlay = new ContentDialogOverlayWindow()
-                {
-                    Height = mainWindow.Bounds.Height,
-                    Width = mainWindow.Bounds.Width,
-                    Position = mainWindow.PointToScreen(new Point())
-                };
-
-                mainWindow.PositionChanged += OverlayOnPositionChanged;
-
-                void OverlayOnPositionChanged(object sender, PixelPointEventArgs e)
-                {
-                    overlay.Position = mainWindow.PointToScreen(new Point());
-                }
-
-                contentDialog = overlay.ContentDialog;
-
-                bool opened = false;
-
-                overlay.Opened += OverlayOnActivated;
-
-                async void OverlayOnActivated(object sender, EventArgs e)
-                {
-                    if (opened)
-                    {
-                        return;
-                    }
-
-                    opened = true;
-
-                    overlay.Position = mainWindow.PointToScreen(new Point());
-
-                    await ShowDialog();
-                }
-
-                await overlay.ShowDialog(mainWindow);
-            }
-            else
-            {
-                contentDialog = new ContentDialog();
-
-                await ShowDialog();
-            }
-
-            async Task ShowDialog()
-            {
-                contentDialog.Title = title;
-                contentDialog.PrimaryButtonText = primaryButton;
-                contentDialog.SecondaryButtonText = secondaryButton;
-                contentDialog.CloseButtonText = closeButton;
-                contentDialog.Content = CreateDialogTextContent(primaryText, secondaryText, iconSymbol);
-
-                contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
-                {
-                    result = primaryButtonResult;
-                });
-                contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
-                {
-                    result = UserResult.No;
-                    contentDialog.PrimaryButtonClick -= deferCloseAction;
-                });
-                contentDialog.CloseButtonCommand = MiniCommand.Create(() =>
-                {
-                    result = UserResult.Cancel;
-                    contentDialog.PrimaryButtonClick -= deferCloseAction;
-                });
-
-                if (deferResetEvent != null)
-                {
-                    contentDialog.PrimaryButtonClick += deferCloseAction;
-                }
-
-                if (useOverlay)
-                {
-                    await contentDialog.ShowAsync(overlay, ContentDialogPlacement.Popup);
-
-                    overlay!.Close();
-                }
-                else
-                {
-                    await contentDialog.ShowAsync(ContentDialogPlacement.Popup);
-                }
-            }
-
-            if (useOverlay)
-            {
-                overlay.Content = null;
-                overlay.Close();
-            }
-
-            return result;
+            return await ShowContentDialog(title, content, primaryButton, secondaryButton, closeButton, primaryButtonResult, deferResetEvent, doWhileDeferred, deferCloseAction);
         }
 
         public async static Task<UserResult> ShowDeferredContentDialog(
@@ -162,7 +101,7 @@ namespace Ryujinx.Ava.UI.Helpers
             bool startedDeferring = false;
             UserResult result = UserResult.None;
 
-            return await ShowContentDialog(
+            return await ShowTextDialog(
                 title,
                 primaryText,
                 secondaryText,
@@ -192,8 +131,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
                 sender.PrimaryButtonClick -= DeferClose;
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     deferResetEvent.WaitOne();
 
@@ -202,7 +140,6 @@ namespace Ryujinx.Ava.UI.Helpers
                         deferral.Complete();
                     });
                 });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                 if (doWhileDeferred != null)
                 {
@@ -213,34 +150,42 @@ namespace Ryujinx.Ava.UI.Helpers
             }
         }
 
-        private static Grid CreateDialogTextContent(string primaryText, string secondaryText, int symbol)
+        private static Grid CreateTextDialogContent(string primaryText, string secondaryText, int symbol)
         {
-            Grid content = new Grid();
-            content.RowDefinitions = new RowDefinitions() { new RowDefinition(), new RowDefinition() };
-            content.ColumnDefinitions = new ColumnDefinitions() { new ColumnDefinition(GridLength.Auto), new ColumnDefinition() };
+            Grid content = new()
+            {
+                RowDefinitions    = new RowDefinitions()    { new RowDefinition(), new RowDefinition() },
+                ColumnDefinitions = new ColumnDefinitions() { new ColumnDefinition(GridLength.Auto), new ColumnDefinition() },
 
-            content.MinHeight = 80;
+                MinHeight = 80
+            };
 
-            SymbolIcon icon = new SymbolIcon { Symbol = (Symbol)symbol, Margin = new Thickness(10) };
-            icon.FontSize = 40;
-            icon.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            SymbolIcon icon = new()
+            {
+                Symbol            = (Symbol)symbol,
+                Margin            = new Thickness(10),
+                FontSize          = 40,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+
             Grid.SetColumn(icon, 0);
             Grid.SetRowSpan(icon, 2);
             Grid.SetRow(icon, 0);
 
-            TextBlock primaryLabel = new TextBlock()
+            TextBlock primaryLabel = new()
             {
-                Text = primaryText,
-                Margin = new Thickness(5),
+                Text         = primaryText,
+                Margin       = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 450
+                MaxWidth     = 450
             };
-            TextBlock secondaryLabel = new TextBlock()
+
+            TextBlock secondaryLabel = new()
             {
-                Text = secondaryText,
-                Margin = new Thickness(5),
+                Text         = secondaryText,
+                Margin       = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 450
+                MaxWidth     = 450
             };
 
             Grid.SetColumn(primaryLabel, 1);
@@ -262,7 +207,7 @@ namespace Ryujinx.Ava.UI.Helpers
             string closeButton,
             string title)
         {
-            return await ShowContentDialog(
+            return await ShowTextDialog(
                 title,
                 primary,
                 secondaryText,
@@ -280,7 +225,7 @@ namespace Ryujinx.Ava.UI.Helpers
             string title,
             UserResult primaryButtonResult = UserResult.Yes)
         {
-            return await ShowContentDialog(
+            return await ShowTextDialog(
                 string.IsNullOrWhiteSpace(title) ? LocaleManager.Instance[LocaleKeys.DialogConfirmationTitle] : title,
                 primaryText,
                 secondaryText,
@@ -298,7 +243,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
         internal static async Task CreateUpdaterInfoDialog(string primary, string secondaryText)
         {
-            await ShowContentDialog(
+            await ShowTextDialog(
                 LocaleManager.Instance[LocaleKeys.DialogUpdaterTitle],
                 primary,
                 secondaryText,
@@ -310,7 +255,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
         internal static async Task CreateWarningDialog(string primary, string secondaryText)
         {
-            await ShowContentDialog(
+            await ShowTextDialog(
                 LocaleManager.Instance[LocaleKeys.DialogWarningTitle],
                 primary,
                 secondaryText,
@@ -324,7 +269,7 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             Logger.Error?.Print(LogClass.Application, errorMessage);
 
-            await ShowContentDialog(
+            await ShowTextDialog(
                 LocaleManager.Instance[LocaleKeys.DialogErrorTitle],
                 LocaleManager.Instance[LocaleKeys.DialogErrorMessage],
                 errorMessage,
@@ -343,16 +288,15 @@ namespace Ryujinx.Ava.UI.Helpers
 
             _isChoiceDialogOpen = true;
 
-            UserResult response =
-                await ShowContentDialog(
-                    title,
-                    primary,
-                    secondaryText,
-                    LocaleManager.Instance[LocaleKeys.InputDialogYes],
-                    "",
-                    LocaleManager.Instance[LocaleKeys.InputDialogNo],
-                    (int)Symbol.Help,
-                    UserResult.Yes);
+            UserResult response = await ShowTextDialog(
+                title,
+                primary,
+                secondaryText,
+                LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                "",
+                LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                (int)Symbol.Help,
+                UserResult.Yes);
 
             _isChoiceDialogOpen = false;
 
@@ -395,6 +339,99 @@ namespace Ryujinx.Ava.UI.Helpers
             }
 
             return string.Empty;
+        }
+
+        public static async Task<ContentDialogResult> ShowAsync(ContentDialog contentDialog)
+        {
+            ContentDialogResult result;
+
+            ContentDialogOverlayWindow contentDialogOverlayWindow = null;
+
+            Window parent = GetMainWindow();
+
+            if (parent.IsActive && parent is MainWindow window && window.ViewModel.IsGameRunning)
+            {
+                contentDialogOverlayWindow = new()
+                {
+                    Height        = parent.Bounds.Height,
+                    Width         = parent.Bounds.Width,
+                    Position      = parent.PointToScreen(new Point()),
+                    ShowInTaskbar = false
+                };
+
+                parent.PositionChanged += OverlayOnPositionChanged;
+
+                void OverlayOnPositionChanged(object sender, PixelPointEventArgs e)
+                {
+                    contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
+                }
+
+                contentDialogOverlayWindow.ContentDialog = contentDialog;
+
+                bool opened = false;
+
+                contentDialogOverlayWindow.Opened += OverlayOnActivated;
+
+                async void OverlayOnActivated(object sender, EventArgs e)
+                {
+                    if (opened)
+                    {
+                        return;
+                    }
+
+                    opened = true;
+
+                    contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
+
+                    result = await ShowDialog();
+                }
+
+                result = await contentDialogOverlayWindow.ShowDialog<ContentDialogResult>(parent);
+            }
+            else
+            {
+                result = await ShowDialog();
+            }
+
+            async Task<ContentDialogResult> ShowDialog()
+            {
+                if (contentDialogOverlayWindow is not null)
+                {
+                    result = await contentDialog.ShowAsync(contentDialogOverlayWindow);
+
+                    contentDialogOverlayWindow!.Close();
+                }
+                else
+                {
+                    result = await contentDialog.ShowAsync();
+                }
+
+                return result;
+            }
+
+            if (contentDialogOverlayWindow is not null)
+            {
+                contentDialogOverlayWindow.Content = null;
+                contentDialogOverlayWindow.Close();
+            }
+
+            return result;
+        }
+
+        private static Window GetMainWindow()
+        {
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime al)
+            {
+                foreach (Window item in al.Windows)
+                {
+                    if (item.IsActive && item is MainWindow window)
+                    {
+                        return window;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

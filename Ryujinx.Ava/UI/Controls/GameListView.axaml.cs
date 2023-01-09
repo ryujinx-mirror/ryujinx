@@ -38,9 +38,9 @@ namespace Ryujinx.Ava.UI.Controls
         {
             if (sender is ListBox listBox)
             {
-                var selected = listBox.SelectedItem as ApplicationData;
+                _selectedApplication = listBox.SelectedItem as ApplicationData;
 
-                _selectedApplication = selected;
+                (DataContext as MainWindowViewModel).ListSelectedApplication = _selectedApplication;
             }
         }
 

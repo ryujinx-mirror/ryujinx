@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;
@@ -22,14 +23,12 @@ namespace Ryujinx.Ava.UI.Windows
 
         public static async Task Show()
         {
-            var content = new AboutWindow();
-
             ContentDialog contentDialog = new()
             {
-                PrimaryButtonText = "",
+                PrimaryButtonText   = "",
                 SecondaryButtonText = "",
-                CloseButtonText = LocaleManager.Instance[LocaleKeys.UserProfilesClose],
-                Content = content
+                CloseButtonText     = LocaleManager.Instance[LocaleKeys.UserProfilesClose],
+                Content             = new AboutWindow()
             };
 
             Style closeButton = new(x => x.Name("CloseButton"));
@@ -41,7 +40,7 @@ namespace Ryujinx.Ava.UI.Windows
             contentDialog.Styles.Add(closeButton);
             contentDialog.Styles.Add(closeButtonParent);
 
-            await contentDialog.ShowAsync();
+            await ContentDialogHelper.ShowAsync(contentDialog);
         }
 
         private void Button_OnClick(object sender, RoutedEventArgs e)

@@ -87,8 +87,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         private float _volume;
         private string _backendText;
 
-        public ApplicationData ListSelectedApplication;
-        public ApplicationData GridSelectedApplication;
         private bool _canUpdate;
         private Cursor _cursor;
         private string _title;
@@ -96,6 +94,9 @@ namespace Ryujinx.Ava.UI.ViewModels
         private AutoResetEvent _rendererWaitEvent;
         private WindowState _windowState;
         private bool _isActive;
+
+        public ApplicationData ListSelectedApplication;
+        public ApplicationData GridSelectedApplication;
 
         public event Action ReloadGameList;
 
