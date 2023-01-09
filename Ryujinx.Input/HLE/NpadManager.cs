@@ -163,7 +163,7 @@ namespace Ryujinx.Input.HLE
             ReloadConfiguration(inputConfig, enableKeyboard, enableMouse);
         }
 
-        public void Update(float aspectRatio = 0)
+        public void Update(float aspectRatio = 1)
         {
             lock (_lock)
             {

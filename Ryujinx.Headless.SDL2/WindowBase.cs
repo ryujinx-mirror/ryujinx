@@ -14,13 +14,16 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using static SDL2.SDL;
 using Switch = Ryujinx.HLE.Switch;
 
 namespace Ryujinx.Headless.SDL2
 {
-    abstract class WindowBase : IHostUiHandler, IDisposable
+    abstract partial class WindowBase : IHostUiHandler, IDisposable
     {
         protected const int DefaultWidth = 1280;
         protected const int DefaultHeight = 720;
@@ -28,6 +31,10 @@ namespace Ryujinx.Headless.SDL2
         private const int TargetFps = 60;
 
         private static ConcurrentQueue<Action> MainThreadActions = new ConcurrentQueue<Action>();
+
+        [LibraryImport("SDL2")]
+        // TODO: Remove this as soon as SDL2-CS was updated to expose this method publicly
+        private static partial IntPtr SDL_LoadBMP_RW(IntPtr src, int freesrc);
 
         public static void QueueMainThreadAction(Action action)
         {
@@ -66,9 +73,14 @@ namespace Ryujinx.Headless.SDL2
         private AspectRatio _aspectRatio;
         private bool _enableMouse;
 
-        public WindowBase(InputManager inputManager, GraphicsDebugLevel glLogLevel, AspectRatio aspectRatio, bool enableMouse)
+        public WindowBase(
+            InputManager inputManager,
+            GraphicsDebugLevel glLogLevel,
+            AspectRatio aspectRatio,
+            bool enableMouse,
+            HideCursor hideCursor)
         {
-            MouseDriver = new SDL2MouseDriver();
+            MouseDriver = new SDL2MouseDriver(hideCursor);
             _inputManager = inputManager;
             _inputManager.SetMouseDriver(MouseDriver);
             NpadManager = _inputManager.CreateNpadManager();
@@ -103,6 +115,34 @@ namespace Ryujinx.Headless.SDL2
             TouchScreenManager.Initialize(device);
         }
 
+        private void SetWindowIcon()
+        {
+            Stream iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Ryujinx.Headless.SDL2.Ryujinx.bmp");
+            byte[] iconBytes = new byte[iconStream!.Length];
+
+            if (iconStream.Read(iconBytes, 0, iconBytes.Length) != iconBytes.Length)
+            {
+                Logger.Error?.Print(LogClass.Application, "Failed to read icon to byte array.");
+                iconStream.Close();
+
+                return;
+            }
+
+            iconStream.Close();
+
+            unsafe
+            {
+                fixed (byte* iconPtr = iconBytes)
+                {
+                    IntPtr rwOpsStruct = SDL_RWFromConstMem((IntPtr)iconPtr, iconBytes.Length);
+                    IntPtr iconHandle = SDL_LoadBMP_RW(rwOpsStruct, 1);
+
+                    SDL_SetWindowIcon(WindowHandle, iconHandle);
+                    SDL_FreeSurface(iconHandle);
+                }
+            }
+        }
+
         private void InitializeWindow()
         {
             string titleNameSection = string.IsNullOrWhiteSpace(Device.Application.TitleName) ? string.Empty
@@ -127,6 +167,8 @@ namespace Ryujinx.Headless.SDL2
                 throw new Exception(errorMessage);
             }
 
+            SetWindowIcon();
+
             _windowId = SDL_GetWindowID(WindowHandle);
             SDL2Driver.Instance.RegisterWindow(_windowId, HandleWindowEvent);
 
@@ -146,9 +188,11 @@ namespace Ryujinx.Headless.SDL2
                         Renderer?.Window.SetSize(Width, Height);
                         MouseDriver.SetClientSize(Width, Height);
                         break;
+
                     case SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
                         Exit();
                         break;
+
                     default:
                         break;
                 }
@@ -330,6 +374,9 @@ namespace Ryujinx.Headless.SDL2
             }
 
             Device.Hid.DebugPad.Update();
+
+            // TODO: Replace this with MouseDriver.CheckIdle() when mouse motion events are received on every supported platform.
+            MouseDriver.UpdatePosition();
 
             return true;
         }

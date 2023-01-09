@@ -5,7 +5,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Input.HLE;
 using System;
-
 using static SDL2.SDL;
 
 namespace Ryujinx.Headless.SDL2.OpenGL
@@ -103,7 +102,13 @@ namespace Ryujinx.Headless.SDL2.OpenGL
         private GraphicsDebugLevel _glLogLevel;
         private SDL2OpenGLContext _openGLContext;
 
-        public OpenGLWindow(InputManager inputManager, GraphicsDebugLevel glLogLevel, AspectRatio aspectRatio, bool enableMouse) : base(inputManager, glLogLevel, aspectRatio, enableMouse)
+        public OpenGLWindow(
+            InputManager inputManager,
+            GraphicsDebugLevel glLogLevel,
+            AspectRatio aspectRatio,
+            bool enableMouse,
+            HideCursor hideCursor)
+            : base(inputManager, glLogLevel, aspectRatio, enableMouse, hideCursor)
         {
             _glLogLevel = glLogLevel;
         }
