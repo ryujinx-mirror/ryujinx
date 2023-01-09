@@ -75,22 +75,25 @@ jobs:
       - name: Packing Linux builds
         run: |
           pushd publish_linux
-          tar --exclude "publish/Ryujinx" -cvf ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
+          tar --exclude "publish/Ryujinx" --exclude "publish/Ryujinx.sh" -cvf ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
           python3 ../distribution/misc/add_tar_exec.py ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx" "publish/Ryujinx"
+          python3 ../distribution/misc/add_tar_exec.py ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx.sh" "publish/Ryujinx.sh"
           gzip -9 < ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar > ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar.gz
           rm ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar
           popd
 
           pushd publish_linux_sdl2_headless
-          tar --exclude "publish/Ryujinx.Headless.SDL2" -cvf ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
+          tar --exclude "publish/Ryujinx.Headless.SDL2" --exclude "publish/Ryujinx.sh" -cvf ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
           python3 ../distribution/misc/add_tar_exec.py ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx.Headless.SDL2" "publish/Ryujinx.Headless.SDL2"
+          python3 ../distribution/misc/add_tar_exec.py ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx.sh" "publish/Ryujinx.sh"
           gzip -9 < ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar > ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar.gz
           rm ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-linux_x64.tar
           popd
 
           pushd publish_linux_ava
-          tar --exclude "publish/Ryujinx" -cvf ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
-          python3 ../distribution/misc/add_tar_exec.py ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx" "publish/Ryujinx"
+          tar --exclude "publish/Ryujinx.Ava" --exclude "publish/Ryujinx.sh" -cvf ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar publish
+          python3 ../distribution/misc/add_tar_exec.py ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx.Ava" "publish/Ryujinx.Ava"
+          python3 ../distribution/misc/add_tar_exec.py ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar "publish/Ryujinx.sh" "publish/Ryujinx.sh"
           gzip -9 < ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar > ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar.gz
           rm ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-linux_x64.tar
           popd

@@ -42,6 +42,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="..\distribution\linux\Ryujinx.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Ryujinx.bmp" />
   </ItemGroup>
