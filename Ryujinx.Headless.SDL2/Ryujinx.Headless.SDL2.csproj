@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -31,16 +31,16 @@
     <PackageReference Include="CommandLineParser" />
   </ItemGroup>
 
-	<ItemGroup>
-      <Content Include="..\distribution\legal\THIRDPARTY.md">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        <TargetPath>THIRDPARTY.md</TargetPath>
-      </Content>
-      <Content Include="..\LICENSE.txt">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        <TargetPath>LICENSE.txt</TargetPath>
-      </Content>
-	</ItemGroup>
+  <ItemGroup>
+    <Content Include="..\distribution\legal\THIRDPARTY.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>THIRDPARTY.md</TargetPath>
+    </Content>
+    <Content Include="..\LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>LICENSE.txt</TargetPath>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Ryujinx.bmp" />
