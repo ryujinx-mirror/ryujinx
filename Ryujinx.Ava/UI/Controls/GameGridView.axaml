@@ -139,6 +139,9 @@
                 <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource AppListHoverBackgroundColor}" />
                 </Style>
+                <Style Selector="ListBoxItem:selected /template/ Border#SelectionIndicator">
+                    <Setter Property="MinHeight" Value="{Binding $parent[UserControl].DataContext.GridItemSelectorSize}" />
+                </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
                 <DataTemplate>
