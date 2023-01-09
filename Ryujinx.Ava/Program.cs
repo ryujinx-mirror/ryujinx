@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Threading;
+using Ryujinx.Ava.UI.Helper;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
@@ -89,6 +90,8 @@ namespace Ryujinx.Ava
 
             Initialize(args);
 
+            LoggerAdapter.Register();
+
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 
@@ -110,8 +113,7 @@ namespace Ryujinx.Ava
                     AllowEglInitialization          = false,
                     CompositionBackdropCornerRadius = 8.0f,
                 })
-                .UseSkia()
-                .LogToTrace();
+                .UseSkia();
         }
 
         private static void Initialize(string[] args)
