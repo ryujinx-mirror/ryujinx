@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
@@ -282,7 +283,7 @@ namespace ARMeilleure.Translation
                 options |= CompilerOptions.Relocatable;
             }
 
-            CompiledFunction compiledFunc = Compiler.Compile(cfg, argTypes, retType, options);
+            CompiledFunction compiledFunc = Compiler.Compile(cfg, argTypes, retType, options, RuntimeInformation.ProcessArchitecture);
 
             if (context.HasPtc && !singleStep)
             {
@@ -359,9 +360,14 @@ namespace ARMeilleure.Translation
                     }
                 }
 
-                if (block.Address == context.EntryAddress && !context.HighCq)
+                if (block.Address == context.EntryAddress)
                 {
-                    EmitRejitCheck(context, out counter);
+                    if (!context.HighCq)
+                    {
+                        EmitRejitCheck(context, out counter);
+                    }
+
+                    context.ClearQcFlag();
                 }
 
                 context.CurrBlock = block;
@@ -386,9 +392,14 @@ namespace ARMeilleure.Translation
 
                         bool isLastOp = opcIndex == block.OpCodes.Count - 1;
 
-                        if (isLastOp && block.Branch != null && !block.Branch.Exit && block.Branch.Address <= block.Address)
+                        if (isLastOp)
                         {
-                            EmitSynchronization(context);
+                            context.SyncQcFlag();
+
+                            if (block.Branch != null && !block.Branch.Exit && block.Branch.Address <= block.Address)
+                            {
+                                EmitSynchronization(context);
+                            }
                         }
 
                         Operand lblPredicateSkip = default;

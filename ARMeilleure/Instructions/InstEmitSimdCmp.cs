@@ -466,12 +466,26 @@ namespace ARMeilleure.Instructions
 
         public static void Fcmp_S(ArmEmitterContext context)
         {
-            EmitFcmpOrFcmpe(context, signalNaNs: false);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitFcmpOrFcmpe(context, signalNaNs: false);
+            }
+            else
+            {
+                EmitFcmpOrFcmpe(context, signalNaNs: false);
+            }
         }
 
         public static void Fcmpe_S(ArmEmitterContext context)
         {
-            EmitFcmpOrFcmpe(context, signalNaNs: true);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitFcmpOrFcmpe(context, signalNaNs: true);
+            }
+            else
+            {
+                EmitFcmpOrFcmpe(context, signalNaNs: true);
+            }
         }
 
         private static void EmitFccmpOrFccmpe(ArmEmitterContext context, bool signalNaNs)

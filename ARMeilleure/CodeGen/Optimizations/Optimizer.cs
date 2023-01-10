@@ -44,8 +44,8 @@ namespace ARMeilleure.CodeGen.Optimizations
                         ConstantFolding.RunPass(node);
                         Simplification.RunPass(node);
 
-                        if (DestIsLocalVar(node))
-                        {   
+                        if (DestIsSingleLocalVar(node))
+                        {
                             if (IsPropagableCompare(node))
                             {
                                 modified |= PropagateCompare(ref buffer, node);
@@ -99,20 +99,6 @@ namespace ARMeilleure.CodeGen.Optimizations
             while (modified);
         }
 
-        private static Span<Operation> GetUses(ref Span<Operation> buffer, Operand operand)
-        {
-            ReadOnlySpan<Operation> uses = operand.Uses;
-
-            if (buffer.Length < uses.Length)
-            {
-                buffer = Allocators.Default.AllocateSpan<Operation>((uint)uses.Length);
-            }
-
-            uses.CopyTo(buffer);
-
-            return buffer.Slice(0, uses.Length);
-        }
-
         private static bool PropagateCompare(ref Span<Operation> buffer, Operation compOp)
         {
             // Try to propagate Compare operations into their BranchIf uses, when these BranchIf uses are in the form
@@ -160,7 +146,7 @@ namespace ARMeilleure.CodeGen.Optimizations
 
             Comparison compType = (Comparison)comp.AsInt32();
 
-            Span<Operation> uses = GetUses(ref buffer, dest);
+            Span<Operation> uses = dest.GetUses(ref buffer);
 
             foreach (Operation use in uses)
             {
@@ -199,7 +185,7 @@ namespace ARMeilleure.CodeGen.Optimizations
             Operand dest   = copyOp.Destination;
             Operand source = copyOp.GetSource(0);
 
-            Span<Operation> uses = GetUses(ref buffer, dest);
+            Span<Operation> uses = dest.GetUses(ref buffer);
 
             foreach (Operation use in uses)
             {
@@ -231,12 +217,12 @@ namespace ARMeilleure.CodeGen.Optimizations
 
         private static bool IsUnused(Operation node)
         {
-            return DestIsLocalVar(node) && node.Destination.UsesCount == 0 && !HasSideEffects(node);
+            return DestIsSingleLocalVar(node) && node.Destination.UsesCount == 0 && !HasSideEffects(node);
         }
 
-        private static bool DestIsLocalVar(Operation node)
+        private static bool DestIsSingleLocalVar(Operation node)
         {
-            return node.Destination != default && node.Destination.Kind == OperandKind.LocalVariable;
+            return node.DestinationsCount == 1 && node.Destination.Kind == OperandKind.LocalVariable;
         }
 
         private static bool HasSideEffects(Operation node)

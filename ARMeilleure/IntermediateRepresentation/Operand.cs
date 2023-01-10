@@ -259,6 +259,20 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
+        public Span<Operation> GetUses(ref Span<Operation> buffer)
+        {
+            ReadOnlySpan<Operation> uses = Uses;
+
+            if (buffer.Length < uses.Length)
+            {
+                buffer = Allocators.Default.AllocateSpan<Operation>((uint)uses.Length);
+            }
+
+            uses.CopyTo(buffer);
+
+            return buffer.Slice(0, uses.Length);
+        }
+
         private static void New<T>(ref T* data, ref ushort count, ref ushort capacity, ushort initialCapacity) where T : unmanaged
         {
             count = 0;

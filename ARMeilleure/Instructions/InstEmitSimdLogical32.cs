@@ -13,7 +13,11 @@ namespace ARMeilleure.Instructions
     {
         public static void Vand_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64AndV | Intrinsic.Arm64V128, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.X86Pand, n, m));
             }
@@ -25,7 +29,11 @@ namespace ARMeilleure.Instructions
 
         public static void Vbic_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64BicV | Intrinsic.Arm64V128, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.X86Pandn, m, n));
             }
@@ -73,17 +81,35 @@ namespace ARMeilleure.Instructions
 
         public static void Vbif(ArmEmitterContext context)
         {
-            EmitBifBit(context, true);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorTernaryOpSimd32(context, (d, n, m) => context.AddIntrinsic(Intrinsic.Arm64BifV | Intrinsic.Arm64V128, d, n, m));
+            }
+            else
+            {
+                EmitBifBit(context, true);
+            }
         }
 
         public static void Vbit(ArmEmitterContext context)
         {
-            EmitBifBit(context, false);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorTernaryOpSimd32(context, (d, n, m) => context.AddIntrinsic(Intrinsic.Arm64BitV | Intrinsic.Arm64V128, d, n, m));
+            }
+            else
+            {
+                EmitBifBit(context, false);
+            }
         }
 
         public static void Vbsl(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorTernaryOpSimd32(context, (d, n, m) => context.AddIntrinsic(Intrinsic.Arm64BslV | Intrinsic.Arm64V128, d, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorTernaryOpSimd32(context, (d, n, m) =>
                 {
@@ -105,7 +131,11 @@ namespace ARMeilleure.Instructions
 
         public static void Veor_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64EorV | Intrinsic.Arm64V128, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.X86Pxor, n, m));
             }
@@ -117,7 +147,11 @@ namespace ARMeilleure.Instructions
 
         public static void Vorn_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64OrnV | Intrinsic.Arm64V128, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 Operand mask = context.VectorOne();
 
@@ -135,7 +169,11 @@ namespace ARMeilleure.Instructions
 
         public static void Vorr_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64OrrV | Intrinsic.Arm64V128, n, m));
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.X86Por, n, m));
             }

@@ -4,7 +4,7 @@ namespace ARMeilleure.Memory
 {
     class ReservedRegion
     {
-        private const int DefaultGranularity = 65536; // Mapping granularity in Windows.
+        public const int DefaultGranularity = 65536; // Mapping granularity in Windows.
 
         public IJitMemoryBlock Block { get; }
 

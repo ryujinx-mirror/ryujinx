@@ -5,8 +5,6 @@ namespace ARMeilleure.CodeGen.X86
 {
     static class IntrinsicTable
     {
-        private const int BadOp = 0;
-
         private static IntrinsicInfo[] _intrinTable;
 
         static IntrinsicTable()

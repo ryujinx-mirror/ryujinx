@@ -1,8 +1,9 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Optimizations;
-using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Diagnostics;
 using ARMeilleure.IntermediateRepresentation;
+using System;
+using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Translation
 {
@@ -12,7 +13,8 @@ namespace ARMeilleure.Translation
             ControlFlowGraph cfg,
             OperandType[]    argTypes,
             OperandType      retType,
-            CompilerOptions  options)
+            CompilerOptions  options,
+            Architecture     target)
         {
             CompilerContext cctx = new(cfg, argTypes, retType, options);
 
@@ -49,7 +51,18 @@ namespace ARMeilleure.Translation
                 Logger.EndPass(PassName.RegisterToLocal, cfg);
             }
 
-            return CodeGenerator.Generate(cctx);
+            if (target == Architecture.X64)
+            {
+                return CodeGen.X86.CodeGenerator.Generate(cctx);
+            }
+            else if (target == Architecture.Arm64)
+            {
+                return CodeGen.Arm64.CodeGenerator.Generate(cctx);
+            }
+            else
+            {
+                throw new NotImplementedException(target.ToString());
+            }
         }
     }
 }

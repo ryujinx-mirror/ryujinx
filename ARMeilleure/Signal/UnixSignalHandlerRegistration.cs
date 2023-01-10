@@ -3,23 +3,23 @@ using System.Runtime.InteropServices;
 
 namespace ARMeilleure.Signal
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct SigSet
-    {
-        fixed long sa_mask[16];
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct SigAction
-    {
-        public IntPtr sa_handler;
-        public SigSet sa_mask;
-        public int sa_flags;
-        public IntPtr sa_restorer;
-    }
-
     static partial class UnixSignalHandlerRegistration
     {
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public unsafe struct SigSet
+        {
+            fixed long sa_mask[16];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SigAction
+        {
+            public IntPtr sa_handler;
+            public SigSet sa_mask;
+            public int sa_flags;
+            public IntPtr sa_restorer;
+        }
+
         private const int SIGSEGV = 11;
         private const int SIGBUS = 10;
         private const int SA_SIGINFO = 0x00000004;
@@ -28,7 +28,22 @@ namespace ARMeilleure.Signal
         private static partial int sigaction(int signum, ref SigAction sigAction, out SigAction oldAction);
 
         [LibraryImport("libc", SetLastError = true)]
+        private static partial int sigaction(int signum, IntPtr sigAction, out SigAction oldAction);
+
+        [LibraryImport("libc", SetLastError = true)]
         private static partial int sigemptyset(ref SigSet set);
+
+        public static SigAction GetSegfaultExceptionHandler()
+        {
+            int result = sigaction(SIGSEGV, IntPtr.Zero, out SigAction old);
+
+            if (result != 0)
+            {
+                throw new InvalidOperationException($"Could not get SIGSEGV sigaction. Error: {result}");
+            }
+
+            return old;
+        }
 
         public static SigAction RegisterExceptionHandler(IntPtr action)
         {
@@ -49,7 +64,7 @@ namespace ARMeilleure.Signal
 
             if (OperatingSystem.IsMacOS())
             {
-                result = sigaction(SIGBUS, ref sig, out SigAction oldb);
+                result = sigaction(SIGBUS, ref sig, out _);
 
                 if (result != 0)
                 {

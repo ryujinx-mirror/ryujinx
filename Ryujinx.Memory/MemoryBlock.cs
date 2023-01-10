@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Ryujinx.Memory
@@ -13,10 +13,9 @@ namespace Ryujinx.Memory
         private readonly bool _usesSharedMemory;
         private readonly bool _isMirror;
         private readonly bool _viewCompatible;
+        private readonly bool _forJit;
         private IntPtr _sharedMemory;
         private IntPtr _pointer;
-        private ConcurrentDictionary<MemoryBlock, byte> _viewStorages;
-        private int _viewCount;
 
         /// <summary>
         /// Pointer to the memory block data.
@@ -40,24 +39,27 @@ namespace Ryujinx.Memory
             if (flags.HasFlag(MemoryAllocationFlags.Mirrorable))
             {
                 _sharedMemory = MemoryManagement.CreateSharedMemory(size, flags.HasFlag(MemoryAllocationFlags.Reserve));
-                _pointer = MemoryManagement.MapSharedMemory(_sharedMemory, size);
+
+                if (!flags.HasFlag(MemoryAllocationFlags.NoMap))
+                {
+                    _pointer = MemoryManagement.MapSharedMemory(_sharedMemory, size);
+                }
+
                 _usesSharedMemory = true;
             }
             else if (flags.HasFlag(MemoryAllocationFlags.Reserve))
             {
                 _viewCompatible = flags.HasFlag(MemoryAllocationFlags.ViewCompatible);
-                _pointer = MemoryManagement.Reserve(size, _viewCompatible);
+                _forJit = flags.HasFlag(MemoryAllocationFlags.Jit);
+                _pointer = MemoryManagement.Reserve(size, _forJit, _viewCompatible);
             }
             else
             {
-                _pointer = MemoryManagement.Allocate(size);
+                _forJit = flags.HasFlag(MemoryAllocationFlags.Jit);
+                _pointer = MemoryManagement.Allocate(size, _forJit);
             }
 
             Size = size;
-
-            _viewStorages = new ConcurrentDictionary<MemoryBlock, byte>();
-            _viewStorages.TryAdd(this, 0);
-            _viewCount = 1;
         }
 
         /// <summary>
@@ -104,7 +106,7 @@ namespace Ryujinx.Memory
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
         public bool Commit(ulong offset, ulong size)
         {
-            return MemoryManagement.Commit(GetPointerInternal(offset, size), size);
+            return MemoryManagement.Commit(GetPointerInternal(offset, size), size, _forJit);
         }
 
         /// <summary>
@@ -136,11 +138,6 @@ namespace Ryujinx.Memory
             if (srcBlock._sharedMemory == IntPtr.Zero)
             {
                 throw new ArgumentException("The source memory block is not mirrorable, and thus cannot be mapped on the current block.");
-            }
-
-            if (_viewStorages.TryAdd(srcBlock, 0))
-            {
-                srcBlock.IncrementViewCount();
             }
 
             MemoryManagement.MapView(srcBlock._sharedMemory, srcOffset, GetPointerInternal(dstOffset, size), size, this);
@@ -403,33 +400,16 @@ namespace Ryujinx.Memory
                 {
                     MemoryManagement.Free(ptr, Size);
                 }
-
-                foreach (MemoryBlock viewStorage in _viewStorages.Keys)
-                {
-                    viewStorage.DecrementViewCount();
-                }
-
-                _viewStorages.Clear();
             }
-        }
 
-        /// <summary>
-        /// Increments the number of views that uses this memory block as storage.
-        /// </summary>
-        private void IncrementViewCount()
-        {
-            Interlocked.Increment(ref _viewCount);
-        }
-
-        /// <summary>
-        /// Decrements the number of views that uses this memory block as storage.
-        /// </summary>
-        private void DecrementViewCount()
-        {
-            if (Interlocked.Decrement(ref _viewCount) == 0 && _sharedMemory != IntPtr.Zero && !_isMirror)
+            if (!_isMirror)
             {
-                MemoryManagement.DestroySharedMemory(_sharedMemory);
-                _sharedMemory = IntPtr.Zero;
+                IntPtr sharedMemory = Interlocked.Exchange(ref _sharedMemory, IntPtr.Zero);
+
+                if (sharedMemory != IntPtr.Zero)
+                {
+                    MemoryManagement.DestroySharedMemory(sharedMemory);
+                }
             }
         }
 
@@ -451,6 +431,16 @@ namespace Ryujinx.Memory
             }
 
             return true;
+        }
+
+        public static ulong GetPageSize()
+        {
+            if (OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            {
+                return 1UL << 14;
+            }
+
+            return 1UL << 12;
         }
 
         private static void ThrowInvalidMemoryRegionException() => throw new InvalidMemoryRegionException();

@@ -27,6 +27,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             public Register Register;
 
             public bool IsFixed;
+            public bool IsFixedAndUsed;
         }
 
         private readonly Data* _data;
@@ -44,6 +45,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         public ref int SpillOffset => ref _data->SpillOffset;
 
         public bool IsFixed => _data->IsFixed;
+        public ref bool IsFixedAndUsed => ref _data->IsFixedAndUsed;
         public bool IsEmpty => FirstRange == default;
         public bool IsSplit => Children.Count != 0;
         public bool IsSpilled => SpillOffset != -1;
@@ -114,7 +116,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             }
             else
             {
-                FirstRange = new LiveRange(position, position + 1); 
+                FirstRange = new LiveRange(position, position + 1);
                 End = position + 1;
             }
         }

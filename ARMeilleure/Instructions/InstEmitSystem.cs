@@ -150,6 +150,8 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
+            context.SyncQcFlag();
+
             Operand fpsr = Const(0);
 
             for (int flag = 0; flag < RegisterConsts.FpFlagsCount; flag++)
@@ -195,6 +197,8 @@ namespace ARMeilleure.Instructions
         private static void EmitSetFpsr(ArmEmitterContext context)
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            context.ClearQcFlagIfModified();
 
             Operand fpsr = GetIntOrZR(context, op.Rt);
                     fpsr = context.ConvertI64ToI32(fpsr);

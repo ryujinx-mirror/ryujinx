@@ -1,7 +1,7 @@
 ﻿using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
-
+using System.Runtime.InteropServices;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Signal
@@ -32,7 +32,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq).Map<DebugPartialUnmap>();
+            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<DebugPartialUnmap>();
         }
 
         public static DebugThreadLocalMapGetOrReserve GenerateDebugThreadLocalMapGetOrReserve(IntPtr structPtr)
@@ -49,7 +49,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq).Map<DebugThreadLocalMapGetOrReserve>();
+            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<DebugThreadLocalMapGetOrReserve>();
         }
 
         public static DebugNativeWriteLoop GenerateDebugNativeWriteLoop()
@@ -78,7 +78,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq).Map<DebugNativeWriteLoop>();
+            return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<DebugNativeWriteLoop>();
         }
     }
 }

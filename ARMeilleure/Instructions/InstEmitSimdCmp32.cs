@@ -17,7 +17,11 @@ namespace ARMeilleure.Instructions
     {
         public static void Vceq_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.Equal, false);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitSse2OrAvxCmpOpF32(context, CmpCondition.Equal, false);
             }
@@ -38,7 +42,11 @@ namespace ARMeilleure.Instructions
 
             if (op.F)
             {
-                if (Optimizations.FastFP && Optimizations.UseSse2)
+                if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+                {
+                    InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.Equal, true);
+                }
+                else if (Optimizations.FastFP && Optimizations.UseSse2)
                 {
                     EmitSse2OrAvxCmpOpF32(context, CmpCondition.Equal, true);
                 }
@@ -55,7 +63,11 @@ namespace ARMeilleure.Instructions
 
         public static void Vcge_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseAvx)
+            if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.GreaterThanOrEqual, false);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseAvx)
             {
                 EmitSse2OrAvxCmpOpF32(context, CmpCondition.GreaterThanOrEqual, false);
             }
@@ -78,7 +90,11 @@ namespace ARMeilleure.Instructions
 
             if (op.F)
             {
-                if (Optimizations.FastFP && Optimizations.UseAvx)
+                if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+                {
+                    InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.GreaterThanOrEqual, true);
+                }
+                else if (Optimizations.FastFP && Optimizations.UseAvx)
                 {
                     EmitSse2OrAvxCmpOpF32(context, CmpCondition.GreaterThanOrEqual, true);
                 }
@@ -95,7 +111,11 @@ namespace ARMeilleure.Instructions
 
         public static void Vcgt_V(ArmEmitterContext context)
         {
-            if (Optimizations.FastFP && Optimizations.UseAvx)
+            if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.GreaterThan, false);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseAvx)
             {
                 EmitSse2OrAvxCmpOpF32(context, CmpCondition.GreaterThan, false);
             }
@@ -118,7 +138,11 @@ namespace ARMeilleure.Instructions
 
             if (op.F)
             {
-                if (Optimizations.FastFP && Optimizations.UseAvx)
+                if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+                {
+                    InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.GreaterThan, true);
+                }
+                else if (Optimizations.FastFP && Optimizations.UseAvx)
                 {
                     EmitSse2OrAvxCmpOpF32(context, CmpCondition.GreaterThan, true);
                 }
@@ -139,7 +163,11 @@ namespace ARMeilleure.Instructions
 
             if (op.F)
             {
-                if (Optimizations.FastFP && Optimizations.UseSse2)
+                if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+                {
+                    InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.LessThanOrEqual, true);
+                }
+                else if (Optimizations.FastFP && Optimizations.UseSse2)
                 {
                     EmitSse2OrAvxCmpOpF32(context, CmpCondition.LessThanOrEqual, true);
                 }
@@ -160,7 +188,11 @@ namespace ARMeilleure.Instructions
 
             if (op.F)
             {
-                if (Optimizations.FastFP && Optimizations.UseSse2)
+                if (Optimizations.FastFP && Optimizations.UseAdvSimd)
+                {
+                    InstEmitSimdHelper32Arm64.EmitCmpOpF32(context, CmpCondition.LessThan, true);
+                }
+                else if (Optimizations.FastFP && Optimizations.UseSse2)
                 {
                     EmitSse2OrAvxCmpOpF32(context, CmpCondition.LessThan, true);
                 }
@@ -247,12 +279,26 @@ namespace ARMeilleure.Instructions
 
         public static void Vcmp(ArmEmitterContext context)
         {
-            EmitVcmpOrVcmpe(context, false);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVcmpOrVcmpe(context, false);
+            }
+            else
+            {
+                EmitVcmpOrVcmpe(context, false);
+            }
         }
 
         public static void Vcmpe(ArmEmitterContext context)
         {
-            EmitVcmpOrVcmpe(context, true);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelper32Arm64.EmitVcmpOrVcmpe(context, true);
+            }
+            else
+            {
+                EmitVcmpOrVcmpe(context, true);
+            }
         }
 
         private static void EmitVcmpOrVcmpe(ArmEmitterContext context, bool signalNaNs)

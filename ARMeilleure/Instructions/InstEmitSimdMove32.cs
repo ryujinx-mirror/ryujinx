@@ -392,7 +392,11 @@ namespace ARMeilleure.Instructions
         {
             OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
 
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAdvSimd)
+            {
+                EmitVectorZipUzpOpSimd32(context, Intrinsic.Arm64Zip1V, Intrinsic.Arm64Zip2V);
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorShuffleOpSimd32(context, (m, d) =>
                 {
@@ -461,7 +465,11 @@ namespace ARMeilleure.Instructions
         {
             OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
 
-            if (Optimizations.UseSsse3)
+            if (Optimizations.UseAdvSimd)
+            {
+                EmitVectorZipUzpOpSimd32(context, Intrinsic.Arm64Uzp1V, Intrinsic.Arm64Uzp2V);
+            }
+            else if (Optimizations.UseSsse3)
             {
                 EmitVectorShuffleOpSimd32(context, (m, d) =>
                 {
@@ -556,6 +564,52 @@ namespace ARMeilleure.Instructions
                 {
                     context.Copy(GetVecA32(op.Qm), resM);
                 }
+            }
+        }
+
+        private static void EmitVectorZipUzpOpSimd32(ArmEmitterContext context, Intrinsic inst1, Intrinsic inst2)
+        {
+            OpCode32SimdCmpZ op = (OpCode32SimdCmpZ)context.CurrOp;
+
+            bool overlap = op.Qm == op.Qd;
+
+            Operand d = GetVecA32(op.Qd);
+            Operand m = GetVecA32(op.Qm);
+
+            Operand dPart = d;
+            Operand mPart = m;
+
+            if (!op.Q) // Register swap: move relevant doubleword to destination side.
+            {
+                dPart = InstEmitSimdHelper32Arm64.EmitMoveDoubleWordToSide(context, d, op.Vd, 0);
+                mPart = InstEmitSimdHelper32Arm64.EmitMoveDoubleWordToSide(context, m, op.Vm, 0);
+            }
+
+            Intrinsic vSize = op.Q ? Intrinsic.Arm64V128 : Intrinsic.Arm64V64;
+
+            vSize |= (Intrinsic)(op.Size << (int)Intrinsic.Arm64VSizeShift);
+
+            Operand resD = context.AddIntrinsic(inst1 | vSize, dPart, mPart);
+            Operand resM = context.AddIntrinsic(inst2 | vSize, dPart, mPart);
+
+            if (!op.Q) // Register insert.
+            {
+                resD = context.AddIntrinsic(Intrinsic.Arm64InsVe | Intrinsic.Arm64VDWord, d, Const(op.Vd & 1), resD, Const(0));
+
+                if (overlap)
+                {
+                    resD = context.AddIntrinsic(Intrinsic.Arm64InsVe | Intrinsic.Arm64VDWord, resD, Const(op.Vm & 1), resM, Const(0));
+                }
+                else
+                {
+                    resM = context.AddIntrinsic(Intrinsic.Arm64InsVe | Intrinsic.Arm64VDWord, m, Const(op.Vm & 1), resM, Const(0));
+                }
+            }
+
+            context.Copy(d, resD);
+            if (!overlap)
+            {
+                context.Copy(m, resM);
             }
         }
 

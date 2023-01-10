@@ -171,7 +171,7 @@ namespace ARMeilleure.Translation
             var retType = OperandType.I64;
             var argTypes = new[] { OperandType.I64 };
 
-            var func = Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq).Map<GuestFunction>();
+            var func = Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<GuestFunction>();
 
             return Marshal.GetFunctionPointerForDelegate(func);
         }
@@ -197,7 +197,7 @@ namespace ARMeilleure.Translation
             var retType = OperandType.I64;
             var argTypes = new[] { OperandType.I64 };
 
-            var func = Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq).Map<GuestFunction>();
+            var func = Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<GuestFunction>();
 
             return Marshal.GetFunctionPointerForDelegate(func);
         }
@@ -235,7 +235,7 @@ namespace ARMeilleure.Translation
             var retType = OperandType.None;
             var argTypes = new[] { OperandType.I64, OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq).Map<DispatcherFunction>();
+            return Compiler.Compile(cfg, argTypes, retType, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<DispatcherFunction>();
         }
     }
 }

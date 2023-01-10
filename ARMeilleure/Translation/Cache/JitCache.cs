@@ -1,6 +1,7 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Unwinding;
 using ARMeilleure.Memory;
+using ARMeilleure.Native;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +18,7 @@ namespace ARMeilleure.Translation.Cache
         private const int CacheSize = 2047 * 1024 * 1024;
 
         private static ReservedRegion _jitRegion;
+        private static JitCacheInvalidation _jitCacheInvalidator;
 
         private static CacheMemoryAllocator _cacheAllocator;
 
@@ -24,8 +26,6 @@ namespace ARMeilleure.Translation.Cache
 
         private static readonly object _lock = new object();
         private static bool _initialized;
-
-        public static IntPtr Base => _jitRegion.Pointer;
 
         public static void Initialize(IJitMemoryAllocator allocator)
         {
@@ -36,6 +36,7 @@ namespace ARMeilleure.Translation.Cache
                 if (_initialized) return;
 
                 _jitRegion = new ReservedRegion(allocator, CacheSize);
+                _jitCacheInvalidator = new JitCacheInvalidation(allocator);
 
                 _cacheAllocator = new CacheMemoryAllocator(CacheSize);
 
@@ -60,11 +61,24 @@ namespace ARMeilleure.Translation.Cache
 
                 IntPtr funcPtr = _jitRegion.Pointer + funcOffset;
 
-                ReprotectAsWritable(funcOffset, code.Length);
+                if (OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                {
+                    unsafe
+                    {
+                        fixed (byte *codePtr = code)
+                        {
+                            JitSupportDarwin.Copy(funcPtr, (IntPtr)codePtr, (ulong)code.Length);
+                        }
+                    }
+                }
+                else
+                {
+                    ReprotectAsWritable(funcOffset, code.Length);
+                    Marshal.Copy(code, 0, funcPtr, code.Length);
+                    ReprotectAsExecutable(funcOffset, code.Length);
 
-                Marshal.Copy(code, 0, funcPtr, code.Length);
-
-                ReprotectAsExecutable(funcOffset, code.Length);
+                    _jitCacheInvalidator.Invalidate(funcPtr, (ulong)code.Length);
+                }
 
                 Add(funcOffset, code.Length, func.UnwindInfo);
 

@@ -90,6 +90,47 @@ namespace ARMeilleure.CodeGen.Optimizations
                     }
                     break;
 
+                case Instruction.Compare:
+                    if (type == OperandType.I32 &&
+                        operation.GetSource(0).Type == type &&
+                        operation.GetSource(1).Type == type)
+                    {
+                        switch ((Comparison)operation.GetSource(2).Value)
+                        {
+                            case Comparison.Equal:
+                                EvaluateBinaryI32(operation, (x, y) => x == y ? 1 : 0);
+                                break;
+                            case Comparison.NotEqual:
+                                EvaluateBinaryI32(operation, (x, y) => x != y ? 1 : 0);
+                                break;
+                            case Comparison.Greater:
+                                EvaluateBinaryI32(operation, (x, y) => x > y ? 1 : 0);
+                                break;
+                            case Comparison.LessOrEqual:
+                                EvaluateBinaryI32(operation, (x, y) => x <= y ? 1 : 0);
+                                break;
+                            case Comparison.GreaterUI:
+                                EvaluateBinaryI32(operation, (x, y) => (uint)x > (uint)y ? 1 : 0);
+                                break;
+                            case Comparison.LessOrEqualUI:
+                                EvaluateBinaryI32(operation, (x, y) => (uint)x <= (uint)y ? 1 : 0);
+                                break;
+                            case Comparison.GreaterOrEqual:
+                                EvaluateBinaryI32(operation, (x, y) => x >= y ? 1 : 0);
+                                break;
+                            case Comparison.Less:
+                                EvaluateBinaryI32(operation, (x, y) => x < y ? 1 : 0);
+                                break;
+                            case Comparison.GreaterOrEqualUI:
+                                EvaluateBinaryI32(operation, (x, y) => (uint)x >= (uint)y ? 1 : 0);
+                                break;
+                            case Comparison.LessUI:
+                                EvaluateBinaryI32(operation, (x, y) => (uint)x < (uint)y ? 1 : 0);
+                                break;
+                        }
+                    }
+                    break;
+
                 case Instruction.Copy:
                     if (type == OperandType.I32)
                     {

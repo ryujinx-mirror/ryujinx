@@ -13,17 +13,17 @@ namespace Ryujinx.Memory
     {
         private static readonly ConcurrentDictionary<IntPtr, ulong> _allocations = new ConcurrentDictionary<IntPtr, ulong>();
 
-        public static IntPtr Allocate(ulong size)
+        public static IntPtr Allocate(ulong size, bool forJit)
         {
-            return AllocateInternal(size, MmapProts.PROT_READ | MmapProts.PROT_WRITE);
+            return AllocateInternal(size, MmapProts.PROT_READ | MmapProts.PROT_WRITE, forJit);
         }
 
-        public static IntPtr Reserve(ulong size)
+        public static IntPtr Reserve(ulong size, bool forJit)
         {
-            return AllocateInternal(size, MmapProts.PROT_NONE);
+            return AllocateInternal(size, MmapProts.PROT_NONE, forJit);
         }
 
-        private static IntPtr AllocateInternal(ulong size, MmapProts prot, bool shared = false)
+        private static IntPtr AllocateInternal(ulong size, MmapProts prot, bool forJit, bool shared = false)
         {
             MmapFlags flags = MmapFlags.MAP_ANONYMOUS;
 
@@ -39,6 +39,16 @@ namespace Ryujinx.Memory
             if (prot == MmapProts.PROT_NONE)
             {
                 flags |= MmapFlags.MAP_NORESERVE;
+            }
+
+            if (OperatingSystem.IsMacOSVersionAtLeast(10, 14) && forJit)
+            {
+                flags |= MmapFlags.MAP_JIT_DARWIN;
+
+                if (prot == (MmapProts.PROT_READ | MmapProts.PROT_WRITE))
+                {
+                    prot |= MmapProts.PROT_EXEC;
+                }
             }
 
             IntPtr ptr = mmap(IntPtr.Zero, size, prot, flags, -1, 0);
@@ -57,9 +67,16 @@ namespace Ryujinx.Memory
             return ptr;
         }
 
-        public static bool Commit(IntPtr address, ulong size)
+        public static bool Commit(IntPtr address, ulong size, bool forJit)
         {
-            return mprotect(address, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE) == 0;
+            MmapProts prot = MmapProts.PROT_READ | MmapProts.PROT_WRITE;
+
+            if (OperatingSystem.IsMacOSVersionAtLeast(10, 14) && forJit)
+            {
+                prot |= MmapProts.PROT_EXEC;
+            }
+
+            return mprotect(address, size, prot) == 0;
         }
 
         public static bool Decommit(IntPtr address, ulong size)

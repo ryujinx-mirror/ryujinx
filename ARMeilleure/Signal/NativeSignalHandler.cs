@@ -1,5 +1,7 @@
 ﻿using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.Memory;
 using ARMeilleure.Translation;
+using ARMeilleure.Translation.Cache;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -69,8 +71,8 @@ namespace ARMeilleure.Signal
 
         private const uint EXCEPTION_ACCESS_VIOLATION = 0xc0000005;
 
-        private const ulong PageSize = 0x1000;
-        private const ulong PageMask = PageSize - 1;
+        private static ulong _pageSize = GetPageSize();
+        private static ulong _pageMask = _pageSize - 1;
 
         private static IntPtr _handlerConfig;
         private static IntPtr _signalHandlerPtr;
@@ -78,6 +80,19 @@ namespace ARMeilleure.Signal
 
         private static readonly object _lock = new object();
         private static bool _initialized;
+
+        private static ulong GetPageSize()
+        {
+            // TODO: This needs to be based on the current memory manager configuration.
+            if (OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            {
+                return 1UL << 14;
+            }
+            else
+            {
+                return 1UL << 12;
+            }
+        }
 
         static NativeSignalHandler()
         {
@@ -87,7 +102,12 @@ namespace ARMeilleure.Signal
             config = new SignalHandlerConfig();
         }
 
-        public static void InitializeSignalHandler()
+        public static void InitializeJitCache(IJitMemoryAllocator allocator)
+        {
+            JitCache.Initialize(allocator);
+        }
+
+        public static void InitializeSignalHandler(Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
         {
             if (_initialized) return;
 
@@ -95,10 +115,9 @@ namespace ARMeilleure.Signal
             {
                 if (_initialized) return;
 
-                bool unix = OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
                 ref SignalHandlerConfig config = ref GetConfigRef();
 
-                if (unix)
+                if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
                     // Unix siginfo struct locations.
                     // NOTE: These are incredibly likely to be different between kernel version and architectures.
@@ -108,7 +127,13 @@ namespace ARMeilleure.Signal
 
                     _signalHandlerPtr = Marshal.GetFunctionPointerForDelegate(GenerateUnixSignalHandler(_handlerConfig));
 
-                    SigAction old = UnixSignalHandlerRegistration.RegisterExceptionHandler(_signalHandlerPtr);
+                    if (customSignalHandlerFactory != null)
+                    {
+                        _signalHandlerPtr = customSignalHandlerFactory(UnixSignalHandlerRegistration.GetSegfaultExceptionHandler().sa_handler, _signalHandlerPtr);
+                    }
+
+                    var old = UnixSignalHandlerRegistration.RegisterExceptionHandler(_signalHandlerPtr);
+
                     config.UnixOldSigaction = (nuint)(ulong)old.sa_handler;
                     config.UnixOldSigaction3Arg = old.sa_flags & 4;
                 }
@@ -118,6 +143,11 @@ namespace ARMeilleure.Signal
                     config.StructWriteOffset = 32; // ExceptionInformation0
 
                     _signalHandlerPtr = Marshal.GetFunctionPointerForDelegate(GenerateWindowsSignalHandler(_handlerConfig));
+
+                    if (customSignalHandlerFactory != null)
+                    {
+                        _signalHandlerPtr = customSignalHandlerFactory(IntPtr.Zero, _signalHandlerPtr);
+                    }
 
                     _signalHandlerHandle = WindowsSignalHandlerRegistration.RegisterExceptionHandler(_signalHandlerPtr);
                 }
@@ -197,7 +227,7 @@ namespace ARMeilleure.Signal
                 // Only call tracking if in range.
                 context.BranchIfFalse(nextLabel, inRange, BasicBlockFrequency.Cold);
 
-                Operand offset = context.BitwiseAnd(context.Subtract(faultAddress, rangeAddress), Const(~PageMask));
+                Operand offset = context.BitwiseAnd(context.Subtract(faultAddress, rangeAddress), Const(~_pageMask));
 
                 // Call the tracking action, with the pointer's relative offset to the base address.
                 Operand trackingActionPtr = context.Load(OperandType.I64, Const((ulong)signalStructPtr + rangeBaseOffset + 20));
@@ -208,7 +238,7 @@ namespace ARMeilleure.Signal
 
                 // Tracking action should be non-null to call it, otherwise assume false return.
                 context.BranchIfFalse(skipActionLabel, trackingActionPtr);
-                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(PageSize), isWrite, Const(0));
+                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(_pageSize), isWrite, Const(0));
                 context.Copy(inRegionLocal, result);
 
                 context.MarkLabel(skipActionLabel);
@@ -278,7 +308,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I32, OperandType.I64, OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq).Map<UnixExceptionHandler>();
+            return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<UnixExceptionHandler>();
         }
 
         private static VectoredExceptionHandler GenerateWindowsSignalHandler(IntPtr signalStructPtr)
@@ -332,7 +362,7 @@ namespace ARMeilleure.Signal
 
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
-            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq).Map<VectoredExceptionHandler>();
+            return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Map<VectoredExceptionHandler>();
         }
     }
 }

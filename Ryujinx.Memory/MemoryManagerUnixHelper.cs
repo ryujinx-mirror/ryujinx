@@ -22,7 +22,8 @@ namespace Ryujinx.Memory
             MAP_ANONYMOUS = 4,
             MAP_NORESERVE = 8,
             MAP_FIXED = 16,
-            MAP_UNLOCKED = 32
+            MAP_UNLOCKED = 32,
+            MAP_JIT_DARWIN = 0x800
         }
 
         [Flags]
@@ -45,7 +46,6 @@ namespace Ryujinx.Memory
         private const int MAP_UNLOCKED_LINUX_GENERIC = 0x80000;
 
         private const int MAP_NORESERVE_DARWIN = 0x40;
-        private const int MAP_JIT_DARWIN = 0x800;
         private const int MAP_ANONYMOUS_DARWIN = 0x1000;
 
         public const int MADV_DONTNEED = 4;
@@ -151,10 +151,9 @@ namespace Ryujinx.Memory
                 }
             }
 
-            if (OperatingSystem.IsMacOSVersionAtLeast(10, 14))
+            if (flags.HasFlag(MmapFlags.MAP_JIT_DARWIN) && OperatingSystem.IsMacOSVersionAtLeast(10, 14))
             {
-                // Only to be used with the Hardened Runtime.
-                // result |= MAP_JIT_DARWIN;
+                result |= (int)MmapFlags.MAP_JIT_DARWIN;
             }
 
             return result;

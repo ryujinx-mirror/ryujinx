@@ -26,7 +26,15 @@ namespace ARMeilleure.Instructions
 
         public static void Rshrn_V(ArmEmitterContext context)
         {
-            if (Optimizations.UseSsse3)
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64RshrnV, shift);
+            }
+            else if (Optimizations.UseSsse3)
             {
                 OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
@@ -80,7 +88,14 @@ namespace ARMeilleure.Instructions
 
             int shift = GetImmShl(op);
 
-            EmitScalarUnaryOpZx(context, (op1) => context.ShiftLeft(op1, Const(shift)));
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitScalarShiftBinaryOp(context, Intrinsic.Arm64ShlS, shift);
+            }
+            else
+            {
+                EmitScalarUnaryOpZx(context, (op1) => context.ShiftLeft(op1, Const(shift)));
+            }
         }
 
         public static void Shl_V(ArmEmitterContext context)
@@ -90,7 +105,11 @@ namespace ARMeilleure.Instructions
             int shift = GetImmShl(op);
             int eSize = 8 << op.Size;
 
-            if (shift >= eSize)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64ShlV, shift);
+            }
+            else if (shift >= eSize)
             {
                 if ((op.RegisterSize == RegisterSize.Simd64))
                 {
@@ -143,7 +162,11 @@ namespace ARMeilleure.Instructions
 
             int shift = 8 << op.Size;
 
-            if (Optimizations.UseSse41)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorUnaryOp(context, Intrinsic.Arm64ShllV);
+            }
+            else if (Optimizations.UseSse41)
             {
                 Operand n = GetVec(op.Rn);
 
@@ -170,7 +193,15 @@ namespace ARMeilleure.Instructions
 
         public static void Shrn_V(ArmEmitterContext context)
         {
-            if (Optimizations.UseSsse3)
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64ShrnV, shift);
+            }
+            else if (Optimizations.UseSsse3)
             {
                 OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
@@ -205,89 +236,259 @@ namespace ARMeilleure.Instructions
 
         public static void Sli_S(ArmEmitterContext context)
         {
-            EmitSli(context, scalar: true);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShl(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64SliS, shift);
+            }
+            else
+            {
+                EmitSli(context, scalar: true);
+            }
         }
 
         public static void Sli_V(ArmEmitterContext context)
         {
-            EmitSli(context, scalar: false);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShl(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64SliV, shift);
+            }
+            else
+            {
+                EmitSli(context, scalar: false);
+            }
         }
 
         public static void Sqrshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Round | ShlRegFlags.Saturating);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorSaturatingBinaryOp(context, Intrinsic.Arm64SqrshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Round | ShlRegFlags.Saturating);
+            }
         }
 
         public static void Sqrshrn_S(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqrshrnS, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+            }
         }
 
         public static void Sqrshrn_V(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqrshrnV, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+            }
         }
 
         public static void Sqrshrun_S(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqrshrunS, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+            }
         }
 
         public static void Sqrshrun_V(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqrshrunV, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+            }
         }
 
         public static void Sqshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Saturating);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorSaturatingBinaryOp(context, Intrinsic.Arm64SqshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Saturating);
+            }
         }
 
         public static void Sqshrn_S(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqshrnS, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+            }
         }
 
         public static void Sqshrn_V(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqshrnV, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+            }
         }
 
         public static void Sqshrun_S(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqshrunS, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+            }
         }
 
         public static void Sqshrun_V(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64SqshrunV, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+            }
         }
 
         public static void Sri_S(ArmEmitterContext context)
         {
-            EmitSri(context, scalar: true);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64SriS, shift);
+            }
+            else
+            {
+                EmitSri(context, scalar: true);
+            }
         }
 
         public static void Sri_V(ArmEmitterContext context)
         {
-            EmitSri(context, scalar: false);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64SriV, shift);
+            }
+            else
+            {
+                EmitSri(context, scalar: false);
+            }
         }
 
         public static void Srshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Round);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorBinaryOp(context, Intrinsic.Arm64SrshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Signed | ShlRegFlags.Round);
+            }
         }
 
         public static void Srshr_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpSx(context, ShrImmFlags.Round);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftBinaryOp(context, Intrinsic.Arm64SrshrS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpSx(context, ShrImmFlags.Round);
+            }
         }
 
         public static void Srshr_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64SrshrV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
             {
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
@@ -325,14 +526,31 @@ namespace ARMeilleure.Instructions
 
         public static void Srsra_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpSx(context, ShrImmFlags.Round | ShrImmFlags.Accumulate);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64SrsraS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpSx(context, ShrImmFlags.Round | ShrImmFlags.Accumulate);
+            }
         }
 
         public static void Srsra_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64SrsraV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
             {
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
@@ -372,12 +590,26 @@ namespace ARMeilleure.Instructions
 
         public static void Sshl_S(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Scalar | ShlRegFlags.Signed);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitScalarBinaryOp(context, Intrinsic.Arm64SshlS);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Scalar | ShlRegFlags.Signed);
+            }
         }
 
         public static void Sshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Signed);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorBinaryOp(context, Intrinsic.Arm64SshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Signed);
+            }
         }
 
         public static void Sshll_V(ArmEmitterContext context)
@@ -386,7 +618,11 @@ namespace ARMeilleure.Instructions
 
             int shift = GetImmShl(op);
 
-            if (Optimizations.UseSse41)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64SshllV, shift);
+            }
+            else if (Optimizations.UseSse41)
             {
                 Operand n = GetVec(op.Rn);
 
@@ -416,7 +652,18 @@ namespace ARMeilleure.Instructions
 
         public static void Sshr_S(ArmEmitterContext context)
         {
-            EmitShrImmOp(context, ShrImmFlags.ScalarSx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftBinaryOp(context, Intrinsic.Arm64SshrS, shift);
+            }
+            else
+            {
+                EmitShrImmOp(context, ShrImmFlags.ScalarSx);
+            }
         }
 
         public static void Sshr_V(ArmEmitterContext context)
@@ -425,7 +672,11 @@ namespace ARMeilleure.Instructions
 
             int shift = GetImmShr(op);
 
-            if (Optimizations.UseGfni && op.Size == 0)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64SshrV, shift);
+            }
+            else if (Optimizations.UseGfni && op.Size == 0)
             {
                 Operand n = GetVec(op.Rn);
 
@@ -478,14 +729,31 @@ namespace ARMeilleure.Instructions
 
         public static void Ssra_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpSx(context, ShrImmFlags.Accumulate);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64SsraS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpSx(context, ShrImmFlags.Accumulate);
+            }
         }
 
         public static void Ssra_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64SsraV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0 && op.Size < 3)
             {
                 int shift = GetImmShr(op);
 
@@ -515,49 +783,131 @@ namespace ARMeilleure.Instructions
 
         public static void Uqrshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Round | ShlRegFlags.Saturating);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorSaturatingBinaryOp(context, Intrinsic.Arm64UqrshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Round | ShlRegFlags.Saturating);
+            }
         }
 
         public static void Uqrshrn_S(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64UqrshrnS, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+            }
         }
 
         public static void Uqrshrn_V(ArmEmitterContext context)
         {
-            EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64UqrshrnV, shift);
+            }
+            else
+            {
+                EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+            }
         }
 
         public static void Uqshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Saturating);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorSaturatingBinaryOp(context, Intrinsic.Arm64UqshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Saturating);
+            }
         }
 
         public static void Uqshrn_S(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64UqshrnS, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+            }
         }
 
         public static void Uqshrn_V(ArmEmitterContext context)
         {
-            EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorSaturatingShiftTernaryOpRd(context, Intrinsic.Arm64UqshrnV, shift);
+            }
+            else
+            {
+                EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+            }
         }
 
         public static void Urshl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Round);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorBinaryOp(context, Intrinsic.Arm64UrshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Round);
+            }
         }
 
         public static void Urshr_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpZx(context, ShrImmFlags.Round);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftBinaryOp(context, Intrinsic.Arm64UrshrS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpZx(context, ShrImmFlags.Round);
+            }
         }
 
         public static void Urshr_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64UrshrV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0)
             {
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
@@ -593,14 +943,31 @@ namespace ARMeilleure.Instructions
 
         public static void Ursra_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpZx(context, ShrImmFlags.Round | ShrImmFlags.Accumulate);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64UrsraS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpZx(context, ShrImmFlags.Round | ShrImmFlags.Accumulate);
+            }
         }
 
         public static void Ursra_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64UrsraV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0)
             {
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
@@ -638,12 +1005,26 @@ namespace ARMeilleure.Instructions
 
         public static void Ushl_S(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.Scalar);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitScalarBinaryOp(context, Intrinsic.Arm64UshlS);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.Scalar);
+            }
         }
 
         public static void Ushl_V(ArmEmitterContext context)
         {
-            EmitShlRegOp(context, ShlRegFlags.None);
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorBinaryOp(context, Intrinsic.Arm64UshlV);
+            }
+            else
+            {
+                EmitShlRegOp(context, ShlRegFlags.None);
+            }
         }
 
         public static void Ushll_V(ArmEmitterContext context)
@@ -652,7 +1033,11 @@ namespace ARMeilleure.Instructions
 
             int shift = GetImmShl(op);
 
-            if (Optimizations.UseSse41)
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64UshllV, shift);
+            }
+            else if (Optimizations.UseSse41)
             {
                 Operand n = GetVec(op.Rn);
 
@@ -682,14 +1067,31 @@ namespace ARMeilleure.Instructions
 
         public static void Ushr_S(ArmEmitterContext context)
         {
-            EmitShrImmOp(context, ShrImmFlags.ScalarZx);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftBinaryOp(context, Intrinsic.Arm64UshrS, shift);
+            }
+            else
+            {
+                EmitShrImmOp(context, ShrImmFlags.ScalarZx);
+            }
         }
 
         public static void Ushr_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftBinaryOp(context, Intrinsic.Arm64UshrV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0)
             {
                 int shift = GetImmShr(op);
 
@@ -714,14 +1116,31 @@ namespace ARMeilleure.Instructions
 
         public static void Usra_S(ArmEmitterContext context)
         {
-            EmitScalarShrImmOpZx(context, ShrImmFlags.Accumulate);
+            if (Optimizations.UseAdvSimd)
+            {
+                OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitScalarShiftTernaryOpRd(context, Intrinsic.Arm64UsraS, shift);
+            }
+            else
+            {
+                EmitScalarShrImmOpZx(context, ShrImmFlags.Accumulate);
+            }
         }
 
         public static void Usra_V(ArmEmitterContext context)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
 
-            if (Optimizations.UseSse2 && op.Size > 0)
+            if (Optimizations.UseAdvSimd)
+            {
+                int shift = GetImmShr(op);
+
+                InstEmitSimdHelperArm64.EmitVectorShiftTernaryOpRd(context, Intrinsic.Arm64UsraV, shift);
+            }
+            else if (Optimizations.UseSse2 && op.Size > 0)
             {
                 int shift = GetImmShr(op);
 

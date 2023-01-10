@@ -17,8 +17,6 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private const int InstructionGap     = 2;
         private const int InstructionGapMask = InstructionGap - 1;
 
-        private const int RegistersCount = 16;
-
         private HashSet<int> _blockEdges;
         private LiveRange[] _blockRanges;
         private BitMap[] _blockLiveIn;
@@ -59,7 +57,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                 void PopulateFreePositions(RegisterType type, out int[] positions, out int count)
                 {
-                    positions = new int[RegistersCount];
+                    positions = new int[masks.RegistersCount];
                     count = BitOperations.PopCount((uint)masks.GetAvailableRegisters(type));
 
                     int mask = masks.GetAvailableRegisters(type);
@@ -115,7 +113,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             StackAllocator stackAlloc,
             RegisterMasks regMasks)
         {
-            NumberLocals(cfg);
+            NumberLocals(cfg, regMasks.RegistersCount);
 
             var context = new AllocationContext(stackAlloc, regMasks, _intervals.Count);
 
@@ -134,22 +132,25 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 {
                     context.Active.Set(index);
 
-                    if (current.Register.Type == RegisterType.Integer)
+                    if (current.IsFixedAndUsed)
                     {
-                        context.IntUsedRegisters |= 1 << current.Register.Index;
-                    }
-                    else /* if (interval.Register.Type == RegisterType.Vector) */
-                    {
-                        context.VecUsedRegisters |= 1 << current.Register.Index;
+                        if (current.Register.Type == RegisterType.Integer)
+                        {
+                            context.IntUsedRegisters |= 1 << current.Register.Index;
+                        }
+                        else /* if (interval.Register.Type == RegisterType.Vector) */
+                        {
+                            context.VecUsedRegisters |= 1 << current.Register.Index;
+                        }
                     }
 
                     continue;
                 }
 
-                AllocateInterval(context, current, index);
+                AllocateInterval(context, current, index, regMasks.RegistersCount);
             }
 
-            for (int index = RegistersCount * 2; index < _intervals.Count; index++)
+            for (int index = regMasks.RegistersCount * 2; index < _intervals.Count; index++)
             {
                 if (!_intervals[index].IsSpilled)
                 {
@@ -163,7 +164,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             return new AllocationResult(context.IntUsedRegisters, context.VecUsedRegisters, context.StackAlloc.TotalSize);
         }
 
-        private void AllocateInterval(AllocationContext context, LiveInterval current, int cIndex)
+        private void AllocateInterval(AllocationContext context, LiveInterval current, int cIndex, int registersCount)
         {
             // Check active intervals that already ended.
             foreach (int iIndex in context.Active)
@@ -199,17 +200,17 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 }
             }
 
-            if (!TryAllocateRegWithoutSpill(context, current, cIndex))
+            if (!TryAllocateRegWithoutSpill(context, current, cIndex, registersCount))
             {
-                AllocateRegWithSpill(context, current, cIndex);
+                AllocateRegWithSpill(context, current, cIndex, registersCount);
             }
         }
 
-        private bool TryAllocateRegWithoutSpill(AllocationContext context, LiveInterval current, int cIndex)
+        private bool TryAllocateRegWithoutSpill(AllocationContext context, LiveInterval current, int cIndex, int registersCount)
         {
             RegisterType regType = current.Local.Type.ToRegisterType();
 
-            Span<int> freePositions = stackalloc int[RegistersCount];
+            Span<int> freePositions = stackalloc int[registersCount];
 
             context.GetFreePositions(regType, freePositions, out int freePositionsCount);
 
@@ -278,7 +279,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 {
                     Debug.Assert(splitChild.GetStart() > current.GetStart(), "Split interval has an invalid start position.");
 
-                    InsertInterval(splitChild);
+                    InsertInterval(splitChild, registersCount);
                 }
                 else
                 {
@@ -302,12 +303,12 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             return true;
         }
 
-        private void AllocateRegWithSpill(AllocationContext context, LiveInterval current, int cIndex)
+        private void AllocateRegWithSpill(AllocationContext context, LiveInterval current, int cIndex, int registersCount)
         {
             RegisterType regType = current.Local.Type.ToRegisterType();
 
-            Span<int> usePositions = stackalloc int[RegistersCount];
-            Span<int> blockedPositions = stackalloc int[RegistersCount];
+            Span<int> usePositions = stackalloc int[registersCount];
+            Span<int> blockedPositions = stackalloc int[registersCount];
 
             context.GetFreePositions(regType, usePositions, out _);
             context.GetFreePositions(regType, blockedPositions, out _);
@@ -386,7 +387,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                 Debug.Assert(splitChild.GetStart() > current.GetStart(), "Split interval has an invalid start position.");
 
-                InsertInterval(splitChild);
+                InsertInterval(splitChild, registersCount);
 
                 Spill(context, current);
             }
@@ -396,7 +397,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 // so we only need to split the intervals using the selected register.
                 current.Register = new Register(selectedReg, regType);
 
-                SplitAndSpillOverlappingIntervals(context, current);
+                SplitAndSpillOverlappingIntervals(context, current, registersCount);
 
                 context.Active.Set(cIndex);
             }
@@ -417,14 +418,14 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 {
                     Debug.Assert(splitChild.GetStart() > current.GetStart(), "Split interval has an invalid start position.");
 
-                    InsertInterval(splitChild);
+                    InsertInterval(splitChild, registersCount);
                 }
                 else
                 {
                     Spill(context, splitChild);
                 }
 
-                SplitAndSpillOverlappingIntervals(context, current);
+                SplitAndSpillOverlappingIntervals(context, current, registersCount);
 
                 context.Active.Set(cIndex);
             }
@@ -460,7 +461,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             return selected;
         }
 
-        private void SplitAndSpillOverlappingIntervals(AllocationContext context, LiveInterval current)
+        private void SplitAndSpillOverlappingIntervals(AllocationContext context, LiveInterval current, int registersCount)
         {
             foreach (int iIndex in context.Active)
             {
@@ -468,7 +469,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                 if (!interval.IsFixed && interval.Register == current.Register)
                 {
-                    SplitAndSpillOverlappingInterval(context, current, interval);
+                    SplitAndSpillOverlappingInterval(context, current, interval, registersCount);
 
                     context.Active.Clear(iIndex);
                 }
@@ -480,7 +481,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                 if (!interval.IsFixed && interval.Register == current.Register && interval.Overlaps(current))
                 {
-                    SplitAndSpillOverlappingInterval(context, current, interval);
+                    SplitAndSpillOverlappingInterval(context, current, interval, registersCount);
 
                     context.Inactive.Clear(iIndex);
                 }
@@ -490,7 +491,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private void SplitAndSpillOverlappingInterval(
             AllocationContext context,
             LiveInterval      current,
-            LiveInterval      interval)
+            LiveInterval      interval,
+            int               registersCount)
         {
             // If there's a next use after the start of the current interval,
             // we need to split the spilled interval twice, and re-insert it
@@ -522,7 +524,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     splitChild = right;
                 }
 
-                InsertInterval(splitChild);
+                InsertInterval(splitChild, registersCount);
             }
             else
             {
@@ -530,13 +532,13 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             }
         }
 
-        private void InsertInterval(LiveInterval interval)
+        private void InsertInterval(LiveInterval interval, int registersCount)
         {
             Debug.Assert(interval.UsesCount != 0, "Trying to insert a interval without uses.");
             Debug.Assert(!interval.IsEmpty,       "Trying to insert a empty interval.");
             Debug.Assert(!interval.IsSpilled,     "Trying to insert a spilled interval.");
 
-            int startIndex = RegistersCount * 2;
+            int startIndex = registersCount * 2;
 
             int insertIndex = _intervals.BinarySearch(startIndex, _intervals.Count - startIndex, interval, null);
 
@@ -790,12 +792,12 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             return _operationNodes[position / InstructionGap];
         }
 
-        private void NumberLocals(ControlFlowGraph cfg)
+        private void NumberLocals(ControlFlowGraph cfg, int registersCount)
         {
             _operationNodes = new List<(IntrusiveList<Operation>, Operation)>();
             _intervals = new List<LiveInterval>();
 
-            for (int index = 0; index < RegistersCount; index++)
+            for (int index = 0; index < registersCount; index++)
             {
                 _intervals.Add(new LiveInterval(new Register(index, RegisterType.Integer)));
                 _intervals.Add(new LiveInterval(new Register(index, RegisterType.Vector)));
@@ -1040,6 +1042,11 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     void VisitDestination(Operand dest)
                     {
                         LiveInterval interval = _intervals[GetOperandId(dest)];
+
+                        if (interval.IsFixed)
+                        {
+                            interval.IsFixedAndUsed = true;
+                        }
 
                         interval.SetStart(operationPos + 1);
                         interval.AddUsePosition(operationPos + 1);

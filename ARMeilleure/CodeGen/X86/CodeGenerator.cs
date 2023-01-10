@@ -16,6 +16,7 @@ namespace ARMeilleure.CodeGen.X86
 {
     static class CodeGenerator
     {
+        private const int RegistersCount = 16;
         private const int PageSize       = 0x1000;
         private const int StackGuardSize = 0x2000;
 
@@ -143,7 +144,8 @@ namespace ARMeilleure.CodeGen.X86
                 CallingConvention.GetIntCallerSavedRegisters(),
                 CallingConvention.GetVecCallerSavedRegisters(),
                 CallingConvention.GetIntCalleeSavedRegisters(),
-                CallingConvention.GetVecCalleeSavedRegisters());
+                CallingConvention.GetVecCalleeSavedRegisters(),
+                RegistersCount);
 
             AllocationResult allocResult = regAlloc.RunPass(cfg, stackAlloc, regMasks);
 

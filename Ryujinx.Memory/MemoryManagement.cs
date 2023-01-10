@@ -4,7 +4,7 @@ namespace Ryujinx.Memory
 {
     public static class MemoryManagement
     {
-        public static IntPtr Allocate(ulong size)
+        public static IntPtr Allocate(ulong size, bool forJit)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -12,7 +12,7 @@ namespace Ryujinx.Memory
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                return MemoryManagementUnix.Allocate(size);
+                return MemoryManagementUnix.Allocate(size, forJit);
             }
             else
             {
@@ -20,7 +20,7 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static IntPtr Reserve(ulong size, bool viewCompatible)
+        public static IntPtr Reserve(ulong size, bool forJit, bool viewCompatible)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -28,7 +28,7 @@ namespace Ryujinx.Memory
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                return MemoryManagementUnix.Reserve(size);
+                return MemoryManagementUnix.Reserve(size, forJit);
             }
             else
             {
@@ -36,7 +36,7 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Commit(IntPtr address, ulong size)
+        public static bool Commit(IntPtr address, ulong size, bool forJit)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -44,7 +44,7 @@ namespace Ryujinx.Memory
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                return MemoryManagementUnix.Commit(address, size);
+                return MemoryManagementUnix.Commit(address, size, forJit);
             }
             else
             {
