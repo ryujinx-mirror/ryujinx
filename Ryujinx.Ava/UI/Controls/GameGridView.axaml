@@ -26,12 +26,12 @@
                 ToolTip.Tip="{locale:Locale GameListContextMenuOpenUserSaveDirectoryToolTip}" />
             <MenuItem
                 Command="{Binding OpenDeviceSaveDirectory}"
-                Header="{locale:Locale GameListContextMenuOpenUserDeviceDirectory}"
-                ToolTip.Tip="{locale:Locale GameListContextMenuOpenUserDeviceDirectoryToolTip}" />
+                Header="{locale:Locale GameListContextMenuOpenDeviceSaveDirectory}"
+                ToolTip.Tip="{locale:Locale GameListContextMenuOpenDeviceSaveDirectoryToolTip}" />
             <MenuItem
                 Command="{Binding OpenBcatSaveDirectory}"
-                Header="{locale:Locale GameListContextMenuOpenUserBcatDirectory}"
-                ToolTip.Tip="{locale:Locale GameListContextMenuOpenUserBcatDirectoryToolTip}" />
+                Header="{locale:Locale GameListContextMenuOpenBcatSaveDirectory}"
+                ToolTip.Tip="{locale:Locale GameListContextMenuOpenBcatSaveDirectoryToolTip}" />
             <Separator />
             <MenuItem
                 Command="{Binding OpenTitleUpdateManager}"
