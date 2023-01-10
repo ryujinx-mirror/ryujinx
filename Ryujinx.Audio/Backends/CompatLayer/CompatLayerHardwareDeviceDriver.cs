@@ -15,6 +15,8 @@ namespace Ryujinx.Audio.Backends.CompatLayer
     {
         private IHardwareDeviceDriver _realDriver;
 
+        public static bool IsSupported => true;
+
         public CompatLayerHardwareDeviceDriver(IHardwareDeviceDriver realDevice)
         {
             _realDriver = realDevice;

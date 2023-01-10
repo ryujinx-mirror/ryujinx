@@ -26,6 +26,8 @@ namespace Ryujinx.Audio.Integration
         bool SupportsSampleFormat(SampleFormat sampleFormat);
         bool SupportsChannelCount(uint channelCount);
 
+        static abstract bool IsSupported { get; }
+
         IHardwareDeviceDriver GetRealDeviceDriver()
         {
             return this;
