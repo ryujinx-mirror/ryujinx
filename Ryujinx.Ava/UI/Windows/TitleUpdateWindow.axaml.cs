@@ -81,7 +81,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void PrintHeading()
         {
-            Heading.Text = string.Format(LocaleManager.Instance[LocaleKeys.GameUpdateWindowHeading], _titleUpdates.Count, _titleName, _titleId.ToString("X16"));
+            Heading.Text = string.Format(LocaleManager.Instance[LocaleKeys.GameUpdateWindowHeading], _titleUpdates.Count - 1, _titleName, _titleId.ToString("X16"));
         }
 
         private void LoadUpdates()
