@@ -1918,7 +1918,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     LocaleManager.Instance[LocaleKeys.InputDialogNo],
                     LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
-                if (result != UserResult.Yes)
+                if (result == UserResult.Yes)
                 {
                     ConfigurationState.Instance.Logger.EnableTrace.Value = false;
 
@@ -1938,7 +1938,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     LocaleManager.Instance[LocaleKeys.InputDialogNo],
                     LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
 
-                if (result != UserResult.Yes)
+                if (result == UserResult.Yes)
                 {
                     ConfigurationState.Instance.Graphics.ShadersDumpPath.Value = "";
 
