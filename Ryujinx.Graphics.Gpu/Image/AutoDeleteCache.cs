@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -13,6 +14,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private const int MaxCapacity = 2048;
 
         private readonly LinkedList<Texture> _textures;
+        private readonly ConcurrentQueue<Texture> _deferredRemovals;
 
         /// <summary>
         /// Creates a new instance of the automatic deletion cache.
@@ -20,6 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public AutoDeleteCache()
         {
             _textures = new LinkedList<Texture>();
+            _deferredRemovals = new ConcurrentQueue<Texture>();
         }
 
         /// <summary>
@@ -56,6 +59,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 oldestTexture.CacheNode = null;
             }
+
+            if (_deferredRemovals.Count > 0)
+            {
+                while (_deferredRemovals.TryDequeue(out Texture textureToRemove))
+                {
+                    Remove(textureToRemove, false);
+                }
+            }
         }
 
         /// <summary>
@@ -84,6 +95,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Removes a texture from the cache.
+        /// </summary>
+        /// <param name="texture">The texture to be removed from the cache</param>
+        /// <param name="flush">True to remove the texture if it was on the cache</param>
+        /// <returns>True if the texture was found and removed, false otherwise</returns>
         public bool Remove(Texture texture, bool flush)
         {
             if (texture.CacheNode == null)
@@ -102,6 +119,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             texture.CacheNode = null;
 
             return texture.DecrementReferenceCount();
+        }
+
+        /// <summary>
+        /// Queues removal of a texture from the cache in a thread safe way.
+        /// </summary>
+        /// <param name="texture">The texture to be removed from the cache</param>
+        public void RemoveDeferred(Texture texture)
+        {
+            _deferredRemovals.Enqueue(texture);
         }
 
         public IEnumerator<Texture> GetEnumerator()

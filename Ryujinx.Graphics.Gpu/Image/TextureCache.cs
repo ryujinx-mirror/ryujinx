@@ -1166,6 +1166,19 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Queues the removal of a texture from the auto delete cache.
+        /// </summary>
+        /// <remarks>
+        /// This function is thread safe and can be called from any thread.
+        /// The texture will be deleted on the next time the cache is used.
+        /// </remarks>
+        /// <param name="texture">The texture to be removed</param>
+        public void QueueAutoDeleteCacheRemoval(Texture texture)
+        {
+            _cache.RemoveDeferred(texture);
+        }
+
+        /// <summary>
         /// Disposes all textures and samplers in the cache.
         /// It's an error to use the texture cache after disposal.
         /// </summary>
