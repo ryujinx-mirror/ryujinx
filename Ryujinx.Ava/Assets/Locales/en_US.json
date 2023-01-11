@@ -1,4 +1,5 @@
 {
+  "Language": "English (US)",
   "MenuBarFileOpenApplet": "Open Applet",
   "MenuBarFileOpenAppletOpenMiiAppletToolTip": "Open Mii Editor Applet in Standalone mode",
   "SettingsTabInputDirectMouseAccess": "Direct Mouse Access",
@@ -611,3 +612,4 @@
   "Recover": "Recover",
   "UserProfilesRecoverHeading" : "Saves were found for the following accounts"
 }
+

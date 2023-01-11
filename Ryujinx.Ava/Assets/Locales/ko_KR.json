@@ -1,4 +1,5 @@
 {
+  "Language": "한국어",
   "MenuBarFileOpenApplet": "애플릿 열기",
   "MenuBarFileOpenAppletOpenMiiAppletToolTip": "독립 실행형 모드에서 Mii 편집기 애플릿 열기",
   "SettingsTabInputDirectMouseAccess": "직접 마우스 접속",

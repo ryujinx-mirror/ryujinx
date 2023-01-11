@@ -1,13 +1,20 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Ryujinx.Ava.UI.ViewModels;
-using Ryujinx.Ava.UI.Windows;
-using System.Threading.Tasks;
 using LibHac.FsSystem;
 using LibHac.Ncm;
+using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Ava.UI.ViewModels;
+using Ryujinx.Ava.UI.Windows;
+using Ryujinx.Common;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS;
 using Ryujinx.Modules;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.Views.Main
 {
@@ -19,13 +26,47 @@ namespace Ryujinx.Ava.UI.Views.Main
         public MainMenuBarView()
         {
             InitializeComponent();
+
+            List<MenuItem> menuItems = new();
+
+            string localePath = "Ryujinx.Ava/Assets/Locales";
+            string localeExt  = ".json";
+
+            string[] localesPath = EmbeddedResources.GetAllAvailableResources(localePath, localeExt);
+
+            Array.Sort(localesPath);
+
+            foreach (string locale in localesPath)
+            {
+                string languageCode = Path.GetFileNameWithoutExtension(locale).Split('.').Last();
+                string languageJson = EmbeddedResources.ReadAllText($"{localePath}/{languageCode}{localeExt}");
+                var    strings      = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
+
+                if (!strings.TryGetValue("Language", out string languageName))
+                {
+                    languageName = languageCode;
+                }
+
+                MenuItem menuItem = new()
+                {
+                    Header  = languageName,
+                    Command = MiniCommand.Create(() =>
+                    {
+                        ViewModel.ChangeLanguage(languageCode);
+                    })
+                };
+
+                menuItems.Add(menuItem);
+            }
+
+            ChangeLanguageMenuItem.Items = menuItems.ToArray();
         }
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
 
-            if (this.VisualRoot is MainWindow window)
+            if (VisualRoot is MainWindow window)
             {
                 Window = window;
             }
