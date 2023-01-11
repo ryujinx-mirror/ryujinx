@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "Изменить изображение профиля",
   "UserProfilesAvailableUserProfiles": "Доступные профили пользователей:",
   "UserProfilesAddNewProfile": "Добавить новый профиль",
-  "UserProfilesDeleteSelectedProfile": "Удалить выбранный профиль",
+  "UserProfilesDelete": "Удалить",
   "UserProfilesClose": "Закрыть",
   "ProfileImageSelectionTitle": "Выбор изображения профиля",
   "ProfileImageSelectionHeader": "Выберите изображение профиля",

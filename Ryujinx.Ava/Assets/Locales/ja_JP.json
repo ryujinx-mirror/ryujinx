@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "プロファイル画像を変更",
   "UserProfilesAvailableUserProfiles": "利用可能なユーザプロファイル:",
   "UserProfilesAddNewProfile": "プロファイルを作成",
-  "UserProfilesDeleteSelectedProfile": "削除",
+  "UserProfilesDelete": "削除",
   "UserProfilesClose": "閉じる",
   "ProfileImageSelectionTitle": "プロファイル画像選択",
   "ProfileImageSelectionHeader": "プロファイル画像を選択",

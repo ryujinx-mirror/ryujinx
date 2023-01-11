@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "Αλλαγή Εικόνας Προφίλ",
   "UserProfilesAvailableUserProfiles": "Διαθέσιμα Προφίλ Χρηστών:",
   "UserProfilesAddNewProfile": "Προσθήκη Νέου Προφίλ",
-  "UserProfilesDeleteSelectedProfile": "Διαγραφή Επιλεγμένου Προφίλ",
+  "UserProfilesDelete": "Διαγράφω",
   "UserProfilesClose": "Κλείσιμο",
   "ProfileImageSelectionTitle": "Επιλογή Εικόνας Προφίλ",
   "ProfileImageSelectionHeader": "Επιλέξτε μία Εικόνα Προφίλ",

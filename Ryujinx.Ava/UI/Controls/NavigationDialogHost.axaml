@@ -12,5 +12,6 @@
     <ui:Frame 
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
-        x:Name="ContentFrame" />
+        x:Name="ContentFrame">
+    </ui:Frame>
 </UserControl>

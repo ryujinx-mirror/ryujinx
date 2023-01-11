@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "更換頭貼",
   "UserProfilesAvailableUserProfiles": "現有的帳號:",
   "UserProfilesAddNewProfile": "建立帳號",
-  "UserProfilesDeleteSelectedProfile": "刪除選擇的帳號",
+  "UserProfilesDelete": "刪除",
   "UserProfilesClose": "關閉",
   "ProfileImageSelectionTitle": "頭貼選擇",
   "ProfileImageSelectionHeader": "選擇合適的頭貼圖片",

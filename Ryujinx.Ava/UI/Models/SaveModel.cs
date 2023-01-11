@@ -4,13 +4,10 @@ using LibHac.Fs.Shim;
 using LibHac.Ncm;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.Ui.App.Common;
-using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,7 +19,6 @@ namespace Ryujinx.Ava.UI.Models
         private readonly HorizonClient _horizonClient;
         private long _size;
 
-        public Action DeleteAction { get; set; }
         public ulong SaveId { get; }
         public ProgramId TitleId { get; }
         public string TitleIdString => $"{TitleId.Value:X16}";
@@ -98,26 +94,6 @@ namespace Ryujinx.Ava.UI.Models
                 Size = total_size;
             });
 
-        }
-
-        public void OpenLocation()
-        {
-            ApplicationHelper.OpenSaveDir(SaveId);
-        }
-
-        public async void Delete()
-        {
-            var result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DeleteUserSave],
-                LocaleManager.Instance[LocaleKeys.IrreversibleActionNote],
-                LocaleManager.Instance[LocaleKeys.InputDialogYes],
-                LocaleManager.Instance[LocaleKeys.InputDialogNo], "");
-
-            if (result == UserResult.Yes)
-            {
-                _horizonClient.Fs.DeleteSaveData(SaveDataSpaceId.User, SaveId);
-
-                DeleteAction?.Invoke();
-            }
         }
     }
 }

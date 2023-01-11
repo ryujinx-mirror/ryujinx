@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "Profil Resmini Değiştir",
   "UserProfilesAvailableUserProfiles": "Mevcut Kullanıcı Profilleri:",
   "UserProfilesAddNewProfile": "Yeni Profil Ekle",
-  "UserProfilesDeleteSelectedProfile": "Seçili Profili Sil",
+  "UserProfilesDelete": "Sil",
   "UserProfilesClose": "Kapat",
   "ProfileImageSelectionTitle": "Profil Resmi Seçimi",
   "ProfileImageSelectionHeader": "Profil Resmi Seç",

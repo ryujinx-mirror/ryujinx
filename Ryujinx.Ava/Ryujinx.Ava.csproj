@@ -130,6 +130,18 @@
       <DependentUpon>GameListView.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="UI\Views\User\UserEditorView.axaml.cs">
+      <DependentUpon>UserEditor.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\Views\User\UserRecovererView.axaml.cs">
+      <DependentUpon>UserRecoverer.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\Views\User\UserSelectorView.axaml.cs">
+      <DependentUpon>UserSelector.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

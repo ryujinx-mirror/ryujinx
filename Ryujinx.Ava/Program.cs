@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Threading;
-using Ryujinx.Ava.UI.Helper;
+using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;

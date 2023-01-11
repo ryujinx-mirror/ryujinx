@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using System.Runtime.InteropServices;
 using Avalonia;
 
-namespace Ryujinx.Ava.UI.Helper
+namespace Ryujinx.Ava.UI.Helpers
 {
     public delegate void UpdateBoundsCallbackDelegate(Rect rect);
 

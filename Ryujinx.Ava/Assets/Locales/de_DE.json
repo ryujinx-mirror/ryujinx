@@ -260,7 +260,7 @@
   "UserProfilesChangeProfileImage": "Profilbild ändern",
   "UserProfilesAvailableUserProfiles": "Verfügbare Profile:",
   "UserProfilesAddNewProfile": "Neues Profil",
-  "UserProfilesDeleteSelectedProfile": "Profil löschen",
+  "UserProfilesDelete": "Löschen",
   "UserProfilesClose": "Schließen",
   "ProfileImageSelectionTitle": "Auswahl des Profilbildes",
   "ProfileImageSelectionHeader": "Wähle ein Profilbild aus",

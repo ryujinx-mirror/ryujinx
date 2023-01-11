@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform;
-using Ryujinx.Ava.UI.Helper;
 using SPB.Graphics;
 using SPB.Platform;
 using SPB.Platform.GLX;
@@ -148,9 +147,9 @@ namespace Ryujinx.Ava.UI.Helpers
                 IntPtr.Zero);
 
             WindowHandle = handle;
-            
+
             Marshal.FreeHGlobal(wndClassEx.lpszClassName);
-            
+
             return new PlatformHandle(WindowHandle, "HWND");
         }
 

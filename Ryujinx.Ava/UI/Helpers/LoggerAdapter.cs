@@ -2,7 +2,7 @@ using Avalonia.Utilities;
 using System;
 using System.Text;
 
-namespace Ryujinx.Ava.UI.Helper
+namespace Ryujinx.Ava.UI.Helpers
 {
     using AvaLogger = Avalonia.Logging.Logger;
     using AvaLogLevel = Avalonia.Logging.LogEventLevel;

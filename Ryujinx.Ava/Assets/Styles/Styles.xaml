@@ -179,6 +179,9 @@
     <Style Selector="Button">
         <Setter Property="MinWidth" Value="80" />
     </Style>
+    <Style Selector="ProgressBar /template/ Border#ProgressBarTrack">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
     <Style Selector="ToggleButton">
         <Setter Property="Padding" Value="0,-5,0,0" />
     </Style>
@@ -233,6 +236,35 @@
     </Style>
     <Style Selector="TextBox.NumberBoxTextBoxStyle">
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundColor}" />
+    </Style>
+    <Style Selector="ListBox ListBoxItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
+        <Setter Property="BorderThickness" Value="2"/>
+        <Style.Animations>
+            <Animation Duration="0:0:0.7">
+                <KeyFrame Cue="0%">
+                    <Setter Property="MaxHeight" Value="0" />
+                    <Setter Property="Opacity" Value="0.0" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="MaxHeight" Value="1000" />
+                    <Setter Property="Opacity" Value="0.3" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="MaxHeight" Value="1000" />
+                    <Setter Property="Opacity" Value="1.0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <Style Selector="ListBox ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
+    </Style>
+    <Style Selector="ListBox ListBoxItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppListHoverBackgroundColor}" />
     </Style>
     <Styles.Resources>
         <SolidColorBrush x:Key="ThemeAccentColorBrush" Color="{DynamicResource SystemAccentColor}" />

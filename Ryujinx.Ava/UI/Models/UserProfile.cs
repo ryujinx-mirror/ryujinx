@@ -1,5 +1,7 @@
+using Avalonia.Media;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.ViewModels;
+using Ryujinx.Ava.UI.Views.User;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Profile = Ryujinx.HLE.HOS.Services.Account.Acc.UserProfile;
 
@@ -12,6 +14,8 @@ namespace Ryujinx.Ava.UI.Models
         private byte[] _image;
         private string _name;
         private UserId _userId;
+        private bool _isPointerOver;
+        private IBrush _backgroundColor;
 
         public byte[] Image
         {
@@ -43,27 +47,57 @@ namespace Ryujinx.Ava.UI.Models
             }
         }
 
+        public bool IsPointerOver
+        {
+            get => _isPointerOver;
+            set
+            {
+                _isPointerOver = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public IBrush BackgroundColor
+        {
+            get => _backgroundColor;
+            set
+            {
+                _backgroundColor = value;
+                OnPropertyChanged();
+            }
+        }
+
         public UserProfile(Profile profile, NavigationDialogHost owner)
         {
             _profile = profile;
             _owner = owner;
+
+            UpdateBackground();
 
             Image = profile.Image;
             Name = profile.Name;
             UserId = profile.UserId;
         }
 
-        public bool IsOpened => _profile.AccountState == AccountState.Open;
-
         public void UpdateState()
         {
-            OnPropertyChanged(nameof(IsOpened));
+            UpdateBackground();
             OnPropertyChanged(nameof(Name));
+        }
+
+        private void UpdateBackground()
+        {
+            Avalonia.Application.Current.Styles.TryGetResource("ControlFillColorSecondary", out object color);
+
+            if (color is not null)
+            {
+                BackgroundColor = _profile.AccountState == AccountState.Open ? new SolidColorBrush((Color)color) : Brushes.Transparent;
+            }
         }
 
         public void Recover(UserProfile userProfile)
         {
-            _owner.Navigate(typeof(UserEditor), (_owner, userProfile, true));
+            _owner.Navigate(typeof(UserEditorView), (_owner, userProfile, true));
         }
     }
 }

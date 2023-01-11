@@ -111,35 +111,6 @@
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
             <ListBox.Styles>
-                <Style Selector="ListBoxItem">
-                    <Setter Property="Padding" Value="0" />
-                    <Setter Property="Margin" Value="0" />
-                    <Setter Property="CornerRadius" Value="5" />
-                    <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
-                    <Setter Property="BorderThickness" Value="2"/>
-                    <Style.Animations>
-                        <Animation Duration="0:0:0.7">
-                            <KeyFrame Cue="0%">
-                                <Setter Property="MaxHeight" Value="0" />
-                                <Setter Property="Opacity" Value="0.0" />
-                            </KeyFrame>
-                            <KeyFrame Cue="50%">
-                                <Setter Property="MaxHeight" Value="1000" />
-                                <Setter Property="Opacity" Value="0.3" />
-                            </KeyFrame>
-                            <KeyFrame Cue="100%">
-                                <Setter Property="MaxHeight" Value="1000" />
-                                <Setter Property="Opacity" Value="1.0" />
-                            </KeyFrame>
-                        </Animation>
-                    </Style.Animations>
-                </Style>
-                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                    <Setter Property="Background" Value="{DynamicResource AppListBackgroundColor}" />
-                </Style>
-                <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-                    <Setter Property="Background" Value="{DynamicResource AppListHoverBackgroundColor}" />
-                </Style>
                 <Style Selector="ListBoxItem:selected /template/ Border#SelectionIndicator">
                     <Setter Property="MinHeight" Value="{Binding $parent[UserControl].DataContext.ListItemSelectorSize}" />
                 </Style>

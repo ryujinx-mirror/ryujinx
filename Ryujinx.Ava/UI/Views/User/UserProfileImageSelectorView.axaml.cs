@@ -4,25 +4,26 @@ using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Models;
-using Ryujinx.Ava.UI.Windows;
+using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using System.IO;
 using Image = SixLabors.ImageSharp.Image;
 
-namespace Ryujinx.Ava.UI.Controls
+namespace Ryujinx.Ava.UI.Views.User
 {
-    public partial class ProfileImageSelectionDialog : UserControl
+    public partial class UserProfileImageSelectorView : UserControl
     {
         private ContentManager _contentManager;
         private NavigationDialogHost _parent;
         private TempProfile _profile;
 
-        public bool FirmwareFound => _contentManager.GetCurrentFirmwareVersion() != null;
+        internal UserProfileImageSelectorViewModel ViewModel { get; private set; }
 
-        public ProfileImageSelectionDialog()
+        public UserProfileImageSelectorView()
         {
             InitializeComponent();
             AddHandler(Frame.NavigatedToEvent, (s, e) =>
@@ -40,13 +41,23 @@ namespace Ryujinx.Ava.UI.Controls
                     case NavigationMode.New:
                         (_parent, _profile) = ((NavigationDialogHost, TempProfile))arg.Parameter;
                         _contentManager = _parent.ContentManager;
+
+                        ((ContentDialog)_parent.Parent).Title = $"{LocaleManager.Instance[LocaleKeys.UserProfileWindowTitle]} - {LocaleManager.Instance[LocaleKeys.ProfileImageSelectionHeader]}";
+
+                        if (Program.PreviewerDetached)
+                        {
+                            DataContext = ViewModel = new UserProfileImageSelectorViewModel();
+                            ViewModel.FirmwareFound = _contentManager.GetCurrentFirmwareVersion() != null;
+                        }
+
                         break;
                     case NavigationMode.Back:
-                        _parent.GoBack();
+                        if (_profile.Image != null)
+                        {
+                            _parent.GoBack();
+                        }
                         break;
                 }
-
-                DataContext = this;
             }
         }
 
@@ -73,17 +84,25 @@ namespace Ryujinx.Ava.UI.Controls
                     string imageFile = image[0];
 
                     _profile.Image = ProcessProfileImage(File.ReadAllBytes(imageFile));
-                }
 
-                _parent.GoBack();
+                    if (_profile.Image != null)
+                    {
+                        _parent.GoBack();
+                    }
+                }
             }
+        }
+
+        private void GoBack(object sender, RoutedEventArgs e)
+        {
+            _parent.GoBack();
         }
 
         private void SelectFirmwareImage_OnClick(object sender, RoutedEventArgs e)
         {
-            if (FirmwareFound)
+            if (ViewModel.FirmwareFound)
             {
-                _parent.Navigate(typeof(AvatarWindow), (_parent, _profile));
+                _parent.Navigate(typeof(UserFirmwareAvatarSelectorView), (_parent, _profile));
             }
         }
 
