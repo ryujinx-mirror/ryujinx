@@ -1,7 +1,6 @@
 using ARMeilleure.CodeGen;
 using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.CodeGen.Unwinding;
-using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Common;
 using ARMeilleure.Memory;
 using Ryujinx.Common;
@@ -22,12 +21,15 @@ using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
 {
+    using Arm64HardwareCapabilities = ARMeilleure.CodeGen.Arm64.HardwareCapabilities;
+    using X86HardwareCapabilities = ARMeilleure.CodeGen.X86.HardwareCapabilities;
+
     class Ptc : IPtcLoadState
     {
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 4114; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 4264; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -952,11 +954,26 @@ namespace ARMeilleure.Translation.PTC
 
         private static FeatureInfo GetFeatureInfo()
         {
-            return new FeatureInfo(
-                (uint)HardwareCapabilities.FeatureInfo1Ecx,
-                (uint)HardwareCapabilities.FeatureInfo1Edx,
-                (uint)HardwareCapabilities.FeatureInfo7Ebx,
-                (uint)HardwareCapabilities.FeatureInfo7Ecx);
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            {
+                return new FeatureInfo(
+                    (ulong)Arm64HardwareCapabilities.LinuxFeatureInfoHwCap,
+                    (ulong)Arm64HardwareCapabilities.LinuxFeatureInfoHwCap2,
+                    (ulong)Arm64HardwareCapabilities.MacOsFeatureInfo,
+                    0);
+            }
+            else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+            {
+                return new FeatureInfo(
+                    (ulong)X86HardwareCapabilities.FeatureInfo1Ecx,
+                    (ulong)X86HardwareCapabilities.FeatureInfo1Edx,
+                    (ulong)X86HardwareCapabilities.FeatureInfo7Ebx,
+                    (ulong)X86HardwareCapabilities.FeatureInfo7Ecx);
+            }
+            else
+            {
+                return new FeatureInfo(0, 0, 0, 0);
+            }
         }
 
         private byte GetMemoryManagerMode()
@@ -976,7 +993,7 @@ namespace ARMeilleure.Translation.PTC
             return osPlatform;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 58*/)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 74*/)]
         private struct OuterHeader
         {
             public ulong Magic;
@@ -1007,8 +1024,8 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 16*/)]
-        private record struct FeatureInfo(uint FeatureInfo0, uint FeatureInfo1, uint FeatureInfo2, uint FeatureInfo3);
+        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 32*/)]
+        private record struct FeatureInfo(ulong FeatureInfo0, ulong FeatureInfo1, ulong FeatureInfo2, ulong FeatureInfo3);
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 128*/)]
         private struct InnerHeader

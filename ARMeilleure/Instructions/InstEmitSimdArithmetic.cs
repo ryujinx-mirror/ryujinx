@@ -2556,7 +2556,7 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
-            if (Optimizations.UseAdvSimd && false) // Not supported by all Arm CPUs.
+            if (Optimizations.UseArm64Pmull)
             {
                 InstEmitSimdHelperArm64.EmitVectorBinaryOp(context, Intrinsic.Arm64PmullV);
             }
