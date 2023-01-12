@@ -44,20 +44,22 @@
             <settings:SettingsNetworkView Name="NetworkPage" />
             <settings:SettingsLoggingView Name="LoggingPage" />
         </Grid>
-        <ui:NavigationView Grid.Row="1"
-                           IsSettingsVisible="False"
-                           Name="NavPanel"
-                           IsBackEnabled="False"
-                           PaneDisplayMode="Left"
-                           Margin="2,10,10,0"
-                           VerticalAlignment="Stretch"
-                           HorizontalAlignment="Stretch"
-                           OpenPaneLength="200">
+        <ui:NavigationView
+            Grid.Row="1"
+            IsSettingsVisible="False"
+            Name="NavPanel"
+            IsBackEnabled="False"
+            PaneDisplayMode="Left"
+            Margin="2,10,10,0"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch"
+            OpenPaneLength="200">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem IsSelected="True"
-                                       Content="{locale:Locale SettingsTabGeneral}"
-                                       Tag="UiPage"
-                                       Icon="New" />
+                <ui:NavigationViewItem
+                    IsSelected="True"
+                    Content="{locale:Locale SettingsTabGeneral}"
+                    Tag="UiPage"
+                    Icon="New" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabInput}"
                     Tag="InputPage"
@@ -74,8 +76,9 @@
                     Content="{locale:Locale SettingsTabCpu}"
                     Tag="CpuPage">
                     <ui:NavigationViewItem.Icon>
-                        <ui:FontIcon FontFamily="avares://Ryujinx.Ava/Assets/Fonts#Segoe Fluent Icons"
-                                     Glyph="{helpers:GlyphValueConverter Chip}" />
+                        <ui:FontIcon
+                            FontFamily="avares://Ryujinx.Ava/Assets/Fonts#Segoe Fluent Icons"
+                            Glyph="{helpers:GlyphValueConverter Chip}" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
@@ -95,6 +98,11 @@
                     Tag="LoggingPage"
                     Icon="Document" />
             </ui:NavigationView.MenuItems>
+            <ui:NavigationView.Styles>
+                <Style Selector="Grid#PlaceholderGrid">
+                    <Setter Property="Height" Value="40" />
+                </Style>
+            </ui:NavigationView.Styles>
         </ui:NavigationView>
         <ReversibleStackPanel
             Grid.Row="2"
@@ -103,17 +111,17 @@
             Orientation="Horizontal"
             HorizontalAlignment="Right"
             ReverseOrder="{Binding IsMacOS}">
-            <Button 
-                HotKey="Enter" 
+            <Button
+                HotKey="Enter"
                 Classes="accent"
-                Content="{locale:Locale SettingsButtonOk}" 
+                Content="{locale:Locale SettingsButtonOk}"
                 Command="{ReflectionBinding OkButton}" />
-            <Button 
-                HotKey="Escape" 
-                Content="{locale:Locale SettingsButtonCancel}" 
+            <Button
+                HotKey="Escape"
+                Content="{locale:Locale SettingsButtonCancel}"
                 Command="{ReflectionBinding CancelButton}" />
-            <Button 
-                Content="{locale:Locale SettingsButtonApply}" 
+            <Button
+                Content="{locale:Locale SettingsButtonApply}"
                 Command="{ReflectionBinding ApplyButton}" />
         </ReversibleStackPanel>
     </Grid>

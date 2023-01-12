@@ -1,4 +1,4 @@
-﻿<UserControl 
+﻿<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsSystemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,7 +12,7 @@
     <Design.DataContext>
         <viewModels:SettingsViewModel />
     </Design.DataContext>
-    <ScrollViewer 
+    <ScrollViewer
         Name="SystemPage"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
@@ -172,9 +172,9 @@
                     </CheckBox>
                 </StackPanel>
                 <Separator Height="1" />
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Vertical" Spacing="2">
                     <TextBlock Classes="h1" Text="{locale:Locale SettingsTabSystemHacks}" />
-                    <TextBlock Text="{locale:Locale SettingsTabSystemHacksNote}" />
+                    <TextBlock Foreground="{DynamicResource SecondaryTextColor}" Text="{locale:Locale SettingsTabSystemHacksNote}" />
                 </StackPanel>
                 <StackPanel
                     Margin="10,0,0,0"

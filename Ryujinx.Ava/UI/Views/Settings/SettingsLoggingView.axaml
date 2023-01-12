@@ -1,4 +1,4 @@
-﻿<UserControl 
+﻿<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsLoggingView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -47,30 +47,33 @@
                               ToolTip.Tip="{locale:Locale ErrorLogTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabLoggingEnableErrorLogs}" />
                     </CheckBox>
-                    <CheckBox IsChecked="{Binding EnableTrace}"
-                              ToolTip.Tip="{locale:Locale TraceLogTooltip}">
-                        <TextBlock Text="{locale:Locale SettingsTabLoggingEnableTraceLogs}" />
-                    </CheckBox>
                     <CheckBox IsChecked="{Binding EnableGuest}"
                               ToolTip.Tip="{locale:Locale GuestLogTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabLoggingEnableGuestLogs}" />
                     </CheckBox>
                 </StackPanel>
                 <Separator Height="1" />
-                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabLoggingDeveloperOptions}" />
+                <StackPanel Orientation="Vertical" Spacing="2">
+                    <TextBlock Classes="h1" Text="{locale:Locale SettingsTabLoggingDeveloperOptions}" />
+                    <TextBlock Foreground="{DynamicResource SecondaryTextColor}" Text="{locale:Locale SettingsTabLoggingDeveloperOptionsNote}" />
+                </StackPanel>
                 <StackPanel
                     Margin="10,0,0,0"
                     HorizontalAlignment="Stretch"
                     Orientation="Vertical"
                     Spacing="10">
                     <StackPanel Orientation="Vertical">
-                        <CheckBox IsChecked="{Binding EnableDebug}"
-                                ToolTip.Tip="{locale:Locale DebugLogTooltip}">
-                        <TextBlock Text="{locale:Locale SettingsTabLoggingEnableDebugLogs}" />
+                        <CheckBox IsChecked="{Binding EnableTrace}"
+                                  ToolTip.Tip="{locale:Locale TraceLogTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsTabLoggingEnableTraceLogs}" />
                         </CheckBox>
                         <CheckBox IsChecked="{Binding EnableFsAccessLog}"
                                 ToolTip.Tip="{locale:Locale FileAccessLogTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabLoggingEnableFsAccessLogs}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableDebug}"
+                                  ToolTip.Tip="{locale:Locale DebugLogTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsTabLoggingEnableDebugLogs}" />
                         </CheckBox>
                         <StackPanel Margin="0,10,0,0" Orientation="Horizontal" VerticalAlignment="Stretch">
                             <TextBlock VerticalAlignment="Center"

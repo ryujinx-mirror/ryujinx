@@ -60,5 +60,6 @@
         <Color x:Key="MenuFlyoutPresenterBorderColor">#3D3D3D</Color>
         <Color x:Key="AppListBackgroundColor">#0FFFFFFF</Color>
         <Color x:Key="AppListHoverBackgroundColor">#1EFFFFFF</Color>
+        <Color x:Key="SecondaryTextColor">#A0FFFFFF</Color>
     </Styles.Resources>
 </Styles>

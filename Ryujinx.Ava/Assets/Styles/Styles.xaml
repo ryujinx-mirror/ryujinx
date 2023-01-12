@@ -56,8 +56,8 @@
     <Style Selector="Border.settings">
         <Setter Property="Background" Value="{DynamicResource ThemeDarkColor}" />
         <Setter Property="BorderBrush" Value="{DynamicResource MenuFlyoutPresenterBorderColor}" />
-        <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="5" />
     </Style>
     <Style Selector="Image.small">
         <Setter Property="Width" Value="50" />
@@ -303,6 +303,9 @@
         <Color x:Key="ThemeControlBorderColor">#FF505050</Color>
         <Color x:Key="VsyncEnabled">#FF2EEAC9</Color>
         <Color x:Key="VsyncDisabled">#FFFF4554</Color>
+        <Color x:Key="AppListBackgroundColor">#0FFFFFFF</Color>
+        <Color x:Key="AppListHoverBackgroundColor">#1EFFFFFF</Color>
+        <Color x:Key="SecondaryTextColor">#A0FFFFFF</Color>
         <x:Double x:Key="ScrollBarThickness">15</x:Double>
         <x:Double x:Key="FontSizeSmall">8</x:Double>
         <x:Double x:Key="FontSizeNormal">10</x:Double>
