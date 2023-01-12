@@ -83,9 +83,6 @@
                                   HorizontalContentAlignment="Left"
                                   ToolTip.Tip="{locale:Locale ResolutionScaleTooltip}">
                             <ComboBoxItem>
-                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScaleCustom}" />
-                            </ComboBoxItem>
-                            <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScaleNative}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
@@ -96,6 +93,9 @@
                             </ComboBoxItem>
                             <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScale4x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScaleCustom}" />
                             </ComboBoxItem>
                         </ComboBox>
                         <ui:NumberBox

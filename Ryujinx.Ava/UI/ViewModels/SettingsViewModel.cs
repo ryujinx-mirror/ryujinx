@@ -151,7 +151,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool IsSoundIoEnabled { get; set; }
         public bool IsSDL2Enabled { get; set; }
         public bool EnableCustomTheme { get; set; }
-        public bool IsCustomResolutionScaleActive => _resolutionScale == 0;
+        public bool IsCustomResolutionScaleActive => _resolutionScale == 4;
         public bool IsVulkanSelected => GraphicsBackendIndex == 0;
 
         public string TimeZone { get; set; }
@@ -311,25 +311,66 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             ConfigurationState config = ConfigurationState.Instance;
 
-            GameDirectories.Clear();
-            GameDirectories.AddRange(config.Ui.GameDirs.Value);
-
+            // User Interface
             EnableDiscordIntegration = config.EnableDiscordIntegration;
             CheckUpdatesOnStart = config.CheckUpdatesOnStart;
             ShowConfirmExit = config.ShowConfirmExit;
             HideCursorOnIdle = config.HideCursorOnIdle;
+
+            GameDirectories.Clear();
+            GameDirectories.AddRange(config.Ui.GameDirs.Value);
+
+            EnableCustomTheme = config.Ui.EnableCustomTheme;
+            CustomThemePath = config.Ui.CustomThemePath;
+            BaseStyleIndex = config.Ui.BaseStyle == "Light" ? 0 : 1;
+
+            // Input
             EnableDockedMode = config.System.EnableDockedMode;
             EnableKeyboard = config.Hid.EnableKeyboard;
             EnableMouse = config.Hid.EnableMouse;
+
+            // Keyboard Hotkeys
+            KeyboardHotkeys = config.Hid.Hotkeys.Value;
+
+            // System
+            Region = (int)config.System.Region.Value;
+            Language = (int)config.System.Language.Value;
+            TimeZone = config.System.TimeZone;
+
+            DateTime dateTimeOffset = DateTime.Now.AddSeconds(config.System.SystemTimeOffset);
+
+            DateOffset = dateTimeOffset.Date;
+            TimeOffset = dateTimeOffset.TimeOfDay;
             EnableVsync = config.Graphics.EnableVsync;
-            EnablePptc = config.System.EnablePtc;
-            EnableInternetAccess = config.System.EnableInternetAccess;
             EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
-            IgnoreMissingServices = config.System.IgnoreMissingServices;
             ExpandDramSize = config.System.ExpandRam;
+            IgnoreMissingServices = config.System.IgnoreMissingServices;
+
+            // CPU
+            EnablePptc = config.System.EnablePtc;
+            MemoryMode = (int)config.System.MemoryManagerMode.Value;
+
+            // Graphics
+            GraphicsBackendIndex = (int)config.Graphics.GraphicsBackend.Value;
+            PreferredGpuIndex = _gpuIds.Contains(config.Graphics.PreferredGpu) ? _gpuIds.IndexOf(config.Graphics.PreferredGpu) : 0;
             EnableShaderCache = config.Graphics.EnableShaderCache;
             EnableTextureRecompression = config.Graphics.EnableTextureRecompression;
             EnableMacroHLE = config.Graphics.EnableMacroHLE;
+            ResolutionScale = config.Graphics.ResScale == -1 ? 4 : config.Graphics.ResScale - 1;
+            CustomResolutionScale = config.Graphics.ResScaleCustom;
+            MaxAnisotropy = config.Graphics.MaxAnisotropy == -1 ? 0 : (int)(MathF.Log2(config.Graphics.MaxAnisotropy));
+            AspectRatio = (int)config.Graphics.AspectRatio.Value;
+            GraphicsBackendMultithreadingIndex = (int)config.Graphics.BackendThreading.Value;
+            ShaderDumpPath = config.Graphics.ShadersDumpPath;
+
+            // Audio
+            AudioBackend = (int)config.System.AudioBackend.Value;
+            Volume = config.System.AudioVolume * 100;
+
+            // Network
+            EnableInternetAccess = config.System.EnableInternetAccess;
+            
+            // Logging
             EnableFileLog = config.Logger.EnableFileLog;
             EnableStub = config.Logger.EnableStub;
             EnableInfo = config.Logger.EnableInfo;
@@ -339,94 +380,69 @@ namespace Ryujinx.Ava.UI.ViewModels
             EnableGuest = config.Logger.EnableGuest;
             EnableDebug = config.Logger.EnableDebug;
             EnableFsAccessLog = config.Logger.EnableFsAccessLog;
-            EnableCustomTheme = config.Ui.EnableCustomTheme;
-            Volume = config.System.AudioVolume * 100;
-
-            GraphicsBackendMultithreadingIndex = (int)config.Graphics.BackendThreading.Value;
-
-            OpenglDebugLevel = (int)config.Logger.GraphicsDebugLevel.Value;
-
-            TimeZone = config.System.TimeZone;
-            ShaderDumpPath = config.Graphics.ShadersDumpPath;
-            CustomThemePath = config.Ui.CustomThemePath;
-            BaseStyleIndex = config.Ui.BaseStyle == "Light" ? 0 : 1;
-            GraphicsBackendIndex = (int)config.Graphics.GraphicsBackend.Value;
-
-            PreferredGpuIndex = _gpuIds.Contains(config.Graphics.PreferredGpu) ? _gpuIds.IndexOf(config.Graphics.PreferredGpu) : 0;
-
-            Language = (int)config.System.Language.Value;
-            Region = (int)config.System.Region.Value;
             FsGlobalAccessLogMode = config.System.FsGlobalAccessLogMode;
-            AudioBackend = (int)config.System.AudioBackend.Value;
-            MemoryMode = (int)config.System.MemoryManagerMode.Value;
-
-            float anisotropy = config.Graphics.MaxAnisotropy;
-
-            MaxAnisotropy = anisotropy == -1 ? 0 : (int)(MathF.Log2(anisotropy));
-            AspectRatio = (int)config.Graphics.AspectRatio.Value;
-
-            int resolution = config.Graphics.ResScale;
-
-            ResolutionScale = resolution == -1 ? 0 : resolution;
-            CustomResolutionScale = config.Graphics.ResScaleCustom;
-
-            DateTime dateTimeOffset = DateTime.Now.AddSeconds(config.System.SystemTimeOffset);
-
-            DateOffset = dateTimeOffset.Date;
-            TimeOffset = dateTimeOffset.TimeOfDay;
-
-            KeyboardHotkeys = config.Hid.Hotkeys.Value;
+            OpenglDebugLevel = (int)config.Logger.GraphicsDebugLevel.Value;
         }
 
         public void SaveSettings()
         {
             ConfigurationState config = ConfigurationState.Instance;
 
+            // User Interface
+            config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
+            config.CheckUpdatesOnStart.Value = CheckUpdatesOnStart;
+            config.ShowConfirmExit.Value = ShowConfirmExit;
+            config.HideCursorOnIdle.Value = HideCursorOnIdle;
+
             if (_directoryChanged)
             {
-                List<string> gameDirs = new List<string>(GameDirectories);
+                List<string> gameDirs = new(GameDirectories);
                 config.Ui.GameDirs.Value = gameDirs;
             }
+
+            config.Ui.EnableCustomTheme.Value = EnableCustomTheme;
+            config.Ui.CustomThemePath.Value = CustomThemePath;
+            config.Ui.BaseStyle.Value = BaseStyleIndex == 0 ? "Light" : "Dark";
+
+            // Input
+            config.System.EnableDockedMode.Value = EnableDockedMode;
+            config.Hid.EnableKeyboard.Value = EnableKeyboard;
+            config.Hid.EnableMouse.Value = EnableMouse;
+
+            // Keyboard Hotkeys
+            config.Hid.Hotkeys.Value = KeyboardHotkeys;
+
+            // System
+            config.System.Region.Value = (Region)Region;
+            config.System.Language.Value = (Language)Language;
 
             if (_validTzRegions.Contains(TimeZone))
             {
                 config.System.TimeZone.Value = TimeZone;
             }
 
-            config.Logger.EnableError.Value = EnableError;
-            config.Logger.EnableTrace.Value = EnableTrace;
-            config.Logger.EnableWarn.Value = EnableWarn;
-            config.Logger.EnableInfo.Value = EnableInfo;
-            config.Logger.EnableStub.Value = EnableStub;
-            config.Logger.EnableDebug.Value = EnableDebug;
-            config.Logger.EnableGuest.Value = EnableGuest;
-            config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
-            config.Logger.EnableFileLog.Value = EnableFileLog;
-            config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
-            config.System.EnableDockedMode.Value = EnableDockedMode;
-            config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
-            config.CheckUpdatesOnStart.Value = CheckUpdatesOnStart;
-            config.ShowConfirmExit.Value = ShowConfirmExit;
-            config.HideCursorOnIdle.Value = HideCursorOnIdle;
+            TimeSpan systemTimeOffset = DateOffset - DateTime.Now;
+
+            config.System.SystemTimeOffset.Value = systemTimeOffset.Seconds;
             config.Graphics.EnableVsync.Value = EnableVsync;
+            config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
+            config.System.ExpandRam.Value = ExpandDramSize;
+            config.System.IgnoreMissingServices.Value = IgnoreMissingServices;
+
+            // CPU
+            config.System.EnablePtc.Value = EnablePptc;
+            config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
+
+            // Graphics
+            config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;
+            config.Graphics.PreferredGpu.Value = _gpuIds.ElementAtOrDefault(PreferredGpuIndex);
             config.Graphics.EnableShaderCache.Value = EnableShaderCache;
             config.Graphics.EnableTextureRecompression.Value = EnableTextureRecompression;
             config.Graphics.EnableMacroHLE.Value = EnableMacroHLE;
-            config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;
-            config.System.EnablePtc.Value = EnablePptc;
-            config.System.EnableInternetAccess.Value = EnableInternetAccess;
-            config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
-            config.System.IgnoreMissingServices.Value = IgnoreMissingServices;
-            config.System.ExpandRam.Value = ExpandDramSize;
-            config.Hid.EnableKeyboard.Value = EnableKeyboard;
-            config.Hid.EnableMouse.Value = EnableMouse;
-            config.Ui.CustomThemePath.Value = CustomThemePath;
-            config.Ui.EnableCustomTheme.Value = EnableCustomTheme;
-            config.Ui.BaseStyle.Value = BaseStyleIndex == 0 ? "Light" : "Dark";
-            config.System.Language.Value = (Language)Language;
-            config.System.Region.Value = (Region)Region;
-
-            config.Graphics.PreferredGpu.Value = _gpuIds.ElementAtOrDefault(PreferredGpuIndex);
+            config.Graphics.ResScale.Value = ResolutionScale == 4 ? -1 : ResolutionScale + 1;
+            config.Graphics.ResScaleCustom.Value = CustomResolutionScale;
+            config.Graphics.MaxAnisotropy.Value = MaxAnisotropy == 0 ? -1 : MathF.Pow(2, MaxAnisotropy);
+            config.Graphics.AspectRatio.Value = (AspectRatio)AspectRatio;
 
             if (ConfigurationState.Instance.Graphics.BackendThreading != (BackendThreading)GraphicsBackendMultithreadingIndex)
             {
@@ -434,22 +450,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
 
             config.Graphics.BackendThreading.Value = (BackendThreading)GraphicsBackendMultithreadingIndex;
-
-            TimeSpan systemTimeOffset = DateOffset - DateTime.Now;
-
-            config.System.SystemTimeOffset.Value = systemTimeOffset.Seconds;
             config.Graphics.ShadersDumpPath.Value = ShaderDumpPath;
-            config.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
-            config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
 
-            float anisotropy = MaxAnisotropy == 0 ? -1 : MathF.Pow(2, MaxAnisotropy);
-
-            config.Graphics.MaxAnisotropy.Value = anisotropy;
-            config.Graphics.AspectRatio.Value = (AspectRatio)AspectRatio;
-            config.Graphics.ResScale.Value = ResolutionScale == 0 ? -1 : ResolutionScale;
-            config.Graphics.ResScaleCustom.Value = CustomResolutionScale;
-            config.System.AudioVolume.Value = Volume / 100;
-
+            // Audio
             AudioBackend audioBackend = (AudioBackend)AudioBackend;
             if (audioBackend != config.System.AudioBackend.Value)
             {
@@ -458,7 +461,23 @@ namespace Ryujinx.Ava.UI.ViewModels
                 Logger.Info?.Print(LogClass.Application, $"AudioBackend toggled to: {audioBackend}");
             }
 
-            config.Hid.Hotkeys.Value = KeyboardHotkeys;
+            config.System.AudioVolume.Value = Volume / 100;
+
+            // Network
+            config.System.EnableInternetAccess.Value = EnableInternetAccess;
+
+            // Logging
+            config.Logger.EnableFileLog.Value = EnableFileLog;
+            config.Logger.EnableStub.Value = EnableStub;
+            config.Logger.EnableInfo.Value = EnableInfo;
+            config.Logger.EnableWarn.Value = EnableWarn;
+            config.Logger.EnableError.Value = EnableError;
+            config.Logger.EnableTrace.Value = EnableTrace;
+            config.Logger.EnableGuest.Value = EnableGuest;
+            config.Logger.EnableDebug.Value = EnableDebug;
+            config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
+            config.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
+            config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
 
             config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
 
