@@ -1,6 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.LogManager.Types;
 using Ryujinx.Horizon.Sdk.Lm;
 using Ryujinx.Horizon.Sdk.Sf;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
@@ -13,13 +14,19 @@ namespace Ryujinx.Horizon.LogManager.Ipc
 {
     partial class LmLogger : ILmLogger
     {
+        private const int MessageLengthLimit = 5000;
+
         private readonly LogService _log;
         private readonly ulong      _pid;
+
+        private LogPacket _logPacket;
 
         public LmLogger(LogService log, ulong pid)
         {
             _log = log;
             _pid = pid;
+
+            _logPacket = new LogPacket();
         }
 
         [CmifCommand(0)]
@@ -30,7 +37,12 @@ namespace Ryujinx.Horizon.LogManager.Ipc
                 return Result.Success;
             }
 
-            Logger.Guest?.Print(LogClass.ServiceLm, LogImpl(message));
+            if (LogImpl(message))
+            {
+                Logger.Guest?.Print(LogClass.ServiceLm, _logPacket.ToString());
+
+                _logPacket = new LogPacket();
+            }
 
             return Result.Success;
         }
@@ -60,58 +72,86 @@ namespace Ryujinx.Horizon.LogManager.Ipc
             return true;
         }
 
-        private static string LogImpl(ReadOnlySpan<byte> message)
+        private bool LogImpl(ReadOnlySpan<byte> message)
         {
-            SpanReader      reader  = new(message);
-            LogPacketHeader header  = reader.Read<LogPacketHeader>();
-            StringBuilder   builder = new();
+            SpanReader      reader = new(message);
+            LogPacketHeader header = reader.Read<LogPacketHeader>();
 
-            builder.AppendLine($"Guest Log:\n  Log level: {header.Severity}");
+            bool isHeadPacket = (header.Flags & LogPacketFlags.IsHead) != 0;
+            bool isTailPacket = (header.Flags & LogPacketFlags.IsTail) != 0;
+
+            _logPacket.Severity = header.Severity;
 
             while (reader.Length > 0)
             {
                 int type = ReadUleb128(ref reader);
                 int size = ReadUleb128(ref reader);
 
-                LogDataChunkKey field = (LogDataChunkKey)type;
+                LogDataChunkKey key = (LogDataChunkKey)type;
 
-                string fieldStr;
-
-                if (field == LogDataChunkKey.Start)
+                if (key == LogDataChunkKey.Start)
                 {
                     reader.Skip(size);
 
                     continue;
                 }
-                else if (field == LogDataChunkKey.Stop)
+                else if (key == LogDataChunkKey.Stop)
                 {
                     break;
                 }
-                else if (field == LogDataChunkKey.Line)
+                else if (key == LogDataChunkKey.Line)
                 {
-                    fieldStr = $"{field}: {reader.Read<int>()}";
+                    _logPacket.Line = reader.Read<int>();
                 }
-                else if (field == LogDataChunkKey.DropCount)
+                else if (key == LogDataChunkKey.DropCount)
                 {
-                    fieldStr = $"{field}: {reader.Read<long>()}";
+                    _logPacket.DropCount = reader.Read<long>();
                 }
-                else if (field == LogDataChunkKey.Time)
+                else if (key == LogDataChunkKey.Time)
                 {
-                    fieldStr = $"{field}: {reader.Read<long>()}s";
+                    _logPacket.Time = reader.Read<long>();
                 }
-                else if (field < LogDataChunkKey.Count)
+                else if (key == LogDataChunkKey.Message)
                 {
-                    fieldStr = $"{field}: '{Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd()}'";
-                }
-                else
-                {
-                    fieldStr = $"Field{field}: '{Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd()}'";
-                }
+                    string text = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
 
-                builder.AppendLine($"    {fieldStr}");
+                    if (isHeadPacket && isTailPacket)
+                    {
+                        _logPacket.Message = text;
+                    }
+                    else
+                    {
+                        _logPacket.Message += text;
+
+                        if (_logPacket.Message.Length >= MessageLengthLimit)
+                        {
+                            isTailPacket = true;
+                        }
+                    }
+                }
+                else if (key == LogDataChunkKey.Filename)
+                {
+                    _logPacket.Filename = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                }
+                else if (key == LogDataChunkKey.Function)
+                {
+                    _logPacket.Function = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                }
+                else if (key == LogDataChunkKey.Module)
+                {
+                    _logPacket.Module = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                }
+                else if (key == LogDataChunkKey.Thread)
+                {
+                    _logPacket.Thread = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                }
+                else if (key == LogDataChunkKey.ProgramName)
+                {
+                    _logPacket.ProgramName = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                }
             }
 
-            return builder.ToString();
+            return isTailPacket;
         }
 
         private static int ReadUleb128(ref SpanReader reader)
