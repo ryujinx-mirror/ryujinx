@@ -94,7 +94,7 @@ namespace Ryujinx.Ava.UI.Views.User
                     var save = saveDataInfo[i];
                     if (save.ProgramId.Value != 0)
                     {
-                        var saveModel = new SaveModel(save, _horizonClient, _virtualFileSystem);
+                        var saveModel = new SaveModel(save, _virtualFileSystem);
                         saves.Add(saveModel);
                     }
                 }
@@ -137,10 +137,9 @@ namespace Ryujinx.Ava.UI.Views.User
                     if (result == UserResult.Yes)
                     {
                         _horizonClient.Fs.DeleteSaveData(SaveDataSpaceId.User, saveModel.SaveId);
+                        ViewModel.Saves.Remove(saveModel);
+                        ViewModel.Sort();
                     }
-
-                    ViewModel.Saves.Remove(saveModel);
-                    ViewModel.Views.Remove(saveModel);
                 }
             }
         }

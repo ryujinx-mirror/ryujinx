@@ -234,6 +234,9 @@
         <Setter Property="BorderBrush" Value="{DynamicResource MenuFlyoutPresenterBorderBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource MenuFlyoutPresenterBorderThemeThickness}" />
     </Style>
+    <Style Selector="TextBox">
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
     <Style Selector="TextBox.NumberBoxTextBoxStyle">
         <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundColor}" />
     </Style>

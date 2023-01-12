@@ -55,6 +55,11 @@
                             HorizontalContentAlignment="Left"
                             Content="{locale:Locale Size}" />
                     </ComboBoxItem>
+                    <ComboBox.Styles>
+                        <Style Selector="ContentControl#ContentPresenter">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                        </Style>
+                    </ComboBox.Styles>
                 </ComboBox>
                 <ComboBox SelectedIndex="{Binding OrderIndex}" Width="150">
                     <ComboBoxItem>
@@ -69,6 +74,11 @@
                             HorizontalContentAlignment="Left"
                             Content="{locale:Locale OrderDescending}" />
                     </ComboBoxItem>
+                    <ComboBox.Styles>
+                        <Style Selector="ContentControl#ContentPresenter">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                        </Style>
+                    </ComboBox.Styles>
                 </ComboBox>
             </StackPanel>
             <Grid
@@ -122,6 +132,8 @@
                                     Height="42"
                                     Width="42"
                                     Padding="10"
+                                    BorderBrush="{DynamicResource AppListHoverBackgroundColor}"
+                                    BorderThickness="1"
                                     IsVisible="{Binding !InGameList}">
                                     <ui:SymbolIcon
                                         Symbol="Help"

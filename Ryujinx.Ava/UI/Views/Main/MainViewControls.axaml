@@ -74,7 +74,6 @@
             Margin="5,0,5,0"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
-            VerticalContentAlignment="Center"
             DockPanel.Dock="Right"
             KeyUp="SearchBox_OnKeyUp"
             Text="{Binding SearchText}"

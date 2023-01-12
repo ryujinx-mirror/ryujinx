@@ -13,8 +13,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private int _sortIndex;
         private int _orderIndex;
         private string _search;
-        private ObservableCollection<SaveModel> _saves;
-        private ObservableCollection<SaveModel> _views;
+        private ObservableCollection<SaveModel> _saves = new();
+        private ObservableCollection<SaveModel> _views = new();
         private AccountManager _accountManager;
 
         public string SaveManagerHeading =>
@@ -77,8 +77,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         public UserSaveManagerViewModel(AccountManager accountManager)
         {
             _accountManager = accountManager;
-            _saves = new ObservableCollection<SaveModel>();
-            _views = new ObservableCollection<SaveModel>();
         }
 
         public void Sort()

@@ -1,13 +1,9 @@
-using LibHac;
 using LibHac.Fs;
-using LibHac.Fs.Shim;
 using LibHac.Ncm;
-using Ryujinx.Ava.Common;
-using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.FileSystem;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +12,6 @@ namespace Ryujinx.Ava.UI.Models
 {
     public class SaveModel : BaseModel
     {
-        private readonly HorizonClient _horizonClient;
         private long _size;
 
         public ulong SaveId { get; }
@@ -41,11 +36,29 @@ namespace Ryujinx.Ava.UI.Models
 
         public bool SizeAvailable { get; set; }
 
-        public string SizeString => $"{((float)_size * 0.000000954):0.###}MB";
+        public string SizeString => GetSizeString();
 
-        public SaveModel(SaveDataInfo info, HorizonClient horizonClient, VirtualFileSystem virtualFileSystem)
+        private string GetSizeString()
         {
-            _horizonClient = horizonClient;
+            const int scale = 1024;
+            string[] orders = { "GiB", "MiB", "KiB" };
+            long max = (long)Math.Pow(scale, orders.Length);
+
+            foreach (string order in orders)
+            {
+                if (Size > max)
+                {
+                    return $"{decimal.Divide(Size, max):##.##} {order}";
+                }
+
+                max /= scale;
+            }
+
+            return "0 KiB";
+        }
+
+        public SaveModel(SaveDataInfo info, VirtualFileSystem virtualFileSystem)
+        {
             SaveId = info.SaveDataId;
             TitleId = info.ProgramId;
             UserId = info.UserId;
