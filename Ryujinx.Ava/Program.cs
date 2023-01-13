@@ -28,7 +28,7 @@ namespace Ryujinx.Ava
         public static double DesktopScaleFactor { get; set; } = 1.0;
         public static string Version            { get; private set; }
         public static string ConfigurationPath  { get; private set; }
-        public static bool   PreviewerDetached {  get; private set; }
+        public static bool   PreviewerDetached  { get; private set; }
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
