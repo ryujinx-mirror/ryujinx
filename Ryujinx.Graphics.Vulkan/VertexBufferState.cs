@@ -82,9 +82,9 @@ namespace Ryujinx.Graphics.Vulkan
                         }
 
                         _buffer = autoBuffer;
-                    }
 
-                    state.Internal.VertexBindingDescriptions[DescriptorIndex].Stride = (uint)_stride;
+                        state.Internal.VertexBindingDescriptions[DescriptorIndex].Stride = (uint)stride;
+                    }
 
                     return;
                 }

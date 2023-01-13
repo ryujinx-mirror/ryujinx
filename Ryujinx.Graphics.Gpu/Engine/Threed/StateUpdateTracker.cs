@@ -139,6 +139,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Check if the given register group is dirty without clearing it.
+        /// </summary>
+        /// <param name="groupIndex">Index of the group to check</param>
+        /// <returns>True if dirty, false otherwise</returns>
+        public bool IsDirty(int groupIndex)
+        {
+            return (_dirtyMask & (1UL << groupIndex)) != 0;
+        }
+
+        /// <summary>
         /// Check all the groups specified by <paramref name="checkMask"/> for modification, and update if modified.
         /// </summary>
         /// <param name="checkMask">Mask, where each bit set corresponds to a group index that should be checked</param>

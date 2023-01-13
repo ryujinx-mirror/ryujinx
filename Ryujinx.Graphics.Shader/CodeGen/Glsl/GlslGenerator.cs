@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 for (int i = 1; i < info.Functions.Count; i++)
                 {
-                    context.AppendLine($"{GetFunctionSignature(info.Functions[i])};");
+                    context.AppendLine($"{GetFunctionSignature(context, info.Functions[i])};");
                 }
 
                 context.AppendLine();
@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             context.CurrentFunction = function;
 
-            context.AppendLine(GetFunctionSignature(function, funcName));
+            context.AppendLine(GetFunctionSignature(context, function, funcName));
             context.EnterScope();
 
             Declarations.DeclareLocals(context, function);
@@ -54,23 +54,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             context.LeaveScope();
         }
 
-        private static string GetFunctionSignature(StructuredFunction function, string funcName = null)
+        private static string GetFunctionSignature(CodeGenContext context, StructuredFunction function, string funcName = null)
         {
             string[] args = new string[function.InArguments.Length + function.OutArguments.Length];
 
             for (int i = 0; i < function.InArguments.Length; i++)
             {
-                args[i] = $"{Declarations.GetVarTypeName(function.InArguments[i])} {OperandManager.GetArgumentName(i)}";
+                args[i] = $"{Declarations.GetVarTypeName(context, function.InArguments[i])} {OperandManager.GetArgumentName(i)}";
             }
 
             for (int i = 0; i < function.OutArguments.Length; i++)
             {
                 int j = i + function.InArguments.Length;
 
-                args[j] = $"out {Declarations.GetVarTypeName(function.OutArguments[i])} {OperandManager.GetArgumentName(j)}";
+                args[j] = $"out {Declarations.GetVarTypeName(context, function.OutArguments[i])} {OperandManager.GetArgumentName(j)}";
             }
 
-            return $"{Declarations.GetVarTypeName(function.ReturnType)} {funcName ?? function.Name}({string.Join(", ", args)})";
+            return $"{Declarations.GetVarTypeName(context, function.ReturnType)} {funcName ?? function.Name}({string.Join(", ", args)})";
         }
 
         private static void PrintBlock(CodeGenContext context, AstBlock block)

@@ -112,6 +112,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             };
         }
 
+        public bool QueryHostReducedPrecision() => _context.Capabilities.ReduceShaderPrecision;
+
         public bool QueryHostHasFrontFacingBug() => _context.Capabilities.HasFrontFacingBug;
 
         public bool QueryHostHasVectorIndexingBug() => _context.Capabilities.HasVectorIndexingBug;

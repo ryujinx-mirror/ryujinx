@@ -2,6 +2,7 @@
 using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -49,6 +50,11 @@ namespace Ryujinx.Graphics.Vulkan
         private Auto<DisposableFramebuffer> _framebuffer;
         private Auto<DisposableRenderPass> _renderPass;
         private int _writtenAttachmentCount;
+
+        private bool _framebufferUsingColorWriteMask;
+
+        private ITexture[] _preMaskColors;
+        private ITexture _preMaskDepthStencil;
 
         private readonly DescriptorSetUpdater _descriptorSetUpdater;
 
@@ -905,22 +911,35 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            SignalStateChange();
-
-            if (writtenAttachments != _writtenAttachmentCount)
+            if (_framebufferUsingColorWriteMask)
             {
-                SignalAttachmentChange();
-                _writtenAttachmentCount = writtenAttachments;
+                SetRenderTargetsInternal(_preMaskColors, _preMaskDepthStencil, true);
             }
+            else
+            {
+                SignalStateChange();
+
+                if (writtenAttachments != _writtenAttachmentCount)
+                {
+                    SignalAttachmentChange();
+                    _writtenAttachmentCount = writtenAttachments;
+                }
+            }
+        }
+
+        private void SetRenderTargetsInternal(ITexture[] colors, ITexture depthStencil, bool filterWriteMasked)
+        {
+            FramebufferParams?.UpdateModifications();
+            CreateFramebuffer(colors, depthStencil, filterWriteMasked);
+            CreateRenderPass();
+            SignalStateChange();
+            SignalAttachmentChange();
         }
 
         public void SetRenderTargets(ITexture[] colors, ITexture depthStencil)
         {
-            FramebufferParams?.UpdateModifications();
-            CreateFramebuffer(colors, depthStencil);
-            CreateRenderPass();
-            SignalStateChange();
-            SignalAttachmentChange();
+            _framebufferUsingColorWriteMask = false;
+            SetRenderTargetsInternal(colors, depthStencil, Gd.IsTBDR);
         }
 
         public void SetRenderTargetScale(float scale)
@@ -1102,7 +1121,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                         int vbSize = vertexBuffer.Buffer.Size;
 
-                        if (Gd.Vendor == Vendor.Amd && vertexBuffer.Stride > 0)
+                        if (Gd.Vendor == Vendor.Amd && !Gd.IsMoltenVk && vertexBuffer.Stride > 0)
                         {
                             // AMD has a bug where if offset + stride * count is greater than
                             // the size, then the last attribute will have the wrong value.
@@ -1119,7 +1138,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                         buffer.Dispose();
 
-                        if ((vertexBuffer.Stride % FormatExtensions.MaxBufferFormatScalarSize) == 0)
+                        if (!Gd.Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.VertexBufferAlignment4B) &&
+                            (vertexBuffer.Stride % FormatExtensions.MaxBufferFormatScalarSize) == 0)
                         {
                             buffer = new VertexBufferState(
                                 vb,
@@ -1259,8 +1279,62 @@ namespace Ryujinx.Graphics.Vulkan
             _currentPipelineHandle = 0;
         }
 
-        private void CreateFramebuffer(ITexture[] colors, ITexture depthStencil)
+        private void CreateFramebuffer(ITexture[] colors, ITexture depthStencil, bool filterWriteMasked)
         {
+            if (filterWriteMasked)
+            {
+                // TBDR GPUs don't work properly if the same attachment is bound to multiple targets,
+                // due to each attachment being a copy of the real attachment, rather than a direct write.
+
+                // Just try to remove duplicate attachments.
+                // Save a copy of the array to rebind when mask changes.
+
+                void maskOut()
+                {
+                    if (!_framebufferUsingColorWriteMask)
+                    {
+                        _preMaskColors = colors.ToArray();
+                        _preMaskDepthStencil = depthStencil;
+                    }
+
+                    // If true, then the framebuffer must be recreated when the mask changes.
+                    _framebufferUsingColorWriteMask = true;
+                }
+
+                // Look for textures that are masked out.
+
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    if (colors[i] == null)
+                    {
+                        continue;
+                    }
+
+                    ref var vkBlend = ref _newState.Internal.ColorBlendAttachmentState[i];
+
+                    for (int j = 0; j < i; j++)
+                    {
+                        // Check each binding for a duplicate binding before it.
+
+                        if (colors[i] == colors[j])
+                        {
+                            // Prefer the binding with no write mask.
+                            ref var vkBlend2 = ref _newState.Internal.ColorBlendAttachmentState[j];
+                            if (vkBlend.ColorWriteMask == 0)
+                            {
+                                colors[i] = null;
+                                maskOut();
+                            }
+                            else if (vkBlend2.ColorWriteMask == 0)
+                            {
+                                colors[j] = null;
+                                maskOut();
+                            }
+                        }
+                    }
+                }
+            }
+
             FramebufferParams = new FramebufferParams(Device, colors, depthStencil);
             UpdatePipelineAttachmentFormats();
         }

@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Gpu.Engine.GPFifo;
+﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
@@ -30,6 +31,11 @@ namespace Ryujinx.Graphics.Gpu
         /// Current channel memory manager.
         /// </summary>
         internal MemoryManager MemoryManager => _memoryManager;
+
+        /// <summary>
+        /// Host hardware capabilities from the GPU context.
+        /// </summary>
+        internal ref Capabilities Capabilities => ref _context.Capabilities;
 
         /// <summary>
         /// Creates a new instance of a GPU channel.

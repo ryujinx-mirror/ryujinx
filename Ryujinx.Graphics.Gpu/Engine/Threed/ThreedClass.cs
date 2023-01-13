@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _i2mClass = new InlineToMemoryClass(context, channel, initializeState: false);
 
-            var spec = new SpecializationStateUpdater();
+            var spec = new SpecializationStateUpdater(context);
             var drawState = new DrawState();
 
             _drawManager = new DrawManager(context, channel, _state, drawState, spec);

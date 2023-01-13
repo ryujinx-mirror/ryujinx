@@ -128,7 +128,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else if (value >= AttributeConsts.FragmentOutputColorBase && value < AttributeConsts.FragmentOutputColorEnd)
             {
-                return new AttributeInfo(value & ~0xf, (value >> 2) & 3, 4, AggregateType.Vector4 | AggregateType.FP32, false);
+                int location = (value - AttributeConsts.FragmentOutputColorBase) / 16;
+                var elemType = config.GpuAccessor.QueryFragmentOutputType(location) switch
+                {
+                    AttributeType.Sint => AggregateType.S32,
+                    AttributeType.Uint => AggregateType.U32,
+                    _ => AggregateType.FP32
+                };
+
+                return new AttributeInfo(value & ~0xf, (value >> 2) & 3, 4, AggregateType.Vector4 | elemType, false);
             }
             else if (value == AttributeConsts.SupportBlockViewInverseX || value == AttributeConsts.SupportBlockViewInverseY)
             {

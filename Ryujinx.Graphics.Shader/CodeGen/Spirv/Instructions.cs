@@ -2194,13 +2194,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             if (operation.Inst.HasFlag(Instruction.FP64))
             {
                 var result = emitF(context.TypeFP64(), context.GetFP64(src1), context.GetFP64(src2));
-                context.Decorate(result, Decoration.NoContraction);
+
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                {
+                    context.Decorate(result, Decoration.NoContraction);
+                }
+
                 return new OperationResult(AggregateType.FP64, result);
             }
             else if (operation.Inst.HasFlag(Instruction.FP32))
             {
                 var result = emitF(context.TypeFP32(), context.GetFP32(src1), context.GetFP32(src2));
-                context.Decorate(result, Decoration.NoContraction);
+
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                {
+                    context.Decorate(result, Decoration.NoContraction);
+                }
+
                 return new OperationResult(AggregateType.FP32, result);
             }
             else
@@ -2255,13 +2265,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             if (operation.Inst.HasFlag(Instruction.FP64))
             {
                 var result = emitF(context.TypeFP64(), context.GetFP64(src1), context.GetFP64(src2), context.GetFP64(src3));
-                context.Decorate(result, Decoration.NoContraction);
+
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                {
+                    context.Decorate(result, Decoration.NoContraction);
+                }
+
                 return new OperationResult(AggregateType.FP64, result);
             }
             else if (operation.Inst.HasFlag(Instruction.FP32))
             {
                 var result = emitF(context.TypeFP32(), context.GetFP32(src1), context.GetFP32(src2), context.GetFP32(src3));
-                context.Decorate(result, Decoration.NoContraction);
+
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                {
+                    context.Decorate(result, Decoration.NoContraction);
+                }
+
                 return new OperationResult(AggregateType.FP32, result);
             }
             else

@@ -106,7 +106,7 @@ namespace Ryujinx.Graphics.Vulkan
                 flags |= ImageCreateFlags.CreateCubeCompatibleBit;
             }
 
-            if (type == ImageType.Type3D)
+            if (type == ImageType.Type3D && !gd.Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.No3DImageView))
             {
                 flags |= ImageCreateFlags.Create2DArrayCompatibleBit;
             }

@@ -140,6 +140,25 @@ namespace Ryujinx.Graphics.Vulkan
             return _attachments[index];
         }
 
+        public ComponentType GetAttachmentComponentType(int index)
+        {
+            if (_colors != null && (uint)index < _colors.Length)
+            {
+                var format = _colors[index].Info.Format;
+
+                if (format.IsSint())
+                {
+                    return ComponentType.SignedInteger;
+                }
+                else if (format.IsUint())
+                {
+                    return ComponentType.UnsignedInteger;
+                }
+            }
+
+            return ComponentType.Float;
+        }
+
         public bool IsValidColorAttachment(int bindIndex)
         {
             return (uint)bindIndex < Constants.MaxRenderTargets && (_validColorAttachments & (1u << bindIndex)) != 0;

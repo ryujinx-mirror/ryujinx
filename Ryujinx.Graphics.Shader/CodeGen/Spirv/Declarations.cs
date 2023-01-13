@@ -577,6 +577,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     context.Decorate(spvVar, Decoration.Patch);
                 }
 
+                if (context.Config.GpuAccessor.QueryHostReducedPrecision() && attr == AttributeConsts.PositionX && context.Config.Stage != ShaderStage.Fragment)
+                {
+                    context.Decorate(spvVar, Decoration.Invariant);
+                }
+
                 context.Decorate(spvVar, Decoration.BuiltIn, (LiteralInteger)GetBuiltIn(context, attrInfo.BaseValue));
 
                 if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline && isOutAttr)

@@ -389,6 +389,18 @@ namespace Ryujinx.Graphics.Vulkan
                 features2.PNext = &featuresCustomBorderColorSupported;
             }
 
+            PhysicalDeviceRobustness2FeaturesEXT supportedFeaturesRobustness2 = new PhysicalDeviceRobustness2FeaturesEXT()
+            {
+                SType = StructureType.PhysicalDeviceRobustness2FeaturesExt
+            };
+
+            if (supportedExtensions.Contains("VK_EXT_robustness2"))
+            {
+                supportedFeaturesRobustness2.PNext = features2.PNext;
+
+                features2.PNext = &supportedFeaturesRobustness2;
+            }
+
             api.GetPhysicalDeviceFeatures2(physicalDevice, &features2);
 
             var supportedFeatures = features2.Features;
@@ -428,14 +440,17 @@ namespace Ryujinx.Graphics.Vulkan
 
             pExtendedFeatures = &featuresTransformFeedback;
 
-            var featuresRobustness2 = new PhysicalDeviceRobustness2FeaturesEXT()
+            if (supportedExtensions.Contains("VK_EXT_robustness2"))
             {
-                SType = StructureType.PhysicalDeviceRobustness2FeaturesExt,
-                PNext = pExtendedFeatures,
-                NullDescriptor = true
-            };
+                var featuresRobustness2 = new PhysicalDeviceRobustness2FeaturesEXT()
+                {
+                    SType = StructureType.PhysicalDeviceRobustness2FeaturesExt,
+                    PNext = pExtendedFeatures,
+                    NullDescriptor = supportedFeaturesRobustness2.NullDescriptor
+                };
 
-            pExtendedFeatures = &featuresRobustness2;
+                pExtendedFeatures = &featuresRobustness2;
+            }
 
             var featuresExtendedDynamicState = new PhysicalDeviceExtendedDynamicStateFeaturesEXT()
             {

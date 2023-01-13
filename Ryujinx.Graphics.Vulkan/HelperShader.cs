@@ -9,6 +9,13 @@ using VkFormat = Silk.NET.Vulkan.Format;
 
 namespace Ryujinx.Graphics.Vulkan
 {
+    enum ComponentType
+    {
+        Float,
+        SignedInteger,
+        UnsignedInteger
+    }
+
     class HelperShader : IDisposable
     {
         private const int UniformBufferAlignment = 256;
@@ -18,7 +25,9 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly ISampler _samplerNearest;
         private readonly IProgram _programColorBlit;
         private readonly IProgram _programColorBlitClearAlpha;
-        private readonly IProgram _programColorClear;
+        private readonly IProgram _programColorClearF;
+        private readonly IProgram _programColorClearSI;
+        private readonly IProgram _programColorClearUI;
         private readonly IProgram _programStrideChange;
         private readonly IProgram _programConvertIndexBuffer;
         private readonly IProgram _programConvertIndirectData;
@@ -63,10 +72,22 @@ namespace Ryujinx.Graphics.Vulkan
                 Array.Empty<int>(),
                 Array.Empty<int>());
 
-            _programColorClear = gd.CreateProgramWithMinimalLayout(new[]
+            _programColorClearF = gd.CreateProgramWithMinimalLayout(new[]
             {
                 new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorClearFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearFFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+            });
+
+            _programColorClearSI = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearSIFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+            });
+
+            _programColorClearUI = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearUIFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             var strideChangeBindings = new ShaderBindings(
@@ -242,6 +263,7 @@ namespace Ryujinx.Graphics.Vulkan
             int dstWidth,
             int dstHeight,
             VkFormat dstFormat,
+            ComponentType type,
             Rectangle<int> scissor)
         {
             const int ClearColorBufferSize = 16;
@@ -273,7 +295,22 @@ namespace Ryujinx.Graphics.Vulkan
 
             scissors[0] = scissor;
 
-            _pipeline.SetProgram(_programColorClear);
+            IProgram program;
+
+            if (type == ComponentType.SignedInteger)
+            {
+                program = _programColorClearSI;
+            }
+            else if (type == ComponentType.UnsignedInteger)
+            {
+                program = _programColorClearUI;
+            }
+            else
+            {
+                program = _programColorClearF;
+            }
+
+            _pipeline.SetProgram(program);
             _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, false, dstFormat);
             _pipeline.SetRenderTargetColorMasks(new uint[] { componentMask });
             _pipeline.SetViewports(viewports, false);
@@ -948,7 +985,9 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _programColorBlitClearAlpha.Dispose();
                 _programColorBlit.Dispose();
-                _programColorClear.Dispose();
+                _programColorClearF.Dispose();
+                _programColorClearSI.Dispose();
+                _programColorClearUI.Dispose();
                 _programStrideChange.Dispose();
                 _programConvertIndexBuffer.Dispose();
                 _programConvertIndirectData.Dispose();

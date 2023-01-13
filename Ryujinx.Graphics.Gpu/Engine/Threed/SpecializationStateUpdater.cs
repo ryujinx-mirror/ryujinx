@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Shader;
 
@@ -10,6 +11,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// </summary>
     internal class SpecializationStateUpdater
     {
+        private readonly GpuContext _context;
         private GpuChannelGraphicsState _graphics;
         private GpuChannelPoolState _pool;
 
@@ -17,6 +19,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private bool _usesTopology;
 
         private bool _changed;
+
+        /// <summary>
+        /// Creates a new instance of the specialization state updater class.
+        /// </summary>
+        /// <param name="context">GPU context</param>
+        public SpecializationStateUpdater(GpuContext context)
+        {
+            _context = context;
+        }
 
         /// <summary>
         /// Signal that the specialization state has changed.
@@ -227,6 +238,42 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             if (changed)
+            {
+                Signal();
+            }
+        }
+
+        /// <summary>
+        /// Updates the type of the outputs produced by the fragment shader based on the current render target state.
+        /// </summary>
+        /// <param name="rtControl">The render target control register</param>
+        /// <param name="state">The color attachment state</param>
+        public void SetFragmentOutputTypes(RtControl rtControl, ref Array8<RtColorState> state)
+        {
+            bool changed = false;
+            int count = rtControl.UnpackCount();
+
+            for (int index = 0; index < Constants.TotalRenderTargets; index++)
+            {
+                int rtIndex = rtControl.UnpackPermutationIndex(index);
+
+                var colorState = state[rtIndex];
+
+                if (index < count && StateUpdater.IsRtEnabled(colorState))
+                {
+                    Format format = colorState.Format.Convert().Format;
+
+                    AttributeType type = format.IsInteger() ? (format.IsSint() ? AttributeType.Sint : AttributeType.Uint) : AttributeType.Float;
+
+                    if (type != _graphics.FragmentOutputTypes[index])
+                    {
+                        _graphics.FragmentOutputTypes[index] = type;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed && _context.Capabilities.NeedsFragmentOutputSpecialization)
             {
                 Signal();
             }

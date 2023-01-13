@@ -115,6 +115,16 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries output type for fragment shaders.
+        /// </summary>
+        /// <param name="location">Location of the framgent output</param>
+        /// <returns>Output location</returns>
+        AttributeType QueryFragmentOutputType(int location)
+        {
+            return AttributeType.Float;
+        }
+
+        /// <summary>
         /// Queries Local Size X for compute shaders.
         /// </summary>
         /// <returns>Local Size X</returns>
@@ -182,6 +192,15 @@ namespace Ryujinx.Graphics.Shader
         /// </summary>
         /// <returns>True if any storage buffer address is not aligned to 16 bytes, false otherwise</returns>
         bool QueryHasUnalignedStorageBuffer()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Queries host about whether to reduce precision to improve performance.
+        /// </summary>
+        /// <returns>True if precision is limited to vertex position, false otherwise</returns>
+        bool QueryHostReducedPrecision()
         {
             return false;
         }

@@ -3,6 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
+using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Graphics.Vulkan.Queries;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
@@ -77,6 +78,8 @@ namespace Ryujinx.Graphics.Vulkan
         internal bool IsAmdWindows { get; private set; }
         internal bool IsIntelWindows { get; private set; }
         internal bool IsAmdGcn { get; private set; }
+        internal bool IsMoltenVk { get; private set; }
+        internal bool IsTBDR { get; private set; }
         public string GpuVendor { get; private set; }
         public string GpuRenderer { get; private set; }
         public string GpuVersion { get; private set; }
@@ -93,6 +96,14 @@ namespace Ryujinx.Graphics.Vulkan
             Shaders = new HashSet<ShaderCollection>();
             Textures = new HashSet<ITexture>();
             Samplers = new HashSet<SamplerHolder>();
+
+            if (OperatingSystem.IsMacOS())
+            {
+                MVKInitialization.Initialize();
+
+                // Any device running on MacOS is using MoltenVK, even Intel and AMD vendors.
+                IsMoltenVk = true;
+            }
         }
 
         private unsafe void LoadFeatures(string[] supportedExtensions, uint maxQueueCount, uint queueFamilyIndex)
@@ -161,7 +172,10 @@ namespace Ryujinx.Graphics.Vulkan
                 properties2.PNext = &propertiesTransformFeedback;
             }
 
-            Api.GetPhysicalDeviceProperties2(_physicalDevice, &properties2);
+            PhysicalDevicePortabilitySubsetPropertiesKHR propertiesPortabilitySubset = new PhysicalDevicePortabilitySubsetPropertiesKHR()
+            {
+                SType = StructureType.PhysicalDevicePortabilitySubsetPropertiesKhr
+            };
 
             PhysicalDeviceFeatures2 features2 = new PhysicalDeviceFeatures2()
             {
@@ -183,6 +197,11 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceCustomBorderColorFeaturesExt
             };
 
+            PhysicalDevicePortabilitySubsetFeaturesKHR featuresPortabilitySubset = new PhysicalDevicePortabilitySubsetFeaturesKHR()
+            {
+                SType = StructureType.PhysicalDevicePortabilitySubsetFeaturesKhr
+            };
+
             if (supportedExtensions.Contains("VK_EXT_robustness2"))
             {
                 features2.PNext = &featuresRobustness2;
@@ -200,7 +219,30 @@ namespace Ryujinx.Graphics.Vulkan
                 features2.PNext = &featuresCustomBorderColor;
             }
 
+            bool usePortability = supportedExtensions.Contains("VK_KHR_portability_subset");
+
+            if (usePortability)
+            {
+                propertiesPortabilitySubset.PNext = properties2.PNext;
+                properties2.PNext = &propertiesPortabilitySubset;
+
+                featuresPortabilitySubset.PNext = features2.PNext;
+                features2.PNext = &featuresPortabilitySubset;
+            }
+
+            Api.GetPhysicalDeviceProperties2(_physicalDevice, &properties2);
             Api.GetPhysicalDeviceFeatures2(_physicalDevice, &features2);
+
+            var portabilityFlags = PortabilitySubsetFlags.None;
+
+            if (usePortability)
+            {
+                portabilityFlags |= propertiesPortabilitySubset.MinVertexInputBindingStrideAlignment > 1 ? PortabilitySubsetFlags.VertexBufferAlignment4B : 0;
+                portabilityFlags |= featuresPortabilitySubset.TriangleFans ? 0 : PortabilitySubsetFlags.NoTriangleFans;
+                portabilityFlags |= featuresPortabilitySubset.PointPolygons ? 0 : PortabilitySubsetFlags.NoPointMode;
+                portabilityFlags |= featuresPortabilitySubset.ImageView2DOn3DImage ? 0 : PortabilitySubsetFlags.No3DImageView;
+                portabilityFlags |= featuresPortabilitySubset.SamplerMipLodBias ? 0 : PortabilitySubsetFlags.NoLodBias;
+            }
 
             bool customBorderColorSupported = supportedExtensions.Contains("VK_EXT_custom_border_color") &&
                                               featuresCustomBorderColor.CustomBorderColors &&
@@ -224,7 +266,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportedExtensions.Contains(ExtConditionalRendering.ExtensionName),
                 supportedExtensions.Contains(ExtExtendedDynamicState.ExtensionName),
                 features2.Features.MultiViewport,
-                featuresRobustness2.NullDescriptor,
+                featuresRobustness2.NullDescriptor || IsMoltenVk,
                 supportedExtensions.Contains(KhrPushDescriptor.ExtensionName),
                 supportsTransformFeedback,
                 propertiesTransformFeedback.TransformFeedbackQueries,
@@ -232,7 +274,8 @@ namespace Ryujinx.Graphics.Vulkan
                 propertiesSubgroupSizeControl.MinSubgroupSize,
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
                 propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
-                supportedSampleCounts);
+                supportedSampleCounts,
+                portabilityFlags);
 
             MemoryAllocator = new MemoryAllocator(Api, _device, properties.Limits.MaxMemoryAllocationCount);
 
@@ -413,6 +456,36 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsR4G4B4A4Format = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
                 GAL.Format.R4G4B4A4Unorm);
 
+            bool supportsAstcFormats = FormatCapabilities.OptimalFormatsSupport(compressedFormatFeatureFlags,
+                GAL.Format.Astc4x4Unorm,
+                GAL.Format.Astc5x4Unorm,
+                GAL.Format.Astc5x5Unorm,
+                GAL.Format.Astc6x5Unorm,
+                GAL.Format.Astc6x6Unorm,
+                GAL.Format.Astc8x5Unorm,
+                GAL.Format.Astc8x6Unorm,
+                GAL.Format.Astc8x8Unorm,
+                GAL.Format.Astc10x5Unorm,
+                GAL.Format.Astc10x6Unorm,
+                GAL.Format.Astc10x8Unorm,
+                GAL.Format.Astc10x10Unorm,
+                GAL.Format.Astc12x10Unorm,
+                GAL.Format.Astc12x12Unorm,
+                GAL.Format.Astc4x4Srgb,
+                GAL.Format.Astc5x4Srgb,
+                GAL.Format.Astc5x5Srgb,
+                GAL.Format.Astc6x5Srgb,
+                GAL.Format.Astc6x6Srgb,
+                GAL.Format.Astc8x5Srgb,
+                GAL.Format.Astc8x6Srgb,
+                GAL.Format.Astc8x8Srgb,
+                GAL.Format.Astc10x5Srgb,
+                GAL.Format.Astc10x6Srgb,
+                GAL.Format.Astc10x8Srgb,
+                GAL.Format.Astc10x10Srgb,
+                GAL.Format.Astc12x10Srgb,
+                GAL.Format.Astc12x12Srgb);
+
             PhysicalDeviceVulkan12Features featuresVk12 = new PhysicalDeviceVulkan12Features()
             {
                 SType = StructureType.PhysicalDeviceVulkan12Features
@@ -434,7 +507,9 @@ namespace Ryujinx.Graphics.Vulkan
                 GpuVendor,
                 hasFrontFacingBug: IsIntelWindows,
                 hasVectorIndexingBug: Vendor == Vendor.Qualcomm,
-                supportsAstcCompression: features2.Features.TextureCompressionAstcLdr,
+                needsFragmentOutputSpecialization: IsMoltenVk,
+                reduceShaderPrecision: IsMoltenVk,
+                supportsAstcCompression: features2.Features.TextureCompressionAstcLdr && supportsAstcFormats,
                 supportsBc123Compression: supportsBc123CompressionFormat,
                 supportsBc45Compression: supportsBc45CompressionFormat,
                 supportsBc67Compression: supportsBc67CompressionFormat,
@@ -515,12 +590,13 @@ namespace Ryujinx.Graphics.Vulkan
 
             IsAmdWindows = Vendor == Vendor.Amd && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             IsIntelWindows = Vendor == Vendor.Intel && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            IsTBDR = IsMoltenVk || Vendor == Vendor.Qualcomm || Vendor == Vendor.ARM || Vendor == Vendor.ImgTec;
 
             GpuVendor = vendorName;
             GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName);
             GpuVersion = $"Vulkan v{ParseStandardVulkanVersion(properties.ApiVersion)}, Driver v{ParseDriverVersion(ref properties)}";
 
-            IsAmdGcn = Vendor == Vendor.Amd && VendorUtils.AmdGcnRegex().IsMatch(GpuRenderer);
+            IsAmdGcn = !IsMoltenVk && Vendor == Vendor.Amd && VendorUtils.AmdGcnRegex().IsMatch(GpuRenderer);
 
             Logger.Notice.Print(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
         }
@@ -531,6 +607,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 GAL.PrimitiveTopology.Quads => GAL.PrimitiveTopology.Triangles,
                 GAL.PrimitiveTopology.QuadStrip => GAL.PrimitiveTopology.TriangleStrip,
+                GAL.PrimitiveTopology.TriangleFan => Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.NoTriangleFans) ? GAL.PrimitiveTopology.Triangles : topology,
                 _ => topology
             };
         }
@@ -540,6 +617,7 @@ namespace Ryujinx.Graphics.Vulkan
             return topology switch
             {
                 GAL.PrimitiveTopology.Quads => true,
+                GAL.PrimitiveTopology.TriangleFan => Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.NoTriangleFans),
                 _ => false
             };
         }
@@ -553,7 +631,13 @@ namespace Ryujinx.Graphics.Vulkan
 
         public bool NeedsVertexBufferAlignment(int attrScalarAlignment, out int alignment)
         {
-            if (Vendor != Vendor.Nvidia)
+            if (Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.VertexBufferAlignment4B))
+            {
+                alignment = 4;
+
+                return true;
+            }
+            else if (Vendor != Vendor.Nvidia)
             {
                 // Vulkan requires that vertex attributes are globally aligned by their component size,
                 // so buffer strides that don't divide by the largest scalar element are invalid.

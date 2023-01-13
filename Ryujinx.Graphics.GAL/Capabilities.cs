@@ -9,6 +9,8 @@ namespace Ryujinx.Graphics.GAL
 
         public readonly bool HasFrontFacingBug;
         public readonly bool HasVectorIndexingBug;
+        public readonly bool NeedsFragmentOutputSpecialization;
+        public readonly bool ReduceShaderPrecision;
 
         public readonly bool SupportsAstcCompression;
         public readonly bool SupportsBc123Compression;
@@ -49,6 +51,8 @@ namespace Ryujinx.Graphics.GAL
             string vendorName,
             bool hasFrontFacingBug,
             bool hasVectorIndexingBug,
+            bool needsFragmentOutputSpecialization,
+            bool reduceShaderPrecision,
             bool supportsAstcCompression,
             bool supportsBc123Compression,
             bool supportsBc45Compression,
@@ -85,6 +89,8 @@ namespace Ryujinx.Graphics.GAL
             VendorName = vendorName;
             HasFrontFacingBug = hasFrontFacingBug;
             HasVectorIndexingBug = hasVectorIndexingBug;
+            NeedsFragmentOutputSpecialization = needsFragmentOutputSpecialization;
+            ReduceShaderPrecision = reduceShaderPrecision;
             SupportsAstcCompression = supportsAstcCompression;
             SupportsBc123Compression = supportsBc123Compression;
             SupportsBc45Compression = supportsBc45Compression;

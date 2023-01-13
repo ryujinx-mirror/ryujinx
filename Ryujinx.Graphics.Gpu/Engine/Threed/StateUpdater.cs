@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public const int ScissorStateIndex = 16;
         public const int VertexBufferStateIndex = 0;
         public const int PrimitiveRestartStateIndex = 12;
+        public const int RenderTargetStateIndex = 27;
 
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
@@ -262,6 +263,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _context.Renderer.Pipeline.EndTransformFeedback();
                 _prevTfEnable = false;
+            }
+
+            if (_updateTracker.IsDirty(RenderTargetStateIndex))
+            {
+                UpdateRenderTargetSpecialization();
             }
 
             _updateTracker.Update(ulong.MaxValue);
@@ -527,11 +533,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Updates specialization state based on render target state.
+        /// </summary>
+        public void UpdateRenderTargetSpecialization()
+        {
+            _currentSpecState.SetFragmentOutputTypes(_state.State.RtControl, ref _state.State.RtColorState);
+        }
+
+        /// <summary>
         /// Checks if a render target color buffer is used.
         /// </summary>
         /// <param name="colorState">Color buffer information</param>
         /// <returns>True if the specified buffer is enabled/used, false otherwise</returns>
-        private static bool IsRtEnabled(RtColorState colorState)
+        internal static bool IsRtEnabled(RtColorState colorState)
         {
             // Colors are disabled by writing 0 to the format.
             return colorState.Format != 0 && colorState.WidthOrStride != 0;
@@ -893,7 +907,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     Logger.Debug?.Print(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
 
-                    format = Format.R32G32B32A32Float;
+                    format = vertexAttrib.UnpackType() switch
+                    {
+                        VertexAttribType.Sint => Format.R32G32B32A32Sint,
+                        VertexAttribType.Uint => Format.R32G32B32A32Uint,
+                        _ => Format.R32G32B32A32Float
+                    };
                 }
 
                 vertexAttribs[index] = new VertexAttribDescriptor(

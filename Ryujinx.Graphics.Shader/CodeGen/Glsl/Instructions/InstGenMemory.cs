@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                         if ((outputType & AggregateType.ElementCountMask) != 0)
                         {
-                            return $"{Declarations.GetVarTypeName(outputType, precise: false)}({imageConst})";
+                            return $"{Declarations.GetVarTypeName(context, outputType, precise: false)}({imageConst})";
                         }
 
                         return imageConst;
@@ -513,7 +513,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     if ((outputType & AggregateType.ElementCountMask) != 0)
                     {
-                        return $"{Declarations.GetVarTypeName(outputType, precise: false)}({scalarValue})";
+                        return $"{Declarations.GetVarTypeName(context, outputType, precise: false)}({scalarValue})";
                     }
                 }
 
