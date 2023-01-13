@@ -590,11 +590,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             IsAmdWindows = Vendor == Vendor.Amd && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             IsIntelWindows = Vendor == Vendor.Intel && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            IsTBDR = IsMoltenVk ||
-                Vendor == Vendor.Qualcomm ||
-                Vendor == Vendor.ARM ||
-                Vendor == Vendor.Broadcom ||
-                Vendor == Vendor.ImgTec;
+            IsTBDR = IsMoltenVk || Vendor == Vendor.Qualcomm || Vendor == Vendor.ARM || Vendor == Vendor.ImgTec;
 
             GpuVendor = vendorName;
             GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName);

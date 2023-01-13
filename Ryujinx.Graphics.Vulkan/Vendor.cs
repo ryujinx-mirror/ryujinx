@@ -9,7 +9,6 @@ namespace Ryujinx.Graphics.Vulkan
         Intel,
         Nvidia,
         ARM,
-        Broadcom,
         Qualcomm,
         Apple,
         Unknown
@@ -29,7 +28,6 @@ namespace Ryujinx.Graphics.Vulkan
                 0x106B => Vendor.Apple,
                 0x10DE => Vendor.Nvidia,
                 0x13B5 => Vendor.ARM,
-                0x14E4 => Vendor.Broadcom,
                 0x8086 => Vendor.Intel,
                 0x5143 => Vendor.Qualcomm,
                 _ => Vendor.Unknown
@@ -45,7 +43,6 @@ namespace Ryujinx.Graphics.Vulkan
                 0x106B => "Apple",
                 0x10DE => "NVIDIA",
                 0x13B5 => "ARM",
-                0x14E4 => "Broadcom",
                 0x1AE0 => "Google",
                 0x5143 => "Qualcomm",
                 0x8086 => "Intel",
