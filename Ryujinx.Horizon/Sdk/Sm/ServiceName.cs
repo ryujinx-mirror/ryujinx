@@ -8,7 +8,7 @@ namespace Ryujinx.Horizon.Sdk.Sm
     {
         public static ServiceName Invalid { get; } = new ServiceName(0);
 
-        public bool IsInvalid => Packed == 0;
+        public bool IsValid => Packed != 0;
 
         public int Length => sizeof(ulong);
 

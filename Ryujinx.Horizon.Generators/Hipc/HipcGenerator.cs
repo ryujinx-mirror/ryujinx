@@ -267,6 +267,8 @@ namespace Ryujinx.Horizon.Generators.Hipc
             }
 
             int index = 0;
+            int inArgIndex = 0;
+            int outArgIndex = 0;
             int inCopyHandleIndex = 0;
             int inMoveHandleIndex = 0;
             int inObjectIndex = 0;
@@ -284,7 +286,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
                 {
                     if (IsNonSpanOutBuffer(compilation, parameter))
                     {
-                        generator.AppendLine($"using var {argName} = CommandSerialization.GetWritableRegion(processor.GetBufferRange({index}));");
+                        generator.AppendLine($"using var {argName} = CommandSerialization.GetWritableRegion(processor.GetBufferRange({outArgIndex++}));");
 
                         argName = $"out {GenerateSpanCastElement0(canonicalTypeName, $"{argName}.Memory.Span")}";
                     }
@@ -302,7 +304,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
                     switch (argType)
                     {
                         case CommandArgType.InArgument:
-                            value = $"CommandSerialization.DeserializeArg<{canonicalTypeName}>(inRawData, processor.GetInArgOffset({index}))";
+                            value = $"CommandSerialization.DeserializeArg<{canonicalTypeName}>(inRawData, processor.GetInArgOffset({inArgIndex++}))";
                             break;
                         case CommandArgType.InCopyHandle:
                             value = $"CommandSerialization.DeserializeCopyHandle(ref context, {inCopyHandleIndex++})";

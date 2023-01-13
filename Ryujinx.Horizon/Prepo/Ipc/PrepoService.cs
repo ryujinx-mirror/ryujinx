@@ -42,7 +42,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
                 return PrepoResult.PermissionDenied;
             }
 
-            ProcessPlayReport(PlayReportKind.Normal, pid, gameRoomBuffer, reportBuffer, Uid.Null);
+            ProcessPlayReport(PlayReportKind.Normal, gameRoomBuffer, reportBuffer, pid, Uid.Null);
 
             return Result.Success;
         }
@@ -57,7 +57,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
                 return PrepoResult.PermissionDenied;
             }
 
-            ProcessPlayReport(PlayReportKind.Normal, pid, gameRoomBuffer, reportBuffer, userId, true);
+            ProcessPlayReport(PlayReportKind.Normal, gameRoomBuffer, reportBuffer, pid, userId, true);
 
             return Result.Success;
         }
@@ -107,25 +107,25 @@ namespace Ryujinx.Horizon.Prepo.Ipc
         }
 
         [CmifCommand(20100)]
-        public Result SaveSystemReport([Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer, [ClientProcessId] ulong pid)
+        public Result SaveSystemReport([Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, Sdk.Ncm.ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
         {
             if ((_permissionLevel & PrepoServicePermissionLevel.System) != 0)
             {
                 return PrepoResult.PermissionDenied;
             }
 
-            return ProcessPlayReport(PlayReportKind.System, pid, gameRoomBuffer, reportBuffer, Uid.Null);
+            return ProcessPlayReport(PlayReportKind.System, gameRoomBuffer, reportBuffer, 0, Uid.Null, false, applicationId);
         }
 
         [CmifCommand(20101)]
-        public Result SaveSystemReportWithUser(Uid userId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer, [ClientProcessId] ulong pid)
+        public Result SaveSystemReportWithUser(Uid userId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, Sdk.Ncm.ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
         {
             if ((_permissionLevel & PrepoServicePermissionLevel.System) != 0)
             {
                 return PrepoResult.PermissionDenied;
             }
 
-            return ProcessPlayReport(PlayReportKind.System, pid, gameRoomBuffer, reportBuffer, userId, true);
+            return ProcessPlayReport(PlayReportKind.System, gameRoomBuffer, reportBuffer, 0, userId, true, applicationId);
         }
 
         [CmifCommand(40100)] // 2.0.0+
@@ -164,7 +164,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             return PrepoResult.PermissionDenied;
         }
 
-        private static Result ProcessPlayReport(PlayReportKind playReportKind, ulong pid, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, Uid userId, bool withUserId = false)
+        private static Result ProcessPlayReport(PlayReportKind playReportKind, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid, Uid userId, bool withUserId = false, Sdk.Ncm.ApplicationId applicationId = default)
         {
             if (withUserId)
             {
@@ -191,16 +191,23 @@ namespace Ryujinx.Horizon.Prepo.Ipc
                 return PrepoResult.InvalidBufferSize;
             }
 
-            // NOTE: The service calls arp:r using the pid to get the application id, if it fails PrepoResult.InvalidPid is returned.
-            //       Reports are stored internally and an event is signaled to transmit them.
-
             StringBuilder     builder            = new();
             MessagePackObject deserializedReport = MessagePackSerializer.UnpackMessagePackObject(reportBuffer.ToArray());
 
             builder.AppendLine();
             builder.AppendLine("PlayReport log:");
             builder.AppendLine($" Kind: {playReportKind}");
-            builder.AppendLine($" Pid: {pid}");
+
+            // NOTE: The service calls arp:r using the pid to get the application id, if it fails PrepoResult.InvalidPid is returned.
+            //       Reports are stored internally and an event is signaled to transmit them.
+            if (pid != 0)
+            {
+                builder.AppendLine($" Pid: {pid}");
+            }
+            else
+            {
+                builder.AppendLine($" ApplicationId: {applicationId}");
+            }
 
             if (!userId.IsNull)
             {

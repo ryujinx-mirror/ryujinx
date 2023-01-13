@@ -12,8 +12,8 @@ namespace Ryujinx.Horizon.Sdk.Prepo
         Result RequestImmediateTransmission();
         Result GetTransmissionStatus(out int status);
         Result GetSystemSessionId(out ulong systemSessionId);
-        Result SaveSystemReport(ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid);
-        Result SaveSystemReportWithUser(Uid userId, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid);
+        Result SaveSystemReport(ReadOnlySpan<byte> gameRoomBuffer, Ncm.ApplicationId applicationId, ReadOnlySpan<byte> reportBuffer);
+        Result SaveSystemReportWithUser(Uid userId, ReadOnlySpan<byte> gameRoomBuffer, Ncm.ApplicationId applicationId, ReadOnlySpan<byte> reportBuffer);
         Result IsUserAgreementCheckEnabled(out bool enabled);
         Result SetUserAgreementCheckEnabled(bool enabled);
     }

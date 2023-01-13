@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Horizon.Sdk.Account
 {
     [StructLayout(LayoutKind.Sequential)]
-    public readonly record struct Uid
+    readonly record struct Uid
     {
         public readonly long High;
         public readonly long Low;
