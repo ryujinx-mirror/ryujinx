@@ -14,6 +14,12 @@ namespace Ryujinx.Graphics.Vulkan
             MemoryPropertyFlags.HostCoherentBit |
             MemoryPropertyFlags.HostCachedBit;
 
+        // Some drivers don't expose a "HostCached" memory type,
+        // so we need those alternative flags for the allocation to succeed there.
+        private const MemoryPropertyFlags DefaultBufferMemoryAltFlags =
+            MemoryPropertyFlags.HostVisibleBit |
+            MemoryPropertyFlags.HostCoherentBit;
+
         private const MemoryPropertyFlags DeviceLocalBufferMemoryFlags =
             MemoryPropertyFlags.DeviceLocalBit;
 
@@ -94,9 +100,21 @@ namespace Ryujinx.Graphics.Vulkan
             gd.Api.CreateBuffer(_device, in bufferCreateInfo, null, out var buffer).ThrowOnError();
             gd.Api.GetBufferMemoryRequirements(_device, buffer, out var requirements);
 
-            var allocateFlags = deviceLocal ? DeviceLocalBufferMemoryFlags : DefaultBufferMemoryFlags;
+            MemoryPropertyFlags allocateFlags;
+            MemoryPropertyFlags allocateFlagsAlt;
 
-            var allocation = gd.MemoryAllocator.AllocateDeviceMemory(_physicalDevice, requirements, allocateFlags);
+            if (deviceLocal)
+            {
+                allocateFlags = DeviceLocalBufferMemoryFlags;
+                allocateFlagsAlt = DeviceLocalBufferMemoryFlags;
+            }
+            else
+            {
+                allocateFlags = DefaultBufferMemoryFlags;
+                allocateFlagsAlt = DefaultBufferMemoryAltFlags;
+            }
+
+            var allocation = gd.MemoryAllocator.AllocateDeviceMemory(_physicalDevice, requirements, allocateFlags, allocateFlagsAlt);
 
             if (allocation.Memory.Handle == 0UL)
             {

@@ -27,7 +27,16 @@ namespace Ryujinx.Graphics.Vulkan
             MemoryRequirements requirements,
             MemoryPropertyFlags flags = 0)
         {
-            int memoryTypeIndex = FindSuitableMemoryTypeIndex(_api, physicalDevice, requirements.MemoryTypeBits, flags);
+            return AllocateDeviceMemory(physicalDevice, requirements, flags, flags);
+        }
+
+        public MemoryAllocation AllocateDeviceMemory(
+            PhysicalDevice physicalDevice,
+            MemoryRequirements requirements,
+            MemoryPropertyFlags flags,
+            MemoryPropertyFlags alternativeFlags)
+        {
+            int memoryTypeIndex = FindSuitableMemoryTypeIndex(_api, physicalDevice, requirements.MemoryTypeBits, flags, alternativeFlags);
             if (memoryTypeIndex < 0)
             {
                 return default;
@@ -56,21 +65,35 @@ namespace Ryujinx.Graphics.Vulkan
             return newBl.Allocate(size, alignment, map);
         }
 
-        private static int FindSuitableMemoryTypeIndex(Vk api, PhysicalDevice physicalDevice, uint memoryTypeBits, MemoryPropertyFlags flags)
+        private static int FindSuitableMemoryTypeIndex(
+            Vk api,
+            PhysicalDevice physicalDevice,
+            uint memoryTypeBits,
+            MemoryPropertyFlags flags,
+            MemoryPropertyFlags alternativeFlags)
         {
+            int bestCandidateIndex = -1;
+
             api.GetPhysicalDeviceMemoryProperties(physicalDevice, out var properties);
 
             for (int i = 0; i < properties.MemoryTypeCount; i++)
             {
                 var type = properties.MemoryTypes[i];
 
-                if ((memoryTypeBits & (1 << i)) != 0 && type.PropertyFlags.HasFlag(flags))
+                if ((memoryTypeBits & (1 << i)) != 0)
                 {
-                    return i;
+                    if (type.PropertyFlags.HasFlag(flags))
+                    {
+                        return i;
+                    }
+                    else if (type.PropertyFlags.HasFlag(alternativeFlags))
+                    {
+                        bestCandidateIndex = i;
+                    }
                 }
             }
 
-            return -1;
+            return bestCandidateIndex;
         }
 
         public void Dispose()
