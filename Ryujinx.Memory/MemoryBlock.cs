@@ -435,12 +435,7 @@ namespace Ryujinx.Memory
 
         public static ulong GetPageSize()
         {
-            if (OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-            {
-                return 1UL << 14;
-            }
-
-            return 1UL << 12;
+            return (ulong)Environment.SystemPageSize;
         }
 
         private static void ThrowInvalidMemoryRegionException() => throw new InvalidMemoryRegionException();
