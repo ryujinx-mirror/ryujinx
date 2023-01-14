@@ -1431,10 +1431,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
+            handle.Sync(_context);
+
             _context.Renderer.BackgroundContextAction(() =>
             {
-                handle.Sync(_context);
-
                 Storage.SignalModifiedDirty();
 
                 lock (handle.Overlaps)
