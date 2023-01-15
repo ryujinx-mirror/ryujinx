@@ -54,6 +54,7 @@ namespace Ryujinx.Graphics.Vulkan
             gd.Textures.Add(this);
 
             var format = _gd.FormatCapabilities.ConvertToVkFormat(info.Format);
+            var usage = TextureStorage.GetImageUsageFromFormat(info.Format);
             var levels = (uint)info.Levels;
             var layers = (uint)info.GetLayers();
 
@@ -94,7 +95,7 @@ namespace Ryujinx.Graphics.Vulkan
             var subresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, levels, (uint)firstLayer, layers);
             var subresourceRangeDepth = new ImageSubresourceRange(aspectFlagsDepth, (uint)firstLevel, levels, (uint)firstLayer, layers);
 
-            unsafe Auto<DisposableImageView> CreateImageView(ComponentMapping cm, ImageSubresourceRange sr, ImageViewType viewType, ImageUsageFlags usageFlags = 0)
+            unsafe Auto<DisposableImageView> CreateImageView(ComponentMapping cm, ImageSubresourceRange sr, ImageViewType viewType, ImageUsageFlags usageFlags)
             {
                 var usage = new ImageViewUsageCreateInfo()
                 {
@@ -110,14 +111,14 @@ namespace Ryujinx.Graphics.Vulkan
                     Format = format,
                     Components = cm,
                     SubresourceRange = sr,
-                    PNext = usageFlags == 0 ? null : &usage
+                    PNext = &usage
                 };
 
                 gd.Api.CreateImageView(device, imageCreateInfo, null, out var imageView).ThrowOnError();
                 return new Auto<DisposableImageView>(new DisposableImageView(gd.Api, device, imageView), null, storage.GetImage());
             }
 
-            _imageView = CreateImageView(componentMapping, subresourceRange, type);
+            _imageView = CreateImageView(componentMapping, subresourceRange, type, ImageUsageFlags.SampledBit);
 
             // Framebuffer attachments and storage images requires a identity component mapping.
             var identityComponentMapping = new ComponentMapping(
@@ -126,7 +127,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ComponentSwizzle.B,
                 ComponentSwizzle.A);
 
-            _imageViewIdentity = CreateImageView(identityComponentMapping, subresourceRangeDepth, type);
+            _imageViewIdentity = CreateImageView(identityComponentMapping, subresourceRangeDepth, type, usage);
 
             // Framebuffer attachments also require 3D textures to be bound as 2D array.
             if (info.Target == Target.Texture3D)
@@ -144,7 +145,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     subresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, levels, (uint)firstLayer, (uint)info.Depth);
 
-                    _imageView2dArray = CreateImageView(identityComponentMapping, subresourceRange, ImageViewType.Type2DArray);
+                    _imageView2dArray = CreateImageView(identityComponentMapping, subresourceRange, ImageViewType.Type2DArray, usage);
                 }
             }
 
