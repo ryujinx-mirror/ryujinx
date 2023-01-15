@@ -70,6 +70,22 @@ namespace Ryujinx.Ava.UI.Helpers
             }
         }
 
+        public static IntPtr CreateEmptyCursor()
+        {
+            return CreateCursor(IntPtr.Zero, 0, 0, 1, 1, new byte[] { 0xFF }, new byte[] { 0x00 });
+        }
+
+        public static IntPtr CreateArrowCursor()
+        {
+            return LoadCursor(IntPtr.Zero, (IntPtr)Cursors.IDC_ARROW);
+        }
+
+        [LibraryImport("user32.dll")]
+        public static partial IntPtr SetCursor(IntPtr handle);
+
+        [LibraryImport("user32.dll")]
+        public static partial IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, byte[] pvANDPlane, byte[] pvXORPlane);
+
         [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "RegisterClassExW")]
         public static partial ushort RegisterClassEx(ref WNDCLASSEX param);
 

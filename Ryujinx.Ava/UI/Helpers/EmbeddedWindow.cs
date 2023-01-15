@@ -34,6 +34,8 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             WindowHandle = IntPtr.Zero;
             X11Display = IntPtr.Zero;
+            NsView = IntPtr.Zero;
+            MetalLayer = IntPtr.Zero;
         }
 
         public EmbeddedWindow()
@@ -42,7 +44,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
             stateObserverable.Subscribe(StateChanged);
 
-            this.Initialized += NativeEmbeddedWindow_Initialized;
+            Initialized += NativeEmbeddedWindow_Initialized;
         }
 
         public virtual void OnWindowCreated() { }
@@ -127,7 +129,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
                 style = ClassStyles.CS_OWNDC,
                 lpszClassName = Marshal.StringToHGlobalUni(_className),
-                hCursor = LoadCursor(IntPtr.Zero, (IntPtr)Cursors.IDC_ARROW)
+                hCursor = CreateArrowCursor()
             };
 
             var atom = RegisterClassEx(ref wndClassEx);
@@ -198,6 +200,7 @@ namespace Ryujinx.Ava.UI.Helpers
                         KeyModifiers.None));
                     break;
             }
+
             return DefWindowProc(hWnd, msg, wParam, lParam);
         }
 

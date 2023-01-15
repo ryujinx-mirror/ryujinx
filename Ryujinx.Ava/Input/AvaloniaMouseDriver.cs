@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using FluentAvalonia.Core;
 using Ryujinx.Input;
 using System;
 using System.Numerics;
@@ -69,12 +70,22 @@ namespace Ryujinx.Ava.Input
 
         private void Parent_PointerReleaseEvent(object o, PointerReleasedEventArgs args)
         {
-            PressedButtons[(int)args.InitialPressMouseButton - 1] = false;
+            int button = (int)args.InitialPressMouseButton - 1;
+
+            if (PressedButtons.Count() >= button)
+            {
+                PressedButtons[button] = false;
+            }
         }
 
         private void Parent_PointerPressEvent(object o, PointerPressedEventArgs args)
         {
-            PressedButtons[(int)args.GetCurrentPoint(_widget).Properties.PointerUpdateKind] = true;
+            int button = (int)args.GetCurrentPoint(_widget).Properties.PointerUpdateKind;
+
+            if (PressedButtons.Count() >= button)
+            {
+                PressedButtons[button] = true;
+            }
         }
 
         private void Parent_PointerMovedEvent(object o, PointerEventArgs args)
@@ -86,12 +97,18 @@ namespace Ryujinx.Ava.Input
 
         public void SetMousePressed(MouseButton button)
         {
-            PressedButtons[(int)button] = true;
+            if (PressedButtons.Count() >= (int)button)
+            {
+                PressedButtons[(int)button] = true;
+            }
         }
 
         public void SetMouseReleased(MouseButton button)
         {
-            PressedButtons[(int)button] = false;
+            if (PressedButtons.Count() >= (int)button)
+            {
+                PressedButtons[(int)button] = false;
+            }
         }
 
         public void SetPosition(double x, double y)
@@ -101,7 +118,12 @@ namespace Ryujinx.Ava.Input
 
         public bool IsButtonPressed(MouseButton button)
         {
-            return PressedButtons[(int)button];
+            if (PressedButtons.Count() >= (int)button)
+            {
+                return PressedButtons[(int)button];
+            }
+
+            return false;
         }
 
         public Size GetClientSize()

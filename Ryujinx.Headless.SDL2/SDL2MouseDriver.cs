@@ -10,7 +10,7 @@ namespace Ryujinx.Headless.SDL2
 {
     class SDL2MouseDriver : IGamepadDriver
     {
-        private const int CursorHideIdleTime = 8; // seconds
+        private const int CursorHideIdleTime = 5; // seconds
 
         private bool _isDisposed;
         private HideCursor _hideCursor;

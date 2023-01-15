@@ -68,7 +68,7 @@ namespace Ryujinx.Ui
         private readonly CancellationTokenSource _gpuCancellationTokenSource;
 
         // Hide Cursor
-        const int CursorHideIdleTime = 8; // seconds
+        const int CursorHideIdleTime = 5; // seconds
         private static readonly Cursor _invisibleCursor = new Cursor(Display.Default, CursorType.BlankCursor);
         private long _lastCursorMoveTime;
         private bool _hideCursorOnIdle;
