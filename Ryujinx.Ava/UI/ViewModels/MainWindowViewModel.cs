@@ -1601,13 +1601,9 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void OpenTitleUpdateManager()
         {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    await new TitleUpdateWindow(VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName).ShowDialog(desktop.MainWindow);
-                }
+                await TitleUpdateWindow.Show(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName);
             }
         }
 

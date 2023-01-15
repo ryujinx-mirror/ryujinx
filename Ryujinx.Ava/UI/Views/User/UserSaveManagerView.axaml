@@ -107,6 +107,7 @@
             VerticalAlignment="Stretch">
             <ListBox
                 Name="SaveList"
+                VirtualizationMode="None"
                 Items="{Binding Views}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
@@ -115,6 +116,9 @@
                         <Setter Property="Padding" Value="10" />
                         <Setter Property="Margin" Value="5" />
                         <Setter Property="CornerRadius" Value="4" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected /template/ Border#SelectionIndicator">
+                        <Setter Property="IsVisible" Value="False" />
                     </Style>
                 </ListBox.Styles>
                 <ListBox.ItemTemplate>
