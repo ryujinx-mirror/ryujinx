@@ -579,52 +579,5 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 fraction -= (int)fraction;
             }
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ResampleForUpsampler(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, float ratio, ref float fraction, int sampleCount)
-        {
-            // Currently a simple cubic interpolation, assuming duplicated values at edges.
-            // TODO: Discover and use algorithm that the switch uses.
-
-            int inputBufferIndex = 0;
-            int maxIndex = inputBuffer.Length - 1;
-            int cubicEnd = inputBuffer.Length - 3;
-
-            for (int i = 0; i < sampleCount; i++)
-            {
-                float s0, s1, s2, s3;
-
-                s1 = inputBuffer[inputBufferIndex];
-
-                if (inputBufferIndex == 0 || inputBufferIndex > cubicEnd)
-                {
-                    // Clamp interplation values at the ends of the input buffer.
-                    s0 = inputBuffer[Math.Max(0, inputBufferIndex - 1)];
-                    s2 = inputBuffer[Math.Min(maxIndex, inputBufferIndex + 1)];
-                    s3 = inputBuffer[Math.Min(maxIndex, inputBufferIndex + 2)];
-                }
-                else
-                {
-                    s0 = inputBuffer[inputBufferIndex - 1];
-                    s2 = inputBuffer[inputBufferIndex + 1];
-                    s3 = inputBuffer[inputBufferIndex + 2];
-                }
-
-                float a = s3 - s2 - s0 + s1;
-                float b = s0 - s1 - a;
-                float c = s2 - s0;
-                float d = s1;
-
-                float f2 = fraction * fraction;
-                float f3 = f2 * fraction;
-
-                outputBuffer[i] = a * f3 + b * f2 + c * fraction + d;
-
-                fraction += ratio;
-                inputBufferIndex += (int)MathF.Truncate(fraction);
-
-                fraction -= (int)fraction;
-            }
-        }
     }
 }
