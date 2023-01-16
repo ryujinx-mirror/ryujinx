@@ -82,7 +82,7 @@ namespace Ryujinx.Ava.UI.Renderer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                return CreateMacOs();
+                return CreateMacOS();
             }
 
             return base.CreateNativeControlCore(control);
@@ -113,11 +113,12 @@ namespace Ryujinx.Ava.UI.Renderer
         }
 
         [SupportedOSPlatform("linux")]
-        protected virtual IPlatformHandle CreateLinux(IPlatformHandle control)
+        private IPlatformHandle CreateLinux(IPlatformHandle control)
         {
             if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
             {
                 X11Window = new GLXWindow(new NativeHandle(X11.DefaultDisplay), new NativeHandle(control.Handle));
+                X11Window.Hide();
             }
             else
             {
@@ -227,7 +228,7 @@ namespace Ryujinx.Ava.UI.Renderer
         }
 
         [SupportedOSPlatform("macos")]
-        IPlatformHandle CreateMacOs()
+        IPlatformHandle CreateMacOS()
         {
             MetalLayer = MetalHelper.GetMetalLayer(out IntPtr nsView, out _updateBoundsCallback);
 

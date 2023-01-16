@@ -2,14 +2,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Ui.Common.Configuration;
-using Silk.NET.Vulkan;
 using System;
 
 namespace Ryujinx.Ava.UI.Renderer
 {
     public partial class RendererHost : UserControl, IDisposable
     {
-        public EmbeddedWindow EmbeddedWindow;
+        public readonly EmbeddedWindow EmbeddedWindow;
 
         public event EventHandler<EventArgs> WindowCreated;
         public event Action<object, Size>    SizeChanged;
@@ -17,8 +16,6 @@ namespace Ryujinx.Ava.UI.Renderer
         public RendererHost()
         {
             InitializeComponent();
-
-            Dispose();
 
             if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.OpenGl)
             {
@@ -47,6 +44,8 @@ namespace Ryujinx.Ava.UI.Renderer
                 EmbeddedWindow.WindowCreated -= CurrentWindow_WindowCreated;
                 EmbeddedWindow.SizeChanged   -= CurrentWindow_SizeChanged;
             }
+
+            GC.SuppressFinalize(this);
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
