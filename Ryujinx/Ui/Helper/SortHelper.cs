@@ -7,65 +7,33 @@ namespace Ryujinx.Ui.Helper
     {
         public static int TimePlayedSort(ITreeModel model, TreeIter a, TreeIter b)
         {
-            string aValue = model.GetValue(a, 5).ToString();
-            string bValue = model.GetValue(b, 5).ToString();
-            float aFloat;
-            float bFloat;
+            static string ReverseFormat(string time)
+            {
+                if (time == "Never")
+                {
+                    return "00";
+                }
 
-            if (aValue.Length > 7 && aValue[^7..] == "minutes")
-            {
-                aValue = aValue.Replace("minutes", "");
-                aFloat = (float.Parse(aValue) * 60);
-            }
-            else if (aValue.Length > 5 && aValue[^5..] == "hours")
-            {
-                aValue = aValue.Replace("hours", "");
-                aFloat = (float.Parse(aValue) * 3600);
-            }
-            else if (aValue.Length > 4 && aValue[^4..] == "days")
-            {
-                aValue = aValue.Replace("days", "");
-                aFloat = (float.Parse(aValue) * 86400);
-            }
-            else
-            {
-                aValue = aValue.Replace("seconds", "");
-                aFloat = float.Parse(aValue);
+                var numbers = time.Split(new char[] { 'd', 'h', 'm' });
+
+                time = time.Replace(" ", "").Replace("d", ".").Replace("h", ":").Replace("m", "");
+
+                if (numbers.Length == 2)
+                {
+                    return $"00.00:{time}";
+                }
+                else if (numbers.Length == 3)
+                {
+                    return $"00.{time}";
+                }
+
+                return time;
             }
 
-            if (bValue.Length > 7 && bValue[^7..] == "minutes")
-            {
-                bValue = bValue.Replace("minutes", "");
-                bFloat = (float.Parse(bValue) * 60);
-            }
-            else if (bValue.Length > 5 && bValue[^5..] == "hours")
-            {
-                bValue = bValue.Replace("hours", "");
-                bFloat = (float.Parse(bValue) * 3600);
-            }
-            else if (bValue.Length > 4 && bValue[^4..] == "days")
-            {
-                bValue =  bValue.Replace("days", "");
-                bFloat = (float.Parse(bValue) * 86400);
-            }
-            else
-            {
-                bValue = bValue[0..^8];
-                bFloat = float.Parse(bValue);
-            }
+            string aValue = ReverseFormat(model.GetValue(a, 5).ToString());
+            string bValue = ReverseFormat(model.GetValue(b, 5).ToString());
 
-            if (aFloat > bFloat)
-            {
-                return -1;
-            }
-            else if (bFloat > aFloat)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
+            return TimeSpan.Compare(TimeSpan.Parse(aValue), TimeSpan.Parse(bValue));
         }
 
         public static int LastPlayedSort(ITreeModel model, TreeIter a, TreeIter b)
