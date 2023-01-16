@@ -1,5 +1,8 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.OpenGL;
+using Ryujinx.Ui.Common.Configuration;
 using SPB.Graphics;
 using SPB.Graphics.OpenGL;
 using SPB.Platform;
@@ -7,26 +10,20 @@ using SPB.Platform.WGL;
 using SPB.Windowing;
 using System;
 
-namespace Ryujinx.Ava.UI.Helpers
+namespace Ryujinx.Ava.UI.Renderer
 {
-    public class OpenGLEmbeddedWindow : EmbeddedWindow
+    public class EmbeddedWindowOpenGL : EmbeddedWindow
     {
-        private readonly int _major;
-        private readonly int _minor;
-        private readonly GraphicsDebugLevel _graphicsDebugLevel;
         private SwappableNativeWindowBase _window;
+
         public OpenGLContextBase Context { get; set; }
 
-        public OpenGLEmbeddedWindow(int major, int minor, GraphicsDebugLevel graphicsDebugLevel)
-        {
-            _major = major;
-            _minor = minor;
-            _graphicsDebugLevel = graphicsDebugLevel;
-        }
+        public EmbeddedWindowOpenGL() { }
 
         protected override void OnWindowDestroying()
         {
             Context.Dispose();
+
             base.OnWindowDestroying();
         }
 
@@ -48,19 +45,20 @@ namespace Ryujinx.Ava.UI.Helpers
             }
 
             var flags = OpenGLContextFlags.Compat;
-            if (_graphicsDebugLevel != GraphicsDebugLevel.None)
+            if (ConfigurationState.Instance.Logger.GraphicsDebugLevel != GraphicsDebugLevel.None)
             {
                 flags |= OpenGLContextFlags.Debug;
             }
 
-            Context = PlatformHelper.CreateOpenGLContext(FramebufferFormat.Default, _major, _minor, flags);
+            var graphicsMode = Environment.OSVersion.Platform == PlatformID.Unix ? new FramebufferFormat(new ColorFormat(8, 8, 8, 0), 16, 0, ColorFormat.Zero, 0, 2, false) : FramebufferFormat.Default;
+
+            Context = PlatformHelper.CreateOpenGLContext(graphicsMode, 3, 3, flags);
 
             Context.Initialize(_window);
             Context.MakeCurrent(_window);
 
-            var bindingsContext = new OpenToolkitBindingsContext(Context.GetProcAddress);
+            GL.LoadBindings(new OpenTKBindingsContext(Context.GetProcAddress));
 
-            GL.LoadBindings(bindingsContext);
             Context.MakeCurrent(null);
         }
 
@@ -76,7 +74,14 @@ namespace Ryujinx.Ava.UI.Helpers
 
         public void SwapBuffers()
         {
-            _window.SwapBuffers();
+            _window?.SwapBuffers();
+        }
+
+        public void InitializeBackgroundContext(IRenderer renderer)
+        {
+            (renderer as OpenGLRenderer)?.InitializeBackgroundContext(SPBOpenGLContext.CreateBackgroundContext(Context));
+
+            MakeCurrent();
         }
     }
 }

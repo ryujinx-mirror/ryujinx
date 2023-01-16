@@ -13,6 +13,7 @@ using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
+using Ryujinx.Ava.UI.Renderer;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
@@ -870,7 +871,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public Action<bool> SwitchToGameControl { get; private set; }
         public Action<Control> SetMainContent { get; private set; }
         public TopLevel TopLevel { get; private set; }
-        public RendererHost RendererControl { get; private set; }
+        public RendererHost RendererHostControl { get; private set; }
         public bool IsClosing { get; set; }
         public LibHacHorizonManager LibHacHorizonManager { get; internal set; }
         public IHostUiHandler UiHandler { get; internal set; }
@@ -1144,7 +1145,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private void InitializeGame()
         {
-            RendererControl.RendererInitialized += GlRenderer_Created;
+            RendererHostControl.WindowCreated += RendererHost_Created;
 
             AppHost.StatusUpdatedEvent += Update_StatusBar;
             AppHost.AppExit += AppHost_AppExit;
@@ -1203,7 +1204,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        private void GlRenderer_Created(object sender, EventArgs e)
+        private void RendererHost_Created(object sender, EventArgs e)
         {
             ShowLoading(false);
 
@@ -1731,18 +1732,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             PrepareLoadScreen();
 
-            RendererControl = new RendererHost(ConfigurationState.Instance.Logger.GraphicsDebugLevel);
-            if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.OpenGl)
-            {
-                RendererControl.CreateOpenGL();
-            }
-            else
-            {
-                RendererControl.CreateVulkan();
-            }
+            RendererHostControl = new RendererHost();
 
             AppHost = new AppHost(
-                RendererControl,
+                RendererHostControl,
                 InputManager,
                 path,
                 VirtualFileSystem,
@@ -1783,9 +1776,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 SwitchToGameControl(startFullscreen);
 
-                SetMainContent(RendererControl);
+                SetMainContent(RendererHostControl);
 
-                RendererControl.Focus();
+                RendererHostControl.Focus();
             });
         }
 
@@ -1853,8 +1846,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                 HandleRelaunch();
             });
 
-            RendererControl.RendererInitialized -= GlRenderer_Created;
-            RendererControl = null;
+            RendererHostControl.WindowCreated -= RendererHost_Created;
+            RendererHostControl = null;
 
             SelectedIcon = null;
 

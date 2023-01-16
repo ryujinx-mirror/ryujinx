@@ -1,13 +1,13 @@
 using OpenTK;
 using System;
 
-namespace Ryujinx.Ava.UI.Helpers
+namespace Ryujinx.Ava.UI.Renderer
 {
-    internal class OpenToolkitBindingsContext : IBindingsContext
+    internal class OpenTKBindingsContext : IBindingsContext
     {
         private readonly Func<string, IntPtr> _getProcAddress;
 
-        public OpenToolkitBindingsContext(Func<string, IntPtr> getProcAddress)
+        public OpenTKBindingsContext(Func<string, IntPtr> getProcAddress)
         {
             _getProcAddress = getProcAddress;
         }
