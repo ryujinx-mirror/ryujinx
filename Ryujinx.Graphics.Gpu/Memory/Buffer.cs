@@ -470,19 +470,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 return false;
             }
 
-            if (address < Address)
+            ulong maxAddress = Math.Max(address, Address);
+            ulong minEndAddress = Math.Min(address + size, Address + Size);
+
+            if (maxAddress >= minEndAddress)
             {
-                address = Address;
+                // Access doesn't overlap.
+                return false;
             }
 
-            ulong maxSize = Address + Size - address;
-
-            if (size > maxSize)
-            {
-                size = maxSize;
-            }
-
-            ForceDirty(address, size);
+            ForceDirty(maxAddress, minEndAddress - maxAddress);
 
             return true;
         }

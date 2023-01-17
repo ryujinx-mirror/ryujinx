@@ -22,6 +22,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private int _referenceCount;
 
         /// <summary>
+        /// Indicates whenever the memory manager supports 4KB pages.
+        /// </summary>
+        public bool Supports4KBPages => _cpuMemory.Supports4KBPages;
+
+        /// <summary>
         /// In-memory shader cache.
         /// </summary>
         public ShaderCache ShaderCache { get; }

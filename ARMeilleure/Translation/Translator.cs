@@ -81,7 +81,7 @@ namespace ARMeilleure.Translation
 
             if (memory.Type.IsHostMapped())
             {
-                NativeSignalHandler.InitializeSignalHandler();
+                NativeSignalHandler.InitializeSignalHandler(allocator.GetPageSize());
             }
         }
 

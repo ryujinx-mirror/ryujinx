@@ -139,8 +139,6 @@ namespace Ryujinx.Memory.Tracking
         /// <returns>The memory tracking handle</returns>
         public MultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
         {
-            (address, size) = PageAlign(address, size);
-
             return new MultiRegionHandle(this, address, size, handles, granularity);
         }
 
@@ -166,11 +164,11 @@ namespace Ryujinx.Memory.Tracking
         /// <returns>The memory tracking handle</returns>
         public RegionHandle BeginTracking(ulong address, ulong size)
         {
-            (address, size) = PageAlign(address, size);
+            var (paAddress, paSize) = PageAlign(address, size);
 
             lock (TrackingLock)
             {
-                RegionHandle handle = new RegionHandle(this, address, size, _memoryManager.IsRangeMapped(address, size));
+                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, _memoryManager.IsRangeMapped(address, size));
 
                 return handle;
             }
@@ -186,11 +184,11 @@ namespace Ryujinx.Memory.Tracking
         /// <returns>The memory tracking handle</returns>
         internal RegionHandle BeginTrackingBitmap(ulong address, ulong size, ConcurrentBitmap bitmap, int bit)
         {
-            (address, size) = PageAlign(address, size);
+            var (paAddress, paSize) = PageAlign(address, size);
 
             lock (TrackingLock)
             {
-                RegionHandle handle = new RegionHandle(this, address, size, bitmap, bit, _memoryManager.IsRangeMapped(address, size));
+                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, bitmap, bit, _memoryManager.IsRangeMapped(address, size));
 
                 return handle;
             }

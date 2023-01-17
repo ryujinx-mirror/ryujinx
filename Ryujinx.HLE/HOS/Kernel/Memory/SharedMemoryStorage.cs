@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 ulong address = pageNode.Address - DramMemoryMap.DramBase;
                 ulong size = pageNode.PagesCount * KPageTableBase.PageSize;
-                context.Memory.Commit(address, size);
+                context.CommitMemory(address, size);
             }
         }
 

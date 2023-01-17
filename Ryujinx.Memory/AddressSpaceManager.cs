@@ -13,9 +13,12 @@ namespace Ryujinx.Memory
     /// </summary>
     public sealed class AddressSpaceManager : IVirtualMemoryManager, IWritableBlock
     {
-        public const int PageBits = PageTable<ulong>.PageBits;
-        public const int PageSize = PageTable<ulong>.PageSize;
-        public const int PageMask = PageTable<ulong>.PageMask;
+        public const int PageBits = PageTable<nuint>.PageBits;
+        public const int PageSize = PageTable<nuint>.PageSize;
+        public const int PageMask = PageTable<nuint>.PageMask;
+
+        /// <inheritdoc/>
+        public bool Supports4KBPages => true;
 
         /// <summary>
         /// Address space width in bits.
@@ -25,7 +28,7 @@ namespace Ryujinx.Memory
         private readonly ulong _addressSpaceSize;
 
         private readonly MemoryBlock _backingMemory;
-        private readonly PageTable<ulong> _pageTable;
+        private readonly PageTable<nuint> _pageTable;
 
         /// <summary>
         /// Creates a new instance of the memory manager.
@@ -46,20 +49,35 @@ namespace Ryujinx.Memory
             AddressSpaceBits = asBits;
             _addressSpaceSize = asSize;
             _backingMemory = backingMemory;
-            _pageTable = new PageTable<ulong>();
+            _pageTable = new PageTable<nuint>();
         }
 
         /// <inheritdoc/>
-        public void Map(ulong va, ulong pa, ulong size)
+        public void Map(ulong va, ulong pa, ulong size, MemoryMapFlags flags)
         {
             AssertValidAddressAndSize(va, size);
 
             while (size != 0)
             {
-                _pageTable.Map(va, pa);
+                _pageTable.Map(va, (nuint)(ulong)_backingMemory.GetPointer(pa, PageSize));
 
                 va += PageSize;
                 pa += PageSize;
+                size -= PageSize;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void MapForeign(ulong va, nuint hostPointer, ulong size)
+        {
+            AssertValidAddressAndSize(va, size);
+
+            while (size != 0)
+            {
+                _pageTable.Map(va, hostPointer);
+
+                va += PageSize;
+                hostPointer += PageSize;
                 size -= PageSize;
             }
         }
@@ -108,7 +126,7 @@ namespace Ryujinx.Memory
 
             if (IsContiguousAndMapped(va, data.Length))
             {
-                data.CopyTo(_backingMemory.GetSpan(GetPhysicalAddressInternal(va), data.Length));
+                data.CopyTo(GetHostSpanContiguous(va, data.Length));
             }
             else
             {
@@ -116,22 +134,18 @@ namespace Ryujinx.Memory
 
                 if ((va & PageMask) != 0)
                 {
-                    ulong pa = GetPhysicalAddressInternal(va);
-
                     size = Math.Min(data.Length, PageSize - (int)(va & PageMask));
 
-                    data.Slice(0, size).CopyTo(_backingMemory.GetSpan(pa, size));
+                    data.Slice(0, size).CopyTo(GetHostSpanContiguous(va, size));
 
                     offset += size;
                 }
 
                 for (; offset < data.Length; offset += size)
                 {
-                    ulong pa = GetPhysicalAddressInternal(va + (ulong)offset);
-
                     size = Math.Min(data.Length - offset, PageSize);
 
-                    data.Slice(offset, size).CopyTo(_backingMemory.GetSpan(pa, size));
+                    data.Slice(offset, size).CopyTo(GetHostSpanContiguous(va + (ulong)offset, size));
                 }
             }
         }
@@ -154,7 +168,7 @@ namespace Ryujinx.Memory
 
             if (IsContiguousAndMapped(va, size))
             {
-                return _backingMemory.GetSpan(GetPhysicalAddressInternal(va), size);
+                return GetHostSpanContiguous(va, size);
             }
             else
             {
@@ -176,7 +190,7 @@ namespace Ryujinx.Memory
 
             if (IsContiguousAndMapped(va, size))
             {
-                return new WritableRegion(null, va, _backingMemory.GetMemory(GetPhysicalAddressInternal(va), size));
+                return new WritableRegion(null, va, new NativeMemoryManager<byte>((byte*)GetHostAddress(va), size).Memory);
             }
             else
             {
@@ -189,14 +203,14 @@ namespace Ryujinx.Memory
         }
 
         /// <inheritdoc/>
-        public ref T GetRef<T>(ulong va) where T : unmanaged
+        public unsafe ref T GetRef<T>(ulong va) where T : unmanaged
         {
             if (!IsContiguous(va, Unsafe.SizeOf<T>()))
             {
                 ThrowMemoryNotContiguous();
             }
 
-            return ref _backingMemory.GetRef<T>(GetPhysicalAddressInternal(va));
+            return ref *(T*)GetHostAddress(va);
         }
 
         /// <inheritdoc/>
@@ -210,7 +224,7 @@ namespace Ryujinx.Memory
             return (int)(vaSpan / PageSize);
         }
 
-        private static void ThrowMemoryNotContiguous() => throw new MemoryNotContiguousException();
+        private void ThrowMemoryNotContiguous() => throw new MemoryNotContiguousException();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsContiguousAndMapped(ulong va, int size) => IsContiguous(va, size) && IsMapped(va);
@@ -232,7 +246,7 @@ namespace Ryujinx.Memory
                     return false;
                 }
 
-                if (GetPhysicalAddressInternal(va) + PageSize != GetPhysicalAddressInternal(va + PageSize))
+                if (GetHostAddress(va) + PageSize != GetHostAddress(va + PageSize))
                 {
                     return false;
                 }
@@ -244,6 +258,17 @@ namespace Ryujinx.Memory
         }
 
         /// <inheritdoc/>
+        public IEnumerable<HostMemoryRange> GetHostRegions(ulong va, ulong size)
+        {
+            if (size == 0)
+            {
+                return Enumerable.Empty<HostMemoryRange>();
+            }
+
+            return GetHostRegionsImpl(va, size);
+        }
+
+        /// <inheritdoc/>
         public IEnumerable<MemoryRange> GetPhysicalRegions(ulong va, ulong size)
         {
             if (size == 0)
@@ -251,6 +276,39 @@ namespace Ryujinx.Memory
                 return Enumerable.Empty<MemoryRange>();
             }
 
+            var hostRegions = GetHostRegionsImpl(va, size);
+            if (hostRegions == null)
+            {
+                return null;
+            }
+
+            var regions = new MemoryRange[hostRegions.Count];
+
+            ulong backingStart = (ulong)_backingMemory.Pointer;
+            ulong backingEnd = backingStart + _backingMemory.Size;
+
+            int count = 0;
+
+            for (int i = 0; i < regions.Length; i++)
+            {
+                var hostRegion = hostRegions[i];
+
+                if ((ulong)hostRegion.Address >= backingStart && (ulong)hostRegion.Address < backingEnd)
+                {
+                    regions[count++] = new MemoryRange((ulong)hostRegion.Address - backingStart, hostRegion.Size);
+                }
+            }
+
+            if (count != regions.Length)
+            {
+                return new ArraySegment<MemoryRange>(regions, 0, count);
+            }
+
+            return regions;
+        }
+
+        private List<HostMemoryRange> GetHostRegionsImpl(ulong va, ulong size)
+        {
             if (!ValidateAddress(va) || !ValidateAddressAndSize(va, size))
             {
                 return null;
@@ -258,9 +316,9 @@ namespace Ryujinx.Memory
 
             int pages = GetPagesCount(va, (uint)size, out va);
 
-            var regions = new List<MemoryRange>();
+            var regions = new List<HostMemoryRange>();
 
-            ulong regionStart = GetPhysicalAddressInternal(va);
+            nuint regionStart = GetHostAddress(va);
             ulong regionSize = PageSize;
 
             for (int page = 0; page < pages - 1; page++)
@@ -270,12 +328,12 @@ namespace Ryujinx.Memory
                     return null;
                 }
 
-                ulong newPa = GetPhysicalAddressInternal(va + PageSize);
+                nuint newHostAddress = GetHostAddress(va + PageSize);
 
-                if (GetPhysicalAddressInternal(va) + PageSize != newPa)
+                if (GetHostAddress(va) + PageSize != newHostAddress)
                 {
-                    regions.Add(new MemoryRange(regionStart, regionSize));
-                    regionStart = newPa;
+                    regions.Add(new HostMemoryRange(regionStart, regionSize));
+                    regionStart = newHostAddress;
                     regionSize = 0;
                 }
 
@@ -283,7 +341,7 @@ namespace Ryujinx.Memory
                 regionSize += PageSize;
             }
 
-            regions.Add(new MemoryRange(regionStart, regionSize));
+            regions.Add(new HostMemoryRange(regionStart, regionSize));
 
             return regions;
         }
@@ -301,22 +359,18 @@ namespace Ryujinx.Memory
 
             if ((va & PageMask) != 0)
             {
-                ulong pa = GetPhysicalAddressInternal(va);
-
                 size = Math.Min(data.Length, PageSize - (int)(va & PageMask));
 
-                _backingMemory.GetSpan(pa, size).CopyTo(data.Slice(0, size));
+                GetHostSpanContiguous(va, size).CopyTo(data.Slice(0, size));
 
                 offset += size;
             }
 
             for (; offset < data.Length; offset += size)
             {
-                ulong pa = GetPhysicalAddressInternal(va + (ulong)offset);
-
                 size = Math.Min(data.Length - offset, PageSize);
 
-                _backingMemory.GetSpan(pa, size).CopyTo(data.Slice(offset, size));
+                GetHostSpanContiguous(va + (ulong)offset, size).CopyTo(data.Slice(offset, size));
             }
         }
 
@@ -391,22 +445,23 @@ namespace Ryujinx.Memory
             }
         }
 
-        private ulong GetPhysicalAddressInternal(ulong va)
+        private unsafe Span<byte> GetHostSpanContiguous(ulong va, int size)
         {
-            return _pageTable.Read(va) + (va & PageMask);
+            return new Span<byte>((void*)GetHostAddress(va), size);
         }
 
-        /// <summary>
-        /// Reprotect a region of virtual memory for tracking. Sets software protection bits.
-        /// </summary>
-        /// <param name="va">Virtual address base</param>
-        /// <param name="size">Size of the region to protect</param>
-        /// <param name="protection">Memory protection to set</param>
+        private nuint GetHostAddress(ulong va)
+        {
+            return _pageTable.Read(va) + (nuint)(va & PageMask);
+        }
+
+        /// <inheritdoc/>
         public void TrackingReprotect(ulong va, ulong size, MemoryPermission protection)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
         {
             // Only the ARM Memory Manager has tracking for now.

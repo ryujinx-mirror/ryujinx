@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 KernelConstants.UserSlabHeapItemSize,
                 KernelConstants.UserSlabHeapSize);
 
-            memory.Commit(KernelConstants.UserSlabHeapBase - DramMemoryMap.DramBase, KernelConstants.UserSlabHeapSize);
+            CommitMemory(KernelConstants.UserSlabHeapBase - DramMemoryMap.DramBase, KernelConstants.UserSlabHeapSize);
 
             CriticalSection = new KCriticalSection(this);
             Schedulers = new KScheduler[KScheduler.CpuCoresCount];
@@ -117,6 +117,17 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
 
             new Thread(PreemptionThreadStart) { Name = "HLE.PreemptionThread" }.Start();
+        }
+
+        public void CommitMemory(ulong address, ulong size)
+        {
+            ulong alignment = MemoryBlock.GetPageSize();
+            ulong endAddress = address + size;
+
+            address &= ~(alignment - 1);
+            endAddress = (endAddress + (alignment - 1)) & ~(alignment - 1);
+
+            Memory.Commit(address, endAddress - address);
         }
 
         public ulong NewThreadUid()

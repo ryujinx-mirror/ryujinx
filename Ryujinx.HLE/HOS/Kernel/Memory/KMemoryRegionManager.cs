@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 if (address != 0)
                 {
                     IncrementPagesReferenceCount(address, pagesCount);
-                    context.Memory.Commit(address - DramMemoryMap.DramBase, pagesCount * KPageTableBase.PageSize);
+                    context.CommitMemory(address - DramMemoryMap.DramBase, pagesCount * KPageTableBase.PageSize);
                 }
 
                 return address;

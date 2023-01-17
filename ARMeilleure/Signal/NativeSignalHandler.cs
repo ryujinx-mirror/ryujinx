@@ -71,8 +71,8 @@ namespace ARMeilleure.Signal
 
         private const uint EXCEPTION_ACCESS_VIOLATION = 0xc0000005;
 
-        private static ulong _pageSize = GetPageSize();
-        private static ulong _pageMask = _pageSize - 1;
+        private static ulong _pageSize;
+        private static ulong _pageMask;
 
         private static IntPtr _handlerConfig;
         private static IntPtr _signalHandlerPtr;
@@ -80,19 +80,6 @@ namespace ARMeilleure.Signal
 
         private static readonly object _lock = new object();
         private static bool _initialized;
-
-        private static ulong GetPageSize()
-        {
-            // TODO: This needs to be based on the current memory manager configuration.
-            if (OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-            {
-                return 1UL << 14;
-            }
-            else
-            {
-                return 1UL << 12;
-            }
-        }
 
         static NativeSignalHandler()
         {
@@ -102,18 +89,21 @@ namespace ARMeilleure.Signal
             config = new SignalHandlerConfig();
         }
 
-        public static void InitializeJitCache(IJitMemoryAllocator allocator)
+        public static void Initialize(IJitMemoryAllocator allocator)
         {
             JitCache.Initialize(allocator);
         }
 
-        public static void InitializeSignalHandler(Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
+        public static void InitializeSignalHandler(ulong pageSize, Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
         {
             if (_initialized) return;
 
             lock (_lock)
             {
                 if (_initialized) return;
+
+                _pageSize = pageSize;
+                _pageMask = pageSize - 1;
 
                 ref SignalHandlerConfig config = ref GetConfigRef();
 

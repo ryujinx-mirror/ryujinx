@@ -48,7 +48,7 @@ namespace Ryujinx.Tests.Cpu
             _ram = new MemoryBlock(Size * 2);
             _memory = new MemoryManager(_ram, 1ul << 16);
             _memory.IncrementReferenceCount();
-            _memory.Map(CodeBaseAddress, 0, Size * 2);
+            _memory.Map(CodeBaseAddress, 0, Size * 2, MemoryMapFlags.Private);
 
             _context = CpuContext.CreateExecutionContext();
             _context.IsAarch32 = true;
