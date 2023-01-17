@@ -91,7 +91,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A reference to the descriptor</returns>
         public ref readonly T2 GetDescriptorRef(int id)
         {
-            return ref MemoryMarshal.Cast<byte, T2>(PhysicalMemory.GetSpan(Address + (ulong)id * DescriptorSize, DescriptorSize))[0];
+            return ref GetDescriptorRefAddress(Address + (ulong)id * DescriptorSize);
+        }
+
+        /// <summary>
+        /// Gets a reference to the descriptor for a given address.
+        /// </summary>
+        /// <param name="address">Address of the descriptor</param>
+        /// <returns>A reference to the descriptor</returns>
+        public ref readonly T2 GetDescriptorRefAddress(ulong address)
+        {
+            return ref MemoryMarshal.Cast<byte, T2>(PhysicalMemory.GetSpan(address, DescriptorSize))[0];
         }
 
         /// <summary>

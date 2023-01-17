@@ -204,6 +204,8 @@ namespace Ryujinx.Graphics.Gpu
 
                 Texture texture = pt.Cache.FindOrCreateTexture(null, TextureSearchFlags.WithUpscale, pt.Info, 0, null, pt.Range);
 
+                pt.Cache.Tick();
+
                 texture.SynchronizeMemory();
 
                 ImageCrop crop = pt.Crop;

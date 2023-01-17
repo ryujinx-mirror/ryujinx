@@ -5,6 +5,28 @@ using System.Collections.Generic;
 namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
+    /// An entry on the short duration texture cache.
+    /// </summary>
+    class ShortTextureCacheEntry
+    {
+        public readonly TextureDescriptor Descriptor;
+        public readonly int InvalidatedSequence;
+        public readonly Texture Texture;
+
+        /// <summary>
+        /// Create a new entry on the short duration texture cache.
+        /// </summary>
+        /// <param name="descriptor">Last descriptor that referenced the texture</param>
+        /// <param name="texture">The texture</param>
+        public ShortTextureCacheEntry(TextureDescriptor descriptor, Texture texture)
+        {
+            Descriptor = descriptor;
+            InvalidatedSequence = texture.InvalidatedSequence;
+            Texture = texture;
+        }
+    }
+
+    /// <summary>
     /// A texture cache that automatically removes older textures that are not used for some time.
     /// The cache works with a rotated list with a fixed size. When new textures are added, the
     /// old ones at the bottom of the list are deleted.
@@ -16,6 +38,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         private readonly LinkedList<Texture> _textures;
         private readonly ConcurrentQueue<Texture> _deferredRemovals;
 
+        private HashSet<ShortTextureCacheEntry> _shortCacheBuilder;
+        private HashSet<ShortTextureCacheEntry> _shortCache;
+
+        private Dictionary<TextureDescriptor, ShortTextureCacheEntry> _shortCacheLookup;
+
         /// <summary>
         /// Creates a new instance of the automatic deletion cache.
         /// </summary>
@@ -23,6 +50,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             _textures = new LinkedList<Texture>();
             _deferredRemovals = new ConcurrentQueue<Texture>();
+
+            _shortCacheBuilder = new HashSet<ShortTextureCacheEntry>();
+            _shortCache = new HashSet<ShortTextureCacheEntry>();
+
+            _shortCacheLookup = new Dictionary<TextureDescriptor, ShortTextureCacheEntry>();
         }
 
         /// <summary>
@@ -128,6 +160,85 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void RemoveDeferred(Texture texture)
         {
             _deferredRemovals.Enqueue(texture);
+        }
+
+        /// <summary>
+        /// Attempt to find a texture on the short duration cache.
+        /// </summary>
+        /// <param name="descriptor">The texture descriptor</param>
+        /// <returns>The texture if found, null otherwise</returns>
+        public Texture FindShortCache(in TextureDescriptor descriptor)
+        {
+            if (_shortCacheLookup.Count > 0 && _shortCacheLookup.TryGetValue(descriptor, out var entry))
+            {
+                if (entry.InvalidatedSequence == entry.Texture.InvalidatedSequence)
+                {
+                    return entry.Texture;
+                }
+                else
+                {
+                    _shortCacheLookup.Remove(descriptor);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Removes a texture from the short duration cache.
+        /// </summary>
+        /// <param name="texture">Texture to remove from the short cache</param>
+        public void RemoveShortCache(Texture texture)
+        {
+            bool removed = _shortCache.Remove(texture.ShortCacheEntry);
+            removed |= _shortCacheBuilder.Remove(texture.ShortCacheEntry);
+
+            if (removed)
+            {
+                texture.DecrementReferenceCount();
+
+                _shortCacheLookup.Remove(texture.ShortCacheEntry.Descriptor);
+                texture.ShortCacheEntry = null;
+            }
+        }
+
+        /// <summary>
+        /// Adds a texture to the short duration cache.
+        /// It starts in the builder set, and it is moved into the deletion set on next process.
+        /// </summary>
+        /// <param name="texture">Texture to add to the short cache</param>
+        /// <param name="descriptor">Last used texture descriptor</param>
+        public void AddShortCache(Texture texture, ref TextureDescriptor descriptor)
+        {
+            var entry = new ShortTextureCacheEntry(descriptor, texture);
+
+            _shortCacheBuilder.Add(entry);
+            _shortCacheLookup.Add(entry.Descriptor, entry);
+
+            texture.ShortCacheEntry = entry;
+
+            texture.IncrementReferenceCount();
+        }
+
+        /// <summary>
+        /// Delete textures from the short duration cache.
+        /// Moves the builder set to be deleted on next process.
+        /// </summary>
+        public void ProcessShortCache()
+        {
+            HashSet<ShortTextureCacheEntry> toRemove = _shortCache;
+
+            foreach (var entry in toRemove)
+            {
+                entry.Texture.DecrementReferenceCount();
+
+                _shortCacheLookup.Remove(entry.Descriptor);
+                entry.Texture.ShortCacheEntry = null;
+            }
+
+            toRemove.Clear();
+            _shortCache = _shortCacheBuilder;
+            _shortCacheBuilder = toRemove;
         }
 
         public IEnumerator<Texture> GetEnumerator()
