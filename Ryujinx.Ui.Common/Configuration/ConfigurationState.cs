@@ -617,7 +617,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.ResScaleCustom.Value             = 1.0f;
             Graphics.MaxAnisotropy.Value              = -1.0f;
             Graphics.AspectRatio.Value                = AspectRatio.Fixed16x9;
-            Graphics.GraphicsBackend.Value            = GraphicsBackend.OpenGl;
+            Graphics.GraphicsBackend.Value            = OperatingSystem.IsMacOS() ? GraphicsBackend.Vulkan : GraphicsBackend.OpenGl;
             Graphics.PreferredGpu.Value               = "";
             Graphics.ShadersDumpPath.Value            = "";
             Logger.EnableDebug.Value                  = false;
