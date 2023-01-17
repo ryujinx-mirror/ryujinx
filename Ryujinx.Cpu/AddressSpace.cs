@@ -462,7 +462,7 @@ namespace Ryujinx.Cpu
 
         public void Dispose()
         {
-            _privateMemoryAllocator.Dispose();
+            _privateMemoryAllocator?.Dispose();
             Base.Dispose();
             Mirror.Dispose();
         }
