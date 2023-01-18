@@ -16,6 +16,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS;
 using System;
 using System.Buffers.Text;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -35,7 +36,8 @@ namespace Ryujinx.HLE.FileSystem
         public EmulatedGameCard GameCard  { get; private set; }
         public EmulatedSdCard   SdCard    { get; private set; }
         public ModLoader        ModLoader { get; private set; }
-        public Stream           RomFs     { get; private set; }
+
+        private readonly ConcurrentDictionary<ulong, Stream> _romFsByPid;
 
         private static bool _isInitialized = false;
 
@@ -55,17 +57,34 @@ namespace Ryujinx.HLE.FileSystem
         {
             ReloadKeySet();
             ModLoader = new ModLoader(); // Should only be created once
+            _romFsByPid = new ConcurrentDictionary<ulong, Stream>();
         }
 
-        public void LoadRomFs(string fileName)
+        public void LoadRomFs(ulong pid, string fileName)
         {
-            RomFs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+            var romfsStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+
+            _romFsByPid.AddOrUpdate(pid, romfsStream, (pid, oldStream) =>
+            {
+                oldStream.Close();
+
+                return romfsStream;
+            });
         }
 
-        public void SetRomFs(Stream romfsStream)
+        public void SetRomFs(ulong pid, Stream romfsStream)
         {
-            RomFs?.Close();
-            RomFs = romfsStream;
+            _romFsByPid.AddOrUpdate(pid, romfsStream, (pid, oldStream) =>
+            {
+                oldStream.Close();
+
+                return romfsStream;
+            });
+        }
+
+        public Stream GetRomFs(ulong pid)
+        {
+            return _romFsByPid[pid];
         }
 
         public string GetFullPath(string basePath, string fileName)
@@ -583,7 +602,12 @@ namespace Ryujinx.HLE.FileSystem
         {
             if (disposing)
             {
-                RomFs?.Dispose();
+                foreach (var stream in _romFsByPid.Values)
+                {
+                    stream.Close();
+                }
+
+                _romFsByPid.Clear();
             }
         }
     }

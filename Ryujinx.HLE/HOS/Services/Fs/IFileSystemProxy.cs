@@ -27,6 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
     class IFileSystemProxy : DisposableIpcService
     {
         private SharedRef<LibHac.FsSrv.Sf.IFileSystemProxy> _baseFileSystemProxy;
+        private ulong _pid;
 
         public IFileSystemProxy(ServiceCtx context) : base(context.Device.System.FsServer)
         {
@@ -38,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // SetCurrentProcess(u64, pid)
         public ResultCode SetCurrentProcess(ServiceCtx context)
         {
+            _pid = context.Request.HandleDesc.PId;
+
             return ResultCode.Success;
         }
 
@@ -702,7 +705,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
-            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            var storage = context.Device.FileSystem.GetRomFs(_pid).AsStorage(true);
             using var sharedStorage = new SharedRef<LibHac.Fs.IStorage>(storage);
             using var sfStorage = new SharedRef<IStorage>(new StorageInterfaceAdapter(ref sharedStorage.Ref()));
 
@@ -791,7 +794,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
-            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            var storage = context.Device.FileSystem.GetRomFs(_pid).AsStorage(true);
             using var sharedStorage = new SharedRef<LibHac.Fs.IStorage>(storage);
             using var sfStorage = new SharedRef<IStorage>(new StorageInterfaceAdapter(ref sharedStorage.Ref()));
 
@@ -811,7 +814,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                 throw new NotImplementedException($"Accessing storage from other programs is not supported (program index = {programIndex}).");
             }
 
-            var storage = context.Device.FileSystem.RomFs.AsStorage(true);
+            var storage = context.Device.FileSystem.GetRomFs(_pid).AsStorage(true);
             using var sharedStorage = new SharedRef<LibHac.Fs.IStorage>(storage);
             using var sfStorage = new SharedRef<IStorage>(new StorageInterfaceAdapter(ref sharedStorage.Ref()));
 

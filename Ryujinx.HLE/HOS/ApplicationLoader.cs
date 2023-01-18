@@ -76,11 +76,6 @@ namespace Ryujinx.HLE.HOS
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
         {
-            if (romFsFile != null)
-            {
-                _device.Configuration.VirtualFileSystem.LoadRomFs(romFsFile);
-            }
-
             LocalFileSystem codeFs = new LocalFileSystem(exeFsDir);
 
             MetaLoader metaData = ReadNpdm(codeFs);
@@ -95,7 +90,12 @@ namespace Ryujinx.HLE.HOS
                 EnsureSaveData(new ApplicationId(TitleId));
             }
 
-            LoadExeFs(codeFs, string.Empty, metaData);
+            ulong pid = LoadExeFs(codeFs, string.Empty, metaData);
+
+            if (romFsFile != null)
+            {
+                _device.Configuration.VirtualFileSystem.LoadRomFs(pid, romFsFile);
+            }
         }
 
         public static (Nca main, Nca patch, Nca control) GetGameData(VirtualFileSystem fileSystem, PartitionFileSystem pfs, int programIndex)
@@ -491,6 +491,8 @@ namespace Ryujinx.HLE.HOS
 
             _displayVersion = displayVersion;
 
+            ulong pid = LoadExeFs(codeFs, displayVersion, metaData);
+
             if (dataStorage == null)
             {
                 Logger.Warning?.Print(LogClass.Loader, "No RomFS found in NCA");
@@ -499,7 +501,7 @@ namespace Ryujinx.HLE.HOS
             {
                 IStorage newStorage = _device.Configuration.VirtualFileSystem.ModLoader.ApplyRomFsMods(TitleId, dataStorage);
 
-                _device.Configuration.VirtualFileSystem.SetRomFs(newStorage.AsStream(FileAccess.Read));
+                _device.Configuration.VirtualFileSystem.SetRomFs(pid, newStorage.AsStream(FileAccess.Read));
             }
 
             // Don't create save data for system programs.
@@ -509,8 +511,6 @@ namespace Ryujinx.HLE.HOS
                 // We'll know if this changes in the future because stuff will get errors when trying to mount the correct save.
                 EnsureSaveData(new ApplicationId(TitleId & ~0xFul));
             }
-
-            LoadExeFs(codeFs, displayVersion, metaData);
 
             Logger.Info?.Print(LogClass.Loader, $"Application Loaded: {TitleName} v{DisplayVersion} [{TitleIdText}] [{(TitleIs64Bit ? "64-bit" : "32-bit")}]");
         }
@@ -579,7 +579,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        private void LoadExeFs(IFileSystem codeFs, string displayVersion, MetaLoader metaData = null, bool isHomebrew = false)
+        private ulong LoadExeFs(IFileSystem codeFs, string displayVersion, MetaLoader metaData = null, bool isHomebrew = false)
         {
             if (_device.Configuration.VirtualFileSystem.ModLoader.ReplaceExefsPartition(TitleId, ref codeFs))
             {
@@ -654,6 +654,8 @@ namespace Ryujinx.HLE.HOS
             DiskCacheLoadState = result.DiskCacheLoadState;
 
             _device.Configuration.VirtualFileSystem.ModLoader.LoadCheats(TitleId, result.TamperInfo, _device.TamperMachine);
+
+            return result.ProcessId;
         }
 
         public void LoadProgram(string filePath)
@@ -665,6 +667,7 @@ namespace Ryujinx.HLE.HOS
             bool isNro = Path.GetExtension(filePath).ToLower() == ".nro";
 
             IExecutable executable;
+            Stream romfsStream = null;
 
             if (isNro)
             {
@@ -697,7 +700,7 @@ namespace Ryujinx.HLE.HOS
 
                             if (romfsSize != 0)
                             {
-                                _device.Configuration.VirtualFileSystem.SetRomFs(new HomebrewRomFsStream(input, obj.FileSize + (long)romfsOffset));
+                                romfsStream = new HomebrewRomFsStream(input, obj.FileSize + (long)romfsOffset);
                             }
 
                             if (nacpSize != 0)
@@ -757,6 +760,11 @@ namespace Ryujinx.HLE.HOS
             _device.Gpu.HostInitalized.Set();
 
             ProgramLoadResult result = ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, programInfo, executables: executable);
+
+            if (romfsStream != null)
+            {
+                _device.Configuration.VirtualFileSystem.SetRomFs(result.ProcessId, romfsStream);
+            }
 
             DiskCacheLoadState = result.DiskCacheLoadState;
 

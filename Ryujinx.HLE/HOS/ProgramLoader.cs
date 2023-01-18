@@ -41,17 +41,19 @@ namespace Ryujinx.HLE.HOS
 
     struct ProgramLoadResult
     {
-        public static ProgramLoadResult Failed => new ProgramLoadResult(false, null, null);
+        public static ProgramLoadResult Failed => new ProgramLoadResult(false, null, null, 0);
 
         public readonly bool Success;
         public readonly ProcessTamperInfo TamperInfo;
         public readonly IDiskCacheLoadState DiskCacheLoadState;
+        public readonly ulong ProcessId;
 
-        public ProgramLoadResult(bool success, ProcessTamperInfo tamperInfo, IDiskCacheLoadState diskCacheLoadState)
+        public ProgramLoadResult(bool success, ProcessTamperInfo tamperInfo, IDiskCacheLoadState diskCacheLoadState, ulong pid)
         {
             Success = success;
             TamperInfo = tamperInfo;
             DiskCacheLoadState = diskCacheLoadState;
+            ProcessId = pid;
         }
     }
 
@@ -366,7 +368,7 @@ namespace Ryujinx.HLE.HOS
                 process.MemoryManager.AliasRegionStart,
                 process.MemoryManager.CodeRegionStart);
 
-            return new ProgramLoadResult(true, tamperInfo, processContextFactory.DiskCacheLoadState);
+            return new ProgramLoadResult(true, tamperInfo, processContextFactory.DiskCacheLoadState, process.Pid);
         }
 
         private static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)
