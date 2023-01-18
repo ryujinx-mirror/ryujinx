@@ -4,6 +4,7 @@ using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager;
 using Ryujinx.HLE.HOS.Services.Sockets.Nsd.Types;
+using System;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
@@ -370,7 +371,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
                 return result;
             }
 
-            byte environmentType = identifier.Substring(0, 2) switch
+            byte environmentType = identifier.AsSpan(0, 2) switch
             {
                 "lp" => (byte)ApplicationServerEnvironmentType.Lp,
                 "sd" => (byte)ApplicationServerEnvironmentType.Sd,

@@ -1,5 +1,6 @@
 ﻿using LibHac.Account;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -35,8 +36,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 throw new ArgumentException("Invalid Hex value!", nameof(hex));
             }
 
-            Low  = Convert.ToInt64(hex.Substring(16), 16);
-            High = Convert.ToInt64(hex.Substring(0, 16), 16);
+            Low  = long.Parse(hex.AsSpan(16), NumberStyles.HexNumber);
+            High = long.Parse(hex.AsSpan(0, 16), NumberStyles.HexNumber);
         }
 
         public void Write(BinaryWriter binaryWriter)

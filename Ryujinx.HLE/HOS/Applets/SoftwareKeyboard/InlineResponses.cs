@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             for (int maxStr = text.Length; maxStr >= 0; maxStr--)
             {
                 // This loop will probably will run only once.
-                bytes = encoding.GetBytes(text.Substring(0, maxStr));
+                bytes = encoding.GetBytes(text, 0, maxStr);
                 if (bytes.Length <= maxSize)
                 {
                     break;

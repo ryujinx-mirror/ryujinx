@@ -246,7 +246,7 @@ namespace Ryujinx.Ui.Windows
 
             if (str.Length > MaxSize)
             {
-                return str.Substring(0, MaxSize - ShrinkChars.Length) + ShrinkChars;
+                return $"{str.AsSpan(0, MaxSize - ShrinkChars.Length)}{ShrinkChars}";
             }
 
             return str;

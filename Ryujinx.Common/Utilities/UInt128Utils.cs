@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace Ryujinx.Common.Utilities
 {
@@ -6,7 +7,7 @@ namespace Ryujinx.Common.Utilities
     {
         public static UInt128 FromHex(string hex)
         {
-            return new UInt128((ulong)Convert.ToInt64(hex.Substring(0, 16), 16), (ulong)Convert.ToInt64(hex.Substring(16), 16));
+            return new UInt128(ulong.Parse(hex.AsSpan(0, 16), NumberStyles.HexNumber), ulong.Parse(hex.AsSpan(16), NumberStyles.HexNumber));
         }
 
         public static UInt128 CreateRandom()

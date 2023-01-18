@@ -125,8 +125,8 @@ namespace ARMeilleure.Translation.PTC
         {
             _lastHash = default;
 
-            string fileNameActual = string.Concat(_ptc.CachePathActual, ".info");
-            string fileNameBackup = string.Concat(_ptc.CachePathBackup, ".info");
+            string fileNameActual = $"{_ptc.CachePathActual}.info";
+            string fileNameBackup = $"{_ptc.CachePathBackup}.info";
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
             FileInfo fileInfoBackup = new FileInfo(fileNameBackup);
@@ -246,8 +246,8 @@ namespace ARMeilleure.Translation.PTC
         {
             _waitEvent.Reset();
 
-            string fileNameActual = string.Concat(_ptc.CachePathActual, ".info");
-            string fileNameBackup = string.Concat(_ptc.CachePathBackup, ".info");
+            string fileNameActual = $"{_ptc.CachePathActual}.info";
+            string fileNameBackup = $"{_ptc.CachePathBackup}.info";
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
 

@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
+using System.Text;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
@@ -44,11 +45,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
-            string texCall;
+            var texCallBuilder = new StringBuilder();
 
             if (texOp.Inst == Instruction.ImageAtomic)
             {
-                texCall = (texOp.Flags & TextureFlags.AtomicMask) switch {
+                texCallBuilder.Append((texOp.Flags & TextureFlags.AtomicMask) switch {
                     TextureFlags.Add        => "imageAtomicAdd",
                     TextureFlags.Minimum    => "imageAtomicMin",
                     TextureFlags.Maximum    => "imageAtomicMax",
@@ -60,11 +61,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     TextureFlags.Swap       => "imageAtomicExchange",
                     TextureFlags.CAS        => "imageAtomicCompSwap",
                     _                       => "imageAtomicAdd",
-                };
+                });
             }
             else
             {
-                texCall = texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore";
+                texCallBuilder.Append(texOp.Inst == Instruction.ImageLoad ? "imageLoad" : "imageStore");
             }
 
             int srcIndex = isBindless ? 1 : 0;
@@ -83,7 +84,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string imageName = OperandManager.GetImageName(context.Config.Stage, texOp, indexExpr);
 
-            texCall += "(" + imageName;
+            texCallBuilder.Append('(');
+            texCallBuilder.Append(imageName);
 
             int coordsCount = texOp.Type.GetDimensions();
 
@@ -91,7 +93,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             void Append(string str)
             {
-                texCall += ", " + str;
+                texCallBuilder.Append(", ");
+                texCallBuilder.Append(str);
             }
 
             string ApplyScaling(string vector)
@@ -107,11 +110,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     if (pCount == 3 && isArray)
                     {
                         // The array index is not scaled, just x and y.
-                        vector = "ivec3(Helper_TexelFetchScale((" + vector + ").xy, " + scaleIndex + "), (" + vector + ").z)";
+                        vector = $"ivec3(Helper_TexelFetchScale(({vector}).xy, {scaleIndex}), ({vector}).z)";
                     }
                     else if (pCount == 2 && !isArray)
                     {
-                        vector = "Helper_TexelFetchScale(" + vector + ", " + scaleIndex + ")";
+                        vector = $"Helper_TexelFetchScale({vector}, {scaleIndex})";
                     }
                 }
 
@@ -127,7 +130,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     elems[index] = Src(AggregateType.S32);
                 }
 
-                Append(ApplyScaling("ivec" + pCount + "(" + string.Join(", ", elems) + ")"));
+                Append(ApplyScaling($"ivec{pCount}({string.Join(", ", elems)})"));
             }
             else
             {
@@ -164,7 +167,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     _                => string.Empty
                 };
 
-                Append(prefix + "vec4(" + string.Join(", ", cElems) + ")");
+                Append($"{prefix}vec4({string.Join(", ", cElems)})");
             }
 
             if (texOp.Inst == Instruction.ImageAtomic)
@@ -185,19 +188,26 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                 Append(value);
 
-                texCall += ")";
+                texCallBuilder.Append(')');
 
                 if (type != AggregateType.S32)
                 {
-                    texCall = "int(" + texCall + ")";
+                    texCallBuilder
+                        .Insert(0, "int(")
+                        .Append(')');
                 }
             }
             else
             {
-                texCall += ")" + (texOp.Inst == Instruction.ImageLoad ? GetMaskMultiDest(texOp.Index) : "");
+                texCallBuilder.Append(')');
+
+                if (texOp.Inst == Instruction.ImageLoad)
+                {
+                    texCallBuilder.Append(GetMaskMultiDest(texOp.Index));
+                }
             }
 
-            return texCall;
+            return texCallBuilder.ToString();
         }
 
         public static string LoadAttribute(CodeGenContext context, AstOperation operation)
@@ -827,7 +837,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static string GetMask(int index)
         {
-            return '.' + "rgba".Substring(index, 1);
+            return $".{"rgba".AsSpan(index, 1)}";
         }
 
         private static string GetMaskMultiDest(int mask)

@@ -344,7 +344,7 @@ namespace Ryujinx.Ui.Windows
 
             string imageUrl = _amiiboList.FirstOrDefault(amiibo => amiibo.Head + amiibo.Tail == _amiiboCharsComboBox.ActiveId).Image;
 
-            string usageString = "";
+            var usageStringBuilder = new StringBuilder();
 
             for (int i = 0; i < _amiiboList.Count; i++)
             {
@@ -358,19 +358,20 @@ namespace Ryujinx.Ui.Windows
                         {
                             foreach (AmiiboApiUsage usageItem in item.AmiiboUsage)
                             {
-                                usageString += Environment.NewLine + $"- {usageItem.Usage.Replace("/", Environment.NewLine + "-")}";
+                                usageStringBuilder.Append(Environment.NewLine);
+                                usageStringBuilder.Append($"- {usageItem.Usage.Replace("/", Environment.NewLine + "-")}");
 
                                 writable = usageItem.Write;
                             }
                         }
                     }
 
-                    if (usageString.Length == 0)
+                    if (usageStringBuilder.Length == 0)
                     {
-                        usageString = "Unknown.";
+                        usageStringBuilder.Append("Unknown.");
                     }
 
-                    _gameUsageLabel.Text = $"Usage{(writable ? " (Writable)" : "")} : {usageString}";
+                    _gameUsageLabel.Text = $"Usage{(writable ? " (Writable)" : "")} : {usageStringBuilder}";
                 }
             }
 

@@ -32,9 +32,9 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private bool ConsumeIf(string toConsume)
         {
-            string mangledPart = Mangled.Substring(_position);
+            var mangledPart = Mangled.AsSpan(_position);
 
-            if (mangledPart.StartsWith(toConsume))
+            if (mangledPart.StartsWith(toConsume.AsSpan()))
             {
                 _position += toConsume.Length;
 
@@ -44,14 +44,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             return false;
         }
 
-        private string PeekString(int offset = 0, int length = 1)
+        private ReadOnlySpan<char> PeekString(int offset = 0, int length = 1)
         {
             if (_position + offset >= length)
             {
                 return null;
             }
 
-            return Mangled.Substring(_position + offset, length);
+            return Mangled.AsSpan(_position + offset, length);
         }
 
         private char Peek(int offset = 0)
@@ -101,8 +101,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private int ParseSeqId()
         {
-            string part     = Mangled.Substring(_position);
-            int    seqIdLen = 0;
+            ReadOnlySpan<char> part     = Mangled.AsSpan(_position);
+            int                seqIdLen = 0;
 
             for (; seqIdLen < part.Length; seqIdLen++)
             {
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             _position += seqIdLen;
 
-            return FromBase36(part.Substring(0, seqIdLen));
+            return FromBase36(new string(part[..seqIdLen]));
         }
 
         //   <substitution> ::= S <seq-id> _
@@ -900,8 +900,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private int ParsePositiveNumber()
         {
-            string part         = Mangled.Substring(_position);
-            int    numberLength = 0;
+            ReadOnlySpan<char> part         = Mangled.AsSpan(_position);
+            int                numberLength = 0;
 
             for (; numberLength < part.Length; numberLength++)
             {
@@ -918,7 +918,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return -1;
             }
 
-            return int.Parse(part.AsSpan(0, numberLength));
+            return int.Parse(part[..numberLength]);
         }
 
         private string ParseNumber(bool isSigned = false)
@@ -933,8 +933,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            string part         = Mangled.Substring(_position);
-            int    numberLength = 0;
+            ReadOnlySpan<char> part         = Mangled.AsSpan(_position);
+            int                numberLength = 0;
 
             for (; numberLength < part.Length; numberLength++)
             {
@@ -946,7 +946,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             _position += numberLength;
 
-            return part.Substring(0, numberLength);
+            return new string(part[..numberLength]);
         }
 
         // <source-name> ::= <positive length number> <identifier>

@@ -1339,7 +1339,7 @@ namespace ARMeilleure.Decoders
 
         private static void SetT32(string encoding, InstName name, InstEmitter emitter, MakeOp makeOp)
         {
-            string reversedEncoding = encoding.Substring(16) + encoding.Substring(0, 16);
+            string reversedEncoding = $"{encoding.AsSpan(16)}{encoding.AsSpan(0, 16)}";
             MakeOp reversedMakeOp =
                 (inst, address, opCode)
                     => makeOp(inst, address, (int)BitOperations.RotateRight((uint)opCode, 16));
@@ -1353,7 +1353,7 @@ namespace ARMeilleure.Decoders
             string thumbEncoding = encoding;
             if (thumbEncoding.StartsWith("<<<<"))
             {
-                thumbEncoding = "1110" + thumbEncoding.Substring(4);
+                thumbEncoding = $"1110{thumbEncoding.AsSpan(4)}";
             }
             SetT32(thumbEncoding, name, emitter, makeOpT32);
         }
@@ -1365,19 +1365,19 @@ namespace ARMeilleure.Decoders
             string thumbEncoding = encoding;
             if (thumbEncoding.StartsWith("11110100"))
             {
-                thumbEncoding = "11111001" + encoding.Substring(8);
+                thumbEncoding = $"11111001{encoding.AsSpan(8)}";
             }
             else if (thumbEncoding.StartsWith("1111001x"))
             {
-                thumbEncoding = "111x1111" + encoding.Substring(8);
+                thumbEncoding = $"111x1111{encoding.AsSpan(8)}";
             }
             else if (thumbEncoding.StartsWith("11110010"))
             {
-                thumbEncoding = "11101111" + encoding.Substring(8);
+                thumbEncoding = $"11101111{encoding.AsSpan(8)}";
             }
             else if (thumbEncoding.StartsWith("11110011"))
             {
-                thumbEncoding = "11111111" + encoding.Substring(8);
+                thumbEncoding = $"11111111{encoding.AsSpan(8)}";
             }
             else
             {

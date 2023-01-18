@@ -141,8 +141,8 @@ namespace Ryujinx.HLE.FileSystem
                     return $"{rawPath}:/";
                 }
 
-                string basePath = rawPath.Substring(0, firstSeparatorOffset);
-                string fileName = rawPath.Substring(firstSeparatorOffset + 1);
+                var basePath = rawPath.AsSpan(0, firstSeparatorOffset);
+                var fileName = rawPath.AsSpan(firstSeparatorOffset + 1);
 
                 return $"{basePath}:/{fileName}";
             }

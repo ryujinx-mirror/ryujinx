@@ -183,8 +183,8 @@ namespace ARMeilleure.Translation.PTC
 
         private void PreLoad()
         {
-            string fileNameActual = string.Concat(CachePathActual, ".cache");
-            string fileNameBackup = string.Concat(CachePathBackup, ".cache");
+            string fileNameActual = $"{CachePathActual}.cache";
+            string fileNameBackup = $"{CachePathBackup}.cache";
 
             FileInfo fileInfoActual = new FileInfo(fileNameActual);
             FileInfo fileInfoBackup = new FileInfo(fileNameBackup);
@@ -400,8 +400,8 @@ namespace ARMeilleure.Translation.PTC
 
             try
             {
-                string fileNameActual = string.Concat(CachePathActual, ".cache");
-                string fileNameBackup = string.Concat(CachePathBackup, ".cache");
+                string fileNameActual = $"{CachePathActual}.cache";
+                string fileNameBackup = $"{CachePathBackup}.cache";
 
                 FileInfo fileInfoActual = new FileInfo(fileNameActual);
 

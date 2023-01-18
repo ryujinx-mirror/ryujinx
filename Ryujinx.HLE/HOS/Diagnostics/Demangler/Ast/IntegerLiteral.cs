@@ -1,4 +1,5 @@
 using System.IO;
+using System;
 
 namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
@@ -25,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             if (_literalValue[0] == 'n')
             {
                 writer.Write("-");
-                writer.Write(_literalValue.Substring(1));
+                writer.Write(_literalValue.AsSpan(1));
             }
             else
             {

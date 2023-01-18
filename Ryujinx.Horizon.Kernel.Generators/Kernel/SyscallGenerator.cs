@@ -417,7 +417,7 @@ namespace Ryujinx.Horizon.Generators.Kernel
 
         private static string GetPrefixedArgName(string name)
         {
-            return ArgVariablePrefix + name[0].ToString().ToUpperInvariant() + name.Substring(1);
+            return ArgVariablePrefix + char.ToUpperInvariant(name[0]) + name.Substring(1);
         }
 
         private static string GetCanonicalTypeName(Compilation compilation, SyntaxNode syntaxNode)

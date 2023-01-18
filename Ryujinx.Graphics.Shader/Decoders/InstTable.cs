@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.Instructions;
+using System;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
@@ -329,18 +330,18 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         private static void Add(string encoding, InstName name, InstEmitter emitter, InstProps props = InstProps.None)
         {
-            encoding = encoding.Substring(0, EncodingBits);
+            ReadOnlySpan<char> encodingPart = encoding.AsSpan(0, EncodingBits);
 
-            int bit = encoding.Length - 1;
+            int bit = encodingPart.Length - 1;
             int value = 0;
             int xMask = 0;
             int xBits = 0;
 
-            int[] xPos = new int[encoding.Length];
+            int[] xPos = new int[encodingPart.Length];
 
-            for (int index = 0; index < encoding.Length; index++, bit--)
+            for (int index = 0; index < encodingPart.Length; index++, bit--)
             {
-                char chr = encoding[index];
+                char chr = encodingPart[index];
 
                 if (chr == '1')
                 {
