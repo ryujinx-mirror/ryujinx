@@ -109,12 +109,6 @@ namespace ARMeilleure.Signal
 
                 if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
-                    // Unix siginfo struct locations.
-                    // NOTE: These are incredibly likely to be different between kernel version and architectures.
-
-                    config.StructAddressOffset = OperatingSystem.IsMacOS() ? 24 : 16; // si_addr
-                    config.StructWriteOffset = 8; // si_code
-
                     _signalHandlerPtr = Marshal.GetFunctionPointerForDelegate(GenerateUnixSignalHandler(_handlerConfig));
 
                     if (customSignalHandlerFactory != null)
@@ -251,18 +245,88 @@ namespace ARMeilleure.Signal
             return context.Copy(inRegionLocal);
         }
 
+        private static Operand GenerateUnixFaultAddress(EmitterContext context, Operand sigInfoPtr)
+        {
+            ulong structAddressOffset = OperatingSystem.IsMacOS() ? 24ul : 16ul; // si_addr
+            return context.Load(OperandType.I64, context.Add(sigInfoPtr, Const(structAddressOffset)));
+        }
+
+        private static Operand GenerateUnixWriteFlag(EmitterContext context, Operand ucontextPtr)
+        {
+            if (OperatingSystem.IsMacOS())
+            {
+                const ulong mcontextOffset = 48; // uc_mcontext
+                Operand ctxPtr = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(mcontextOffset)));
+
+                if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                {
+                    const ulong esrOffset = 8; // __es.__esr
+                    Operand esr = context.Load(OperandType.I64, context.Add(ctxPtr, Const(esrOffset)));
+                    return context.BitwiseAnd(esr, Const(0x40ul));
+                }
+
+                if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                {
+                    const ulong errOffset = 4; // __es.__err
+                    Operand err = context.Load(OperandType.I64, context.Add(ctxPtr, Const(errOffset)));
+                    return context.BitwiseAnd(err, Const(2ul));
+                }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                {
+                    Operand auxPtr = context.AllocateLocal(OperandType.I64);
+
+                    Operand loopLabel = Label();
+                    Operand successLabel = Label();
+
+                    const ulong auxOffset = 464; // uc_mcontext.__reserved
+                    const uint esrMagic = 0x45535201;
+
+                    context.Copy(auxPtr,  context.Add(ucontextPtr, Const(auxOffset)));
+
+                    context.MarkLabel(loopLabel);
+
+                    // _aarch64_ctx::magic
+                    Operand magic = context.Load(OperandType.I32, auxPtr);
+                    // _aarch64_ctx::size
+                    Operand size = context.Load(OperandType.I32, context.Add(auxPtr, Const(4ul)));
+
+                    context.BranchIf(successLabel, magic, Const(esrMagic), Comparison.Equal);
+
+                    context.Copy(auxPtr, context.Add(auxPtr, context.ZeroExtend32(OperandType.I64, size)));
+
+                    context.Branch(loopLabel);
+
+                    context.MarkLabel(successLabel);
+
+                    // esr_context::esr
+                    Operand esr = context.Load(OperandType.I64, context.Add(auxPtr, Const(8ul)));
+                    return context.BitwiseAnd(esr, Const(0x40ul));
+                }
+
+                if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                {
+                    const int errOffset = 192; // uc_mcontext.gregs[REG_ERR]
+                    Operand err = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(errOffset)));
+                    return context.BitwiseAnd(err, Const(2ul));
+                }
+            }
+
+            throw new PlatformNotSupportedException();
+        }
+
         private static UnixExceptionHandler GenerateUnixSignalHandler(IntPtr signalStructPtr)
         {
             EmitterContext context = new EmitterContext();
 
             // (int sig, SigInfo* sigInfo, void* ucontext)
             Operand sigInfoPtr = context.LoadArgument(OperandType.I64, 1);
+            Operand ucontextPtr = context.LoadArgument(OperandType.I64, 2);
 
-            Operand structAddressOffset = context.Load(OperandType.I64, Const((ulong)signalStructPtr + StructAddressOffset));
-            Operand structWriteOffset = context.Load(OperandType.I64, Const((ulong)signalStructPtr + StructWriteOffset));
-
-            Operand faultAddress = context.Load(OperandType.I64, context.Add(sigInfoPtr, context.ZeroExtend32(OperandType.I64, structAddressOffset)));
-            Operand writeFlag = context.Load(OperandType.I64, context.Add(sigInfoPtr, context.ZeroExtend32(OperandType.I64, structWriteOffset)));
+            Operand faultAddress = GenerateUnixFaultAddress(context, sigInfoPtr);
+            Operand writeFlag = GenerateUnixWriteFlag(context, ucontextPtr);
 
             Operand isWrite = context.ICompareNotEqual(writeFlag, Const(0L)); // Normalize to 0/1.
 
