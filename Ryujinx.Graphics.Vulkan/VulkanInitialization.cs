@@ -416,6 +416,7 @@ namespace Ryujinx.Graphics.Vulkan
                 IndependentBlend = true,
                 LogicOp = supportedFeatures.LogicOp,
                 MultiViewport = true,
+                OcclusionQueryPrecise = supportedFeatures.OcclusionQueryPrecise,
                 PipelineStatisticsQuery = supportedFeatures.PipelineStatisticsQuery,
                 SamplerAnisotropy = true,
                 ShaderClipDistance = true,

@@ -28,6 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsExtendedDynamicState;
         public readonly bool SupportsMultiView;
         public readonly bool SupportsNullDescriptors;
+        public readonly bool SupportsPreciseOcclusionQueries;
         public readonly bool SupportsPushDescriptors;
         public readonly bool SupportsTransformFeedback;
         public readonly bool SupportsTransformFeedbackQueries;
@@ -53,6 +54,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsPushDescriptors,
             bool supportsTransformFeedback,
             bool supportsTransformFeedbackQueries,
+            bool supportsPreciseOcclusionQueries,
             bool supportsGeometryShader,
             uint minSubgroupSize,
             uint maxSubgroupSize,
@@ -74,6 +76,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsPushDescriptors = supportsPushDescriptors;
             SupportsTransformFeedback = supportsTransformFeedback;
             SupportsTransformFeedbackQueries = supportsTransformFeedbackQueries;
+            SupportsPreciseOcclusionQueries = supportsPreciseOcclusionQueries;
             SupportsGeometryShader = supportsGeometryShader;
             MinSubgroupSize = minSubgroupSize;
             MaxSubgroupSize = maxSubgroupSize;

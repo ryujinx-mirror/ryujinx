@@ -270,6 +270,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportedExtensions.Contains(KhrPushDescriptor.ExtensionName),
                 supportsTransformFeedback,
                 propertiesTransformFeedback.TransformFeedbackQueries,
+                features2.Features.OcclusionQueryPrecise,
                 supportedFeatures.GeometryShader,
                 propertiesSubgroupSizeControl.MinSubgroupSize,
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
