@@ -75,9 +75,12 @@ namespace Ryujinx.Audio.Backends.CompatLayer
                     return SampleFormat.PcmFloat;
                 }
 
-                // TODO: Implement PCM24 conversion.
+                if (_realDriver.SupportsSampleFormat(SampleFormat.PcmInt24))
+                {
+                    return SampleFormat.PcmInt24;
+                }
 
-                // If nothing is truly supported, attempt PCM8 at the cost of loosing quality.
+                // If nothing is truly supported, attempt PCM8 at the cost of losing quality.
                 if (_realDriver.SupportsSampleFormat(SampleFormat.PcmInt8))
                 {
                     return SampleFormat.PcmInt8;

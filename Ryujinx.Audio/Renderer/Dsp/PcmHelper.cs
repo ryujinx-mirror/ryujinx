@@ -37,19 +37,32 @@ namespace Ryujinx.Audio.Renderer.Dsp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TOutput ConvertSample<TInput, TOutput>(TInput value) where TInput: INumber<TInput>, IMinMaxValue<TInput> where TOutput : INumber<TOutput>, IMinMaxValue<TOutput>
-        {
-            TInput conversionRate = TInput.CreateSaturating(TOutput.MaxValue / TOutput.CreateSaturating(TInput.MaxValue));
-
-            return TOutput.CreateSaturating(value * conversionRate);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Convert<TInput, TOutput>(Span<TOutput> output, ReadOnlySpan<TInput> input) where TInput : INumber<TInput>, IMinMaxValue<TInput> where TOutput : INumber<TOutput>, IMinMaxValue<TOutput>
+        public static void ConvertSampleToPcm8(Span<sbyte> output, ReadOnlySpan<short> input)
         {
             for (int i = 0; i < input.Length; i++)
             {
-                output[i] = ConvertSample<TInput, TOutput>(input[i]);
+                // Output most significant byte
+                output[i] = (sbyte)(input[i] >> 8);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ConvertSampleToPcm24(Span<byte> output, ReadOnlySpan<short> input)
+        {
+            for (int i = 0; i < input.Length; i++)
+            {
+                output[i * 3 + 2] = (byte)(input[i] >> 8);
+                output[i * 3 + 1] = (byte)(input[i] & 0xff);
+                output[i * 3 + 0] = 0;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ConvertSampleToPcm32(Span<int> output, ReadOnlySpan<short> input)
+        {
+            for (int i = 0; i < input.Length; i++)
+            {
+                output[i] = ((int)input[i]) << 16;
             }
         }
 

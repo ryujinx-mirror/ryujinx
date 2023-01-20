@@ -58,10 +58,13 @@ namespace Ryujinx.Audio.Backends.CompatLayer
                 switch (realSampleFormat)
                 {
                     case SampleFormat.PcmInt8:
-                        PcmHelper.Convert(MemoryMarshal.Cast<byte, sbyte>(convertedSamples), samples);
+                        PcmHelper.ConvertSampleToPcm8(MemoryMarshal.Cast<byte, sbyte>(convertedSamples), samples);
+                        break;
+                    case SampleFormat.PcmInt24:
+                        PcmHelper.ConvertSampleToPcm24(convertedSamples, samples);
                         break;
                     case SampleFormat.PcmInt32:
-                        PcmHelper.Convert(MemoryMarshal.Cast<byte, int>(convertedSamples), samples);
+                        PcmHelper.ConvertSampleToPcm32(MemoryMarshal.Cast<byte, int>(convertedSamples), samples);
                         break;
                     case SampleFormat.PcmFloat:
                         PcmHelper.ConvertSampleToPcmFloat(MemoryMarshal.Cast<byte, float>(convertedSamples), samples);
