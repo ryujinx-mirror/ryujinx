@@ -43,6 +43,7 @@
         <StackPanel Grid.Row="0" IsVisible="False">
             <helpers:HotKeyControl Name="FullscreenHotKey" Command="{ReflectionBinding ToggleFullscreen}" />
             <helpers:HotKeyControl Name="FullscreenHotKey2" Command="{ReflectionBinding ToggleFullscreen}" />
+            <helpers:HotKeyControl Name="FullscreenHotKeyMacOS" Command="{ReflectionBinding ToggleFullscreen}" />
             <helpers:HotKeyControl Name="DockToggleHotKey" Command="{ReflectionBinding ToggleDockMode}" />
             <helpers:HotKeyControl Name="ExitHotKey" Command="{ReflectionBinding ExitCurrentState}" />
         </StackPanel>
