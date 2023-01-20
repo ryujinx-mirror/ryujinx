@@ -271,7 +271,7 @@ namespace Ryujinx.Ava.UI.Windows
                 ViewModel.LoadApplication(_launchPath, _startFullscreen);
             }
 
-            if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false, this))
+            if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
             {
                 Updater.BeginParse(this, false).ContinueWith(task =>
                 {

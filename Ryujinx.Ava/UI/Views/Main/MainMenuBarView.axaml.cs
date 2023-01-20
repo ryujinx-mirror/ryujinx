@@ -165,7 +165,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
         public async void CheckForUpdates(object sender, RoutedEventArgs e)
         {
-            if (Updater.CanUpdate(true, Window))
+            if (Updater.CanUpdate(true))
             {
                 await Updater.BeginParse(Window, true);
             }

@@ -88,7 +88,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private float _volume;
         private string _backendText;
 
-        private bool _canUpdate;
+        private bool _canUpdate = true;
         private Cursor _cursor;
         private string _title;
         private string _currentEmulatedGamePath;
@@ -177,11 +177,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool CanUpdate
         {
-            get => _canUpdate;
+            get => _canUpdate && EnableNonGameRunningControls && Modules.Updater.CanUpdate(false);
             set
             {
                 _canUpdate = value;
-
                 OnPropertyChanged();
             }
         }
