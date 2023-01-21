@@ -91,6 +91,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         Neu = 13,
         Geu = 14,
         T = 15,
+        Off = 16,
         Lo = 17,
         Sff = 18,
         Ls = 19,

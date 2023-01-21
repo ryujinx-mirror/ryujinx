@@ -54,13 +54,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Config.GpuAccessor.Log("Shader instruction Cctlt is not implemented.");
         }
 
-        public static void Cset(EmitterContext context)
-        {
-            InstCset op = context.GetOp<InstCset>();
-
-            context.Config.GpuAccessor.Log("Shader instruction Cset is not implemented.");
-        }
-
         public static void Cs2r(EmitterContext context)
         {
             InstCs2r op = context.GetOp<InstCs2r>();

@@ -11,23 +11,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
-        public static void Csetp(EmitterContext context)
-        {
-            InstCsetp op = context.GetOp<InstCsetp>();
-
-            // TODO: Implement that properly.
-
-            Operand p0Res = Const(IrConsts.True);
-            Operand p1Res = context.BitwiseNot(p0Res);
-            Operand srcPred = GetPredicate(context, op.SrcPred, op.SrcPredInv);
-
-            p0Res = GetPredLogicalOp(context, op.Bop, p0Res, srcPred);
-            p1Res = GetPredLogicalOp(context, op.Bop, p1Res, srcPred);
-
-            context.Copy(Register(op.DestPred, RegisterType.Predicate), p0Res);
-            context.Copy(Register(op.DestPredInv, RegisterType.Predicate), p1Res);
-        }
-
         public static void IcmpR(EmitterContext context)
         {
             InstIcmpR op = context.GetOp<InstIcmpR>();

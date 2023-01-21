@@ -257,7 +257,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                // TODO: Support CC here aswell (condition).
+                // TODO: Support CC here as well (condition).
                 foreach (SyncTarget target in targets.Values)
                 {
                     PushOpInfo pushOpInfo = target.PushOpInfo;
@@ -317,22 +317,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.BranchIfTrue(label, pred);
             }
-        }
-
-        private static Operand GetCondition(EmitterContext context, Ccc cond, int defaultCond = IrConsts.True)
-        {
-            // TODO: More condition codes, figure out how they work.
-            switch (cond)
-            {
-                case Ccc.Eq:
-                case Ccc.Equ:
-                    return GetZF();
-                case Ccc.Ne:
-                case Ccc.Neu:
-                    return context.BitwiseNot(GetZF());
-            }
-
-            return Const(defaultCond);
         }
     }
 }
