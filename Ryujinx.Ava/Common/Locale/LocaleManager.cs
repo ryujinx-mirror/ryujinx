@@ -13,56 +13,87 @@ namespace Ryujinx.Ava.Common.Locale
     {
         private const string DefaultLanguageCode = "en_US";
 
-        private Dictionary<LocaleKeys, string> _localeStrings;
-        private ConcurrentDictionary<LocaleKeys, object[]> _dynamicValues;
+        private Dictionary<LocaleKeys, string>                      _localeStrings;
+        private Dictionary<LocaleKeys, string>                      _localeDefaultStrings;
+        private readonly ConcurrentDictionary<LocaleKeys, object[]> _dynamicValues;
 
         public static LocaleManager Instance { get; } = new LocaleManager();
-        public Dictionary<LocaleKeys, string> LocaleStrings { get => _localeStrings; set => _localeStrings = value; }
-
 
         public LocaleManager()
         {
-            _localeStrings = new Dictionary<LocaleKeys, string>();
-            _dynamicValues = new ConcurrentDictionary<LocaleKeys, object[]>();
+            _localeStrings        = new Dictionary<LocaleKeys, string>();
+            _localeDefaultStrings = new Dictionary<LocaleKeys, string>();
+            _dynamicValues        = new ConcurrentDictionary<LocaleKeys, object[]>();
 
             Load();
         }
 
         public void Load()
         {
+            // Load the system Language Code.
             string localeLanguageCode = CultureInfo.CurrentCulture.Name.Replace('-', '_');
 
+            // If the view is loaded with the UI Previewer detached, then override it with the saved one or default.
             if (Program.PreviewerDetached)
             {
                 if (!string.IsNullOrEmpty(ConfigurationState.Instance.Ui.LanguageCode.Value))
                 {
                     localeLanguageCode = ConfigurationState.Instance.Ui.LanguageCode.Value;
                 }
+                else
+                {
+                    localeLanguageCode = DefaultLanguageCode;
+                }
             }
 
-            // Load english first, if the target language translation is incomplete, we default to english.
+            // Load en_US as default, if the target language translation is incomplete.
             LoadDefaultLanguage();
 
-            if (localeLanguageCode != DefaultLanguageCode)
-            {
-                LoadLanguage(localeLanguageCode);
-            }
+            LoadLanguage(localeLanguageCode);
         }
 
         public string this[LocaleKeys key]
         {
             get
             {
+                // Check if the locale contains the key.
                 if (_localeStrings.TryGetValue(key, out string value))
                 {
+                    // Check if the localized string needs to be formatted.
                     if (_dynamicValues.TryGetValue(key, out var dynamicValue))
                     {
-                        return string.Format(value, dynamicValue);
+                        try
+                        {
+                            return string.Format(value, dynamicValue);
+                        }
+                        catch (Exception)
+                        {
+                            // If formatting failed use the default text instead.
+                            if (_localeDefaultStrings.TryGetValue(key, out value))
+                            {
+                                try
+                                {
+                                    return string.Format(value, dynamicValue);
+                                }
+                                catch (Exception)
+                                {
+                                    // If formatting the default text failed return the key.
+                                    return key.ToString();
+                                }
+                            }
+                        }
                     }
 
                     return value;
                 }
 
+                // If the locale doesn't contain the key return the default one.
+                if (_localeDefaultStrings.TryGetValue(key, out string defaultValue))
+                {
+                    return defaultValue;
+                }
+
+                // If the locale text doesn't exist return the key.
                 return key.ToString();
             }
             set
@@ -73,42 +104,43 @@ namespace Ryujinx.Ava.Common.Locale
             }
         }
 
-        public void UpdateDynamicValue(LocaleKeys key, params object[] values)
+        public string UpdateAndGetDynamicValue(LocaleKeys key, params object[] values)
         {
             _dynamicValues[key] = values;
 
             OnPropertyChanged("Item");
+
+            return this[key];
         }
 
-        public void LoadDefaultLanguage()
+        private void LoadDefaultLanguage()
         {
-            LoadLanguage(DefaultLanguageCode);
+            _localeDefaultStrings = LoadJsonLanguage();
         }
 
         public void LoadLanguage(string languageCode)
         {
-            string languageJson = EmbeddedResources.ReadAllText($"Ryujinx.Ava/Assets/Locales/{languageCode}.json");
-
-            if (languageJson == null)
+            foreach (var item in LoadJsonLanguage(languageCode))
             {
-                return;
+                this[item.Key] = item.Value;
             }
+        }
 
-            var strings = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
+        private Dictionary<LocaleKeys, string> LoadJsonLanguage(string languageCode = DefaultLanguageCode)
+        {
+            var    localeStrings = new Dictionary<LocaleKeys, string>();
+            string languageJson  = EmbeddedResources.ReadAllText($"Ryujinx.Ava/Assets/Locales/{languageCode}.json");
+            var    strings       = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
 
             foreach (var item in strings)
             {
                 if (Enum.TryParse<LocaleKeys>(item.Key, out var key))
                 {
-                    this[key] = item.Value;
+                    localeStrings[key] = item.Value;
                 }
             }
 
-            if (Program.PreviewerDetached)
-            {
-                ConfigurationState.Instance.Ui.LanguageCode.Value = languageCode;
-                ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
-            }
+            return localeStrings;
         }
     }
 }

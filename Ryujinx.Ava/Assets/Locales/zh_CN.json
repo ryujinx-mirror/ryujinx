@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "是否删除选择的账户",
   "DialogControllerSettingsModifiedConfirmMessage": "目前的输入预设已更新",
   "DialogControllerSettingsModifiedConfirmSubMessage": "要保存吗？",
-  "DialogDlcLoadNcaErrorMessage": "{0}. 错误的文件: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. 错误的文件: {1}",
   "DialogDlcNoDlcErrorMessage": "选择的文件不包含所选游戏的 DLC！",
   "DialogPerformanceCheckLoggingEnabledMessage": "您启用了跟踪日志，仅供开发人员使用。",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "为了获得最佳性能，建议禁用跟踪日志记录。您是否要立即禁用？",

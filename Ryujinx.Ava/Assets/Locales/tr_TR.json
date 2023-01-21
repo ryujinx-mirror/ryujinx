@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Seçilen profili silmek istiyor musunuz",
   "DialogControllerSettingsModifiedConfirmMessage": "Güncel kontrolcü seçenekleri güncellendi.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Kaydetmek istiyor musunuz?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Hatalı Dosya: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Hatalı Dosya: {1}",
   "DialogDlcNoDlcErrorMessage": "Belirtilen dosya seçilen oyun için DLC içermiyor!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Sadece geliştiriler için dizayn edilen Trace Loglama seçeneği etkin.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "En iyi performans için trace loglama'nın devre dışı bırakılması tavsiye edilir. Trace loglama seçeneğini şimdi devre dışı bırakmak ister misiniz?",

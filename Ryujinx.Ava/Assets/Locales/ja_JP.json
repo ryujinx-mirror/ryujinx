@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "選択されたプロファイルを削除しますか",
   "DialogControllerSettingsModifiedConfirmMessage": "現在のコントローラ設定が更新されました.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "セーブしますか?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. エラー発生ファイル: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. エラー発生ファイル: {1}",
   "DialogDlcNoDlcErrorMessage": "選択されたファイルはこのタイトル用の DLC ではありません!",
   "DialogPerformanceCheckLoggingEnabledMessage": "トレースロギングを有効にします. これは開発者のみに有用な機能です.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "パフォーマンス最適化のためには,トレースロギングを無効にすることを推奨します. トレースロギングを無効にしてよろしいですか?",

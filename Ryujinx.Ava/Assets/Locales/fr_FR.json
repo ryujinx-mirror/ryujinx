@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Voulez-vous supprimer le profil sélectionné ?",
   "DialogControllerSettingsModifiedConfirmMessage": "Les paramètres actuels du contrôleur ont été mis à jour.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Voulez-vous sauvegarder?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Fichier erroné : {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Fichier erroné : {1}",
   "DialogDlcNoDlcErrorMessage": "Le fichier spécifié ne contient pas de DLC pour le titre sélectionné !",
   "DialogPerformanceCheckLoggingEnabledMessage": "Vous avez activé la journalisation des traces, conçue pour être utilisée uniquement par les développeurs.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Pour des performances optimales, il est recommandé de désactiver la journalisation des traces. Souhaitez-vous désactiver la journalisation des traces maintenant ?",

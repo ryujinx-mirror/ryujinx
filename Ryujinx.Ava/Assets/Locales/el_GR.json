@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Θέλετε να διαγράψετε το επιλεγμένο προφίλ",
   "DialogControllerSettingsModifiedConfirmMessage": "Οι τρέχουσες ρυθμίσεις χειρισμού έχουν ενημερωθεί.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Θέλετε να αποθηκεύσετε;",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Σφάλμα Αρχείου: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Σφάλμα Αρχείου: {1}",
   "DialogDlcNoDlcErrorMessage": "Το αρχείο δεν περιέχει DLC για τον επιλεγμένο τίτλο!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Έχετε ενεργοποιημένη την καταγραφή εντοπισμού σφαλμάτων, η οποία έχει σχεδιαστεί για χρήση μόνο από προγραμματιστές.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Για βέλτιστη απόδοση, συνιστάται η απενεργοποίηση καταγραφής εντοπισμού σφαλμάτων. Θέλετε να απενεργοποιήσετε την καταγραφή τώρα;",

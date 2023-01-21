@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "是否刪除選擇的帳號",
   "DialogControllerSettingsModifiedConfirmMessage": "目前的輸入預設已更新",
   "DialogControllerSettingsModifiedConfirmSubMessage": "要儲存嗎？",
-  "DialogDlcLoadNcaErrorMessage": "{0}. 錯誤的檔案: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. 錯誤的檔案: {1}",
   "DialogDlcNoDlcErrorMessage": "選擇的檔案不包含所選遊戲的 DLC！",
   "DialogPerformanceCheckLoggingEnabledMessage": "您啟用了跟蹤日誌，僅供開發人員使用。",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "為了獲得最佳效能，建議停用跟蹤日誌記錄。您是否要立即停用？",

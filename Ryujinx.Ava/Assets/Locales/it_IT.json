@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Vuoi eliminare il profilo selezionato?",
   "DialogControllerSettingsModifiedConfirmMessage": "Le attuali impostazioni del controller sono state aggiornate.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Vuoi salvare?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. File errato: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. File errato: {1}",
   "DialogDlcNoDlcErrorMessage": "Il file specificato non contiene un DLC per il titolo selezionato!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Hai abilitato il trace logging, che è progettato per essere usato solo dagli sviluppatori.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Per prestazioni ottimali, si raccomanda di disabilitare il trace logging. Vuoi disabilitare il debug logging adesso?",

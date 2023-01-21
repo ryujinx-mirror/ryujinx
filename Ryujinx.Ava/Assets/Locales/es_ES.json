@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "¿Quieres eliminar el perfil seleccionado?",
   "DialogControllerSettingsModifiedConfirmMessage": "Se ha actualizado la configuración del mando actual.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "¿Guardar cambios?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Archivo con error: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Archivo con error: {1}",
   "DialogDlcNoDlcErrorMessage": "¡Ese archivo no contiene contenido descargable para el título seleccionado!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Has habilitado los registros debug, diseñados solo para uso de los desarrolladores.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Para un rendimiento óptimo, se recomienda deshabilitar los registros debug. ¿Quieres deshabilitarlos ahora?",

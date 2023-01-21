@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Möchtest du das ausgewählte Profil löschen?",
   "DialogControllerSettingsModifiedConfirmMessage": "Die aktuellen Controller-Einstellungen wurden aktualisiert.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Controller-Einstellungen speichern?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Fehlerhafte Datei: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Fehlerhafte Datei: {1}",
   "DialogDlcNoDlcErrorMessage": "Die angegebene Datei enthält keinen DLC für den ausgewählten Titel!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Es wurde die Debug Protokollierung aktiviert",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Um eine optimale Leistung zu erzielen, wird empfohlen, die Debug Protokollierung zu deaktivieren. Debug Protokollierung jetzt deaktivieren?",

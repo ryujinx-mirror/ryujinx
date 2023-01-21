@@ -76,11 +76,11 @@ namespace Ryujinx.Ava.UI.Helpers
             string setupButtonLabel = isInSetupGuide ? LocaleManager.Instance[LocaleKeys.OpenSetupGuideMessage] : "";
 
             var result = await ContentDialogHelper.CreateInfoDialog(
-                string.Format(LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogMessage], errorCode, GetErrorTitle(error)),
+                LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogUserErrorDialogMessage, errorCode, GetErrorTitle(error)),
                 GetErrorDescription(error) + (isInSetupGuide
                     ? LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogInfoMessage]
                     : ""), setupButtonLabel, LocaleManager.Instance[LocaleKeys.InputDialogOk],
-                string.Format(LocaleManager.Instance[LocaleKeys.DialogUserErrorDialogTitle], errorCode));
+                LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogUserErrorDialogTitle, errorCode));
 
             if (result == UserResult.Ok)
             {

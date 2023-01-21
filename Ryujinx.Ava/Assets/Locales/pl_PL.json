@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Czy chcesz usunąć wybrany profil",
   "DialogControllerSettingsModifiedConfirmMessage": "Aktualne ustawienia kontrolera zostały zaktualizowane.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Czy chcesz zapisać?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Błędny Plik: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Błędny Plik: {1}",
   "DialogDlcNoDlcErrorMessage": "Określony plik nie zawiera DLC dla wybranego tytułu!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Masz włączone rejestrowanie śledzenia, które jest przeznaczone tylko dla programistów.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Aby uzyskać optymalną wydajność, zaleca się wyłączenie rejestrowania śledzenia. Czy chcesz teraz wyłączyć rejestrowanie śledzenia?",

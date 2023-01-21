@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Deseja deletar o perfil selecionado",
   "DialogControllerSettingsModifiedConfirmMessage": "As configurações de controle atuais foram atualizadas.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Deseja salvar?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Arquivo com erro: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Arquivo com erro: {1}",
   "DialogDlcNoDlcErrorMessage": "O arquivo especificado não contém DLCs para o título selecionado!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Os logs de depuração estão ativos, esse recurso é feito para ser usado apenas por desenvolvedores.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Para melhor performance, é recomendável desabilitar os logs de depuração. Gostaria de desabilitar os logs de depuração agora?",

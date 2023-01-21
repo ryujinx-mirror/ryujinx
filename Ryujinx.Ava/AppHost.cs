@@ -462,8 +462,7 @@ namespace Ryujinx.Ava
                             {
                                 UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
                                     LocaleManager.Instance[LocaleKeys.DialogFirmwareNoFirmwareInstalledMessage],
-                                    string.Format(LocaleManager.Instance[LocaleKeys.DialogFirmwareInstallEmbeddedMessage],
-                                    firmwareVersion.VersionString),
+                                    LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogFirmwareInstallEmbeddedMessage, firmwareVersion.VersionString),
                                     LocaleManager.Instance[LocaleKeys.InputDialogYes],
                                     LocaleManager.Instance[LocaleKeys.InputDialogNo],
                                     "");
@@ -493,10 +492,8 @@ namespace Ryujinx.Ava
                                 _viewModel.RefreshFirmwareStatus();
 
                                 await ContentDialogHelper.CreateInfoDialog(
-                                    string.Format(LocaleManager.Instance[LocaleKeys.DialogFirmwareInstalledMessage],
-                                    firmwareVersion.VersionString),
-                                    string.Format(LocaleManager.Instance[LocaleKeys.DialogFirmwareInstallEmbeddedSuccessMessage],
-                                    firmwareVersion.VersionString),
+                                    LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogFirmwareInstalledMessage, firmwareVersion.VersionString),
+                                    LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogFirmwareInstallEmbeddedSuccessMessage, firmwareVersion.VersionString),
                                     LocaleManager.Instance[LocaleKeys.InputDialogOk],
                                     "",
                                     LocaleManager.Instance[LocaleKeys.RyujinxInfo]);

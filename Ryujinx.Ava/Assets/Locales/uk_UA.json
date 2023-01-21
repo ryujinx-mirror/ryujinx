@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Ви хочете видалити вибраний профіль",
   "DialogControllerSettingsModifiedConfirmMessage": "Поточні налаштування контролера оновлено.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Ви хочете зберегти?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Файл з помилкою: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Файл з помилкою: {1}",
   "DialogDlcNoDlcErrorMessage": "Зазначений файл не містить DLC для вибраного заголовку!",
   "DialogPerformanceCheckLoggingEnabledMessage": "Ви увімкнули журнал налагодження, призначений лише для розробників.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Для оптимальної продуктивності рекомендується вимкнути ведення журналу налагодження. Ви хочете вимкнути ведення журналу налагодження зараз?",

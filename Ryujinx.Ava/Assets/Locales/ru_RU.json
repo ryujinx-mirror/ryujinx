@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "Вы хотите удалить выбранный профиль",
   "DialogControllerSettingsModifiedConfirmMessage": "Текущие настройки контроллера обновлены.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Вы хотите сохранить?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Файл с ошибкой: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Файл с ошибкой: {1}",
   "DialogDlcNoDlcErrorMessage": "Указанный файл не содержит DLC для выбранной игры!",
   "DialogPerformanceCheckLoggingEnabledMessage": "У вас включено ведение журнала отладки, предназначенное только для разработчиков.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "Для оптимальной производительности рекомендуется отключить ведение журнала отладки. Вы хотите отключить ведение журнала отладки сейчас?",

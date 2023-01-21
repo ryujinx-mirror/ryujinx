@@ -20,7 +20,7 @@ namespace Ryujinx.Ava.Common.Locale
 
             ReflectionBindingExtension binding = new($"[{keyToUse}]")
             {
-                Mode = BindingMode.OneWay,
+                Mode   = BindingMode.OneWay,
                 Source = LocaleManager.Instance
             };
 

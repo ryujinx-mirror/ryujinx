@@ -375,7 +375,7 @@
   "DialogUserProfileUnsavedChangesSubMessage": "Do you want to discard your changes?",
   "DialogControllerSettingsModifiedConfirmMessage": "The current controller settings has been updated.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "Do you want to save?",
-  "DialogDlcLoadNcaErrorMessage": "{0}. Errored File: {1}",
+  "DialogLoadNcaErrorMessage": "{0}. Errored File: {1}",
   "DialogDlcNoDlcErrorMessage": "The specified file does not contain a DLC for the selected title!",
   "DialogPerformanceCheckLoggingEnabledMessage": "You have trace logging enabled, which is designed to be used by developers only.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "For optimal performance, it's recommended to disable trace logging. Would you like to disable trace logging now?",

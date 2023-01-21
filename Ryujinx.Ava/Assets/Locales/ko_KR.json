@@ -370,7 +370,7 @@
   "DialogUserProfileDeletionConfirmMessage": "선택한 프로파일을 삭제하겠습니까?",
   "DialogControllerSettingsModifiedConfirmMessage": "현재 컨트롤러 설정이 업데이트되었습니다.",
   "DialogControllerSettingsModifiedConfirmSubMessage": "저장하겠습니까?",
-  "DialogDlcLoadNcaErrorMessage": "{0}입니다. 오류 발생 파일: {1}",
+  "DialogLoadNcaErrorMessage": "{0}입니다. 오류 발생 파일: {1}",
   "DialogDlcNoDlcErrorMessage": "지정된 파일에 선택한 타이틀에 대한 DLC가 포함되어 있지 않습니다!",
   "DialogPerformanceCheckLoggingEnabledMessage": "개발자만 사용하도록 설계된 추적 로깅이 활성화되어 있습니다.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "최적의 성능을 위해 추적 로깅을 비활성화하는 것이 좋습니다. 지금 추적 로깅을 비활성화하겠습니까?",
