@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using LibHac;
 using LibHac.Account;
@@ -12,7 +13,6 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Logging;
@@ -44,14 +44,11 @@ namespace Ryujinx.Ava.Common
             _accountManager = accountManager;
         }
 
-        private static bool TryFindSaveData(string titleName, ulong titleId,
-            BlitStruct<ApplicationControlProperty> controlHolder, in SaveDataFilter filter, out ulong saveDataId)
+        private static bool TryFindSaveData(string titleName, ulong titleId, BlitStruct<ApplicationControlProperty> controlHolder, in SaveDataFilter filter, out ulong saveDataId)
         {
             saveDataId = default;
 
-            Result result = _horizonClient.Fs.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo,
-                SaveDataSpaceId.User, in filter);
-
+            Result result = _horizonClient.Fs.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, in filter);
             if (ResultFs.TargetNotFound.Includes(result))
             {
                 ref ApplicationControlProperty control = ref controlHolder.Value;
@@ -68,17 +65,15 @@ namespace Ryujinx.Ava.Common
                     control.UserAccountSaveDataSize = 0x4000;
                     control.UserAccountSaveDataJournalSize = 0x4000;
 
-                    Logger.Warning?.Print(LogClass.Application,
-                        "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
+                    Logger.Warning?.Print(LogClass.Application, "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
                 }
 
-                Uid user = new Uid((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
+                Uid user = new((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
 
                 result = _horizonClient.Fs.EnsureApplicationSaveData(out _, new LibHac.Ncm.ApplicationId(titleId), in control, in user);
-
                 if (result.IsFailure())
                 {
-                    Dispatcher.UIThread.Post(async () =>
+                    Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogMessageCreateSaveErrorMessage, result.ToStringWithName()));
                     });
@@ -97,7 +92,7 @@ namespace Ryujinx.Ava.Common
                 return true;
             }
 
-            Dispatcher.UIThread.Post(async () =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogMessageFindSaveErrorMessage, result.ToStringWithName()));
             });
@@ -105,8 +100,7 @@ namespace Ryujinx.Ava.Common
             return false;
         }
 
-        public static void OpenSaveDir(in SaveDataFilter saveDataFilter, ulong titleId,
-            BlitStruct<ApplicationControlProperty> controlData, string titleName)
+        public static void OpenSaveDir(in SaveDataFilter saveDataFilter, ulong titleId, BlitStruct<ApplicationControlProperty> controlData, string titleName)
         {
             if (!TryFindSaveData(titleName, titleId, controlData, in saveDataFilter, out ulong saveDataId))
             {
@@ -147,14 +141,15 @@ namespace Ryujinx.Ava.Common
             }
         }
 
-        public static async Task ExtractSection(NcaSectionType ncaSectionType, string titleFilePath,
-            int programIndex = 0)
+        public static async Task ExtractSection(NcaSectionType ncaSectionType, string titleFilePath, string titleName, int programIndex = 0)
         {
-            OpenFolderDialog folderDialog = new() { Title = LocaleManager.Instance[LocaleKeys.FolderDialogExtractTitle] };
+            OpenFolderDialog folderDialog = new()
+            {
+                Title = LocaleManager.Instance[LocaleKeys.FolderDialogExtractTitle]
+            };
 
-            string destination = await folderDialog.ShowAsync(_owner);
-
-            var cancellationToken = new CancellationTokenSource();
+            string destination       = await folderDialog.ShowAsync(_owner);
+            var    cancellationToken = new CancellationTokenSource();
 
             if (!string.IsNullOrWhiteSpace(destination))
             {
@@ -174,133 +169,122 @@ namespace Ryujinx.Ava.Common
                             cancellationToken.Cancel();
                         }
                     });
+                    
+                    using FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read);
 
-                    Thread.Sleep(1000);
+                    Nca mainNca  = null;
+                    Nca patchNca = null;
 
-                    using (FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read))
+                    string extension = Path.GetExtension(titleFilePath).ToLower();
+                    if (extension == ".nsp" || extension == ".pfs0" || extension == ".xci")
                     {
-                        Nca mainNca = null;
-                        Nca patchNca = null;
+                        PartitionFileSystem pfs;
 
-                        string extension = Path.GetExtension(titleFilePath).ToLower();
-
-                        if (extension == ".nsp" || extension == ".pfs0" || extension == ".xci")
+                        if (extension == ".xci")
                         {
-                            PartitionFileSystem pfs;
+                            pfs = new Xci(_virtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
+                        }
+                        else
+                        {
+                            pfs = new PartitionFileSystem(file.AsStorage());
+                        }
 
-                            if (extension == ".xci")
+                        foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
+                        {
+                            using var ncaFile = new UniqueRef<IFile>();
+
+                            pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+
+                            Nca nca = new(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage());
+                            if (nca.Header.ContentType == NcaContentType.Program)
                             {
-                                Xci xci = new(_virtualFileSystem.KeySet, file.AsStorage());
-
-                                pfs = xci.OpenPartition(XciPartitionType.Secure);
-                            }
-                            else
-                            {
-                                pfs = new PartitionFileSystem(file.AsStorage());
-                            }
-
-                            foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))
-                            {
-                                using var ncaFile = new UniqueRef<IFile>();
-
-                                pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                                Nca nca = new(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage());
-
-                                if (nca.Header.ContentType == NcaContentType.Program)
+                                int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
+                                if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
                                 {
-                                    int dataIndex =
-                                        Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
-                                    if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
-                                    {
-                                        patchNca = nca;
-                                    }
-                                    else
-                                    {
-                                        mainNca = nca;
-                                    }
+                                    patchNca = nca;
+                                }
+                                else
+                                {
+                                    mainNca = nca;
                                 }
                             }
                         }
-                        else if (extension == ".nca")
-                        {
-                            mainNca = new Nca(_virtualFileSystem.KeySet, file.AsStorage());
-                        }
+                    }
+                    else if (extension == ".nca")
+                    {
+                        mainNca = new Nca(_virtualFileSystem.KeySet, file.AsStorage());
+                    }
 
-                        if (mainNca == null)
+                    if (mainNca == null)
+                    {
+                        Logger.Error?.Print(LogClass.Application, "Extraction failure. The main NCA was not present in the selected file");
+
+                        Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            Logger.Error?.Print(LogClass.Application,
-                                "Extraction failure. The main NCA was not present in the selected file");
-                            Dispatcher.UIThread.InvokeAsync(async () =>
+                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogNcaExtractionMainNcaNotFoundErrorMessage]);
+                        });
+
+                        return;
+                    }
+
+                    (Nca updatePatchNca, _) = ApplicationLoader.GetGameUpdateData(_virtualFileSystem, mainNca.Header.TitleId.ToString("x16"), programIndex, out _);
+                    if (updatePatchNca != null)
+                    {
+                        patchNca = updatePatchNca;
+                    }
+
+                    int index = Nca.GetSectionIndexFromType(ncaSectionType, mainNca.Header.ContentType);
+
+                    try
+                    {
+                        IFileSystem ncaFileSystem = patchNca != null
+                            ? mainNca.OpenFileSystemWithPatch(patchNca, index, IntegrityCheckLevel.ErrorOnInvalid)
+                            : mainNca.OpenFileSystem(index, IntegrityCheckLevel.ErrorOnInvalid);
+
+                        FileSystemClient fsClient = _horizonClient.Fs;
+
+                        string source = DateTime.Now.ToFileTime().ToString()[10..];
+                        string output = DateTime.Now.ToFileTime().ToString()[10..];
+
+                        using var uniqueSourceFs = new UniqueRef<IFileSystem>(ncaFileSystem);
+                        using var uniqueOutputFs = new UniqueRef<IFileSystem>(new LocalFileSystem(destination));
+
+                        fsClient.Register(source.ToU8Span(), ref uniqueSourceFs.Ref());
+                        fsClient.Register(output.ToU8Span(), ref uniqueOutputFs.Ref());
+
+                        (Result? resultCode, bool canceled) = CopyDirectory(fsClient, $"{source}:/", $"{output}:/", cancellationToken.Token);
+
+                        if (!canceled)
+                        {
+                            if (resultCode.Value.IsFailure())
                             {
-                                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogNcaExtractionMainNcaNotFoundErrorMessage]);
-                            });
-                            return;
-                        }
+                                Logger.Error?.Print(LogClass.Application, $"LibHac returned error code: {resultCode.Value.ErrorCode}");
 
-                        (Nca updatePatchNca, _) = ApplicationLoader.GetGameUpdateData(_virtualFileSystem,
-                            mainNca.Header.TitleId.ToString("x16"), programIndex, out _);
-                        if (updatePatchNca != null)
-                        {
-                            patchNca = updatePatchNca;
-                        }
-
-                        int index = Nca.GetSectionIndexFromType(ncaSectionType, mainNca.Header.ContentType);
-
-                        try
-                        {
-                            IFileSystem ncaFileSystem = patchNca != null
-                                ? mainNca.OpenFileSystemWithPatch(patchNca, index, IntegrityCheckLevel.ErrorOnInvalid)
-                                : mainNca.OpenFileSystem(index, IntegrityCheckLevel.ErrorOnInvalid);
-
-                            FileSystemClient fsClient = _horizonClient.Fs;
-
-                            string source = DateTime.Now.ToFileTime().ToString()[10..];
-                            string output = DateTime.Now.ToFileTime().ToString()[10..];
-
-                            using var uniqueSourceFs = new UniqueRef<IFileSystem>(ncaFileSystem);
-                            using var uniqueOutputFs = new UniqueRef<IFileSystem>(new LocalFileSystem(destination));
-
-                            fsClient.Register(source.ToU8Span(), ref uniqueSourceFs.Ref());
-                            fsClient.Register(output.ToU8Span(), ref uniqueOutputFs.Ref());
-
-                            (Result? resultCode, bool canceled) = CopyDirectory(fsClient, $"{source}:/", $"{output}:/", cancellationToken.Token);
-
-                            if (!canceled)
-                            {
-                                if (resultCode.Value.IsFailure())
+                                Dispatcher.UIThread.InvokeAsync(async () =>
                                 {
-                                    Logger.Error?.Print(LogClass.Application,
-                                        $"LibHac returned error code: {resultCode.Value.ErrorCode}");
-                                    Dispatcher.UIThread.InvokeAsync(async () =>
-                                    {
-                                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogNcaExtractionCheckLogErrorMessage]);
-                                    });
-                                }
-                                else if (resultCode.Value.IsSuccess())
-                                {
-                                    Dispatcher.UIThread.InvokeAsync(async () =>
-                                    {
-                                        await ContentDialogHelper.CreateInfoDialog(
-                                            LocaleManager.Instance[LocaleKeys.DialogNcaExtractionSuccessMessage],
-                                            "",
-                                            LocaleManager.Instance[LocaleKeys.InputDialogOk],
-                                            "",
-                                            LocaleManager.Instance[LocaleKeys.DialogNcaExtractionTitle]);
-                                    });
-                                }
+                                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogNcaExtractionCheckLogErrorMessage]);
+                                });
                             }
-
-                            fsClient.Unmount(source.ToU8Span());
-                            fsClient.Unmount(output.ToU8Span());
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            Dispatcher.UIThread.InvokeAsync(async () =>
+                            else if (resultCode.Value.IsSuccess())
                             {
-                                await ContentDialogHelper.CreateErrorDialog(ex.Message);
-                            });
+                                NotificationHelper.Show(
+                                    LocaleManager.Instance[LocaleKeys.DialogNcaExtractionTitle],
+                                    $"{titleName}\n\n{LocaleManager.Instance[LocaleKeys.DialogNcaExtractionSuccessMessage]}",
+                                    NotificationType.Information);
+                            }
                         }
+
+                        fsClient.Unmount(source.ToU8Span());
+                        fsClient.Unmount(output.ToU8Span());
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"{ex.Message}");
+
+                        Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await ContentDialogHelper.CreateErrorDialog(ex.Message);
+                        });
                     }
                 });
 

@@ -14,7 +14,7 @@
     Focusable="True">
     <UserControl.Resources>
         <helpers:BitmapArrayValueConverter x:Key="ByteImage" />
-        <MenuFlyout x:Key="GameContextMenu" Opened="MenuBase_OnMenuOpened">
+        <MenuFlyout x:Key="GameContextMenu">
             <MenuItem
                 Command="{Binding ToggleFavorite}"
                 Header="{locale:Locale GameListContextMenuToggleFavorite}"
@@ -22,14 +22,17 @@
             <Separator />
             <MenuItem
                 Command="{Binding OpenUserSaveDirectory}"
+                IsEnabled="{Binding EnabledUserSaveDirectory}"
                 Header="{locale:Locale GameListContextMenuOpenUserSaveDirectory}"
                 ToolTip.Tip="{locale:Locale GameListContextMenuOpenUserSaveDirectoryToolTip}" />
             <MenuItem
                 Command="{Binding OpenDeviceSaveDirectory}"
+                IsEnabled="{Binding EnabledDeviceSaveDirectory}"
                 Header="{locale:Locale GameListContextMenuOpenDeviceSaveDirectory}"
                 ToolTip.Tip="{locale:Locale GameListContextMenuOpenDeviceSaveDirectoryToolTip}" />
             <MenuItem
                 Command="{Binding OpenBcatSaveDirectory}"
+                IsEnabled="{Binding EnabledBcatSaveDirectory}"
                 Header="{locale:Locale GameListContextMenuOpenBcatSaveDirectory}"
                 ToolTip.Tip="{locale:Locale GameListContextMenuOpenBcatSaveDirectoryToolTip}" />
             <Separator />

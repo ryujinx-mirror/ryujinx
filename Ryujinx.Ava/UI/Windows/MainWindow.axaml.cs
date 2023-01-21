@@ -104,6 +104,8 @@ namespace Ryujinx.Ava.UI.Windows
             ApplicationLibrary.ApplicationCountUpdated += ApplicationLibrary_ApplicationCountUpdated;
             ApplicationLibrary.ApplicationAdded += ApplicationLibrary_ApplicationAdded;
             ViewModel.ReloadGameList += ReloadGameList;
+
+            NotificationHelper.SetNotificationManager(this);
         }
 
         private void IsActiveChanged(bool obj)

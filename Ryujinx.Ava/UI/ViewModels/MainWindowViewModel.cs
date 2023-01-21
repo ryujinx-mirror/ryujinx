@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
-using LibHac.Bcat;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.Tools.Fs;
@@ -343,6 +343,12 @@ namespace Ryujinx.Ava.UI.ViewModels
                 };
             }
         }
+
+        public bool EnabledUserSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.UserAccountSaveDataSize > 0;
+
+        public bool EnabledDeviceSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.DeviceSaveDataSize > 0;
+
+        public bool EnabledBcatSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
 
         public string LoadHeading
         {
@@ -735,19 +741,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             get
             {
-                switch (ConfigurationState.Instance.Ui.GridSize)
+                return ConfigurationState.Instance.Ui.GridSize.Value switch
                 {
-                    case 1:
-                        return 78;
-                    case 2:
-                        return 100;
-                    case 3:
-                        return 120;
-                    case 4:
-                        return 140;
-                    default:
-                        return 16;
-                }
+                    1 => 78,
+                    2 => 100,
+                    3 => 120,
+                    4 => 140,
+                    _ => 16,
+                };
             }
         }
 
@@ -755,19 +756,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             get
             {
-                switch (ConfigurationState.Instance.Ui.GridSize)
+                return ConfigurationState.Instance.Ui.GridSize.Value switch
                 {
-                    case 1:
-                        return 120;
-                    case 2:
-                        return ShowNames ? 210 : 150;
-                    case 3:
-                        return ShowNames ? 240 : 180;
-                    case 4:
-                        return ShowNames ? 280 : 220;
-                    default:
-                        return 16;
-                }
+                    1 => 120,
+                    2 => ShowNames ? 210 : 150,
+                    3 => ShowNames ? 240 : 180,
+                    4 => ShowNames ? 280 : 220,
+                    _ => 16,
+                };
             }
         }
 
@@ -1091,35 +1087,27 @@ namespace Ryujinx.Ava.UI.ViewModels
             }));
         }
 
-        private void OpenSaveDirectory(in SaveDataFilter filter, ApplicationData data, ulong titleId)
-        {
-            ApplicationHelper.OpenSaveDir(in filter, titleId, data.ControlHolder, data.TitleName);
-        }
-
         private async void ExtractLogo()
         {
-            var selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, SelectedApplication.Path, SelectedApplication.TitleName);
             }
         }
 
         private async void ExtractRomFs()
         {
-            var selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Data, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Data, SelectedApplication.Path, SelectedApplication.TitleName);
             }
         }
 
         private async void ExtractExeFs()
         {
-            var selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Code, selection.Path);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Code, SelectedApplication.Path, SelectedApplication.TitleName);
             }
         }
 
@@ -1487,56 +1475,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public void OpenDeviceSaveDirectory()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                Task.Run(() =>
-                {
-                    if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
-                    {
-                        async void Action()
-                        {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogRyujinxErrorMessage], LocaleManager.Instance[LocaleKeys.DialogInvalidTitleIdErrorMessage]);
-                        }
-
-                        Dispatcher.UIThread.Post(Action);
-
-                        return;
-                    }
-
-                    var saveDataFilter = SaveDataFilter.Make(titleIdNumber, SaveDataType.Device, userId: default, saveDataId: default, index: default);
-                    OpenSaveDirectory(in saveDataFilter, selection, titleIdNumber);
-                });
-            }
-        }
-
-        public void OpenBcatSaveDirectory()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                Task.Run(() =>
-                {
-                    if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
-                    {
-                        async void Action()
-                        {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogRyujinxErrorMessage], LocaleManager.Instance[LocaleKeys.DialogInvalidTitleIdErrorMessage]);
-                        }
-
-                        Dispatcher.UIThread.Post(Action);
-
-                        return;
-                    }
-
-                    var saveDataFilter = SaveDataFilter.Make(titleIdNumber, SaveDataType.Bcat, userId: default, saveDataId: default, index: default);
-                    OpenSaveDirectory(in saveDataFilter, selection, titleIdNumber);
-                });
-            }
-        }
-
         public void ToggleFavorite()
         {
             ApplicationData selection = SelectedApplication;
@@ -1555,37 +1493,45 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void OpenUserSaveDirectory()
         {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
+            OpenSaveDirectory(SaveDataType.Account, userId: new UserId((ulong)AccountManager.LastOpenedUser.UserId.High, (ulong)AccountManager.LastOpenedUser.UserId.Low));
+        }
+
+        public void OpenDeviceSaveDirectory()
+        {
+            OpenSaveDirectory(SaveDataType.Device, userId: default);
+        }
+
+        public void OpenBcatSaveDirectory()
+        {
+            OpenSaveDirectory(SaveDataType.Bcat, userId: default);
+        }
+
+        private void OpenSaveDirectory(SaveDataType saveDataType, UserId userId)
+        {
+            if (SelectedApplication != null)
             {
-                Task.Run(() =>
+                if (!ulong.TryParse(SelectedApplication.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
                 {
-                    if (!ulong.TryParse(selection.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
+                    Dispatcher.UIThread.InvokeAsync(async () =>
                     {
-                        async void Action()
-                        {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogRyujinxErrorMessage], LocaleManager.Instance[LocaleKeys.DialogInvalidTitleIdErrorMessage]);
-                        }
+                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogRyujinxErrorMessage], LocaleManager.Instance[LocaleKeys.DialogInvalidTitleIdErrorMessage]);
+                    });
 
-                        Dispatcher.UIThread.Post(Action);
+                    return;
+                }
 
-                        return;
-                    }
+                var saveDataFilter = SaveDataFilter.Make(titleIdNumber, saveDataType, userId, saveDataId: default, index: default);
 
-                    UserId         userId         = new((ulong)AccountManager.LastOpenedUser.UserId.High, (ulong)AccountManager.LastOpenedUser.UserId.Low);
-                    SaveDataFilter saveDataFilter = SaveDataFilter.Make(titleIdNumber, saveType: default, userId, saveDataId: default, index: default);
-                    OpenSaveDirectory(in saveDataFilter, selection, titleIdNumber);
-                });
+                ApplicationHelper.OpenSaveDir(in saveDataFilter, titleIdNumber, SelectedApplication.ControlHolder, SelectedApplication.TitleName);
             }
         }
 
         public void OpenModsDirectory()
         {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
                 string modsBasePath  = VirtualFileSystem.ModLoader.GetModsBasePath();
-                string titleModsPath = VirtualFileSystem.ModLoader.GetTitleDir(modsBasePath, selection.TitleId);
+                string titleModsPath = VirtualFileSystem.ModLoader.GetTitleDir(modsBasePath, SelectedApplication.TitleId);
 
                 OpenHelper.OpenFolder(titleModsPath);
             }
@@ -1593,12 +1539,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void OpenSdModsDirectory()
         {
-            ApplicationData selection = SelectedApplication;
-
-            if (selection != null)
+            if (SelectedApplication != null)
             {
                 string sdModsBasePath = VirtualFileSystem.ModLoader.GetSdModsBasePath();
-                string titleModsPath  = VirtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, selection.TitleId);
+                string titleModsPath  = VirtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, SelectedApplication.TitleId);
 
                 OpenHelper.OpenFolder(titleModsPath);
             }
@@ -1614,25 +1558,17 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void OpenDownloadableContentManager()
         {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    await new DownloadableContentManagerWindow(VirtualFileSystem, ulong.Parse(selection.TitleId, NumberStyles.HexNumber), selection.TitleName).ShowDialog(desktop.MainWindow);
-                }
+                await new DownloadableContentManagerWindow(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName).ShowDialog(TopLevel as Window);
             }
         }
 
         public async void OpenCheatManager()
         {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
+            if (SelectedApplication != null)
             {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    await new CheatWindow(VirtualFileSystem, selection.TitleId, selection.TitleName).ShowDialog(desktop.MainWindow);
-                }
+                await new CheatWindow(VirtualFileSystem, SelectedApplication.TitleId, SelectedApplication.TitleName).ShowDialog(TopLevel as Window);
             }
         }
 
