@@ -135,7 +135,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 // The other thread can only increase the command count.
                 // We can assume that if it is above 0, it will stay there or get higher.
 
-                while (_commandCount > 0 && Volatile.Read(ref _interruptAction) == null)
+                while (Volatile.Read(ref _commandCount) > 0 && Volatile.Read(ref _interruptAction) == null)
                 {
                     int commandPtr = _consumerPtr;
 
@@ -169,7 +169,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         internal ref T New<T>() where T : struct
         {
-            while (_producerPtr == (_consumerPtr + QueueCount - 1) % QueueCount)
+            while (_producerPtr == (Volatile.Read(ref _consumerPtr) + QueueCount - 1) % QueueCount)
             {
                 // If incrementing the producer pointer would overflow, we need to wait.
                 // _consumerPtr can only move forward, so there's no race to worry about here.
