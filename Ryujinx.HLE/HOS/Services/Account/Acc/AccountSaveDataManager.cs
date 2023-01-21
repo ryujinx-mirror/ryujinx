@@ -1,5 +1,7 @@
 ﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Utilities;
+using Ryujinx.Common.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -43,16 +45,25 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             if (File.Exists(_profilesJsonPath))
             {
-                ProfilesJson profilesJson = JsonHelper.DeserializeFromFile<ProfilesJson>(_profilesJsonPath);
-
-                foreach (var profile in profilesJson.Profiles)
+                try 
                 {
-                    UserProfile addedProfile = new UserProfile(new UserId(profile.UserId), profile.Name, profile.Image, profile.LastModifiedTimestamp);
+                    ProfilesJson profilesJson = JsonHelper.DeserializeFromFile<ProfilesJson>(_profilesJsonPath);
 
-                    profiles.AddOrUpdate(profile.UserId, addedProfile, (key, old) => addedProfile);
+                    foreach (var profile in profilesJson.Profiles)
+                    {
+                        UserProfile addedProfile = new UserProfile(new UserId(profile.UserId), profile.Name, profile.Image, profile.LastModifiedTimestamp);
+
+                        profiles.AddOrUpdate(profile.UserId, addedProfile, (key, old) => addedProfile);
+                    }
+
+                    LastOpened = new UserId(profilesJson.LastOpened);
                 }
+                catch (Exception e) 
+                {
+                    Logger.Error?.Print(LogClass.Application, $"Failed to parse {_profilesJsonPath}: {e.Message} Loading default profile!");
 
-                LastOpened = new UserId(profilesJson.LastOpened);
+                    LastOpened = AccountManager.DefaultUserId;
+                }
             }
             else
             {
