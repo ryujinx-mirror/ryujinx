@@ -77,8 +77,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem Name="ChangeLanguageMenuItem" Header="{locale:Locale MenuBarOptionsChangeLanguage}">
-                </MenuItem>
+                <MenuItem Name="ChangeLanguageMenuItem" Header="{locale:Locale MenuBarOptionsChangeLanguage}" />
                 <Separator />
                 <MenuItem
                     Click="OpenSettings"
@@ -140,6 +139,10 @@
                 <MenuItem Header="{locale:Locale MenuBarToolsInstallFirmware}" IsEnabled="{Binding EnableNonGameRunningControls}">
                     <MenuItem Command="{ReflectionBinding InstallFirmwareFromFile}" Header="{locale:Locale MenuBarFileToolsInstallFirmwareFromFile}" />
                     <MenuItem Command="{ReflectionBinding InstallFirmwareFromFolder}" Header="{locale:Locale MenuBarFileToolsInstallFirmwareFromDirectory}" />
+                </MenuItem>
+                <MenuItem Header="{locale:Locale MenuBarToolsManageFileTypes}" IsVisible="{Binding ManageFileTypesVisible}">
+                    <MenuItem Header="{locale:Locale MenuBarToolsInstallFileTypes}" Click="InstallFileTypes_Click"/>
+                    <MenuItem Header="{locale:Locale MenuBarToolsUninstallFileTypes}" Click="UninstallFileTypes_Click"/>
                 </MenuItem>
             </MenuItem>
             <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarHelp}">

@@ -14,10 +14,8 @@ using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Ava
@@ -34,48 +32,6 @@ namespace Ryujinx.Ava
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
 
         private const uint MB_ICONWARNING = 0x30;
-
-        [SupportedOSPlatform("linux")]
-        static void RegisterMimeTypes()
-        {
-            if (ReleaseInformation.IsFlatHubBuild())
-            {
-                return;
-            }
-
-            string mimeDbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "mime");
-
-            if (!File.Exists(Path.Combine(mimeDbPath, "packages", "Ryujinx.xml")))
-            {
-                string mimeTypesFile = Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "mime", "Ryujinx.xml");
-                using Process mimeProcess = new();
-
-                mimeProcess.StartInfo.FileName = "xdg-mime";
-                mimeProcess.StartInfo.Arguments = $"install --novendor --mode user {mimeTypesFile}";
-
-                mimeProcess.Start();
-                mimeProcess.WaitForExit();
-
-                if (mimeProcess.ExitCode != 0)
-                {
-                    Logger.Error?.PrintMsg(LogClass.Application, $"Unable to install mime types. Make sure xdg-utils is installed. Process exited with code: {mimeProcess.ExitCode}");
-                    return;
-                }
-
-                using Process updateMimeProcess = new();
-
-                updateMimeProcess.StartInfo.FileName = "update-mime-database";
-                updateMimeProcess.StartInfo.Arguments = mimeDbPath;
-
-                updateMimeProcess.Start();
-                updateMimeProcess.WaitForExit();
-
-                if (updateMimeProcess.ExitCode != 0)
-                {
-                    Logger.Error?.PrintMsg(LogClass.Application, $"Could not update local mime database. Process exited with code: {updateMimeProcess.ExitCode}");
-                }
-            }
-        }
 
         public static void Main(string[] args)
         {
@@ -138,12 +94,6 @@ namespace Ryujinx.Ava
 
             // Initialize the logger system.
             LoggerModule.Initialize();
-
-            // Register mime types on linux.
-            if (OperatingSystem.IsLinux())
-            {
-                RegisterMimeTypes();
-            }
 
             // Initialize Discord integration.
             DiscordIntegrationModule.Initialize();

@@ -44,7 +44,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
 using GUI = Gtk.Builder.ObjectAttribute;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 
@@ -109,6 +108,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem   _favToggle;
         [GUI] MenuItem        _firmwareInstallDirectory;
         [GUI] MenuItem        _firmwareInstallFile;
+        [GUI] MenuItem        _fileTypesSubMenu;
         [GUI] Label           _fifoStatus;
         [GUI] CheckMenuItem   _iconToggle;
         [GUI] CheckMenuItem   _developerToggle;
@@ -219,6 +219,8 @@ namespace Ryujinx.Ui
             _actionMenu.Sensitive = false;
             _pauseEmulation.Sensitive = false;
             _resumeEmulation.Sensitive = false;
+
+            _fileTypesSubMenu.Visible = FileAssociationHelper.IsTypeAssociationSupported;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
             if (ConfigurationState.Instance.Ui.GuiColumns.IconColumn)       _iconToggle.Active       = true;
@@ -1498,6 +1500,30 @@ namespace Ryujinx.Ui
             {
                 _firmwareVersionLabel.Text = currentFirmware != null ? currentFirmware.VersionString : "0.0.0";
             });
+        }
+
+        private void InstallFileTypes_Pressed(object sender, EventArgs e)
+        {
+            if (FileAssociationHelper.Install())
+            {
+                GtkDialog.CreateInfoDialog("Install file types", "File types successfully installed!");
+            }
+            else
+            {
+                GtkDialog.CreateErrorDialog("Failed to install file types.");
+            }
+        }
+
+        private void UninstallFileTypes_Pressed(object sender, EventArgs e)
+        {
+            if (FileAssociationHelper.Uninstall())
+            {
+                GtkDialog.CreateInfoDialog("Uninstall file types", "File types successfully uninstalled!");
+            }
+            else
+            {
+                GtkDialog.CreateErrorDialog("Failed to uninstall file types.");
+            }
         }
 
         private void HandleRelaunch()

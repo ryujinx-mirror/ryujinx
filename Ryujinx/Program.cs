@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 namespace Ryujinx
@@ -70,48 +69,6 @@ namespace Ryujinx
 
                     return result;
                 });
-            }
-        }
-
-        [SupportedOSPlatform("linux")]
-        static void RegisterMimeTypes()
-        {
-            if (ReleaseInformation.IsFlatHubBuild())
-            {
-                return;
-            }
-
-            string mimeDbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "mime");
-
-            if (!File.Exists(Path.Combine(mimeDbPath, "packages", "Ryujinx.xml")))
-            {
-                string mimeTypesFile = Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "mime", "Ryujinx.xml");
-                using Process mimeProcess = new();
-
-                mimeProcess.StartInfo.FileName = "xdg-mime";
-                mimeProcess.StartInfo.Arguments = $"install --novendor --mode user {mimeTypesFile}";
-
-                mimeProcess.Start();
-                mimeProcess.WaitForExit();
-
-                if (mimeProcess.ExitCode != 0)
-                {
-                    Logger.Error?.PrintMsg(LogClass.Application, $"Unable to install mime types. Make sure xdg-utils is installed. Process exited with code: {mimeProcess.ExitCode}");
-                    return;
-                }
-
-                using Process updateMimeProcess = new();
-
-                updateMimeProcess.StartInfo.FileName = "update-mime-database";
-                updateMimeProcess.StartInfo.Arguments = mimeDbPath;
-
-                updateMimeProcess.Start();
-                updateMimeProcess.WaitForExit();
-
-                if (updateMimeProcess.ExitCode != 0)
-                {
-                    Logger.Error?.PrintMsg(LogClass.Application, $"Could not update local mime database. Process exited with code: {updateMimeProcess.ExitCode}");
-                }
             }
         }
 
@@ -188,12 +145,6 @@ namespace Ryujinx
 
             // Initialize the logger system.
             LoggerModule.Initialize();
-
-            // Register mime types on linux.
-            if (OperatingSystem.IsLinux())
-            {
-                RegisterMimeTypes();
-            }
 
             // Initialize Discord integration.
             DiscordIntegrationModule.Initialize();

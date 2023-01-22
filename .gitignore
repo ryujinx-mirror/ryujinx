@@ -170,3 +170,6 @@ launchSettings.json
 
 # NetCore Publishing Profiles
 PublishProfiles/
+
+# Glade backup files
+*.glade~
