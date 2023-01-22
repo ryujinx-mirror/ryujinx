@@ -340,7 +340,7 @@ namespace Ryujinx.Ui.Common.Configuration
             {
                 configurationFileFormat = JsonHelper.DeserializeFromFile<ConfigurationFileFormat>(path);
 
-                return true;
+                return configurationFileFormat.Version != 0;
             }
             catch
             {
