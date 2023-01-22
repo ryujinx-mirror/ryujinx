@@ -1303,7 +1303,15 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateConstantCopy(CodeGenContext context, Operand dest, ulong value)
         {
-            if (value != 0)
+            if (value == 0)
+            {
+                context.Assembler.Mov(dest, Register(ZrRegister, dest.Type));
+            }
+            else if (CodeGenCommon.TryEncodeBitMask(dest.Type, value, out _, out _, out _))
+            {
+                context.Assembler.Orr(dest, Register(ZrRegister, dest.Type), Const(dest.Type, (long)value));
+            }
+            else
             {
                 int hw = 0;
                 bool first = true;
@@ -1327,10 +1335,6 @@ namespace ARMeilleure.CodeGen.Arm64
                     hw++;
                     value >>= 16;
                 }
-            }
-            else
-            {
-                context.Assembler.Mov(dest, Register(ZrRegister, dest.Type));
             }
         }
 

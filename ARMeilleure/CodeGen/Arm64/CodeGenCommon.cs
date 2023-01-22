@@ -1,5 +1,4 @@
 using ARMeilleure.IntermediateRepresentation;
-using System;
 using System.Numerics;
 
 namespace ARMeilleure.CodeGen.Arm64
@@ -32,9 +31,12 @@ namespace ARMeilleure.CodeGen.Arm64
 
         public static bool TryEncodeBitMask(Operand operand, out int immN, out int immS, out int immR)
         {
-            ulong value = operand.Value;
+            return TryEncodeBitMask(operand.Type, operand.Value, out immN, out immS, out immR);
+        }
 
-            if (operand.Type == OperandType.I32)
+        public static bool TryEncodeBitMask(OperandType type, ulong value, out int immN, out int immS, out int immR)
+        {
+            if (type == OperandType.I32)
             {
                 value |= value << 32;
             }
@@ -50,7 +52,7 @@ namespace ARMeilleure.CodeGen.Arm64
             // Any value AND all ones will be equal itself, so it's effectively a no-op.
             // Any value OR all ones will be equal all ones, so one can just use MOV.
             // Any value XOR all ones will be equal its inverse, so one can just use MVN.
-            if (value == ulong.MaxValue)
+            if (value == 0 || value == ulong.MaxValue)
             {
                 immN = 0;
                 immS = 0;
@@ -59,79 +61,18 @@ namespace ARMeilleure.CodeGen.Arm64
                 return false;
             }
 
-            int bitLength = CountSequence(value);
+            // Normalize value, rotating it such that the LSB is 1: Ensures we get a complete element that has not
+            // been cut-in-half across the word boundary.
+            int rotation = BitOperations.TrailingZeroCount(value & (value + 1));
+            ulong rotatedValue = ulong.RotateRight(value, rotation);
 
-            if ((value >> bitLength) != 0)
-            {
-                bitLength += CountSequence(value >> bitLength);
-            }
+            // Now that we have a complete element in the LSB with the LSB = 1, determine size and number of ones
+            // in element.
+            int elementSize = BitOperations.TrailingZeroCount(rotatedValue & (rotatedValue + 1));
+            int onesInElement = BitOperations.TrailingZeroCount(~rotatedValue);
 
-            int bitLengthLog2 = BitOperations.Log2((uint)bitLength);
-            int bitLengthPow2 = 1 << bitLengthLog2;
-
-            if (bitLengthPow2 < bitLength)
-            {
-                bitLengthLog2++;
-                bitLengthPow2 <<= 1;
-            }
-
-            int selectedESize = 64;
-            int repetitions = 1;
-            int onesCount = BitOperations.PopCount(value);
-
-            if (bitLengthPow2 < 64 && (value >> bitLengthPow2) != 0)
-            {
-                for (int eSizeLog2 = bitLengthLog2; eSizeLog2 < 6; eSizeLog2++)
-                {
-                    bool match = true;
-                    int eSize = 1 << eSizeLog2;
-                    ulong mask = (1UL << eSize) - 1;
-                    ulong eValue = value & mask;
-
-                    for (int e = 1; e < 64 / eSize; e++)
-                    {
-                        if (((value >> (e * eSize)) & mask) != eValue)
-                        {
-                            match = false;
-                            break;
-                        }
-                    }
-
-                    if (match)
-                    {
-                        selectedESize = eSize;
-                        repetitions = 64 / eSize;
-                        onesCount = BitOperations.PopCount(eValue);
-                        break;
-                    }
-                }
-            }
-
-            // Find rotation. We have two cases, one where the highest bit is 0
-            // and one where it is 1.
-            // If it's 1, we just need to count the number of 1 bits on the MSB to find the right rotation.
-            // If it's 0, we just need to count the number of 0 bits on the LSB to find the left rotation,
-            // then we can convert it to the right rotation shift by subtracting the value from the element size.
-            int rotation;
-            long vHigh = (long)(value << (64 - selectedESize));
-            if (vHigh < 0)
-            {
-                rotation = BitOperations.LeadingZeroCount(~(ulong)vHigh);
-            }
-            else
-            {
-                rotation = (selectedESize - BitOperations.TrailingZeroCount(value)) & (selectedESize - 1);
-            }
-
-            // Reconstruct value and see if it matches. If not, we can't encode.
-            ulong reconstructed = onesCount == 64 ? ulong.MaxValue : RotateRight((1UL << onesCount) - 1, rotation, selectedESize);
-
-            for (int bit = 32; bit >= selectedESize; bit >>= 1)
-            {
-                reconstructed |= reconstructed << bit;
-            }
-
-            if (reconstructed != value || onesCount == 0)
+            // Check the value is repeating; also ensures element size is a power of two.
+            if (ulong.RotateRight(value, elementSize) != value)
             {
                 immN = 0;
                 immS = 0;
@@ -140,34 +81,11 @@ namespace ARMeilleure.CodeGen.Arm64
                 return false;
             }
 
-            immR = rotation;
-
-            // immN indicates that there are no repetitions.
-            // The MSB of immS indicates the amount of repetitions, and the LSB the number of bits set.
-            if (repetitions == 1)
-            {
-                immN = 1;
-                immS = 0;
-            }
-            else
-            {
-                immN = 0;
-                immS = (0xf80 >> BitOperations.Log2((uint)repetitions)) & 0x3f;
-            }
-
-            immS |= onesCount - 1;
+            immN = (elementSize >> 6) & 1;
+            immS = (((~elementSize + 1) << 1) | (onesInElement - 1)) & 0x3f;
+            immR = (elementSize - rotation) & (elementSize - 1);
 
             return true;
-        }
-
-        private static int CountSequence(ulong value)
-        {
-            return BitOperations.TrailingZeroCount(value) + BitOperations.TrailingZeroCount(~value);
-        }
-
-        private static ulong RotateRight(ulong bits, int shift, int size)
-        {
-            return (bits >> shift) | ((bits << (size - shift)) & (size == 64 ? ulong.MaxValue : (1UL << size) - 1));
         }
     }
 }
