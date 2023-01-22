@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct CreateSamplerCommand : IGALCommand
+    struct CreateSamplerCommand : IGALCommand, IGALCommand<CreateSamplerCommand>
     {
         public CommandType CommandType => CommandType.CreateSampler;
         private TableRef<ThreadedSampler> _sampler;

@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct PreFrameCommand : IGALCommand
+    struct PreFrameCommand : IGALCommand, IGALCommand<PreFrameCommand>
     {
         public CommandType CommandType => CommandType.PreFrame;
 

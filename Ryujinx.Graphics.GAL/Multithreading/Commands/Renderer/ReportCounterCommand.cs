@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct ReportCounterCommand : IGALCommand
+    struct ReportCounterCommand : IGALCommand, IGALCommand<ReportCounterCommand>
     {
         public CommandType CommandType => CommandType.ReportCounter;
         private TableRef<ThreadedCounterEvent> _event;

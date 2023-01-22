@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
-    struct TextureGetDataCommand : IGALCommand
+    struct TextureGetDataCommand : IGALCommand, IGALCommand<TextureGetDataCommand>
     {
         public CommandType CommandType => CommandType.TextureGetData;
         private TableRef<ThreadedTexture> _texture;

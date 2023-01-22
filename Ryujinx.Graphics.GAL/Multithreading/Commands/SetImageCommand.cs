@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetImageCommand : IGALCommand
+    struct SetImageCommand : IGALCommand, IGALCommand<SetImageCommand>
     {
         public CommandType CommandType => CommandType.SetImage;
         private int _binding;

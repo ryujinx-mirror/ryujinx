@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct DrawIndexedIndirectCommand : IGALCommand
+    struct DrawIndexedIndirectCommand : IGALCommand, IGALCommand<DrawIndexedIndirectCommand>
     {
         public CommandType CommandType => CommandType.DrawIndexedIndirect;
         private BufferRange _indirectBuffer;

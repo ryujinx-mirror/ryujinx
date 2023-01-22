@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetVertexBuffersCommand : IGALCommand
+    struct SetVertexBuffersCommand : IGALCommand, IGALCommand<SetVertexBuffersCommand>
     {
         public CommandType CommandType => CommandType.SetVertexBuffers;
         private SpanRef<VertexBufferDescriptor> _vertexBuffers;

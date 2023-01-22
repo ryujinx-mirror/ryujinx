@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetLogicOpStateCommand : IGALCommand
+    struct SetLogicOpStateCommand : IGALCommand, IGALCommand<SetLogicOpStateCommand>
     {
         public CommandType CommandType => CommandType.SetLogicOpState;
         private bool _enable;

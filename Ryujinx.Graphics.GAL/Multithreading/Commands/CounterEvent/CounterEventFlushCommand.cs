@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.CounterEvent
 {
-    struct CounterEventFlushCommand : IGALCommand
+    struct CounterEventFlushCommand : IGALCommand, IGALCommand<CounterEventFlushCommand>
     {
         public CommandType CommandType => CommandType.CounterEventFlush;
         private TableRef<ThreadedCounterEvent> _event;

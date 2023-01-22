@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetFaceCullingCommand : IGALCommand
+    struct SetFaceCullingCommand : IGALCommand, IGALCommand<SetFaceCullingCommand>
     {
         public CommandType CommandType => CommandType.SetFaceCulling;
         private bool _enable;

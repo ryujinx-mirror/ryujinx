@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetProgramCommand : IGALCommand
+    struct SetProgramCommand : IGALCommand, IGALCommand<SetProgramCommand>
     {
         public CommandType CommandType => CommandType.SetProgram;
         private TableRef<IProgram> _program;

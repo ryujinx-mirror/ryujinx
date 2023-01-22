@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetFrontFaceCommand : IGALCommand
+    struct SetFrontFaceCommand : IGALCommand, IGALCommand<SetFrontFaceCommand>
     {
         public CommandType CommandType => CommandType.SetFrontFace;
         private FrontFace _frontFace;

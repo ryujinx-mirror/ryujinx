@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct CreateSyncCommand : IGALCommand
+    struct CreateSyncCommand : IGALCommand, IGALCommand<CreateSyncCommand>
     {
         public CommandType CommandType => CommandType.CreateSync;
         private ulong _id;

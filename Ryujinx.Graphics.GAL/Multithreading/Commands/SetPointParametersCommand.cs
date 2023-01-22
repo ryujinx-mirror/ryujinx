@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetPointParametersCommand : IGALCommand
+    struct SetPointParametersCommand : IGALCommand, IGALCommand<SetPointParametersCommand>
     {
         public CommandType CommandType => CommandType.SetPointParameters;
         private float _size;

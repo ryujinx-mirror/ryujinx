@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetRenderTargetColorMasksCommand : IGALCommand
+    struct SetRenderTargetColorMasksCommand : IGALCommand, IGALCommand<SetRenderTargetColorMasksCommand>
     {
         public CommandType CommandType => CommandType.SetRenderTargetColorMasks;
         private SpanRef<uint> _componentMask;

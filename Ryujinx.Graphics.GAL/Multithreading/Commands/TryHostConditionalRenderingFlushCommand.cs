@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct TryHostConditionalRenderingFlushCommand : IGALCommand
+    struct TryHostConditionalRenderingFlushCommand : IGALCommand, IGALCommand<TryHostConditionalRenderingFlushCommand>
     {
         public CommandType CommandType => CommandType.TryHostConditionalRenderingFlush;
         private TableRef<ThreadedCounterEvent> _value;

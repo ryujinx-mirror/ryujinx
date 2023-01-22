@@ -4,7 +4,7 @@ using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetTextureAndSamplerCommand : IGALCommand
+    struct SetTextureAndSamplerCommand : IGALCommand, IGALCommand<SetTextureAndSamplerCommand>
     {
         public CommandType CommandType => CommandType.SetTextureAndSampler;
         private ShaderStage _stage;

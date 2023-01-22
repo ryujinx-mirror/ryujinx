@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetPatchParametersCommand : IGALCommand
+    struct SetPatchParametersCommand : IGALCommand, IGALCommand<SetPatchParametersCommand>
     {
         public CommandType CommandType => CommandType.SetPatchParameters;
         private int _vertices;

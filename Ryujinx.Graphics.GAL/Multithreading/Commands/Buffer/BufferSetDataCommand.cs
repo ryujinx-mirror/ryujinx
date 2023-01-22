@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
 {
-    struct BufferSetDataCommand : IGALCommand
+    struct BufferSetDataCommand : IGALCommand, IGALCommand<BufferSetDataCommand>
     {
         public CommandType CommandType => CommandType.BufferSetData;
         private BufferHandle _buffer;

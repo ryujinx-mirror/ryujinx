@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct GetCapabilitiesCommand : IGALCommand
+    struct GetCapabilitiesCommand : IGALCommand, IGALCommand<GetCapabilitiesCommand>
     {
         public CommandType CommandType => CommandType.GetCapabilities;
         private TableRef<ResultBox<Capabilities>> _result;

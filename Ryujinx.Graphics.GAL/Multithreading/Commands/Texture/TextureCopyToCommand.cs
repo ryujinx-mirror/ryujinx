@@ -3,7 +3,7 @@ using Ryujinx.Graphics.GAL.Multithreading.Resources;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
-    struct TextureCopyToCommand : IGALCommand
+    struct TextureCopyToCommand : IGALCommand, IGALCommand<TextureCopyToCommand>
     {
         public CommandType CommandType => CommandType.TextureCopyTo;
         private TableRef<ThreadedTexture> _texture;

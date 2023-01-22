@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetRenderTargetsCommand : IGALCommand
+    struct SetRenderTargetsCommand : IGALCommand, IGALCommand<SetRenderTargetsCommand>
     {
         public CommandType CommandType => CommandType.SetRenderTargets;
         private TableRef<ITexture[]> _colors;

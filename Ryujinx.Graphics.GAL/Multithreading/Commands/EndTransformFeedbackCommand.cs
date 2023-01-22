@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct EndTransformFeedbackCommand : IGALCommand
+    struct EndTransformFeedbackCommand : IGALCommand, IGALCommand<EndTransformFeedbackCommand>
     {
         public CommandType CommandType => CommandType.EndTransformFeedback;
 

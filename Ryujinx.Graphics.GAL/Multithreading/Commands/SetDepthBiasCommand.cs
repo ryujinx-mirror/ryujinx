@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetDepthBiasCommand : IGALCommand
+    struct SetDepthBiasCommand : IGALCommand, IGALCommand<SetDepthBiasCommand>
     {
         public CommandType CommandType => CommandType.SetDepthBias;
         private PolygonModeMask _enables;

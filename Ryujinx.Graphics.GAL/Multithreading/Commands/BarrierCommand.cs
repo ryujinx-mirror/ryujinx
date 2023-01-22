@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct BarrierCommand : IGALCommand
+    struct BarrierCommand : IGALCommand, IGALCommand<BarrierCommand>
     {
         public CommandType CommandType => CommandType.Barrier;
 

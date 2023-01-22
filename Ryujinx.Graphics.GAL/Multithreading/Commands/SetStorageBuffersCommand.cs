@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetStorageBuffersCommand : IGALCommand
+    struct SetStorageBuffersCommand : IGALCommand, IGALCommand<SetStorageBuffersCommand>
     {
         public CommandType CommandType => CommandType.SetStorageBuffers;
         private SpanRef<BufferAssignment> _buffers;

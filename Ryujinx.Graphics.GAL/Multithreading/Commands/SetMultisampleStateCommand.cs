@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetMultisampleStateCommand : IGALCommand
+    struct SetMultisampleStateCommand : IGALCommand, IGALCommand<SetMultisampleStateCommand>
     {
         public CommandType CommandType => CommandType.SetMultisampleState;
         private MultisampleDescriptor _multisample;

@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
-    struct SetTransformFeedbackBuffersCommand : IGALCommand
+    struct SetTransformFeedbackBuffersCommand : IGALCommand, IGALCommand<SetTransformFeedbackBuffersCommand>
     {
         public CommandType CommandType => CommandType.SetTransformFeedbackBuffers;
         private SpanRef<BufferRange> _buffers;

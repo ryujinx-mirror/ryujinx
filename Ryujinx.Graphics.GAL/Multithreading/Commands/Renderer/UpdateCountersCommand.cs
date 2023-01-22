@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
-    struct UpdateCountersCommand : IGALCommand
+    struct UpdateCountersCommand : IGALCommand, IGALCommand<UpdateCountersCommand>
     {
         public CommandType CommandType => CommandType.UpdateCounters;
 
