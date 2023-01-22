@@ -25,6 +25,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         // This method uses much more memory so we want to avoid it if possible.
         private const int ByteComparisonSwitchThreshold = 4;
 
+        // Tuning for blacklisting textures from scaling when their data is updated from CPU.
+        // Each write adds the weight, each GPU modification subtracts 1.
+        // Exceeding the threshold blacklists the texture.
+        private const int ScaledSetWeight = 10;
+        private const int ScaledSetThreshold = 30;
+
         private const int MinLevelsForForceAnisotropy = 5;
 
         private struct TexturePoolOwner
@@ -122,6 +128,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         private Target   _arrayViewTarget;
 
         private ITexture _flushHostTexture;
+        private ITexture _setHostTexture;
+        private int _scaledSetScore;
 
         private Texture _viewStorage;
 
@@ -519,6 +527,25 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Registers when a texture has had its data set after being scaled, and
+        /// determines if it should be blacklisted from scaling to improve performance.
+        /// </summary>
+        /// <returns>True if setting data for a scaled texture is allowed, false if the texture has been blacklisted</returns>
+        private bool AllowScaledSetData()
+        {
+            _scaledSetScore += ScaledSetWeight;
+
+            if (_scaledSetScore >= ScaledSetThreshold)
+            {
+                BlacklistScale();
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Blacklists this texture from being scaled. Resets its scale to 1 if needed.
         /// </summary>
         public void BlacklistScale()
@@ -554,9 +581,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Copy the host texture to a scaled one. If a texture is not provided, create it with the given scale.
         /// </summary>
         /// <param name="scale">Scale factor</param>
+        /// <param name="copy">True if the data should be copied to the texture, false otherwise</param>
         /// <param name="storage">Texture to use instead of creating one</param>
         /// <returns>A host texture containing a scaled version of this texture</returns>
-        private ITexture GetScaledHostTexture(float scale, ITexture storage = null)
+        private ITexture GetScaledHostTexture(float scale, bool copy, ITexture storage = null)
         {
             if (storage == null)
             {
@@ -564,7 +592,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 storage = _context.Renderer.CreateTexture(createInfo, scale);
             }
 
-            HostTexture.CopyTo(storage, new Extents2D(0, 0, HostTexture.Width, HostTexture.Height), new Extents2D(0, 0, storage.Width, storage.Height), true);
+            if (copy)
+            {
+                HostTexture.CopyTo(storage, new Extents2D(0, 0, HostTexture.Width, HostTexture.Height), new Extents2D(0, 0, storage.Width, storage.Height), true);
+            }
 
             return storage;
         }
@@ -595,7 +626,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 ScaleFactor = scale;
 
-                ITexture newStorage = GetScaledHostTexture(ScaleFactor);
+                ITexture newStorage = GetScaledHostTexture(ScaleFactor, true);
 
                 Logger.Debug?.Print(LogClass.Gpu, $"  Copy performed: {HostTexture.Width}x{HostTexture.Height} to {newStorage.Width}x{newStorage.Height}");
 
@@ -692,11 +723,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SynchronizeFull()
         {
-            if (_hasData)
-            {
-                BlacklistScale();
-            }
-
             ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Range);
 
             // If the host does not support ASTC compression, we need to do the decompression.
@@ -723,7 +749,19 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             SpanOrArray<byte> result = ConvertToHostCompatibleFormat(data);
 
-            HostTexture.SetData(result);
+            if (ScaleFactor != 1f && AllowScaledSetData())
+            {
+                // If needed, create a texture to load from 1x scale.
+                ITexture texture = _setHostTexture = GetScaledHostTexture(1f, false, _setHostTexture);
+
+                texture.SetData(result);
+
+                texture.CopyTo(HostTexture, new Extents2D(0, 0, texture.Width, texture.Height), new Extents2D(0, 0, HostTexture.Width, HostTexture.Height), true);
+            }
+            else
+            {
+                HostTexture.SetData(result);
+            }
 
             _hasData = true;
         }
@@ -1056,7 +1094,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (ScaleFactor != 1f)
             {
                 // If needed, create a texture to flush back to host at 1x scale.
-                texture = _flushHostTexture = GetScaledHostTexture(1f, _flushHostTexture);
+                texture = _flushHostTexture = GetScaledHostTexture(1f, true, _flushHostTexture);
             }
 
             return texture;
@@ -1456,6 +1494,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SignalModified()
         {
+            _scaledSetScore = Math.Max(0, _scaledSetScore - 1);
+
             if (_modifiedStale || Group.HasCopyDependencies)
             {
                 _modifiedStale = false;
@@ -1472,6 +1512,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="bound">True if the texture has been bound, false if it has been unbound</param>
         public void SignalModifying(bool bound)
         {
+            if (bound)
+            {
+                _scaledSetScore = Math.Max(0, _scaledSetScore - 1);
+            }
+
             if (_modifiedStale || Group.HasCopyDependencies)
             {
                 _modifiedStale = false;
@@ -1685,6 +1730,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _flushHostTexture?.Release();
             _flushHostTexture = null;
+
+            _setHostTexture?.Release();
+            _setHostTexture = null;
         }
 
         /// <summary>

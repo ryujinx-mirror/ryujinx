@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if eligible</returns>
         private static TextureScaleMode IsUpscaleCompatible(TextureInfo info, bool withUpscale)
         {
-            if ((info.Target == Target.Texture2D || info.Target == Target.Texture2DArray) && !info.FormatInfo.IsCompressed)
+            if ((info.Target == Target.Texture2D || info.Target == Target.Texture2DArray || info.Target == Target.Texture2DMultisample) && !info.FormatInfo.IsCompressed)
             {
                 return UpscaleSafeMode(info) ? (withUpscale ? TextureScaleMode.Scaled : TextureScaleMode.Eligible) : TextureScaleMode.Undesired;
             }

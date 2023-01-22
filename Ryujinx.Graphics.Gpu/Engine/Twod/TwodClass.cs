@@ -349,6 +349,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 return;
             }
 
+            if (srcTexture.Info.Samples > 1 || dstTexture.Info.Samples > 1)
+            {
+                srcTexture.PropagateScale(dstTexture);
+            }
+
             float scale = srcTexture.ScaleFactor;
             float dstScale = dstTexture.ScaleFactor;
 
