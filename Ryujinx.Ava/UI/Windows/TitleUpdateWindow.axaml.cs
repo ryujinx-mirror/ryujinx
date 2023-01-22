@@ -60,24 +60,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         public void Save(object sender, RoutedEventArgs e)
         {
-            ViewModel._titleUpdateWindowData.Paths.Clear();
-
-            ViewModel._titleUpdateWindowData.Selected = "";
-
-            foreach (TitleUpdateModel update in ViewModel.TitleUpdates)
-            {
-                ViewModel._titleUpdateWindowData.Paths.Add(update.Path);
-
-                if (update == ViewModel.SelectedUpdate)
-                {
-                    ViewModel._titleUpdateWindowData.Selected = update.Path;
-                }
-            }
-
-            using (FileStream titleUpdateJsonStream = File.Create(ViewModel._titleUpdateJsonPath, 4096, FileOptions.WriteThrough))
-            {
-                titleUpdateJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(ViewModel._titleUpdateWindowData, true)));
-            }
+            ViewModel.Save();
 
             if (VisualRoot is MainWindow window)
             {

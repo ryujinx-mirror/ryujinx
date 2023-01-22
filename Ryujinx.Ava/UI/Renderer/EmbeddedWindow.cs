@@ -140,68 +140,75 @@ namespace Ryujinx.Ava.UI.Renderer
             {
                 if (VisualRoot != null)
                 {
-                    Point   rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), VisualRoot).Value;
-                    Pointer pointer            = new(0, PointerType.Mouse, true);
-
-                    switch (msg)
+                    if (msg == WindowsMessages.LBUTTONDOWN ||
+                        msg == WindowsMessages.RBUTTONDOWN ||
+                        msg == WindowsMessages.LBUTTONUP   ||
+                        msg == WindowsMessages.RBUTTONUP   ||
+                        msg == WindowsMessages.MOUSEMOVE)
                     {
-                        case WindowsMessages.LBUTTONDOWN:
-                        case WindowsMessages.RBUTTONDOWN:
-                            {
-                                bool                   isLeft               = msg == WindowsMessages.LBUTTONDOWN;
-                                RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
-                                PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonPressed : PointerUpdateKind.RightButtonPressed);
+                        Point   rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), VisualRoot).Value;
+                        Pointer pointer            = new(0, PointerType.Mouse, true);
 
-                                var evnt = new PointerPressedEventArgs(
-                                    this,
-                                    pointer,
-                                    VisualRoot,
-                                    rootVisualPosition,
-                                    (ulong)Environment.TickCount64,
-                                    properties,
-                                    KeyModifiers.None);
+                        switch (msg)
+                        {
+                            case WindowsMessages.LBUTTONDOWN:
+                            case WindowsMessages.RBUTTONDOWN:
+                                {
+                                    bool                   isLeft               = msg == WindowsMessages.LBUTTONDOWN;
+                                    RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
+                                    PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonPressed : PointerUpdateKind.RightButtonPressed);
 
-                                RaiseEvent(evnt);
+                                    var evnt = new PointerPressedEventArgs(
+                                        this,
+                                        pointer,
+                                        VisualRoot,
+                                        rootVisualPosition,
+                                        (ulong)Environment.TickCount64,
+                                        properties,
+                                        KeyModifiers.None);
 
-                                break;
-                            }
-                        case WindowsMessages.LBUTTONUP:
-                        case WindowsMessages.RBUTTONUP:
-                            {
-                                bool                   isLeft               = msg == WindowsMessages.LBUTTONUP;
-                                RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
-                                PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonReleased : PointerUpdateKind.RightButtonReleased);
+                                    RaiseEvent(evnt);
 
-                                var evnt = new PointerReleasedEventArgs(
-                                    this,
-                                    pointer,
-                                    VisualRoot,
-                                    rootVisualPosition,
-                                    (ulong)Environment.TickCount64,
-                                    properties,
-                                    KeyModifiers.None,
-                                    isLeft ? MouseButton.Left : MouseButton.Right);
+                                    break;
+                                }
+                            case WindowsMessages.LBUTTONUP:
+                            case WindowsMessages.RBUTTONUP:
+                                {
+                                    bool                   isLeft               = msg == WindowsMessages.LBUTTONUP;
+                                    RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
+                                    PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonReleased : PointerUpdateKind.RightButtonReleased);
 
-                                RaiseEvent(evnt);
+                                    var evnt = new PointerReleasedEventArgs(
+                                        this,
+                                        pointer,
+                                        VisualRoot,
+                                        rootVisualPosition,
+                                        (ulong)Environment.TickCount64,
+                                        properties,
+                                        KeyModifiers.None,
+                                        isLeft ? MouseButton.Left : MouseButton.Right);
 
-                                break;
-                            }
-                        case WindowsMessages.MOUSEMOVE:
-                            {
-                                var evnt = new PointerEventArgs(
-                                    PointerMovedEvent,
-                                    this,
-                                    pointer,
-                                    VisualRoot,
-                                    rootVisualPosition,
-                                    (ulong)Environment.TickCount64,
-                                    new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.Other),
-                                    KeyModifiers.None);
+                                    RaiseEvent(evnt);
 
-                                RaiseEvent(evnt);
+                                    break;
+                                }
+                            case WindowsMessages.MOUSEMOVE:
+                                {
+                                    var evnt = new PointerEventArgs(
+                                        PointerMovedEvent,
+                                        this,
+                                        pointer,
+                                        VisualRoot,
+                                        rootVisualPosition,
+                                        (ulong)Environment.TickCount64,
+                                        new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.Other),
+                                        KeyModifiers.None);
 
-                                break;
-                            }
+                                    RaiseEvent(evnt);
+
+                                    break;
+                                }
+                        }
                     }
                 }
 

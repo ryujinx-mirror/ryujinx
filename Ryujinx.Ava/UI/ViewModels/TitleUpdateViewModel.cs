@@ -21,8 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SpanHelpers = LibHac.Common.SpanHelpers;
+using System.Text;
 using Path = System.IO.Path;
+using SpanHelpers = LibHac.Common.SpanHelpers;
 
 namespace Ryujinx.Ava.UI.ViewModels;
 
@@ -90,6 +91,8 @@ public class TitleUpdateViewModel : BaseModel
                 Selected = "",
                 Paths    = new List<string>()
             };
+
+            Save();
         }
 
         LoadUpdates();
@@ -101,6 +104,9 @@ public class TitleUpdateViewModel : BaseModel
         {
             AddUpdate(path);
         }
+
+        // NOTE: Save the list again to remove leftovers.
+        Save();
 
         TitleUpdateModel selected = TitleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected, null);
 
@@ -222,5 +228,23 @@ public class TitleUpdateViewModel : BaseModel
         }
 
         SortUpdates();
+    }
+
+    public void Save()
+    {
+        _titleUpdateWindowData.Paths.Clear();
+        _titleUpdateWindowData.Selected = "";
+
+        foreach (TitleUpdateModel update in TitleUpdates)
+        {
+            _titleUpdateWindowData.Paths.Add(update.Path);
+
+            if (update == SelectedUpdate)
+            {
+                _titleUpdateWindowData.Selected = update.Path;
+            }
+        }
+
+        File.WriteAllBytes(_titleUpdateJsonPath, Encoding.UTF8.GetBytes(JsonHelper.Serialize(_titleUpdateWindowData, true)));
     }
 }

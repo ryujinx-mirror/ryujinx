@@ -231,7 +231,7 @@ namespace Ryujinx.Ava
             }
         }
 
-        private unsafe void Renderer_ScreenCaptured(object sender, ScreenCaptureImageInfo e)
+        private void Renderer_ScreenCaptured(object sender, ScreenCaptureImageInfo e)
         {
             if (e.Data.Length > 0 && e.Height > 0 && e.Width > 0)
             {
@@ -240,7 +240,7 @@ namespace Ryujinx.Ava
                     lock (_lockObject)
                     {
                         DateTime currentTime = DateTime.Now;
-                        string   filename    = $"ryujinx_capture_{currentTime}-{currentTime:D2}-{currentTime:D2}_{currentTime:D2}-{currentTime:D2}-{currentTime:D2}.png";
+                        string   filename    = $"ryujinx_capture_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.png";
                         
                         string directory = AppDataManager.Mode switch
                         {
