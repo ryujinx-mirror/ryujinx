@@ -211,7 +211,7 @@ namespace ARMeilleure.Translation
 
                 if (oldFunc != func)
                 {
-                    JitCache.Unmap(func.FuncPtr);
+                    JitCache.Unmap(func.FuncPointer);
                     func = oldFunc;
                 }
 
@@ -230,7 +230,7 @@ namespace ARMeilleure.Translation
         {
             if (FunctionTable.IsValid(guestAddress) && (Optimizations.AllowLcqInFunctionTable || func.HighCq))
             {
-                Volatile.Write(ref FunctionTable.GetValue(guestAddress), (ulong)func.FuncPtr);
+                Volatile.Write(ref FunctionTable.GetValue(guestAddress), (ulong)func.FuncPointer);
             }
         }
 
@@ -292,11 +292,11 @@ namespace ARMeilleure.Translation
                 _ptc.WriteCompiledFunction(address, funcSize, hash, highCq, compiledFunc);
             }
 
-            GuestFunction func = compiledFunc.Map<GuestFunction>();
+            GuestFunction func = compiledFunc.MapWithPointer<GuestFunction>(out IntPtr funcPointer);
 
             Allocators.ResetAll();
 
-            return new TranslatedFunction(func, counter, funcSize, highCq);
+            return new TranslatedFunction(func, funcPointer, counter, funcSize, highCq);
         }
 
         private void BackgroundTranslate()
@@ -537,7 +537,7 @@ namespace ARMeilleure.Translation
 
             foreach (var func in functions)
             {
-                JitCache.Unmap(func.FuncPtr);
+                JitCache.Unmap(func.FuncPointer);
 
                 func.CallCounter?.Dispose();
             }
@@ -546,7 +546,7 @@ namespace ARMeilleure.Translation
 
             while (_oldFuncs.TryDequeue(out var kv))
             {
-                JitCache.Unmap(kv.Value.FuncPtr);
+                JitCache.Unmap(kv.Value.FuncPointer);
 
                 kv.Value.CallCounter?.Dispose();
             }

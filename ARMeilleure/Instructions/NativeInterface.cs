@@ -191,7 +191,7 @@ namespace ARMeilleure.Instructions
         {
             TranslatedFunction function = Context.Translator.GetOrTranslate(address, GetContext().ExecutionMode);
 
-            return (ulong)function.FuncPtr.ToInt64();
+            return (ulong)function.FuncPointer.ToInt64();
         }
 
         public static void InvalidateCacheLine(ulong address)

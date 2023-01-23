@@ -745,9 +745,9 @@ namespace ARMeilleure.Translation.PTC
             bool highCq)
         {
             var cFunc = new CompiledFunction(code, unwindInfo, RelocInfo.Empty);
-            var gFunc = cFunc.Map<GuestFunction>();
+            var gFunc = cFunc.MapWithPointer<GuestFunction>(out IntPtr gFuncPointer);
 
-            return new TranslatedFunction(gFunc, callCounter, guestSize, highCq);
+            return new TranslatedFunction(gFunc, gFuncPointer, callCounter, guestSize, highCq);
         }
 
         private void UpdateInfo(InfoEntry infoEntry)
