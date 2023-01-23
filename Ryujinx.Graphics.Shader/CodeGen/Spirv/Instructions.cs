@@ -261,17 +261,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static OperationResult GenerateBitfieldExtractS32(CodeGenContext context, AstOperation operation)
         {
-            return GenerateTernaryS32(context, operation, context.Delegates.BitFieldSExtract);
+            return GenerateBitfieldExtractS32(context, operation, context.Delegates.BitFieldSExtract);
         }
 
         private static OperationResult GenerateBitfieldExtractU32(CodeGenContext context, AstOperation operation)
         {
-            return GenerateTernaryS32(context, operation, context.Delegates.BitFieldUExtract);
+            return GenerateTernaryU32(context, operation, context.Delegates.BitFieldUExtract);
         }
 
         private static OperationResult GenerateBitfieldInsert(CodeGenContext context, AstOperation operation)
         {
-            return GenerateQuaternaryS32(context, operation, context.Delegates.BitFieldInsert);
+            return GenerateBitfieldInsert(context, operation, context.Delegates.BitFieldInsert);
         }
 
         private static OperationResult GenerateBitfieldReverse(CodeGenContext context, AstOperation operation)
@@ -2290,22 +2290,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
         }
 
-        private static OperationResult GenerateTernaryS32(
-            CodeGenContext context,
-            AstOperation operation,
-            Func<SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction> emitS)
-        {
-            var src1 = operation.GetSource(0);
-            var src2 = operation.GetSource(1);
-            var src3 = operation.GetSource(2);
-
-            return new OperationResult(AggregateType.S32, emitS(
-                context.TypeS32(),
-                context.GetS32(src1),
-                context.GetS32(src2),
-                context.GetS32(src3)));
-        }
-
         private static OperationResult GenerateTernaryU32(
             CodeGenContext context,
             AstOperation operation,
@@ -2322,7 +2306,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 context.GetU32(src3)));
         }
 
-        private static OperationResult GenerateQuaternaryS32(
+        private static OperationResult GenerateBitfieldExtractS32(
+            CodeGenContext context,
+            AstOperation operation,
+            Func<SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction> emitS)
+        {
+            var src1 = operation.GetSource(0);
+            var src2 = operation.GetSource(1);
+            var src3 = operation.GetSource(2);
+
+            return new OperationResult(AggregateType.S32, emitS(
+                context.TypeS32(),
+                context.GetS32(src1),
+                context.GetU32(src2),
+                context.GetU32(src3)));
+        }
+
+        private static OperationResult GenerateBitfieldInsert(
             CodeGenContext context,
             AstOperation operation,
             Func<SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction> emitS)
@@ -2332,12 +2332,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var src3 = operation.GetSource(2);
             var src4 = operation.GetSource(3);
 
-            return new OperationResult(AggregateType.S32, emitS(
-                context.TypeS32(),
-                context.GetS32(src1),
-                context.GetS32(src2),
-                context.GetS32(src3),
-                context.GetS32(src4)));
+            return new OperationResult(AggregateType.U32, emitS(
+                context.TypeU32(),
+                context.GetU32(src1),
+                context.GetU32(src2),
+                context.GetU32(src3),
+                context.GetU32(src4)));
         }
     }
 }
