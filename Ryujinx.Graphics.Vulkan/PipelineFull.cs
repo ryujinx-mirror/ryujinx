@@ -14,7 +14,6 @@ namespace Ryujinx.Graphics.Vulkan
         private CounterQueueEvent _activeConditionalRender;
 
         private readonly List<BufferedQuery> _pendingQueryCopies;
-        private readonly List<BufferedQuery> _pendingQueryResets;
 
         private ulong _byteWeight;
 
@@ -22,7 +21,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _activeQueries = new List<QueryPool>();
             _pendingQueryCopies = new();
-            _pendingQueryResets = new List<BufferedQuery>();
 
             CommandBuffer = (Cbs = gd.CommandBufferPool.Rent()).CommandBuffer;
         }
@@ -32,16 +30,6 @@ namespace Ryujinx.Graphics.Vulkan
             foreach (var query in _pendingQueryCopies)
             {
                 query.PoolCopy(Cbs);
-            }
-
-            lock (_pendingQueryResets)
-            {
-                foreach (var query in _pendingQueryResets)
-                {
-                    query.PoolReset(CommandBuffer);
-                }
-
-                _pendingQueryResets.Clear();
             }
 
             _pendingQueryCopies.Clear();
@@ -238,10 +226,12 @@ namespace Ryujinx.Graphics.Vulkan
                 Gd.Api.CmdBeginQuery(CommandBuffer, queryPool, 0, Gd.Capabilities.SupportsPreciseOcclusionQueries ? QueryControlFlags.PreciseBit : 0);
             }
 
+            Gd.ResetCounterPool();
+
             Restore();
         }
 
-        public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset)
+        public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset, bool fromSamplePool)
         {
             if (needsReset)
             {
@@ -249,9 +239,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 Gd.Api.CmdResetQueryPool(CommandBuffer, pool, 0, 1);
 
-                lock (_pendingQueryResets)
+                if (fromSamplePool)
                 {
-                    _pendingQueryResets.Remove(query); // Might be present on here.
+                    // Try reset some additional queries in advance.
+
+                    Gd.ResetFutureCounters(CommandBuffer, AutoFlush.GetRemainingQueries());
                 }
             }
 
@@ -265,14 +257,6 @@ namespace Ryujinx.Graphics.Vulkan
             Gd.Api.CmdEndQuery(CommandBuffer, pool, 0);
 
             _activeQueries.Remove(pool);
-        }
-
-        public void ResetQuery(BufferedQuery query)
-        {
-            lock (_pendingQueryResets)
-            {
-                _pendingQueryResets.Add(query);
-            }
         }
 
         public void CopyQueryResults(BufferedQuery query)

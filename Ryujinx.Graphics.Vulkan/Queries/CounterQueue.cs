@@ -3,6 +3,7 @@ using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Vulkan.Queries
 {
@@ -32,6 +33,8 @@ namespace Ryujinx.Graphics.Vulkan.Queries
 
         private Thread _consumerThread;
 
+        public int ResetSequence { get; private set; }
+
         internal CounterQueue(VulkanRenderer gd, Device device, PipelineFull pipeline, CounterType type)
         {
             _gd = gd;
@@ -51,6 +54,24 @@ namespace Ryujinx.Graphics.Vulkan.Queries
 
             _consumerThread = new Thread(EventConsumer);
             _consumerThread.Start();
+        }
+
+        public void ResetCounterPool()
+        {
+            ResetSequence++;
+        }
+
+        public void ResetFutureCounters(CommandBuffer cmd, int count)
+        {
+            // Pre-emptively reset queries to avoid render pass splitting.
+            lock (_queryPool)
+            {
+                count = Math.Min(count, _queryPool.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    _queryPool.ElementAt(i).PoolReset(cmd, ResetSequence);
+                }
+            }
         }
 
         private void EventConsumer()
@@ -106,7 +127,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
         {
             lock (_lock)
             {
-                _pipeline.ResetQuery(query);
+                // The query will be reset when it dequeues.
                 _queryPool.Enqueue(query);
             }
         }

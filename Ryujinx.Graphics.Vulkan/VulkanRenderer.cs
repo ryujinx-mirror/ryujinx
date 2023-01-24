@@ -679,6 +679,16 @@ namespace Ryujinx.Graphics.Vulkan
             _counters.Update();
         }
 
+        public void ResetCounterPool()
+        {
+            _counters.ResetCounterPool();
+        }
+
+        public void ResetFutureCounters(CommandBuffer cmd, int count)
+        {
+            _counters?.ResetFutureCounters(cmd, count);
+        }
+
         public void BackgroundContextAction(Action action, bool alwaysBackground = false)
         {
             action();

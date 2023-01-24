@@ -24,6 +24,19 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             }
         }
 
+        public void ResetCounterPool()
+        {
+            foreach (var queue in _counterQueues)
+            {
+                queue.ResetCounterPool();
+            }
+        }
+
+        public void ResetFutureCounters(CommandBuffer cmd, int count)
+        {
+            _counterQueues[(int)CounterType.SamplesPassed].ResetFutureCounters(cmd, count);
+        }
+
         public CounterQueueEvent QueueReport(CounterType type, EventHandler<ulong> resultHandler, bool hostReserved)
         {
             return _counterQueues[(int)type].QueueReport(resultHandler, _pipeline.DrawCount, hostReserved);

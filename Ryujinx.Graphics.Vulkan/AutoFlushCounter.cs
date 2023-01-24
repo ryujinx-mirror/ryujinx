@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -16,6 +17,10 @@ namespace Ryujinx.Graphics.Vulkan
         private bool _hasPendingQuery;
         private int _queryCount;
 
+        private int[] _queryCountHistory = new int[3];
+        private int _queryCountHistoryIndex;
+        private int _remainingQueries;
+
         public void RegisterFlush(ulong drawCount)
         {
             _lastFlush = Stopwatch.GetTimestamp();
@@ -27,6 +32,9 @@ namespace Ryujinx.Graphics.Vulkan
         public bool RegisterPendingQuery()
         {
             _hasPendingQuery = true;
+            _remainingQueries--;
+
+            _queryCountHistory[_queryCountHistoryIndex]++;
 
             // Interrupt render passes to flush queries, so that early results arrive sooner.
             if (++_queryCount == InitialQueryCountForFlush)
@@ -35,6 +43,21 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return false;
+        }
+
+        public int GetRemainingQueries()
+        {
+            if (_remainingQueries <= 0)
+            {
+                _remainingQueries = 16;
+            }
+
+            if (_queryCount < InitialQueryCountForFlush)
+            {
+                return Math.Min(InitialQueryCountForFlush - _queryCount, _remainingQueries);
+            }
+
+            return _remainingQueries;
         }
 
         public bool ShouldFlushQuery()
@@ -68,6 +91,15 @@ namespace Ryujinx.Graphics.Vulkan
             long now = Stopwatch.GetTimestamp();
 
             return now > _lastFlush + flushTimeout;
+        }
+
+        public void Present()
+        {
+            _queryCountHistoryIndex = (_queryCountHistoryIndex + 1) % 3;
+
+            _remainingQueries = _queryCountHistory.Max() + 10;
+
+            _queryCountHistory[_queryCountHistoryIndex] = 0;
         }
     }
 }

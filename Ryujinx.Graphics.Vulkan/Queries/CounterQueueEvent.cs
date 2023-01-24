@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
 
             DrawIndex = drawIndex;
 
-            _counter.Begin();
+            _counter.Begin(_queue.ResetSequence);
         }
 
         public Auto<DisposableBuffer> GetBuffer()
