@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Vulkan
         public int[] AttachmentIndices { get; }
 
         public int AttachmentsCount { get; }
-        public int MaxColorAttachmentIndex { get; }
+        public int MaxColorAttachmentIndex => AttachmentIndices.Length > 0 ? AttachmentIndices[AttachmentIndices.Length - 1] : -1;
         public bool HasDepthStencil { get; }
         public int ColorAttachmentsCount => AttachmentsCount - (HasDepthStencil ? 1 : 0);
 
@@ -66,8 +66,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             AttachmentSamples = new uint[count];
             AttachmentFormats = new VkFormat[count];
-            AttachmentIndices = new int[count];
-            MaxColorAttachmentIndex = colors.Length - 1;
+            AttachmentIndices = new int[colorsCount];
 
             uint width = uint.MaxValue;
             uint height = uint.MaxValue;

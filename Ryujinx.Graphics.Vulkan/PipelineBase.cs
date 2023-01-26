@@ -1344,8 +1344,7 @@ namespace Ryujinx.Graphics.Vulkan
             var dstAttachmentFormats = _newState.Internal.AttachmentFormats.AsSpan();
             FramebufferParams.AttachmentFormats.CopyTo(dstAttachmentFormats);
 
-            int maxAttachmentIndex = FramebufferParams.MaxColorAttachmentIndex + (FramebufferParams.HasDepthStencil ? 1 : 0);
-            for (int i = FramebufferParams.AttachmentFormats.Length; i <= maxAttachmentIndex; i++)
+            for (int i = FramebufferParams.AttachmentFormats.Length; i < dstAttachmentFormats.Length; i++)
             {
                 dstAttachmentFormats[i] = 0;
             }
@@ -1376,8 +1375,6 @@ namespace Ryujinx.Graphics.Vulkan
 
                 for (int i = 0; i < FramebufferParams.AttachmentsCount; i++)
                 {
-                    int bindIndex = FramebufferParams.AttachmentIndices[i];
-
                     attachmentDescs[i] = new AttachmentDescription(
                         0,
                         FramebufferParams.AttachmentFormats[i],

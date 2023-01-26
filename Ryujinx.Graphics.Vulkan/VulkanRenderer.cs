@@ -271,6 +271,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsTransformFeedback,
                 propertiesTransformFeedback.TransformFeedbackQueries,
                 features2.Features.OcclusionQueryPrecise,
+                supportedFeatures.PipelineStatisticsQuery,
                 supportedFeatures.GeometryShader,
                 propertiesSubgroupSizeControl.MinSubgroupSize,
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
@@ -589,9 +590,13 @@ namespace Ryujinx.Graphics.Vulkan
 
             Vendor = VendorUtils.FromId(properties.VendorID);
 
-            IsAmdWindows = Vendor == Vendor.Amd && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            IsIntelWindows = Vendor == Vendor.Intel && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            IsTBDR = IsMoltenVk || Vendor == Vendor.Qualcomm || Vendor == Vendor.ARM || Vendor == Vendor.ImgTec;
+            IsAmdWindows = Vendor == Vendor.Amd && OperatingSystem.IsWindows();
+            IsIntelWindows = Vendor == Vendor.Intel && OperatingSystem.IsWindows();
+            IsTBDR = IsMoltenVk ||
+                Vendor == Vendor.Qualcomm ||
+                Vendor == Vendor.ARM ||
+                Vendor == Vendor.Broadcom ||
+                Vendor == Vendor.ImgTec;
 
             GpuVendor = vendorName;
             GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName);

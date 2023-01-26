@@ -27,14 +27,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             int attachmentCount = 0;
             int colorCount = 0;
-            int maxColorAttachmentIndex = 0;
 
             for (int i = 0; i < state.AttachmentEnable.Length; i++)
             {
                 if (state.AttachmentEnable[i])
                 {
-                    maxColorAttachmentIndex = i;
-
                     attachmentFormats[attachmentCount] = gd.FormatCapabilities.ConvertToVkFormat(state.AttachmentFormats[i]);
 
                     attachmentIndices[attachmentCount++] = i;
@@ -270,7 +267,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             // NOTE: Viewports, Scissors are dynamic.
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < Constants.MaxRenderTargets; i++)
             {
                 var blend = state.BlendDescriptors[i];
 
@@ -293,21 +290,24 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            int maxAttachmentIndex = 0;
-            for (int i = 0; i < 8; i++)
+            int attachmentCount = 0;
+            int maxColorAttachmentIndex = -1;
+
+            for (int i = 0; i < Constants.MaxRenderTargets; i++)
             {
                 if (state.AttachmentEnable[i])
                 {
-                    pipeline.Internal.AttachmentFormats[maxAttachmentIndex++] = gd.FormatCapabilities.ConvertToVkFormat(state.AttachmentFormats[i]);
+                    pipeline.Internal.AttachmentFormats[attachmentCount++] = gd.FormatCapabilities.ConvertToVkFormat(state.AttachmentFormats[i]);
+                    maxColorAttachmentIndex = i;
                 }
             }
 
             if (state.DepthStencilEnable)
             {
-                pipeline.Internal.AttachmentFormats[maxAttachmentIndex++] = gd.FormatCapabilities.ConvertToVkFormat(state.DepthStencilFormat);
+                pipeline.Internal.AttachmentFormats[attachmentCount++] = gd.FormatCapabilities.ConvertToVkFormat(state.DepthStencilFormat);
             }
 
-            pipeline.ColorBlendAttachmentStateCount = 8;
+            pipeline.ColorBlendAttachmentStateCount = (uint)(maxColorAttachmentIndex + 1);
             pipeline.VertexAttributeDescriptionsCount = (uint)Math.Min(Constants.MaxVertexAttributes, state.VertexAttribCount);
 
             return pipeline;

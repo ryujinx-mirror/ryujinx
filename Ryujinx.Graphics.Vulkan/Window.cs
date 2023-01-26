@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ImageSharingMode = SharingMode.Exclusive,
                 ImageArrayLayers = 1,
                 PreTransform = capabilities.CurrentTransform,
-                CompositeAlpha = CompositeAlphaFlagsKHR.OpaqueBitKhr,
+                CompositeAlpha = ChooseCompositeAlpha(capabilities.SupportedCompositeAlpha),
                 PresentMode = ChooseSwapPresentMode(presentModes, _vsyncEnabled),
                 Clipped = true
             };
@@ -188,6 +188,22 @@ namespace Ryujinx.Graphics.Vulkan
             return availableFormats[0];
         }
 
+        private static CompositeAlphaFlagsKHR ChooseCompositeAlpha(CompositeAlphaFlagsKHR supportedFlags)
+        {
+            if (supportedFlags.HasFlag(CompositeAlphaFlagsKHR.OpaqueBitKhr))
+            {
+                return CompositeAlphaFlagsKHR.OpaqueBitKhr;
+            }
+            else if (supportedFlags.HasFlag(CompositeAlphaFlagsKHR.PreMultipliedBitKhr))
+            {
+                return CompositeAlphaFlagsKHR.PreMultipliedBitKhr;
+            }
+            else
+            {
+                return CompositeAlphaFlagsKHR.InheritBitKhr;
+            }
+        }
+
         private static PresentModeKHR ChooseSwapPresentMode(PresentModeKHR[] availablePresentModes, bool vsyncEnabled)
         {
             if (!vsyncEnabled && availablePresentModes.Contains(PresentModeKHR.ImmediateKhr))
@@ -197,10 +213,6 @@ namespace Ryujinx.Graphics.Vulkan
             else if (availablePresentModes.Contains(PresentModeKHR.MailboxKhr))
             {
                 return PresentModeKHR.MailboxKhr;
-            }
-            else if (availablePresentModes.Contains(PresentModeKHR.FifoKhr))
-            {
-               return PresentModeKHR.FifoKhr;
             }
             else
             {
