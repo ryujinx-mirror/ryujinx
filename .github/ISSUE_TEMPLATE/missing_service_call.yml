@@ -1,0 +1,31 @@
+name: Missing Service Call
+description: Service call is missing in Ryujinx.
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search for an [existing missing service call issue](https://github.com/Ryujinx/Ryujinx/issues) first.
+      options:
+      - label: I have searched the existing issues
+        required: true
+  - type: textarea
+    id: instruction
+    attributes:
+      label: Service Call
+      description: What service call is missing?
+    validations:
+      required: true
+  - type: textarea
+    id: name
+    attributes:
+      label: Service description
+      description: Include the description/explanation from [Switchbrew](https://switchbrew.org/w/index.php?title=Services_API) and/or [SwIPC](https://reswitched.github.io/SwIPC/) in the above code block
+    validations:
+      required: true
+  - type: textarea
+    id: required
+    attributes:
+      label: Required by
+      description:  Add links to the [compatibility list page(s)](https://github.com/Ryujinx/Ryujinx-Games-List/issues) of the game(s) that require this service.
+    validations:
+      required: true
